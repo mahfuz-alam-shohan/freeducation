@@ -21,7 +21,7 @@ import {
   listLearningMaterials,
   listQuestions,
   listQuestionsFiltered,
-  setupDatabase, // Ensure this is imported
+  setupDatabase,
 } from "./db";
 import { renderDashboard, renderLogin } from "./admin";
 import { renderSmartFilter, renderStudentHome } from "./student";
@@ -46,18 +46,13 @@ const redirectResponse = (location: string, headers?: HeadersInit) =>
   });
 
 const errorResponse = (error: unknown) => {
-  // Safe error logging
   const message = error instanceof Error ? error.message : String(error);
-  console.error("Critical Error:", error); 
-  
+  console.error("Critical Error:", error);
   return htmlResponse(`
-    <div style="font-family:sans-serif; padding:2rem; color:#b42318; background:#fff5f5; border:1px solid #fed7d7; border-radius:8px; max-width:600px; margin:2rem auto;">
-      <h3 style="margin-top:0;">System Error</h3>
+    <div style="font-family:sans-serif; padding:2rem; max-width:600px; margin:2rem auto; border:1px solid #fee2e2; background:#fef2f2; border-radius:8px; color:#991b1b;">
+      <h3 style="margin-top:0">System Error</h3>
       <p>${message}</p>
-      <div style="margin-top:1rem; font-size:0.85em; color:#666; background:#fff; padding:10px; border-radius:4px; overflow-x:auto;">
-        ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}
-      </div>
-      <p style="margin-top:1rem;"><a href="/admin" style="color:#b42318; text-decoration:underline;">Back to Dashboard</a></p>
+      <a href="/admin" style="text-decoration:underline;">Back</a>
     </div>
   `, 500);
 }
@@ -108,6 +103,8 @@ export default {
     const path = url.pathname;
 
     try {
+      // --- Public Routes ---
+
       if (path === "/") {
         const hierarchy = await getHierarchy(env.DB);
         return htmlResponse(renderStudentHome(hierarchy));
@@ -128,8 +125,9 @@ export default {
         return htmlResponse(renderSmartFilter(hierarchy, questionTypes, questions, query));
       }
 
+      // --- Admin Routes ---
+
       if (path.startsWith("/admin")) {
-        // Try getting admin count. If this fails, the DB is likely missing tables.
         const adminCount = await getAdminCount(env.DB);
 
         if (path === "/admin/login") {
@@ -139,13 +137,10 @@ export default {
             const password = form.password ?? "";
 
             if (!email || password.length < 8) {
-              return htmlResponse(
-                renderLogin({
-                  isFirstAdmin: adminCount === 0,
-                  error: "Provide a valid email and a password with at least 8 characters.",
-                }),
-                400
-              );
+              return htmlResponse(renderLogin({
+                isFirstAdmin: adminCount === 0,
+                error: "Invalid email or password (min 8 chars)."
+              }), 400);
             }
 
             if (adminCount === 0) {
@@ -158,13 +153,7 @@ export default {
 
             const user = await getUserByEmail(env.DB, email);
             if (!user || !(await verifyPassword(password, user.passwordHash))) {
-              return htmlResponse(
-                renderLogin({
-                  isFirstAdmin: false,
-                  error: "Invalid credentials.",
-                }),
-                401
-              );
+              return htmlResponse(renderLogin({ isFirstAdmin: false, error: "Invalid credentials." }), 401);
             }
 
             const sessionToken = randomToken(32);
@@ -179,51 +168,50 @@ export default {
           return redirectResponse("/", { "Set-Cookie": clearSessionCookie() });
         }
 
+        // --- Protected Admin Area ---
+        
         const adminUser = await requireAdmin(env.DB, request);
         if (!adminUser) {
           return redirectResponse("/admin/login");
         }
 
+        // Get Current View from Query Params (default: overview)
+        const currentView = url.searchParams.get("view") || "overview";
+
+        // Handle Form Submissions
         if (request.method === "POST") {
           try {
             const form = await getFormData(request);
 
             if (path === "/admin/classes") {
               await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=structure");
             }
-
             if (path === "/admin/groups") {
               await insertGroup(env.DB, form.classId, form.name);
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=structure");
             }
-
             if (path === "/admin/subjects") {
               const groupId = form.groupId ? form.groupId : null;
               await insertSubject(env.DB, form.classId, groupId, form.name);
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=structure");
             }
-
             if (path === "/admin/chapters") {
               await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=chapters");
             }
-
             if (path === "/admin/subchapters") {
               await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=chapters");
             }
-
             if (path === "/admin/question-types") {
               await insertQuestionType(env.DB, form.chapterId, form.name);
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=chapters");
             }
-
             if (path === "/admin/source-entities") {
               await insertSourceEntity(env.DB, form.categoryId, form.name);
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=settings");
             }
-
             if (path === "/admin/questions") {
               await insertQuestion(env.DB, {
                 chapterId: form.chapterId,
@@ -233,9 +221,8 @@ export default {
                 prompt: form.prompt,
                 imageUrl: form.imageUrl || null,
               });
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=questions");
             }
-
             if (path === "/admin/learning-materials") {
               await insertLearningMaterial(env.DB, {
                 subchapterId: form.subchapterId,
@@ -244,15 +231,15 @@ export default {
                 url: form.url,
                 notes: form.notes || null,
               });
-              return redirectResponse("/admin");
+              return redirectResponse("/admin?view=content");
             }
           } catch (err) {
             return errorResponse(err);
           }
-
           return htmlResponse("Unknown action", 400);
         }
 
+        // Render Dashboard with Data
         const [hierarchy, questionTypes, sources, questions, learningMaterials] = await Promise.all([
           getHierarchy(env.DB),
           getQuestionTypes(env.DB),
@@ -260,6 +247,7 @@ export default {
           listQuestions(env.DB),
           listLearningMaterials(env.DB),
         ]);
+
         return htmlResponse(
           renderDashboard({
             hierarchy,
@@ -267,33 +255,21 @@ export default {
             sources,
             questions,
             learningMaterials,
-          })
+          }, currentView) // Pass the view parameter
         );
       }
 
       return htmlResponse("Not found", 404);
 
     } catch (e: any) {
-      // --- AUTO-DETECT MISSING TABLES OR DB CRASH ---
-      // If we see "no such table", we initialize the DB.
       if (e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
         try {
-          console.log("Database error detected. Attempting to initialize schema...");
           await setupDatabase(env.DB);
-          return htmlResponse(`
-            <div style="font-family:system-ui; max-width:600px; margin:4rem auto; padding:2rem; border:1px solid #ddd; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
-              <h2 style="color:#1f7a3f; margin-top:0;">Database Setup Complete</h2>
-              <p>The system detected missing tables and has automatically created them.</p>
-              <p><strong>Please reload this page to continue.</strong></p>
-              <button onclick="window.location.reload()" style="padding:10px 20px; background:#123a7f; color:white; border:none; border-radius:6px; cursor:pointer;">Reload Page</button>
-            </div>
-          `);
+          return htmlResponse(`<meta http-equiv="refresh" content="2"><div style="font-family:sans-serif;padding:2rem;">Database Initialized. Reloading...</div>`);
         } catch (initErr) {
           return errorResponse(initErr);
         }
       }
-      
-      // Catch-all for other errors (like the 'duration' one)
       return errorResponse(e);
     }
   },
