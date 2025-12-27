@@ -86,167 +86,175 @@ const getFormData = async (request: Request) => {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const path = url.pathname;
+    try {
+      const url = new URL(request.url);
+      const path = url.pathname;
 
-    if (path === "/") {
-      const hierarchy = await getHierarchy(env.DB);
-      return htmlResponse(renderStudentHome(hierarchy));
-    }
+      if (path === "/") {
+        const hierarchy = await getHierarchy(env.DB);
+        return htmlResponse(renderStudentHome(hierarchy));
+      }
 
-    if (path === "/smart-filter") {
-      const query = Object.fromEntries(url.searchParams.entries());
-      const [hierarchy, questionTypes, questions] = await Promise.all([
-        getHierarchy(env.DB),
-        getQuestionTypes(env.DB),
-        listQuestionsFiltered(env.DB, {
-          classId: query.classId,
-          subjectId: query.subjectId,
-          chapterId: query.chapterId,
-          questionTypeId: query.questionTypeId,
-        }),
-      ]);
-      return htmlResponse(renderSmartFilter(hierarchy, questionTypes, questions, query));
-    }
+      if (path === "/smart-filter") {
+        const query = Object.fromEntries(url.searchParams.entries());
+        const [hierarchy, questionTypes, questions] = await Promise.all([
+          getHierarchy(env.DB),
+          getQuestionTypes(env.DB),
+          listQuestionsFiltered(env.DB, {
+            classId: query.classId,
+            subjectId: query.subjectId,
+            chapterId: query.chapterId,
+            questionTypeId: query.questionTypeId,
+          }),
+        ]);
+        return htmlResponse(renderSmartFilter(hierarchy, questionTypes, questions, query));
+      }
 
-    if (path.startsWith("/admin")) {
-      const adminCount = await getAdminCount(env.DB);
+      if (path.startsWith("/admin")) {
+        const adminCount = await getAdminCount(env.DB);
 
-      if (path === "/admin/login") {
-        if (request.method === "POST") {
-          const form = await getFormData(request);
-          const email = form.email?.trim().toLowerCase();
-          const password = form.password ?? "";
+        if (path === "/admin/login") {
+          if (request.method === "POST") {
+            const form = await getFormData(request);
+            const email = form.email?.trim().toLowerCase();
+            const password = form.password ?? "";
 
-          if (!email || password.length < 8) {
-            return htmlResponse(
-              renderLogin({
-                isFirstAdmin: adminCount === 0,
-                error: "Provide a valid email and a password with at least 8 characters.",
-              }),
-              400
-            );
-          }
+            if (!email || password.length < 8) {
+              return htmlResponse(
+                renderLogin({
+                  isFirstAdmin: adminCount === 0,
+                  error: "Provide a valid email and a password with at least 8 characters.",
+                }),
+                400
+              );
+            }
 
-          if (adminCount === 0) {
-            const passwordHash = await createPasswordHash(password);
-            const user = await createAdmin(env.DB, email, passwordHash);
+            if (adminCount === 0) {
+              const passwordHash = await createPasswordHash(password);
+              const user = await createAdmin(env.DB, email, passwordHash);
+              const sessionToken = randomToken(32);
+              await createSession(env.DB, user.id, await sha256(sessionToken));
+              return redirectResponse("/admin", { "Set-Cookie": buildSessionCookie(sessionToken) });
+            }
+
+            const user = await getUserByEmail(env.DB, email);
+            if (!user || !(await verifyPassword(password, user.passwordHash))) {
+              return htmlResponse(
+                renderLogin({
+                  isFirstAdmin: false,
+                  error: "Invalid credentials.",
+                }),
+                401
+              );
+            }
+
             const sessionToken = randomToken(32);
             await createSession(env.DB, user.id, await sha256(sessionToken));
             return redirectResponse("/admin", { "Set-Cookie": buildSessionCookie(sessionToken) });
           }
 
-          const user = await getUserByEmail(env.DB, email);
-          if (!user || !(await verifyPassword(password, user.passwordHash))) {
-            return htmlResponse(
-              renderLogin({
-                isFirstAdmin: false,
-                error: "Invalid credentials.",
-              }),
-              401
-            );
+          return htmlResponse(renderLogin({ isFirstAdmin: adminCount === 0 }));
+        }
+
+        if (path === "/admin/logout") {
+          return redirectResponse("/", { "Set-Cookie": clearSessionCookie() });
+        }
+
+        const adminUser = await requireAdmin(env.DB, request);
+        if (!adminUser) {
+          return redirectResponse("/admin/login");
+        }
+
+        if (request.method === "POST") {
+          const form = await getFormData(request);
+
+          if (path === "/admin/classes") {
+            await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
+            return redirectResponse("/admin");
           }
 
-          const sessionToken = randomToken(32);
-          await createSession(env.DB, user.id, await sha256(sessionToken));
-          return redirectResponse("/admin", { "Set-Cookie": buildSessionCookie(sessionToken) });
+          if (path === "/admin/groups") {
+            await insertGroup(env.DB, form.classId, form.name);
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/subjects") {
+            const groupId = form.groupId ? form.groupId : null;
+            await insertSubject(env.DB, form.classId, groupId, form.name);
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/chapters") {
+            await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/subchapters") {
+            await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/question-types") {
+            await insertQuestionType(env.DB, form.chapterId, form.name);
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/source-entities") {
+            await insertSourceEntity(env.DB, form.categoryId, form.name);
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/questions") {
+            await insertQuestion(env.DB, {
+              chapterId: form.chapterId,
+              questionTypeId: form.questionTypeId,
+              sourceEntityId: form.sourceEntityId,
+              sourceYear: form.sourceYear,
+              prompt: form.prompt,
+              imageUrl: form.imageUrl || null,
+            });
+            return redirectResponse("/admin");
+          }
+
+          if (path === "/admin/learning-materials") {
+            await insertLearningMaterial(env.DB, {
+              subchapterId: form.subchapterId,
+              title: form.title,
+              materialType: form.materialType,
+              url: form.url,
+              notes: form.notes || null,
+            });
+            return redirectResponse("/admin");
+          }
+
+          return htmlResponse("Unknown action", 400);
         }
 
-        return htmlResponse(renderLogin({ isFirstAdmin: adminCount === 0 }));
+        const [hierarchy, questionTypes, sources, questions, learningMaterials] = await Promise.all([
+          getHierarchy(env.DB),
+          getQuestionTypes(env.DB),
+          getSources(env.DB),
+          listQuestions(env.DB),
+          listLearningMaterials(env.DB),
+        ]);
+        return htmlResponse(
+          renderDashboard({
+            hierarchy,
+            questionTypes,
+            sources,
+            questions,
+            learningMaterials,
+          })
+        );
       }
 
-      if (path === "/admin/logout") {
-        return redirectResponse("/", { "Set-Cookie": clearSessionCookie() });
-      }
-
-      const adminUser = await requireAdmin(env.DB, request);
-      if (!adminUser) {
-        return redirectResponse("/admin/login");
-      }
-
-      if (request.method === "POST") {
-        const form = await getFormData(request);
-
-        if (path === "/admin/classes") {
-          await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/groups") {
-          await insertGroup(env.DB, form.classId, form.name);
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/subjects") {
-          const groupId = form.groupId ? form.groupId : null;
-          await insertSubject(env.DB, form.classId, groupId, form.name);
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/chapters") {
-          await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/subchapters") {
-          await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/question-types") {
-          await insertQuestionType(env.DB, form.chapterId, form.name);
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/source-entities") {
-          await insertSourceEntity(env.DB, form.categoryId, form.name);
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/questions") {
-          await insertQuestion(env.DB, {
-            chapterId: form.chapterId,
-            questionTypeId: form.questionTypeId,
-            sourceEntityId: form.sourceEntityId,
-            sourceYear: form.sourceYear,
-            prompt: form.prompt,
-            imageUrl: form.imageUrl || null,
-          });
-          return redirectResponse("/admin");
-        }
-
-        if (path === "/admin/learning-materials") {
-          await insertLearningMaterial(env.DB, {
-            subchapterId: form.subchapterId,
-            title: form.title,
-            materialType: form.materialType,
-            url: form.url,
-            notes: form.notes || null,
-          });
-          return redirectResponse("/admin");
-        }
-
-        return htmlResponse("Unknown action", 400);
-      }
-
-      const [hierarchy, questionTypes, sources, questions, learningMaterials] = await Promise.all([
-        getHierarchy(env.DB),
-        getQuestionTypes(env.DB),
-        getSources(env.DB),
-        listQuestions(env.DB),
-        listLearningMaterials(env.DB),
-      ]);
-      return htmlResponse(
-        renderDashboard({
-          hierarchy,
-          questionTypes,
-          sources,
-          questions,
-          learningMaterials,
-        })
-      );
+      return htmlResponse("Not found", 404);
+    } catch (err) {
+      // Return a visible error page instead of a generic 500 crash
+      return new Response(`Error: ${err instanceof Error ? err.message : String(err)}`, {
+        status: 500,
+        headers: { "Content-Type": "text/plain" },
+      });
     }
-
-    return htmlResponse("Not found", 404);
   },
 };
