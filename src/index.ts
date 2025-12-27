@@ -21,6 +21,7 @@ import {
   listLearningMaterials,
   listQuestions,
   listQuestionsFiltered,
+  setupDatabase, // Import the setup function
 } from "./db";
 import { renderDashboard, renderLogin } from "./admin";
 import { renderSmartFilter, renderStudentHome } from "./student";
@@ -177,69 +178,65 @@ export default {
         }
 
         if (request.method === "POST") {
-          try {
-            const form = await getFormData(request);
+          const form = await getFormData(request);
 
-            if (path === "/admin/classes") {
-              await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/classes") {
+            await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/groups") {
-              await insertGroup(env.DB, form.classId, form.name);
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/groups") {
+            await insertGroup(env.DB, form.classId, form.name);
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/subjects") {
-              const groupId = form.groupId ? form.groupId : null;
-              await insertSubject(env.DB, form.classId, groupId, form.name);
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/subjects") {
+            const groupId = form.groupId ? form.groupId : null;
+            await insertSubject(env.DB, form.classId, groupId, form.name);
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/chapters") {
-              await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/chapters") {
+            await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/subchapters") {
-              await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/subchapters") {
+            await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/question-types") {
-              await insertQuestionType(env.DB, form.chapterId, form.name);
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/question-types") {
+            await insertQuestionType(env.DB, form.chapterId, form.name);
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/source-entities") {
-              await insertSourceEntity(env.DB, form.categoryId, form.name);
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/source-entities") {
+            await insertSourceEntity(env.DB, form.categoryId, form.name);
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/questions") {
-              await insertQuestion(env.DB, {
-                chapterId: form.chapterId,
-                questionTypeId: form.questionTypeId,
-                sourceEntityId: form.sourceEntityId,
-                sourceYear: form.sourceYear,
-                prompt: form.prompt,
-                imageUrl: form.imageUrl || null,
-              });
-              return redirectResponse("/admin");
-            }
+          if (path === "/admin/questions") {
+            await insertQuestion(env.DB, {
+              chapterId: form.chapterId,
+              questionTypeId: form.questionTypeId,
+              sourceEntityId: form.sourceEntityId,
+              sourceYear: form.sourceYear,
+              prompt: form.prompt,
+              imageUrl: form.imageUrl || null,
+            });
+            return redirectResponse("/admin");
+          }
 
-            if (path === "/admin/learning-materials") {
-              await insertLearningMaterial(env.DB, {
-                subchapterId: form.subchapterId,
-                title: form.title,
-                materialType: form.materialType,
-                url: form.url,
-                notes: form.notes || null,
-              });
-              return redirectResponse("/admin");
-            }
-          } catch (err) {
-            return errorResponse(err);
+          if (path === "/admin/learning-materials") {
+            await insertLearningMaterial(env.DB, {
+              subchapterId: form.subchapterId,
+              title: form.title,
+              materialType: form.materialType,
+              url: form.url,
+              notes: form.notes || null,
+            });
+            return redirectResponse("/admin");
           }
 
           return htmlResponse("Unknown action", 400);
@@ -265,8 +262,28 @@ export default {
 
       return htmlResponse("Not found", 404);
 
-    } catch (e) {
-      // Catch-all for any unhandled global errors
+    } catch (e: any) {
+      // --- AUTO-DETECT MISSING TABLES ---
+      // If we see "no such table", we initialize the DB and ask the user to refresh.
+      if (e.message && e.message.includes("no such table")) {
+        try {
+          console.log("Detecting missing tables. Initializing database schema...");
+          await setupDatabase(env.DB);
+          return htmlResponse(`
+            <div style="font-family:system-ui; max-width:600px; margin:4rem auto; padding:2rem; border:1px solid #ddd; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+              <h2 style="color:#1f7a3f; margin-top:0;">Database Initialized Successfully</h2>
+              <p>The system detected that the database tables were missing and has automatically created them for you.</p>
+              <p><strong>Please reload this page to continue.</strong></p>
+              <button onclick="window.location.reload()" style="padding:10px 20px; background:#123a7f; color:white; border:none; border-radius:6px; cursor:pointer;">Reload Page</button>
+            </div>
+          `);
+        } catch (initErr) {
+          // If even initialization fails
+          return errorResponse(initErr);
+        }
+      }
+      
+      // Catch-all for other errors
       return errorResponse(e);
     }
   },
