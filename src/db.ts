@@ -219,7 +219,7 @@ export const insertQuestion = async (
 export const listQuestions = async (db: D1Database) => {
   const result = await db
     .prepare(
-      `SELECT questions.id, questions.prompt, questions.source_year as sourceYear,
+      `SELECT questions.id, questions.prompt, questions.source_year as sourceYear, questions.image_url as imageUrl,
         question_types.name as questionType,
         chapters.name as chapter,
         subjects.name as subject,
@@ -268,7 +268,7 @@ export const listQuestionsFiltered = async (
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const result = await db
     .prepare(
-      `SELECT questions.id, questions.prompt, questions.source_year as sourceYear,
+      `SELECT questions.id, questions.prompt, questions.source_year as sourceYear, questions.image_url as imageUrl,
         question_types.name as questionType,
         chapters.name as chapter,
         subjects.name as subject,
