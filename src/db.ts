@@ -34,7 +34,6 @@ const SCHEMA = `
 
 export async function initDB(env: Env) {
   const statements = SCHEMA.split(';').map(s => s.trim()).filter(s => s.length > 0);
-  // Execute sequentially to avoid binding errors in batch
   for (const stmt of statements) {
     await env.DB.prepare(stmt).run();
   }
