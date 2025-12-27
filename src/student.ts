@@ -11,21 +11,22 @@ const partMap: Record<string, string> = { k: 'ক', kh: 'খ', g: 'গ', gh: '�
 const header = (backLink?: string, title?: string) => `
   <header class="app-header">
     <div class="header-content">
-      ${backLink ? `
-        <a href="${backLink}" style="padding:8px; margin-left:-8px; display:flex; align-items:center; color:var(--text-muted);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
-      ` : `
-        <div class="brand">
+      <div class="header-slot header-left">
+        ${backLink ? `
+          <a href="${backLink}" class="header-back">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </a>
+        ` : ''}
+      </div>
+      <div class="header-center">
+        <div class="brand header-brand">
           ${iconHat}
           <span>${appConfig.siteName}</span>
         </div>
-      `}
-
-      ${title ? `<div class="header-pill">${title}</div>` : ''}
-
-      <div style="width:40px; display:flex; justify-content:flex-end;">
-        <a href="/admin/login" style="opacity:0.4;">${iconLock}</a>
+        ${title ? `<div class="header-pill">${title}</div>` : ''}
+      </div>
+      <div class="header-slot header-right">
+        <a href="/admin/login" class="header-admin">${iconLock}</a>
       </div>
     </div>
   </header>
@@ -45,17 +46,22 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
       </a>
     `).join("") || "";
 
-    const classes = h.classes.map((c, idx) => `
+    const classes = h.classes.map((c, idx) => {
+      const sharedClass = c.linked_class_id ? h.classes.find((cls: any) => cls.id === c.linked_class_id) : null;
+      const hasGroups = sharedClass ? sharedClass.has_groups : c.has_groups;
+      return `
       <a href="/?classId=${c.id}" class="focus-card clickable class-card">
         <div>
           <h3>${c.name}</h3>
           <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">
-            ${c.has_groups ? 'Science • Arts • Commerce' : 'General Curriculum'}
+            ${hasGroups ? 'Science • Arts • Commerce' : 'General Curriculum'}
           </p>
+          ${sharedClass ? `<span class="class-tag">Shared with ${sharedClass.name}</span>` : ''}
         </div>
         <div class="badge">${String(idx + 1).padStart(2, "0")}</div>
       </a>
-    `).join("");
+    `;
+    }).join("");
 
     return layout("Select Class", `
       ${header()}
@@ -88,15 +94,22 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
   // 2. SUBJECT SELECTION
   if (!q.subjectId) {
     const cls = h.classes.find(c => String(c.id) === q.classId);
-    const subjects = h.subjects.filter(s => String(s.class_id) === q.classId);
+    const effectiveClassId = cls?.linked_class_id ? String(cls.linked_class_id) : q.classId;
+    const effectiveClass = cls?.linked_class_id ? h.classes.find(c => String(c.id) === effectiveClassId) : cls;
+    const subjects = h.subjects.filter(s => String(s.class_id) === effectiveClassId);
+    const classGroups = h.groups.filter(g => String(g.class_id) === effectiveClassId);
+    const selectedGroup = q.groupId ? classGroups.find(g => String(g.id) === q.groupId) : null;
 
     // Group subjects visually
     const commonSubs = subjects.filter(s => !s.group_id);
-    const groupSubs = subjects.filter(s => s.group_id);
+    const groupSubs = selectedGroup ? subjects.filter(s => String(s.group_id) === String(selectedGroup.id)) : [];
 
     const renderSub = (s: any) => `
-      <a href="/?classId=${q.classId}&subjectId=${s.id}" class="list-row" style="padding:12px 0; border-bottom:1px dashed var(--border);">
-        <span style="font-weight:600; font-size:16px;">${s.name}</span>
+      <a href="/?classId=${q.classId}&subjectId=${s.id}" class="subject-row">
+        <div>
+          <div class="subject-title">${s.name}</div>
+          <div class="subject-meta">Tap to explore lessons & practice sets</div>
+        </div>
         <span class="tag tag-gray">Open</span>
       </a>
     `;
@@ -109,15 +122,34 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
           <div class="hero-sub">Choose a subject to explore lessons, topics, and smart filters.</div>
         </section>
 
-        <div class="focus-card">
+        ${classGroups.length > 0 ? `
+          <div class="focus-card" style="margin-bottom:16px;">
+            <div class="section-title" style="margin-bottom:8px;">Select Your Group</div>
+            <div class="group-picker">
+              ${classGroups.map((g: any) => `
+                <a href="/?classId=${q.classId}&groupId=${g.id}" class="group-pill ${selectedGroup?.id === g.id ? 'active' : ''}">
+                  ${g.name}
+                </a>
+              `).join("")}
+            </div>
+            ${!selectedGroup ? `<div class="group-hint">Choose your group to unlock group-wise subjects.</div>` : `
+              <div class="group-hint">Showing ${selectedGroup.name} subjects + common subjects.</div>
+            `}
+            ${effectiveClass?.id !== cls?.id ? `<div class="group-note">Shared curriculum from ${effectiveClass?.name}.</div>` : ''}
+          </div>
+        ` : ''}
+
+        <div class="focus-card subject-card">
           <div class="section-title" style="margin-bottom:8px;">Common Subjects</div>
-          ${commonSubs.map(renderSub).join("")}
+          ${commonSubs.length ? commonSubs.map(renderSub).join("") : `<div class="empty-state" style="padding:16px;"><div class="empty-icon">📘</div><p>No common subjects yet.</p></div>`}
         </div>
 
-        ${groupSubs.length > 0 ? `
-          <div class="focus-card">
-            <div class="section-title" style="margin-bottom:8px;">Group Subjects</div>
-            ${groupSubs.map(renderSub).join("")}
+        ${classGroups.length > 0 ? `
+          <div class="focus-card subject-card">
+            <div class="section-title" style="margin-bottom:8px;">
+              ${selectedGroup ? `${selectedGroup.name} Subjects` : 'Group Subjects'}
+            </div>
+            ${selectedGroup ? (groupSubs.length ? groupSubs.map(renderSub).join("") : `<div class="empty-state" style="padding:16px;"><div class="empty-icon">✨</div><p>No subjects for this group yet.</p></div>`) : `<div class="empty-state" style="padding:16px;"><div class="empty-icon">👋</div><p>Please choose your group above.</p></div>`}
           </div>
         ` : ''}
       </main>
@@ -256,4 +288,3 @@ export const renderResults = (questions: any[], q: Record<string, string>) => {
     </main>
   `);
 };
-

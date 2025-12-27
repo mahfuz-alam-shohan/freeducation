@@ -26,6 +26,7 @@ export default {
     const path = url.pathname;
 
     try {
+      await DB.ensureClassLinkColumn(env.DB);
       // --- PUBLIC ---
       if (path === "/") {
         const [h, f] = await Promise.all([DB.getHierarchy(env.DB), DB.getFeaturedCards(env.DB)]);
@@ -86,8 +87,12 @@ export default {
           
           if (path === "/admin/delete") { await DB.deleteItem(env.DB, p.table as string, p.id as string); return redirect(`/admin?view=${p.view}`); }
           if (path === "/admin/classes") { await DB.insertClass(env.DB, p.name as string, p.hasGroups === "true"); return redirect("/admin?view=structure"); }
+          if (path === "/admin/classes/update") { await DB.updateClass(env.DB, p.id as string, p.name as string, p.hasGroups === "true"); return redirect("/admin?view=structure"); }
+          if (path === "/admin/classes/link") { await DB.updateClassLink(env.DB, p.id as string, (p.linkedClassId as string) || null); return redirect("/admin?view=structure"); }
           if (path === "/admin/groups") { await DB.insertGroup(env.DB, p.classId as string, p.name as string); return redirect("/admin?view=structure"); }
+          if (path === "/admin/groups/update") { await DB.updateGroup(env.DB, p.id as string, p.name as string); return redirect("/admin?view=structure"); }
           if (path === "/admin/subjects") { await DB.insertSubject(env.DB, p.classId as string, p.groupId as string || null, p.name as string); return redirect("/admin?view=structure"); }
+          if (path === "/admin/subjects/update") { await DB.updateSubject(env.DB, p.id as string, p.name as string, p.groupId as string || null); return redirect("/admin?view=structure"); }
           if (path === "/admin/chapters") { await DB.insertChapter(env.DB, p.subjectId as string, p.name as string, 1); return redirect("/admin?view=qbank"); }
           if (path === "/admin/subchapters") { await DB.insertSubChapter(env.DB, p.chapterId as string, p.name as string); return redirect("/admin?view=qbank"); }
           if (path === "/admin/source-entities") { await DB.insertSourceEntity(env.DB, p.categoryId as string, p.name as string); return redirect("/admin?view=settings"); }

@@ -31,7 +31,9 @@ CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   has_groups INTEGER NOT NULL DEFAULT 0,
+  linked_class_id INTEGER,
   created_at TEXT NOT NULL
+  ,FOREIGN KEY (linked_class_id) REFERENCES classes(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS groups (
@@ -149,6 +151,19 @@ export const setupDatabase = async (db: D1Database) => {
   }
 };
 
+export const ensureClassLinkColumn = async (db: D1Database) => {
+  try {
+    const info = await db.prepare("PRAGMA table_info(classes)").all();
+    if (!info.results || info.results.length === 0) return;
+    const hasColumn = info.results.some((row: any) => row.name === "linked_class_id");
+    if (!hasColumn) {
+      await db.prepare("ALTER TABLE classes ADD COLUMN linked_class_id INTEGER").run();
+    }
+  } catch (err: any) {
+    console.warn("Schema migrate:", err.message);
+  }
+};
+
 // --- ACCESSORS ---
 export const getAdminCount = async (db: D1Database) => (await db.prepare("SELECT COUNT(*) as count FROM users").first('count') as number) ?? 0;
 export const getUserByEmail = async (db: D1Database, email: string) => {
@@ -209,6 +224,19 @@ export const insertSubChapter = (db: D1Database, chid: string, name: string) => 
 export const insertSourceEntity = (db: D1Database, cid: string, name: string) => db.prepare("INSERT INTO source_entities (category_id, name) VALUES (?, ?)").bind(cid, name).run();
 export const insertLearningMaterial = (db: D1Database, p: any) => db.prepare(`INSERT INTO learning_materials (subchapter_id, title, material_type, url, notes, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`).bind(p.subchapterId, p.title, p.materialType, p.url, p.notes).run();
 
+// --- UPDATE HELPERS ---
+export const updateClass = (db: D1Database, id: string, name: string, hasGroups: boolean) =>
+  db.prepare("UPDATE classes SET name = ?, has_groups = ? WHERE id = ?").bind(name, hasGroups ? 1 : 0, id).run();
+
+export const updateClassLink = (db: D1Database, id: string, linkedId: string | null) =>
+  db.prepare("UPDATE classes SET linked_class_id = ? WHERE id = ?").bind(linkedId, id).run();
+
+export const updateGroup = (db: D1Database, id: string, name: string) =>
+  db.prepare("UPDATE groups SET name = ? WHERE id = ?").bind(name, id).run();
+
+export const updateSubject = (db: D1Database, id: string, name: string, groupId: string | null) =>
+  db.prepare("UPDATE subjects SET name = ?, group_id = ? WHERE id = ?").bind(name, groupId, id).run();
+
 // --- FEATURED CARDS ---
 export const insertFeaturedCard = async (db: D1Database, p: any) => {
   await db.prepare(`INSERT INTO featured_cards (title, subtitle, image_url, target_link, bg_color, position, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`)
@@ -268,7 +296,7 @@ export const listQuestionsFiltered = async (db: D1Database, f: any) => {
   const conds = [];
   const vals = [];
 
-  if (f.classId) { conds.push("s.class_id = ?"); vals.push(f.classId); }
+  if (f.classId && !f.subjectId) { conds.push("s.class_id = ?"); vals.push(f.classId); }
   if (f.subjectId) { conds.push("s.id = ?"); vals.push(f.subjectId); }
   if (f.chapterId) { conds.push("ch.id = ?"); vals.push(f.chapterId); }
   if (f.subchapterId) { conds.push("sch.id = ?"); vals.push(f.subchapterId); }
@@ -294,5 +322,3 @@ export const listQuestionsFiltered = async (db: D1Database, f: any) => {
 export const listLearningMaterials = async (db: D1Database) => {
   return (await db.prepare("SELECT * FROM learning_materials ORDER BY id DESC LIMIT 20").all()).results ?? [];
 };
-
-
