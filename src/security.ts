@@ -12,7 +12,8 @@ export const hashPassword = async (password: string, salt: string) => {
     {
       name: "PBKDF2",
       salt: encoder.encode(salt),
-      iterations: 120000,
+      // FIX: Lowered iterations from 120,000 to 100,000 to meet environment limits
+      iterations: 100000,
       hash: "SHA-256",
     },
     baseKey,
@@ -56,3 +57,4 @@ const bufferToHex = (buffer: ArrayBuffer) =>
   Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+
