@@ -21,7 +21,7 @@ import {
   listLearningMaterials,
   listQuestions,
   listQuestionsFiltered,
-  setupDatabase, // Import the setup function
+  setupDatabase, // Ensure this is imported
 } from "./db";
 import { renderDashboard, renderLogin } from "./admin";
 import { renderSmartFilter, renderStudentHome } from "./student";
@@ -46,12 +46,18 @@ const redirectResponse = (location: string, headers?: HeadersInit) =>
   });
 
 const errorResponse = (error: unknown) => {
-  const message = error instanceof Error ? error.message : "Unknown Error";
+  // Safe error logging
+  const message = error instanceof Error ? error.message : String(error);
+  console.error("Critical Error:", error); 
+  
   return htmlResponse(`
     <div style="font-family:sans-serif; padding:2rem; color:#b42318; background:#fff5f5; border:1px solid #fed7d7; border-radius:8px; max-width:600px; margin:2rem auto;">
-      <h3 style="margin-top:0;">Action Failed</h3>
+      <h3 style="margin-top:0;">System Error</h3>
       <p>${message}</p>
-      <a href="/admin" style="color:#b42318; text-decoration:underline;">Back to Dashboard</a>
+      <div style="margin-top:1rem; font-size:0.85em; color:#666; background:#fff; padding:10px; border-radius:4px; overflow-x:auto;">
+        ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}
+      </div>
+      <p style="margin-top:1rem;"><a href="/admin" style="color:#b42318; text-decoration:underline;">Back to Dashboard</a></p>
     </div>
   `, 500);
 }
@@ -72,10 +78,10 @@ const getSessionCookie = (request: Request) => {
   return cookies["freeducation_session"] ?? "";
 };
 
-const buildSessionCookie = (token: string) =>
-  `freeducation_session=${token}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=${
-    appConfig.sessionDurationHours * 3600
-  }`;
+const buildSessionCookie = (token: string) => {
+  const hours = (appConfig && appConfig.sessionDurationHours) ? appConfig.sessionDurationHours : 8;
+  return `freeducation_session=${token}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=${hours * 3600}`;
+};
 
 const clearSessionCookie = () =>
   "freeducation_session=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0";
@@ -123,6 +129,7 @@ export default {
       }
 
       if (path.startsWith("/admin")) {
+        // Try getting admin count. If this fails, the DB is likely missing tables.
         const adminCount = await getAdminCount(env.DB);
 
         if (path === "/admin/login") {
@@ -178,65 +185,69 @@ export default {
         }
 
         if (request.method === "POST") {
-          const form = await getFormData(request);
+          try {
+            const form = await getFormData(request);
 
-          if (path === "/admin/classes") {
-            await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/classes") {
+              await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/groups") {
-            await insertGroup(env.DB, form.classId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/groups") {
+              await insertGroup(env.DB, form.classId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/subjects") {
-            const groupId = form.groupId ? form.groupId : null;
-            await insertSubject(env.DB, form.classId, groupId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/subjects") {
+              const groupId = form.groupId ? form.groupId : null;
+              await insertSubject(env.DB, form.classId, groupId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/chapters") {
-            await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/chapters") {
+              await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/subchapters") {
-            await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/subchapters") {
+              await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/question-types") {
-            await insertQuestionType(env.DB, form.chapterId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/question-types") {
+              await insertQuestionType(env.DB, form.chapterId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/source-entities") {
-            await insertSourceEntity(env.DB, form.categoryId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/source-entities") {
+              await insertSourceEntity(env.DB, form.categoryId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/questions") {
-            await insertQuestion(env.DB, {
-              chapterId: form.chapterId,
-              questionTypeId: form.questionTypeId,
-              sourceEntityId: form.sourceEntityId,
-              sourceYear: form.sourceYear,
-              prompt: form.prompt,
-              imageUrl: form.imageUrl || null,
-            });
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/questions") {
+              await insertQuestion(env.DB, {
+                chapterId: form.chapterId,
+                questionTypeId: form.questionTypeId,
+                sourceEntityId: form.sourceEntityId,
+                sourceYear: form.sourceYear,
+                prompt: form.prompt,
+                imageUrl: form.imageUrl || null,
+              });
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/learning-materials") {
-            await insertLearningMaterial(env.DB, {
-              subchapterId: form.subchapterId,
-              title: form.title,
-              materialType: form.materialType,
-              url: form.url,
-              notes: form.notes || null,
-            });
-            return redirectResponse("/admin");
+            if (path === "/admin/learning-materials") {
+              await insertLearningMaterial(env.DB, {
+                subchapterId: form.subchapterId,
+                title: form.title,
+                materialType: form.materialType,
+                url: form.url,
+                notes: form.notes || null,
+              });
+              return redirectResponse("/admin");
+            }
+          } catch (err) {
+            return errorResponse(err);
           }
 
           return htmlResponse("Unknown action", 400);
@@ -263,28 +274,29 @@ export default {
       return htmlResponse("Not found", 404);
 
     } catch (e: any) {
-      // --- AUTO-DETECT MISSING TABLES ---
-      // If we see "no such table", we initialize the DB and ask the user to refresh.
-      if (e.message && e.message.includes("no such table")) {
+      // --- AUTO-DETECT MISSING TABLES OR DB CRASH ---
+      // If we see "no such table", we initialize the DB.
+      if (e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
         try {
-          console.log("Detecting missing tables. Initializing database schema...");
+          console.log("Database error detected. Attempting to initialize schema...");
           await setupDatabase(env.DB);
           return htmlResponse(`
             <div style="font-family:system-ui; max-width:600px; margin:4rem auto; padding:2rem; border:1px solid #ddd; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
-              <h2 style="color:#1f7a3f; margin-top:0;">Database Initialized Successfully</h2>
-              <p>The system detected that the database tables were missing and has automatically created them for you.</p>
+              <h2 style="color:#1f7a3f; margin-top:0;">Database Setup Complete</h2>
+              <p>The system detected missing tables and has automatically created them.</p>
               <p><strong>Please reload this page to continue.</strong></p>
               <button onclick="window.location.reload()" style="padding:10px 20px; background:#123a7f; color:white; border:none; border-radius:6px; cursor:pointer;">Reload Page</button>
             </div>
           `);
         } catch (initErr) {
-          // If even initialization fails
           return errorResponse(initErr);
         }
       }
       
-      // Catch-all for other errors
+      // Catch-all for other errors (like the 'duration' one)
       return errorResponse(e);
     }
   },
 };
+
+
