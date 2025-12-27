@@ -1,6 +1,7 @@
-import { appConfig, hierarchyLabels } from "./config";
-import { layout, header } from "./templates";
+import { appConfig } from "./config";
+import { layout } from "./templates";
 
+// Reuse types from other files or define common interface
 type Hierarchy = {
   classes: Array<{ id: number; name: string; has_groups: number; is_merged: number }>;
   groups: Array<{ id: number; class_id: number; name: string }>;
@@ -9,168 +10,126 @@ type Hierarchy = {
   subchapters: Array<{ id: number; chapter_id: number; name: string; position: number }>;
 };
 
-type QuestionRow = {
-  id: number;
-  prompt: string;
-  sourceYear: string;
-  questionType: string;
-  chapter: string;
-  subject: string;
-  sourceEntity: string;
-  imageUrl?: string | null;
-};
+// Render Public Header
+const publicHeader = () => `
+  <header class="site-header">
+    <div class="container flex justify-between" style="width:100%;">
+      <a href="/" class="logo">
+        <span style="font-size:1.5rem;">🎓</span> ${appConfig.siteName}
+      </a>
+      <a href="/admin/login" class="admin-link" title="Admin Login">
+        🔒
+      </a>
+    </div>
+  </header>
+`;
 
 export const renderStudentHome = (hierarchy: Hierarchy) => {
   const classCards = hierarchy.classes.length
     ? hierarchy.classes
         .map(
           (item) => `
-      <div class="card">
-        <h3>${item.name}</h3>
-        <p>${item.has_groups ? "Group-based subjects" : "Direct subjects"}</p>
-        <p class="badge">${item.is_merged ? "Merged class" : "Standalone"}</p>
+      <div class="class-card">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">📚</div>
+        <h3 style="font-size:1.25rem;">${item.name}</h3>
+        <p class="text-sm text-muted" style="margin-top:0.5rem;">${item.has_groups ? "Science, Arts, Commerce" : "General Subjects"}</p>
+        <button class="secondary" style="margin-top:1rem; width:100%;">Explore</button>
       </div>`
         )
         .join("")
-    : `<div class="card">
-      <h3>Start building the hierarchy</h3>
-      <p>Add classes, subjects, and chapters from the admin dashboard.</p>
-    </div>`;
+    : `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#94a3b8;">
+        <h3>Content coming soon...</h3>
+        <p>The curriculum is being updated.</p>
+       </div>`;
 
   const body = `
-    ${header(appConfig.tagline)}
+    ${publicHeader()}
     <main>
-      <div class="container">
-        <section class="hero">
-          <div>
-            <h1>Structured learning for SSC & HSC students</h1>
-            <p>Navigate chapter-wise lessons, then practice targeted questions by source and exam pattern.</p>
-            <div style="margin-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap;">
-              <a href="/smart-filter"><button>Smart Question Filter</button></a>
-              <a href="/admin"><button class="secondary">Admin Dashboard</button></a>
-            </div>
+      <section class="hero-section">
+        <div class="container">
+          <h1 style="font-size:2.5rem; color:#0f172a; margin-bottom:1rem;">Master Your Curriculum</h1>
+          <p style="font-size:1.1rem; color:#64748b; max-width:600px; margin:0 auto 2rem;">
+            Access free lecture notes, videos, and question banks tailored for the Bangladesh education board.
+          </p>
+          <div class="flex gap-4" style="justify-content:center;">
+            <a href="/smart-filter"><button class="accent" style="padding:0.8rem 1.5rem; font-size:1rem;">Start Practicing</button></a>
           </div>
-          <div class="card">
-            <h3>Learning vs Exam</h3>
-            <ul>
-              <li>Sub-chapters for concept learning.</li>
-              <li>Question types for exam patterns.</li>
-              <li>Source tracking by board, year, or institution.</li>
-            </ul>
-          </div>
-        </section>
-        <h2 class="section-title">${hierarchyLabels.classLabel} Directory</h2>
-        <div class="card-grid">
+        </div>
+      </section>
+
+      <div class="container" style="padding-top:2rem; padding-bottom:3rem;">
+        <h2 style="font-size:1.5rem; border-left:4px solid var(--accent); padding-left:1rem;">Browse by Class</h2>
+        <div class="class-grid">
           ${classCards}
         </div>
       </div>
     </main>
   `;
 
-  return layout("Student Home", body);
+  return layout("Home", body);
 };
 
 export const renderSmartFilter = (
   hierarchy: Hierarchy,
-  questionTypes: Array<{ id: number; name: string; chapter_id: number }>,
-  questions: QuestionRow[],
+  questionTypes: any[],
+  questions: any[],
   query: Record<string, string>
 ) => {
-  const classOptions = hierarchy.classes
-    .map((item) => `<option value="${item.id}" ${query.classId === String(item.id) ? "selected" : ""}>${item.name}</option>`)
-    .join("");
+  // Options logic reused from before, just wrapped in new HTML structure
+  const classOptions = hierarchy.classes.map(i => `<option value="${i.id}" ${query.classId === String(i.id) ? "selected" : ""}>${i.name}</option>`).join("");
+  // ... (Shortened for brevity, assume similar filter logic as previous logic but using new layout)
+  
+  // Re-implementing filter render logic with new styles:
   const subjectOptions = hierarchy.subjects
-    .filter((subject) => !query.classId || String(subject.class_id) === query.classId)
-    .map(
-      (subject) =>
-        `<option value="${subject.id}" ${query.subjectId === String(subject.id) ? "selected" : ""}>${subject.name}</option>`
-    )
-    .join("");
+      .filter((s) => !query.classId || String(s.class_id) === query.classId)
+      .map((s) => `<option value="${s.id}" ${query.subjectId === String(s.id) ? "selected" : ""}>${s.name}</option>`)
+      .join("");
+      
   const chapterOptions = hierarchy.chapters
-    .filter((chapter) => !query.subjectId || String(chapter.subject_id) === query.subjectId)
-    .map(
-      (chapter) =>
-        `<option value="${chapter.id}" ${query.chapterId === String(chapter.id) ? "selected" : ""}>${chapter.name}</option>`
-    )
-    .join("");
-  const questionTypeOptions = questionTypes
-    .filter((item) => !query.chapterId || String(item.chapter_id) === query.chapterId)
-    .map(
-      (item) =>
-        `<option value="${item.id}" ${query.questionTypeId === String(item.id) ? "selected" : ""}>${item.name}</option>`
-    )
-    .join("");
+      .filter((c) => !query.subjectId || String(c.subject_id) === query.subjectId)
+      .map((c) => `<option value="${c.id}" ${query.chapterId === String(c.id) ? "selected" : ""}>${c.name}</option>`)
+      .join("");
 
-  const questionRows = questions.length
-    ? questions
-        .map(
-          (row) => `
-      <tr>
-        <td>
-          ${row.prompt}
-          ${row.imageUrl ? `<div style="margin-top:0.5rem;"><img src="${row.imageUrl}" alt="Question Image" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #ddd;"></div>` : ''}
-        </td>
-        <td>${row.chapter}</td>
-        <td>${row.questionType}</td>
-        <td>${row.sourceEntity} ${row.sourceYear}</td>
-      </tr>`
-        )
-        .join("")
-    : `<tr><td colspan="4">No questions yet. Add questions from admin.</td></tr>`;
+  const typeOptions = questionTypes
+      .filter((t) => !query.chapterId || String(t.chapter_id) === query.chapterId)
+      .map((t) => `<option value="${t.id}" ${query.questionTypeId === String(t.id) ? "selected" : ""}>${t.name}</option>`)
+      .join("");
+
+  const rows = questions.length ? questions.map(q => `
+    <tr>
+      <td>
+        <div class="font-bold">${q.prompt}</div>
+        ${q.imageUrl ? `<a href="${q.imageUrl}" target="_blank" class="text-xs text-accent">View Image</a>` : ''}
+      </td>
+      <td><span class="badge blue">${q.questionType}</span></td>
+      <td class="text-sm">${q.chapter}</td>
+      <td class="text-xs text-muted">${q.sourceEntity} '${q.sourceYear}</td>
+    </tr>
+  `).join("") : '<tr><td colspan="4" class="text-center text-muted">No questions match these filters.</td></tr>';
 
   const body = `
-    ${header("Smart Question Filter")}
-    <main>
-      <div class="container">
-        <div class="card">
-          <h3>Filter questions by chapter, type, and source.</h3>
-          <form method="GET" action="/smart-filter">
-            <label>${hierarchyLabels.classLabel}
-              <select name="classId">
-                <option value="">All</option>
-                ${classOptions}
-              </select>
-            </label>
-            <label>${hierarchyLabels.subjectLabel}
-              <select name="subjectId">
-                <option value="">All</option>
-                ${subjectOptions}
-              </select>
-            </label>
-            <label>${hierarchyLabels.chapterLabel}
-              <select name="chapterId">
-                <option value="">All</option>
-                ${chapterOptions}
-              </select>
-            </label>
-            <label>${hierarchyLabels.questionTypeLabel}
-              <select name="questionTypeId">
-                <option value="">All</option>
-                ${questionTypeOptions}
-              </select>
-            </label>
-            <button type="submit">Apply Filters</button>
-          </form>
-        </div>
-        <div class="card" style="margin-top:1rem;">
-          <h3>Latest Questions</h3>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Prompt</th>
-                <th>Chapter</th>
-                <th>Type</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${questionRows}
-            </tbody>
-          </table>
-        </div>
+    ${publicHeader()}
+    <main class="container" style="padding-top:2rem;">
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-header"><h3>Smart Question Filter</h3></div>
+        <form method="GET" action="/smart-filter" class="form-grid-3" style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+          <div><label>Class</label><select name="classId" onchange="this.form.submit()"><option value="">All Classes</option>${classOptions}</select></div>
+          <div><label>Subject</label><select name="subjectId" onchange="this.form.submit()"><option value="">All Subjects</option>${subjectOptions}</select></div>
+          <div><label>Chapter</label><select name="chapterId" onchange="this.form.submit()"><option value="">All Chapters</option>${chapterOptions}</select></div>
+          <div><label>Type</label><select name="questionTypeId"><option value="">All Types</option>${typeOptions}</select></div>
+          <div style="display:flex; align-items:flex-end;"><button type="submit" class="accent" style="width:100%;">Apply Filter</button></div>
+        </form>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Question</th><th>Type</th><th>Chapter</th><th>Source</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
       </div>
     </main>
   `;
-
   return layout("Smart Filter", body);
 };
+
+
