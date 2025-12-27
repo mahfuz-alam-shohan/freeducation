@@ -1,263 +1,106 @@
 import { appConfig } from "./config";
-import {
-  createAdmin,
-  createSession,
-  deleteItem, // Import delete
-  Env,
-  getAdminCount,
-  getHierarchy,
-  getQuestionTypes,
-  getSources,
-  getUserByEmail,
-  getUserFromSession,
-  insertChapter,
-  insertClass,
-  insertGroup,
-  insertLearningMaterial,
-  insertQuestion,
-  insertQuestionType,
-  insertSourceEntity,
-  insertSubChapter,
-  insertSubject,
-  listLearningMaterials,
-  listQuestions,
-  listQuestionsFiltered,
-  setupDatabase,
-} from "./db";
-import { renderDashboard, renderLogin } from "./admin";
-import { renderSmartFilter, renderStudentHome } from "./student";
-import { createPasswordHash, randomToken, sha256, verifyPassword } from "./security";
+import * as DB from "./db";
+import * as Admin from "./admin";
+import * as Student from "./student";
+import * as Security from "./security";
 
-const htmlResponse = (body: string, status = 200, headers?: HeadersInit) =>
-  new Response(body, { status, headers: { "Content-Type": "text/html; charset=utf-8", ...headers } });
-
-const redirectResponse = (location: string, headers?: HeadersInit) =>
-  new Response(null, { status: 302, headers: { Location: location, ...headers } });
-
-const errorResponse = (error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error("Critical Error:", error);
-  // Returns to previous page logic often requires JS, so we just link back to dashboard
-  return htmlResponse(`
-    <div style="font-family:-apple-system, sans-serif; padding:2rem; max-width:500px; margin:2rem auto; border:1px solid #fee2e2; background:#fff; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); text-align:center;">
-      <div style="font-size:40px; margin-bottom:1rem;">⚠️</div>
-      <h3 style="margin-top:0; color:#111;">Action Failed</h3>
-      <p style="color:#666;">${message}</p>
-      <button onclick="history.back()" style="margin-top:1rem; padding:10px 20px; background:#111; color:#fff; border:none; border-radius:6px; cursor:pointer;">Go Back</button>
-    </div>
-  `, 400);
-}
-
-const parseCookies = (cookieHeader: string | null) => {
-  const cookies: Record<string, string> = {};
-  if (!cookieHeader) return cookies;
-  cookieHeader.split(";").forEach((cookie) => {
-    const [key, ...valueParts] = cookie.trim().split("=");
-    if (!key) return;
-    cookies[key] = valueParts.join("=");
-  });
-  return cookies;
-};
-
-const getSessionCookie = (request: Request) => {
-  const cookies = parseCookies(request.headers.get("Cookie"));
-  return cookies["freeducation_session"] ?? "";
-};
-
-const buildSessionCookie = (token: string) => {
-  const hours = (appConfig && appConfig.sessionDurationHours) ? appConfig.sessionDurationHours : 8;
-  return `freeducation_session=${token}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=${hours * 3600}`;
-};
-
-const clearSessionCookie = () => "freeducation_session=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0";
-
-const requireAdmin = async (db: D1Database, request: Request) => {
-  const token = getSessionCookie(request);
-  if (!token) return null;
-  const tokenHash = await sha256(token);
-  return getUserFromSession(db, tokenHash);
-};
-
-const getFormData = async (request: Request) => {
-  const formData = await request.formData();
-  const data: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) {
-    data[key] = String(value);
-  }
-  return data;
-};
+const html = (body: string, status = 200) => new Response(body, { status, headers: { "Content-Type": "text/html; charset=utf-8" } });
+const redirect = (loc: string) => new Response(null, { status: 302, headers: { Location: loc } });
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
+  async fetch(req: Request, env: DB.Env): Promise<Response> {
+    const url = new URL(req.url);
     const path = url.pathname;
 
     try {
-      // --- Public Routes ---
+      // --- PUBLIC ---
       if (path === "/") {
-        const hierarchy = await getHierarchy(env.DB);
-        return htmlResponse(renderStudentHome(hierarchy));
+        const [h, f] = await Promise.all([DB.getHierarchy(env.DB), DB.getFeaturedCards(env.DB)]);
+        const q = Object.fromEntries(url.searchParams);
+        return html(Student.renderStudentHome({...h, featuredCards: f}, q));
       }
-
+      
       if (path === "/smart-filter") {
-        const query = Object.fromEntries(url.searchParams.entries());
-        const [hierarchy, questionTypes, questions] = await Promise.all([
-          getHierarchy(env.DB),
-          getQuestionTypes(env.DB),
-          listQuestionsFiltered(env.DB, {
-            classId: query.classId,
-            subjectId: query.subjectId,
-            chapterId: query.chapterId,
-            questionTypeId: query.questionTypeId,
-          }),
-        ]);
-        return htmlResponse(renderSmartFilter(hierarchy, questionTypes, questions, query));
+         const query = Object.fromEntries(url.searchParams);
+         const questions = await DB.listQuestionsFiltered(env.DB, query);
+         return html(Student.renderResults(questions, query));
       }
 
-      // --- Admin Routes ---
+      // --- ADMIN ---
       if (path.startsWith("/admin")) {
-        const adminCount = await getAdminCount(env.DB);
-
+        // Auth Check
+        const cookie = req.headers.get("Cookie")?.match(/freeducation_session=([^;]+)/)?.[1];
+        let user = null;
+        if (cookie) user = await DB.getUserFromSession(env.DB, await Security.sha256(cookie));
+        
+        // Login Page
         if (path === "/admin/login") {
-          if (request.method === "POST") {
-            const form = await getFormData(request);
-            const email = form.email?.trim().toLowerCase();
-            const password = form.password ?? "";
-
-            if (!email || password.length < 8) return htmlResponse(renderLogin({ isFirstAdmin: adminCount === 0, error: "Invalid input." }), 400);
-
-            if (adminCount === 0) {
-              const passwordHash = await createPasswordHash(password);
-              const user = await createAdmin(env.DB, email, passwordHash);
-              const sessionToken = randomToken(32);
-              await createSession(env.DB, user.id, await sha256(sessionToken));
-              return redirectResponse("/admin", { "Set-Cookie": buildSessionCookie(sessionToken) });
-            }
-
-            const user = await getUserByEmail(env.DB, email);
-            if (!user || !(await verifyPassword(password, user.passwordHash))) {
-              return htmlResponse(renderLogin({ isFirstAdmin: false, error: "Invalid credentials." }), 401);
-            }
-
-            const sessionToken = randomToken(32);
-            await createSession(env.DB, user.id, await sha256(sessionToken));
-            return redirectResponse("/admin", { "Set-Cookie": buildSessionCookie(sessionToken) });
-          }
-          return htmlResponse(renderLogin({ isFirstAdmin: adminCount === 0 }));
+           const adminCount = await DB.getAdminCount(env.DB);
+           if (req.method === "POST") {
+             const fd = await req.formData();
+             const email = fd.get("email") as string;
+             const pw = fd.get("password") as string;
+             
+             let u: any = null;
+             if (adminCount === 0) {
+               u = await DB.createAdmin(env.DB, email, await Security.createPasswordHash(pw));
+             } else {
+               const exist = await DB.getUserByEmail(env.DB, email);
+               if (exist && await Security.verifyPassword(pw, exist.passwordHash)) u = exist;
+             }
+             
+             if (u) {
+               const tok = Security.randomToken(32);
+               await DB.createSession(env.DB, u.id, await Security.sha256(tok));
+               return new Response(null, { status: 302, headers: { Location: "/admin", "Set-Cookie": `freeducation_session=${tok}; HttpOnly; Path=/` }});
+             }
+             return html(Admin.renderLogin({error: "Invalid Credentials"}));
+           }
+           if (user) return redirect("/admin");
+           return html(Admin.renderLogin({isFirst: adminCount===0}));
         }
-
+        
         if (path === "/admin/logout") {
-          return redirectResponse("/", { "Set-Cookie": clearSessionCookie() });
+          return new Response(null, { status: 302, headers: { Location: "/", "Set-Cookie": "freeducation_session=; HttpOnly; Path=/; Max-Age=0" }});
         }
 
-        const adminUser = await requireAdmin(env.DB, request);
-        if (!adminUser) return redirectResponse("/admin/login");
+        if (!user) return redirect("/admin/login");
 
-        const currentView = url.searchParams.get("view") || "overview";
-
-        // --- DELETE HANDLER ---
-        // Format: /admin/delete/{table}/{id}
-        // HTML Forms don't support DELETE method, so we listen for a specific path pattern or a _method field.
-        // We'll use a path convention: /admin/delete
-        if (path === "/admin/delete" && request.method === "POST") {
-          const form = await getFormData(request);
-          const table = form.table;
-          const id = form.id;
-          const returnView = form.view || 'overview';
+        // Admin Actions
+        if (req.method === "POST") {
+          const fd = await req.formData();
+          const p = Object.fromEntries(fd);
           
-          if(table && id) {
-            await deleteItem(env.DB, table, id);
-          }
-          return redirectResponse(`/admin?view=${returnView}`);
+          if (path === "/admin/delete") { await DB.deleteItem(env.DB, p.table as string, p.id as string); return redirect(`/admin?view=${p.view}`); }
+          if (path === "/admin/classes") { await DB.insertClass(env.DB, p.name as string, p.hasGroups === "true"); return redirect("/admin?view=structure"); }
+          if (path === "/admin/groups") { await DB.insertGroup(env.DB, p.classId as string, p.name as string); return redirect("/admin?view=structure"); }
+          if (path === "/admin/subjects") { await DB.insertSubject(env.DB, p.classId as string, p.groupId as string || null, p.name as string); return redirect("/admin?view=structure"); }
+          if (path === "/admin/chapters") { await DB.insertChapter(env.DB, p.subjectId as string, p.name as string, 1); return redirect("/admin?view=qbank"); }
+          if (path === "/admin/subchapters") { await DB.insertSubChapter(env.DB, p.chapterId as string, p.name as string); return redirect("/admin?view=qbank"); }
+          if (path === "/admin/source-entities") { await DB.insertSourceEntity(env.DB, p.categoryId as string, p.name as string); return redirect("/admin?view=settings"); }
+          if (path === "/admin/featured-cards") { await DB.insertFeaturedCard(env.DB, p); return redirect("/admin?view=cards"); }
+          
+          if (path === "/admin/stems") { await DB.insertStem(env.DB, p); return redirect("/admin?view=qbank"); }
+          if (path === "/admin/questions") { await DB.insertQuestion(env.DB, p); return redirect("/admin?view=qbank"); }
         }
 
-
-        // --- CREATE HANDLERS ---
-        if (request.method === "POST") {
-          try {
-            const form = await getFormData(request);
-
-            if (path === "/admin/classes") {
-              // Simplified Class Creation
-              await insertClass(env.DB, form.name, form.hasGroups === "true");
-              return redirectResponse("/admin?view=structure");
-            }
-            if (path === "/admin/groups") {
-              await insertGroup(env.DB, form.classId, form.name);
-              return redirectResponse("/admin?view=structure");
-            }
-            if (path === "/admin/subjects") {
-              const groupId = form.groupId ? form.groupId : null;
-              await insertSubject(env.DB, form.classId, groupId, form.name);
-              return redirectResponse("/admin?view=structure");
-            }
-            if (path === "/admin/chapters") {
-              await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-              return redirectResponse("/admin?view=questions");
-            }
-            if (path === "/admin/subchapters") {
-              await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-              return redirectResponse("/admin?view=materials");
-            }
-            if (path === "/admin/question-types") {
-              await insertQuestionType(env.DB, form.chapterId, form.name);
-              return redirectResponse("/admin?view=questions");
-            }
-            if (path === "/admin/source-entities") {
-              await insertSourceEntity(env.DB, form.categoryId, form.name);
-              return redirectResponse("/admin?view=settings");
-            }
-            if (path === "/admin/questions") {
-              await insertQuestion(env.DB, {
-                chapterId: form.chapterId,
-                questionTypeId: form.questionTypeId,
-                sourceEntityId: form.sourceEntityId,
-                sourceYear: form.sourceYear,
-                prompt: form.prompt,
-                imageUrl: form.imageUrl || null,
-              });
-              return redirectResponse("/admin?view=questions");
-            }
-            if (path === "/admin/learning-materials") {
-              await insertLearningMaterial(env.DB, {
-                subchapterId: form.subchapterId,
-                title: form.title,
-                materialType: form.materialType,
-                url: form.url,
-                notes: form.notes || null,
-              });
-              return redirectResponse("/admin?view=materials");
-            }
-          } catch (err) {
-            return errorResponse(err);
-          }
-          return htmlResponse("Unknown action", 400);
-        }
-
-        // --- DASHBOARD RENDER ---
-        const [hierarchy, questionTypes, sources, questions, learningMaterials] = await Promise.all([
-          getHierarchy(env.DB),
-          getQuestionTypes(env.DB),
-          getSources(env.DB),
-          listQuestions(env.DB),
-          listLearningMaterials(env.DB),
+        const view = url.searchParams.get("view") || "structure";
+        const [h, s, cards, stems] = await Promise.all([
+          DB.getHierarchy(env.DB), 
+          DB.getSources(env.DB), 
+          DB.getFeaturedCards(env.DB),
+          env.DB.prepare("SELECT * FROM stems ORDER BY id DESC LIMIT 50").all().then(r => r.results || [])
         ]);
-
-        return htmlResponse(renderDashboard({
-          hierarchy, questionTypes, sources, questions, learningMaterials
-        }, currentView));
+        
+        return html(Admin.renderDashboard({hierarchy: h, sources: s, cards, stems}, view));
       }
 
-      return htmlResponse("Not found", 404);
-
+      return html("Not Found", 404);
     } catch (e: any) {
-      if (e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
-        await setupDatabase(env.DB);
-        return htmlResponse(`<meta http-equiv="refresh" content="2"><div>Initializing Database...</div>`);
-      }
-      return errorResponse(e);
+       if (e.message && e.message.includes("no such table")) { await DB.setupDatabase(env.DB); return html("DB Init. Reload."); }
+       return html(e.message, 500);
     }
-  },
+  }
 };
 
 
