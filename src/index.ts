@@ -26,6 +26,7 @@ export default {
     const path = url.pathname;
 
     try {
+      await DB.ensureClassLinkColumn(env.DB);
       // --- PUBLIC ---
       if (path === "/") {
         const [h, f] = await Promise.all([DB.getHierarchy(env.DB), DB.getFeaturedCards(env.DB)]);
