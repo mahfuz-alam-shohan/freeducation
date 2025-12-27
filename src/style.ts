@@ -12,7 +12,6 @@ export const css = `
     --success: #10b981;
     --radius: 12px;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,14 +57,13 @@ export const css = `
     border: 1px solid var(--border); 
     padding: 1.5rem; 
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s, box-shadow 0.2s;
   }
   
   /* Inputs */
   .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--muted); }
   .input-group input, .input-group select, .input-group textarea {
     width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);
-    font-size: 1rem; background: #fff; transition: border-color 0.2s;
+    font-size: 1rem; background: #fff;
   }
   .input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
@@ -85,7 +83,7 @@ export const css = `
   }
   .search-input {
     width: 100%; padding: 1rem 1.5rem; border-radius: 99px; border: 1px solid var(--border);
-    box-shadow: var(--shadow-md); font-size: 1rem; padding-left: 3rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); font-size: 1rem; padding-left: 3rem;
   }
   .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--muted); }
 
@@ -95,13 +93,11 @@ export const css = `
   .sidebar-link { display: block; padding: 0.75rem 1rem; color: #94a3b8; border-radius: 6px; margin-bottom: 0.25rem; }
   .sidebar-link:hover, .sidebar-link.active { background: #334155; color: white; }
   .sidebar-brand { font-size: 1.25rem; font-weight: bold; color: white; margin-bottom: 2rem; display: block; }
-  
   .admin-main { padding: 2rem; }
   
-  /* Mobile Responsive */
   @media (max-width: 768px) {
     .admin-layout { display: block; }
-    .sidebar { display: none; } /* Simplified for mobile admin */
+    .sidebar { display: none; }
     .hero h1 { font-size: 2rem; }
     .grid-cols-2 { grid-template-columns: 1fr; }
   }
