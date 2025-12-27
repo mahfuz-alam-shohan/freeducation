@@ -2,18 +2,38 @@ import { appConfig } from "./config";
 import { layout, iconHat } from "./templates";
 
 const nav = (active: string) => `
-  <header class="app-header">
-    <div class="brand">${iconHat} Admin</div>
-    <div class="header-right"><form action="/admin/logout" method="POST"><button class="btn-ghost" style="color:var(--danger);">LOGOUT</button></form></div>
-  </header>
-  <nav class="nav-scroll">
-    <a href="/admin?view=overview" class="nav-pill ${active==='overview'?'active':''}">Overview</a>
-    <a href="/admin?view=cards" class="nav-pill ${active==='cards'?'active':''}">Cards</a>
-    <a href="/admin?view=structure" class="nav-pill ${active==='structure'?'active':''}">Structure</a>
-    <a href="/admin?view=qbank" class="nav-pill ${active==='qbank'?'active':''}">Q-Bank</a>
-    <a href="/admin?view=materials" class="nav-pill ${active==='materials'?'active':''}">Materials</a>
-    <a href="/admin?view=settings" class="nav-pill ${active==='settings'?'active':''}">Settings</a>
-  </nav>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="brand">${iconHat} Admin Panel</div>
+      <div class="stack-sm">
+        <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.12em; opacity:0.6;">Navigation</div>
+        <nav class="admin-nav">
+          <a href="/admin?view=overview" class="${active==='overview'?'active':''}">Overview</a>
+          <a href="/admin?view=cards" class="${active==='cards'?'active':''}">Featured Cards</a>
+          <a href="/admin?view=structure" class="${active==='structure'?'active':''}">Structure</a>
+          <a href="/admin?view=qbank" class="${active==='qbank'?'active':''}">Question Bank</a>
+          <a href="/admin?view=materials" class="${active==='materials'?'active':''}">Materials</a>
+          <a href="/admin?view=settings" class="${active==='settings'?'active':''}">Settings</a>
+        </nav>
+      </div>
+      <form action="/admin/logout" method="POST">
+        <button class="btn-ghost" style="color:#fff; border-color:rgba(255,255,255,0.2);">Logout</button>
+      </form>
+    </aside>
+    <div>
+      <header class="admin-topbar">
+        <div class="brand">${iconHat} Admin</div>
+        <form action="/admin/logout" method="POST"><button class="btn-ghost" style="color:var(--danger);">Logout</button></form>
+      </header>
+      <nav class="nav-scroll">
+        <a href="/admin?view=overview" class="nav-pill ${active==='overview'?'active':''}">Overview</a>
+        <a href="/admin?view=cards" class="nav-pill ${active==='cards'?'active':''}">Cards</a>
+        <a href="/admin?view=structure" class="nav-pill ${active==='structure'?'active':''}">Structure</a>
+        <a href="/admin?view=qbank" class="nav-pill ${active==='qbank'?'active':''}">Q-Bank</a>
+        <a href="/admin?view=materials" class="nav-pill ${active==='materials'?'active':''}">Materials</a>
+        <a href="/admin?view=settings" class="nav-pill ${active==='settings'?'active':''}">Settings</a>
+      </nav>
+      <main class="admin-main">
 `;
 
 const del = (tbl: string, id: number, view: string) => `
@@ -25,7 +45,7 @@ const del = (tbl: string, id: number, view: string) => `
 
 // --- VIEW: Featured Cards ---
 const renderCards = (d: any) => `
-  <div class="container" style="padding-top:16px;">
+  <div class="container">
     <div class="card">
       <div class="card-header">Create Featured Card</div>
       <div class="card-body">
@@ -45,7 +65,7 @@ const renderCards = (d: any) => `
       </div>
     </div>
     
-    <div style="font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:8px;">ACTIVE CARDS</div>
+    <div class="section-title" style="margin-bottom:8px;">Active Cards</div>
     ${d.cards.map((c: any) => `
       <div class="card" style="margin-bottom:8px; border-left:4px solid ${c.bg_color};">
         <div class="card-body" style="padding:12px; display:flex; justify-content:space-between; align-items:center;">
@@ -63,7 +83,7 @@ const renderCards = (d: any) => `
 // --- VIEW: Structure ---
 const renderStructure = (d: any) => {
   return `
-    <div class="container" style="padding-top:16px;">
+    <div class="container">
       <form method="POST" action="/admin/classes" class="card" style="padding:16px; border:2px dashed var(--border);">
         <div style="display:flex; gap:8px;">
           <input name="name" placeholder="New Class Name" required>
@@ -109,7 +129,7 @@ const renderQBank = (d: any) => {
   const stemOpts = d.stems?.map((st: any) => `<option value="${st.id}">${st.content.substring(0,30)}...</option>`).join("") || "";
 
   return `
-    <div class="container" style="padding-top:16px;">
+    <div class="container">
       
       <!-- 1. Structure -->
       <div class="card collapsed-section">
@@ -129,7 +149,7 @@ const renderQBank = (d: any) => {
       </div>
 
       <!-- 2. STEM CREATOR (The Para) -->
-      <div class="card" style="border:2px solid var(--accent); background:#fdfdfe;">
+      <div class="card" style="border:2px solid var(--accent); background:#fefcf6;">
         <div class="card-header" style="color:var(--accent);">2. Create Stem (Scenario)</div>
         <div class="card-body">
           <form method="POST" action="/admin/stems" class="form-stack">
@@ -152,7 +172,7 @@ const renderQBank = (d: any) => {
           <form method="POST" action="/admin/questions">
             
             <!-- Link to Stem -->
-            <div style="background:#f1f5f9; padding:12px; border-radius:8px; margin-bottom:12px;">
+            <div style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:12px;">
               <label style="font-size:11px; font-weight:700; color:var(--text-sub);">LINK TO SCENARIO (Optional)</label>
               <select name="stemId" style="margin-top:4px;">
                 <option value="">-- No Stem (Standalone MCQ) --</option>
@@ -194,7 +214,7 @@ const renderQBank = (d: any) => {
 
 // --- VIEW: Settings ---
 const renderSettings = (d: any) => `
-  <div class="container" style="padding-top:16px;">
+  <div class="container">
     <div class="card">
       <div class="card-header">Source Entities (Boards)</div>
       <div class="card-body">
@@ -220,15 +240,16 @@ export const renderDashboard = (d: any, view: string) => {
   else if (view === 'settings') c = renderSettings(d);
   else if (view === 'cards') c = renderCards(d);
   else c = renderStructure(d); // Default
-  return layout("Admin", nav(view) + c);
+  return layout("Admin", nav(view) + c + `</main></div></div>`);
 };
 
 export const renderLogin = (opts: any) => layout("Login", `
   <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;">
-    <div class="card" style="width:100%; max-width:360px;">
+    <div class="card" style="width:100%; max-width:420px;">
       <div class="card-body" style="text-align:center; padding:32px;">
-         <div style="font-size:40px; margin-bottom:16px;">🎓</div>
-         <h3>Admin Login</h3>
+         <div style="font-size:44px;">🎓</div>
+         <h3 style="margin-top:8px;">Admin Login</h3>
+         <p style="color:var(--text-muted); font-size:14px;">Manage content, track progress, and curate learning paths.</p>
          ${opts.error ? `<p style="color:var(--danger);">${opts.error}</p>` : ''}
          <form method="POST" action="/admin/login" style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
            <input name="email" type="email" placeholder="Email" required>
@@ -240,5 +261,4 @@ export const renderLogin = (opts: any) => layout("Login", `
     </div>
   </div>
 `);
-
 

@@ -21,11 +21,11 @@ const header = (backLink?: string, title?: string) => `
           <span>${appConfig.siteName}</span>
         </div>
       `}
-      
-      ${title ? `<div style="font-weight:700; font-size:16px;">${title}</div>` : ''}
-      
+
+      ${title ? `<div class="header-pill">${title}</div>` : ''}
+
       <div style="width:40px; display:flex; justify-content:flex-end;">
-        <a href="/admin/login" style="opacity:0.3;">${iconLock}</a>
+        <a href="/admin/login" style="opacity:0.4;">${iconLock}</a>
       </div>
     </div>
   </header>
@@ -39,32 +39,48 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
   if (!q.classId) {
     const featured = h.featuredCards?.map(c => `
       <a href="${c.target_link}" class="focus-card featured clickable" style="background:${c.bg_color || 'var(--primary)'};">
-        <div style="font-size:12px; font-weight:700; opacity:0.8; text-transform:uppercase; margin-bottom:4px; letter-spacing:1px;">Featured</div>
-        <h3 style="font-size:20px; margin-bottom:4px;">${c.title}</h3>
+        <div style="font-size:11px; font-weight:700; opacity:0.85; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.12em;">Featured</div>
+        <h3 style="font-size:20px; margin-bottom:6px;">${c.title}</h3>
         <p style="font-size:14px; opacity:0.9; margin:0;">${c.subtitle || 'Tap to explore'}</p>
       </a>
     `).join("") || "";
 
-    const classes = h.classes.map(c => `
-      <a href="/?classId=${c.id}" class="focus-card clickable" style="display:flex; align-items:center; justify-content:space-between;">
+    const classes = h.classes.map((c, idx) => `
+      <a href="/?classId=${c.id}" class="focus-card clickable class-card">
         <div>
-          <h3 style="font-size:18px;">${c.name}</h3>
+          <h3>${c.name}</h3>
           <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">
             ${c.has_groups ? 'Science • Arts • Commerce' : 'General Curriculum'}
           </p>
         </div>
-        <div style="background:var(--bg-app); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--primary);">
-          →
-        </div>
+        <div class="badge">${String(idx + 1).padStart(2, "0")}</div>
       </a>
     `).join("");
 
     return layout("Select Class", `
       ${header()}
       <main class="container" style="padding-top:24px;">
-        ${featured}
-        <div style="margin:32px 0 16px 0; font-weight:700; color:var(--text-muted); font-size:13px; letter-spacing:0.05em; text-transform:uppercase;">Select Your Class</div>
-        ${classes}
+        <section class="hero">
+          <div class="hero-title">Learn smart, play hard, and ace every chapter.</div>
+          <div class="hero-sub">Pick a class to unlock engaging practice, creative stems, and board-focused guidance.</div>
+          <div class="hero-meta">
+            <span class="pill">📚 Curated Question Banks</span>
+            <span class="pill">🎯 Exam Mode Practice</span>
+            <span class="pill">⚡ Instant Navigation</span>
+          </div>
+        </section>
+
+        ${featured ? `
+          <section class="stack-sm" style="margin-top:24px;">
+            <div class="section-title">Featured for You</div>
+            <div class="grid-auto">${featured}</div>
+          </section>
+        ` : ''}
+
+        <section class="stack-sm" style="margin-top:24px;">
+          <div class="section-title">Select Your Class</div>
+          <div class="card-grid">${classes}</div>
+        </section>
       </main>
     `);
   }
@@ -79,24 +95,28 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
     const groupSubs = subjects.filter(s => s.group_id);
 
     const renderSub = (s: any) => `
-      <a href="/?classId=${q.classId}&subjectId=${s.id}" style="display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid var(--border);">
+      <a href="/?classId=${q.classId}&subjectId=${s.id}" class="list-row" style="padding:12px 0; border-bottom:1px dashed var(--border);">
         <span style="font-weight:600; font-size:16px;">${s.name}</span>
-        <span style="color:var(--text-muted);">›</span>
+        <span class="tag tag-gray">Open</span>
       </a>
     `;
 
     return layout(cls.name, `
       ${header("/", cls.name)}
       <main class="container" style="padding-top:16px;">
-        
+        <section class="hero" style="margin-bottom:20px;">
+          <div class="hero-title">${cls.name} Subjects</div>
+          <div class="hero-sub">Choose a subject to explore lessons, topics, and smart filters.</div>
+        </section>
+
         <div class="focus-card">
-          <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Common Subjects</div>
+          <div class="section-title" style="margin-bottom:8px;">Common Subjects</div>
           ${commonSubs.map(renderSub).join("")}
         </div>
 
         ${groupSubs.length > 0 ? `
           <div class="focus-card">
-            <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Group Subjects</div>
+            <div class="section-title" style="margin-bottom:8px;">Group Subjects</div>
             ${groupSubs.map(renderSub).join("")}
           </div>
         ` : ''}
@@ -118,12 +138,12 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
         <div style="padding:0 16px;">
           ${topics.map(t => `
             <a href="/smart-filter?classId=${q.classId}&subjectId=${q.subjectId}&chapterId=${c.id}&subchapterId=${t.id}" 
-               style="display:block; padding:16px 0; border-bottom:1px solid var(--border); font-size:15px; display:flex; justify-content:space-between;">
+               class="list-row" style="padding:14px 0; border-bottom:1px solid var(--border); font-size:15px;">
                <span>${t.name}</span>
-               <span style="color:var(--accent); font-weight:600; font-size:13px;">Practice</span>
+               <span class="tag tag-accent">Practice</span>
             </a>
           `).join("")}
-          <a href="/smart-filter?chapterId=${c.id}" style="display:block; padding:16px 0; text-align:center; color:var(--accent); font-weight:600; font-size:14px;">
+          <a href="/smart-filter?chapterId=${c.id}" class="btn-ghost" style="margin:16px 0;">
             Solve All ${c.name} Questions →
           </a>
         </div>
@@ -134,6 +154,10 @@ export const renderStudentHome = (h: Hierarchy, q: Record<string, string>) => {
   return layout(subject.name, `
     ${header(`/?classId=${q.classId}`, subject.name)}
     <main class="container" style="padding-top:24px;">
+      <section class="hero" style="margin-bottom:20px;">
+        <div class="hero-title">${subject.name}</div>
+        <div class="hero-sub">Pick a chapter and dive into practice questions.</div>
+      </section>
       ${chapterHtml}
     </main>
   `);
@@ -232,5 +256,4 @@ export const renderResults = (questions: any[], q: Record<string, string>) => {
     </main>
   `);
 };
-
 
