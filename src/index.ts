@@ -166,9 +166,13 @@ async function createSession(env: Env, adminId: number): Promise<string> {
   const createdAt = new Date();
   const expiresAt = new Date(createdAt.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
 
-  await env.DB.prepare(
+  const result = await env.DB.prepare(
     "INSERT INTO admin_sessions (admin_id, token, created_at, expires_at) VALUES (?, ?, ?, ?)"
   ).bind(adminId, token, createdAt.toISOString(), expiresAt.toISOString()).run();
+
+  if (!result.success) {
+    throw new Error(result.error ? `Unable to create session: ${result.error}` : "Unable to create session.");
+  }
 
   return token;
 }
@@ -339,7 +343,7 @@ function fromBase64(value: string): Uint8Array {
 }
 
 function renderPublicHome(): Response {
-  return new Response(
+  return createHtmlResponse(
     `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -406,11 +410,6 @@ function renderPublicHome(): Response {
   </main>
 </body>
 </html>`,
-    {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-      },
-    }
   );
 }
 
@@ -435,27 +434,32 @@ function ensureDatabase(env: Env): { ok: true } | { ok: false; message: string }
 
 async function ensureSchema(env: Env): Promise<{ ok: true } | { ok: false; message: string }> {
   try {
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS admins (
+    const statements = [
+      `CREATE TABLE IF NOT EXISTS admins (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         created_at TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS admin_sessions (
+      )`,
+      `CREATE TABLE IF NOT EXISTS admin_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         admin_id INTEGER NOT NULL,
         token TEXT NOT NULL UNIQUE,
         created_at TEXT NOT NULL,
         expires_at TEXT NOT NULL,
         FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
-      );
+      )`,
+      "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token)",
+      "CREATE INDEX IF NOT EXISTS idx_admin_sessions_admin_id ON admin_sessions(admin_id)",
+    ];
 
-      CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token);
-      CREATE INDEX IF NOT EXISTS idx_admin_sessions_admin_id ON admin_sessions(admin_id);
-    `);
+    for (const statement of statements) {
+      const result = await env.DB.prepare(statement).run();
+      if (!result.success) {
+        throw new Error(result.error ? `Schema update failed: ${result.error}` : "Schema update failed.");
+      }
+    }
     return { ok: true };
   } catch (error) {
     return {
@@ -573,7 +577,7 @@ function renderAdminShell(options: {
   error?: string;
 }): Response {
   const { title, subtitle, form, error } = options;
-  return new Response(
+  return createHtmlResponse(
     `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -754,11 +758,6 @@ function renderAdminShell(options: {
   </main>
 </body>
 </html>`,
-    {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-      },
-    }
   );
 }
 
@@ -792,4 +791,17 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function createHtmlResponse(html: string): Response {
+  return new Response(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    },
+  });
 }
