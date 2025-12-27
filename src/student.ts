@@ -17,6 +17,7 @@ type QuestionRow = {
   chapter: string;
   subject: string;
   sourceEntity: string;
+  imageUrl?: string | null;
 };
 
 export const renderStudentHome = (hierarchy: Hierarchy) => {
@@ -105,7 +106,10 @@ export const renderSmartFilter = (
         .map(
           (row) => `
       <tr>
-        <td>${row.prompt}</td>
+        <td>
+          ${row.prompt}
+          ${row.imageUrl ? `<div style="margin-top:0.5rem;"><img src="${row.imageUrl}" alt="Question Image" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #ddd;"></div>` : ''}
+        </td>
         <td>${row.chapter}</td>
         <td>${row.questionType}</td>
         <td>${row.sourceEntity} ${row.sourceYear}</td>
