@@ -1,356 +1,312 @@
-import { appConfig, hierarchyLabels, sourceCategories } from "./config";
-import { layout, header } from "./templates";
+import { appConfig, hierarchyLabels } from "./config";
+import { layout } from "./templates";
+
+// --- Components ---
+
+const renderSidebar = (currentView: string) => {
+  const links = [
+    { id: "overview", label: "📊 Overview" },
+    { id: "structure", label: "🏗️ Structure" },
+    { id: "chapters", label: "📖 Chapters" },
+    { id: "content", label: "📚 Content" },
+    { id: "questions", label: "❓ Questions" },
+    { id: "settings", label: "⚙️ Settings" },
+  ];
+
+  return `
+    <nav class="admin-nav">
+      ${links
+        .map(
+          (link) =>
+            `<a href="/admin?view=${link.id}" class="nav-item ${
+              currentView === link.id ? "active" : ""
+            }">${link.label}</a>`
+        )
+        .join("")}
+      <div style="flex-grow:1;"></div>
+      <form action="/admin/logout" method="POST" style="padding:1rem;">
+        <button type="submit" style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1);">Logout</button>
+      </form>
+    </nav>
+  `;
+};
+
+// --- View Renderers ---
+
+const renderOverview = (data: any) => `
+  <div class="card">
+    <div class="card-header"><h3>Dashboard Overview</h3></div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:1rem;">
+      <div style="text-align:center; padding:1rem; background:#f8fafc; border-radius:6px;">
+        <div class="text-xs text-muted">Total Questions</div>
+        <div style="font-size:1.5rem; font-weight:700; color:var(--accent);">${data.questions.length}</div>
+      </div>
+      <div style="text-align:center; padding:1rem; background:#f8fafc; border-radius:6px;">
+        <div class="text-xs text-muted">Materials</div>
+        <div style="font-size:1.5rem; font-weight:700;">${data.learningMaterials.length}</div>
+      </div>
+      <div style="text-align:center; padding:1rem; background:#f8fafc; border-radius:6px;">
+        <div class="text-xs text-muted">Classes</div>
+        <div style="font-size:1.5rem; font-weight:700;">${data.hierarchy.classes.length}</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header"><h3>Recent Activity</h3></div>
+    <p class="text-sm text-muted">System ready. Select a tab from the menu to manage content.</p>
+  </div>
+`;
+
+const renderStructure = (data: any) => {
+  const classOptions = data.hierarchy.classes.map((c: any) => `<option value="${c.id}">${c.name}</option>`).join("");
+  const groupOptions = data.hierarchy.groups.map((g: any) => `<option value="${g.id}">${g.name}</option>`).join("");
+
+  return `
+  <div class="form-grid">
+    <!-- Class Form -->
+    <div class="card">
+      <div class="card-header"><h4>Add Class</h4></div>
+      <form method="POST" action="/admin/classes">
+        <div class="form-grid-2" style="display:grid; gap:0.5rem;">
+          <input type="text" name="name" placeholder="Name (e.g. Class 10)" required />
+          <select name="hasGroups"><option value="false">No Groups</option><option value="true">Has Groups</option></select>
+        </div>
+        <button type="submit" class="secondary" style="width:100%; margin-top:0.5rem;">Create Class</button>
+      </form>
+    </div>
+
+    <!-- Group Form -->
+    <div class="card">
+      <div class="card-header"><h4>Add Group</h4></div>
+      <form method="POST" action="/admin/groups" class="flex gap-2">
+        <select name="classId" style="flex:1" required><option value="">Select Class...</option>${classOptions}</select>
+        <input type="text" name="name" style="flex:2" placeholder="Group Name" required />
+        <button type="submit" class="secondary">Add</button>
+      </form>
+    </div>
+
+    <!-- Subject Form -->
+    <div class="card">
+      <div class="card-header"><h4>Add Subject</h4></div>
+      <form method="POST" action="/admin/subjects">
+        <div class="form-grid-2" style="display:grid; gap:0.5rem; margin-bottom:0.5rem;">
+          <select name="classId" required><option value="">Class...</option>${classOptions}</select>
+          <select name="groupId"><option value="">Common (No Group)</option>${groupOptions}</select>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" name="name" style="flex:1" placeholder="Subject Name" required />
+          <button type="submit" class="secondary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  `;
+};
+
+const renderChapters = (data: any) => {
+  const subjectOptions = data.hierarchy.subjects.map((s: any) => `<option value="${s.id}">${s.name}</option>`).join("");
+  const chapterOptions = data.hierarchy.chapters.map((c: any) => `<option value="${c.id}">${c.name}</option>`).join("");
+
+  return `
+  <div class="form-grid">
+    <div class="card">
+      <div class="card-header"><h4>1. Add Chapter</h4></div>
+      <form method="POST" action="/admin/chapters">
+        <div class="input-group">
+          <label>Subject</label>
+          <select name="subjectId" required>${subjectOptions}</select>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" name="name" style="flex:3" placeholder="Chapter Name" required />
+          <input type="number" name="position" style="flex:1" value="1" placeholder="#" required />
+          <button type="submit" class="accent">Add</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h4>2. Add Sub-chapter (Topic)</h4></div>
+      <form method="POST" action="/admin/subchapters">
+        <div class="input-group">
+          <label>Parent Chapter</label>
+          <select name="chapterId" required>${chapterOptions}</select>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" name="name" style="flex:3" placeholder="Topic Name" required />
+          <input type="number" name="position" style="flex:1" value="1" required />
+          <button type="submit" class="secondary">Add</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h4>3. Add Question Type</h4></div>
+      <form method="POST" action="/admin/question-types" class="flex gap-2">
+        <select name="chapterId" style="flex:1" required>${chapterOptions}</select>
+        <input type="text" name="name" style="flex:1" placeholder="Type (e.g. MCQ)" required />
+        <button type="submit" class="secondary">Add</button>
+      </form>
+    </div>
+  </div>
+  `;
+};
+
+const renderQuestions = (data: any) => {
+  const chapterOptions = data.hierarchy.chapters.map((c: any) => `<option value="${c.id}">${c.name}</option>`).join("");
+  const typeOptions = data.questionTypes.map((t: any) => `<option value="${t.id}">${t.name}</option>`).join("");
+  const sourceOptions = data.sources.entities.map((s: any) => `<option value="${s.id}">${s.name}</option>`).join("");
+
+  const rows = data.questions.map((q: any) => `
+    <tr>
+      <td><div class="text-sm font-bold">${q.prompt.substring(0, 50)}...</div></td>
+      <td><span class="badge blue">${q.questionType}</span></td>
+      <td class="text-xs">${q.chapter}</td>
+    </tr>
+  `).join("");
+
+  return `
+  <div class="card">
+    <div class="card-header"><h4>Upload Question</h4></div>
+    <form method="POST" action="/admin/questions">
+      <div class="form-grid-2" style="display:grid; gap:0.5rem; margin-bottom:0.5rem;">
+        <select name="chapterId" required><option value="">Select Chapter...</option>${chapterOptions}</select>
+        <select name="questionTypeId" required><option value="">Question Type...</option>${typeOptions}</select>
+      </div>
+      <div class="form-grid-2" style="display:grid; gap:0.5rem; margin-bottom:0.5rem;">
+        <select name="sourceEntityId" required><option value="">Source...</option>${sourceOptions}</select>
+        <input type="text" name="sourceYear" placeholder="Year (2024)" required />
+      </div>
+      <textarea name="prompt" rows="3" placeholder="Question text..." required style="margin-bottom:0.5rem;"></textarea>
+      <input type="url" name="imageUrl" placeholder="Image URL (Optional)" style="margin-bottom:0.5rem;" />
+      <button type="submit" class="accent" style="width:100%;">Save Question</button>
+    </form>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>Question</th><th>Type</th><th>Chapter</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="3" class="text-muted text-center">No questions found.</td></tr>'}</tbody>
+    </table>
+  </div>
+  `;
+};
+
+const renderContent = (data: any) => {
+  const subchapterOptions = data.hierarchy.subchapters.map((s: any) => `<option value="${s.id}">${s.name}</option>`).join("");
+  const rows = data.learningMaterials.map((m: any) => `
+    <tr>
+      <td><div class="font-bold">${m.title}</div><a href="${m.url}" target="_blank" class="text-xs text-accent">View Link</a></td>
+      <td><span class="badge">${m.materialType}</span></td>
+    </tr>
+  `).join("");
+
+  return `
+  <div class="card">
+    <div class="card-header"><h4>Add Learning Material</h4></div>
+    <form method="POST" action="/admin/learning-materials">
+      <div class="input-group">
+        <label>Sub-chapter (Topic)</label>
+        <select name="subchapterId" required>${subchapterOptions}</select>
+      </div>
+      <div class="input-group">
+        <label>Title</label>
+        <input type="text" name="title" required />
+      </div>
+      <div class="form-grid-2" style="display:grid; gap:0.5rem; margin-bottom:0.5rem;">
+        <select name="materialType">
+          <option value="Lecture Video">Video</option>
+          <option value="PDF">PDF</option>
+          <option value="Handwritten Note">Note</option>
+        </select>
+        <input type="url" name="url" placeholder="https://..." required />
+      </div>
+      <button type="submit" class="accent" style="width:100%;">Add Material</button>
+    </form>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>Title</th><th>Type</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="2" class="text-muted">No materials.</td></tr>'}</tbody>
+    </table>
+  </div>
+  `;
+};
+
+const renderSettings = (data: any) => {
+  const categoryOptions = data.sources.categories.map((c: any) => `<option value="${c.id}">${c.name}</option>`).join("");
+  return `
+  <div class="card">
+    <div class="card-header"><h4>Source Entities</h4></div>
+    <p class="text-sm text-muted" style="margin-bottom:1rem;">Add boards, universities, or colleges to tag questions.</p>
+    <form method="POST" action="/admin/source-entities" class="flex gap-2">
+      <select name="categoryId" style="flex:1" required>${categoryOptions}</select>
+      <input type="text" name="name" style="flex:2" placeholder="Entity Name (e.g. Dhaka Board)" required />
+      <button type="submit" class="secondary">Add</button>
+    </form>
+  </div>
+  `;
+}
+
+// --- Main Dashboard Renderer ---
+
+export const renderDashboard = (data: any, view: string = "overview") => {
+  let contentHtml = "";
+
+  switch (view) {
+    case "structure": contentHtml = renderStructure(data); break;
+    case "chapters": contentHtml = renderChapters(data); break;
+    case "questions": contentHtml = renderQuestions(data); break;
+    case "content": contentHtml = renderContent(data); break;
+    case "settings": contentHtml = renderSettings(data); break;
+    default: contentHtml = renderOverview(data); break;
+  }
+
+  const body = `
+    <div class="admin-layout">
+      ${renderSidebar(view)}
+      <main class="admin-content">
+        <h2 style="margin-bottom:1.5rem; text-transform:capitalize;">${view}</h2>
+        ${contentHtml}
+      </main>
+    </div>
+  `;
+
+  return layout("Admin Dashboard", body);
+};
 
 export const renderLogin = (options: { isFirstAdmin: boolean; error?: string }) => {
-  const title = options.isFirstAdmin ? "Welcome to Freeducation" : "Admin Login";
-  const subtitle = options.isFirstAdmin
-    ? "Create the master admin account to initialize the system."
-    : "Enter your credentials to access the dashboard.";
-  const buttonLabel = options.isFirstAdmin ? "Create Owner Account" : "Sign In";
-
-  // Using a dedicated auth layout wrapper instead of the standard header
   const body = `
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <div class="auth-logo">🎓</div>
-          <h1 class="auth-title">${title}</h1>
-          <p class="auth-subtitle">${subtitle}</p>
+    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:#f1f5f9; padding:1rem;">
+      <div class="card" style="width:100%; max-width:400px; padding:2rem;">
+        <div style="text-align:center; margin-bottom:2rem;">
+          <h1 style="font-size:1.75rem; color:var(--primary);">Admin Access</h1>
+          <p class="text-muted">Freeducation Control Panel</p>
         </div>
+        
+        ${options.error ? `<div style="background:#fee2e2; color:#ef4444; padding:0.75rem; border-radius:6px; margin-bottom:1rem; font-size:0.9rem;">${options.error}</div>` : ''}
+        ${options.isFirstAdmin ? `<div style="background:#e0f2fe; color:#0369a1; padding:0.75rem; border-radius:6px; margin-bottom:1rem; font-size:0.9rem;">🎉 Setup: Create the first admin account.</div>` : ''}
 
-        ${
-          options.error
-            ? `<div class="alert alert-error">⚠️ ${options.error}</div>`
-            : ""
-        }
-
-        <form method="POST" action="/admin/login">
-          <div>
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" placeholder="admin@example.com" required autofocus />
+        <form method="POST" action="/admin/login" class="form-grid">
+          <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" name="email" required placeholder="admin@example.com" />
           </div>
-          <div>
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="••••••••" minlength="8" required />
-            ${options.isFirstAdmin ? '<p style="font-size:0.8em; margin-top:0.25rem;">Must be at least 8 characters.</p>' : ''}
+          <div class="input-group">
+            <label>Password</label>
+            <input type="password" name="password" required placeholder="••••••••" />
           </div>
-          <button type="submit">${buttonLabel}</button>
+          <button type="submit" class="accent" style="width:100%; padding:0.8rem;">${options.isFirstAdmin ? 'Create Account' : 'Secure Login'}</button>
         </form>
-
-        <div style="text-align:center; margin-top:1.5rem; font-size:0.85rem; color:var(--text-light);">
-          &larr; <a href="/" style="text-decoration:underline;">Back to Student Home</a>
+        
+        <div style="text-align:center; margin-top:2rem;">
+          <a href="/" class="text-sm text-accent">← Return to Public Site</a>
         </div>
       </div>
     </div>
   `;
-
   return layout("Admin Login", body);
-};
-
-type DashboardData = {
-  hierarchy: {
-    classes: Array<{ id: number; name: string; has_groups: number; is_merged: number }>;
-    groups: Array<{ id: number; class_id: number; name: string }>;
-    subjects: Array<{ id: number; class_id: number; group_id: number | null; name: string }>;
-    chapters: Array<{ id: number; subject_id: number; name: string; position: number }>;
-    subchapters: Array<{ id: number; chapter_id: number; name: string; position: number }>;
-  };
-  questionTypes: Array<{ id: number; name: string; chapter_id: number }>;
-  sources: {
-    categories: Array<{ id: number; name: string }>;
-    entities: Array<{ id: number; category_id: number; name: string }>;
-  };
-  questions: Array<{ id: number; prompt: string; questionType: string; chapter: string; subject: string; sourceEntity: string; sourceYear: string; imageUrl: string | null }>;
-  learningMaterials: Array<{ id: number; title: string; materialType: string; subchapter: string; chapter: string }>;
-};
-
-export const renderDashboard = (data: DashboardData) => {
-  const classOptions = data.hierarchy.classes
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
-  const groupOptions = data.hierarchy.groups
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
-  const subjectOptions = data.hierarchy.subjects
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
-  const chapterOptions = data.hierarchy.chapters
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
-  const subchapterOptions = data.hierarchy.subchapters
-    .map((item) => {
-      const chapterName =
-        data.hierarchy.chapters.find((chapter) => chapter.id === item.chapter_id)?.name ?? "";
-      return `<option value="${item.id}">${chapterName} → ${item.name}</option>`;
-    })
-    .join("");
-  const questionTypeOptions = data.questionTypes
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
-    
-  // Robust Fallback for Dropdowns
-  const sourceCategoryOptions = data.sources.categories.length 
-    ? data.sources.categories.map((item) => `<option value="${item.id}">${item.name}</option>`).join("")
-    : `<option value="" disabled selected>No categories (DB sync needed)</option>`;
-
-  const sourceEntityOptions = data.sources.entities.length
-    ? data.sources.entities.map((item) => `<option value="${item.id}">${item.name}</option>`).join("")
-    : `<option value="" disabled selected>No entities found</option>`;
-
-  const questionRows = data.questions.length
-    ? data.questions
-        .map(
-          (row) => `
-      <tr>
-        <td>
-          <div style="font-weight:500;">${row.prompt.substring(0, 80)}${row.prompt.length > 80 ? '...' : ''}</div>
-          ${row.imageUrl ? `<a href="${row.imageUrl}" target="_blank" style="font-size:0.75rem; color:var(--primary); display:inline-flex; align-items:center; gap:4px; margin-top:4px;">📷 View Image</a>` : ''}
-        </td>
-        <td>${row.chapter}</td>
-        <td><span class="badge" style="background:#f3f4f6; color:#374151;">${row.questionType}</span></td>
-        <td>${row.sourceEntity} <span style="color:var(--text-light); font-size:0.9em;">'${row.sourceYear}</span></td>
-      </tr>`
-        )
-        .join("")
-    : `<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-light);">No questions uploaded yet. Start by adding some above!</td></tr>`;
-
-  const learningRows = data.learningMaterials.length
-    ? data.learningMaterials
-        .map(
-          (row) => `
-      <tr>
-        <td style="font-weight:500;">${row.title}</td>
-        <td>${row.subchapter}</td>
-        <td><span class="badge">${row.materialType}</span></td>
-      </tr>`
-        )
-        .join("")
-    : `<tr><td colspan="3" style="text-align:center; padding:2rem; color:var(--text-light);">No learning materials found.</td></tr>`;
-
-  const body = `
-    ${header("Admin Dashboard")}
-    <main>
-      <div class="container dashboard">
-        
-        <div class="alert alert-info" style="display:flex; justify-content:space-between; align-items:center;">
-          <span>👋 <strong>Welcome, Admin.</strong> Manage your curriculum hierarchy and content here.</span>
-          <form action="/admin/logout" method="POST" style="margin:0; width:auto; display:inline;">
-             <button type="submit" class="secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Logout</button>
-          </form>
-        </div>
-
-        <section class="card">
-          <h2>1. Hierarchy Setup</h2>
-          <p>Build the structure from top to bottom.</p>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">
-            
-            <form method="POST" action="/admin/classes">
-              <h4>New ${hierarchyLabels.classLabel}</h4>
-              <label>Name
-                <input type="text" name="name" placeholder="e.g. Class 11" required />
-              </label>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                <label style="font-size:0.8rem;">Has Groups
-                  <select name="hasGroups"><option value="true">Yes</option><option value="false">No</option></select>
-                </label>
-                <label style="font-size:0.8rem;">Merged
-                  <select name="isMerged"><option value="false">No</option><option value="true">Yes</option></select>
-                </label>
-              </div>
-              <button type="submit" class="secondary">Add Class</button>
-            </form>
-
-            <form method="POST" action="/admin/groups">
-              <h4>New ${hierarchyLabels.groupLabel}</h4>
-              <label>Class
-                <select name="classId" required>${classOptions}</select>
-              </label>
-              <label>Name
-                <input type="text" name="name" placeholder="e.g. Science" required />
-              </label>
-              <button type="submit" class="secondary">Add Group</button>
-            </form>
-
-            <form method="POST" action="/admin/subjects">
-              <h4>New ${hierarchyLabels.subjectLabel}</h4>
-              <label>Class
-                <select name="classId" required>${classOptions}</select>
-              </label>
-              <label>Group
-                <select name="groupId"><option value="">None (Common)</option>${groupOptions}</select>
-              </label>
-              <label>Name
-                <input type="text" name="name" placeholder="e.g. Physics 1st Paper" required />
-              </label>
-              <button type="submit" class="secondary">Add Subject</button>
-            </form>
-
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>2. Chapter Management</h2>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
-            
-            <form method="POST" action="/admin/chapters">
-              <h4>New ${hierarchyLabels.chapterLabel}</h4>
-              <label>Subject
-                <select name="subjectId" required>${subjectOptions}</select>
-              </label>
-              <div style="display:grid; grid-template-columns:3fr 1fr; gap:0.5rem;">
-                <label>Name <input type="text" name="name" required /></label>
-                <label>Pos <input type="number" name="position" value="1" required /></label>
-              </div>
-              <button type="submit" class="secondary">Add Chapter</button>
-            </form>
-
-            <form method="POST" action="/admin/subchapters">
-              <h4>New ${hierarchyLabels.subChapterLabel}</h4>
-              <label>Chapter
-                <select name="chapterId" required>${chapterOptions}</select>
-              </label>
-              <div style="display:grid; grid-template-columns:3fr 1fr; gap:0.5rem;">
-                <label>Name <input type="text" name="name" required /></label>
-                <label>Pos <input type="number" name="position" value="1" required /></label>
-              </div>
-              <button type="submit" class="secondary">Add Sub-chapter</button>
-            </form>
-
-             <form method="POST" action="/admin/question-types">
-              <h4>New Question Type</h4>
-              <label>Chapter
-                <select name="chapterId" required>${chapterOptions}</select>
-              </label>
-              <label>Type Name (e.g., MCQ, Creative)
-                <input type="text" name="name" required />
-              </label>
-              <button type="submit" class="secondary">Add Type</button>
-            </form>
-
-          </div>
-        </section>
-
-        <section class="card" style="border-left: 4px solid var(--accent);">
-          <h2>3. Content Upload</h2>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem;">
-            
-            <div>
-              <h3>Add Learning Material</h3>
-              <form method="POST" action="/admin/learning-materials">
-                <label>Sub-chapter
-                  <select name="subchapterId" required>${subchapterOptions || "<option value=\"\">Create sub-chapters first</option>"}</select>
-                </label>
-                <label>Title
-                  <input type="text" name="title" required />
-                </label>
-                <label>Type & URL
-                  <div style="display:grid; grid-template-columns:1fr 2fr; gap:0.5rem;">
-                    <select name="materialType">
-                      <option value="Lecture Video">Video</option>
-                      <option value="Handwritten Note">Note</option>
-                      <option value="PDF">PDF</option>
-                    </select>
-                    <input type="url" name="url" placeholder="https://..." required />
-                  </div>
-                </label>
-                <label>Notes (Optional)
-                  <textarea name="notes" rows="1"></textarea>
-                </label>
-                <button type="submit">Upload Material</button>
-              </form>
-            </div>
-
-            <div>
-              <h3>Add Question</h3>
-              <form method="POST" action="/admin/questions">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                   <label>Chapter
-                    <select name="chapterId" required>${chapterOptions}</select>
-                  </label>
-                  <label>Type
-                    <select name="questionTypeId" required>${questionTypeOptions}</select>
-                  </label>
-                </div>
-                
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                  <label>Source
-                    <select name="sourceEntityId" required>${sourceEntityOptions}</select>
-                  </label>
-                  <label>Year
-                    <input type="text" name="sourceYear" placeholder="2023" required />
-                  </label>
-                </div>
-
-                <label>Question Prompt
-                  <textarea name="prompt" rows="2" required></textarea>
-                </label>
-                <label>Image URL (Optional)
-                  <input type="url" name="imageUrl" placeholder="https://..." />
-                </label>
-                <button type="submit">Save Question</button>
-              </form>
-            </div>
-
-          </div>
-        </section>
-
-        <section class="card">
-          <h3>Source Management</h3>
-          <form method="POST" action="/admin/source-entities" style="max-width:500px;">
-            <div style="display:flex; gap:0.5rem; align-items:flex-end;">
-              <label style="flex:1;">Category
-                <select name="categoryId" required>${sourceCategoryOptions}</select>
-              </label>
-              <label style="flex:2;">New Entity Name
-                <input type="text" name="name" placeholder="e.g. Dhaka Board" required />
-              </label>
-              <button type="submit" class="secondary" style="width:auto; margin-bottom:1px;">Add</button>
-            </div>
-          </form>
-        </section>
-
-        <section class="card">
-          <h3>Recent Questions</h3>
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Prompt</th>
-                  <th>Chapter</th>
-                  <th>Type</th>
-                  <th>Source</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${questionRows}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="card">
-          <h3>Recent Materials</h3>
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Sub-chapter</th>
-                  <th>Type</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${learningRows}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-      </div>
-    </main>
-  `;
-
-  return layout("Admin Dashboard", body);
 };
 
 
