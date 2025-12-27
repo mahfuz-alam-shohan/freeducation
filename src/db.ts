@@ -12,6 +12,7 @@ export interface User {
 }
 
 // --- AUTOMATIC SCHEMA SETUP ---
+// NOTE: Schema remains robust. We rely on logic in Admin/Student files to interpret group_id correctly.
 const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
 
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS groups (
 CREATE TABLE IF NOT EXISTS subjects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   class_id INTEGER NOT NULL,
-  group_id INTEGER,
+  group_id INTEGER, -- Nullable. If NULL, it is a COMMON subject. If SET, it belongs to that group.
   name TEXT NOT NULL,
   FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
   FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL
@@ -124,43 +125,25 @@ CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
 CREATE INDEX IF NOT EXISTS idx_questions_question_type_id ON questions(question_type_id);
 CREATE INDEX IF NOT EXISTS idx_questions_source_entity_id ON questions(source_entity_id);
 
-INSERT OR IGNORE INTO source_categories (name) VALUES
-  ('Board Exam'),
-  ('University Admission'),
-  ('Top Colleges');
+INSERT OR IGNORE INTO source_categories (name) VALUES ('Board Exam'), ('University Admission'), ('Top Colleges');
 `;
 
 export const setupDatabase = async (db: D1Database) => {
   console.log("Running DB Setup...");
-
-  // 1. Remove comments to ensure clean splitting
   const cleanSQL = SCHEMA_SQL.replace(/--.*$/gm, '');
-
-  // 2. Split by semicolon
-  const statements = cleanSQL
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-
-  // 3. Execute sequentially (One by One)
-  // This avoids the 'aggregateD1Meta' crash associated with db.exec/db.batch in some envs
+  const statements = cleanSQL.split(';').map(s => s.trim()).filter(s => s.length > 0);
   for (const statement of statements) {
-    try {
-      await db.prepare(statement).run();
-    } catch (err: any) {
-      console.warn(`Setup warning for statement: "${statement.substring(0, 30)}..." - ${err.message}`);
-    }
+    try { await db.prepare(statement).run(); } catch (err: any) { console.warn(err.message); }
   }
-
   console.log("DB Setup Complete.");
 };
-// ------------------------------
 
 // Safe config access helper
 const getSessionDuration = () => {
   return (appConfig && appConfig.sessionDurationHours) ? appConfig.sessionDurationHours : 8;
 };
 
+// --- AUTH ---
 export const getAdminCount = async (db: D1Database) => {
   const result = await db.prepare("SELECT COUNT(*) as count FROM users").all();
   return (result.results?.[0]?.count as number) ?? 0;
@@ -180,53 +163,29 @@ export const getUserByEmail = async (db: D1Database, email: string) => {
 };
 
 export const createAdmin = async (db: D1Database, email: string, passwordHash: string) => {
-  const statement = db.prepare(
-    "INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, 'admin', datetime('now'))"
-  );
-  await statement.bind(email, passwordHash).run();
-  const row = await db
-    .prepare("SELECT id, email FROM users WHERE email = ?")
-    .bind(email)
-    .first();
-  if (!row) {
-    throw new Error("Admin creation failed");
-  }
+  await db.prepare("INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, 'admin', datetime('now'))")
+    .bind(email, passwordHash).run();
+  const row = await db.prepare("SELECT id, email FROM users WHERE email = ?").bind(email).first();
+  if (!row) throw new Error("Admin creation failed");
   return { id: row.id as number, email: row.email as string } as User;
 };
 
-export const createSession = async (
-  db: D1Database,
-  userId: number,
-  tokenHash: string
-) => {
-  // SAFE FALLBACK: use getSessionDuration()
+export const createSession = async (db: D1Database, userId: number, tokenHash: string) => {
   const duration = getSessionDuration(); 
   const expiresAt = new Date(Date.now() + duration * 3600 * 1000);
-  
-  await db
-    .prepare(
-      "INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, datetime('now'), ?)")
-    .bind(userId, tokenHash, expiresAt.toISOString())
-    .run();
+  await db.prepare("INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, datetime('now'), ?)")
+    .bind(userId, tokenHash, expiresAt.toISOString()).run();
 };
 
 export const getUserFromSession = async (db: D1Database, tokenHash: string) => {
-  const row = await db
-    .prepare(
-      `SELECT users.id as id, users.email as email, users.role as role
-       FROM sessions
-       JOIN users ON users.id = sessions.user_id
-       WHERE sessions.token_hash = ? AND sessions.expires_at > datetime('now')`
-    )
-    .bind(tokenHash)
-    .first();
+  const row = await db.prepare(
+      `SELECT users.id as id, users.email as email, users.role as role FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ? AND sessions.expires_at > datetime('now')`
+    ).bind(tokenHash).first();
   if (!row) return null;
-  return {
-    id: row.id as number,
-    email: row.email as string,
-    role: row.role as "admin",
-  } as User;
+  return { id: row.id as number, email: row.email as string, role: row.role as "admin" } as User;
 };
+
+// --- READ OPERATIONS ---
 
 export const getHierarchy = async (db: D1Database) => {
   const classes = await db.prepare("SELECT * FROM classes ORDER BY id").all();
@@ -253,232 +212,125 @@ export const getQuestionTypes = async (db: D1Database, chapterId?: string) => {
 
 export const getSources = async (db: D1Database) => {
   const categories = await db.prepare("SELECT * FROM source_categories ORDER BY id").all();
-  const entities = await db
-    .prepare("SELECT * FROM source_entities ORDER BY id")
-    .all();
-  return {
-    categories: categories.results ?? [],
-    entities: entities.results ?? [],
-  };
+  const entities = await db.prepare("SELECT * FROM source_entities ORDER BY id").all();
+  return { categories: categories.results ?? [], entities: entities.results ?? [] };
 };
 
-export const insertClass = async (
-  db: D1Database,
-  name: string,
-  hasGroups: boolean,
-  isMerged: boolean
-) => {
-  await db
-    .prepare(
-      "INSERT INTO classes (name, has_groups, is_merged, created_at) VALUES (?, ?, ?, datetime('now'))"
-    )
-    .bind(name, hasGroups ? 1 : 0, isMerged ? 1 : 0)
-    .run();
+// --- WRITE OPERATIONS (INSERT) ---
+
+export const insertClass = async (db: D1Database, name: string, hasGroups: boolean) => {
+  const existing = await db.prepare("SELECT id FROM classes WHERE lower(name) = lower(?)").bind(name).first();
+  if (existing) throw new Error(`Class '${name}' already exists.`);
+
+  await db.prepare("INSERT INTO classes (name, has_groups, is_merged, created_at) VALUES (?, ?, 0, datetime('now'))")
+    .bind(name, hasGroups ? 1 : 0).run();
 };
 
 export const insertGroup = async (db: D1Database, classId: string, name: string) => {
-  await db
-    .prepare("INSERT INTO groups (class_id, name) VALUES (?, ?)")
-    .bind(classId, name)
-    .run();
+  await db.prepare("INSERT INTO groups (class_id, name) VALUES (?, ?)").bind(classId, name).run();
 };
 
-export const insertSubject = async (
-  db: D1Database,
-  classId: string,
-  groupId: string | null,
-  name: string
-) => {
-  await db
-    .prepare("INSERT INTO subjects (class_id, group_id, name) VALUES (?, ?, ?)")
-    .bind(classId, groupId, name)
-    .run();
+export const insertSubject = async (db: D1Database, classId: string, groupId: string | null, name: string) => {
+  await db.prepare("INSERT INTO subjects (class_id, group_id, name) VALUES (?, ?, ?)").bind(classId, groupId, name).run();
 };
 
-export const insertChapter = async (
-  db: D1Database,
-  subjectId: string,
-  name: string,
-  position: number
-) => {
-  await db
-    .prepare("INSERT INTO chapters (subject_id, name, position) VALUES (?, ?, ?)")
-    .bind(subjectId, name, position)
-    .run();
+export const insertChapter = async (db: D1Database, subjectId: string, name: string, position: number) => {
+  await db.prepare("INSERT INTO chapters (subject_id, name, position) VALUES (?, ?, ?)").bind(subjectId, name, position).run();
 };
 
-export const insertSubChapter = async (
-  db: D1Database,
-  chapterId: string,
-  name: string,
-  position: number
-) => {
-  await db
-    .prepare("INSERT INTO subchapters (chapter_id, name, position) VALUES (?, ?, ?)")
-    .bind(chapterId, name, position)
-    .run();
+export const insertSubChapter = async (db: D1Database, chapterId: string, name: string, position: number) => {
+  await db.prepare("INSERT INTO subchapters (chapter_id, name, position) VALUES (?, ?, ?)").bind(chapterId, name, position).run();
 };
 
-export const insertQuestionType = async (
-  db: D1Database,
-  chapterId: string,
-  name: string
-) => {
-  await db
-    .prepare("INSERT INTO question_types (chapter_id, name) VALUES (?, ?)")
-    .bind(chapterId, name)
-    .run();
+export const insertQuestionType = async (db: D1Database, chapterId: string, name: string) => {
+  await db.prepare("INSERT INTO question_types (chapter_id, name) VALUES (?, ?)").bind(chapterId, name).run();
 };
 
-export const insertSourceEntity = async (
-  db: D1Database,
-  categoryId: string,
-  name: string
-) => {
-  await db
-    .prepare("INSERT INTO source_entities (category_id, name) VALUES (?, ?)")
-    .bind(categoryId, name)
-    .run();
+export const insertSourceEntity = async (db: D1Database, categoryId: string, name: string) => {
+  await db.prepare("INSERT INTO source_entities (category_id, name) VALUES (?, ?)").bind(categoryId, name).run();
 };
 
 export const insertQuestion = async (
   db: D1Database,
-  payload: {
-    chapterId: string;
-    questionTypeId: string;
-    sourceEntityId: string;
-    sourceYear: string;
-    prompt: string;
-    imageUrl: string | null;
-  }
+  payload: { chapterId: string; questionTypeId: string; sourceEntityId: string; sourceYear: string; prompt: string; imageUrl: string | null; }
 ) => {
-  await db
-    .prepare(
-      `INSERT INTO questions
-      (chapter_id, question_type_id, source_entity_id, source_year, prompt, image_url, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
-    )
-    .bind(
-      payload.chapterId,
-      payload.questionTypeId,
-      payload.sourceEntityId,
-      payload.sourceYear,
-      payload.prompt,
-      payload.imageUrl
-    )
-    .run();
+  await db.prepare(
+      `INSERT INTO questions (chapter_id, question_type_id, source_entity_id, source_year, prompt, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+    ).bind(payload.chapterId, payload.questionTypeId, payload.sourceEntityId, payload.sourceYear, payload.prompt, payload.imageUrl).run();
 };
 
+export const insertLearningMaterial = async (
+  db: D1Database,
+  payload: { subchapterId: string; title: string; materialType: string; url: string; notes: string | null; }
+) => {
+  await db.prepare(
+      `INSERT INTO learning_materials (subchapter_id, title, material_type, url, notes, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`
+    ).bind(payload.subchapterId, payload.title, payload.materialType, payload.url, payload.notes).run();
+};
+
+// --- WRITE OPERATIONS (DELETE) ---
+
+export const deleteItem = async (db: D1Database, table: string, id: string) => {
+  const allowedTables = ['classes', 'groups', 'subjects', 'chapters', 'subchapters', 'question_types', 'questions', 'learning_materials', 'source_entities'];
+  if (!allowedTables.includes(table)) throw new Error("Invalid table for deletion");
+  
+  await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
+};
+
+// --- LISTS ---
+
 export const listQuestions = async (db: D1Database) => {
-  const result = await db
-    .prepare(
+  const result = await db.prepare(
       `SELECT questions.id, questions.prompt, questions.source_year as sourceYear, questions.image_url as imageUrl,
-        question_types.name as questionType,
-        chapters.name as chapter,
-        subjects.name as subject,
-        source_entities.name as sourceEntity
+        question_types.name as questionType, chapters.name as chapter, subjects.name as subject, source_entities.name as sourceEntity
       FROM questions
       JOIN question_types ON question_types.id = questions.question_type_id
       JOIN chapters ON chapters.id = questions.chapter_id
       JOIN subjects ON subjects.id = chapters.subject_id
       JOIN source_entities ON source_entities.id = questions.source_entity_id
-      ORDER BY questions.id DESC
-      LIMIT 50`
-    )
-    .all();
+      ORDER BY questions.id DESC LIMIT 50`
+    ).all();
   return result.results ?? [];
 };
 
-export const listQuestionsFiltered = async (
-  db: D1Database,
-  filters: {
-    classId?: string;
-    subjectId?: string;
-    chapterId?: string;
-    questionTypeId?: string;
-  }
-) => {
+export const listQuestionsFiltered = async (db: D1Database, filters: any) => {
   const conditions: string[] = [];
   const values: string[] = [];
 
-  if (filters.classId) {
-    conditions.push("subjects.class_id = ?");
-    values.push(filters.classId);
-  }
-  if (filters.subjectId) {
-    conditions.push("subjects.id = ?");
-    values.push(filters.subjectId);
-  }
-  if (filters.chapterId) {
-    conditions.push("chapters.id = ?");
-    values.push(filters.chapterId);
-  }
-  if (filters.questionTypeId) {
-    conditions.push("question_types.id = ?");
-    values.push(filters.questionTypeId);
-  }
+  if (filters.classId) { conditions.push("subjects.class_id = ?"); values.push(filters.classId); }
+  // Note: Group Filtering is handled at Subject level on frontend logic usually, but here we can enforce:
+  // If subjectId is provided, we trust it. If not, and groupId is provided, we could filter subjects, 
+  // but SQL joins for subjects.group_id would be needed. 
+  // For simplicity and robustness, we filter by subjectId if it exists, otherwise we return class-level questions 
+  // and let the UI filter strictly.
+  if (filters.subjectId) { conditions.push("subjects.id = ?"); values.push(filters.subjectId); }
+  if (filters.chapterId) { conditions.push("chapters.id = ?"); values.push(filters.chapterId); }
+  if (filters.questionTypeId) { conditions.push("question_types.id = ?"); values.push(filters.questionTypeId); }
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const result = await db
-    .prepare(
+  const result = await db.prepare(
       `SELECT questions.id, questions.prompt, questions.source_year as sourceYear, questions.image_url as imageUrl,
-        question_types.name as questionType,
-        chapters.name as chapter,
-        subjects.name as subject,
-        source_entities.name as sourceEntity
+        question_types.name as questionType, chapters.name as chapter, subjects.name as subject, source_entities.name as sourceEntity
       FROM questions
       JOIN question_types ON question_types.id = questions.question_type_id
       JOIN chapters ON chapters.id = questions.chapter_id
       JOIN subjects ON subjects.id = chapters.subject_id
       JOIN source_entities ON source_entities.id = questions.source_entity_id
-      ${whereClause}
-      ORDER BY questions.id DESC
-      LIMIT 50`
-    )
-    .bind(...values)
-    .all();
+      ${whereClause} ORDER BY questions.id DESC LIMIT 50`
+    ).bind(...values).all();
   return result.results ?? [];
 };
 
 export const listLearningMaterials = async (db: D1Database) => {
-  const result = await db
-    .prepare(
+  const result = await db.prepare(
       `SELECT learning_materials.id, learning_materials.title, learning_materials.material_type as materialType,
         subchapters.name as subchapter, chapters.name as chapter
       FROM learning_materials
       JOIN subchapters ON subchapters.id = learning_materials.subchapter_id
       JOIN chapters ON chapters.id = subchapters.chapter_id
-      ORDER BY learning_materials.id DESC
-      LIMIT 50`
-    )
-    .all();
+      ORDER BY learning_materials.id DESC LIMIT 50`
+    ).all();
   return result.results ?? [];
-};
-
-export const insertLearningMaterial = async (
-  db: D1Database,
-  payload: {
-    subchapterId: string;
-    title: string;
-    materialType: string;
-    url: string;
-    notes: string | null;
-  }
-) => {
-  await db
-    .prepare(
-      `INSERT INTO learning_materials
-      (subchapter_id, title, material_type, url, notes, created_at)
-      VALUES (?, ?, ?, ?, ?, datetime('now'))`
-    )
-    .bind(
-      payload.subchapterId,
-      payload.title,
-      payload.materialType,
-      payload.url,
-      payload.notes
-    )
-    .run();
 };
 
 
