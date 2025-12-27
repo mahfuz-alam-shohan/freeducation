@@ -2,12 +2,18 @@ name = "freeducation"
 main = "src/index.ts"
 compatibility_date = "2024-10-01"
 
+# D1 Database Binding
 [[d1_databases]]
 binding = "DB"
 database_name = "freeducation"
 database_id = "08f71595-eb18-4391-94c5-9c5b50297c83"
+migrations_dir = "migrations" # <--- This is the Key for automation
 
-# BUCKET BINDING
+# R2 Bucket Binding
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "freeducation"
+
+# Vars for security (You should set these in Cloudflare Dashboard too)
+[vars]
+JWT_SECRET = "change-this-secret-to-something-long-and-random"
