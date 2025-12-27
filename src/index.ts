@@ -3,9 +3,22 @@ import * as DB from "./db";
 import * as Admin from "./admin";
 import * as Student from "./student";
 import * as Security from "./security";
+import { layout } from "./templates"; // Import layout to wrap errors
 
 const html = (body: string, status = 200) => new Response(body, { status, headers: { "Content-Type": "text/html; charset=utf-8" } });
 const redirect = (loc: string) => new Response(null, { status: 302, headers: { Location: loc } });
+
+// Helper to render beautiful error pages instead of raw text
+const renderError = (title: string, msg: string, code = 500) => {
+  return html(layout(title, `
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h1 class="error-title">${title}</h1>
+      <p class="error-msg">${msg}</p>
+      <a href="/" class="btn-primary" style="margin-top:24px; width:auto; display:inline-flex;">Return Home</a>
+    </div>
+  `), code);
+};
 
 export default {
   async fetch(req: Request, env: DB.Env): Promise<Response> {
@@ -95,12 +108,16 @@ export default {
         return html(Admin.renderDashboard({hierarchy: h, sources: s, cards, stems}, view));
       }
 
-      return html("Not Found", 404);
+      return renderError("Page Not Found", "We couldn't find the page you are looking for.", 404);
+
     } catch (e: any) {
-       if (e.message && e.message.includes("no such table")) { await DB.setupDatabase(env.DB); return html("DB Init. Reload."); }
-       return html(e.message, 500);
+       // --- UI FIX: Wrap DB Init message in the Layout ---
+       if (e.message && e.message.includes("no such table")) { 
+         await DB.setupDatabase(env.DB); 
+         return renderError("System Initialized", "The database has been created successfully. Please reload the page to start.", 200); 
+       }
+       
+       return renderError("System Error", e.message, 500);
     }
   }
 };
-
-
