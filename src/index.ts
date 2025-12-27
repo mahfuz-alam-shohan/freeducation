@@ -1,905 +1,360 @@
-const layout = (title: string, description: string, body: string) => `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="${description}" />
-    <title>${title}</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f4f7fb;
-        --surface: #ffffff;
-        --primary: #1e4db7;
-        --primary-dark: #163a8f;
-        --accent: #f97316;
-        --text: #0f172a;
-        --muted: #556079;
-        --border: #e2e8f0;
-        --success: #15803d;
-        --shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
-      }
+/**
+ * Freeducation - Mobile-First Educational Platform
+ * Built for Cloudflare Workers + D1
+ */
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+interface Env {
+  DB: D1Database;
+  BUCKET: R2Bucket;
+}
 
-      body {
-        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        line-height: 1.6;
-      }
+// --- SECURITY & UTILS ---
 
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
+// simple salt generator
+const generateSalt = () => crypto.randomUUID().replace(/-/g, "");
 
-      .container {
-        width: min(1120px, 100% - 2rem);
-        margin: 0 auto;
-      }
+// SHA-256 Password Hashing
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password + salt),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: enc.encode(salt), iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(derivedBits)));
+}
 
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(30, 77, 183, 0.12);
-        color: var(--primary);
-        padding: 0.35rem 0.8rem;
-        border-radius: 999px;
-        font-size: 0.85rem;
-        font-weight: 600;
-      }
+// Cookie Helpers
+function getCookie(request: Request, name: string): string | null {
+  const cookieString = request.headers.get("Cookie");
+  if (!cookieString) return null;
+  const cookies = cookieString.split(";");
+  for (let cookie of cookies) {
+    const [key, value] = cookie.split("=");
+    if (key.trim() === name) return value;
+  }
+  return null;
+}
 
-      header {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
+// --- HTML TEMPLATES ---
 
-      .nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem 0;
-      }
+const css = `
+  :root {
+    --bg: #f8fafc; --surface: #ffffff; --primary: #006A4E; /* BD Green-ish */
+    --primary-dark: #004d38; --red: #f42a41; /* BD Red */
+    --text: #0f172a; --muted: #64748b; --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 4rem; }
+  
+  /* Mobile First Layout */
+  .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 1rem; }
+  
+  /* Components */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; margin-bottom: 1rem; }
+  .logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+  .logo-circle { width: 12px; height: 12px; background: var(--red); border-radius: 50%; }
+  
+  .card { background: var(--surface); padding: 1.25rem; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 1rem; }
+  .btn { display: inline-flex; justify-content: center; width: 100%; padding: 0.75rem; border-radius: 12px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: 0.2s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  
+  .input-group { margin-bottom: 1rem; }
+  .input-group label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+  .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 0.75rem; border-radius: 10px; border: 1px solid var(--border); font-size: 1rem; }
+  
+  /* Utilities */
+  .text-center { text-align: center; }
+  .text-sm { font-size: 0.875rem; }
+  .text-muted { color: var(--muted); }
+  .mt-4 { margin-top: 1rem; }
+  .tag { background: #e0f2fe; color: #0284c7; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+  .tag.video { background: #fce7f3; color: #be185d; }
 
-      .nav-links {
-        display: flex;
-        gap: 1rem;
-        font-weight: 600;
-        font-size: 0.95rem;
-      }
-
-      .nav-links a {
-        padding: 0.4rem 0.75rem;
-        border-radius: 999px;
-        transition: background 0.2s ease;
-      }
-
-      .nav-links a:hover {
-        background: rgba(30, 77, 183, 0.08);
-      }
-
-      .hero {
-        padding: 3.5rem 0 3rem;
-      }
-
-      .hero-grid {
-        display: grid;
-        gap: 2rem;
-      }
-
-      .hero-card {
-        background: var(--surface);
-        padding: 2rem;
-        border-radius: 24px;
-        box-shadow: var(--shadow);
-      }
-
-      .hero h1 {
-        font-size: clamp(2.2rem, 5vw, 3.4rem);
-        line-height: 1.1;
-        margin-bottom: 1rem;
-      }
-
-      .hero p {
-        color: var(--muted);
-        font-size: 1.05rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.85rem 1.6rem;
-        border-radius: 999px;
-        background: var(--primary);
-        color: #fff;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        transition: background 0.2s ease;
-      }
-
-      .button.secondary {
-        background: rgba(30, 77, 183, 0.1);
-        color: var(--primary);
-      }
-
-      .button:hover {
-        background: var(--primary-dark);
-      }
-
-      .button.secondary:hover {
-        background: rgba(30, 77, 183, 0.2);
-      }
-
-      .content-grid {
-        display: grid;
-        gap: 1.5rem;
-        margin-top: 2rem;
-      }
-
-      .card {
-        background: var(--surface);
-        padding: 1.5rem;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-      }
-
-      .card h3 {
-        margin-bottom: 0.75rem;
-        font-size: 1.2rem;
-      }
-
-      .card p {
-        color: var(--muted);
-      }
-
-      .stats {
-        display: grid;
-        gap: 1rem;
-        margin-top: 2rem;
-      }
-
-      .stat {
-        background: #eaf0ff;
-        padding: 1.2rem;
-        border-radius: 18px;
-        font-weight: 600;
-        color: var(--primary-dark);
-      }
-
-      .section {
-        padding: 3rem 0;
-      }
-
-      .section h2 {
-        font-size: clamp(1.6rem, 4vw, 2.2rem);
-        margin-bottom: 1rem;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .dashboard {
-        display: grid;
-        gap: 1.5rem;
-      }
-
-      .panel {
-        background: var(--surface);
-        padding: 1.5rem;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-      }
-
-      .panel h3 {
-        margin-bottom: 0.75rem;
-      }
-
-      .list {
-        display: grid;
-        gap: 0.75rem;
-        margin-top: 1rem;
-      }
-
-      .list-item {
-        padding: 0.9rem 1rem;
-        border-radius: 16px;
-        border: 1px dashed #cbd5f5;
-        background: #f8faff;
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-
-      form {
-        display: grid;
-        gap: 1rem;
-      }
-
-      label {
-        font-weight: 600;
-        font-size: 0.9rem;
-      }
-
-      input,
-      select,
-      textarea {
-        padding: 0.85rem 1rem;
-        border-radius: 14px;
-        border: 1px solid var(--border);
-        font-family: inherit;
-        font-size: 1rem;
-      }
-
-      input:focus,
-      textarea:focus,
-      select:focus {
-        outline: 2px solid rgba(30, 77, 183, 0.25);
-        border-color: rgba(30, 77, 183, 0.5);
-      }
-
-      .form-row {
-        display: grid;
-        gap: 0.6rem;
-      }
-
-      .tag {
-        display: inline-flex;
-        padding: 0.25rem 0.6rem;
-        border-radius: 999px;
-        background: rgba(249, 115, 22, 0.12);
-        color: var(--accent);
-        font-size: 0.8rem;
-        font-weight: 600;
-      }
-
-      footer {
-        padding: 2.5rem 0 3rem;
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-
-      @media (min-width: 768px) {
-        .hero-grid {
-          grid-template-columns: 1.1fr 0.9fr;
-          align-items: center;
-        }
-
-        .content-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
-        .stats {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
-        .dashboard {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .form-split {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    ${body}
-  </body>
-</html>`;
-
-const baseNav = `
-  <header>
-    <div class="container nav">
-      <a href="/" aria-label="Freeducation home">
-        <strong>Freeducation</strong>
-      </a>
-      <nav class="nav-links">
-        <a href="/">Explore</a>
-        <a href="/browse">Browse</a>
-        <a href="/dashboards">Dashboards</a>
-        <a href="/admin/setup">Top Admin Setup</a>
-        <a href="/admin/login">Login</a>
-      </nav>
-    </div>
-  </header>
+  /* Admin Footer */
+  .admin-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 0.75rem; display: flex; justify-content: center; gap: 1rem; font-size: 0.8rem; }
+  .admin-bar a { color: var(--muted); text-decoration: none; }
 `;
 
-const homePage = () =>
-  layout(
-    "Freeducation | Free learning for every student",
-    "Discover free ebooks, courses, videos, and student tools in one mobile-first hub.",
-    `
-    ${baseNav}
-    <main>
-      <section class="hero">
-        <div class="container hero-grid">
-          <div>
-            <span class="pill">Always free • Mobile-first • Cloudflare-ready</span>
-            <h1>Everything students need to learn, collected in one place.</h1>
-            <p>
-              Freeducation delivers free ebooks, videos, study packs, and tools with a secure, modular
-              platform that grows with your community.
-            </p>
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <a class="button" href="/admin/setup">Create top admin account</a>
-              <a class="button secondary" href="#content">Browse library</a>
-            </div>
-          </div>
-          <div class="hero-card">
-            <h3>Today’s highlights</h3>
-            <p class="muted">Fresh resources, curated collections, and student-friendly search.</p>
-            <div class="content-grid" style="margin-top: 1.2rem;">
-              <div class="card">
-                <span class="tag">Ebooks</span>
-                <h3>STEM starter pack</h3>
-                <p>Open textbooks, exam guides, and quick reference sheets.</p>
-              </div>
-              <div class="card">
-                <span class="tag">Videos</span>
-                <h3>Daily micro lessons</h3>
-                <p>Short, mobile-first videos with transcripts and summaries.</p>
-              </div>
-              <div class="card">
-                <span class="tag">Tools</span>
-                <h3>Study planner</h3>
-                <p>Generate weekly plans and track progress across topics.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+const layout = (title: string, content: string) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
+  <style>${css}</style>
+</head>
+<body>
+  ${content}
+</body>
+</html>`;
 
-      <section class="section" id="content">
-        <div class="container">
-          <h2>Explore the free learning library</h2>
-          <p class="muted">Organized by category, verified by admins, and optimized for low-bandwidth access.</p>
-          <div class="content-grid">
-            <article class="card">
-              <h3>Books & PDFs</h3>
-              <p>Thousands of open-access textbooks, lab manuals, and lecture notes.</p>
-            </article>
-            <article class="card">
-              <h3>Courses & Playlists</h3>
-              <p>Structured learning paths with progress tracking and saved favorites.</p>
-            </article>
-            <article class="card">
-              <h3>Community Resources</h3>
-              <p>Student notes, project showcases, and curated opportunities.</p>
-            </article>
-          </div>
-
-          <div class="stats">
-            <div class="stat">Verified uploads from administrators only</div>
-            <div class="stat">Role-based dashboards for every team</div>
-            <div class="stat">Optimized for phones, tablets, and desktops</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="container hero-card">
-          <h2>Built for security and growth</h2>
-          <p class="muted">
-            Data lives in Cloudflare D1 and R2, audit-ready logs keep every change traceable, and a
-            top-level admin controls who can publish content.
-          </p>
-          <div class="content-grid">
-            <div class="card">
-              <h3>Trusted roles</h3>
-              <p>Super admin, director, admin, and moderator workflows are modular by design.</p>
-            </div>
-            <div class="card">
-              <h3>Performance first</h3>
-              <p>Edge deployment with fast caching keeps pages responsive on any device.</p>
-            </div>
-            <div class="card">
-              <h3>Responsible access</h3>
-              <p>Strict permission layers and review queues protect student safety.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-    <footer>
-      <div class="container">
-        <p>Freeducation — A free learning platform for every student.</p>
-      </div>
-    </footer>
-  `
-  );
-
-const browsePage = () =>
-  layout(
-    "Browse Library | Freeducation",
-    "Search and filter free learning resources across ebooks, videos, and study tools.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Student library</span>
-          <h1>Browse free learning resources</h1>
-          <p class="muted">Find ebooks, videos, and study tools curated by the Freeducation team.</p>
-          <form style="margin-top: 1.5rem;">
-            <div class="form-split">
-              <div class="form-row">
-                <label for="search">Search</label>
-                <input id="search" name="search" type="search" placeholder="Search by topic, book, or course" />
-              </div>
-              <div class="form-row">
-                <label for="level">Learning level</label>
-                <select id="level" name="level">
-                  <option value="all">All levels</option>
-                  <option value="school">School</option>
-                  <option value="college">College</option>
-                  <option value="professional">Professional</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <label for="focus">Focus areas</label>
-              <input id="focus" name="focus" type="text" placeholder="STEM, Languages, Arts, Exam Prep" />
-            </div>
-            <button class="button" type="button">Filter resources</button>
-          </form>
-        </div>
-        <div class="content-grid" style="margin-top: 2rem;">
-          <article class="card">
-            <span class="tag">Featured ebook</span>
-            <h3>Open Physics Handbook</h3>
-            <p class="muted">Verified PDF with chapter summaries and practice questions.</p>
-          </article>
-          <article class="card">
-            <span class="tag">New playlist</span>
-            <h3>Front-end foundations</h3>
-            <p class="muted">Short videos, downloadable notes, and a weekly learning plan.</p>
-          </article>
-          <article class="card">
-            <span class="tag">Student tool</span>
-            <h3>Scholarship tracker</h3>
-            <p class="muted">Track deadlines, eligibility, and application tasks.</p>
-          </article>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const setupPage = () =>
-  layout(
-    "Top Admin Setup | Freeducation",
-    "Create the first super admin account for Freeducation.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Initial setup</span>
-          <h1>Activate the platform with your top admin account</h1>
-          <p class="muted">
-            This account controls all other roles. Complete the secure form below to create the first
-            super admin profile.
-          </p>
-          <form method="POST" action="/admin/setup">
-            <div class="form-split">
-              <div class="form-row">
-                <label for="full-name">Full name</label>
-                <input id="full-name" name="fullName" type="text" placeholder="e.g. Amina Rahman" required />
-              </div>
-              <div class="form-row">
-                <label for="email">Work email</label>
-                <input id="email" name="email" type="email" placeholder="admin@freeducation.org" required />
-              </div>
-            </div>
-            <div class="form-row">
-              <label for="role">Primary role</label>
-              <select id="role" name="role" required>
-                <option value="super-admin">Super Admin (Top role)</option>
-                <option value="director">Director</option>
-              </select>
-            </div>
-            <div class="form-split">
-              <div class="form-row">
-                <label for="password">Password</label>
-                <input id="password" name="password" type="password" minlength="12" required />
-              </div>
-              <div class="form-row">
-                <label for="confirm">Confirm password</label>
-                <input id="confirm" name="confirm" type="password" minlength="12" required />
-              </div>
-            </div>
-            <div class="form-row">
-              <label for="mission">Mission statement</label>
-              <textarea id="mission" name="mission" rows="4" placeholder="Share how Freeducation will serve students."></textarea>
-            </div>
-            <button class="button" type="submit">Create top admin account</button>
-          </form>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const setupSuccessPage = () =>
-  layout(
-    "Setup Complete | Freeducation",
-    "Top admin account created.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Setup complete</span>
-          <h1>Top admin account created</h1>
-          <p class="muted">Continue to login and start inviting directors, admins, and moderators.</p>
-          <a class="button" href="/admin/login">Go to login</a>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const loginPage = () =>
-  layout(
-    "Admin Login | Freeducation",
-    "Secure login for Freeducation administrators.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Secure access</span>
-          <h1>Administrator login</h1>
-          <p class="muted">Only approved roles can access dashboards.</p>
-          <form method="POST" action="/admin/login">
-            <div class="form-row">
-              <label for="login-email">Email</label>
-              <input id="login-email" name="email" type="email" required />
-            </div>
-            <div class="form-row">
-              <label for="login-password">Password</label>
-              <input id="login-password" name="password" type="password" required />
-            </div>
-            <button class="button" type="submit">Login</button>
-          </form>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const dashboardPage = () =>
-  layout(
-    "Top Admin Dashboard | Freeducation",
-    "Overview for the Freeducation top admin dashboard.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Top Admin Dashboard</span>
-          <h1>Welcome to your control center</h1>
-          <p class="muted">Manage roles, approve resources, and monitor learning impact.</p>
-        </div>
-        <div class="dashboard" style="margin-top: 1.5rem;">
-          <section class="panel">
-            <h3>Role management</h3>
-            <p class="muted">Invite directors, admins, and moderators with scoped permissions.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Invite new admin</strong>
-                <span class="muted">Send role-specific access links.</span>
-              </div>
-              <div class="list-item">
-                <strong>Approval queue</strong>
-                <span class="muted">Review pending content submissions.</span>
-              </div>
-              <div class="list-item">
-                <strong>Audit logs</strong>
-                <span class="muted">Track every change with timestamps.</span>
-              </div>
-            </div>
-          </section>
-          <section class="panel">
-            <h3>Content health</h3>
-            <p class="muted">Keep the library organized and trusted.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Top categories</strong>
-                <span class="muted">Science, Business, Coding, Language Learning</span>
-              </div>
-              <div class="list-item">
-                <strong>Safety checks</strong>
-                <span class="muted">Automated scans and manual review tools.</span>
-              </div>
-              <div class="list-item">
-                <strong>Student feedback</strong>
-                <span class="muted">Monitor ratings, flags, and suggestions.</span>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const dashboardsPage = () =>
-  layout(
-    "Role Dashboards | Freeducation",
-    "Overview of dashboards for each Freeducation role.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Dashboards</span>
-          <h1>Role-specific control centers</h1>
-          <p class="muted">Each team has tailored workflows to keep the library trusted and organized.</p>
-          <div class="content-grid" style="margin-top: 1.5rem;">
-            <a class="card" href="/admin/dashboard">
-              <h3>Super Admin</h3>
-              <p class="muted">Full control, approvals, and audit logs.</p>
-            </a>
-            <a class="card" href="/director/dashboard">
-              <h3>Director</h3>
-              <p class="muted">Oversee strategy, analytics, and team health.</p>
-            </a>
-            <a class="card" href="/admin/manager">
-              <h3>Admin</h3>
-              <p class="muted">Manage content and ensure quality.</p>
-            </a>
-            <a class="card" href="/moderator/dashboard">
-              <h3>Moderator</h3>
-              <p class="muted">Review submissions and student reports.</p>
-            </a>
-          </div>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const directorDashboardPage = () =>
-  layout(
-    "Director Dashboard | Freeducation",
-    "Operational and strategy view for directors.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Director Dashboard</span>
-          <h1>Strategic overview</h1>
-          <p class="muted">Monitor impact metrics, partnerships, and operational priorities.</p>
-        </div>
-        <div class="dashboard" style="margin-top: 1.5rem;">
-          <section class="panel">
-            <h3>Impact metrics</h3>
-            <p class="muted">Weekly engagement, completion rates, and top learning paths.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Active learners</strong>
-                <span class="muted">12,840 students this month</span>
-              </div>
-              <div class="list-item">
-                <strong>Completion rate</strong>
-                <span class="muted">68% across structured courses</span>
-              </div>
-            </div>
-          </section>
-          <section class="panel">
-            <h3>Operations</h3>
-            <p class="muted">Coordinate teams and resource plans.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Partner onboarding</strong>
-                <span class="muted">Review new content partnerships.</span>
-              </div>
-              <div class="list-item">
-                <strong>Team coverage</strong>
-                <span class="muted">Moderator staffing and shift notes.</span>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const adminManagerPage = () =>
-  layout(
-    "Admin Dashboard | Freeducation",
-    "Content management dashboard for admins.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Admin Dashboard</span>
-          <h1>Content & quality management</h1>
-          <p class="muted">Organize uploads, verify resources, and keep collections updated.</p>
-        </div>
-        <div class="dashboard" style="margin-top: 1.5rem;">
-          <section class="panel">
-            <h3>Content queue</h3>
-            <p class="muted">Approve and categorize new submissions.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Pending ebooks</strong>
-                <span class="muted">24 waiting for review</span>
-              </div>
-              <div class="list-item">
-                <strong>Video playlists</strong>
-                <span class="muted">8 curated playlists awaiting publish</span>
-              </div>
-            </div>
-          </section>
-          <section class="panel">
-            <h3>Collections</h3>
-            <p class="muted">Keep learning paths consistent and accurate.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Exam prep hubs</strong>
-                <span class="muted">Update course sequencing</span>
-              </div>
-              <div class="list-item">
-                <strong>Community submissions</strong>
-                <span class="muted">Verify with moderator notes</span>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const moderatorDashboardPage = () =>
-  layout(
-    "Moderator Dashboard | Freeducation",
-    "Review queue and student safety tools for moderators.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">Moderator Dashboard</span>
-          <h1>Review & safety workflow</h1>
-          <p class="muted">Protect student safety and keep content quality high.</p>
-        </div>
-        <div class="dashboard" style="margin-top: 1.5rem;">
-          <section class="panel">
-            <h3>Reports</h3>
-            <p class="muted">Handle student flags and urgent reviews.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Flagged resources</strong>
-                <span class="muted">6 items require review</span>
-              </div>
-              <div class="list-item">
-                <strong>Safety inbox</strong>
-                <span class="muted">3 urgent tickets</span>
-              </div>
-            </div>
-          </section>
-          <section class="panel">
-            <h3>Guidelines</h3>
-            <p class="muted">Standard review checklists.</p>
-            <div class="list">
-              <div class="list-item">
-                <strong>Copyright checks</strong>
-                <span class="muted">Verify licenses before approval</span>
-              </div>
-              <div class="list-item">
-                <strong>Student well-being</strong>
-                <span class="muted">Escalate harmful content immediately</span>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const notFoundPage = () =>
-  layout(
-    "Page not found | Freeducation",
-    "The requested page could not be found.",
-    `
-    ${baseNav}
-    <main class="section">
-      <div class="container">
-        <div class="hero-card">
-          <span class="pill">404</span>
-          <h1>We couldn't find that page</h1>
-          <p class="muted">Return to the home page to keep exploring.</p>
-          <a class="button" href="/">Back to home</a>
-        </div>
-      </div>
-    </main>
-  `
-  );
-
-const htmlResponse = (content: string, status = 200) =>
-  new Response(content, {
-    status,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "x-content-type-options": "nosniff",
-      "x-frame-options": "DENY",
-      "referrer-policy": "no-referrer",
-      "permissions-policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-      "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
-      "content-security-policy":
-        "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
-    },
-  });
+// --- ROUTE HANDLERS ---
 
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-
+    
+    // 1. PUBLIC LANDING PAGE (Student View)
     if (url.pathname === "/") {
-      return htmlResponse(homePage());
+      // Fetch latest resources (simulated query for now, easy to replace with SELECT * FROM resources)
+      const { results } = await env.DB.prepare("SELECT * FROM resources WHERE is_public = 1 ORDER BY created_at DESC LIMIT 5").all();
+      
+      const resourceHtml = results.length > 0 
+        ? results.map((r: any) => `
+            <div class="card">
+              <span class="tag ${r.type === 'video' ? 'video' : ''}">${r.type}</span>
+              <h3 style="margin: 0.5rem 0;">${r.title}</h3>
+              <p class="text-muted text-sm">${r.description || 'No description.'}</p>
+              <a href="${r.url}" class="btn btn-outline mt-4" target="_blank">View Resource</a>
+            </div>
+          `).join('')
+        : `<div class="text-center text-muted" style="padding: 2rem;">No resources uploaded yet.<br>Admins, please login to add content.</div>`;
+
+      return new Response(layout("Freeducation | Bangladesh", `
+        <div class="container">
+          <header class="header">
+            <a href="/" class="logo"><div class="logo-circle"></div>Freeducation</a>
+            <span class="tag">Beta</span>
+          </header>
+          
+          <div class="card" style="background: linear-gradient(135deg, #006A4E 0%, #004d38 100%); color: white; border: none;">
+            <h2>Free Education for Everyone</h2>
+            <p style="opacity: 0.9; margin-top: 0.5rem;">Access free books, videos, and tools to help you succeed in your studies.</p>
+          </div>
+
+          <h3 style="margin: 1.5rem 0 1rem;">Latest Uploads</h3>
+          ${resourceHtml}
+        </div>
+
+        <div class="admin-bar">
+          <a href="/admin/login">Admin Login</a>
+          <span>•</span>
+          <a href="/admin/setup">Setup</a>
+        </div>
+      `), { headers: { "Content-Type": "text/html" } });
     }
 
-    if (url.pathname === "/browse") {
-      return htmlResponse(browsePage());
-    }
-
-    if (url.pathname === "/dashboards") {
-      return htmlResponse(dashboardsPage());
-    }
-
+    // 2. TOP ADMIN SETUP (Bootstrap)
     if (url.pathname === "/admin/setup") {
-      if (request.method === "POST") {
-        return htmlResponse(setupSuccessPage(), 201);
+      // SECURITY CRITICAL: Check if ANY user exists. If yes, block this page.
+      const userCount: any = await env.DB.prepare("SELECT count(*) as total FROM users").first();
+      
+      if (userCount && userCount.total > 0) {
+        return new Response(layout("Setup Locked", `
+          <div class="container" style="display:grid; place-items:center; height: 80vh;">
+            <div class="text-center">
+              <h1>Setup Locked</h1>
+              <p class="text-muted">The top admin account has already been created.</p>
+              <a href="/admin/login" class="btn btn-primary mt-4">Go to Login</a>
+            </div>
+          </div>
+        `), { headers: { "Content-Type": "text/html" } });
       }
-      return htmlResponse(setupPage());
+
+      // Handle Form Submission
+      if (request.method === "POST") {
+        const formData = await request.formData();
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+        const name = formData.get("name") as string;
+
+        if (!email || !password || !name) return new Response("Missing fields", { status: 400 });
+
+        const salt = generateSalt();
+        const hash = await hashPassword(password, salt);
+        const id = crypto.randomUUID();
+
+        // Create Super Admin
+        await env.DB.prepare(
+          "INSERT INTO users (id, email, password_hash, salt, full_name, role) VALUES (?, ?, ?, ?, ?, 'super_admin')"
+        ).bind(id, email, hash, salt, name).run();
+
+        return Response.redirect(`${url.origin}/admin/login`, 303);
+      }
+
+      // Render Setup Form
+      return new Response(layout("Create Top Admin", `
+        <div class="container">
+          <div class="card">
+            <h2 class="text-center">Initialize Platform</h2>
+            <p class="text-center text-muted text-sm">Create the first Super Admin account.</p>
+            <form method="POST" class="mt-4">
+              <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" name="name" required placeholder="e.g. Mahfuz Alam">
+              </div>
+              <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="admin@freeducation.bd">
+              </div>
+              <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" required minlength="8">
+              </div>
+              <button type="submit" class="btn btn-primary">Create System Owner</button>
+            </form>
+          </div>
+        </div>
+      `), { headers: { "Content-Type": "text/html" } });
     }
 
+    // 3. ADMIN LOGIN
     if (url.pathname === "/admin/login") {
       if (request.method === "POST") {
+        const formData = await request.formData();
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        const user: any = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+
+        if (!user) {
+          return new Response("Invalid credentials", { status: 401 });
+        }
+
+        const hash = await hashPassword(password, user.salt);
+        if (hash !== user.password_hash) {
+          return new Response("Invalid credentials", { status: 401 });
+        }
+
+        // Create Session
+        const sessionId = crypto.randomUUID();
+        // Expire in 24 hours
+        const expiresAt = Math.floor(Date.now() / 1000) + 86400; 
+
+        await env.DB.prepare("INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)")
+          .bind(sessionId, user.id, expiresAt).run();
+
+        // Set Cookie and Redirect
+        const headers = new Headers();
+        headers.append("Set-Cookie", `session_id=${sessionId}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax; Secure`);
+        headers.append("Location", "/admin/dashboard");
+        
+        return new Response(null, { status: 303, headers });
+      }
+
+      return new Response(layout("Admin Login", `
+        <div class="container" style="height: 80vh; display: flex; flex-direction: column; justify-content: center;">
+          <div class="text-center mb-4">
+            <a href="/" class="logo" style="justify-content: center;"><div class="logo-circle"></div>Freeducation</a>
+          </div>
+          <div class="card">
+            <h2 class="text-center">Admin Access</h2>
+            <form method="POST" class="mt-4">
+              <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required>
+              </div>
+              <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            <div class="text-center mt-4">
+              <a href="/" class="text-sm text-muted">Back to Student View</a>
+            </div>
+          </div>
+        </div>
+      `), { headers: { "Content-Type": "text/html" } });
+    }
+
+    // 4. PROTECTED DASHBOARD
+    if (url.pathname.startsWith("/admin/dashboard")) {
+      const sessionId = getCookie(request, "session_id");
+      if (!sessionId) return Response.redirect(`${url.origin}/admin/login`, 303);
+
+      // Validate Session
+      const session: any = await env.DB.prepare(`
+        SELECT sessions.*, users.full_name, users.role 
+        FROM sessions 
+        JOIN users ON sessions.user_id = users.id 
+        WHERE sessions.id = ? AND sessions.expires_at > ?
+      `).bind(sessionId, Math.floor(Date.now() / 1000)).first();
+
+      if (!session) return Response.redirect(`${url.origin}/admin/login`, 303);
+
+      // Handle Resource Upload (Simple Implementation)
+      if (request.method === "POST" && url.pathname === "/admin/dashboard/add") {
+        const formData = await request.formData();
+        await env.DB.prepare(`
+          INSERT INTO resources (id, title, description, type, category, url, created_by)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          crypto.randomUUID(),
+          formData.get("title"),
+          formData.get("description"),
+          formData.get("type"),
+          formData.get("category"),
+          formData.get("url"),
+          session.user_id
+        ).run();
         return Response.redirect(`${url.origin}/admin/dashboard`, 303);
       }
-      return htmlResponse(loginPage());
+
+      return new Response(layout("Admin Dashboard", `
+        <div class="container">
+          <header class="header">
+            <strong>Admin Dashboard</strong>
+            <span class="tag">${session.role}</span>
+          </header>
+
+          <div class="card">
+            <h3>Welcome, ${session.full_name}</h3>
+            <p class="text-muted text-sm">Manage content for Freeducation students.</p>
+          </div>
+
+          <h3>Quick Actions</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <button onclick="document.getElementById('add-form').scrollIntoView()" class="btn btn-primary">Add New Content</button>
+            <a href="/" class="btn btn-outline" target="_blank">View Site</a>
+          </div>
+
+          <div class="card" id="add-form">
+            <h3>Upload Resource</h3>
+            <form method="POST" action="/admin/dashboard/add" class="mt-4">
+              <div class="input-group">
+                <label>Title</label>
+                <input type="text" name="title" required placeholder="e.g. HSC Physics Note">
+              </div>
+              <div class="input-group">
+                <label>Type</label>
+                <select name="type">
+                  <option value="pdf">PDF Document</option>
+                  <option value="video">Video Link</option>
+                  <option value="tool">Interactive Tool</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>Category</label>
+                <input type="text" name="category" placeholder="e.g. Science">
+              </div>
+              <div class="input-group">
+                <label>URL (Link or R2 Key)</label>
+                <input type="url" name="url" required placeholder="https://...">
+              </div>
+              <div class="input-group">
+                <label>Description</label>
+                <textarea name="description" rows="3"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Publish</button>
+            </form>
+          </div>
+
+          <div class="text-center mt-4 mb-4">
+            <a href="/admin/logout" class="text-red-500 text-sm">Log Out</a>
+          </div>
+        </div>
+      `), { headers: { "Content-Type": "text/html" } });
     }
 
-    if (url.pathname === "/admin/dashboard") {
-      return htmlResponse(dashboardPage());
-    }
-
-    if (url.pathname === "/director/dashboard") {
-      return htmlResponse(directorDashboardPage());
-    }
-
-    if (url.pathname === "/admin/manager") {
-      return htmlResponse(adminManagerPage());
-    }
-
-    if (url.pathname === "/moderator/dashboard") {
-      return htmlResponse(moderatorDashboardPage());
-    }
-
-    return htmlResponse(notFoundPage(), 404);
-  },
+    return new Response("Not Found", { status: 404 });
+  }
 };
