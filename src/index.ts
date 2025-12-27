@@ -2,6 +2,7 @@ import { appConfig } from "./config";
 import {
   createAdmin,
   createSession,
+  deleteItem, // Import delete
   Env,
   getAdminCount,
   getHierarchy,
@@ -28,33 +29,23 @@ import { renderSmartFilter, renderStudentHome } from "./student";
 import { createPasswordHash, randomToken, sha256, verifyPassword } from "./security";
 
 const htmlResponse = (body: string, status = 200, headers?: HeadersInit) =>
-  new Response(body, {
-    status,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      ...headers,
-    },
-  });
+  new Response(body, { status, headers: { "Content-Type": "text/html; charset=utf-8", ...headers } });
 
 const redirectResponse = (location: string, headers?: HeadersInit) =>
-  new Response(null, {
-    status: 302,
-    headers: {
-      Location: location,
-      ...headers,
-    },
-  });
+  new Response(null, { status: 302, headers: { Location: location, ...headers } });
 
 const errorResponse = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error("Critical Error:", error);
+  // Returns to previous page logic often requires JS, so we just link back to dashboard
   return htmlResponse(`
-    <div style="font-family:sans-serif; padding:2rem; max-width:600px; margin:2rem auto; border:1px solid #fee2e2; background:#fef2f2; border-radius:8px; color:#991b1b;">
-      <h3 style="margin-top:0">System Error</h3>
-      <p>${message}</p>
-      <a href="/admin" style="text-decoration:underline;">Back</a>
+    <div style="font-family:-apple-system, sans-serif; padding:2rem; max-width:500px; margin:2rem auto; border:1px solid #fee2e2; background:#fff; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); text-align:center;">
+      <div style="font-size:40px; margin-bottom:1rem;">⚠️</div>
+      <h3 style="margin-top:0; color:#111;">Action Failed</h3>
+      <p style="color:#666;">${message}</p>
+      <button onclick="history.back()" style="margin-top:1rem; padding:10px 20px; background:#111; color:#fff; border:none; border-radius:6px; cursor:pointer;">Go Back</button>
     </div>
-  `, 500);
+  `, 400);
 }
 
 const parseCookies = (cookieHeader: string | null) => {
@@ -78,8 +69,7 @@ const buildSessionCookie = (token: string) => {
   return `freeducation_session=${token}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=${hours * 3600}`;
 };
 
-const clearSessionCookie = () =>
-  "freeducation_session=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0";
+const clearSessionCookie = () => "freeducation_session=; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=0";
 
 const requireAdmin = async (db: D1Database, request: Request) => {
   const token = getSessionCookie(request);
@@ -104,7 +94,6 @@ export default {
 
     try {
       // --- Public Routes ---
-
       if (path === "/") {
         const hierarchy = await getHierarchy(env.DB);
         return htmlResponse(renderStudentHome(hierarchy));
@@ -126,7 +115,6 @@ export default {
       }
 
       // --- Admin Routes ---
-
       if (path.startsWith("/admin")) {
         const adminCount = await getAdminCount(env.DB);
 
@@ -136,12 +124,7 @@ export default {
             const email = form.email?.trim().toLowerCase();
             const password = form.password ?? "";
 
-            if (!email || password.length < 8) {
-              return htmlResponse(renderLogin({
-                isFirstAdmin: adminCount === 0,
-                error: "Invalid email or password (min 8 chars)."
-              }), 400);
-            }
+            if (!email || password.length < 8) return htmlResponse(renderLogin({ isFirstAdmin: adminCount === 0, error: "Invalid input." }), 400);
 
             if (adminCount === 0) {
               const passwordHash = await createPasswordHash(password);
@@ -160,7 +143,6 @@ export default {
             await createSession(env.DB, user.id, await sha256(sessionToken));
             return redirectResponse("/admin", { "Set-Cookie": buildSessionCookie(sessionToken) });
           }
-
           return htmlResponse(renderLogin({ isFirstAdmin: adminCount === 0 }));
         }
 
@@ -168,23 +150,36 @@ export default {
           return redirectResponse("/", { "Set-Cookie": clearSessionCookie() });
         }
 
-        // --- Protected Admin Area ---
-        
         const adminUser = await requireAdmin(env.DB, request);
-        if (!adminUser) {
-          return redirectResponse("/admin/login");
-        }
+        if (!adminUser) return redirectResponse("/admin/login");
 
-        // Get Current View from Query Params (default: overview)
         const currentView = url.searchParams.get("view") || "overview";
 
-        // Handle Form Submissions
+        // --- DELETE HANDLER ---
+        // Format: /admin/delete/{table}/{id}
+        // HTML Forms don't support DELETE method, so we listen for a specific path pattern or a _method field.
+        // We'll use a path convention: /admin/delete
+        if (path === "/admin/delete" && request.method === "POST") {
+          const form = await getFormData(request);
+          const table = form.table;
+          const id = form.id;
+          const returnView = form.view || 'overview';
+          
+          if(table && id) {
+            await deleteItem(env.DB, table, id);
+          }
+          return redirectResponse(`/admin?view=${returnView}`);
+        }
+
+
+        // --- CREATE HANDLERS ---
         if (request.method === "POST") {
           try {
             const form = await getFormData(request);
 
             if (path === "/admin/classes") {
-              await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
+              // Simplified Class Creation
+              await insertClass(env.DB, form.name, form.hasGroups === "true");
               return redirectResponse("/admin?view=structure");
             }
             if (path === "/admin/groups") {
@@ -198,15 +193,15 @@ export default {
             }
             if (path === "/admin/chapters") {
               await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-              return redirectResponse("/admin?view=chapters");
+              return redirectResponse("/admin?view=questions");
             }
             if (path === "/admin/subchapters") {
               await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-              return redirectResponse("/admin?view=chapters");
+              return redirectResponse("/admin?view=materials");
             }
             if (path === "/admin/question-types") {
               await insertQuestionType(env.DB, form.chapterId, form.name);
-              return redirectResponse("/admin?view=chapters");
+              return redirectResponse("/admin?view=questions");
             }
             if (path === "/admin/source-entities") {
               await insertSourceEntity(env.DB, form.categoryId, form.name);
@@ -231,7 +226,7 @@ export default {
                 url: form.url,
                 notes: form.notes || null,
               });
-              return redirectResponse("/admin?view=content");
+              return redirectResponse("/admin?view=materials");
             }
           } catch (err) {
             return errorResponse(err);
@@ -239,7 +234,7 @@ export default {
           return htmlResponse("Unknown action", 400);
         }
 
-        // Render Dashboard with Data
+        // --- DASHBOARD RENDER ---
         const [hierarchy, questionTypes, sources, questions, learningMaterials] = await Promise.all([
           getHierarchy(env.DB),
           getQuestionTypes(env.DB),
@@ -248,27 +243,17 @@ export default {
           listLearningMaterials(env.DB),
         ]);
 
-        return htmlResponse(
-          renderDashboard({
-            hierarchy,
-            questionTypes,
-            sources,
-            questions,
-            learningMaterials,
-          }, currentView) // Pass the view parameter
-        );
+        return htmlResponse(renderDashboard({
+          hierarchy, questionTypes, sources, questions, learningMaterials
+        }, currentView));
       }
 
       return htmlResponse("Not found", 404);
 
     } catch (e: any) {
       if (e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
-        try {
-          await setupDatabase(env.DB);
-          return htmlResponse(`<meta http-equiv="refresh" content="2"><div style="font-family:sans-serif;padding:2rem;">Database Initialized. Reloading...</div>`);
-        } catch (initErr) {
-          return errorResponse(initErr);
-        }
+        await setupDatabase(env.DB);
+        return htmlResponse(`<meta http-equiv="refresh" content="2"><div>Initializing Database...</div>`);
       }
       return errorResponse(e);
     }
