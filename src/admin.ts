@@ -43,7 +43,7 @@ type DashboardData = {
     categories: Array<{ id: number; name: string }>;
     entities: Array<{ id: number; category_id: number; name: string }>;
   };
-  questions: Array<{ id: number; prompt: string; questionType: string; chapter: string; subject: string; sourceEntity: string; sourceYear: string }>;
+  questions: Array<{ id: number; prompt: string; questionType: string; chapter: string; subject: string; sourceEntity: string; sourceYear: string; imageUrl: string | null }>;
   learningMaterials: Array<{ id: number; title: string; materialType: string; subchapter: string; chapter: string }>;
 };
 
@@ -70,19 +70,25 @@ export const renderDashboard = (data: DashboardData) => {
   const questionTypeOptions = data.questionTypes
     .map((item) => `<option value="${item.id}">${item.name}</option>`)
     .join("");
-  const sourceCategoryOptions = data.sources.categories
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
-  const sourceEntityOptions = data.sources.entities
-    .map((item) => `<option value="${item.id}">${item.name}</option>`)
-    .join("");
+    
+  // FIX: Removed fallback that used string names instead of IDs
+  const sourceCategoryOptions = data.sources.categories.length 
+    ? data.sources.categories.map((item) => `<option value="${item.id}">${item.name}</option>`).join("")
+    : `<option value="" disabled selected>No categories found (Run migrations)</option>`;
+
+  const sourceEntityOptions = data.sources.entities.length
+    ? data.sources.entities.map((item) => `<option value="${item.id}">${item.name}</option>`).join("")
+    : `<option value="" disabled selected>No entities found (Add one below)</option>`;
 
   const questionRows = data.questions.length
     ? data.questions
         .map(
           (row) => `
       <tr>
-        <td>${row.prompt}</td>
+        <td>
+          ${row.prompt}
+          ${row.imageUrl ? `<br><a href="${row.imageUrl}" target="_blank" style="font-size:0.8em; color:var(--primary);">View Image</a>` : ''}
+        </td>
         <td>${row.chapter}</td>
         <td>${row.questionType}</td>
         <td>${row.sourceEntity} ${row.sourceYear}</td>
@@ -248,6 +254,22 @@ export const renderDashboard = (data: DashboardData) => {
         </section>
 
         <section class="card">
+          <h3>Add Source Entity</h3>
+          <p>Global sources keep questions organized by board, university, or institution.</p>
+          <form method="POST" action="/admin/source-entities">
+            <label>Source Category
+              <select name="categoryId" required>
+                ${sourceCategoryOptions}
+              </select>
+            </label>
+            <label>Entity Name (e.g., "Dhaka Board", "BUET")
+              <input type="text" name="name" required />
+            </label>
+            <button type="submit">Add Entity</button>
+          </form>
+        </section>
+
+        <section class="card">
           <h3>Upload Question</h3>
           <form method="POST" action="/admin/questions">
             <label>Chapter
@@ -280,22 +302,6 @@ export const renderDashboard = (data: DashboardData) => {
               <input type="url" name="imageUrl" />
             </label>
             <button type="submit">Save Question</button>
-          </form>
-        </section>
-
-        <section class="card">
-          <h3>Add Source Entity</h3>
-          <p>Global sources keep questions organized by board, university, or institution.</p>
-          <form method="POST" action="/admin/source-entities">
-            <label>Source Category
-              <select name="categoryId" required>
-                ${sourceCategoryOptions || sourceCategories.map((item) => `<option value="${item}">${item}</option>`).join("")}
-              </select>
-            </label>
-            <label>Entity Name
-              <input type="text" name="name" required />
-            </label>
-            <button type="submit">Add Entity</button>
           </form>
         </section>
 
