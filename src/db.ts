@@ -114,7 +114,6 @@ export const getUserFromSession = async (db: D1Database, hash: string) => {
 };
 
 // --- CORE DATA ---
-@@ -187,50 +202,63 @@ export const getHierarchy = async (db: D1Database) => {
 
 export const getSources = async (db: D1Database) => {
   const [c, e] = await Promise.all([
