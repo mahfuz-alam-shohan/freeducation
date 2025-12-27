@@ -44,6 +44,17 @@ const redirectResponse = (location: string, headers?: HeadersInit) =>
     },
   });
 
+const errorResponse = (error: unknown) => {
+  const message = error instanceof Error ? error.message : "Unknown Error";
+  return htmlResponse(`
+    <div style="font-family:sans-serif; padding:2rem; color:#b42318; background:#fff5f5; border:1px solid #fed7d7; border-radius:8px; max-width:600px; margin:2rem auto;">
+      <h3 style="margin-top:0;">Action Failed</h3>
+      <p>${message}</p>
+      <a href="/admin" style="color:#b42318; text-decoration:underline;">Back to Dashboard</a>
+    </div>
+  `, 500);
+}
+
 const parseCookies = (cookieHeader: string | null) => {
   const cookies: Record<string, string> = {};
   if (!cookieHeader) return cookies;
@@ -86,10 +97,10 @@ const getFormData = async (request: Request) => {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    try {
-      const url = new URL(request.url);
-      const path = url.pathname;
+    const url = new URL(request.url);
+    const path = url.pathname;
 
+    try {
       if (path === "/") {
         const hierarchy = await getHierarchy(env.DB);
         return htmlResponse(renderStudentHome(hierarchy));
@@ -166,65 +177,69 @@ export default {
         }
 
         if (request.method === "POST") {
-          const form = await getFormData(request);
+          try {
+            const form = await getFormData(request);
 
-          if (path === "/admin/classes") {
-            await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/classes") {
+              await insertClass(env.DB, form.name, form.hasGroups === "true", form.isMerged === "true");
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/groups") {
-            await insertGroup(env.DB, form.classId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/groups") {
+              await insertGroup(env.DB, form.classId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/subjects") {
-            const groupId = form.groupId ? form.groupId : null;
-            await insertSubject(env.DB, form.classId, groupId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/subjects") {
+              const groupId = form.groupId ? form.groupId : null;
+              await insertSubject(env.DB, form.classId, groupId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/chapters") {
-            await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/chapters") {
+              await insertChapter(env.DB, form.subjectId, form.name, Number(form.position));
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/subchapters") {
-            await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/subchapters") {
+              await insertSubChapter(env.DB, form.chapterId, form.name, Number(form.position));
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/question-types") {
-            await insertQuestionType(env.DB, form.chapterId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/question-types") {
+              await insertQuestionType(env.DB, form.chapterId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/source-entities") {
-            await insertSourceEntity(env.DB, form.categoryId, form.name);
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/source-entities") {
+              await insertSourceEntity(env.DB, form.categoryId, form.name);
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/questions") {
-            await insertQuestion(env.DB, {
-              chapterId: form.chapterId,
-              questionTypeId: form.questionTypeId,
-              sourceEntityId: form.sourceEntityId,
-              sourceYear: form.sourceYear,
-              prompt: form.prompt,
-              imageUrl: form.imageUrl || null,
-            });
-            return redirectResponse("/admin");
-          }
+            if (path === "/admin/questions") {
+              await insertQuestion(env.DB, {
+                chapterId: form.chapterId,
+                questionTypeId: form.questionTypeId,
+                sourceEntityId: form.sourceEntityId,
+                sourceYear: form.sourceYear,
+                prompt: form.prompt,
+                imageUrl: form.imageUrl || null,
+              });
+              return redirectResponse("/admin");
+            }
 
-          if (path === "/admin/learning-materials") {
-            await insertLearningMaterial(env.DB, {
-              subchapterId: form.subchapterId,
-              title: form.title,
-              materialType: form.materialType,
-              url: form.url,
-              notes: form.notes || null,
-            });
-            return redirectResponse("/admin");
+            if (path === "/admin/learning-materials") {
+              await insertLearningMaterial(env.DB, {
+                subchapterId: form.subchapterId,
+                title: form.title,
+                materialType: form.materialType,
+                url: form.url,
+                notes: form.notes || null,
+              });
+              return redirectResponse("/admin");
+            }
+          } catch (err) {
+            return errorResponse(err);
           }
 
           return htmlResponse("Unknown action", 400);
@@ -249,12 +264,10 @@ export default {
       }
 
       return htmlResponse("Not found", 404);
-    } catch (err) {
-      // Return a visible error page instead of a generic 500 crash
-      return new Response(`Error: ${err instanceof Error ? err.message : String(err)}`, {
-        status: 500,
-        headers: { "Content-Type": "text/plain" },
-      });
+
+    } catch (e) {
+      // Catch-all for any unhandled global errors
+      return errorResponse(e);
     }
   },
 };
