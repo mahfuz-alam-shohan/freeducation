@@ -177,6 +177,13 @@ export const insertQuestion = async (db: D1Database, p: any) => {
     p.questionPart, 
     p.isConnected === 'true' ? 1 : 0,
     p.prompt, 
+    p.imageUrl || null,
+    p.sourceEntityId || null,
+    p.sourceYear || null
+  ).run();
+};
+
+export const deleteItem = async (db: D1Database, table: string, id: string) => {
   await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
 };
 
