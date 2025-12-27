@@ -311,6 +311,8 @@ const baseNav = `
       </a>
       <nav class="nav-links">
         <a href="/">Explore</a>
+        <a href="/browse">Browse</a>
+        <a href="/dashboards">Dashboards</a>
         <a href="/admin/setup">Top Admin Setup</a>
         <a href="/admin/login">Login</a>
       </nav>
@@ -419,6 +421,63 @@ const homePage = () =>
         <p>Freeducation — A free learning platform for every student.</p>
       </div>
     </footer>
+  `
+  );
+
+const browsePage = () =>
+  layout(
+    "Browse Library | Freeducation",
+    "Search and filter free learning resources across ebooks, videos, and study tools.",
+    `
+    ${baseNav}
+    <main class="section">
+      <div class="container">
+        <div class="hero-card">
+          <span class="pill">Student library</span>
+          <h1>Browse free learning resources</h1>
+          <p class="muted">Find ebooks, videos, and study tools curated by the Freeducation team.</p>
+          <form style="margin-top: 1.5rem;">
+            <div class="form-split">
+              <div class="form-row">
+                <label for="search">Search</label>
+                <input id="search" name="search" type="search" placeholder="Search by topic, book, or course" />
+              </div>
+              <div class="form-row">
+                <label for="level">Learning level</label>
+                <select id="level" name="level">
+                  <option value="all">All levels</option>
+                  <option value="school">School</option>
+                  <option value="college">College</option>
+                  <option value="professional">Professional</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <label for="focus">Focus areas</label>
+              <input id="focus" name="focus" type="text" placeholder="STEM, Languages, Arts, Exam Prep" />
+            </div>
+            <button class="button" type="button">Filter resources</button>
+          </form>
+        </div>
+        <div class="content-grid" style="margin-top: 2rem;">
+          <article class="card">
+            <span class="tag">Featured ebook</span>
+            <h3>Open Physics Handbook</h3>
+            <p class="muted">Verified PDF with chapter summaries and practice questions.</p>
+          </article>
+          <article class="card">
+            <span class="tag">New playlist</span>
+            <h3>Front-end foundations</h3>
+            <p class="muted">Short videos, downloadable notes, and a weekly learning plan.</p>
+          </article>
+          <article class="card">
+            <span class="tag">Student tool</span>
+            <h3>Scholarship tracker</h3>
+            <p class="muted">Track deadlines, eligibility, and application tasks.</p>
+          </article>
+        </div>
+      </div>
+    </main>
   `
   );
 
@@ -581,6 +640,186 @@ const dashboardPage = () =>
   `
   );
 
+const dashboardsPage = () =>
+  layout(
+    "Role Dashboards | Freeducation",
+    "Overview of dashboards for each Freeducation role.",
+    `
+    ${baseNav}
+    <main class="section">
+      <div class="container">
+        <div class="hero-card">
+          <span class="pill">Dashboards</span>
+          <h1>Role-specific control centers</h1>
+          <p class="muted">Each team has tailored workflows to keep the library trusted and organized.</p>
+          <div class="content-grid" style="margin-top: 1.5rem;">
+            <a class="card" href="/admin/dashboard">
+              <h3>Super Admin</h3>
+              <p class="muted">Full control, approvals, and audit logs.</p>
+            </a>
+            <a class="card" href="/director/dashboard">
+              <h3>Director</h3>
+              <p class="muted">Oversee strategy, analytics, and team health.</p>
+            </a>
+            <a class="card" href="/admin/manager">
+              <h3>Admin</h3>
+              <p class="muted">Manage content and ensure quality.</p>
+            </a>
+            <a class="card" href="/moderator/dashboard">
+              <h3>Moderator</h3>
+              <p class="muted">Review submissions and student reports.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  `
+  );
+
+const directorDashboardPage = () =>
+  layout(
+    "Director Dashboard | Freeducation",
+    "Operational and strategy view for directors.",
+    `
+    ${baseNav}
+    <main class="section">
+      <div class="container">
+        <div class="hero-card">
+          <span class="pill">Director Dashboard</span>
+          <h1>Strategic overview</h1>
+          <p class="muted">Monitor impact metrics, partnerships, and operational priorities.</p>
+        </div>
+        <div class="dashboard" style="margin-top: 1.5rem;">
+          <section class="panel">
+            <h3>Impact metrics</h3>
+            <p class="muted">Weekly engagement, completion rates, and top learning paths.</p>
+            <div class="list">
+              <div class="list-item">
+                <strong>Active learners</strong>
+                <span class="muted">12,840 students this month</span>
+              </div>
+              <div class="list-item">
+                <strong>Completion rate</strong>
+                <span class="muted">68% across structured courses</span>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <h3>Operations</h3>
+            <p class="muted">Coordinate teams and resource plans.</p>
+            <div class="list">
+              <div class="list-item">
+                <strong>Partner onboarding</strong>
+                <span class="muted">Review new content partnerships.</span>
+              </div>
+              <div class="list-item">
+                <strong>Team coverage</strong>
+                <span class="muted">Moderator staffing and shift notes.</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  `
+  );
+
+const adminManagerPage = () =>
+  layout(
+    "Admin Dashboard | Freeducation",
+    "Content management dashboard for admins.",
+    `
+    ${baseNav}
+    <main class="section">
+      <div class="container">
+        <div class="hero-card">
+          <span class="pill">Admin Dashboard</span>
+          <h1>Content & quality management</h1>
+          <p class="muted">Organize uploads, verify resources, and keep collections updated.</p>
+        </div>
+        <div class="dashboard" style="margin-top: 1.5rem;">
+          <section class="panel">
+            <h3>Content queue</h3>
+            <p class="muted">Approve and categorize new submissions.</p>
+            <div class="list">
+              <div class="list-item">
+                <strong>Pending ebooks</strong>
+                <span class="muted">24 waiting for review</span>
+              </div>
+              <div class="list-item">
+                <strong>Video playlists</strong>
+                <span class="muted">8 curated playlists awaiting publish</span>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <h3>Collections</h3>
+            <p class="muted">Keep learning paths consistent and accurate.</p>
+            <div class="list">
+              <div class="list-item">
+                <strong>Exam prep hubs</strong>
+                <span class="muted">Update course sequencing</span>
+              </div>
+              <div class="list-item">
+                <strong>Community submissions</strong>
+                <span class="muted">Verify with moderator notes</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  `
+  );
+
+const moderatorDashboardPage = () =>
+  layout(
+    "Moderator Dashboard | Freeducation",
+    "Review queue and student safety tools for moderators.",
+    `
+    ${baseNav}
+    <main class="section">
+      <div class="container">
+        <div class="hero-card">
+          <span class="pill">Moderator Dashboard</span>
+          <h1>Review & safety workflow</h1>
+          <p class="muted">Protect student safety and keep content quality high.</p>
+        </div>
+        <div class="dashboard" style="margin-top: 1.5rem;">
+          <section class="panel">
+            <h3>Reports</h3>
+            <p class="muted">Handle student flags and urgent reviews.</p>
+            <div class="list">
+              <div class="list-item">
+                <strong>Flagged resources</strong>
+                <span class="muted">6 items require review</span>
+              </div>
+              <div class="list-item">
+                <strong>Safety inbox</strong>
+                <span class="muted">3 urgent tickets</span>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <h3>Guidelines</h3>
+            <p class="muted">Standard review checklists.</p>
+            <div class="list">
+              <div class="list-item">
+                <strong>Copyright checks</strong>
+                <span class="muted">Verify licenses before approval</span>
+              </div>
+              <div class="list-item">
+                <strong>Student well-being</strong>
+                <span class="muted">Escalate harmful content immediately</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  `
+  );
+
 const notFoundPage = () =>
   layout(
     "Page not found | Freeducation",
@@ -623,6 +862,14 @@ export default {
       return htmlResponse(homePage());
     }
 
+    if (url.pathname === "/browse") {
+      return htmlResponse(browsePage());
+    }
+
+    if (url.pathname === "/dashboards") {
+      return htmlResponse(dashboardsPage());
+    }
+
     if (url.pathname === "/admin/setup") {
       if (request.method === "POST") {
         return htmlResponse(setupSuccessPage(), 201);
@@ -639,6 +886,18 @@ export default {
 
     if (url.pathname === "/admin/dashboard") {
       return htmlResponse(dashboardPage());
+    }
+
+    if (url.pathname === "/director/dashboard") {
+      return htmlResponse(directorDashboardPage());
+    }
+
+    if (url.pathname === "/admin/manager") {
+      return htmlResponse(adminManagerPage());
+    }
+
+    if (url.pathname === "/moderator/dashboard") {
+      return htmlResponse(moderatorDashboardPage());
     }
 
     return htmlResponse(notFoundPage(), 404);
