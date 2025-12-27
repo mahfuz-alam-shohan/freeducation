@@ -1,12 +1,3 @@
-import { appConfig } from "./config";
-
-export interface Env {
-  DB: D1Database;
-  BUCKET: R2Bucket;
-}
-
-export interface User { id: number; email: string; role: "admin"; }
-
 const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
 
@@ -59,73 +50,7 @@ CREATE TABLE IF NOT EXISTS chapters (
   position INTEGER NOT NULL,
   FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 );
-
-CREATE TABLE IF NOT EXISTS subchapters (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  chapter_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  position INTEGER NOT NULL,
-  FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS source_categories ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE );
-CREATE TABLE IF NOT EXISTS source_entities (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  category_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  FOREIGN KEY (category_id) REFERENCES source_categories(id) ON DELETE CASCADE
-);
-
--- NEW: Featured Cards for Homepage Marketing
-CREATE TABLE IF NOT EXISTS featured_cards (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  subtitle TEXT,
-  image_url TEXT,
-  target_link TEXT NOT NULL,
-  bg_color TEXT DEFAULT '#ffffff', -- Hex code
-  position INTEGER DEFAULT 0,
-  created_at TEXT NOT NULL
-);
-
--- NEW: Stems (The 'Para' or Scenario)
-CREATE TABLE IF NOT EXISTS stems (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  content TEXT NOT NULL, -- The paragraph text
-  image_url TEXT,
-  source_entity_id INTEGER, -- e.g. Dhaka Board
-  source_year TEXT,
-  subject_id INTEGER NOT NULL, -- Broad categorization
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-  FOREIGN KEY (source_entity_id) REFERENCES source_entities(id) ON DELETE SET NULL
-);
-
--- UPDATED: Questions linked to Stems
-CREATE TABLE IF NOT EXISTS questions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  
-  -- Hierarchy Links
-  chapter_id INTEGER NOT NULL,
-  subchapter_id INTEGER, -- Topic Tag
-  
-  -- CQ Structure
-  stem_id INTEGER, -- Link to parent Stem (Nullable for independent MCQs)
-  question_part TEXT, -- 'mcq', 'k', 'kh', 'g', 'gh'
-  is_connected INTEGER DEFAULT 1, -- 1=Yes, 0=No (For k/kh that might be independent)
-
-  -- Content
-  prompt TEXT NOT NULL,
-  image_url TEXT,
-  
-  -- Metadata
-  source_entity_id INTEGER, -- Can inherit from Stem or be specific
-  source_year TEXT,
-  created_at TEXT NOT NULL,
-
-  FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
-  FOREIGN KEY (subchapter_id) REFERENCES subchapters(id) ON DELETE SET NULL,
-  FOREIGN KEY (stem_id) REFERENCES stems(id) ON DELETE CASCADE,
+@@ -127,50 +129,63 @@ CREATE TABLE IF NOT EXISTS questions (
   FOREIGN KEY (source_entity_id) REFERENCES source_entities(id) ON DELETE SET NULL
 );
 
@@ -148,6 +73,19 @@ export const setupDatabase = async (db: D1Database) => {
   const statements = cleanSQL.split(';').map(s => s.trim()).filter(s => s.length > 0);
   for (const statement of statements) {
     try { await db.prepare(statement).run(); } catch (err: any) { console.warn("Schema:", err.message); }
+  }
+};
+
+export const ensureClassLinkColumn = async (db: D1Database) => {
+  try {
+    const info = await db.prepare("PRAGMA table_info(classes)").all();
+    if (!info.results || info.results.length === 0) return;
+    const hasColumn = info.results.some((row: any) => row.name === "linked_class_id");
+    if (!hasColumn) {
+      await db.prepare("ALTER TABLE classes ADD COLUMN linked_class_id INTEGER").run();
+    }
+  } catch (err: any) {
+    console.warn("Schema migrate:", err.message);
   }
 };
 
@@ -176,16 +114,7 @@ export const getUserFromSession = async (db: D1Database, hash: string) => {
 };
 
 // --- CORE DATA ---
-export const getHierarchy = async (db: D1Database) => {
-  const [c, g, s, ch, sch] = await Promise.all([
-    db.prepare("SELECT * FROM classes ORDER BY id").all(),
-    db.prepare("SELECT * FROM groups ORDER BY id").all(),
-    db.prepare("SELECT * FROM subjects ORDER BY id").all(),
-    db.prepare("SELECT * FROM chapters ORDER BY id").all(),
-    db.prepare("SELECT * FROM subchapters ORDER BY id").all()
-  ]);
-  return { classes: c.results||[], groups: g.results||[], subjects: s.results||[], chapters: ch.results||[], subchapters: sch.results||[] };
-};
+@@ -187,50 +202,63 @@ export const getHierarchy = async (db: D1Database) => {
 
 export const getSources = async (db: D1Database) => {
   const [c, e] = await Promise.all([
@@ -249,15 +178,7 @@ export const insertQuestion = async (db: D1Database, p: any) => {
     p.questionPart, 
     p.isConnected === 'true' ? 1 : 0,
     p.prompt, 
-    p.imageUrl || null,
-    p.sourceEntityId || null, // Can inherit from Stem
-    p.sourceYear || null // Can inherit from Stem
-  ).run();
-};
-
-export const deleteItem = async (db: D1Database, table: string, id: string) => {
-  const allowed = ['classes','groups','subjects','chapters','subchapters','questions','learning_materials','source_entities', 'stems', 'featured_cards'];
-  if (!allowed.includes(table)) throw new Error("Invalid table");
+@@ -246,53 +274,51 @@ export const deleteItem = async (db: D1Database, table: string, id: string) => {
   await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
 };
 
@@ -309,4 +230,3 @@ export const listQuestionsFiltered = async (db: D1Database, f: any) => {
 export const listLearningMaterials = async (db: D1Database) => {
   return (await db.prepare("SELECT * FROM learning_materials ORDER BY id DESC LIMIT 20").all()).results ?? [];
 };
-
