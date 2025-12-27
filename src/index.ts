@@ -1,0 +1,674 @@
+const COOKIE_NAME = "freeducation_admin";
+const SESSION_DAYS = 7;
+const HASH_ITERATIONS = 100_000;
+
+interface Env {
+  DB: D1Database;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/admin")) {
+      return handleAdmin(request, env);
+    }
+
+    if (url.pathname === "/") {
+      return renderPublicHome();
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
+};
+
+async function handleAdmin(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const method = request.method.toUpperCase();
+
+  if (url.pathname === "/admin/logout") {
+    if (method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+    return logoutAdmin(request, env);
+  }
+
+  if (url.pathname === "/admin/setup" && method === "POST") {
+    return handleSetup(request, env);
+  }
+
+  if (url.pathname === "/admin/login" && method === "POST") {
+    return handleLogin(request, env);
+  }
+
+  if (url.pathname !== "/admin") {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  if (method !== "GET") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
+
+  const session = await getSession(request, env);
+  if (session) {
+    return renderDashboard(session);
+  }
+
+  const adminCount = await getAdminCount(env);
+  if (adminCount === 0) {
+    return renderSetupForm();
+  }
+
+  return renderLoginForm();
+}
+
+async function getAdminCount(env: Env): Promise<number> {
+  const result = await env.DB.prepare("SELECT COUNT(*) as count FROM admins").first<{ count: number }>();
+  return result?.count ?? 0;
+}
+
+async function handleSetup(request: Request, env: Env): Promise<Response> {
+  const adminCount = await getAdminCount(env);
+  if (adminCount > 0) {
+    return Response.redirect(new URL("/admin", request.url), 303);
+  }
+
+  const formData = await request.formData();
+  const name = (formData.get("name") || "").toString().trim();
+  const email = (formData.get("email") || "").toString().trim().toLowerCase();
+  const password = (formData.get("password") || "").toString();
+
+  if (!name || !email || !password) {
+    return renderSetupForm("Please fill in all fields.");
+  }
+
+  const passwordHash = await hashPassword(password);
+  const createdAt = new Date().toISOString();
+
+  const insert = await env.DB.prepare(
+    "INSERT INTO admins (name, email, password_hash, created_at) VALUES (?, ?, ?, ?)"
+  ).bind(name, email, passwordHash, createdAt).run();
+
+  if (!insert.success) {
+    return renderSetupForm("Unable to create admin. Please try again.");
+  }
+
+  const adminId = insert.meta.last_row_id as number;
+  const sessionToken = await createSession(env, adminId);
+  return redirectWithSession(request, sessionToken);
+}
+
+async function handleLogin(request: Request, env: Env): Promise<Response> {
+  const formData = await request.formData();
+  const email = (formData.get("email") || "").toString().trim().toLowerCase();
+  const password = (formData.get("password") || "").toString();
+
+  if (!email || !password) {
+    return renderLoginForm("Please enter your email and password.");
+  }
+
+  const admin = await env.DB.prepare(
+    "SELECT id, name, email, password_hash FROM admins WHERE email = ?"
+  ).bind(email).first<{ id: number; name: string; email: string; password_hash: string }>();
+
+  if (!admin) {
+    return renderLoginForm("Invalid credentials.");
+  }
+
+  const valid = await verifyPassword(password, admin.password_hash);
+  if (!valid) {
+    return renderLoginForm("Invalid credentials.");
+  }
+
+  const sessionToken = await createSession(env, admin.id);
+  return redirectWithSession(request, sessionToken);
+}
+
+async function createSession(env: Env, adminId: number): Promise<string> {
+  const token = generateToken();
+  const createdAt = new Date();
+  const expiresAt = new Date(createdAt.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+
+  await env.DB.prepare(
+    "INSERT INTO admin_sessions (admin_id, token, created_at, expires_at) VALUES (?, ?, ?, ?)"
+  ).bind(adminId, token, createdAt.toISOString(), expiresAt.toISOString()).run();
+
+  return token;
+}
+
+async function logoutAdmin(request: Request, env: Env): Promise<Response> {
+  const token = getCookie(request, COOKIE_NAME);
+  if (token) {
+    await env.DB.prepare("DELETE FROM admin_sessions WHERE token = ?").bind(token).run();
+  }
+
+  const response = Response.redirect(new URL("/admin", request.url), 303);
+  response.headers.append(
+    "Set-Cookie",
+    `${COOKIE_NAME}=; Path=/admin; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
+  );
+  return response;
+}
+
+async function getSession(request: Request, env: Env): Promise<{ id: number; name: string; email: string } | null> {
+  const token = getCookie(request, COOKIE_NAME);
+  if (!token) {
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  const session = await env.DB.prepare(
+    `SELECT admins.id as id, admins.name as name, admins.email as email
+     FROM admin_sessions
+     JOIN admins ON admins.id = admin_sessions.admin_id
+     WHERE admin_sessions.token = ? AND admin_sessions.expires_at > ?`
+  ).bind(token, now).first<{ id: number; name: string; email: string }>();
+
+  return session ?? null;
+}
+
+function getCookie(request: Request, name: string): string | null {
+  const cookieHeader = request.headers.get("Cookie");
+  if (!cookieHeader) {
+    return null;
+  }
+
+  const cookies = cookieHeader.split(";").map((part) => part.trim());
+  for (const cookie of cookies) {
+    const [key, ...valueParts] = cookie.split("=");
+    if (key === name) {
+      return decodeURIComponent(valueParts.join("="));
+    }
+  }
+
+  return null;
+}
+
+function redirectWithSession(request: Request, token: string): Response {
+  const response = Response.redirect(new URL("/admin", request.url), 303);
+  const maxAge = SESSION_DAYS * 24 * 60 * 60;
+  response.headers.append(
+    "Set-Cookie",
+    `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`
+  );
+  return response;
+}
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      salt,
+      iterations: HASH_ITERATIONS,
+    },
+    key,
+    256
+  );
+
+  const hash = new Uint8Array(bits);
+  return [
+    "pbkdf2",
+    HASH_ITERATIONS.toString(),
+    toBase64(salt),
+    toBase64(hash),
+  ].join("$");
+}
+
+async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+  const [method, iterationsValue, saltValue, hashValue] = storedHash.split("$");
+  if (method !== "pbkdf2") {
+    return false;
+  }
+
+  const iterations = Number(iterationsValue);
+  if (!iterations || !saltValue || !hashValue) {
+    return false;
+  }
+
+  const salt = fromBase64(saltValue);
+  const expectedHash = fromBase64(hashValue);
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      salt,
+      iterations,
+    },
+    key,
+    expectedHash.length * 8
+  );
+
+  const actualHash = new Uint8Array(bits);
+  return timingSafeEqual(actualHash, expectedHash);
+}
+
+function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  let result = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    result |= a[i] ^ b[i];
+  }
+  return result === 0;
+}
+
+function generateToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return toBase64Url(bytes);
+}
+
+function toBase64(data: Uint8Array): string {
+  let binary = "";
+  data.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+function toBase64Url(data: Uint8Array): string {
+  return toBase64(data).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function fromBase64(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function renderPublicHome(): Response {
+  return new Response(
+    `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Freeducation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+    .shell {
+      max-width: 640px;
+      text-align: center;
+      background: white;
+      padding: 40px 28px;
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 28px;
+      color: #0f172a;
+    }
+    .logo svg {
+      width: 52px;
+      height: 52px;
+    }
+    p {
+      margin: 20px 0 0;
+      color: #475569;
+      line-height: 1.6;
+    }
+    @media (min-width: 768px) {
+      .shell {
+        padding: 56px 60px;
+      }
+      .logo {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    ${renderLogo()}
+    <p>
+      Freeducation is preparing a new learning experience. Stay tuned as we build the
+      student portal, course library, and community spaces.
+    </p>
+  </main>
+</body>
+</html>`,
+    {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    }
+  );
+}
+
+function renderSetupForm(error?: string): Response {
+  return renderAdminShell({
+    title: "Create your first admin",
+    subtitle: "Secure the Freeducation control panel.",
+    error,
+    form: `
+      <form method="post" action="/admin/setup" class="card">
+        <label>
+          Full name
+          <input name="name" type="text" placeholder="Admin name" required />
+        </label>
+        <label>
+          Email address
+          <input name="email" type="email" placeholder="admin@freeducation.com" required />
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" minlength="8" placeholder="Create a strong password" required />
+        </label>
+        <button type="submit" class="primary">Create admin</button>
+      </form>
+    `,
+  });
+}
+
+function renderLoginForm(error?: string): Response {
+  return renderAdminShell({
+    title: "Admin login",
+    subtitle: "Welcome back to Freeducation.",
+    error,
+    form: `
+      <form method="post" action="/admin/login" class="card">
+        <label>
+          Email address
+          <input name="email" type="email" placeholder="admin@freeducation.com" required />
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" minlength="8" placeholder="Enter your password" required />
+        </label>
+        <button type="submit" class="primary">Log in</button>
+      </form>
+    `,
+  });
+}
+
+function renderDashboard(admin: { id: number; name: string; email: string }): Response {
+  return renderAdminShell({
+    title: "Admin dashboard",
+    subtitle: "Control center for Freeducation.",
+    form: `
+      <section class="card dashboard">
+        <div>
+          <p class="label">Signed in as</p>
+          <h3>${escapeHtml(admin.name)}</h3>
+          <p class="muted">${escapeHtml(admin.email)}</p>
+        </div>
+        <form method="post" action="/admin/logout">
+          <button class="ghost" type="submit">Log out</button>
+        </form>
+      </section>
+      <section class="grid">
+        <div class="panel">
+          <h4>Overview</h4>
+          <p>Dashboards, analytics, and course controls will live here soon.</p>
+        </div>
+        <div class="panel">
+          <h4>Next steps</h4>
+          <ul>
+            <li>Design the student course flow.</li>
+            <li>Connect R2 assets to lessons.</li>
+            <li>Invite instructors.</li>
+          </ul>
+        </div>
+      </section>
+    `,
+  });
+}
+
+function renderAdminShell(options: {
+  title: string;
+  subtitle: string;
+  form: string;
+  error?: string;
+}): Response {
+  const { title, subtitle, form, error } = options;
+  return new Response(
+    `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(title)} | Freeducation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f1f5f9;
+      display: flex;
+      justify-content: center;
+      padding: 24px 18px 60px;
+    }
+    main {
+      width: min(100%, 1000px);
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 26px;
+      color: #0f172a;
+    }
+    .logo svg {
+      width: 48px;
+      height: 48px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    p {
+      margin: 0;
+      color: #475569;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+      display: grid;
+      gap: 16px;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      color: #334155;
+    }
+    input {
+      border: 1px solid #cbd5f5;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .primary {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
+    }
+    .ghost {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+    }
+    .muted {
+      color: #64748b;
+    }
+    .grid {
+      margin-top: 24px;
+      display: grid;
+      gap: 18px;
+    }
+    .panel {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    .panel h4 {
+      margin: 0 0 8px;
+    }
+    .panel ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #475569;
+    }
+    @media (min-width: 768px) {
+      body {
+        padding: 40px 40px 80px;
+      }
+      header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      h1 {
+        font-size: 34px;
+      }
+      .card {
+        padding: 32px;
+      }
+      .dashboard {
+        flex-direction: row;
+        align-items: center;
+      }
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      ${renderLogo()}
+      <div>
+        <h1>${escapeHtml(title)}</h1>
+        <p>${escapeHtml(subtitle)}</p>
+      </div>
+    </header>
+    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
+    ${form}
+  </main>
+</body>
+</html>`,
+    {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    }
+  );
+}
+
+function renderLogo(): string {
+  return `
+    <div class="logo" aria-label="Freeducation">
+      <svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="hat" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#1d4ed8" />
+            <stop offset="100%" stop-color="#2563eb" />
+          </linearGradient>
+          <linearGradient id="rim" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#0f172a" />
+            <stop offset="100%" stop-color="#334155" />
+          </linearGradient>
+        </defs>
+        <path d="M12 44 L48 24 L84 44 L48 64 Z" fill="url(#hat)" />
+        <path d="M20 48 L48 62 L76 48" stroke="url(#rim)" stroke-width="4" stroke-linecap="round" />
+        <circle cx="72" cy="52" r="6" fill="#f97316" />
+      </svg>
+      <span>Freeducation</span>
+    </div>
+  `;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
