@@ -12,24 +12,10 @@ export interface User {
 }
 
 // --- AUTOMATIC SCHEMA SETUP ---
-// Since tables are not created manually, we embed the schema here to run it via code if needed.
 const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
 
-DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS learning_materials;
-DROP TABLE IF EXISTS questions;
-DROP TABLE IF EXISTS question_types;
-DROP TABLE IF EXISTS subchapters;
-DROP TABLE IF EXISTS chapters;
-DROP TABLE IF EXISTS subjects;
-DROP TABLE IF EXISTS groups;
-DROP TABLE IF EXISTS classes;
-DROP TABLE IF EXISTS source_entities;
-DROP TABLE IF EXISTS source_categories;
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
@@ -37,7 +23,7 @@ CREATE TABLE users (
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   token_hash TEXT NOT NULL,
@@ -46,7 +32,7 @@ CREATE TABLE sessions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE classes (
+CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   has_groups INTEGER NOT NULL DEFAULT 0,
@@ -54,14 +40,14 @@ CREATE TABLE classes (
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE groups (
+CREATE TABLE IF NOT EXISTS groups (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   class_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
 );
 
-CREATE TABLE subjects (
+CREATE TABLE IF NOT EXISTS subjects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   class_id INTEGER NOT NULL,
   group_id INTEGER,
@@ -70,7 +56,7 @@ CREATE TABLE subjects (
   FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL
 );
 
-CREATE TABLE chapters (
+CREATE TABLE IF NOT EXISTS chapters (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   subject_id INTEGER NOT NULL,
   name TEXT NOT NULL,
@@ -78,7 +64,7 @@ CREATE TABLE chapters (
   FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 );
 
-CREATE TABLE subchapters (
+CREATE TABLE IF NOT EXISTS subchapters (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chapter_id INTEGER NOT NULL,
   name TEXT NOT NULL,
@@ -86,26 +72,26 @@ CREATE TABLE subchapters (
   FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
 );
 
-CREATE TABLE question_types (
+CREATE TABLE IF NOT EXISTS question_types (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chapter_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
 );
 
-CREATE TABLE source_categories (
+CREATE TABLE IF NOT EXISTS source_categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE source_entities (
+CREATE TABLE IF NOT EXISTS source_entities (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   FOREIGN KEY (category_id) REFERENCES source_categories(id) ON DELETE CASCADE
 );
 
-CREATE TABLE questions (
+CREATE TABLE IF NOT EXISTS questions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chapter_id INTEGER NOT NULL,
   question_type_id INTEGER NOT NULL,
@@ -119,7 +105,7 @@ CREATE TABLE questions (
   FOREIGN KEY (source_entity_id) REFERENCES source_entities(id) ON DELETE CASCADE
 );
 
-CREATE TABLE learning_materials (
+CREATE TABLE IF NOT EXISTS learning_materials (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   subchapter_id INTEGER NOT NULL,
   title TEXT NOT NULL,
@@ -130,38 +116,45 @@ CREATE TABLE learning_materials (
   FOREIGN KEY (subchapter_id) REFERENCES subchapters(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_subjects_class_id ON subjects(class_id);
-CREATE INDEX idx_chapters_subject_id ON chapters(subject_id);
-CREATE INDEX idx_subchapters_chapter_id ON subchapters(chapter_id);
-CREATE INDEX idx_questions_chapter_id ON questions(chapter_id);
-CREATE INDEX idx_questions_question_type_id ON questions(question_type_id);
-CREATE INDEX idx_questions_source_entity_id ON questions(source_entity_id);
+-- Indexes (Safe to run multiple times usually, but better to keep simple)
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subjects_class_id ON subjects(class_id);
+CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id);
+CREATE INDEX IF NOT EXISTS idx_subchapters_chapter_id ON subchapters(chapter_id);
+CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
+CREATE INDEX IF NOT EXISTS idx_questions_question_type_id ON questions(question_type_id);
+CREATE INDEX IF NOT EXISTS idx_questions_source_entity_id ON questions(source_entity_id);
 
-INSERT INTO source_categories (name) VALUES
+-- Seed Data (Ignore if exists)
+INSERT OR IGNORE INTO source_categories (name) VALUES
   ('Board Exam'),
   ('University Admission'),
   ('Top Colleges');
 `;
 
 export const setupDatabase = async (db: D1Database) => {
-  // Use exec if available (newer workers types), otherwise split statements
+  console.log("Running DB Setup...");
+  // Use exec if available (faster/safer), otherwise batch
   if (typeof db.exec === 'function') {
       await db.exec(SCHEMA_SQL);
   } else {
-      // Fallback for environments where exec might be missing or limited
       const statements = SCHEMA_SQL.split(';')
           .map(s => s.trim())
-          .filter(s => s.length > 0);
+          .filter(s => s.length > 0)
+          .map(s => db.prepare(s));
       
-      const batch = [];
-      for (const stmt of statements) {
-          batch.push(db.prepare(stmt));
+      if (statements.length > 0) {
+        await db.batch(statements);
       }
-      await db.batch(batch);
   }
+  console.log("DB Setup Complete.");
 };
 // ------------------------------
+
+// Safe config access helper
+const getSessionDuration = () => {
+  return (appConfig && appConfig.sessionDurationHours) ? appConfig.sessionDurationHours : 8;
+};
 
 export const getAdminCount = async (db: D1Database) => {
   const result = await db.prepare("SELECT COUNT(*) as count FROM users").all();
@@ -201,7 +194,10 @@ export const createSession = async (
   userId: number,
   tokenHash: string
 ) => {
-  const expiresAt = new Date(Date.now() + appConfig.sessionDurationHours * 3600 * 1000);
+  // SAFE FALLBACK: use getSessionDuration()
+  const duration = getSessionDuration(); 
+  const expiresAt = new Date(Date.now() + duration * 3600 * 1000);
+  
   await db
     .prepare(
       "INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, datetime('now'), ?)")
@@ -479,3 +475,5 @@ export const insertLearningMaterial = async (
     )
     .run();
 };
+
+
