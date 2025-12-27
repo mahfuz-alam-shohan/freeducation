@@ -52,13 +52,13 @@ const renderCards = (d: any) => `
         <form method="POST" action="/admin/featured-cards" class="form-stack">
           <input name="title" placeholder="Title (e.g. Model Test 2025)" required>
           <input name="subtitle" placeholder="Subtitle (e.g. Join the crash course)">
-          <div class="form-row">
-            <input name="imageUrl" placeholder="Icon/Image URL">
-            <input class="form-shrink" name="color" type="color" value="#ffffff" style="width:70px;">
+          <div style="display:flex; gap:8px;">
+            <input name="imageUrl" placeholder="Icon/Image URL" style="flex:1">
+            <input name="color" type="color" value="#ffffff" style="width:60px;">
           </div>
-          <div class="form-row">
-             <input name="link" placeholder="Target Link (/smart-filter...)" required>
-             <input class="form-shrink" name="position" type="number" value="0" placeholder="Pos" style="width:90px;">
+          <div style="display:flex; gap:8px;">
+             <input name="link" placeholder="Target Link (/smart-filter...)" required style="flex:2">
+             <input name="position" type="number" value="0" placeholder="Pos" style="flex:1">
           </div>
           <button class="btn-primary">Publish Card</button>
         </form>
@@ -68,7 +68,7 @@ const renderCards = (d: any) => `
     <div class="section-title" style="margin-bottom:8px;">Active Cards</div>
     ${d.cards.map((c: any) => `
       <div class="card" style="margin-bottom:8px; border-left:4px solid ${c.bg_color};">
-        <div class="card-body list-row" style="padding:12px;">
+        <div class="card-body" style="padding:12px; display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div style="font-weight:600;">${c.title}</div>
             <div style="font-size:12px; color:var(--text-sub);">${c.target_link}</div>
@@ -88,9 +88,9 @@ const renderStructure = (d: any) => {
   return `
     <div class="container">
       <form method="POST" action="/admin/classes" class="card" style="padding:16px; border:2px dashed var(--border);">
-        <div class="form-row">
+        <div style="display:flex; gap:8px;">
           <input name="name" placeholder="New Class Name" required>
-          <div class="form-shrink" style="display:flex; align-items:center; gap:4px;">
+          <div style="display:flex; align-items:center; gap:4px; width:100px;">
             <input type="checkbox" name="hasGroups" value="true" style="width:20px;"> Groups?
           </div>
           <button class="btn-primary" style="width:auto;">Create</button>
@@ -167,10 +167,10 @@ const renderStructure = (d: any) => {
              }).join("")}
              
              <!-- Add Subject Form -->
-             <form method="POST" action="/admin/subjects" class="form-row" style="margin-top:12px;">
+             <form method="POST" action="/admin/subjects" style="margin-top:12px; display:flex; gap:8px;">
                <input type="hidden" name="classId" value="${effectiveId}">
-               ${effectiveClass?.has_groups ? `<select class="form-shrink" name="groupId" style="width:160px;"><option value="">Common</option>${groups.map((g:any)=>`<option value="${g.id}">${g.name}</option>`).join("")}</select>` : ''}
-               <input name="name" placeholder="Subject..." required style="height:40px; font-size:13px;">
+               ${effectiveClass?.has_groups ? `<select name="groupId" style="width:140px;"><option value="">Common</option>${groups.map((g:any)=>`<option value="${g.id}">${g.name}</option>`).join("")}</select>` : ''}
+               <input name="name" placeholder="Subject..." required style="height:36px; font-size:13px;">
                <button class="btn-sm btn-secondary">Add</button>
              </form>
              
@@ -195,9 +195,9 @@ const renderStructure = (d: any) => {
                    </div>
                  `).join("")}
                </div>
-               <form method="POST" action="/admin/groups" class="form-row" style="margin-top:8px;">
+               <form method="POST" action="/admin/groups" style="margin-top:8px; display:flex; gap:8px;">
                  <input type="hidden" name="classId" value="${effectiveId}">
-                 <input name="name" placeholder="New Group" style="height:40px;">
+                 <input name="name" placeholder="New Group" style="height:36px;">
                  <button class="btn-sm btn-secondary">Add</button>
                </form>
              ` : ''}
@@ -223,14 +223,14 @@ const renderQBank = (d: any) => {
       <div class="card collapsed-section">
         <div class="card-header">1. Hierarchy (Chapters)</div>
         <div class="card-body">
-           <form method="POST" action="/admin/chapters" class="form-row" style="margin-bottom:12px;">
-             <select name="subjectId" required>${subOpts}</select>
-             <input name="name" placeholder="New Chapter" required>
+           <form method="POST" action="/admin/chapters" style="display:flex; gap:8px; margin-bottom:12px;">
+             <select name="subjectId" required style="flex:1;">${subOpts}</select>
+             <input name="name" placeholder="New Chapter" style="flex:1;" required>
              <button class="btn-sm btn-secondary">Add</button>
            </form>
-           <form method="POST" action="/admin/subchapters" class="form-row">
-             <select name="chapterId" required>${chapOpts}</select>
-             <input name="name" placeholder="New Topic" required>
+           <form method="POST" action="/admin/subchapters" style="display:flex; gap:8px;">
+             <select name="chapterId" required style="flex:1;">${chapOpts}</select>
+             <input name="name" placeholder="New Topic" style="flex:1;" required>
              <button class="btn-sm btn-secondary">Add</button>
            </form>
         </div>
@@ -241,10 +241,10 @@ const renderQBank = (d: any) => {
         <div class="card-header" style="color:var(--accent);">2. Create Stem (Scenario)</div>
         <div class="card-body">
           <form method="POST" action="/admin/stems" class="form-stack">
-             <div class="form-row">
-                <select name="subjectId" required><option value="">Subject...</option>${subOpts}</select>
-                <select name="sourceEntityId"><option value="">Source...</option>${srcOpts}</select>
-                <input class="form-shrink" name="sourceYear" placeholder="Year" style="width:120px;">
+             <div style="display:flex; gap:8px;">
+                <select name="subjectId" required style="flex:1"><option value="">Subject...</option>${subOpts}</select>
+                <select name="sourceEntityId" style="flex:1"><option value="">Source...</option>${srcOpts}</select>
+                <input name="sourceYear" placeholder="Year" style="flex:1">
              </div>
              <textarea name="content" rows="3" placeholder="Enter the creative scenario paragraph here..." required></textarea>
              <input name="imageUrl" placeholder="Image URL (Optional)">
@@ -306,8 +306,8 @@ const renderSettings = (d: any) => `
     <div class="card">
       <div class="card-header">Source Entities (Boards)</div>
       <div class="card-body">
-        <form method="POST" action="/admin/source-entities" class="form-row">
-          <select class="form-shrink" name="categoryId" required style="width:160px;">${d.sources.categories.map((c:any)=>`<option value="${c.id}">${c.name}</option>`).join("")}</select>
+        <form method="POST" action="/admin/source-entities" style="display:flex; gap:8px;">
+          <select name="categoryId" required style="width:120px;">${d.sources.categories.map((c:any)=>`<option value="${c.id}">${c.name}</option>`).join("")}</select>
           <input name="name" placeholder="Name (e.g. Dhaka Board)" required>
           <button class="btn-sm btn-primary">Add</button>
         </form>
@@ -339,7 +339,7 @@ export const renderLogin = (opts: any) => layout("Login", `
          <h3 style="margin-top:8px;">Admin Login</h3>
          <p style="color:var(--text-muted); font-size:14px;">Manage content, track progress, and curate learning paths.</p>
          ${opts.error ? `<p style="color:var(--danger);">${opts.error}</p>` : ''}
-         <form method="POST" action="/admin/login" class="form-stack" style="margin-top:24px;">
+         <form method="POST" action="/admin/login" style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
            <input name="email" type="email" placeholder="Email" required>
            <input name="password" type="password" placeholder="Password" required>
            <button class="btn-primary">Login</button>
