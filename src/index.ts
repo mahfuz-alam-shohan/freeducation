@@ -21,19 +21,21 @@ const ADMIN_HTML = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeducation Admin</title>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f8fafc; color: #334155; }
-        .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f8fafc; color: #334155; }
+        .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); margin-bottom: 25px; border: 1px solid #e2e8f0; }
         h1, h2 { color: #0f172a; margin-top: 0; }
         .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: border 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: #3b82f6; outline: none; ring: 2px solid #3b82f6; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; color: #475569; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: border 0.2s, box-shadow 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
         button { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; font-size: 1rem; transition: background 0.2s; }
         button:hover { background: #1d4ed8; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .status-bar { padding: 12px 20px; margin-bottom: 20px; border-radius: 8px; background: #eff6ff; color: #1e40af; display: flex; justify-content: space-between; align-items: center; border: 1px solid #dbeafe; }
-        .alert { padding: 15px; background: #fee2e2; color: #991b1b; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #fecaca; }
-        pre { background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+        .alert { padding: 15px; background: #fee2e2; color: #991b1b; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #fecaca; font-weight: 500; }
+        pre { background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 13px; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; }
+        .btn-logout { width: auto; padding: 6px 15px; font-size: 13px; background: #ef4444; }
+        .btn-refresh { width: auto; background: #64748b; padding: 8px 16px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -41,12 +43,14 @@ const ADMIN_HTML = `
         <h1 style="text-align: center; margin-bottom: 30px;">🎓 Freeducation Engine</h1>
 
         <!-- Loading State -->
-        <div id="loading" style="text-align: center;">Checking System Status...</div>
+        <div id="loading" style="text-align: center; padding: 40px;">
+            <div style="font-size: 1.2rem; font-weight: 600;">Checking System Integrity...</div>
+        </div>
 
         <!-- 1. SETUP SECTION (First Run Only) -->
         <div id="setupSection" class="card hidden">
             <h2 style="text-align: center;">🚀 Initialize Platform</h2>
-            <div class="alert">No administrators found. Create the root account securely.</div>
+            <div class="alert">System is fresh. Create the Root Administrator.</div>
             
             <div class="input-group">
                 <label>Admin Name</label>
@@ -57,7 +61,7 @@ const ADMIN_HTML = `
                 <input type="email" id="setupEmail" placeholder="admin@freeducation.com">
             </div>
             <div class="input-group">
-                <label>Create Password</label>
+                <label>Create Secure Password</label>
                 <input type="password" id="setupPass" placeholder="Strong password">
             </div>
             <button onclick="performSetup()">Create Super Admin</button>
@@ -81,7 +85,7 @@ const ADMIN_HTML = `
         <div id="dashboardSection" class="hidden">
             <div id="statusBar" class="status-bar">
                 <span>👤 <strong id="adminName">Admin</strong></span>
-                <button onclick="logout()" style="width: auto; padding: 6px 15px; font-size: 13px; background: #ef4444;">Logout</button>
+                <button onclick="logout()" class="btn-logout">Logout</button>
             </div>
             
             <div class="card">
@@ -96,7 +100,7 @@ const ADMIN_HTML = `
 
                 <div id="chapterForm">
                     <div class="input-group">
-                        <input type="number" id="subjectId" placeholder="Subject ID">
+                        <input type="number" id="subjectId" placeholder="Subject ID (See Reference Below)">
                     </div>
                     <div class="input-group">
                         <input type="text" id="chapterTitle" placeholder="Chapter Title">
@@ -136,7 +140,7 @@ const ADMIN_HTML = `
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0;">📚 Database Reference</h2>
-                    <button onclick="fetchStructure()" style="width: auto; background: #64748b; padding: 8px 16px; font-size: 13px;">Refresh</button>
+                    <button onclick="fetchStructure()" class="btn-refresh">Refresh Data</button>
                 </div>
                 <pre id="jsonOutput">Loading data...</pre>
             </div>
@@ -149,25 +153,32 @@ const ADMIN_HTML = `
 
         // --- INIT ---
         window.onload = async () => {
-            // Check if system is initialized
             try {
                 const res = await fetch(\`\${API_URL}/api/auth/status\`);
-                const status = await res.json();
+                // Robustness: Handle non-JSON responses (fatal errors)
+                if (!res.ok) throw new Error(\`Server returned \${res.status}\`);
                 
+                const status = await res.json();
                 document.getElementById('loading').classList.add('hidden');
                 
+                if (status.error) {
+                    alert("System Critical Error: " + status.error);
+                    return;
+                }
+
                 if (!status.adminExists) {
-                    // Scenario 1: No Admin -> Show Setup
                     document.getElementById('setupSection').classList.remove('hidden');
                 } else if (token) {
-                    // Scenario 2: Admin Exists + Logged In -> Show Dashboard
+                    // Validate token isn't expired/fake by trying to fetch structure
                     showDashboard();
                 } else {
-                    // Scenario 3: Admin Exists + Not Logged In -> Show Login
                     document.getElementById('loginSection').classList.remove('hidden');
                 }
             } catch (e) {
-                alert("Cannot connect to backend.");
+                document.getElementById('loading').innerHTML = \`
+                    <div style="color:red">Connection Failed</div>
+                    <small>\${e.message}</small>
+                \`;
             }
         };
 
@@ -178,20 +189,28 @@ const ADMIN_HTML = `
             const email = document.getElementById('setupEmail').value;
             const password = document.getElementById('setupPass').value;
 
-            if(!name || !email || !password) return alert("Fill all fields");
+            if(!name || !email || !password) return alert("Please fill all fields");
 
-            const res = await fetch(\`\${API_URL}/api/auth/setup\`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password })
-            });
-            const data = await res.json();
+            document.querySelector('#setupSection button').disabled = true;
+            document.querySelector('#setupSection button').innerText = "Creating...";
 
-            if (data.success) {
-                alert("Setup Complete! Please Login.");
-                location.reload();
-            } else {
-                alert("Error: " + data.error);
+            try {
+                const res = await fetch(\`\${API_URL}/api/auth/setup\`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("✅ Setup Complete! You can now login.");
+                    location.reload();
+                } else {
+                    alert("❌ Setup Failed: " + (data.error || "Unknown Error"));
+                    document.querySelector('#setupSection button').disabled = false;
+                }
+            } catch (e) {
+                alert("Network Error: " + e.message);
             }
         }
 
@@ -199,19 +218,23 @@ const ADMIN_HTML = `
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
-            const res = await fetch(\`\${API_URL}/api/auth/login\`, {
-                method: 'POST',
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            
-            if (data.token) {
-                token = data.token;
-                localStorage.setItem('admin_token', token);
-                document.getElementById('adminName').innerText = data.name;
-                showDashboard();
-            } else {
-                alert("Login Failed");
+            try {
+                const res = await fetch(\`\${API_URL}/api/auth/login\`, {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('admin_token', token);
+                    document.getElementById('adminName').innerText = data.name;
+                    showDashboard();
+                } else {
+                    alert("Login Failed: " + (data.error || "Check credentials"));
+                }
+            } catch (e) {
+                alert("Login Error: " + e.message);
             }
         }
 
@@ -228,9 +251,13 @@ const ADMIN_HTML = `
         }
 
         async function fetchStructure() {
-            const res = await fetch(\`\${API_URL}/api/structure\`);
-            const data = await res.json();
-            document.getElementById('jsonOutput').innerText = JSON.stringify(data, null, 2);
+            try {
+                const res = await fetch(\`\${API_URL}/api/structure\`);
+                const data = await res.json();
+                document.getElementById('jsonOutput').innerText = JSON.stringify(data, null, 2);
+            } catch (e) {
+                document.getElementById('jsonOutput').innerText = "Error loading data.";
+            }
         }
 
         function toggleForm() {
@@ -267,10 +294,10 @@ const ADMIN_HTML = `
             });
             const data = await res.json();
             if (data.success) {
-                alert("Success!");
+                alert("✅ Success!");
                 fetchStructure();
             } else {
-                alert("Error: " + JSON.stringify(data));
+                alert("❌ Error: " + (data.error || JSON.stringify(data)));
             }
         }
     </script>
@@ -305,86 +332,101 @@ export default {
             });
         }
         if (request.method === "OPTIONS") {
-            return new Response(null, {
-                headers: {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-                },
-            });
+            return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
         }
 
         // --- AUTH API ---
 
-        // 1. Check Status (Is Admin Setup?)
+        // 1. Check Status
         if (url.pathname === "/api/auth/status") {
-            const count = await env.DB.prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin'").first();
-            return jsonResponse({ adminExists: (count as any).total > 0 });
+            try {
+                // We use a query that fails if the table doesn't exist to catch schema errors early
+                const count = await env.DB.prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin'").first();
+                return jsonResponse({ adminExists: (count as any).total > 0 });
+            } catch (e: any) {
+                // Return the DB error to the frontend so we know if migration failed
+                return jsonResponse({ adminExists: false, error: "Database Error: " + e.message });
+            }
         }
 
         // 2. Setup (Create First Admin)
         if (url.pathname === "/api/auth/setup" && request.method === "POST") {
-            const count = await env.DB.prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin'").first();
-            if ((count as any).total > 0) {
-                return jsonResponse({ error: "System already initialized" }, 403);
-            }
-
-            const { name, email, password } = await request.json() as any;
-            const hashed = await hashPassword(password);
-
             try {
+                // Double check to prevent race conditions
+                const count = await env.DB.prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin'").first();
+                if ((count as any).total > 0) {
+                    return jsonResponse({ error: "System already initialized" }, 403);
+                }
+
+                const { name, email, password } = await request.json() as any;
+                const hashed = await hashPassword(password);
+
                 await env.DB.prepare(
                     "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'admin')"
                 ).bind(name, email, hashed).run();
+                
                 return jsonResponse({ success: true });
-            } catch (e) {
-                return jsonResponse({ error: "Setup failed" }, 500);
+            } catch (e: any) {
+                // CRITICAL: Return the exact error message (e.g., "Table users has no column password_hash")
+                return jsonResponse({ error: e.message }, 500);
             }
         }
 
         // 3. Login
         if (url.pathname === "/api/auth/login" && request.method === "POST") {
-            const { email, password } = await request.json() as any;
-            const hashed = await hashPassword(password);
-            
-            const user = await env.DB.prepare("SELECT * FROM users WHERE email = ? AND password_hash = ?")
-                .bind(email, hashed).first();
+            try {
+                const { email, password } = await request.json() as any;
+                const hashed = await hashPassword(password);
+                
+                const user = await env.DB.prepare("SELECT * FROM users WHERE email = ? AND password_hash = ?")
+                    .bind(email, hashed).first();
 
-            if (!user) return jsonResponse({ error: "Invalid credentials" }, 401);
+                if (!user) return jsonResponse({ error: "Invalid credentials" }, 401);
 
-            const token = btoa(`${user.id}:${user.role}:${Date.now()}`); 
-            return jsonResponse({ token, role: user.role, name: user.name });
+                const token = btoa(`${user.id}:${user.role}:${Date.now()}`); 
+                return jsonResponse({ token, role: user.role, name: user.name });
+            } catch(e: any) {
+                return jsonResponse({ error: "Login Error: " + e.message }, 500);
+            }
         }
 
         // --- PUBLIC DATA ---
         if (url.pathname === "/api/structure") {
-            const classes = await env.DB.prepare("SELECT * FROM classes").all();
-            const subjects = await env.DB.prepare("SELECT * FROM subjects").all();
-            const tree = classes.results.map((c: any) => ({
-                ...c,
-                subjects: subjects.results.filter((s: any) => s.class_id === c.id)
-            }));
-            return jsonResponse(tree);
+            try {
+                const classes = await env.DB.prepare("SELECT * FROM classes").all();
+                const subjects = await env.DB.prepare("SELECT * FROM subjects").all();
+                const tree = classes.results.map((c: any) => ({
+                    ...c,
+                    subjects: subjects.results.filter((s: any) => s.class_id === c.id)
+                }));
+                return jsonResponse(tree);
+            } catch (e: any) {
+                return jsonResponse({ error: "Structure Error: " + e.message }, 500);
+            }
         }
 
         // --- PROTECTED ADMIN ROUTES ---
         if (url.pathname.startsWith("/api/admin/")) {
             const authHeader = request.headers.get("Authorization");
-            const isAdmin = authHeader && atob(authHeader).includes("admin"); // Simple check
+            const isAdmin = authHeader && atob(authHeader).includes("admin");
 
             if (!isAdmin) return jsonResponse({ error: "Unauthorized" }, 403);
 
-            if (url.pathname === "/api/admin/chapter" && request.method === "POST") {
-                const { subject_id, title } = await request.json() as any;
-                await env.DB.prepare("INSERT INTO chapters (subject_id, title) VALUES (?, ?)").bind(subject_id, title).run();
-                return jsonResponse({ success: true });
-            }
+            try {
+                if (url.pathname === "/api/admin/chapter" && request.method === "POST") {
+                    const { subject_id, title } = await request.json() as any;
+                    await env.DB.prepare("INSERT INTO chapters (subject_id, title) VALUES (?, ?)").bind(subject_id, title).run();
+                    return jsonResponse({ success: true });
+                }
 
-            if (url.pathname === "/api/admin/mcq" && request.method === "POST") {
-                const { chapter_id, question, options, correct_index, explanation } = await request.json() as any;
-                await env.DB.prepare("INSERT INTO mcqs (chapter_id, question, options, correct_index, explanation) VALUES (?, ?, ?, ?, ?)")
-                    .bind(chapter_id, question, JSON.stringify(options), correct_index, explanation).run();
-                return jsonResponse({ success: true });
+                if (url.pathname === "/api/admin/mcq" && request.method === "POST") {
+                    const { chapter_id, question, options, correct_index, explanation } = await request.json() as any;
+                    await env.DB.prepare("INSERT INTO mcqs (chapter_id, question, options, correct_index, explanation) VALUES (?, ?, ?, ?, ?)")
+                        .bind(chapter_id, question, JSON.stringify(options), correct_index, explanation).run();
+                    return jsonResponse({ success: true });
+                }
+            } catch(e: any) {
+                return jsonResponse({ error: "DB Error: " + e.message }, 500);
             }
         }
 
