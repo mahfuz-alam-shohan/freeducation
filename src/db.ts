@@ -114,7 +114,6 @@ export const getUserFromSession = async (db: D1Database, hash: string) => {
 };
 
 // --- CORE DATA ---
-@@ -187,50 +202,63 @@ export const getHierarchy = async (db: D1Database) => {
 
 export const getSources = async (db: D1Database) => {
   const [c, e] = await Promise.all([
@@ -178,7 +177,13 @@ export const insertQuestion = async (db: D1Database, p: any) => {
     p.questionPart, 
     p.isConnected === 'true' ? 1 : 0,
     p.prompt, 
-@@ -246,53 +274,51 @@ export const deleteItem = async (db: D1Database, table: string, id: string) => {
+    p.imageUrl || null,
+    p.sourceEntityId || null,
+    p.sourceYear || null
+  ).run();
+};
+
+export const deleteItem = async (db: D1Database, table: string, id: string) => {
   await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
 };
 
