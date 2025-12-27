@@ -9,3 +9,6 @@ database_id = "08f71595-eb18-4391-94c5-9c5b50297c83"
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "freeducation"
+name = "freeducation"
+main = "src/index.ts"
+compatibility_date = "2025-12-27"
