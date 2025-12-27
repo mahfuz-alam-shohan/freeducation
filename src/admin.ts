@@ -27,9 +27,9 @@ const nav = (active: string) => `
       </header>
       <nav class="nav-scroll">
         <a href="/admin?view=overview" class="nav-pill ${active==='overview'?'active':''}">Overview</a>
-        <a href="/admin?view=cards" class="nav-pill ${active==='cards'?'active':''}">Cards</a>
+        <a href="/admin?view=cards" class="nav-pill ${active==='cards'?'active':''}">Featured Cards</a>
         <a href="/admin?view=structure" class="nav-pill ${active==='structure'?'active':''}">Structure</a>
-        <a href="/admin?view=qbank" class="nav-pill ${active==='qbank'?'active':''}">Q-Bank</a>
+        <a href="/admin?view=qbank" class="nav-pill ${active==='qbank'?'active':''}">Question Bank</a>
         <a href="/admin?view=materials" class="nav-pill ${active==='materials'?'active':''}">Materials</a>
         <a href="/admin?view=settings" class="nav-pill ${active==='settings'?'active':''}">Settings</a>
       </nav>
@@ -82,6 +82,9 @@ const renderCards = (d: any) => `
 
 // --- VIEW: Structure ---
 const renderStructure = (d: any) => {
+  const classById = new Map(d.hierarchy.classes.map((c: any) => [c.id, c]));
+  const groupById = new Map(d.hierarchy.groups.map((g: any) => [g.id, g]));
+
   return `
     <div class="container">
       <form method="POST" action="/admin/classes" class="card" style="padding:16px; border:2px dashed var(--border);">
@@ -93,29 +96,114 @@ const renderStructure = (d: any) => {
           <button class="btn-primary" style="width:auto;">Create</button>
         </div>
       </form>
-      ${d.hierarchy.classes.map((c: any) => `
+      ${d.hierarchy.classes.map((c: any) => {
+        const effectiveId = c.linked_class_id || c.id;
+        const effectiveClass = classById.get(effectiveId) || c;
+        const subjects = d.hierarchy.subjects.filter((s: any) => s.class_id === effectiveId);
+        const groups = d.hierarchy.groups.filter((g: any) => g.class_id === effectiveId);
+        const linkedLabel = c.linked_class_id ? `Linked to ${effectiveClass?.name || 'Unknown Class'}` : 'Independent';
+        const canEditStructure = !c.linked_class_id;
+        return `
         <div class="card">
-          <div class="card-header"><span>${c.name}</span>${del('classes', c.id, 'structure')}</div>
+          <div class="card-header">
+            <div>
+              <div style="font-weight:700;">${c.name}</div>
+              <div style="font-size:12px; color:var(--text-sub); margin-top:2px;">${linkedLabel}</div>
+            </div>
+            ${del('classes', c.id, 'structure')}
+          </div>
           <div class="card-body">
+            <div class="stack-sm" style="margin-bottom:8px;">
+              <details class="inline-edit">
+                <summary class="btn-ghost" style="width:max-content;">Edit Class</summary>
+                <form method="POST" action="/admin/classes/update" class="form-stack" style="margin-top:12px;">
+                  <input type="hidden" name="id" value="${c.id}">
+                  <input name="name" value="${c.name}" required>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:13px;">
+                    <input type="hidden" name="hasGroups" value="${canEditStructure ? 'false' : (effectiveClass?.has_groups ? 'true' : 'false')}">
+                    <input type="checkbox" name="hasGroups" value="true" ${effectiveClass?.has_groups ? 'checked' : ''} ${canEditStructure ? '' : 'disabled'}>
+                    Supports Groups
+                  </label>
+                  ${!canEditStructure ? `<small style="color:var(--text-sub);">Group settings are managed by the linked class.</small>` : ''}
+                  <button class="btn-sm btn-secondary" style="width:max-content;">Save Class</button>
+                </form>
+              </details>
+              <details class="inline-edit">
+                <summary class="btn-ghost" style="width:max-content;">Link Class Curriculum</summary>
+                <form method="POST" action="/admin/classes/link" class="form-stack" style="margin-top:12px;">
+                  <input type="hidden" name="id" value="${c.id}">
+                  <select name="linkedClassId">
+                    <option value="">No Link</option>
+                    ${d.hierarchy.classes.filter((o: any) => o.id !== c.id).map((o: any) => `<option value="${o.id}" ${o.id === c.linked_class_id ? 'selected' : ''}>${o.name}</option>`).join("")}
+                  </select>
+                  <button class="btn-sm btn-secondary" style="width:max-content;">Update Link</button>
+                </form>
+              </details>
+            </div>
              <!-- Subjects List -->
-             ${d.hierarchy.subjects.filter((s: any) => s.class_id===c.id).map((s: any) => `
+             ${subjects.map((s: any) => {
+               const groupName = s.group_id ? groupById.get(s.group_id)?.name : null;
+               return `
                <div class="list-row" style="padding:8px 0; border-bottom:1px dashed var(--border);">
-                  <span>📘 ${s.name} <small style="opacity:0.6;">${s.group_id?'(Group)':'(Common)'}</small></span>${del('subjects', s.id, 'structure')}
-               </div>`).join("")}
+                  <span>📘 ${s.name} <small style="opacity:0.6;">${groupName ? `(${groupName} Group)` : '(Common)'}</small></span>
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <details class="inline-edit">
+                      <summary class="btn-ghost" style="padding:4px 8px;">Edit</summary>
+                      <form method="POST" action="/admin/subjects/update" class="form-stack" style="margin-top:8px;">
+                        <input type="hidden" name="id" value="${s.id}">
+                        <input name="name" value="${s.name}" required>
+                        ${effectiveClass?.has_groups ? `
+                          <select name="groupId">
+                            <option value="">Common</option>
+                            ${groups.map((g: any) => `<option value="${g.id}" ${String(g.id) === String(s.group_id) ? 'selected' : ''}>${g.name}</option>`).join("")}
+                          </select>
+                        ` : ''}
+                        <button class="btn-sm btn-secondary" style="width:max-content;">Save</button>
+                      </form>
+                    </details>
+                    ${del('subjects', s.id, 'structure')}
+                  </div>
+               </div>`;
+             }).join("")}
              
              <!-- Add Subject Form -->
              <form method="POST" action="/admin/subjects" style="margin-top:12px; display:flex; gap:8px;">
-               <input type="hidden" name="classId" value="${c.id}">
-               ${c.has_groups ? `<select name="groupId" style="width:100px;"><option value="">Common</option>${d.hierarchy.groups.filter((g:any)=>g.class_id===c.id).map((g:any)=>`<option value="${g.id}">${g.name}</option>`).join("")}</select>` : ''}
+               <input type="hidden" name="classId" value="${effectiveId}">
+               ${effectiveClass?.has_groups ? `<select name="groupId" style="width:140px;"><option value="">Common</option>${groups.map((g:any)=>`<option value="${g.id}">${g.name}</option>`).join("")}</select>` : ''}
                <input name="name" placeholder="Subject..." required style="height:36px; font-size:13px;">
                <button class="btn-sm btn-secondary">Add</button>
              </form>
              
              <!-- Groups Form -->
-             ${c.has_groups ? `<div style="margin-top:16px; border-top:1px solid var(--border); padding-top:8px;"><small>Groups:</small> ${d.hierarchy.groups.filter((g:any)=>g.class_id===c.id).map((g:any)=>`<span class="tag tag-gray">${g.name} ${del('groups', g.id, 'structure')}</span>`).join("")}</div><form method="POST" action="/admin/groups" style="margin-top:8px; display:flex; gap:8px;"><input type="hidden" name="classId" value="${c.id}"><input name="name" placeholder="New Group" style="height:36px;"><button class="btn-sm btn-secondary">Add</button></form>` : ''}
+             ${effectiveClass?.has_groups ? `
+               <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:8px;">
+                 <small>Groups:</small>
+                 ${groups.map((g:any)=>`
+                   <div class="list-row" style="padding:6px 0;">
+                     <span class="tag tag-gray">${g.name}</span>
+                     <div style="display:flex; gap:6px; align-items:center;">
+                       <details class="inline-edit">
+                         <summary class="btn-ghost" style="padding:4px 8px;">Edit</summary>
+                         <form method="POST" action="/admin/groups/update" class="form-stack" style="margin-top:8px;">
+                           <input type="hidden" name="id" value="${g.id}">
+                           <input name="name" value="${g.name}" required>
+                           <button class="btn-sm btn-secondary" style="width:max-content;">Save</button>
+                         </form>
+                       </details>
+                       ${del('groups', g.id, 'structure')}
+                     </div>
+                   </div>
+                 `).join("")}
+               </div>
+               <form method="POST" action="/admin/groups" style="margin-top:8px; display:flex; gap:8px;">
+                 <input type="hidden" name="classId" value="${effectiveId}">
+                 <input name="name" placeholder="New Group" style="height:36px;">
+                 <button class="btn-sm btn-secondary">Add</button>
+               </form>
+             ` : ''}
           </div>
         </div>
-      `).join("")}
+      `;}).join("")}
     </div>
   `;
 };
@@ -261,4 +349,3 @@ export const renderLogin = (opts: any) => layout("Login", `
     </div>
   </div>
 `);
-
