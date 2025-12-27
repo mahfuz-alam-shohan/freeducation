@@ -8,22 +8,46 @@ interface Env {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    if (url.pathname.startsWith("/admin")) {
-      return handleAdmin(request, env);
+    try {
+      return await routeRequest(request, env);
+    } catch (error) {
+      return renderErrorPage(request, error);
     }
-
-    if (url.pathname === "/") {
-      return renderPublicHome();
-    }
-
-    return new Response("Not Found", { status: 404 });
   },
 };
+
+async function routeRequest(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const method = request.method.toUpperCase();
+  const path = url.pathname;
+
+  if (path.startsWith("/admin")) {
+    return handleAdmin(request, env);
+  }
+
+  if (path === "/" && method === "GET") {
+    return renderPublicHome();
+  }
+
+  return new Response("Not Found", { status: 404 });
+}
 
 async function handleAdmin(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
+  const dbCheck = ensureDatabase(env);
+  if (!dbCheck.ok) {
+    return renderAdminShell({
+      title: "Admin unavailable",
+      subtitle: "Database configuration required.",
+      error: dbCheck.message,
+      form: `
+        <section class="card">
+          <p>Please attach the D1 database binding before continuing.</p>
+        </section>
+      `,
+    });
+  }
 
   if (url.pathname === "/admin/logout") {
     if (method !== "POST") {
@@ -376,6 +400,47 @@ function renderPublicHome(): Response {
   );
 }
 
+function ensureDatabase(env: Env): { ok: true } | { ok: false; message: string } {
+  if (!env || !env.DB) {
+    return {
+      ok: false,
+      message: "Missing D1 binding: add a [vars] or [[d1_databases]] section in wrangler.toml.",
+    };
+  }
+
+  const maybePrepare = (env.DB as D1Database).prepare;
+  if (typeof maybePrepare !== "function") {
+    return {
+      ok: false,
+      message: "D1 binding is present but invalid. Please re-bind the database.",
+    };
+  }
+
+  return { ok: true };
+}
+
+function renderErrorPage(request: Request, error: unknown): Response {
+  const message = error instanceof Error ? error.message : "Unexpected error.";
+  const stack = error instanceof Error && error.stack ? error.stack : "";
+  const content = `
+    <section class="card">
+      <p class="label">Request</p>
+      <p class="muted">${escapeHtml(request.method)} ${escapeHtml(new URL(request.url).pathname)}</p>
+      <p class="label" style="margin-top:16px;">Error</p>
+      <p>${escapeHtml(message)}</p>
+      ${stack ? `<pre class="stack">${escapeHtml(stack)}</pre>` : ""}
+      <p class="muted">If this persists, check the Cloudflare Worker logs for details.</p>
+    </section>
+  `;
+
+  return renderAdminShell({
+    title: "Something went wrong",
+    subtitle: "We hit a server error while preparing your page.",
+    error: "Worker threw an exception.",
+    form: content,
+  });
+}
+
 function renderSetupForm(error?: string): Response {
   return renderAdminShell({
     title: "Create your first admin",
@@ -593,6 +658,16 @@ function renderAdminShell(options: {
       margin: 0;
       padding-left: 18px;
       color: #475569;
+    }
+    pre.stack {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 12px;
     }
     @media (min-width: 768px) {
       body {
