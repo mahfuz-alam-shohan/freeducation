@@ -5,14 +5,8 @@ export interface Env {
   BUCKET: R2Bucket;
 }
 
-export interface User {
-  id: number;
-  email: string;
-  role: "admin";
-}
+export interface User { id: number; email: string; role: "admin"; }
 
-// --- AUTOMATIC SCHEMA SETUP ---
-// NOTE: Schema remains robust. We rely on logic in Admin/Student files to interpret group_id correctly.
 const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
 
@@ -37,7 +31,6 @@ CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   has_groups INTEGER NOT NULL DEFAULT 0,
-  is_merged INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
 
@@ -51,7 +44,7 @@ CREATE TABLE IF NOT EXISTS groups (
 CREATE TABLE IF NOT EXISTS subjects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   class_id INTEGER NOT NULL,
-  group_id INTEGER, -- Nullable. If NULL, it is a COMMON subject. If SET, it belongs to that group.
+  group_id INTEGER,
   name TEXT NOT NULL,
   FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
   FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL
@@ -73,18 +66,7 @@ CREATE TABLE IF NOT EXISTS subchapters (
   FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS question_types (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  chapter_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS source_categories (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE
-);
-
+CREATE TABLE IF NOT EXISTS source_categories ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE );
 CREATE TABLE IF NOT EXISTS source_entities (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category_id INTEGER NOT NULL,
@@ -92,18 +74,57 @@ CREATE TABLE IF NOT EXISTS source_entities (
   FOREIGN KEY (category_id) REFERENCES source_categories(id) ON DELETE CASCADE
 );
 
+-- NEW: Featured Cards for Homepage Marketing
+CREATE TABLE IF NOT EXISTS featured_cards (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  image_url TEXT,
+  target_link TEXT NOT NULL,
+  bg_color TEXT DEFAULT '#ffffff', -- Hex code
+  position INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+-- NEW: Stems (The 'Para' or Scenario)
+CREATE TABLE IF NOT EXISTS stems (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  content TEXT NOT NULL, -- The paragraph text
+  image_url TEXT,
+  source_entity_id INTEGER, -- e.g. Dhaka Board
+  source_year TEXT,
+  subject_id INTEGER NOT NULL, -- Broad categorization
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+  FOREIGN KEY (source_entity_id) REFERENCES source_entities(id) ON DELETE SET NULL
+);
+
+-- UPDATED: Questions linked to Stems
 CREATE TABLE IF NOT EXISTS questions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  
+  -- Hierarchy Links
   chapter_id INTEGER NOT NULL,
-  question_type_id INTEGER NOT NULL,
-  source_entity_id INTEGER NOT NULL,
-  source_year TEXT NOT NULL,
+  subchapter_id INTEGER, -- Topic Tag
+  
+  -- CQ Structure
+  stem_id INTEGER, -- Link to parent Stem (Nullable for independent MCQs)
+  question_part TEXT, -- 'mcq', 'k', 'kh', 'g', 'gh'
+  is_connected INTEGER DEFAULT 1, -- 1=Yes, 0=No (For k/kh that might be independent)
+
+  -- Content
   prompt TEXT NOT NULL,
   image_url TEXT,
+  
+  -- Metadata
+  source_entity_id INTEGER, -- Can inherit from Stem or be specific
+  source_year TEXT,
   created_at TEXT NOT NULL,
+
   FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
-  FOREIGN KEY (question_type_id) REFERENCES question_types(id) ON DELETE CASCADE,
-  FOREIGN KEY (source_entity_id) REFERENCES source_entities(id) ON DELETE CASCADE
+  FOREIGN KEY (subchapter_id) REFERENCES subchapters(id) ON DELETE SET NULL,
+  FOREIGN KEY (stem_id) REFERENCES stems(id) ON DELETE CASCADE,
+  FOREIGN KEY (source_entity_id) REFERENCES source_entities(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS learning_materials (
@@ -117,220 +138,161 @@ CREATE TABLE IF NOT EXISTS learning_materials (
   FOREIGN KEY (subchapter_id) REFERENCES subchapters(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_subjects_class_id ON subjects(class_id);
-CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id);
-CREATE INDEX IF NOT EXISTS idx_subchapters_chapter_id ON subchapters(chapter_id);
-CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
-CREATE INDEX IF NOT EXISTS idx_questions_question_type_id ON questions(question_type_id);
-CREATE INDEX IF NOT EXISTS idx_questions_source_entity_id ON questions(source_entity_id);
-
-INSERT OR IGNORE INTO source_categories (name) VALUES ('Board Exam'), ('University Admission'), ('Top Colleges');
+INSERT OR IGNORE INTO source_categories (name) VALUES ('Board Exam'), ('University Admission'), ('College Test');
 `;
 
 export const setupDatabase = async (db: D1Database) => {
-  console.log("Running DB Setup...");
   const cleanSQL = SCHEMA_SQL.replace(/--.*$/gm, '');
   const statements = cleanSQL.split(';').map(s => s.trim()).filter(s => s.length > 0);
   for (const statement of statements) {
-    try { await db.prepare(statement).run(); } catch (err: any) { console.warn(err.message); }
+    try { await db.prepare(statement).run(); } catch (err: any) { console.warn("Schema:", err.message); }
   }
-  console.log("DB Setup Complete.");
 };
 
-// Safe config access helper
-const getSessionDuration = () => {
-  return (appConfig && appConfig.sessionDurationHours) ? appConfig.sessionDurationHours : 8;
-};
-
-// --- AUTH ---
-export const getAdminCount = async (db: D1Database) => {
-  const result = await db.prepare("SELECT COUNT(*) as count FROM users").all();
-  return (result.results?.[0]?.count as number) ?? 0;
-};
-
+// --- ACCESSORS ---
+export const getAdminCount = async (db: D1Database) => (await db.prepare("SELECT COUNT(*) as count FROM users").first('count') as number) ?? 0;
 export const getUserByEmail = async (db: D1Database, email: string) => {
-  const result = await db
-    .prepare("SELECT id, email, password_hash as passwordHash FROM users WHERE email = ?")
-    .bind(email)
-    .first();
-  if (!result) return null;
-  return {
-    id: result.id as number,
-    email: result.email as string,
-    passwordHash: result.passwordHash as string,
-  };
+  const r: any = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+  return r ? { id: r.id, email: r.email, passwordHash: r.password_hash } : null;
 };
 
-export const createAdmin = async (db: D1Database, email: string, passwordHash: string) => {
-  await db.prepare("INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, 'admin', datetime('now'))")
-    .bind(email, passwordHash).run();
-  const row = await db.prepare("SELECT id, email FROM users WHERE email = ?").bind(email).first();
-  if (!row) throw new Error("Admin creation failed");
-  return { id: row.id as number, email: row.email as string } as User;
+// --- INSERTS ---
+export const createAdmin = async (db: D1Database, email: string, hash: string) => {
+  await db.prepare("INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, 'admin', datetime('now'))").bind(email, hash).run();
+  const r: any = await db.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
+  return r as User;
 };
 
-export const createSession = async (db: D1Database, userId: number, tokenHash: string) => {
-  const duration = getSessionDuration(); 
-  const expiresAt = new Date(Date.now() + duration * 3600 * 1000);
-  await db.prepare("INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, datetime('now'), ?)")
-    .bind(userId, tokenHash, expiresAt.toISOString()).run();
+export const createSession = async (db: D1Database, uid: number, hash: string) => {
+  const exp = new Date(Date.now() + 8 * 3600 * 1000).toISOString();
+  await db.prepare("INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, datetime('now'), ?)").bind(uid, hash, exp).run();
 };
 
-export const getUserFromSession = async (db: D1Database, tokenHash: string) => {
-  const row = await db.prepare(
-      `SELECT users.id as id, users.email as email, users.role as role FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ? AND sessions.expires_at > datetime('now')`
-    ).bind(tokenHash).first();
-  if (!row) return null;
-  return { id: row.id as number, email: row.email as string, role: row.role as "admin" } as User;
+export const getUserFromSession = async (db: D1Database, hash: string) => {
+  const r: any = await db.prepare(`SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > datetime('now')`).bind(hash).first();
+  return r as User;
 };
 
-// --- READ OPERATIONS ---
-
+// --- CORE DATA ---
 export const getHierarchy = async (db: D1Database) => {
-  const classes = await db.prepare("SELECT * FROM classes ORDER BY id").all();
-  const groups = await db.prepare("SELECT * FROM groups ORDER BY id").all();
-  const subjects = await db.prepare("SELECT * FROM subjects ORDER BY id").all();
-  const chapters = await db.prepare("SELECT * FROM chapters ORDER BY id").all();
-  const subchapters = await db.prepare("SELECT * FROM subchapters ORDER BY id").all();
-  return {
-    classes: classes.results ?? [],
-    groups: groups.results ?? [],
-    subjects: subjects.results ?? [],
-    chapters: chapters.results ?? [],
-    subchapters: subchapters.results ?? [],
-  };
-};
-
-export const getQuestionTypes = async (db: D1Database, chapterId?: string) => {
-  const query = chapterId
-    ? db.prepare("SELECT * FROM question_types WHERE chapter_id = ? ORDER BY id").bind(chapterId)
-    : db.prepare("SELECT * FROM question_types ORDER BY id");
-  const result = await query.all();
-  return result.results ?? [];
+  const [c, g, s, ch, sch] = await Promise.all([
+    db.prepare("SELECT * FROM classes ORDER BY id").all(),
+    db.prepare("SELECT * FROM groups ORDER BY id").all(),
+    db.prepare("SELECT * FROM subjects ORDER BY id").all(),
+    db.prepare("SELECT * FROM chapters ORDER BY id").all(),
+    db.prepare("SELECT * FROM subchapters ORDER BY id").all()
+  ]);
+  return { classes: c.results||[], groups: g.results||[], subjects: s.results||[], chapters: ch.results||[], subchapters: sch.results||[] };
 };
 
 export const getSources = async (db: D1Database) => {
-  const categories = await db.prepare("SELECT * FROM source_categories ORDER BY id").all();
-  const entities = await db.prepare("SELECT * FROM source_entities ORDER BY id").all();
-  return { categories: categories.results ?? [], entities: entities.results ?? [] };
+  const [c, e] = await Promise.all([
+    db.prepare("SELECT * FROM source_categories ORDER BY id").all(),
+    db.prepare("SELECT * FROM source_entities ORDER BY id").all()
+  ]);
+  return { categories: c.results||[], entities: e.results||[] };
 };
 
-// --- WRITE OPERATIONS (INSERT) ---
+export const getFeaturedCards = async (db: D1Database) => {
+  return (await db.prepare("SELECT * FROM featured_cards ORDER BY position ASC, id DESC").all()).results || [];
+};
 
+// --- CREATION HELPERS ---
 export const insertClass = async (db: D1Database, name: string, hasGroups: boolean) => {
-  const existing = await db.prepare("SELECT id FROM classes WHERE lower(name) = lower(?)").bind(name).first();
-  if (existing) throw new Error(`Class '${name}' already exists.`);
+  if (await db.prepare("SELECT id FROM classes WHERE lower(name)=lower(?)").bind(name).first()) throw new Error("Exists");
+  await db.prepare("INSERT INTO classes (name, has_groups, created_at) VALUES (?, ?, datetime('now'))").bind(name, hasGroups?1:0).run();
+};
+export const insertGroup = (db: D1Database, cid: string, name: string) => db.prepare("INSERT INTO groups (class_id, name) VALUES (?, ?)").bind(cid, name).run();
+export const insertSubject = (db: D1Database, cid: string, gid: string|null, name: string) => db.prepare("INSERT INTO subjects (class_id, group_id, name) VALUES (?, ?, ?)").bind(cid, gid, name).run();
+export const insertChapter = (db: D1Database, sid: string, name: string, pos: number) => db.prepare("INSERT INTO chapters (subject_id, name, position) VALUES (?, ?, ?)").bind(sid, name, pos).run();
+export const insertSubChapter = (db: D1Database, chid: string, name: string) => db.prepare("INSERT INTO subchapters (chapter_id, name, position) VALUES (?, ?, 1)").bind(chid, name).run();
+export const insertSourceEntity = (db: D1Database, cid: string, name: string) => db.prepare("INSERT INTO source_entities (category_id, name) VALUES (?, ?)").bind(cid, name).run();
+export const insertLearningMaterial = (db: D1Database, p: any) => db.prepare(`INSERT INTO learning_materials (subchapter_id, title, material_type, url, notes, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`).bind(p.subchapterId, p.title, p.materialType, p.url, p.notes).run();
 
-  await db.prepare("INSERT INTO classes (name, has_groups, is_merged, created_at) VALUES (?, ?, 0, datetime('now'))")
-    .bind(name, hasGroups ? 1 : 0).run();
+// --- FEATURED CARDS ---
+export const insertFeaturedCard = async (db: D1Database, p: any) => {
+  await db.prepare(`INSERT INTO featured_cards (title, subtitle, image_url, target_link, bg_color, position, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`)
+    .bind(p.title, p.subtitle, p.imageUrl, p.link, p.color, Number(p.position)||0).run();
 };
 
-export const insertGroup = async (db: D1Database, classId: string, name: string) => {
-  await db.prepare("INSERT INTO groups (class_id, name) VALUES (?, ?)").bind(classId, name).run();
+// --- CQ SYSTEM INSERTS ---
+export const insertStem = async (db: D1Database, p: any) => {
+  const res = await db.prepare(`INSERT INTO stems (content, image_url, source_entity_id, source_year, subject_id, created_at) VALUES (?, ?, ?, ?, ?, datetime('now')) RETURNING id`)
+    .bind(p.content, p.imageUrl || null, p.sourceEntityId, p.sourceYear, p.subjectId).first();
+  return res?.id;
 };
 
-export const insertSubject = async (db: D1Database, classId: string, groupId: string | null, name: string) => {
-  await db.prepare("INSERT INTO subjects (class_id, group_id, name) VALUES (?, ?, ?)").bind(classId, groupId, name).run();
+export const insertQuestion = async (db: D1Database, p: any) => {
+  await db.prepare(`
+    INSERT INTO questions 
+    (chapter_id, subchapter_id, stem_id, question_part, is_connected, prompt, image_url, source_entity_id, source_year, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(
+    p.chapterId, 
+    p.subchapterId || null, 
+    p.stemId || null, 
+    p.questionPart, 
+    p.isConnected === 'true' ? 1 : 0,
+    p.prompt, 
+    p.imageUrl || null,
+    p.sourceEntityId || null, // Can inherit from Stem
+    p.sourceYear || null // Can inherit from Stem
+  ).run();
 };
-
-export const insertChapter = async (db: D1Database, subjectId: string, name: string, position: number) => {
-  await db.prepare("INSERT INTO chapters (subject_id, name, position) VALUES (?, ?, ?)").bind(subjectId, name, position).run();
-};
-
-export const insertSubChapter = async (db: D1Database, chapterId: string, name: string, position: number) => {
-  await db.prepare("INSERT INTO subchapters (chapter_id, name, position) VALUES (?, ?, ?)").bind(chapterId, name, position).run();
-};
-
-export const insertQuestionType = async (db: D1Database, chapterId: string, name: string) => {
-  await db.prepare("INSERT INTO question_types (chapter_id, name) VALUES (?, ?)").bind(chapterId, name).run();
-};
-
-export const insertSourceEntity = async (db: D1Database, categoryId: string, name: string) => {
-  await db.prepare("INSERT INTO source_entities (category_id, name) VALUES (?, ?)").bind(categoryId, name).run();
-};
-
-export const insertQuestion = async (
-  db: D1Database,
-  payload: { chapterId: string; questionTypeId: string; sourceEntityId: string; sourceYear: string; prompt: string; imageUrl: string | null; }
-) => {
-  await db.prepare(
-      `INSERT INTO questions (chapter_id, question_type_id, source_entity_id, source_year, prompt, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
-    ).bind(payload.chapterId, payload.questionTypeId, payload.sourceEntityId, payload.sourceYear, payload.prompt, payload.imageUrl).run();
-};
-
-export const insertLearningMaterial = async (
-  db: D1Database,
-  payload: { subchapterId: string; title: string; materialType: string; url: string; notes: string | null; }
-) => {
-  await db.prepare(
-      `INSERT INTO learning_materials (subchapter_id, title, material_type, url, notes, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`
-    ).bind(payload.subchapterId, payload.title, payload.materialType, payload.url, payload.notes).run();
-};
-
-// --- WRITE OPERATIONS (DELETE) ---
 
 export const deleteItem = async (db: D1Database, table: string, id: string) => {
-  const allowedTables = ['classes', 'groups', 'subjects', 'chapters', 'subchapters', 'question_types', 'questions', 'learning_materials', 'source_entities'];
-  if (!allowedTables.includes(table)) throw new Error("Invalid table for deletion");
-  
+  const allowed = ['classes','groups','subjects','chapters','subchapters','questions','learning_materials','source_entities', 'stems', 'featured_cards'];
+  if (!allowed.includes(table)) throw new Error("Invalid table");
   await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
 };
 
-// --- LISTS ---
+// --- SMART QUERY ---
+export const listQuestionsFiltered = async (db: D1Database, f: any) => {
+  // Complex Join to get Question + Linked Stem info
+  let sql = `
+    SELECT q.*, 
+           st.content as stemContent, st.image_url as stemImage,
+           ch.name as chapterName, 
+           sch.name as topicName, 
+           COALESCE(se.name, st_se.name) as sourceName, 
+           COALESCE(q.source_year, st.source_year) as year
+    FROM questions q
+    JOIN chapters ch ON ch.id = q.chapter_id
+    LEFT JOIN subchapters sch ON sch.id = q.subchapter_id
+    LEFT JOIN stems st ON st.id = q.stem_id
+    LEFT JOIN source_entities se ON se.id = q.source_entity_id
+    LEFT JOIN source_entities st_se ON st_se.id = st.source_entity_id
+    JOIN subjects s ON s.id = ch.subject_id
+  `;
+  
+  const conds = [];
+  const vals = [];
 
-export const listQuestions = async (db: D1Database) => {
-  const result = await db.prepare(
-      `SELECT questions.id, questions.prompt, questions.source_year as sourceYear, questions.image_url as imageUrl,
-        question_types.name as questionType, chapters.name as chapter, subjects.name as subject, source_entities.name as sourceEntity
-      FROM questions
-      JOIN question_types ON question_types.id = questions.question_type_id
-      JOIN chapters ON chapters.id = questions.chapter_id
-      JOIN subjects ON subjects.id = chapters.subject_id
-      JOIN source_entities ON source_entities.id = questions.source_entity_id
-      ORDER BY questions.id DESC LIMIT 50`
-    ).all();
-  return result.results ?? [];
-};
+  if (f.classId) { conds.push("s.class_id = ?"); vals.push(f.classId); }
+  if (f.subjectId) { conds.push("s.id = ?"); vals.push(f.subjectId); }
+  if (f.chapterId) { conds.push("ch.id = ?"); vals.push(f.chapterId); }
+  if (f.subchapterId) { conds.push("sch.id = ?"); vals.push(f.subchapterId); }
 
-export const listQuestionsFiltered = async (db: D1Database, filters: any) => {
-  const conditions: string[] = [];
-  const values: string[] = [];
+  if (conds.length) sql += " WHERE " + conds.join(" AND ");
+  
+  // Order: First by Stem ID (to group them), then by Part (k, kh, g, gh)
+  sql += ` ORDER BY 
+    CASE WHEN q.stem_id IS NULL THEN q.id ELSE q.stem_id END DESC,
+    CASE q.question_part 
+      WHEN 'stem' THEN 0 
+      WHEN 'k' THEN 1 
+      WHEN 'kh' THEN 2 
+      WHEN 'g' THEN 3 
+      WHEN 'gh' THEN 4 
+      ELSE 5 
+    END ASC
+    LIMIT 100`;
 
-  if (filters.classId) { conditions.push("subjects.class_id = ?"); values.push(filters.classId); }
-  // Note: Group Filtering is handled at Subject level on frontend logic usually, but here we can enforce:
-  // If subjectId is provided, we trust it. If not, and groupId is provided, we could filter subjects, 
-  // but SQL joins for subjects.group_id would be needed. 
-  // For simplicity and robustness, we filter by subjectId if it exists, otherwise we return class-level questions 
-  // and let the UI filter strictly.
-  if (filters.subjectId) { conditions.push("subjects.id = ?"); values.push(filters.subjectId); }
-  if (filters.chapterId) { conditions.push("chapters.id = ?"); values.push(filters.chapterId); }
-  if (filters.questionTypeId) { conditions.push("question_types.id = ?"); values.push(filters.questionTypeId); }
-
-  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const result = await db.prepare(
-      `SELECT questions.id, questions.prompt, questions.source_year as sourceYear, questions.image_url as imageUrl,
-        question_types.name as questionType, chapters.name as chapter, subjects.name as subject, source_entities.name as sourceEntity
-      FROM questions
-      JOIN question_types ON question_types.id = questions.question_type_id
-      JOIN chapters ON chapters.id = questions.chapter_id
-      JOIN subjects ON subjects.id = chapters.subject_id
-      JOIN source_entities ON source_entities.id = questions.source_entity_id
-      ${whereClause} ORDER BY questions.id DESC LIMIT 50`
-    ).bind(...values).all();
-  return result.results ?? [];
+  return (await db.prepare(sql).bind(...vals).all()).results ?? [];
 };
 
 export const listLearningMaterials = async (db: D1Database) => {
-  const result = await db.prepare(
-      `SELECT learning_materials.id, learning_materials.title, learning_materials.material_type as materialType,
-        subchapters.name as subchapter, chapters.name as chapter
-      FROM learning_materials
-      JOIN subchapters ON subchapters.id = learning_materials.subchapter_id
-      JOIN chapters ON chapters.id = subchapters.chapter_id
-      ORDER BY learning_materials.id DESC LIMIT 50`
-    ).all();
-  return result.results ?? [];
+  return (await db.prepare("SELECT * FROM learning_materials ORDER BY id DESC LIMIT 20").all()).results ?? [];
 };
 
 
