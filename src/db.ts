@@ -116,7 +116,6 @@ CREATE TABLE IF NOT EXISTS learning_materials (
   FOREIGN KEY (subchapter_id) REFERENCES subchapters(id) ON DELETE CASCADE
 );
 
--- Indexes (Safe to run multiple times usually, but better to keep simple)
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subjects_class_id ON subjects(class_id);
 CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id);
@@ -125,7 +124,6 @@ CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
 CREATE INDEX IF NOT EXISTS idx_questions_question_type_id ON questions(question_type_id);
 CREATE INDEX IF NOT EXISTS idx_questions_source_entity_id ON questions(source_entity_id);
 
--- Seed Data (Ignore if exists)
 INSERT OR IGNORE INTO source_categories (name) VALUES
   ('Board Exam'),
   ('University Admission'),
@@ -134,19 +132,26 @@ INSERT OR IGNORE INTO source_categories (name) VALUES
 
 export const setupDatabase = async (db: D1Database) => {
   console.log("Running DB Setup...");
-  // Use exec if available (faster/safer), otherwise batch
-  if (typeof db.exec === 'function') {
-      await db.exec(SCHEMA_SQL);
-  } else {
-      const statements = SCHEMA_SQL.split(';')
-          .map(s => s.trim())
-          .filter(s => s.length > 0)
-          .map(s => db.prepare(s));
-      
-      if (statements.length > 0) {
-        await db.batch(statements);
-      }
+
+  // 1. Remove comments to ensure clean splitting
+  const cleanSQL = SCHEMA_SQL.replace(/--.*$/gm, '');
+
+  // 2. Split by semicolon
+  const statements = cleanSQL
+    .split(';')
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+
+  // 3. Execute sequentially (One by One)
+  // This avoids the 'aggregateD1Meta' crash associated with db.exec/db.batch in some envs
+  for (const statement of statements) {
+    try {
+      await db.prepare(statement).run();
+    } catch (err: any) {
+      console.warn(`Setup warning for statement: "${statement.substring(0, 30)}..." - ${err.message}`);
+    }
   }
+
   console.log("DB Setup Complete.");
 };
 // ------------------------------
