@@ -1,7 +1,6 @@
 import { appConfig } from "./config";
-import { layout } from "./templates";
+import { layout, iconHat, iconLock } from "./templates";
 
-// Reuse types from other files or define common interface
 type Hierarchy = {
   classes: Array<{ id: number; name: string; has_groups: number; is_merged: number }>;
   groups: Array<{ id: number; class_id: number; name: string }>;
@@ -10,58 +9,67 @@ type Hierarchy = {
   subchapters: Array<{ id: number; chapter_id: number; name: string; position: number }>;
 };
 
-// Render Public Header
-const publicHeader = () => `
-  <header class="site-header">
-    <div class="container flex justify-between" style="width:100%;">
-      <a href="/" class="logo">
-        <span style="font-size:1.5rem;">🎓</span> ${appConfig.siteName}
-      </a>
-      <a href="/admin/login" class="admin-link" title="Admin Login">
-        🔒
+const header = () => `
+  <header class="app-header">
+    <div class="brand">
+      ${iconHat}
+      <span>${appConfig.siteName}</span>
+    </div>
+    <div class="header-action-right">
+      <a href="/admin/login" style="color:var(--text-sub); padding:8px;">
+        ${iconLock}
       </a>
     </div>
   </header>
 `;
 
 export const renderStudentHome = (hierarchy: Hierarchy) => {
-  const classCards = hierarchy.classes.length
-    ? hierarchy.classes
-        .map(
-          (item) => `
-      <div class="class-card">
-        <div style="font-size:2rem; margin-bottom:0.5rem;">📚</div>
-        <h3 style="font-size:1.25rem;">${item.name}</h3>
-        <p class="text-sm text-muted" style="margin-top:0.5rem;">${item.has_groups ? "Science, Arts, Commerce" : "General Subjects"}</p>
-        <button class="secondary" style="margin-top:1rem; width:100%;">Explore</button>
-      </div>`
-        )
-        .join("")
-    : `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#94a3b8;">
-        <h3>Content coming soon...</h3>
-        <p>The curriculum is being updated.</p>
-       </div>`;
+  // If no classes exist, show empty state
+  if (!hierarchy.classes || hierarchy.classes.length === 0) {
+    const body = `
+      ${header()}
+      <main class="container" style="text-align:center; padding-top:40px;">
+        <div style="font-size:40px; margin-bottom:16px;">📚</div>
+        <h3 style="color:var(--text-main);">No Content Available</h3>
+        <p style="color:var(--text-sub);">Check back later for updates.</p>
+      </main>
+    `;
+    return layout("Home", body);
+  }
+
+  // List classes purely
+  const classList = hierarchy.classes
+    .map(
+      (c) => `
+    <div class="class-row">
+      <div>
+        <div style="font-weight:600; font-size:16px;">${c.name}</div>
+        <div style="font-size:13px; color:var(--text-sub); margin-top:2px;">
+          ${c.has_groups ? "Groups: Science, Arts, Commerce" : "General Subjects"}
+        </div>
+      </div>
+      <a href="/smart-filter?classId=${c.id}" style="display:flex; align-items:center;">
+        <button class="btn-secondary btn-small">Open</button>
+      </a>
+    </div>
+  `
+    )
+    .join("");
 
   const body = `
-    ${publicHeader()}
-    <main>
-      <section class="hero-section">
-        <div class="container">
-          <h1 style="font-size:2.5rem; color:#0f172a; margin-bottom:1rem;">Master Your Curriculum</h1>
-          <p style="font-size:1.1rem; color:#64748b; max-width:600px; margin:0 auto 2rem;">
-            Access free lecture notes, videos, and question banks tailored for the Bangladesh education board.
-          </p>
-          <div class="flex gap-4" style="justify-content:center;">
-            <a href="/smart-filter"><button class="accent" style="padding:0.8rem 1.5rem; font-size:1rem;">Start Practicing</button></a>
-          </div>
-        </div>
-      </section>
-
-      <div class="container" style="padding-top:2rem; padding-bottom:3rem;">
-        <h2 style="font-size:1.5rem; border-left:4px solid var(--accent); padding-left:1rem;">Browse by Class</h2>
-        <div class="class-grid">
-          ${classCards}
-        </div>
+    ${header()}
+    <main class="container">
+      <div style="margin-top:24px; margin-bottom:12px; font-weight:600; font-size:14px; color:var(--text-sub); text-transform:uppercase;">
+        Academic Levels
+      </div>
+      <div class="class-list">
+        ${classList}
+      </div>
+      
+      <div style="margin-top:32px;">
+        <a href="/smart-filter">
+          <button class="btn-accent">Search Question Bank</button>
+        </a>
       </div>
     </main>
   `;
@@ -75,60 +83,63 @@ export const renderSmartFilter = (
   questions: any[],
   query: Record<string, string>
 ) => {
-  // Options logic reused from before, just wrapped in new HTML structure
-  const classOptions = hierarchy.classes.map(i => `<option value="${i.id}" ${query.classId === String(i.id) ? "selected" : ""}>${i.name}</option>`).join("");
-  // ... (Shortened for brevity, assume similar filter logic as previous logic but using new layout)
-  
-  // Re-implementing filter render logic with new styles:
-  const subjectOptions = hierarchy.subjects
-      .filter((s) => !query.classId || String(s.class_id) === query.classId)
-      .map((s) => `<option value="${s.id}" ${query.subjectId === String(s.id) ? "selected" : ""}>${s.name}</option>`)
-      .join("");
-      
-  const chapterOptions = hierarchy.chapters
-      .filter((c) => !query.subjectId || String(c.subject_id) === query.subjectId)
-      .map((c) => `<option value="${c.id}" ${query.chapterId === String(c.id) ? "selected" : ""}>${c.name}</option>`)
-      .join("");
+  // --- Options Generators (Tight) ---
+  const genOptions = (items: any[], selectedId: string, labelKey = "name") => 
+    `<option value="">All</option>` + 
+    items.map(i => `<option value="${i.id}" ${String(i.id) === selectedId ? "selected" : ""}>${i[labelKey]}</option>`).join("");
 
-  const typeOptions = questionTypes
-      .filter((t) => !query.chapterId || String(t.chapter_id) === query.chapterId)
-      .map((t) => `<option value="${t.id}" ${query.questionTypeId === String(t.id) ? "selected" : ""}>${t.name}</option>`)
-      .join("");
+  // Filter Logic
+  const filteredSubjects = hierarchy.subjects.filter(s => !query.classId || String(s.class_id) === query.classId);
+  const filteredChapters = hierarchy.chapters.filter(c => !query.subjectId || String(c.subject_id) === query.subjectId);
 
-  const rows = questions.length ? questions.map(q => `
-    <tr>
-      <td>
-        <div class="font-bold">${q.prompt}</div>
-        ${q.imageUrl ? `<a href="${q.imageUrl}" target="_blank" class="text-xs text-accent">View Image</a>` : ''}
-      </td>
-      <td><span class="badge blue">${q.questionType}</span></td>
-      <td class="text-sm">${q.chapter}</td>
-      <td class="text-xs text-muted">${q.sourceEntity} '${q.sourceYear}</td>
-    </tr>
-  `).join("") : '<tr><td colspan="4" class="text-center text-muted">No questions match these filters.</td></tr>';
+  // --- Questions List ---
+  const questionList = questions.length 
+    ? questions.map(q => `
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-body">
+          <div style="font-weight:500; font-size:15px; margin-bottom:8px;">${q.prompt}</div>
+          ${q.imageUrl ? `<a href="${q.imageUrl}" target="_blank" style="font-size:13px; color:var(--accent); display:block; margin-bottom:8px;">View Image Attachment</a>` : ''}
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span class="badge badge-blue">${q.questionType}</span>
+            <span class="badge badge-gray">${q.chapter}</span>
+            <span class="badge badge-gray">${q.sourceEntity} '${q.sourceYear}</span>
+          </div>
+        </div>
+      </div>
+    `).join("") 
+    : `<div style="text-align:center; padding:32px; color:var(--text-sub);">No questions match filters.</div>`;
 
   const body = `
-    ${publicHeader()}
-    <main class="container" style="padding-top:2rem;">
-      <div class="card" style="margin-bottom:2rem;">
-        <div class="card-header"><h3>Smart Question Filter</h3></div>
-        <form method="GET" action="/smart-filter" class="form-grid-3" style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-          <div><label>Class</label><select name="classId" onchange="this.form.submit()"><option value="">All Classes</option>${classOptions}</select></div>
-          <div><label>Subject</label><select name="subjectId" onchange="this.form.submit()"><option value="">All Subjects</option>${subjectOptions}</select></div>
-          <div><label>Chapter</label><select name="chapterId" onchange="this.form.submit()"><option value="">All Chapters</option>${chapterOptions}</select></div>
-          <div><label>Type</label><select name="questionTypeId"><option value="">All Types</option>${typeOptions}</select></div>
-          <div style="display:flex; align-items:flex-end;"><button type="submit" class="accent" style="width:100%;">Apply Filter</button></div>
-        </form>
+    ${header()}
+    <main class="container">
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">Filter Criteria</div>
+        <div class="card-body">
+          <form method="GET" action="/smart-filter" class="form-stack">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+              <div class="input-group">
+                <label>Class</label>
+                <select name="classId" onchange="this.form.submit()">${genOptions(hierarchy.classes, query.classId)}</select>
+              </div>
+              <div class="input-group">
+                <label>Subject</label>
+                <select name="subjectId" onchange="this.form.submit()">${genOptions(filteredSubjects, query.subjectId)}</select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Chapter</label>
+              <select name="chapterId" onchange="this.form.submit()">${genOptions(filteredChapters, query.chapterId)}</select>
+            </div>
+            <button type="submit" class="btn-primary">Apply Filters</button>
+          </form>
+        </div>
       </div>
 
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Question</th><th>Type</th><th>Chapter</th><th>Source</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+      <div style="margin-bottom:8px; font-weight:600; color:var(--text-sub); font-size:13px;">RESULTS</div>
+      ${questionList}
     </main>
   `;
+
   return layout("Smart Filter", body);
 };
 
