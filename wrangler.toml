@@ -1,0 +1,10 @@
+
+[[d1_databases]]
+binding = "DB"
+database_name = "freeducation"
+database_id = "08f71595-eb18-4391-94c5-9c5b50297c83"
+
+# BUCKET BINDING
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "freeducation"
