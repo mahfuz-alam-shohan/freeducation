@@ -177,7 +177,6 @@ export const insertQuestion = async (db: D1Database, p: any) => {
     p.questionPart, 
     p.isConnected === 'true' ? 1 : 0,
     p.prompt, 
-@@ -246,53 +274,51 @@ export const deleteItem = async (db: D1Database, table: string, id: string) => {
   await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
 };
 
