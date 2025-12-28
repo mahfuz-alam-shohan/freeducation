@@ -1,6 +1,6 @@
 export interface Env {
   DB: D1Database;
-  // BUCKET: R2Bucket; // Ready for when you implement file storage
+  // BUCKET: R2Bucket; // Future use
   JWT_SECRET?: string;
 }
 
