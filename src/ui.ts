@@ -12,6 +12,7 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ro
 
 /* --- Components --- */
 .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; gap: 0.5rem; }
+.btn-compact { padding: 0.4rem 0.9rem; font-size: 0.85rem; }
 .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); }
 .btn-primary:active { transform: scale(0.98); }
 .btn-ghost { background: transparent; color: var(--text-muted); }
@@ -19,6 +20,19 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ro
 .input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.75rem; font-size: 1rem; outline: none; transition: border-color 0.2s; background: #fff; }
 .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
 .card { background: var(--bg-card); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 1rem; }
+.class-card { display: flex; flex-direction: column; gap: 1.25rem; }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.card-title h3 { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.card-subtitle { margin-top: 0.35rem; font-size: 0.85rem; color: var(--text-muted); }
+.card-meta { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-end; }
+.card-section { display: flex; flex-direction: column; gap: 0.6rem; }
+.section-title { font-weight: 600; font-size: 0.95rem; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.stack { display: flex; flex-direction: column; gap: 0.75rem; }
+.group-card { border: 1px solid var(--border); border-radius: 0.85rem; padding: 0.85rem; background: #f8fafc; }
+.group-title { font-weight: 600; margin-bottom: 0.35rem; }
+.empty-state { font-size: 0.85rem; color: var(--text-muted); }
 .badge { padding: 0.25rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 .badge-blue { background: #e0e7ff; color: var(--primary-dark); }
 .badge-gray { background: #f1f5f9; color: var(--text-muted); }
@@ -72,7 +86,11 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ro
 
 /* --- Utilities --- */
 .logo { font-weight: 800; font-size: 1.25rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; }
+.link-indicator { margin-top: 0.6rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.85rem; }
+.link-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+.link-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.6), rgba(148,163,184,0.2)); max-width: 120px; }
+.link-text { font-weight: 500; }
 .alert { padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; font-weight: 500; font-size: 0.9rem; }
 .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
@@ -167,4 +185,3 @@ export function escapeHtml(str: string) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-
