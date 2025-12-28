@@ -183,12 +183,12 @@ async function logoutAdmin(request: Request, env: Env): Promise<Response> {
     await env.DB.prepare("DELETE FROM admin_sessions WHERE token = ?").bind(token).run();
   }
 
-  const response = Response.redirect(new URL("/admin", request.url), 303);
-  response.headers.append(
+  const headers = new Headers({ Location: new URL("/admin", request.url).toString() });
+  headers.append(
     "Set-Cookie",
     `${COOKIE_NAME}=; Path=/admin; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
   );
-  return response;
+  return new Response(null, { status: 303, headers });
 }
 
 async function getSession(request: Request, env: Env): Promise<{ id: number; name: string; email: string } | null> {
@@ -226,13 +226,13 @@ function getCookie(request: Request, name: string): string | null {
 }
 
 function redirectWithSession(request: Request, token: string): Response {
-  const response = Response.redirect(new URL("/admin", request.url), 303);
   const maxAge = SESSION_DAYS * 24 * 60 * 60;
-  response.headers.append(
+  const headers = new Headers({ Location: new URL("/admin", request.url).toString() });
+  headers.append(
     "Set-Cookie",
     `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`
   );
-  return response;
+  return new Response(null, { status: 303, headers });
 }
 
 async function hashPassword(password: string): Promise<string> {
