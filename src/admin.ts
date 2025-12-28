@@ -19,7 +19,8 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
 
   // 1. Health & Setup Check (Only on root admin)
   if (path === "/admin" || path === "/admin/") {
-    const dbStatus = await ensureDatabase(env);
+    // FORCE CHECK: This ensures the DB always matches the code schema on dashboard load.
+    const dbStatus = await ensureDatabase(env); 
     if (!dbStatus.ok) return renderPage("Error", `<div class="alert alert-error">Database Error: ${dbStatus.message}</div>`, "dashboard");
 
     const session = await requireAuth(request, env);
@@ -114,15 +115,21 @@ function renderSetup(error?: string) {
 }
 
 async function renderDashboard(session: any, env: Env) {
-  const stats = await env.DB.batch([
-    env.DB.prepare("SELECT COUNT(*) as c FROM classes"),
-    env.DB.prepare("SELECT COUNT(*) as c FROM admins"),
-    env.DB.prepare("SELECT COUNT(*) as c FROM class_groups")
-  ]);
+  // We use try-catch here because if tables are missing (despite our best efforts), the query might fail.
+  let classCount = 0, adminCount = 0, groupCount = 0;
   
-  const classCount = stats[0].results?.[0]?.c || 0;
-  const adminCount = stats[1].results?.[0]?.c || 0;
-  const groupCount = stats[2].results?.[0]?.c || 0;
+  try {
+    const stats = await env.DB.batch([
+      env.DB.prepare("SELECT COUNT(*) as c FROM classes"),
+      env.DB.prepare("SELECT COUNT(*) as c FROM admins"),
+      env.DB.prepare("SELECT COUNT(*) as c FROM class_groups")
+    ]);
+    classCount = stats[0].results?.[0]?.c || 0;
+    adminCount = stats[1].results?.[0]?.c || 0;
+    groupCount = stats[2].results?.[0]?.c || 0;
+  } catch(e) {
+    console.error("Dashboard stats failed", e);
+  }
 
   return renderPage("Dashboard", `
     <div class="grid">
@@ -305,3 +312,5 @@ async function handleLinkClasses(request: Request, env: Env) {
     // Placeholder for linking logic if needed
     return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
 }
+
+
