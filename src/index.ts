@@ -38,13 +38,17 @@ async function handleAdmin(request: Request, env: Env): Promise<Response> {
   const dbCheck = ensureDatabase(env);
   if (!dbCheck.ok) {
     return renderAdminShell({
-      title: "Admin unavailable",
-      subtitle: "Database configuration required.",
-      error: dbCheck.message,
-      form: `
-        <section class="card">
-          <p>Please attach the D1 database binding before continuing.</p>
-        </section>
+      title: "System Error",
+      currentTab: "",
+      content: `
+        <div class="empty-state">
+          <div class="icon-box error-icon">!</div>
+          <h3>Database Unavailable</h3>
+          <p>${dbCheck.message}</p>
+          <div class="card p-4 mt-4 bg-red-50 text-red-700 border-red-200">
+             Please attach the D1 database binding in your wrangler.toml.
+          </div>
+        </div>
       `,
     });
   }
@@ -52,13 +56,15 @@ async function handleAdmin(request: Request, env: Env): Promise<Response> {
   const schemaCheck = await ensureSchema(env);
   if (!schemaCheck.ok) {
     return renderAdminShell({
-      title: "Admin unavailable",
-      subtitle: "Database schema initialization failed.",
-      error: schemaCheck.message,
-      form: `
-        <section class="card">
-          <p>We could not initialize the admin tables. Check your D1 database permissions and try again.</p>
-        </section>
+      title: "System Error",
+      currentTab: "",
+      content: `
+        <div class="empty-state">
+          <div class="icon-box error-icon">!</div>
+          <h3>Schema Initialization Failed</h3>
+          <p>${schemaCheck.message}</p>
+          <p class="text-sm mt-2 text-muted">Check your D1 database permissions and try again.</p>
+        </div>
       `,
     });
   }
@@ -438,6 +444,10 @@ function fromBase64(value: string): Uint8Array {
   return bytes;
 }
 
+// ----------------------------------------------------------------------------
+// UI Rendering Functions - Completely redesigned for Mobile First / Professional
+// ----------------------------------------------------------------------------
+
 function renderPublicHome(): Response {
   return createHtmlResponse(
     `<!DOCTYPE html>
@@ -446,66 +456,86 @@ function renderPublicHome(): Response {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Freeducation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      color-scheme: light;
-      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-      background: #f8fafc;
-      color: #0f172a;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --bg-page: #f9fafb;
+      --bg-card: #ffffff;
+      --border: #e5e7eb;
     }
     body {
       margin: 0;
-      min-height: 100vh;
+      font-family: "Inter", sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px 20px;
+      min-height: 100vh;
+      padding: 1.5rem;
     }
-    .shell {
-      max-width: 640px;
+    .hero {
+      background: var(--bg-card);
+      max-width: 600px;
+      width: 100%;
       text-align: center;
-      background: white;
-      padding: 40px 28px;
-      border-radius: 24px;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+      padding: 3rem 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
-    .logo {
+    .logo-container {
       display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      font-size: 28px;
-      color: #0f172a;
+      justify-content: center;
+      margin-bottom: 1.5rem;
     }
-    .logo svg {
-      width: 52px;
-      height: 52px;
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 1rem;
+      letter-spacing: -0.025em;
     }
     p {
-      margin: 20px 0 0;
-      color: #475569;
+      color: var(--text-muted);
       line-height: 1.6;
+      font-size: 1.125rem;
+      margin: 0;
     }
-    @media (min-width: 768px) {
-      .shell {
-        padding: 56px 60px;
-      }
-      .logo {
-        font-size: 32px;
-      }
+    .cta {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 9999px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .cta:hover {
+      background: var(--primary-hover);
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    ${renderLogo()}
+  <div class="hero">
+    <div class="logo-container">${renderLogo(64)}</div>
+    <h1>Freeducation</h1>
     <p>
-      Freeducation is preparing a new learning experience. Stay tuned as we build the
-      student portal, course library, and community spaces.
+      We are building the future of accessible learning. <br/>
+      Student portal, course library, and community spaces coming soon.
     </p>
-  </main>
+    <a href="/admin" class="cta">Admin Access</a>
+  </div>
 </body>
-</html>`,
+</html>`
   );
 }
 
@@ -568,68 +598,107 @@ async function ensureSchema(env: Env): Promise<{ ok: true } | { ok: false; messa
 function renderErrorPage(request: Request, error: unknown): Response {
   const message = error instanceof Error ? error.message : "Unexpected error.";
   const stack = error instanceof Error && error.stack ? error.stack : "";
+  
   const content = `
-    <section class="card">
-      <p class="label">Request</p>
-      <p class="muted">${escapeHtml(request.method)} ${escapeHtml(new URL(request.url).pathname)}</p>
-      <p class="label" style="margin-top:16px;">Error</p>
-      <p>${escapeHtml(message)}</p>
-      ${stack ? `<pre class="stack">${escapeHtml(stack)}</pre>` : ""}
-      <p class="muted">If this persists, check the Cloudflare Worker logs for details.</p>
-    </section>
+    <div class="card p-6 border-l-4 border-red-500">
+      <h3 class="text-lg font-bold text-gray-900 mb-2">Internal Server Error</h3>
+      <div class="space-y-4">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Request</p>
+          <p class="font-mono text-sm bg-gray-50 p-2 rounded mt-1">${escapeHtml(request.method)} ${escapeHtml(new URL(request.url).pathname)}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Message</p>
+          <p class="text-red-700 mt-1">${escapeHtml(message)}</p>
+        </div>
+        ${stack ? `
+        <div>
+           <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Stack Trace</p>
+           <pre class="overflow-x-auto text-xs bg-gray-900 text-gray-200 p-3 rounded mt-1">${escapeHtml(stack)}</pre>
+        </div>` : ""}
+      </div>
+    </div>
   `;
 
   return renderAdminShell({
-    title: "Something went wrong",
-    subtitle: "We hit a server error while preparing your page.",
-    error: "Worker threw an exception.",
-    form: content,
+    title: "Error",
+    currentTab: "",
+    content: content,
   });
 }
 
 function renderSetupForm(error?: string): Response {
+  const formHtml = `
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+            ${renderLogo(48)}
+            <h2>Setup Admin</h2>
+            <p>Create your first administrator account to secure the platform.</p>
+        </div>
+        
+        ${error ? `<div class="alert alert-error">${escapeHtml(error)}</div>` : ""}
+        
+        <form method="post" action="/admin/setup" class="space-y-4">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input id="name" name="name" type="text" placeholder="e.g. John Doe" required class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input id="email" name="email" type="email" placeholder="name@example.com" required class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" minlength="8" placeholder="••••••••" required class="form-input" />
+            <p class="text-xs text-muted mt-1">Must be at least 8 characters</p>
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Create Account</button>
+        </form>
+      </div>
+    </div>
+  `;
+
   return renderAdminShell({
-    title: "Create your first admin",
-    subtitle: "Secure the Freeducation control panel.",
-    error,
-    form: `
-      <form method="post" action="/admin/setup" class="card">
-        <label>
-          Full name
-          <input name="name" type="text" placeholder="Admin name" required />
-        </label>
-        <label>
-          Email address
-          <input name="email" type="email" placeholder="admin@freeducation.com" required />
-        </label>
-        <label>
-          Password
-          <input name="password" type="password" minlength="8" placeholder="Create a strong password" required />
-        </label>
-        <button type="submit" class="primary">Create admin</button>
-      </form>
-    `,
+    title: "Setup",
+    currentTab: "",
+    content: formHtml,
+    fullPage: true
   });
 }
 
 function renderLoginForm(error?: string): Response {
+  const formHtml = `
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+            ${renderLogo(48)}
+            <h2>Admin Login</h2>
+            <p>Welcome back! Please sign in to continue.</p>
+        </div>
+
+        ${error ? `<div class="alert alert-error">${escapeHtml(error)}</div>` : ""}
+
+        <form method="post" action="/admin/login" class="space-y-4">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input id="email" name="email" type="email" placeholder="name@example.com" required class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="••••••••" required class="form-input" />
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Sign In</button>
+        </form>
+      </div>
+    </div>
+  `;
+
   return renderAdminShell({
-    title: "Admin login",
-    subtitle: "Welcome back to Freeducation.",
-    error,
-    form: `
-      <form method="post" action="/admin/login" class="card">
-        <label>
-          Email address
-          <input name="email" type="email" placeholder="admin@freeducation.com" required />
-        </label>
-        <label>
-          Password
-          <input name="password" type="password" minlength="8" placeholder="Enter your password" required />
-        </label>
-        <button type="submit" class="primary">Log in</button>
-      </form>
-    `,
+    title: "Login",
+    currentTab: "",
+    content: formHtml,
+    fullPage: true
   });
 }
 
@@ -640,621 +709,635 @@ function renderDashboard(options: {
   error?: string;
 }): Response {
   const { admin, tab, admins, error } = options;
-  return renderAdminShell({
-    title: "Admin dashboard",
-    subtitle: "Control center for Freeducation.",
-    showHeader: false,
-    form: `
-      <section class="admin-shell">
-        <header class="topbar">
-          ${renderLogo()}
-          <div class="topbar-title">
-            <p class="label">Admin workspace</p>
-            <h1>Freeducation</h1>
+  
+  let contentHtml = "";
+
+  if (tab === "users") {
+    contentHtml = `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">User Management</h1>
+          <p class="page-subtitle">Manage administrator access and permissions</p>
+        </div>
+        <label for="modal-toggle" class="btn btn-primary">
+          <span class="icon-plus">+</span> Add Admin
+        </label>
+      </div>
+
+      ${error ? `<div class="alert alert-error mb-6">${escapeHtml(error)}</div>` : ""}
+
+      <div class="card overflow-hidden">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined Date</th>
+                <th class="text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${admins.length > 0 ? admins.map(entry => `
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar">${entry.name.charAt(0).toUpperCase()}</div>
+                      <div class="font-medium text-gray-900">${escapeHtml(entry.name)}</div>
+                    </div>
+                  </td>
+                  <td class="text-gray-500">${escapeHtml(entry.email)}</td>
+                  <td class="text-gray-500">${new Date(entry.created_at).toLocaleDateString()}</td>
+                  <td class="text-right"><span class="badge badge-success">Active</span></td>
+                </tr>
+              `).join("") : `
+                <tr>
+                  <td colspan="4" class="text-center py-8 text-muted">No administrators found.</td>
+                </tr>
+              `}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal -->
+      <input type="checkbox" id="modal-toggle" class="modal-toggle" />
+      <div class="modal">
+        <label for="modal-toggle" class="modal-backdrop"></label>
+        <div class="modal-box">
+          <div class="modal-header">
+            <h3>Add New Admin</h3>
+            <label for="modal-toggle" class="btn-close">&times;</label>
           </div>
-          <div class="topbar-actions">
-            <div class="user-chip">
-              <div>
-                <p class="muted">${escapeHtml(admin.name)}</p>
-                <p class="muted small">${escapeHtml(admin.email)}</p>
-              </div>
+          <form method="post" action="/admin/admins" class="modal-body space-y-4">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input name="name" type="text" placeholder="John Doe" required class="form-input" />
             </div>
-            <form method="post" action="/admin/logout">
-              <button class="ghost" type="submit">Log out</button>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input name="email" type="email" placeholder="admin@freeducation.com" required class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input name="password" type="password" minlength="8" placeholder="Create a strong password" required class="form-input" />
+            </div>
+            <div class="modal-actions">
+              <label for="modal-toggle" class="btn btn-ghost">Cancel</label>
+              <button type="submit" class="btn btn-primary">Create Account</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  } else {
+    // Settings Tab
+    contentHtml = `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">System configuration and maintenance</p>
+        </div>
+      </div>
+
+      <div class="grid-layout">
+        <div class="card p-6">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="card-title text-red-600">Factory Reset</h3>
+              <p class="text-sm text-muted mt-1">
+                This action will delete <strong>all data</strong>, including all admins and sessions. 
+                This action cannot be undone.
+              </p>
+            </div>
+            <div class="icon-box bg-red-100 text-red-600">!</div>
+          </div>
+          <div class="mt-6 border-t border-gray-100 pt-4">
+            <form method="post" action="/admin/reset" onsubmit="return confirm('Are you absolutely sure? This will wipe the database.');">
+              <button class="btn btn-danger">Reset Database</button>
             </form>
           </div>
-        </header>
-        ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
-        <div class="admin-layout">
-          <aside class="sidebar">
-            <nav class="menu">
-              <span class="menu-title">Main menu</span>
-              <a class="menu-item ${tab === "settings" ? "active" : ""}" href="/admin?tab=settings">Settings</a>
-              <a class="menu-item ${tab === "users" ? "active" : ""}" href="/admin?tab=users">User management</a>
-            </nav>
-            <div class="sidebar-card">
-              <p class="label">Session</p>
-              <p class="muted">Logged in as ${escapeHtml(admin.name)}</p>
-            </div>
-          </aside>
-          <section class="content">
-            <div class="content-header">
-              <div>
-                <p class="label">Dashboard</p>
-                <h2>${tab === "users" ? "User management" : "Settings"}</h2>
-              </div>
-              ${
-                tab === "users"
-                  ? `
-                    <label class="primary action-button" for="admin-modal-toggle">Add admin</label>
-                  `
-                  : ""
-              }
-            </div>
-            ${
-              tab === "users"
-                ? `
-                  <section class="card table-card">
-                    <div class="table-header">
-                      <div>
-                        <h4>Admins</h4>
-                        <p class="muted">Manage access to the dashboard.</p>
-                      </div>
-                      <p class="muted">${admins.length} total</p>
-                    </div>
-                    <div class="table-scroll">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Created</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          ${
-                            admins.length > 0
-                              ? admins
-                                  .map(
-                                    (entry) => `
-                                      <tr>
-                                        <td>${escapeHtml(entry.name)}</td>
-                                        <td>${escapeHtml(entry.email)}</td>
-                                        <td>${escapeHtml(new Date(entry.created_at).toLocaleDateString())}</td>
-                                      </tr>
-                                    `
-                                  )
-                                  .join("")
-                              : `<tr><td colspan="3" class="muted">No admins yet.</td></tr>`
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                  </section>
-                  <input id="admin-modal-toggle" class="modal-toggle" type="checkbox" />
-                  <div class="modal">
-                    <label class="modal-backdrop" for="admin-modal-toggle"></label>
-                    <div class="modal-card">
-                      <div class="modal-header">
-                        <div>
-                          <p class="label">Add admin</p>
-                          <h3>Create a new admin</h3>
-                        </div>
-                        <label class="ghost icon-button" for="admin-modal-toggle">Close</label>
-                      </div>
-                      <form method="post" action="/admin/admins" class="modal-form">
-                        <label>
-                          Name
-                          <input name="name" type="text" placeholder="Admin name" required />
-                        </label>
-                        <label>
-                          Email ID
-                          <input name="email" type="email" placeholder="admin@freeducation.com" required />
-                        </label>
-                        <label>
-                          Password
-                          <input name="password" type="password" minlength="8" placeholder="Create password" required />
-                        </label>
-                        <div class="modal-actions">
-                          <label class="ghost" for="admin-modal-toggle">Cancel</label>
-                          <button class="primary" type="submit">Add admin</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                `
-                : `
-                  <section class="card settings-card">
-                    <div>
-                      <h4>Factory reset</h4>
-                      <p class="muted">Drop all tables and recreate the database.</p>
-                    </div>
-                    <form method="post" action="/admin/reset">
-                      <button class="danger" type="submit">Reset database</button>
-                    </form>
-                  </section>
-                `
-            }
-          </section>
         </div>
-        <nav class="bottom-tab">
-          <a class="tab-item ${tab === "settings" ? "active" : ""}" href="/admin?tab=settings">
-            <span>Settings</span>
-          </a>
-          <a class="tab-item ${tab === "users" ? "active" : ""}" href="/admin?tab=users">
-            <span>Users</span>
-          </a>
-        </nav>
-      </section>
-    `,
+        
+        <div class="card p-6">
+           <h3 class="card-title">System Info</h3>
+           <div class="mt-4 space-y-2 text-sm">
+             <div class="flex justify-between py-2 border-b border-gray-50">
+               <span class="text-muted">Environment</span>
+               <span class="font-medium">Cloudflare Workers + D1</span>
+             </div>
+             <div class="flex justify-between py-2 border-b border-gray-50">
+               <span class="text-muted">Current User</span>
+               <span class="font-medium">${escapeHtml(admin.email)}</span>
+             </div>
+             <div class="flex justify-between py-2">
+               <span class="text-muted">Version</span>
+               <span class="font-medium">1.0.0</span>
+             </div>
+           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return renderAdminShell({
+    title: tab === "users" ? "Users" : "Settings",
+    currentTab: tab,
+    adminName: admin.name,
+    adminEmail: admin.email,
+    content: contentHtml
   });
 }
 
 function renderAdminShell(options: {
   title: string;
-  subtitle: string;
-  form: string;
-  error?: string;
-  showHeader?: boolean;
+  content: string;
+  currentTab: string;
+  adminName?: string;
+  adminEmail?: string;
+  fullPage?: boolean;
 }): Response {
-  const { title, subtitle, form, error, showHeader = true } = options;
+  const { title, content, currentTab, adminName, adminEmail, fullPage } = options;
+
+  const sidebar = fullPage ? '' : `
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        ${renderLogo(32)}
+        <span class="brand-name">Freeducation</span>
+      </div>
+      
+      <nav class="nav-menu">
+        <div class="nav-label">MAIN MENU</div>
+        <a href="/admin?tab=settings" class="nav-item ${currentTab === 'settings' ? 'active' : ''}">
+          <span class="icon">⚙️</span> Settings
+        </a>
+        <a href="/admin?tab=users" class="nav-item ${currentTab === 'users' ? 'active' : ''}">
+          <span class="icon">👥</span> User Management
+        </a>
+      </nav>
+
+      <div class="user-profile">
+        <div class="user-info">
+          <div class="avatar-sm">${(adminName || 'A').charAt(0).toUpperCase()}</div>
+          <div class="user-details">
+            <p class="user-name">${escapeHtml(adminName || 'Admin')}</p>
+            <p class="user-email">${escapeHtml(adminEmail || '')}</p>
+          </div>
+        </div>
+        <form method="post" action="/admin/logout">
+          <button type="submit" class="logout-btn" title="Sign out">➔</button>
+        </form>
+      </div>
+    </aside>
+  `;
+
   return createHtmlResponse(
     `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(title)} | Freeducation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>${escapeHtml(title)} | Freeducation Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* --- RESET & VARIABLES --- */
     :root {
-      color-scheme: light;
-      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-      background: #f1f5f9;
-      color: #0f172a;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --bg-body: #f3f4f6;
+      --bg-surface: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --sidebar-width: 260px;
+      --header-height: 60px;
     }
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* --- UTILITIES --- */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-medium { font-weight: 500; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-muted { color: var(--text-muted); }
+    .text-red-600 { color: var(--danger); }
+    .text-gray-500 { color: #6b7280; }
+    .text-gray-900 { color: #111827; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .p-4 { padding: 1rem; }
+    .p-6 { padding: 1.5rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .w-full { width: 100%; }
+    .flex { display: flex; }
+    .justify-between { justify-content: space-between; }
+    .items-start { align-items: flex-start; }
+    .border-b { border-bottom: 1px solid var(--border); }
+    .border-t { border-top: 1px solid var(--border); }
+    .overflow-hidden { overflow: hidden; }
+
+    /* --- LAYOUT --- */
+    .app-shell {
+      display: flex;
       min-height: 100vh;
-      background: #f1f5f9;
+    }
+    
+    /* Mobile Header */
+    .mobile-header {
       display: flex;
-      justify-content: center;
-      padding: 24px 18px 80px;
-    }
-    main {
-      width: min(100%, 1100px);
-    }
-    header {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-bottom: 28px;
-    }
-    .logo {
-      display: inline-flex;
       align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      font-size: 26px;
-      color: #0f172a;
-    }
-    .logo svg {
-      width: 48px;
-      height: 48px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-    p {
-      margin: 0;
-      color: #475569;
-    }
-    .error {
-      background: #fee2e2;
-      color: #991b1b;
-      padding: 12px 16px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-    }
-    .card {
-      background: white;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
-      display: grid;
-      gap: 16px;
-    }
-    label {
-      display: grid;
-      gap: 6px;
-      font-size: 14px;
-      color: #334155;
-    }
-    input {
-      border: 1px solid #cbd5f5;
-      padding: 12px 14px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-family: inherit;
-    }
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 12px 18px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .primary {
-      background: #2563eb;
-      color: white;
-      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
-    }
-    .ghost {
-      background: #e2e8f0;
-      color: #0f172a;
-    }
-    .icon-button {
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 14px;
-    }
-    .danger {
-      background: #dc2626;
-      color: white;
-      box-shadow: 0 12px 24px rgba(220, 38, 38, 0.3);
-    }
-    .dashboard {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
       justify-content: space-between;
-      gap: 20px;
+      height: var(--header-height);
+      padding: 0 1rem;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
     }
-    .label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #64748b;
-    }
-    .muted {
-      color: #64748b;
-    }
-    .grid {
-      margin-top: 24px;
-      display: grid;
-      gap: 18px;
-    }
-    .panel {
-      background: white;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-    }
-    .panel h4 {
-      margin: 0 0 8px;
-    }
-    .panel ul {
-      margin: 0;
-      padding-left: 18px;
-      color: #475569;
-    }
-    pre.stack {
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 12px;
-      border-radius: 12px;
-      overflow-x: auto;
-      font-size: 12px;
-      line-height: 1.5;
-      margin-top: 12px;
-    }
-    .admin-shell {
-      display: grid;
-      gap: 20px;
-    }
-    .topbar {
-      display: grid;
-      gap: 16px;
-      align-items: center;
-      background: white;
-      border-radius: 20px;
-      padding: 20px 22px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-    }
-    .topbar-title h1 {
-      margin: 6px 0 0;
-      font-size: 24px;
-    }
-    .topbar-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .user-chip {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      border-radius: 16px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-    }
-    .user-chip .small {
-      font-size: 12px;
-    }
-    .admin-layout {
-      display: grid;
-      gap: 20px;
-    }
+    
+    /* Sidebar */
     .sidebar {
-      display: none;
-      gap: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
     }
-    .sidebar-card {
-      background: white;
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-      display: grid;
-      gap: 8px;
+    
+    .sidebar-header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
     }
-    .menu {
-      background: white;
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-      display: grid;
-      gap: 10px;
+    .brand-name {
+      font-weight: 700;
+      font-size: 1.125rem;
     }
-    .menu-title {
-      font-size: 12px;
+
+    .nav-menu {
+      flex: 1;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .nav-label {
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: #94a3b8;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      padding-left: 0.75rem;
     }
-    .menu-item {
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      color: var(--text-muted);
       text-decoration: none;
-      padding: 12px 16px;
-      border-radius: 14px;
-      font-weight: 600;
-      color: #0f172a;
-      background: #f1f5f9;
-      display: inline-flex;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-item:hover {
+      background: #f9fafb;
+      color: var(--text-main);
+    }
+    .nav-item.active {
+      background: #eff6ff; /* blue-50 */
+      color: var(--primary);
+    }
+    .nav-item .icon { font-size: 1.1rem; }
+
+    .user-profile {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .menu-item.active {
-      background: #2563eb;
+    .user-info { display: flex; align-items: center; gap: 0.75rem; overflow: hidden; }
+    .avatar-sm {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
       color: white;
-      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
-    }
-    .content {
-      display: grid;
-      gap: 20px;
-    }
-    .content-header {
+      border-radius: 50%;
       display: flex;
-      flex-direction: column;
-      gap: 16px;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .content-header h2 {
-      margin: 6px 0 0;
-      font-size: 26px;
-    }
-    .action-button {
-      text-align: center;
-    }
-    .settings-card {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    .table-card {
-      display: grid;
-      gap: 16px;
-    }
-    .table-header {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .table-scroll {
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 420px;
-    }
-    th,
-    td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 14px;
-    }
-    th {
-      color: #64748b;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: 11px;
+      flex-shrink: 0;
     }
-    .modal-toggle {
-      position: absolute;
+    .user-details { overflow: hidden; }
+    .user-name { font-size: 0.875rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-email { font-size: 0.75rem; color: var(--text-muted); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .logout-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+    }
+    .logout-btn:hover { background: #fee2e2; color: var(--danger); }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      width: 100%;
+      padding: calc(var(--header-height) + 1.5rem) 1rem 2rem;
+    }
+
+    /* Mobile Toggle Logic */
+    .mobile-menu-toggle { display: none; } /* Hide checkbox */
+    .hamburger { cursor: pointer; padding: 0.5rem; font-size: 1.5rem; }
+    .mobile-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 45;
+      display: none;
       opacity: 0;
-      pointer-events: none;
+      transition: opacity 0.3s;
     }
+    
+    /* When Checked */
+    #mobile-menu-toggle:checked ~ .app-shell .sidebar { transform: translateX(0); }
+    #mobile-menu-toggle:checked ~ .mobile-backdrop { display: block; opacity: 1; }
+
+    /* Desktop Styles */
+    @media (min-width: 1024px) {
+      .mobile-header { display: none; }
+      .sidebar { transform: translateX(0); }
+      .main-content { margin-left: var(--sidebar-width); padding: 2rem 2.5rem; }
+      .mobile-backdrop { display: none !important; }
+    }
+
+    /* --- COMPONENTS --- */
+    
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border-radius: 1rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Headers */
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin: 0; }
+    .page-subtitle { color: var(--text-muted); margin: 0.25rem 0 0; }
+    
+    @media (min-width: 640px) {
+      .page-header { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.625rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      gap: 0.5rem;
+    }
+    .btn-primary { background: var(--primary); color: white; border-color: transparent; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { background: #f3f4f6; color: var(--text-main); }
+    .icon-plus { font-weight: bold; font-size: 1.1em; line-height: 1; }
+
+    /* Forms */
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
+    label { font-size: 0.875rem; font-weight: 500; color: #374151; }
+    .form-input {
+      padding: 0.625rem 0.875rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Auth Pages */
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      padding: 2.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+    .auth-header p { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
+
+    /* Tables */
+    .table-container { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    .data-table th {
+      background: #f9fafb;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.875rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 1rem 1.5rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover { background: #f9fafb; }
+    
+    .user-cell { display: flex; align-items: center; gap: 0.75rem; }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #e0e7ff;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-flex;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-success { background: #dcfce7; color: #166534; }
+
+    /* Alerts */
+    .alert {
+      padding: 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* Modal */
+    .modal-toggle { display: none; }
     .modal {
       position: fixed;
       inset: 0;
-      display: none;
+      z-index: 100;
+      display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      background: rgba(15, 23, 42, 0.5);
-      z-index: 20;
-    }
-    .modal-card {
-      width: min(100%, 420px);
-      background: white;
-      border-radius: 20px;
-      padding: 22px;
-      display: grid;
-      gap: 16px;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
     }
     .modal-backdrop {
       position: absolute;
       inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
     }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-    }
-    .modal-form {
-      display: grid;
-      gap: 12px;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-    }
-    .modal-toggle:checked + .modal {
-      display: flex;
-    }
-    .bottom-tab {
-      position: fixed;
-      bottom: 16px;
-      left: 16px;
-      right: 16px;
+    .modal-box {
+      position: relative;
       background: white;
-      border-radius: 999px;
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 4px;
-      padding: 6px;
+      width: 100%;
+      max-width: 460px;
+      border-radius: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      transform: scale(0.95);
+      transition: transform 0.2s;
     }
-    .tab-item {
-      text-decoration: none;
-      text-align: center;
-      padding: 10px;
-      border-radius: 999px;
-      font-weight: 600;
-      color: #475569;
-      background: transparent;
+    .modal-toggle:checked + .modal { opacity: 1; pointer-events: auto; }
+    .modal-toggle:checked + .modal .modal-box { transform: scale(1); }
+    
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .modal-header h3 { margin: 0; font-size: 1.25rem; }
+    .btn-close { font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--text-muted); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+
+    /* Grid Layout for Settings */
+    .grid-layout { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+    @media (min-width: 1024px) {
+      .grid-layout { grid-template-columns: repeat(2, 1fr); }
     }
-    .tab-item.active {
-      background: #2563eb;
-      color: white;
-    }
-    @media (min-width: 768px) {
-      body {
-        padding: 40px 40px 80px;
-      }
-      header {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
-      h1 {
-        font-size: 34px;
-      }
-      .card {
-        padding: 32px;
-      }
-      .dashboard {
-        flex-direction: row;
-        align-items: center;
-      }
-      .grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .topbar {
-        grid-template-columns: auto 1fr auto;
-        align-items: center;
-      }
-      .topbar-actions {
-        flex-direction: row;
-        align-items: center;
-      }
-      .admin-layout {
-        grid-template-columns: 250px minmax(0, 1fr);
-      }
-      .sidebar {
-        display: grid;
-      }
-      .bottom-tab {
-        display: none;
-      }
-      .content-header {
-        flex-direction: row;
-        align-items: center;
-      }
-      .settings-card {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
+    .icon-box {
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      font-weight: 700;
     }
   </style>
 </head>
 <body>
-  <main>
-    ${
-      showHeader
-        ? `
-    <header>
-      ${renderLogo()}
-      <div>
-        <h1>${escapeHtml(title)}</h1>
-        <p>${escapeHtml(subtitle)}</p>
-      </div>
-    </header>
-    `
-        : ""
-    }
-    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
-    ${form}
-  </main>
+  ${fullPage ? content : `
+    <input type="checkbox" id="mobile-menu-toggle" class="mobile-menu-toggle" />
+    <label for="mobile-menu-toggle" class="mobile-backdrop"></label>
+    
+    <div class="app-shell">
+      <header class="mobile-header">
+        <label for="mobile-menu-toggle" class="hamburger">☰</label>
+        <span class="brand-name">Freeducation</span>
+        <div style="width: 24px;"></div> <!-- Spacer -->
+      </header>
+
+      ${sidebar}
+
+      <main class="main-content">
+        ${content}
+      </main>
+    </div>
+  `}
 </body>
-</html>`,
+</html>`
   );
 }
 
-function renderLogo(): string {
+function renderLogo(size: number = 40): string {
   return `
-    <div class="logo" aria-label="Freeducation">
-      <svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false">
-        <defs>
-          <linearGradient id="hat" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stop-color="#1d4ed8" />
-            <stop offset="100%" stop-color="#2563eb" />
-          </linearGradient>
-          <linearGradient id="rim" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stop-color="#0f172a" />
-            <stop offset="100%" stop-color="#334155" />
-          </linearGradient>
-        </defs>
-        <path d="M12 44 L48 24 L84 44 L48 64 Z" fill="url(#hat)" />
-        <path d="M20 48 L48 62 L76 48" stroke="url(#rim)" stroke-width="4" stroke-linecap="round" />
-        <circle cx="72" cy="52" r="6" fill="#f97316" />
-      </svg>
-      <span>Freeducation</span>
-    </div>
+    <svg width="${size}" height="${size}" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad1" x1="12" y1="24" x2="84" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#4f46e5" />
+          <stop offset="100%" stop-color="#4338ca" />
+        </linearGradient>
+      </defs>
+      <path d="M12 44 L48 24 L84 44 L48 64 Z" fill="url(#grad1)" />
+      <path d="M20 48 L48 62 L76 48" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+      <circle cx="72" cy="52" r="6" fill="#f97316" />
+    </svg>
   `;
 }
 
 function escapeHtml(value: string): string {
+  if (!value) return "";
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -1267,7 +1350,7 @@ function createHtmlResponse(html: string): Response {
   return new Response(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      "Content-Security-Policy": "default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
       "Referrer-Policy": "no-referrer",
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
