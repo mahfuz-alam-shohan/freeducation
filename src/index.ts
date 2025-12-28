@@ -78,6 +78,17 @@ async function handleAdmin(request: Request, env: Env): Promise<Response> {
     return handleLogin(request, env);
   }
 
+  if (url.pathname === "/admin/reset") {
+    if (method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+    const session = await getSession(request, env);
+    if (!session) {
+      return Response.redirect(new URL("/admin", request.url), 303);
+    }
+    return handleFactoryReset(request, env);
+  }
+
   if (url.pathname !== "/admin") {
     return new Response("Not Found", { status: 404 });
   }
@@ -181,6 +192,32 @@ async function logoutAdmin(request: Request, env: Env): Promise<Response> {
   const token = getCookie(request, COOKIE_NAME);
   if (token) {
     await env.DB.prepare("DELETE FROM admin_sessions WHERE token = ?").bind(token).run();
+  }
+
+  const headers = new Headers({ Location: new URL("/admin", request.url).toString() });
+  headers.append(
+    "Set-Cookie",
+    `${COOKIE_NAME}=; Path=/admin; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
+  );
+  return new Response(null, { status: 303, headers });
+}
+
+async function handleFactoryReset(request: Request, env: Env): Promise<Response> {
+  const statements = [
+    "DROP TABLE IF EXISTS admin_sessions",
+    "DROP TABLE IF EXISTS admins",
+  ];
+
+  for (const statement of statements) {
+    const result = await env.DB.prepare(statement).run();
+    if (!result.success) {
+      throw new Error(result.error ? `Factory reset failed: ${result.error}` : "Factory reset failed.");
+    }
+  }
+
+  const schemaResult = await ensureSchema(env);
+  if (!schemaResult.ok) {
+    throw new Error(schemaResult.message);
   }
 
   const headers = new Headers({ Location: new URL("/admin", request.url).toString() });
@@ -542,29 +579,38 @@ function renderDashboard(admin: { id: number; name: string; email: string }): Re
     title: "Admin dashboard",
     subtitle: "Control center for Freeducation.",
     form: `
-      <section class="card dashboard">
-        <div>
-          <p class="label">Signed in as</p>
-          <h3>${escapeHtml(admin.name)}</h3>
-          <p class="muted">${escapeHtml(admin.email)}</p>
-        </div>
-        <form method="post" action="/admin/logout">
-          <button class="ghost" type="submit">Log out</button>
-        </form>
-      </section>
-      <section class="grid">
-        <div class="panel">
-          <h4>Overview</h4>
-          <p>Dashboards, analytics, and course controls will live here soon.</p>
-        </div>
-        <div class="panel">
-          <h4>Next steps</h4>
-          <ul>
-            <li>Design the student course flow.</li>
-            <li>Connect R2 assets to lessons.</li>
-            <li>Invite instructors.</li>
-          </ul>
-        </div>
+      <section class="dashboard-layout">
+        <aside class="sidebar">
+          <div class="sidebar-card">
+            <p class="label">Signed in</p>
+            <h3>${escapeHtml(admin.name)}</h3>
+            <p class="muted">${escapeHtml(admin.email)}</p>
+          </div>
+          <nav class="menu">
+            <span class="menu-title">Menu</span>
+            <a class="menu-item active" href="/admin">Settings</a>
+          </nav>
+        </aside>
+        <section class="content">
+          <div class="content-header">
+            <div>
+              <p class="label">Dashboard</p>
+              <h2>Settings</h2>
+            </div>
+            <form method="post" action="/admin/logout">
+              <button class="ghost" type="submit">Log out</button>
+            </form>
+          </div>
+          <section class="card settings-card">
+            <div>
+              <h4>Factory reset</h4>
+              <p class="muted">Drop all tables and recreate the database.</p>
+            </div>
+            <form method="post" action="/admin/reset">
+              <button class="danger" type="submit">Reset database</button>
+            </form>
+          </section>
+        </section>
       </section>
     `,
   });
@@ -674,6 +720,11 @@ function renderAdminShell(options: {
       background: #e2e8f0;
       color: #0f172a;
     }
+    .danger {
+      background: #dc2626;
+      color: white;
+      box-shadow: 0 12px 24px rgba(220, 38, 38, 0.3);
+    }
     .dashboard {
       display: flex;
       flex-direction: column;
@@ -719,6 +770,73 @@ function renderAdminShell(options: {
       line-height: 1.5;
       margin-top: 12px;
     }
+    .dashboard-layout {
+      display: grid;
+      gap: 24px;
+    }
+    .sidebar {
+      display: grid;
+      gap: 20px;
+    }
+    .sidebar-card {
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+      display: grid;
+      gap: 8px;
+    }
+    .menu {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      display: grid;
+      gap: 10px;
+    }
+    .menu-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #94a3b8;
+    }
+    .menu-item {
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      background: #f1f5f9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .menu-item.active {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
+    }
+    .content {
+      display: grid;
+      gap: 20px;
+    }
+    .content-header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .content-header h2 {
+      margin: 6px 0 0;
+      font-size: 26px;
+    }
+    .settings-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+    }
     @media (min-width: 768px) {
       body {
         padding: 40px 40px 80px;
@@ -740,6 +858,19 @@ function renderAdminShell(options: {
       }
       .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .dashboard-layout {
+        grid-template-columns: 260px minmax(0, 1fr);
+        align-items: start;
+      }
+      .content-header {
+        flex-direction: row;
+        align-items: center;
+      }
+      .settings-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
       }
     }
   </style>
