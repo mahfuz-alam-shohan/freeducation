@@ -61,6 +61,20 @@ const TABLES = [
       "FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE",
       "FOREIGN KEY (link_id) REFERENCES class_links(id) ON DELETE CASCADE"
     ]
+  },
+  {
+    name: "subjects",
+    definition: [
+      "id INTEGER PRIMARY KEY AUTOINCREMENT",
+      "name TEXT NOT NULL",
+      "class_id INTEGER",
+      "group_id INTEGER",
+      "link_id INTEGER",
+      "created_at TEXT NOT NULL",
+      "FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE",
+      "FOREIGN KEY (group_id) REFERENCES class_groups(id) ON DELETE CASCADE",
+      "FOREIGN KEY (link_id) REFERENCES class_links(id) ON DELETE CASCADE"
+    ]
   }
 ];
 
@@ -68,7 +82,10 @@ const INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token)",
   "CREATE INDEX IF NOT EXISTS idx_admin_sessions_admin_id ON admin_sessions(admin_id)",
   "CREATE INDEX IF NOT EXISTS idx_class_groups_class_id ON class_groups(class_id)",
-  "CREATE INDEX IF NOT EXISTS idx_class_groups_link_id ON class_groups(link_id)"
+  "CREATE INDEX IF NOT EXISTS idx_class_groups_link_id ON class_groups(link_id)",
+  "CREATE INDEX IF NOT EXISTS idx_subjects_class_id ON subjects(class_id)",
+  "CREATE INDEX IF NOT EXISTS idx_subjects_group_id ON subjects(group_id)",
+  "CREATE INDEX IF NOT EXISTS idx_subjects_link_id ON subjects(link_id)"
 ];
 
 export async function ensureDatabase(env: Env): Promise<{ ok: boolean; message?: string }> {
@@ -129,5 +146,4 @@ export async function resetDatabase(env: Env) {
   
   await ensureDatabase(env);
 }
-
 
