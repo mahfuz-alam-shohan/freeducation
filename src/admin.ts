@@ -50,26 +50,22 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
     return renderClassesList(session, env);
   }
   
-  // Regex for /admin/classes/:id
   const classMatch = path.match(/^\/admin\/classes\/(\d+)$/);
   if (classMatch) {
     return renderClassDetail(session, env, parseInt(classMatch[1]));
   }
   
-  // Class Actions
   if (path === "/admin/classes/group" && method === "POST") return handleCreateGroup(request, env);
   if (path === "/admin/classes/link" && method === "POST") return handleLinkClasses(request, env);
 
   // --- Subjects & Chapters ---
   if (path === "/admin/subjects" && method === "POST") return handleCreateSubject(request, env);
   
-  // Regex for /admin/subjects/:id
   const subjectMatch = path.match(/^\/admin\/subjects\/(\d+)$/);
   if (subjectMatch) {
     return renderSubjectDetail(session, env, parseInt(subjectMatch[1]));
   }
   
-  // Chapter Actions
   if (path === "/admin/chapters" && method === "POST") return handleCreateChapter(request, env);
 
   // --- Settings ---
@@ -88,14 +84,20 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
 
 function renderLogin(error?: string) {
   return renderPage("Login", `
-    <div style="min-height:80vh; display:flex; align-items:center; justify-content:center;">
-      <div class="card" style="max-width:380px; width:100%; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1);">
+    <div style="min-height:80vh; display:flex; align-items:center; justify-content:center; padding:1.5rem;">
+      <div class="card" style="max-width:380px; width:100%;">
         <div class="card-body">
           <h2 style="text-align:center; margin-top:0;">Admin Login</h2>
           ${error ? `<div style="color:var(--danger); background:#fee2e2; padding:0.5rem; border-radius:0.5rem; margin-bottom:1rem; font-size:0.9rem;">${error}</div>` : ""}
-          <form method="POST" action="/admin/login" style="display:flex; flex-direction:column; gap:1rem;">
-            <input type="email" name="email" required class="input" placeholder="Email">
-            <input type="password" name="password" required class="input" placeholder="Password">
+          <form method="POST" action="/admin/login" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div>
+               <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Email</label>
+               <input type="email" name="email" required class="input" placeholder="you@example.com">
+            </div>
+            <div>
+               <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Password</label>
+               <input type="password" name="password" required class="input" placeholder="••••••••">
+            </div>
             <button class="btn btn-primary" style="width:100%;">Sign In</button>
           </form>
         </div>
@@ -106,7 +108,7 @@ function renderLogin(error?: string) {
 
 function renderSetup(error?: string) {
   return renderPage("Setup", `
-    <div style="min-height:80vh; display:flex; align-items:center; justify-content:center;">
+    <div style="min-height:80vh; display:flex; align-items:center; justify-content:center; padding:1.5rem;">
       <div class="card" style="max-width:380px; width:100%;">
         <div class="card-body">
           <h2 style="text-align:center; margin-top:0;">Setup Owner</h2>
@@ -124,7 +126,6 @@ function renderSetup(error?: string) {
 }
 
 async function renderDashboard(session: any, env: Env) {
-  // Simple stats
   let counts = { classes: 0, subjects: 0, admins: 0 };
   try {
     const res = await env.DB.batch([
@@ -140,19 +141,17 @@ async function renderDashboard(session: any, env: Env) {
   return renderPage("Dashboard", `
     <div class="header-bar">
       <h1 class="page-title">Dashboard</h1>
+      <p style="color:var(--text-muted); margin:0;">Overview of your content</p>
     </div>
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
-      <div class="card"><div class="card-body">
-        <div style="color:var(--text-muted); font-size:0.85rem; font-weight:600; text-transform:uppercase;">Classes</div>
-        <div style="font-size:2rem; font-weight:700;">${counts.classes}</div>
+    
+    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:1rem; margin-bottom:2rem;">
+      <div class="card" style="margin:0;"><div class="card-body">
+        <div style="color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Classes</div>
+        <div style="font-size:2rem; font-weight:800; color:var(--primary);">${counts.classes}</div>
       </div></div>
-      <div class="card"><div class="card-body">
-        <div style="color:var(--text-muted); font-size:0.85rem; font-weight:600; text-transform:uppercase;">Subjects</div>
-        <div style="font-size:2rem; font-weight:700;">${counts.subjects}</div>
-      </div></div>
-      <div class="card"><div class="card-body">
-        <div style="color:var(--text-muted); font-size:0.85rem; font-weight:600; text-transform:uppercase;">Admins</div>
-        <div style="font-size:2rem; font-weight:700;">${counts.admins}</div>
+      <div class="card" style="margin:0;"><div class="card-body">
+        <div style="color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Subjects</div>
+        <div style="font-size:2rem; font-weight:800;">${counts.subjects}</div>
       </div></div>
     </div>
     
@@ -161,15 +160,15 @@ async function renderDashboard(session: any, env: Env) {
         <h3>Quick Actions</h3>
       </div>
       <div class="card-body">
-        <a href="/admin/classes" class="btn btn-primary">Manage Classes</a>
+        <a href="/admin/classes" class="btn btn-primary" style="width:100%;">Manage Classes</a>
       </div>
     </div>
   `, "dashboard", session);
 }
 
-// --- List View: Classes (Table) ---
+// --- List View: Classes (Mobile Card List) ---
 async function renderClassesList(session: any, env: Env) {
-  // FIX: c.link_id does not exist. We use lm.link_id instead.
+  // Corrected query using lm.link_id alias
   const classes = await env.DB.prepare(`
     SELECT c.*, 
            (SELECT COUNT(*) FROM subjects WHERE class_id = c.id OR (link_id IS NOT NULL AND link_id = lm.link_id)) as subject_count,
@@ -182,37 +181,42 @@ async function renderClassesList(session: any, env: Env) {
 
   return renderPage("Classes", `
     <div class="header-bar">
-      <h1 class="page-title">Classes Registry</h1>
-      <a href="#new-class-modal" class="btn btn-primary btn-sm">+ New Class</a>
+      <h1 class="page-title">Classes</h1>
+      <div class="action-bar">
+         <a href="#new-class-modal" class="btn btn-primary">+ New Class</a>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Class Name</th>
+            <th>Type</th>
+            <th>Stats</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${classes.results?.map(c => `
             <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Subjects</th>
-              <th>Linked With</th>
-              <th class="col-action">Action</th>
+              <td data-label="Name">
+                <a href="/admin/classes/${c.id}" style="text-decoration:none; color:inherit;">${escapeHtml(c.name)}</a>
+              </td>
+              <td data-label="Type">
+                ${c.has_groups ? '<span class="badge badge-blue">Groups</span>' : '<span class="badge badge-gray">Standard</span>'}
+                ${c.link_name ? `<span class="badge badge-purple">Linked</span>` : ''}
+              </td>
+              <td data-label="Stats">
+                ${c.subject_count} Subjects
+              </td>
+              <td>
+                <a href="/admin/classes/${c.id}" class="btn btn-white btn-sm" style="width:100%;">Manage</a>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            ${classes.results?.map(c => `
-              <tr>
-                <td><a href="/admin/classes/${c.id}" style="font-weight:600; color:var(--primary); text-decoration:none;">${escapeHtml(c.name)}</a></td>
-                <td>${c.has_groups ? '<span class="badge badge-blue">Groups</span>' : '<span class="badge badge-gray">Standard</span>'}</td>
-                <td>${c.subject_count}</td>
-                <td>${c.link_name ? `<span class="badge badge-gray">${escapeHtml(c.link_name)}</span>` : '<span style="color:#cbd5e1">—</span>'}</td>
-                <td class="col-action">
-                  <a href="/admin/classes/${c.id}" class="btn btn-white btn-sm">Manage</a>
-                </td>
-              </tr>
-            `).join('') || '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No classes found</td></tr>'}
-          </tbody>
-        </table>
-      </div>
+          `).join('') || '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No classes found</td></tr>'}
+        </tbody>
+      </table>
     </div>
 
     <!-- Modals -->
@@ -220,27 +224,29 @@ async function renderClassesList(session: any, env: Env) {
       <div class="modal-box">
         <h3 style="margin-top:0;">Create New Class</h3>
         <form action="/admin/classes" method="POST">
-          <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Class Name</label>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Class Name</label>
           <input name="name" class="input" required placeholder="e.g. Class 9" style="margin-bottom:1rem;">
           
-          <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem; font-size:0.9rem;">
-            <input type="checkbox" name="has_groups" value="1">
-            Enable Groups (Science/Arts/Commerce)
+          <label style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; padding:0.75rem; border:1px solid var(--border); border-radius:0.75rem;">
+            <input type="checkbox" name="has_groups" value="1" style="transform:scale(1.2);">
+            <div>
+              <div style="font-weight:600;">Enable Groups</div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">For Science, Arts, Commerce</div>
+            </div>
           </label>
           
-          <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-            <a href="#" class="btn btn-ghost">Cancel</a>
-            <button class="btn btn-primary">Create Class</button>
+          <div style="display:flex; gap:0.75rem;">
+            <a href="#" class="btn btn-white" style="flex:1;">Cancel</a>
+            <button class="btn btn-primary" style="flex:1;">Create</button>
           </div>
         </form>
       </div>
     </div>
-  `, "classes", session, `<span>Classes</span>`);
+  `, "classes", session);
 }
 
-// --- Detail View: Class (The Hub) ---
+// --- Detail View: Class (Mobile Hub) ---
 async function renderClassDetail(session: any, env: Env, classId: number) {
-  // 1. Fetch Class Info
   const classData = await env.DB.prepare(`
     SELECT c.*, l.name as link_name, l.id as link_id
     FROM classes c
@@ -251,11 +257,6 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
 
   if (!classData) return new Response("Class not found", { status: 404 });
 
-  // 2. Fetch Subjects & Groups
-  // Note: We need to handle linked data carefully.
-  // Subjects can be linked (link_id) OR direct (class_id).
-  // Groups can be linked (link_id) OR direct (class_id).
-  
   const linkId = classData.link_id;
   
   const [subjects, groups] = await env.DB.batch([
@@ -275,7 +276,6 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
   const subjectList = subjects.results as SubjectRow[] || [];
   const groupList = groups.results as GroupRow[] || [];
 
-  // 3. Render
   const breadcrumbs = `
     <a href="/admin/classes">Classes</a> 
     <span class="breadcrumb-sep">/</span> 
@@ -284,64 +284,42 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
 
   return renderPage(classData.name, `
     <div class="header-bar">
-      <div>
-        <h1 class="page-title">${escapeHtml(classData.name)} <span style="font-size:1rem; color:var(--text-muted); font-weight:400;">Dashboard</span></h1>
-        ${classData.link_name ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.25rem;">Linked with ${escapeHtml(classData.link_name)}</div>` : ''}
-      </div>
-      <div style="display:flex; gap:0.5rem;">
-        <a href="#modal-subject" class="btn btn-primary btn-sm">+ Add Subject</a>
-        ${classData.has_groups ? `<a href="#modal-group" class="btn btn-white btn-sm">+ Add Group</a>` : ''}
-        <a href="#modal-link" class="btn btn-ghost btn-sm">Link Class</a>
+      <h1 class="page-title">${escapeHtml(classData.name)}</h1>
+      ${classData.link_name ? `<div style="font-size:0.85rem; color:var(--primary); background:#eff6ff; padding:0.5rem; border-radius:0.5rem; display:inline-block; margin-bottom:0.5rem;">🔗 Linked: ${escapeHtml(classData.link_name)}</div>` : ''}
+      
+      <div class="action-bar">
+        <a href="#modal-subject" class="btn btn-primary">+ Subject</a>
+        ${classData.has_groups ? `<a href="#modal-group" class="btn btn-white">+ Group</a>` : ''}
+        <a href="#modal-link" class="btn btn-ghost">Link</a>
       </div>
     </div>
 
     <!-- Section: Common Subjects -->
-    <div class="card">
-      <div class="card-header"><h3>Subjects</h3></div>
-      <div class="table-container">
-        <table class="data-table">
-          <thead><tr><th>Subject Name</th><th>Group</th><th>Scope</th><th class="col-action">Action</th></tr></thead>
-          <tbody>
-            ${subjectList.map(s => `
-              <tr>
-                <td>
-                  <a href="/admin/subjects/${s.id}" style="font-weight:600; color:var(--primary); text-decoration:none;">
-                    ${escapeHtml(s.name)}
-                  </a>
-                </td>
-                <td>${s.group_name ? `<span class="badge badge-gray">${escapeHtml(s.group_name)}</span>` : '<span style="color:#cbd5e1">Common</span>'}</td>
-                <td>${s.link_id ? `<span class="badge badge-blue">Shared</span>` : 'Local'}</td>
-                <td class="col-action">
-                  <a href="/admin/subjects/${s.id}" class="btn btn-white btn-sm">Manage Chapters</a>
-                </td>
-              </tr>
-            `).join('') || '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No subjects added yet.</td></tr>'}
-          </tbody>
-        </table>
-      </div>
+    <h3 style="margin-bottom:0.75rem;">Subjects</h3>
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Details</th><th>Action</th></tr></thead>
+        <tbody>
+          ${subjectList.map(s => `
+            <tr>
+              <td data-label="Subject">
+                <a href="/admin/subjects/${s.id}" style="text-decoration:none; color:inherit;">${escapeHtml(s.name)}</a>
+              </td>
+              <td data-label="Details">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                   ${s.group_name ? `<span class="badge badge-gray">${escapeHtml(s.group_name)}</span>` : '<span class="badge badge-gray">Common</span>'}
+                   ${s.link_id ? `<span class="badge badge-purple">Shared</span>` : ''}
+                </div>
+              </td>
+              <td>
+                <a href="/admin/subjects/${s.id}" class="btn btn-white btn-sm" style="width:100%;">Chapters</a>
+              </td>
+            </tr>
+          `).join('') || '<tr><td colspan="3" style="text-align:center; padding:2rem; color:var(--text-muted);">No subjects yet.</td></tr>'}
+        </tbody>
+      </table>
     </div>
     
-    <!-- Section: Groups (if enabled) -->
-    ${classData.has_groups ? `
-      <div class="card">
-        <div class="card-header"><h3>Groups</h3></div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead><tr><th>Group Name</th><th>Scope</th><th class="col-action"></th></tr></thead>
-            <tbody>
-              ${groupList.map(g => `
-                <tr>
-                  <td>${escapeHtml(g.name)}</td>
-                  <td>${g.link_id ? 'Shared' : 'Local'}</td>
-                  <td class="col-action"><button class="btn btn-ghost btn-sm" disabled>Edit</button></td>
-                </tr>
-              `).join('') || '<tr><td colspan="3" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No groups defined.</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    ` : ''}
-
     <!-- Add Subject Modal -->
     <div id="modal-subject" class="modal-target modal-overlay">
       <div class="modal-box">
@@ -359,9 +337,9 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
             </select>
           ` : ''}
           
-          <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-            <a href="#" class="btn btn-ghost">Cancel</a>
-            <button class="btn btn-primary">Add Subject</button>
+          <div style="display:flex; gap:0.75rem;">
+            <a href="#" class="btn btn-white" style="flex:1;">Cancel</a>
+            <button class="btn btn-primary" style="flex:1;">Add</button>
           </div>
         </form>
       </div>
@@ -374,9 +352,9 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
         <form action="/admin/classes/group" method="POST">
           <input type="hidden" name="class_id" value="${classId}">
           <input name="name" class="input" required placeholder="Group Name (e.g. Science)" style="margin-bottom:1rem;">
-          <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-            <a href="#" class="btn btn-ghost">Cancel</a>
-            <button class="btn btn-primary">Add Group</button>
+          <div style="display:flex; gap:0.75rem;">
+            <a href="#" class="btn btn-white" style="flex:1;">Cancel</a>
+            <button class="btn btn-primary" style="flex:1;">Add</button>
           </div>
         </form>
       </div>
@@ -385,14 +363,14 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
     <!-- Link Modal -->
     <div id="modal-link" class="modal-target modal-overlay">
       <div class="modal-box">
-        <h3>Link with another class</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Linking allows two classes (e.g. Class 9 & 10) to share the exact same subjects and chapters.</p>
+        <h3>Link Class</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Share content with another class (e.g. Class 9 & 10).</p>
         <form action="/admin/classes/link" method="POST">
           <input type="hidden" name="class_id" value="${classId}">
-          <input name="link_class_id" class="input" placeholder="ID of other class (temporary UI)" required style="margin-bottom:1rem;">
-          <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-            <a href="#" class="btn btn-ghost">Cancel</a>
-            <button class="btn btn-primary">Link Classes</button>
+          <input name="link_class_id" class="input" placeholder="ID of other class" required type="number" style="margin-bottom:1rem;">
+          <div style="display:flex; gap:0.75rem;">
+            <a href="#" class="btn btn-white" style="flex:1;">Cancel</a>
+            <button class="btn btn-primary" style="flex:1;">Link</button>
           </div>
         </form>
       </div>
@@ -406,8 +384,7 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
   const subject = await env.DB.prepare("SELECT * FROM subjects WHERE id = ?").bind(subjectId).first<SubjectRow>();
   if (!subject) return new Response("Subject not found", { status: 404 });
   
-  // Need class info for breadcrumbs
-  const classInfo = await env.DB.prepare("SELECT * FROM classes WHERE id = ?").bind(subject.class_id).first<ClassRow>(); // Note: if linked, we might need more logic, but this suffices for now.
+  const classInfo = await env.DB.prepare("SELECT * FROM classes WHERE id = ?").bind(subject.class_id).first<ClassRow>();
 
   const chapters = await env.DB.prepare("SELECT * FROM chapters WHERE subject_id = ? ORDER BY sort_order ASC, created_at ASC").bind(subjectId).all<ChapterRow>();
 
@@ -415,36 +392,37 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
     <a href="/admin/classes">Classes</a>
     <span class="breadcrumb-sep">/</span>
     <a href="/admin/classes/${subject.class_id}">${classInfo ? escapeHtml(classInfo.name) : 'Class'}</a>
-    <span class="breadcrumb-sep">/</span>
-    <span>${escapeHtml(subject.name)}</span>
   `;
 
   return renderPage(subject.name, `
     <div class="header-bar">
-      <h1 class="page-title">
-        <span style="font-weight:400; color:var(--text-muted);">${escapeHtml(subject.name)} /</span> 
-        Chapters
-      </h1>
-      <a href="#modal-chapter" class="btn btn-primary btn-sm">+ New Chapter</a>
+      <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0.25rem;">Subject</div>
+      <h1 class="page-title" style="margin-bottom:1rem;">${escapeHtml(subject.name)}</h1>
+      <div class="action-bar">
+         <a href="#modal-chapter" class="btn btn-primary">+ New Chapter</a>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="table-container">
-        <table class="data-table">
-          <thead><tr><th style="width:50px">#</th><th>Chapter Name</th><th class="col-action">Action</th></tr></thead>
-          <tbody>
-            ${chapters.results?.map((ch, idx) => `
-              <tr>
-                <td>${idx + 1}</td>
-                <td style="font-weight:500;">${escapeHtml(ch.name)}</td>
-                <td class="col-action">
-                  <a href="#" class="btn btn-ghost btn-sm">Edit</a>
-                </td>
-              </tr>
-            `).join('') || '<tr><td colspan="3" style="text-align:center; padding:3rem; color:var(--text-muted);">No chapters yet. Add the first one!</td></tr>'}
-          </tbody>
-        </table>
-      </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Chapter</th><th>Action</th></tr></thead>
+        <tbody>
+          ${chapters.results?.map((ch, idx) => `
+            <tr>
+              <td data-label="Chapter">
+                <span style="color:var(--text-muted); font-size:0.9rem; margin-right:0.5rem;">#${idx + 1}</span>
+                ${escapeHtml(ch.name)}
+              </td>
+              <td data-label="Info">
+                 <span style="font-size:0.85rem; color:var(--text-muted);">0 Topics</span>
+              </td>
+              <td>
+                <a href="#" class="btn btn-white btn-sm" style="width:100%;">Edit</a>
+              </td>
+            </tr>
+          `).join('') || '<tr><td colspan="3" style="text-align:center; padding:3rem; color:var(--text-muted);">No chapters yet.</td></tr>'}
+        </tbody>
+      </table>
     </div>
 
     <!-- New Chapter Modal -->
@@ -454,12 +432,12 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
         <form action="/admin/chapters" method="POST">
           <input type="hidden" name="subject_id" value="${subjectId}">
           <label style="display:block; margin-bottom:0.5rem;">Chapter Name</label>
-          <input name="name" class="input" required placeholder="e.g. Chapter 1: Dynamics" style="margin-bottom:1rem;">
-          <label style="display:block; margin-bottom:0.5rem;">Order (Optional)</label>
+          <input name="name" class="input" required placeholder="e.g. Motion" style="margin-bottom:1rem;">
+          <label style="display:block; margin-bottom:0.5rem;">Order</label>
           <input name="sort_order" type="number" class="input" value="0" style="margin-bottom:1.5rem;">
-          <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-            <a href="#" class="btn btn-ghost">Cancel</a>
-            <button class="btn btn-primary">Add Chapter</button>
+          <div style="display:flex; gap:0.75rem;">
+            <a href="#" class="btn btn-white" style="flex:1;">Cancel</a>
+            <button class="btn btn-primary" style="flex:1;">Add</button>
           </div>
         </form>
       </div>
@@ -469,13 +447,14 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
 
 function renderSettings(session: any) {
   return renderPage("Settings", `
-      <div class="header-bar"><h1 class="page-title">System Settings</h1></div>
-      <div class="card" style="border-color:#fca5a5;">
-          <div class="card-header" style="background:#fef2f2; color:#991b1b;"><h3>Danger Zone</h3></div>
+      <div class="header-bar"><h1 class="page-title">Settings</h1></div>
+      
+      <div class="card" style="border-color:#fca5a5; background:#fff5f5;">
           <div class="card-body">
-            <p style="color:var(--text-muted); margin-top:0;">Resetting the database will delete ALL classes, subjects, and chapters permanently.</p>
-            <form action="/admin/settings?action=reset" method="POST" onsubmit="return confirm('Are you strictly sure? This cannot be undone.');">
-                <button class="btn btn-danger">Factory Reset Database</button>
+            <h3 style="color:#991b1b; margin-top:0;">Danger Zone</h3>
+            <p style="color:#7f1d1d; margin-top:0.5rem; font-size:0.9rem;">Resetting the database will delete ALL content.</p>
+            <form action="/admin/settings?action=reset" method="POST" onsubmit="return confirm('Strictly sure?');">
+                <button class="btn btn-danger" style="width:100%;">Factory Reset DB</button>
             </form>
           </div>
       </div>
@@ -541,8 +520,6 @@ async function handleCreateGroup(request: Request, env: Env) {
 }
 
 async function handleLinkClasses(request: Request, env: Env) {
-    // Simplified Link Logic for new architecture
-    // This part assumes you enter an ID. In a real app we'd make a nicer UI for selecting.
     const fd = await request.formData();
     const classId = Number(fd.get("class_id"));
     const targetId = Number(fd.get("link_class_id"));
@@ -568,9 +545,6 @@ async function handleCreateSubject(request: Request, env: Env) {
   if (classId && name) {
     const linkRow = await env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(classId).first<{ link_id: number }>();
     const linkId = linkRow?.link_id || null;
-    
-    // If linked and no group, assign to link. If linked and group, assign to link + group.
-    // If not linked, assign to class.
     
     await env.DB.prepare("INSERT INTO subjects (name, class_id, group_id, link_id, created_at) VALUES (?,?,?,?,?)")
       .bind(name, linkId ? null : classId, groupId, linkId, new Date().toISOString())
