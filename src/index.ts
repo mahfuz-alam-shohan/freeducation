@@ -78,6 +78,17 @@ async function handleAdmin(request: Request, env: Env): Promise<Response> {
     return handleLogin(request, env);
   }
 
+  if (url.pathname === "/admin/admins") {
+    if (method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+    const session = await getSession(request, env);
+    if (!session) {
+      return Response.redirect(new URL("/admin", request.url), 303);
+    }
+    return handleAddAdmin(request, env, session);
+  }
+
   if (url.pathname === "/admin/reset") {
     if (method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
@@ -99,7 +110,9 @@ async function handleAdmin(request: Request, env: Env): Promise<Response> {
 
   const session = await getSession(request, env);
   if (session) {
-    return renderDashboard(session);
+    const tab = url.searchParams.get("tab") === "users" ? "users" : "settings";
+    const admins = await getAdminList(env);
+    return renderDashboard({ admin: session, tab, admins });
   }
 
   const adminCount = await getAdminCount(env);
@@ -170,6 +183,45 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
 
   const sessionToken = await createSession(env, admin.id);
   return redirectWithSession(request, sessionToken);
+}
+
+async function handleAddAdmin(
+  request: Request,
+  env: Env,
+  admin: { id: number; name: string; email: string }
+): Promise<Response> {
+  const formData = await request.formData();
+  const name = (formData.get("name") || "").toString().trim();
+  const email = (formData.get("email") || "").toString().trim().toLowerCase();
+  const password = (formData.get("password") || "").toString();
+
+  if (!name || !email || !password) {
+    const admins = await getAdminList(env);
+    return renderDashboard({
+      admin,
+      tab: "users",
+      admins,
+      error: "Please fill in name, email, and password to add a new admin.",
+    });
+  }
+
+  const passwordHash = await hashPassword(password);
+  const createdAt = new Date().toISOString();
+  const insert = await env.DB.prepare(
+    "INSERT INTO admins (name, email, password_hash, created_at) VALUES (?, ?, ?, ?)"
+  ).bind(name, email, passwordHash, createdAt).run();
+
+  if (!insert.success) {
+    const admins = await getAdminList(env);
+    return renderDashboard({
+      admin,
+      tab: "users",
+      admins,
+      error: "Unable to add the admin. Check if the email already exists.",
+    });
+  }
+
+  return Response.redirect(new URL("/admin?tab=users", request.url), 303);
 }
 
 async function createSession(env: Env, adminId: number): Promise<string> {
@@ -243,6 +295,13 @@ async function getSession(request: Request, env: Env): Promise<{ id: number; nam
   ).bind(token, now).first<{ id: number; name: string; email: string }>();
 
   return session ?? null;
+}
+
+async function getAdminList(env: Env): Promise<{ id: number; name: string; email: string; created_at: string }[]> {
+  const result = await env.DB.prepare(
+    "SELECT id, name, email, created_at FROM admins ORDER BY created_at DESC"
+  ).all<{ id: number; name: string; email: string; created_at: string }>();
+  return result.results ?? [];
 }
 
 function getCookie(request: Request, name: string): string | null {
@@ -574,43 +633,158 @@ function renderLoginForm(error?: string): Response {
   });
 }
 
-function renderDashboard(admin: { id: number; name: string; email: string }): Response {
+function renderDashboard(options: {
+  admin: { id: number; name: string; email: string };
+  tab: "settings" | "users";
+  admins: { id: number; name: string; email: string; created_at: string }[];
+  error?: string;
+}): Response {
+  const { admin, tab, admins, error } = options;
   return renderAdminShell({
     title: "Admin dashboard",
     subtitle: "Control center for Freeducation.",
+    showHeader: false,
     form: `
-      <section class="dashboard-layout">
-        <aside class="sidebar">
-          <div class="sidebar-card">
-            <p class="label">Signed in</p>
-            <h3>${escapeHtml(admin.name)}</h3>
-            <p class="muted">${escapeHtml(admin.email)}</p>
+      <section class="admin-shell">
+        <header class="topbar">
+          ${renderLogo()}
+          <div class="topbar-title">
+            <p class="label">Admin workspace</p>
+            <h1>Freeducation</h1>
           </div>
-          <nav class="menu">
-            <span class="menu-title">Menu</span>
-            <a class="menu-item active" href="/admin">Settings</a>
-          </nav>
-        </aside>
-        <section class="content">
-          <div class="content-header">
-            <div>
-              <p class="label">Dashboard</p>
-              <h2>Settings</h2>
+          <div class="topbar-actions">
+            <div class="user-chip">
+              <div>
+                <p class="muted">${escapeHtml(admin.name)}</p>
+                <p class="muted small">${escapeHtml(admin.email)}</p>
+              </div>
             </div>
             <form method="post" action="/admin/logout">
               <button class="ghost" type="submit">Log out</button>
             </form>
           </div>
-          <section class="card settings-card">
-            <div>
-              <h4>Factory reset</h4>
-              <p class="muted">Drop all tables and recreate the database.</p>
+        </header>
+        ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
+        <div class="admin-layout">
+          <aside class="sidebar">
+            <nav class="menu">
+              <span class="menu-title">Main menu</span>
+              <a class="menu-item ${tab === "settings" ? "active" : ""}" href="/admin?tab=settings">Settings</a>
+              <a class="menu-item ${tab === "users" ? "active" : ""}" href="/admin?tab=users">User management</a>
+            </nav>
+            <div class="sidebar-card">
+              <p class="label">Session</p>
+              <p class="muted">Logged in as ${escapeHtml(admin.name)}</p>
             </div>
-            <form method="post" action="/admin/reset">
-              <button class="danger" type="submit">Reset database</button>
-            </form>
+          </aside>
+          <section class="content">
+            <div class="content-header">
+              <div>
+                <p class="label">Dashboard</p>
+                <h2>${tab === "users" ? "User management" : "Settings"}</h2>
+              </div>
+              ${
+                tab === "users"
+                  ? `
+                    <label class="primary action-button" for="admin-modal-toggle">Add admin</label>
+                  `
+                  : ""
+              }
+            </div>
+            ${
+              tab === "users"
+                ? `
+                  <section class="card table-card">
+                    <div class="table-header">
+                      <div>
+                        <h4>Admins</h4>
+                        <p class="muted">Manage access to the dashboard.</p>
+                      </div>
+                      <p class="muted">${admins.length} total</p>
+                    </div>
+                    <div class="table-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${
+                            admins.length > 0
+                              ? admins
+                                  .map(
+                                    (entry) => `
+                                      <tr>
+                                        <td>${escapeHtml(entry.name)}</td>
+                                        <td>${escapeHtml(entry.email)}</td>
+                                        <td>${escapeHtml(new Date(entry.created_at).toLocaleDateString())}</td>
+                                      </tr>
+                                    `
+                                  )
+                                  .join("")
+                              : `<tr><td colspan="3" class="muted">No admins yet.</td></tr>`
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                  <input id="admin-modal-toggle" class="modal-toggle" type="checkbox" />
+                  <div class="modal">
+                    <label class="modal-backdrop" for="admin-modal-toggle"></label>
+                    <div class="modal-card">
+                      <div class="modal-header">
+                        <div>
+                          <p class="label">Add admin</p>
+                          <h3>Create a new admin</h3>
+                        </div>
+                        <label class="ghost icon-button" for="admin-modal-toggle">Close</label>
+                      </div>
+                      <form method="post" action="/admin/admins" class="modal-form">
+                        <label>
+                          Name
+                          <input name="name" type="text" placeholder="Admin name" required />
+                        </label>
+                        <label>
+                          Email ID
+                          <input name="email" type="email" placeholder="admin@freeducation.com" required />
+                        </label>
+                        <label>
+                          Password
+                          <input name="password" type="password" minlength="8" placeholder="Create password" required />
+                        </label>
+                        <div class="modal-actions">
+                          <label class="ghost" for="admin-modal-toggle">Cancel</label>
+                          <button class="primary" type="submit">Add admin</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                `
+                : `
+                  <section class="card settings-card">
+                    <div>
+                      <h4>Factory reset</h4>
+                      <p class="muted">Drop all tables and recreate the database.</p>
+                    </div>
+                    <form method="post" action="/admin/reset">
+                      <button class="danger" type="submit">Reset database</button>
+                    </form>
+                  </section>
+                `
+            }
           </section>
-        </section>
+        </div>
+        <nav class="bottom-tab">
+          <a class="tab-item ${tab === "settings" ? "active" : ""}" href="/admin?tab=settings">
+            <span>Settings</span>
+          </a>
+          <a class="tab-item ${tab === "users" ? "active" : ""}" href="/admin?tab=users">
+            <span>Users</span>
+          </a>
+        </nav>
       </section>
     `,
   });
@@ -621,8 +795,9 @@ function renderAdminShell(options: {
   subtitle: string;
   form: string;
   error?: string;
+  showHeader?: boolean;
 }): Response {
-  const { title, subtitle, form, error } = options;
+  const { title, subtitle, form, error, showHeader = true } = options;
   return createHtmlResponse(
     `<!DOCTYPE html>
 <html lang="en">
@@ -644,10 +819,10 @@ function renderAdminShell(options: {
       background: #f1f5f9;
       display: flex;
       justify-content: center;
-      padding: 24px 18px 60px;
+      padding: 24px 18px 80px;
     }
     main {
-      width: min(100%, 1000px);
+      width: min(100%, 1100px);
     }
     header {
       display: flex;
@@ -720,6 +895,11 @@ function renderAdminShell(options: {
       background: #e2e8f0;
       color: #0f172a;
     }
+    .icon-button {
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
     .danger {
       background: #dc2626;
       color: white;
@@ -770,26 +950,60 @@ function renderAdminShell(options: {
       line-height: 1.5;
       margin-top: 12px;
     }
-    .dashboard-layout {
+    .admin-shell {
       display: grid;
-      gap: 24px;
+      gap: 20px;
+    }
+    .topbar {
+      display: grid;
+      gap: 16px;
+      align-items: center;
+      background: white;
+      border-radius: 20px;
+      padding: 20px 22px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+    .topbar-title h1 {
+      margin: 6px 0 0;
+      font-size: 24px;
+    }
+    .topbar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .user-chip .small {
+      font-size: 12px;
+    }
+    .admin-layout {
+      display: grid;
+      gap: 20px;
     }
     .sidebar {
-      display: grid;
+      display: none;
       gap: 20px;
     }
     .sidebar-card {
       background: white;
-      border-radius: 20px;
-      padding: 22px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
       display: grid;
       gap: 8px;
     }
     .menu {
       background: white;
-      border-radius: 20px;
-      padding: 20px;
+      border-radius: 18px;
+      padding: 18px;
       box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
       display: grid;
       gap: 10px;
@@ -831,11 +1045,117 @@ function renderAdminShell(options: {
       margin: 6px 0 0;
       font-size: 26px;
     }
+    .action-button {
+      text-align: center;
+    }
     .settings-card {
       display: flex;
       flex-direction: column;
       gap: 16px;
       align-items: flex-start;
+    }
+    .table-card {
+      display: grid;
+      gap: 16px;
+    }
+    .table-header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .table-scroll {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 420px;
+    }
+    th,
+    td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+    th {
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+    }
+    .modal-toggle {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.5);
+      z-index: 20;
+    }
+    .modal-card {
+      width: min(100%, 420px);
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+    }
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .modal-form {
+      display: grid;
+      gap: 12px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .modal-toggle:checked + .modal {
+      display: flex;
+    }
+    .bottom-tab {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background: white;
+      border-radius: 999px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      padding: 6px;
+    }
+    .tab-item {
+      text-decoration: none;
+      text-align: center;
+      padding: 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #475569;
+      background: transparent;
+    }
+    .tab-item.active {
+      background: #2563eb;
+      color: white;
     }
     @media (min-width: 768px) {
       body {
@@ -859,9 +1179,22 @@ function renderAdminShell(options: {
       .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .dashboard-layout {
-        grid-template-columns: 260px minmax(0, 1fr);
-        align-items: start;
+      .topbar {
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+      }
+      .topbar-actions {
+        flex-direction: row;
+        align-items: center;
+      }
+      .admin-layout {
+        grid-template-columns: 250px minmax(0, 1fr);
+      }
+      .sidebar {
+        display: grid;
+      }
+      .bottom-tab {
+        display: none;
       }
       .content-header {
         flex-direction: row;
@@ -877,6 +1210,9 @@ function renderAdminShell(options: {
 </head>
 <body>
   <main>
+    ${
+      showHeader
+        ? `
     <header>
       ${renderLogo()}
       <div>
@@ -884,6 +1220,9 @@ function renderAdminShell(options: {
         <p>${escapeHtml(subtitle)}</p>
       </div>
     </header>
+    `
+        : ""
+    }
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
     ${form}
   </main>
