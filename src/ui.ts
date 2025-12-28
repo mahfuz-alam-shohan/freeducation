@@ -1,76 +1,75 @@
-// CSS Variables - Compact & Mobile Optimized
+// CSS Variables - Polished Mobile Aesthetic
 export const CSS = `
 :root {
-  --primary: #4f46e5; --primary-soft: #eef2ff;
-  --bg-body: #f3f4f6; --bg-surface: #ffffff;
-  --text-main: #111827; --text-muted: #6b7280;
-  --border: #e5e7eb; --danger: #ef4444; --success: #10b981;
-  --nav-h: 60px; --header-h: 56px;
-  --radius: 8px;
+  --primary: #4f46e5; --primary-active: #4338ca; --primary-bg: #eef2ff;
+  --bg-body: #f2f2f7; /* iOS Light Gray */
+  --bg-card: #ffffff;
+  --text-main: #000000; --text-muted: #8e8e93; --text-light: #c7c7cc;
+  --border: #c6c6c8; --border-light: #e5e5ea;
+  --danger: #ff3b30; --success: #34c759;
+  --radius: 10px;
+  --nav-h: 60px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 15px; line-height: 1.4; padding-bottom: calc(var(--nav-h) + 1rem); }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 17px; line-height: 1.4; padding-bottom: calc(var(--nav-h) + 20px); }
 a { text-decoration: none; color: inherit; }
-
-/* --- Atomic Utilities --- */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.gap-1 { gap: 0.25rem; } .gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; }
-.text-sm { font-size: 0.85rem; } .text-xs { font-size: 0.75rem; }
-.font-bold { font-weight: 600; } .text-muted { color: var(--text-muted); }
-.p-2 { padding: 0.5rem; } .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-
-/* --- Components --- */
-.btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 0.9rem; border-radius: var(--radius); font-weight: 500; border: 1px solid transparent; cursor: pointer; font-size: 0.9rem; gap: 0.4rem; min-height: 38px; }
-.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; min-height: 32px; }
-.btn-icon { padding: 0.4rem; border-radius: 50%; background: transparent; color: var(--text-muted); }
-.btn-icon:hover { background: var(--bg-body); color: var(--text-main); }
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:active { opacity: 0.9; }
-.btn-white { background: white; border-color: var(--border); color: var(--text-main); }
-.btn-danger { background: #fee2e2; color: #b91c1c; }
-
-.input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 16px; outline: none; background: #fff; appearance: none; }
-.input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
-
-/* --- Compact List Groups --- */
-.list-group { background: var(--bg-surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-.list-item { display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-surface); transition: background 0.1s; }
-.list-item:last-child { border-bottom: none; }
-.list-item:active { background: #f9fafb; }
-.list-content { flex: 1; min-width: 0; }
-.list-title { font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.list-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 0.5rem; align-items: center; margin-top: 0.15rem; }
+button { font-family: inherit; }
 
 /* --- Layout --- */
-.mobile-header { position: sticky; top: 0; z-index: 40; height: var(--header-h); background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; }
-.main-container { max-width: 600px; margin: 0 auto; padding: 1rem; }
-.page-title { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.container { max-width: 600px; margin: 0 auto; padding: 1rem; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.page-title { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin: 0; color: var(--text-main); }
+.section-title { font-size: 13px; text-transform: uppercase; letter-spacing: -0.1px; color: var(--text-muted); margin: 1.5rem 0 0.5rem 1rem; font-weight: 400; }
 
-/* --- Bottom Nav --- */
-.mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-.nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #9ca3af; font-size: 0.7rem; font-weight: 500; width: 100%; padding: 0.5rem 0; }
-.nav-item svg { width: 22px; height: 22px; stroke-width: 2; }
-.nav-item.active { color: var(--primary); }
+/* --- Components --- */
+.ios-list { background: var(--bg-card); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.ios-row { display: flex; align-items: center; padding: 11px 16px; background: var(--bg-card); border-bottom: 0.5px solid var(--border-light); min-height: 44px; transition: background 0.2s; cursor: pointer; }
+.ios-row:last-child { border-bottom: none; }
+.ios-row:active { background: #e5e5ea; }
+.row-icon { margin-right: 12px; color: var(--primary); display: flex; align-items: center; }
+.row-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.row-title { font-weight: 400; font-size: 17px; color: var(--text-main); }
+.row-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.row-action { color: var(--text-light); display: flex; align-items: center; margin-left: 8px; }
 
-/* --- Badges --- */
-.badge { padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
-.badge.blue { background: #eff6ff; color: #3b82f6; border-color: #dbeafe; }
-.badge.purple { background: #faf5ff; color: #a855f7; border-color: #f3e8ff; }
+/* --- Buttons --- */
+.btn { border: none; background: none; font-size: 17px; color: var(--primary); font-weight: 400; padding: 8px 12px; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
+.btn:active { opacity: 0.6; background: rgba(0,0,0,0.05); }
+.btn-filled { background: var(--primary); color: white; font-weight: 600; padding: 10px 20px; border-radius: 99px; width: 100%; display: flex; justify-content: center; }
+.btn-filled:active { background: var(--primary-active); }
+.btn-sm { font-size: 15px; padding: 4px 10px; background: var(--primary-bg); border-radius: 6px; font-weight: 500; }
+.btn-icon { padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+.btn-icon.danger { color: var(--danger); }
 
-/* --- Modals --- */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 1rem; opacity: 0; transition: opacity 0.2s; }
+/* --- Accordion (Hierarchy) --- */
+details { background: var(--bg-card); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+summary { padding: 12px 16px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
+summary::-webkit-details-marker { display: none; }
+summary:active { background: #f2f2f7; }
+summary::after { content: '›'; font-size: 20px; color: var(--text-muted); transition: transform 0.2s; font-weight: 300; }
+details[open] summary { border-bottom: 0.5px solid var(--border-light); }
+details[open] summary::after { transform: rotate(90deg); }
+.group-content { background: #fff; }
+.nested-row { padding-left: 16px; border-bottom: 0.5px solid var(--border-light); } 
+
+/* --- Inputs & Modals --- */
+.input { width: 100%; padding: 12px; font-size: 17px; border: 1px solid var(--border-light); border-radius: 8px; background: #f2f2f7; margin-bottom: 1rem; outline: none; }
+.input:focus { background: #fff; border-color: var(--primary); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
 .modal-overlay.open { display: flex; opacity: 1; }
-.modal-box { background: white; width: 100%; max-width: 400px; padding: 1.25rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.2s; }
+.modal-box { background: white; width: 90%; max-width: 400px; padding: 1.5rem; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.95); transition: transform 0.2s; }
 .modal-overlay.open .modal-box { transform: scale(1); }
 
-/* Desktop */
+/* --- Navigation --- */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); border-top: 0.5px solid var(--border); display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+.nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0; color: var(--text-muted); font-size: 10px; font-weight: 500; }
+.nav-link svg { width: 24px; height: 24px; margin-bottom: 2px; }
+.nav-link.active { color: var(--primary); }
+
 @media (min-width: 768px) {
-  .main-container { max-width: 800px; padding: 2rem; }
-  .mobile-nav { display: none; }
-  .mobile-header { display: none; } /* Could add desktop sidebar back if needed, but keeping simple for now */
+  .container { max-width: 800px; margin-top: 2rem; }
+  .bottom-nav { display: none; }
 }
 `;
 
@@ -84,30 +83,38 @@ export const SCRIPTS = `
     const el = document.getElementById(id);
     if(el) { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 200); }
   }
-  
-  // Generic Edit Filler
-  function openEditModal(modalId, formAction, data) {
+  function openEditModal(modalId, action, data) {
     const modal = document.getElementById(modalId);
     if(!modal) return;
-    
-    // Update Form Action
     const form = modal.querySelector('form');
-    if(form) form.action = formAction;
-
-    // Fill Inputs
-    for (const [key, value] of Object.entries(data)) {
-      const input = form.elements[key];
-      if (input) {
-         if(input.type === 'checkbox') input.checked = !!value;
-         else input.value = value;
-      }
+    if(form) form.action = action;
+    for (const [k, v] of Object.entries(data)) {
+      const el = form.elements[k];
+      if(el) el.type === 'checkbox' ? el.checked = !!v : el.value = v;
     }
     openModal(modalId);
   }
 </script>
 `;
 
-export function renderPage(title: string, content: string, activeTab: string, user?: { name: string, email: string }, breadcrumbs?: string): Response {
+export function renderPage(title: string, content: string, activeTab: string, user?: { name: string }, breadcrumbs?: string): Response {
+  const navItems = [
+    { id: 'dashboard', href: '/admin', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>', label: 'Home' },
+    { id: 'classes', href: '/admin/classes', icon: '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path>', label: 'Classes' },
+    { id: 'settings', href: '/admin/settings', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>', label: 'Settings' }
+  ];
+
+  const navHtml = user ? `
+    <nav class="bottom-nav">
+      ${navItems.map(i => `
+        <a href="${i.href}" class="nav-link ${activeTab === i.id ? 'active' : ''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.icon}</svg>
+          <span>${i.label}</span>
+        </a>
+      `).join('')}
+    </nav>
+  ` : '';
+
   return new Response(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,46 +124,14 @@ export function renderPage(title: string, content: string, activeTab: string, us
   <style>${CSS}</style>
 </head>
 <body>
-  ${user ? renderAuthenticatedLayout(content, activeTab, user, breadcrumbs) : content}
+  <div class="container">
+    ${breadcrumbs ? `<div style="font-size:13px; color:var(--text-muted); margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem;">${breadcrumbs}</div>` : ''}
+    ${content}
+  </div>
+  ${navHtml}
   ${SCRIPTS}
 </body>
 </html>`, { headers: { "Content-Type": "text/html" } });
-}
-
-function renderAuthenticatedLayout(content: string, activeTab: string, user: { name: string }, breadcrumbsHtml: string = "") {
-  const navItems = [
-    { id: 'dashboard', label: 'Home', href: '/admin', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>' },
-    { id: 'classes', label: 'Classes', href: '/admin/classes', icon: '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path>' },
-    { id: 'settings', label: 'Settings', href: '/admin/settings', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>' },
-  ];
-
-  const mobileNavHtml = navItems.map(item => `
-    <a href="${item.href}" class="nav-item ${activeTab === item.id ? 'active' : ''}">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
-      <span>${item.label}</span>
-    </a>
-  `).join('');
-
-  return `
-      <!-- Header -->
-      <header class="mobile-header">
-         <div class="font-bold text-lg" style="color:var(--primary);">Freeducation</div>
-         <div class="flex items-center gap-2">
-            <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-muted">${user.name}</span>
-         </div>
-      </header>
-
-      <!-- Main Content -->
-      <main class="main-container">
-        ${breadcrumbsHtml ? `<div class="flex items-center gap-2 text-sm text-muted mb-3 overflow-x-auto whitespace-nowrap">${breadcrumbsHtml}</div>` : ''}
-        ${content}
-      </main>
-
-      <!-- Bottom Nav -->
-      <nav class="mobile-nav">
-        ${mobileNavHtml}
-      </nav>
-  `;
 }
 
 export function escapeHtml(str: string | null | undefined) {
