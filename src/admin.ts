@@ -14,6 +14,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
   const path = url.pathname;
   const method = request.method;
 
+  // Root & Health
   if (path === "/admin" || path === "/admin/") {
     const dbStatus = await ensureDatabase(env);
     if (!dbStatus.ok) return renderPage("Error", `DB Error: ${dbStatus.message}`, "dashboard");
@@ -25,6 +26,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
     return renderDashboard(session, env);
   }
 
+  // Auth
   if (path === "/admin/login" && method === "POST") return handleLoginSubmit(request, env);
   if (path === "/admin/setup" && method === "POST") return handleSetupSubmit(request, env);
   if (path === "/admin/logout" && method === "POST") {
@@ -97,32 +99,25 @@ async function renderDashboard(session: any, env: Env) {
 
   return renderPage("Overview", `
     <div class="header">
-       <h1 class="page-title">Overview</h1>
-       <div style="font-size:12px; color:var(--primary); font-weight:600;">${session.name}</div>
+       <h1 class="page-title">Admin</h1>
+       <div class="page-subtitle">Welcome back, ${session.name}</div>
     </div>
     
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
-      <div style="background:#fff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-        <div style="font-size:11px; color:#8e8e93; text-transform:uppercase; font-weight:600;">Classes</div>
-        <div style="font-size:28px; font-weight:700; color:var(--text-main);">${counts.classes}</div>
+    <div class="list-header">Overview</div>
+    <div class="inset-list">
+      <div class="list-row" onclick="window.location='/admin/classes'">
+         <div class="row-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path></svg></div>
+         <div class="row-content">
+           <div class="row-title">Classes</div>
+         </div>
+         <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.classes} ›</div>
       </div>
-      <div style="background:#fff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-        <div style="font-size:11px; color:#8e8e93; text-transform:uppercase; font-weight:600;">Subjects</div>
-        <div style="font-size:28px; font-weight:700; color:var(--primary);">${counts.subjects}</div>
-      </div>
-    </div>
-    
-    <div class="section-title">Quick Actions</div>
-    <div class="ios-list">
-      <div class="ios-row" onclick="window.location='/admin/classes'">
-         <div class="row-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path></svg></div>
-         <div class="row-content"><div class="row-title">Manage Classes</div></div>
-         <div class="row-action">›</div>
-      </div>
-      <div class="ios-row" onclick="window.location='/admin/settings'">
-         <div class="row-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
-         <div class="row-content"><div class="row-title">Settings</div></div>
-         <div class="row-action">›</div>
+      <div class="list-row">
+         <div class="row-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
+         <div class="row-content">
+           <div class="row-title">Subjects</div>
+         </div>
+         <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.subjects}</div>
       </div>
     </div>
   `, "dashboard", session);
@@ -132,71 +127,110 @@ async function renderClassesList(session: any, env: Env) {
   const classes = await env.DB.prepare(`
     SELECT c.*, 
            (SELECT COUNT(*) FROM subjects WHERE class_id = c.id OR (link_id IS NOT NULL AND link_id = lm.link_id)) as subject_count,
-           l.name as link_name
+           lm.link_id
     FROM classes c
     LEFT JOIN class_link_members lm ON lm.class_id = c.id
-    LEFT JOIN class_links l ON l.id = lm.link_id
     ORDER BY c.created_at DESC
-  `).all<ClassRow & {subject_count: number}>();
+  `).all<ClassRow & {subject_count: number, link_id: number}>();
+
+  // Helper to find linked classes
+  const linkIds = classes.results?.map(c => c.link_id).filter(Boolean) || [];
+  let linkMap = new Map<number, string[]>();
+  
+  if (linkIds.length > 0) {
+      const links = await env.DB.prepare(`
+        SELECT lm.link_id, c.name 
+        FROM class_link_members lm 
+        JOIN classes c ON c.id = lm.class_id 
+        WHERE lm.link_id IN (${linkIds.join(',')})
+      `).all<{link_id: number, name: string}>();
+      
+      links.results?.forEach(l => {
+          if (!linkMap.has(l.link_id)) linkMap.set(l.link_id, []);
+          linkMap.get(l.link_id)?.push(l.name);
+      });
+  }
 
   return renderPage("Classes", `
-    <div class="header">
-      <h1 class="page-title">Classes</h1>
-      <button onclick="openModal('new-class-modal')" class="btn" style="font-size:24px; padding:0;">+</button>
+    <div class="header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+      <div>
+        <h1 class="page-title">Classes</h1>
+        <div class="page-subtitle">Manage curriculum</div>
+      </div>
+      <button onclick="toggleModal('new-class-modal', true)" class="btn-text">Add</button>
     </div>
 
-    <div class="ios-list">
-      ${classes.results?.map(c => `
-        <div class="ios-row">
-          <div class="row-content" onclick="window.location='/admin/classes/${c.id}'">
+    <div class="inset-list">
+      ${classes.results?.map(c => {
+        const syncedWith = c.link_id ? linkMap.get(c.link_id)?.filter(n => n !== c.name) : [];
+        const syncText = syncedWith && syncedWith.length > 0 ? `Synced: ${syncedWith.join(', ')}` : '';
+        
+        return `
+        <div class="list-row">
+          <div class="row-content" onclick="window.location='/admin/classes/${c.id}'" style="cursor:pointer;">
             <div class="row-title">${escapeHtml(c.name)}</div>
             <div class="row-subtitle">
-              ${c.has_groups ? 'Groups Enabled • ' : ''}
-              ${c.link_name ? `Linked: ${escapeHtml(c.link_name)}` : `${c.subject_count} Subjects`}
+              ${syncText ? `<span style="color:var(--primary); font-weight:600;">${escapeHtml(syncText)}</span>` : `${c.subject_count} Subjects`}
+              ${c.has_groups ? ' • Groups' : ''}
             </div>
           </div>
-          <button class="btn-icon" onclick="openEditModal('edit-class-modal', '/admin/classes/edit', {id: '${c.id}', name: '${escapeHtml(c.name)}', has_groups: ${c.has_groups}})">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+          <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-class-modal', '/admin/classes/edit', {id: '${c.id}', name: '${escapeHtml(c.name)}', has_groups: ${c.has_groups}})">
+            <svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
           </button>
+          <div class="row-action" onclick="window.location='/admin/classes/${c.id}'">
+            <svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg>
+          </div>
         </div>
-      `).join('') || '<div class="ios-row"><div class="row-content text-center" style="color:var(--text-muted);">No classes yet</div></div>'}
+      `}).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary);">No classes found. Tap Add to create one.</div>'}
     </div>
 
-    <!-- Create Modal -->
+    <!-- Create Class Modal -->
     <div id="new-class-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3 class="page-title" style="font-size:20px; margin-bottom:1rem;">New Class</h3>
+      <div class="modal-card">
+        <div class="modal-header">New Class</div>
         <form action="/admin/classes" method="POST">
-          <input name="name" class="input" required placeholder="Class Name (e.g. Class 10)">
-          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; padding:10px; background:#f2f2f7; border-radius:8px;">
-             <input type="checkbox" name="has_groups" value="1" style="width:20px; height:20px;">
-             <div style="font-size:15px;">Enable Groups (Science, Arts)</div>
+          <div class="modal-body">
+             <div class="input-group">
+                <input name="name" class="input" required placeholder="Class Name (e.g. Class 9)">
+             </div>
+             <div class="input-group" style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:17px;">Enable Groups</span>
+                <input type="checkbox" name="has_groups" value="1" style="width:20px; height:20px;">
+             </div>
           </div>
-          <div style="display:flex; gap:10px;">
-             <button type="button" onclick="closeModal('new-class-modal')" class="btn" style="flex:1; color:var(--text-muted);">Cancel</button>
-             <button class="btn-filled" style="flex:1;">Create</button>
+          <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('new-class-modal', false)">Cancel</div>
+             <button class="modal-btn">Create</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Class Modal -->
     <div id="edit-class-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3 class="page-title" style="font-size:20px; margin-bottom:1rem;">Edit Class</h3>
+      <div class="modal-card">
+        <div class="modal-header">Edit Class</div>
         <form method="POST">
-          <input type="hidden" name="id">
-          <input name="name" class="input" required placeholder="Class Name">
-          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; padding:10px; background:#f2f2f7; border-radius:8px;">
-             <input type="checkbox" name="has_groups" value="1" style="width:20px; height:20px;">
-             <div style="font-size:15px;">Enable Groups</div>
+          <div class="modal-body">
+             <input type="hidden" name="id">
+             <div class="input-group">
+                <input name="name" class="input" required placeholder="Class Name">
+             </div>
+             <div class="input-group" style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:17px;">Enable Groups</span>
+                <input type="checkbox" name="has_groups" value="1" style="width:20px; height:20px;">
+             </div>
           </div>
-          <button class="btn-filled" style="margin-bottom:1rem;">Save Changes</button>
+          <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('edit-class-modal', false)">Cancel</div>
+             <button class="modal-btn">Save</button>
+          </div>
         </form>
-        <form action="/admin/classes/delete" method="POST">
+        <form action="/admin/classes/delete" method="POST" style="border-top:0.5px solid var(--separator);">
            <input type="hidden" name="id" id="del-cls-id">
-           <button class="btn" style="color:var(--danger); width:100%;" onclick="this.form.querySelector('#del-cls-id').value = document.querySelector('#edit-class-modal input[name=id]').value; return confirm('Delete entire class?');">Delete Class</button>
-           <button type="button" onclick="closeModal('edit-class-modal')" class="btn" style="width:100%; color:var(--text-muted);">Cancel</button>
+           <div class="modal-actions">
+             <button class="modal-btn danger" onclick="this.form.querySelector('#del-cls-id').value = document.querySelector('#edit-class-modal input[name=id]').value; return confirm('Delete entire class?');">Delete Class</button>
+           </div>
         </form>
       </div>
     </div>
@@ -205,15 +239,20 @@ async function renderClassesList(session: any, env: Env) {
 
 async function renderClassDetail(session: any, env: Env, classId: number) {
   const classData = await env.DB.prepare(`
-    SELECT c.*, l.name as link_name, l.id as link_id
+    SELECT c.*, lm.link_id
     FROM classes c
     LEFT JOIN class_link_members lm ON lm.class_id = c.id
-    LEFT JOIN class_links l ON l.id = lm.link_id
     WHERE c.id = ?
-  `).bind(classId).first<ClassRow>();
+  `).bind(classId).first<ClassRow & {link_id: number}>();
 
   if (!classData) return new Response("Class not found", { status: 404 });
 
+  let linkedNames: string[] = [];
+  if (classData.link_id) {
+     const res = await env.DB.prepare("SELECT c.name FROM class_link_members lm JOIN classes c ON c.id = lm.class_id WHERE lm.link_id = ? AND c.id != ?").bind(classData.link_id, classId).all<{name:string}>();
+     linkedNames = res.results?.map(r => r.name) || [];
+  }
+  
   const linkId = classData.link_id;
   
   const [subjects, groups] = await env.DB.batch([
@@ -233,140 +272,165 @@ async function renderClassDetail(session: any, env: Env, classId: number) {
   const allSubjects = subjects.results as SubjectRow[] || [];
   const groupList = groups.results as GroupRow[] || [];
   
-  // Organize Hierarchy
   const commonSubjects = allSubjects.filter(s => !s.group_id);
   const subjectsByGroup = new Map<number, SubjectRow[]>();
   groupList.forEach(g => subjectsByGroup.set(g.id, allSubjects.filter(s => s.group_id === g.id)));
 
   return renderPage(classData.name, `
     <div class="header">
-      <div>
-        <h1 class="page-title">${escapeHtml(classData.name)}</h1>
-        ${classData.link_name ? `<div style="font-size:13px; color:var(--primary);">🔗 Linked: ${escapeHtml(classData.link_name)}</div>` : ''}
-      </div>
-      <div style="display:flex; gap:10px;">
-        ${classData.has_groups ? `<button onclick="openModal('new-group-modal')" class="btn-sm">+ Group</button>` : ''}
-        <button onclick="openModal('link-modal')" class="btn-sm">Link</button>
+      <h1 class="page-title">${escapeHtml(classData.name)}</h1>
+      <div class="page-subtitle">
+         ${linkedNames.length > 0 
+           ? `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> 
+              <span style="color:var(--primary); font-weight:600; margin-left:4px;">Synced: ${escapeHtml(linkedNames.join(', '))}</span>` 
+           : 'Local Mode'}
       </div>
     </div>
 
-    <!-- Hierarchy: Common Subjects -->
-    <details open>
-      <summary>
-         <span>Common Subjects <span style="color:var(--text-muted); font-weight:400; margin-left:5px;">(${commonSubjects.length})</span></span>
-         <button class="btn-icon" onclick="event.preventDefault(); openEditModal('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ''});"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
-      </summary>
-      <div class="group-content">
-        ${commonSubjects.map(s => `
-          <div class="ios-row nested-row">
-            <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'">
-              <div class="row-title">${escapeHtml(s.name)}</div>
-            </div>
-            <button class="btn-icon" onclick="openEditModal('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
-               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            </button>
-          </div>
-        `).join('')}
-        ${commonSubjects.length === 0 ? '<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:14px;">No common subjects</div>' : ''}
-      </div>
-    </details>
+    <div style="padding:0 1rem; margin-bottom:1rem; display:flex; gap:10px;">
+       ${classData.has_groups ? `<button onclick="toggleModal('new-group-modal', true)" class="btn-text" style="font-size:15px; font-weight:600;">+ Group</button>` : ''}
+       <button onclick="toggleModal('link-modal', true)" class="btn-text" style="font-size:15px; font-weight:600;">Sync Class</button>
+    </div>
 
-    <!-- Hierarchy: Groups -->
-    ${groupList.map(g => `
-      <details>
-        <summary>
-           <span>${escapeHtml(g.name)} <span style="color:var(--text-muted); font-weight:400; margin-left:5px;">(${(subjectsByGroup.get(g.id) || []).length})</span></span>
-           <div style="display:flex; align-items:center;">
-             <button class="btn-icon" style="margin-right:5px; color:var(--text-muted);" onclick="event.preventDefault(); openEditModal('delete-group-modal', '/admin/classes/group/delete', {id: '${g.id}'})"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-             <button class="btn-icon" onclick="event.preventDefault(); openEditModal('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ${g.id}});"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
+    <!-- COMMON SUBJECTS -->
+    <div class="list-header" style="display:flex; justify-content:space-between;">
+       <span>Common Subjects</span>
+       <button onclick="openEdit('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ''})" style="color:var(--primary); font-weight:600;">+</button>
+    </div>
+    <div class="inset-list">
+      ${commonSubjects.map(s => `
+        <div class="list-row">
+           <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'" style="cursor:pointer;">
+             <div class="row-title">${escapeHtml(s.name)}</div>
            </div>
-        </summary>
-        <div class="group-content">
-          ${(subjectsByGroup.get(g.id) || []).map(s => `
-            <div class="ios-row nested-row">
-              <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'">
-                <div class="row-title">${escapeHtml(s.name)}</div>
-              </div>
-              <button class="btn-icon" onclick="openEditModal('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
-                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-              </button>
-            </div>
-          `).join('')}
-          ${(subjectsByGroup.get(g.id) || []).length === 0 ? '<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:14px;">No subjects in this group</div>' : ''}
+           <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
+             <svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+           </button>
+           <div class="row-action" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
         </div>
-      </details>
+      `).join('') || '<div style="padding:14px 16px; color:var(--text-secondary); font-size:15px;">No common subjects</div>'}
+    </div>
+
+    <!-- GROUPS -->
+    ${groupList.map(g => `
+      <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
+         <span>${escapeHtml(g.name)}</span>
+         <div style="display:flex; gap:12px;">
+            <button onclick="openEdit('delete-group-modal', '/admin/classes/group/delete', {id: '${g.id}'})" style="color:var(--text-secondary);">Trash</button>
+            <button onclick="openEdit('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ${g.id}})" style="color:var(--primary); font-weight:600;">+</button>
+         </div>
+      </div>
+      <div class="inset-list">
+         ${(subjectsByGroup.get(g.id) || []).map(s => `
+           <div class="list-row">
+             <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'" style="cursor:pointer;">
+               <div class="row-title">${escapeHtml(s.name)}</div>
+             </div>
+             <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
+               <svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+             </button>
+             <div class="row-action" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
+           </div>
+         `).join('') || '<div style="padding:14px 16px; color:var(--text-secondary); font-size:15px;">No subjects in this group</div>'}
+      </div>
     `).join('')}
 
-    <!-- Modals -->
+    <!-- Add Subject Modal -->
     <div id="new-subject-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3>New Subject</h3>
+      <div class="modal-card">
+        <div class="modal-header">New Subject</div>
         <form action="/admin/subjects" method="POST">
            <input type="hidden" name="class_id">
            <input type="hidden" name="group_id">
-           <input name="name" class="input" required placeholder="Subject Name">
-           <div style="display:flex; gap:10px; margin-top:10px;">
-             <button type="button" onclick="closeModal('new-subject-modal')" class="btn" style="flex:1;">Cancel</button>
-             <button class="btn-filled" style="flex:1;">Add</button>
+           <div class="modal-body">
+             <div class="input-group"><input name="name" class="input" required placeholder="Subject Name"></div>
+             <p style="font-size:13px; color:var(--text-secondary); text-align:center;">This subject will be auto-synced to all linked classes.</p>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('new-subject-modal', false)">Cancel</div>
+             <button class="modal-btn">Add</button>
            </div>
         </form>
       </div>
     </div>
     
+    <!-- Edit Subject Modal -->
     <div id="edit-subject-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3>Edit Subject</h3>
+      <div class="modal-card">
+        <div class="modal-header">Edit Subject</div>
         <form method="POST">
            <input type="hidden" name="id">
            <input type="hidden" name="class_id">
-           <input name="name" class="input" required>
-           <button class="btn-filled" style="margin:10px 0;">Save</button>
+           <div class="modal-body">
+             <div class="input-group"><input name="name" class="input" required></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('edit-subject-modal', false)">Cancel</div>
+             <button class="modal-btn">Save</button>
+           </div>
         </form>
-        <form action="/admin/subjects/delete" method="POST">
+        <form action="/admin/subjects/delete" method="POST" style="border-top:0.5px solid var(--separator);">
            <input type="hidden" name="id" id="del-sub-id">
            <input type="hidden" name="class_id" value="${classId}">
-           <button class="btn" style="color:var(--danger); width:100%;" onclick="this.form.querySelector('#del-sub-id').value = document.querySelector('#edit-subject-modal input[name=id]').value; return confirm('Delete Subject?');">Delete Subject</button>
-           <button type="button" onclick="closeModal('edit-subject-modal')" class="btn" style="width:100%; color:var(--text-muted);">Cancel</button>
-        </form>
-      </div>
-    </div>
-    
-    <div id="new-group-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3>New Group</h3>
-        <form action="/admin/classes/group" method="POST">
-           <input type="hidden" name="class_id" value="${classId}">
-           <input name="name" class="input" required placeholder="Group Name (e.g. Commerce)">
-           <div style="display:flex; gap:10px; margin-top:10px;">
-             <button type="button" onclick="closeModal('new-group-modal')" class="btn" style="flex:1;">Cancel</button>
-             <button class="btn-filled" style="flex:1;">Create</button>
+           <div class="modal-actions">
+             <button class="modal-btn danger" onclick="this.form.querySelector('#del-sub-id').value = document.querySelector('#edit-subject-modal input[name=id]').value; return confirm('Delete Subject from ALL linked classes?');">Delete</button>
            </div>
         </form>
       </div>
     </div>
     
-    <div id="delete-group-modal" class="modal-overlay">
-      <div class="modal-box">
-         <h3>Delete Group?</h3>
-         <p style="color:var(--text-muted); font-size:14px; margin-bottom:1rem;">This will delete the group. Subjects in this group might become orphans or be deleted.</p>
-         <form action="/admin/classes/group/delete" method="POST">
-            <input type="hidden" name="id">
-            <input type="hidden" name="class_id" value="${classId}">
-            <button class="btn-filled" style="background:var(--danger);">Delete Group</button>
-            <button type="button" onclick="closeModal('delete-group-modal')" class="btn" style="width:100%; margin-top:10px;">Cancel</button>
-         </form>
+    <!-- New Group Modal -->
+    <div id="new-group-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">New Group</div>
+        <form action="/admin/classes/group" method="POST">
+           <input type="hidden" name="class_id" value="${classId}">
+           <div class="modal-body">
+             <div class="input-group"><input name="name" class="input" required placeholder="Group Name (e.g. Science)"></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('new-group-modal', false)">Cancel</div>
+             <button class="modal-btn">Create</button>
+           </div>
+        </form>
       </div>
     </div>
     
-    <div id="link-modal" class="modal-overlay">
-      <div class="modal-box">
-         <h3>Link Class</h3>
-         <form action="/admin/classes/link" method="POST">
+    <!-- Delete Group Confirmation -->
+    <div id="delete-group-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header" style="color:var(--danger);">Delete Group?</div>
+        <form action="/admin/classes/group/delete" method="POST">
+           <input type="hidden" name="id">
            <input type="hidden" name="class_id" value="${classId}">
-           <input type="number" name="link_class_id" class="input" placeholder="Other Class ID">
-           <button class="btn-filled">Link</button>
-           <button type="button" onclick="closeModal('link-modal')" class="btn" style="width:100%; margin-top:10px;">Cancel</button>
-         </form>
+           <div class="modal-body" style="text-align:center; color:var(--text-secondary); font-size:15px;">
+              This will remove the group and its subjects from ALL linked classes.
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('delete-group-modal', false)">Cancel</div>
+             <button class="modal-btn danger">Delete</button>
+           </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Link Modal -->
+    <div id="link-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">Sync Class</div>
+        <form action="/admin/classes/link" method="POST">
+           <input type="hidden" name="class_id" value="${classId}">
+           <div class="modal-body">
+             <div style="font-size:14px; color:var(--text-secondary); margin-bottom:12px; line-height:1.4;">
+                Enter the ID of another class to sync with. Content from both classes will be merged and shared.
+             </div>
+             <div class="input-group"><input type="number" name="link_class_id" class="input" placeholder="Class ID to sync with"></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('link-modal', false)">Cancel</div>
+             <button class="modal-btn">Sync</button>
+           </div>
+        </form>
       </div>
     </div>
   `, "classes", session, `<a href="/admin/classes">Classes</a>`);
@@ -381,89 +445,112 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
 
   return renderPage(subject.name, `
     <div class="header">
-       <div>
-         <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Subject</div>
-         <h1 class="page-title">${escapeHtml(subject.name)}</h1>
-       </div>
-       <button onclick="openModal('new-chapter-modal')" class="btn" style="font-size:24px; padding:0;">+</button>
+       <h1 class="page-title">${escapeHtml(subject.name)}</h1>
+       <div class="page-subtitle">Chapters</div>
     </div>
 
-    <div class="ios-list">
+    <div class="inset-list">
       ${chapters.results?.map((ch, idx) => `
-        <div class="ios-row">
-           <div style="font-size:13px; font-weight:700; color:var(--text-muted); width:30px; margin-right:10px;">${idx+1}</div>
+        <div class="list-row">
+           <div style="font-size:15px; font-weight:600; color:var(--text-secondary); width:30px; text-align:center;">${idx+1}</div>
            <div class="row-content">
              <div class="row-title">${escapeHtml(ch.name)}</div>
            </div>
-           <button class="btn-icon" onclick="openEditModal('edit-chapter-modal', '/admin/chapters/edit', {id: '${ch.id}', name: '${escapeHtml(ch.name)}', sort_order: '${ch.sort_order}', subject_id: '${subjectId}'})">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+           <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-chapter-modal', '/admin/chapters/edit', {id: '${ch.id}', name: '${escapeHtml(ch.name)}', sort_order: '${ch.sort_order}', subject_id: '${subjectId}'})">
+              <svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
            </button>
         </div>
-      `).join('') || '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chapters yet</div>'}
+      `).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary);">No chapters yet</div>'}
     </div>
 
-    <!-- Modals -->
+    <div style="text-align:center;">
+       <button onclick="toggleModal('new-chapter-modal', true)" class="btn-text">+ Add Chapter</button>
+    </div>
+
+    <!-- New Chapter Modal -->
     <div id="new-chapter-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3>New Chapter</h3>
+      <div class="modal-card">
+        <div class="modal-header">New Chapter</div>
         <form action="/admin/chapters" method="POST">
            <input type="hidden" name="subject_id" value="${subjectId}">
-           <input name="name" class="input" required placeholder="Chapter Name">
-           <input name="sort_order" type="number" class="input" placeholder="Order (Optional)">
-           <div style="display:flex; gap:10px;">
-             <button type="button" onclick="closeModal('new-chapter-modal')" class="btn" style="flex:1;">Cancel</button>
-             <button class="btn-filled" style="flex:1;">Add</button>
+           <div class="modal-body">
+             <div class="input-group"><input name="name" class="input" required placeholder="Chapter Name"></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Order (Optional)"></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('new-chapter-modal', false)">Cancel</div>
+             <button class="modal-btn">Add</button>
            </div>
         </form>
       </div>
     </div>
-    
+
+    <!-- Edit Chapter Modal -->
     <div id="edit-chapter-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3>Edit Chapter</h3>
+      <div class="modal-card">
+        <div class="modal-header">Edit Chapter</div>
         <form method="POST">
            <input type="hidden" name="id">
            <input type="hidden" name="subject_id">
-           <input name="name" class="input" required>
-           <input name="sort_order" type="number" class="input">
-           <button class="btn-filled" style="margin:10px 0;">Save</button>
+           <div class="modal-body">
+             <div class="input-group"><input name="name" class="input" required></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Order"></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('edit-chapter-modal', false)">Cancel</div>
+             <button class="modal-btn">Save</button>
+           </div>
         </form>
-        <form action="/admin/chapters/delete" method="POST">
+        <form action="/admin/chapters/delete" method="POST" style="border-top:0.5px solid var(--separator);">
            <input type="hidden" name="id" id="del-ch-id">
            <input type="hidden" name="subject_id" value="${subjectId}">
-           <button class="btn" style="color:var(--danger); width:100%;" onclick="this.form.querySelector('#del-ch-id').value = document.querySelector('#edit-chapter-modal input[name=id]').value; return confirm('Delete Chapter?');">Delete Chapter</button>
-           <button type="button" onclick="closeModal('edit-chapter-modal')" class="btn" style="width:100%; color:var(--text-muted);">Cancel</button>
+           <div class="modal-actions">
+             <button class="modal-btn danger" onclick="this.form.querySelector('#del-ch-id').value = document.querySelector('#edit-chapter-modal input[name=id]').value; return confirm('Delete Chapter?');">Delete</button>
+           </div>
         </form>
       </div>
     </div>
-
   `, "classes", session, `<a href="/admin/classes">Classes</a> / <a href="/admin/classes/${subject.class_id}">${classInfo ? escapeHtml(classInfo.name) : 'Class'}</a>`);
 }
 
 function renderLogin(error?: string) {
   return renderPage("Login", `
     <div style="height:80vh; display:flex; align-items:center; justify-content:center;">
-      <div class="modal-box" style="transform:none; box-shadow:none; border:1px solid var(--border-light);">
-         <h1 class="page-title" style="text-align:center; margin-bottom:20px;">Admin</h1>
-         ${error ? `<div style="background:#fee2e2; color:red; padding:10px; border-radius:8px; margin-bottom:10px; font-size:14px; text-align:center;">${error}</div>` : ''}
+      <div class="modal-card" style="transform:scale(1);">
+         <div class="modal-header">Admin Access</div>
+         ${error ? `<div style="padding:10px; background:#FFEBEE; color:var(--danger); text-align:center; font-size:14px;">${error}</div>` : ''}
          <form method="POST" action="/admin/login">
-            <input name="email" class="input" required placeholder="Email">
-            <input name="password" type="password" class="input" required placeholder="Password">
-            <button class="btn-filled" style="margin-top:10px;">Log In</button>
+            <div class="modal-body">
+               <div class="input-group"><input name="email" class="input" required placeholder="Email"></div>
+               <div class="input-group"><input name="password" type="password" class="input" required placeholder="Password"></div>
+            </div>
+            <div class="modal-actions">
+               <button class="modal-btn" style="width:100%; font-weight:600;">Sign In</button>
+            </div>
          </form>
       </div>
     </div>
   `, "");
 }
+
 function renderSetup(error?: string) { return renderLogin("Setup Needed"); }
+
 function renderSettings(session: any) {
   return renderPage("Settings", `
-    <h1 class="page-title" style="margin-bottom:20px;">Settings</h1>
-    <div class="section-title">Danger Zone</div>
-    <div class="ios-list">
+    <div class="header">
+       <h1 class="page-title">Settings</h1>
+    </div>
+    
+    <div class="list-header">System</div>
+    <div class="inset-list">
        <form action="/admin/settings?action=reset" method="POST" onsubmit="return confirm('Strictly sure?');">
-         <button class="ios-row" style="width:100%; border:none; color:var(--danger); font-weight:600;">
-            <div class="row-content">Factory Reset Database</div>
+         <button class="list-row" style="width:100%; text-align:left;">
+            <div class="row-content"><div class="row-title" style="color:var(--danger);">Factory Reset Database</div></div>
+         </button>
+       </form>
+       <form action="/admin/logout" method="POST">
+         <button class="list-row" style="width:100%; text-align:left;">
+            <div class="row-content"><div class="row-title">Sign Out</div></div>
          </button>
        </form>
     </div>
@@ -508,7 +595,39 @@ async function handleDeleteGroup(request: Request, env: Env) {
     await env.DB.prepare("DELETE FROM class_groups WHERE id = ?").bind(fd.get("id")).run();
     return new Response(null, { status: 303, headers: { Location: `/admin/classes/${fd.get("class_id")}` } });
 }
-async function handleLinkClasses(request: Request, env: Env) { return new Response(null, { status: 303, headers: { Location: request.headers.get("Referer") || "/admin/classes" } }); }
+async function handleLinkClasses(request: Request, env: Env) {
+    const fd = await request.formData();
+    const classId = Number(fd.get("class_id"));
+    const targetId = Number(fd.get("link_class_id"));
+
+    if (classId && targetId) {
+       // 1. Get existing link or create new
+       let linkId: number | null = null;
+       const c1Link = await env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(classId).first<{link_id: number}>();
+       if (c1Link) linkId = c1Link.link_id;
+       const c2Link = await env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(targetId).first<{link_id: number}>();
+       if (c2Link) {
+           if (linkId && linkId !== c2Link.link_id) return new Response("Error: Classes belong to different links.", {status: 400});
+           linkId = c2Link.link_id;
+       }
+
+       if (!linkId) {
+           const linkRes = await env.DB.prepare("INSERT INTO class_links (name, created_at) VALUES (?, ?)").bind("Linked Group", new Date().toISOString()).run();
+           linkId = linkRes.meta.last_row_id as number;
+       }
+
+       // 2. Add members
+       await env.DB.prepare("INSERT OR IGNORE INTO class_link_members (link_id, class_id) VALUES (?,?)").bind(linkId, classId).run();
+       await env.DB.prepare("INSERT OR IGNORE INTO class_link_members (link_id, class_id) VALUES (?,?)").bind(linkId, targetId).run();
+       
+       // 3. Migrate Content (The "Sync" Magic)
+       // Move Subjects
+       await env.DB.prepare("UPDATE subjects SET link_id = ?, class_id = NULL WHERE class_id IN (?, ?)").bind(linkId, classId, targetId).run();
+       // Move Groups
+       await env.DB.prepare("UPDATE class_groups SET link_id = ?, class_id = NULL WHERE class_id IN (?, ?)").bind(linkId, classId, targetId).run();
+    }
+    return new Response(null, { status: 303, headers: { Location: `/admin/classes/${classId}` } });
+}
 
 async function handleCreateSubject(request: Request, env: Env) {
   const fd = await request.formData();
