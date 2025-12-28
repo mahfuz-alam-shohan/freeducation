@@ -112,6 +112,12 @@ export async function ensureSchema(env: Env): Promise<{ ok: true } | { ok: false
       existingColumnNames: string[]
     ): Promise<void> => {
       const tempTableName = `${tableName}__new`;
+      const dropTempResult = await env.DB.prepare(`DROP TABLE IF EXISTS ${tempTableName}`).run();
+      if (!dropTempResult.success) {
+        throw new Error(
+          dropTempResult.error ? `Schema update failed: ${dropTempResult.error}` : "Schema update failed."
+        );
+      }
       await createTable(tempTableName, columns);
 
       const sharedColumns = expectedColumnNames.filter((column) => existingColumnNames.includes(column));
