@@ -178,10 +178,18 @@ async function renderClasses(session: any, env: Env) {
   `).all<{ link_id: number; class_name: string }>();
   
   // Group Logic
-  const groupsByClass = new Map();
+  const groupsByClass = new Map<number, GroupRow[]>();
+  const groupsByLink = new Map<number, GroupRow[]>();
   groups.results?.forEach(g => {
-    if(!groupsByClass.has(g.class_id)) groupsByClass.set(g.class_id, []);
-    groupsByClass.get(g.class_id).push(g);
+    if (g.class_id) {
+      if (!groupsByClass.has(g.class_id)) groupsByClass.set(g.class_id, []);
+      groupsByClass.get(g.class_id)?.push(g);
+      return;
+    }
+    if (g.link_id) {
+      if (!groupsByLink.has(g.link_id)) groupsByLink.set(g.link_id, []);
+      groupsByLink.get(g.link_id)?.push(g);
+    }
   });
   const classNamesByLink = new Map<number, string[]>();
   linkMembers.results?.forEach(m => {
@@ -190,34 +198,36 @@ async function renderClasses(session: any, env: Env) {
   });
 
   const listHtml = classes.results?.length ? classes.results.map(c => `
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:start;">
-        <div>
-          <h3 style="margin:0;">${escapeHtml(c.name)}</h3>
-          <div style="margin-top:0.5rem;">
+    <div class="card class-card">
+      <div class="card-header">
+        <div class="card-title">
+          <h3>${escapeHtml(c.name)}</h3>
+          <div class="card-meta">
             ${c.has_groups ? '<span class="badge badge-blue">Groups Enabled</span>' : '<span class="badge badge-gray">No Groups</span>'}
-            ${c.link_id ? `<span class="badge badge-blue" style="margin-left:0.5rem;">Linked</span>` : ''}
+            ${c.link_id ? `<span class="badge badge-blue">Linked</span>` : ''}
           </div>
           ${c.link_id ? `
-            <div style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted);">
-              Linked with: ${(classNamesByLink.get(c.link_id)?.map(name => escapeHtml(name)) || []).join(", ")}
+            <div class="link-indicator">
+              <span class="link-dot"></span>
+              <span class="link-line"></span>
+              <span class="link-text">Linked with ${(classNamesByLink.get(c.link_id)?.map(name => escapeHtml(name)) || []).join(", ")}</span>
             </div>
           ` : ""}
         </div>
         <!-- Simple form to add group inline -->
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
+        <div class="card-actions">
           ${c.has_groups ? `
-          <a href="#modal-group-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">+ Group</a>
+          <a href="#modal-group-${c.id}" class="btn btn-ghost btn-compact">+ Group</a>
           ` : ''}
           ${classes.results && classes.results.length > 1 ? `
-          <a href="#modal-link-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">Link Class</a>
+          <a href="#modal-link-${c.id}" class="btn btn-ghost btn-compact">Link Class</a>
           ` : ''}
         </div>
       </div>
-      
-      ${c.has_groups && groupsByClass.get(c.id)?.length ? `
-        <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
-          ${groupsByClass.get(c.id).map((g: any) => `<span class="badge badge-gray">${escapeHtml(g.name)}</span>`).join('')}
+
+      ${(c.has_groups && (c.link_id ? groupsByLink.get(c.link_id)?.length : groupsByClass.get(c.id)?.length)) ? `
+        <div class="chip-row">
+          ${(c.link_id ? groupsByLink.get(c.link_id) : groupsByClass.get(c.id))?.map((g: any) => `<span class="badge badge-gray">${escapeHtml(g.name)}</span>`).join('')}
         </div>
       ` : ''}
 
@@ -250,7 +260,7 @@ async function renderClasses(session: any, env: Env) {
               `).join("")}
             </select>
             <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-              Linking classes means they will share the same subjects.
+              Linking classes unifies subjects, groups, and settings so both stay identical.
             </div>
             <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
               <a href="#" class="btn btn-ghost">Cancel</a>
@@ -309,9 +319,17 @@ async function renderSubjects(session: any, env: Env) {
   const subjects = await env.DB.prepare("SELECT * FROM subjects ORDER BY created_at DESC").all<SubjectRow>();
 
   const groupsByClass = new Map<number, GroupRow[]>();
+  const groupsByLink = new Map<number, GroupRow[]>();
   groups.results?.forEach(group => {
-    if (!groupsByClass.has(group.class_id || 0)) groupsByClass.set(group.class_id || 0, []);
-    groupsByClass.get(group.class_id || 0)?.push(group);
+    if (group.class_id) {
+      if (!groupsByClass.has(group.class_id)) groupsByClass.set(group.class_id, []);
+      groupsByClass.get(group.class_id)?.push(group);
+      return;
+    }
+    if (group.link_id) {
+      if (!groupsByLink.has(group.link_id)) groupsByLink.set(group.link_id, []);
+      groupsByLink.get(group.link_id)?.push(group);
+    }
   });
 
   const subjectsByClass = new Map<number, SubjectRow[]>();
@@ -337,40 +355,40 @@ async function renderSubjects(session: any, env: Env) {
 
   const listHtml = classes.results?.length ? classes.results.map(c => {
     const classSubjects = c.link_id ? subjectsByLink.get(c.link_id) : subjectsByClass.get(c.id);
-    const classGroups = groupsByClass.get(c.id) || [];
+    const classGroups = c.link_id ? (groupsByLink.get(c.link_id) || []) : (groupsByClass.get(c.id) || []);
     return `
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
-          <div>
-            <h3 style="margin:0;">${escapeHtml(c.name)}</h3>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted);">
+      <div class="card class-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>${escapeHtml(c.name)}</h3>
+            <div class="card-subtitle">
               ${c.link_id ? "Linked subjects enabled" : "Standalone subjects"}
             </div>
           </div>
-          <a href="#modal-subject-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">+ Subject</a>
+          <a href="#modal-subject-${c.id}" class="btn btn-ghost btn-compact">+ Subject</a>
         </div>
 
-        <div style="margin-top:1rem;">
-          <div style="font-weight:600; margin-bottom:0.5rem;">Class Subjects</div>
+        <div class="card-section">
+          <div class="section-title">Class Subjects</div>
           ${classSubjects?.length ? `
-            <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <div class="chip-row">
               ${classSubjects.map(subject => `<span class="badge badge-gray">${escapeHtml(subject.name)}</span>`).join("")}
             </div>
-          ` : `<div style="font-size:0.85rem; color:var(--text-muted);">No class subjects yet.</div>`}
+          ` : `<div class="empty-state">No class subjects yet.</div>`}
         </div>
 
         ${classGroups.length ? `
-          <div style="margin-top:1.25rem;">
-            <div style="font-weight:600; margin-bottom:0.5rem;">Group Subjects</div>
-            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <div class="card-section">
+            <div class="section-title">Group Subjects</div>
+            <div class="stack">
               ${classGroups.map(group => `
-                <div style="border:1px solid var(--border); border-radius:0.75rem; padding:0.75rem;">
-                  <div style="font-weight:600;">${escapeHtml(group.name)}</div>
+                <div class="group-card">
+                  <div class="group-title">${escapeHtml(group.name)}</div>
                   ${subjectsByGroup.get(group.id)?.length ? `
-                    <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+                    <div class="chip-row">
                       ${subjectsByGroup.get(group.id)?.map(subject => `<span class="badge badge-gray">${escapeHtml(subject.name)}</span>`).join("")}
                     </div>
-                  ` : `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.35rem;">No group subjects yet.</div>`}
+                  ` : `<div class="empty-state">No group subjects yet.</div>`}
                 </div>
               `).join("")}
             </div>
@@ -474,8 +492,11 @@ async function handleCreateClass(request: Request, env: Env) {
 
 async function handleCreateGroup(request: Request, env: Env) {
     const fd = await request.formData();
-    await env.DB.prepare("INSERT INTO class_groups (name, class_id, created_at) VALUES (?,?,?)")
-        .bind(fd.get("name"), fd.get("class_id"), new Date().toISOString()).run();
+    const classId = Number(fd.get("class_id"));
+    const linkRow = await env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(classId).first<{ link_id: number }>();
+    const linkId = linkRow?.link_id || null;
+    await env.DB.prepare("INSERT INTO class_groups (name, class_id, link_id, created_at) VALUES (?,?,?,?)")
+        .bind(fd.get("name"), linkId ? null : classId, linkId, new Date().toISOString()).run();
     return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
 }
 
@@ -488,9 +509,11 @@ async function handleLinkClasses(request: Request, env: Env) {
       return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
     }
 
-    const [linkA, linkB] = await env.DB.batch([
+    const [linkA, linkB, classA, classB] = await env.DB.batch([
       env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(classId),
-      env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(linkClassId)
+      env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(linkClassId),
+      env.DB.prepare("SELECT has_groups FROM classes WHERE id = ?").bind(classId),
+      env.DB.prepare("SELECT has_groups FROM classes WHERE id = ?").bind(linkClassId)
     ]);
 
     const linkIdA = (linkA.results?.[0] as { link_id?: number })?.link_id || null;
@@ -527,11 +550,18 @@ async function handleLinkClasses(request: Request, env: Env) {
     if (!linkIdA) {
       await env.DB.prepare("INSERT OR IGNORE INTO class_link_members (link_id, class_id) VALUES (?, ?)").bind(targetLinkId, classId).run();
       await env.DB.prepare("UPDATE subjects SET link_id = ?, class_id = NULL WHERE class_id = ? AND group_id IS NULL").bind(targetLinkId, classId).run();
+      await env.DB.prepare("UPDATE class_groups SET link_id = ?, class_id = NULL WHERE class_id = ?").bind(targetLinkId, classId).run();
     }
     if (!linkIdB) {
       await env.DB.prepare("INSERT OR IGNORE INTO class_link_members (link_id, class_id) VALUES (?, ?)").bind(targetLinkId, linkClassId).run();
       await env.DB.prepare("UPDATE subjects SET link_id = ?, class_id = NULL WHERE class_id = ? AND group_id IS NULL").bind(targetLinkId, linkClassId).run();
+      await env.DB.prepare("UPDATE class_groups SET link_id = ?, class_id = NULL WHERE class_id = ?").bind(targetLinkId, linkClassId).run();
     }
+
+    const hasGroupsA = Boolean((classA.results?.[0] as { has_groups?: number })?.has_groups);
+    const hasGroupsB = Boolean((classB.results?.[0] as { has_groups?: number })?.has_groups);
+    const unifiedGroups = hasGroupsA || hasGroupsB ? 1 : 0;
+    await env.DB.prepare("UPDATE classes SET has_groups = ? WHERE id IN (?, ?)").bind(unifiedGroups, classId, linkClassId).run();
 
     return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
 }
