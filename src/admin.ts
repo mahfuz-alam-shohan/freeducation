@@ -312,5 +312,3 @@ async function handleLinkClasses(request: Request, env: Env) {
     // Placeholder for linking logic if needed
     return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
 }
-
-
