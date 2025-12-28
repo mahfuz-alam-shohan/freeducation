@@ -1,4 +1,4 @@
-// CSS Variables for easy theming
+// CSS Variables
 export const CSS = `
 :root {
   --primary: #6366f1; --primary-dark: #4f46e5;
@@ -8,7 +8,7 @@ export const CSS = `
   --sidebar-w: 260px; --nav-h: 64px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 16px; line-height: 1.5; padding-bottom: calc(var(--nav-h) + 20px); }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 16px; line-height: 1.5; }
 
 /* --- Components --- */
 .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; gap: 0.5rem; }
@@ -23,26 +23,51 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ro
 .badge-blue { background: #e0e7ff; color: var(--primary-dark); }
 .badge-gray { background: #f1f5f9; color: var(--text-muted); }
 
-/* --- Layout System --- */
+/* --- Layout System (Refixed) --- */
 
-/* Mobile First: Bottom Navigation */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column; /* Mobile Default */
+}
+
+.sidebar {
+  display: none; /* Hidden on Mobile */
+  width: var(--sidebar-w);
+  background: white;
+  border-right: 1px solid var(--border);
+  padding: 1.5rem;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: calc(var(--nav-h) + 2rem); /* Space for bottom nav */
+}
+
+.mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+.desktop-header { display: none; margin-bottom: 2rem; justify-content: space-between; align-items: center; }
+
 .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); height: var(--nav-h); display: flex; align-items: center; justify-content: space-around; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
 .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; color: var(--text-muted); text-decoration: none; gap: 4px; padding: 0.5rem; flex: 1; }
 .nav-item svg { width: 24px; height: 24px; stroke-width: 2; }
 .nav-item.active { color: var(--primary); }
-.mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
 
-/* Desktop: Sidebar (Activates at 800px) */
-.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w); background: white; border-right: 1px solid var(--border); padding: 1.5rem; z-index: 50; display: none; flex-direction: column; }
-.desktop-header { display: none; margin-bottom: 2rem; justify-content: space-between; align-items: center; }
-.main-content { flex: 1; padding: 1.5rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-
+/* Desktop Switch */
 @media (min-width: 800px) {
-  body { padding-bottom: 0; padding-left: var(--sidebar-w); background: #f3f4f6; }
+  .app-shell { flex-direction: row; }
   .sidebar { display: flex; }
   .mobile-nav, .mobile-header { display: none; }
   .desktop-header { display: flex; }
-  .main-content { padding: 2.5rem; }
+  .main-content { padding: 2.5rem; padding-bottom: 2.5rem; }
 }
 
 /* --- Utilities --- */
@@ -90,48 +115,50 @@ function renderAuthenticatedLayout(content: string, activeTab: string, user: { n
   `).join('');
 
   return `
-    <header class="mobile-header">
-      <a href="/admin" class="logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Freeducation
-      </a>
-      <div class="user-avatar" style="width:32px;height:32px;background:#e0e7ff;color:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">
-        ${user.name.charAt(0).toUpperCase()}
-      </div>
-    </header>
-
-    <aside class="sidebar">
-      <a href="/admin" class="logo" style="margin-bottom: 2rem;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Freeducation
-      </a>
-      <nav style="display:flex; flex-direction:column; gap:0.5rem; flex:1;">
-        ${navItems.map(item => `
-          <a href="${item.href}" style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; border-radius:0.5rem; color:${activeTab === item.id ? 'var(--primary-dark)' : 'var(--text-muted)'}; background:${activeTab === item.id ? '#e0e7ff' : 'transparent'}; text-decoration:none; font-weight:500;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
-            ${item.label}
-          </a>
-        `).join('')}
-      </nav>
-      <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
-         <div style="font-size:0.85rem; font-weight:600;">${user.name}</div>
-         <form action="/admin/logout" method="POST" style="margin-top:0.5rem;">
-           <button class="btn-ghost" style="padding:0; font-size:0.8rem; color:var(--danger);">Sign Out</button>
-         </form>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="desktop-header">
-        <h1 style="font-size:1.5rem; font-weight:700; margin:0;">Admin Console</h1>
-        <span class="badge badge-gray">v1.1.0</span>
+    <div class="app-shell">
+      <header class="mobile-header">
+        <a href="/admin" class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Freeducation
+        </a>
+        <div class="user-avatar" style="width:32px;height:32px;background:#e0e7ff;color:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">
+          ${user.name.charAt(0).toUpperCase()}
+        </div>
       </header>
-      ${content}
-    </main>
 
-    <nav class="mobile-nav">
-      ${renderNavLinks(true)}
-    </nav>
+      <aside class="sidebar">
+        <a href="/admin" class="logo" style="margin-bottom: 2rem;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Freeducation
+        </a>
+        <nav style="display:flex; flex-direction:column; gap:0.5rem; flex:1;">
+          ${navItems.map(item => `
+            <a href="${item.href}" style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; border-radius:0.5rem; color:${activeTab === item.id ? 'var(--primary-dark)' : 'var(--text-muted)'}; background:${activeTab === item.id ? '#e0e7ff' : 'transparent'}; text-decoration:none; font-weight:500;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
+              ${item.label}
+            </a>
+          `).join('')}
+        </nav>
+        <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
+           <div style="font-size:0.85rem; font-weight:600;">${user.name}</div>
+           <form action="/admin/logout" method="POST" style="margin-top:0.5rem;">
+             <button class="btn-ghost" style="padding:0; font-size:0.8rem; color:var(--danger);">Sign Out</button>
+           </form>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="desktop-header">
+          <h1 style="font-size:1.5rem; font-weight:700; margin:0;">Admin Console</h1>
+          <span class="badge badge-gray">v1.1.0</span>
+        </header>
+        ${content}
+      </main>
+
+      <nav class="mobile-nav">
+        ${renderNavLinks(true)}
+      </nav>
+    </div>
   `;
 }
 
@@ -139,3 +166,5 @@ export function escapeHtml(str: string) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
+
+
