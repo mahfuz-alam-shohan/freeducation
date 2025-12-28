@@ -169,9 +169,10 @@ async function renderDashboard(session: any, env: Env) {
 
 // --- List View: Classes (Table) ---
 async function renderClassesList(session: any, env: Env) {
+  // FIX: c.link_id does not exist. We use lm.link_id instead.
   const classes = await env.DB.prepare(`
     SELECT c.*, 
-           (SELECT COUNT(*) FROM subjects WHERE class_id = c.id OR (link_id IS NOT NULL AND link_id = c.link_id)) as subject_count,
+           (SELECT COUNT(*) FROM subjects WHERE class_id = c.id OR (link_id IS NOT NULL AND link_id = lm.link_id)) as subject_count,
            l.name as link_name
     FROM classes c
     LEFT JOIN class_link_members lm ON lm.class_id = c.id
