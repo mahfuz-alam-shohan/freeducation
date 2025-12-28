@@ -25,3 +25,12 @@ export interface GroupRow {
   class_id?: number | null;
   link_id?: number | null;
 }
+
+export interface SubjectRow {
+  id: number;
+  name: string;
+  class_id?: number | null;
+  group_id?: number | null;
+  link_id?: number | null;
+  created_at: string;
+}

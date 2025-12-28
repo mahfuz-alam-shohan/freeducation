@@ -1,4 +1,4 @@
-import { Env, ClassRow, GroupRow } from "./types";
+import { Env, ClassRow, GroupRow, SubjectRow } from "./types";
 import { getSession, createSession, hashPassword, verifyPassword, destroySession, createAuthHeaders } from "./auth";
 import { renderPage, escapeHtml } from "./ui";
 import { ensureDatabase, resetDatabase } from "./db";
@@ -53,6 +53,11 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
   if (path === "/admin/classes") {
     if (method === "POST") return handleCreateClass(request, env);
     return renderClasses(session, env);
+  }
+
+  if (path === "/admin/subjects") {
+    if (method === "POST") return handleCreateSubject(request, env);
+    return renderSubjects(session, env);
   }
   
   if (path === "/admin/classes/group" && method === "POST") return handleCreateGroup(request, env);
@@ -158,14 +163,30 @@ async function renderDashboard(session: any, env: Env) {
 }
 
 async function renderClasses(session: any, env: Env) {
-  const classes = await env.DB.prepare("SELECT * FROM classes ORDER BY created_at DESC").all<ClassRow>();
+  const classes = await env.DB.prepare(`
+    SELECT c.*, lm.link_id, l.name as link_name
+    FROM classes c
+    LEFT JOIN class_link_members lm ON lm.class_id = c.id
+    LEFT JOIN class_links l ON l.id = lm.link_id
+    ORDER BY c.created_at DESC
+  `).all<ClassRow>();
   const groups = await env.DB.prepare("SELECT * FROM class_groups").all<GroupRow>();
+  const linkMembers = await env.DB.prepare(`
+    SELECT lm.link_id, c.name as class_name
+    FROM class_link_members lm
+    JOIN classes c ON c.id = lm.class_id
+  `).all<{ link_id: number; class_name: string }>();
   
   // Group Logic
   const groupsByClass = new Map();
   groups.results?.forEach(g => {
     if(!groupsByClass.has(g.class_id)) groupsByClass.set(g.class_id, []);
     groupsByClass.get(g.class_id).push(g);
+  });
+  const classNamesByLink = new Map<number, string[]>();
+  linkMembers.results?.forEach(m => {
+    if (!classNamesByLink.has(m.link_id)) classNamesByLink.set(m.link_id, []);
+    classNamesByLink.get(m.link_id)?.push(m.class_name);
   });
 
   const listHtml = classes.results?.length ? classes.results.map(c => `
@@ -175,12 +196,23 @@ async function renderClasses(session: any, env: Env) {
           <h3 style="margin:0;">${escapeHtml(c.name)}</h3>
           <div style="margin-top:0.5rem;">
             ${c.has_groups ? '<span class="badge badge-blue">Groups Enabled</span>' : '<span class="badge badge-gray">No Groups</span>'}
+            ${c.link_id ? `<span class="badge badge-blue" style="margin-left:0.5rem;">Linked</span>` : ''}
           </div>
+          ${c.link_id ? `
+            <div style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted);">
+              Linked with: ${(classNamesByLink.get(c.link_id)?.map(name => escapeHtml(name)) || []).join(", ")}
+            </div>
+          ` : ""}
         </div>
         <!-- Simple form to add group inline -->
-        ${c.has_groups ? `
-        <a href="#modal-group-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">+ Group</a>
-        ` : ''}
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
+          ${c.has_groups ? `
+          <a href="#modal-group-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">+ Group</a>
+          ` : ''}
+          ${classes.results && classes.results.length > 1 ? `
+          <a href="#modal-link-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">Link Class</a>
+          ` : ''}
+        </div>
       </div>
       
       ${c.has_groups && groupsByClass.get(c.id)?.length ? `
@@ -199,6 +231,30 @@ async function renderClasses(session: any, env: Env) {
             <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
               <a href="#" class="btn btn-ghost">Cancel</a>
               <button class="btn btn-primary">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Link Class Modal -->
+      <div id="modal-link-${c.id}" class="modal-target modal-overlay">
+        <div class="modal-box">
+          <h3>Link ${escapeHtml(c.name)} with another class</h3>
+          <form action="/admin/classes/link" method="POST">
+            <input type="hidden" name="class_id" value="${c.id}">
+            <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:0.5rem;">Select Class</label>
+            <select name="link_class_id" class="input" required style="margin-bottom:1rem;">
+              <option value="" disabled selected>Choose a class</option>
+              ${(classes.results || []).filter(other => other.id !== c.id).map(other => `
+                <option value="${other.id}">${escapeHtml(other.name)}</option>
+              `).join("")}
+            </select>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+              Linking classes means they will share the same subjects.
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+              <a href="#" class="btn btn-ghost">Cancel</a>
+              <button class="btn btn-primary">Link</button>
             </div>
           </form>
         </div>
@@ -239,6 +295,121 @@ async function renderClasses(session: any, env: Env) {
       </div>
     </div>
   `, "classes", session);
+}
+
+async function renderSubjects(session: any, env: Env) {
+  const classes = await env.DB.prepare(`
+    SELECT c.*, lm.link_id, l.name as link_name
+    FROM classes c
+    LEFT JOIN class_link_members lm ON lm.class_id = c.id
+    LEFT JOIN class_links l ON l.id = lm.link_id
+    ORDER BY c.created_at DESC
+  `).all<ClassRow>();
+  const groups = await env.DB.prepare("SELECT * FROM class_groups ORDER BY created_at DESC").all<GroupRow>();
+  const subjects = await env.DB.prepare("SELECT * FROM subjects ORDER BY created_at DESC").all<SubjectRow>();
+
+  const groupsByClass = new Map<number, GroupRow[]>();
+  groups.results?.forEach(group => {
+    if (!groupsByClass.has(group.class_id || 0)) groupsByClass.set(group.class_id || 0, []);
+    groupsByClass.get(group.class_id || 0)?.push(group);
+  });
+
+  const subjectsByClass = new Map<number, SubjectRow[]>();
+  const subjectsByLink = new Map<number, SubjectRow[]>();
+  const subjectsByGroup = new Map<number, SubjectRow[]>();
+
+  subjects.results?.forEach(subject => {
+    if (subject.group_id) {
+      if (!subjectsByGroup.has(subject.group_id)) subjectsByGroup.set(subject.group_id, []);
+      subjectsByGroup.get(subject.group_id)?.push(subject);
+      return;
+    }
+    if (subject.link_id) {
+      if (!subjectsByLink.has(subject.link_id)) subjectsByLink.set(subject.link_id, []);
+      subjectsByLink.get(subject.link_id)?.push(subject);
+      return;
+    }
+    if (subject.class_id) {
+      if (!subjectsByClass.has(subject.class_id)) subjectsByClass.set(subject.class_id, []);
+      subjectsByClass.get(subject.class_id)?.push(subject);
+    }
+  });
+
+  const listHtml = classes.results?.length ? classes.results.map(c => {
+    const classSubjects = c.link_id ? subjectsByLink.get(c.link_id) : subjectsByClass.get(c.id);
+    const classGroups = groupsByClass.get(c.id) || [];
+    return `
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+          <div>
+            <h3 style="margin:0;">${escapeHtml(c.name)}</h3>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted);">
+              ${c.link_id ? "Linked subjects enabled" : "Standalone subjects"}
+            </div>
+          </div>
+          <a href="#modal-subject-${c.id}" class="btn btn-ghost" style="padding:0.4rem;">+ Subject</a>
+        </div>
+
+        <div style="margin-top:1rem;">
+          <div style="font-weight:600; margin-bottom:0.5rem;">Class Subjects</div>
+          ${classSubjects?.length ? `
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+              ${classSubjects.map(subject => `<span class="badge badge-gray">${escapeHtml(subject.name)}</span>`).join("")}
+            </div>
+          ` : `<div style="font-size:0.85rem; color:var(--text-muted);">No class subjects yet.</div>`}
+        </div>
+
+        ${classGroups.length ? `
+          <div style="margin-top:1.25rem;">
+            <div style="font-weight:600; margin-bottom:0.5rem;">Group Subjects</div>
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+              ${classGroups.map(group => `
+                <div style="border:1px solid var(--border); border-radius:0.75rem; padding:0.75rem;">
+                  <div style="font-weight:600;">${escapeHtml(group.name)}</div>
+                  ${subjectsByGroup.get(group.id)?.length ? `
+                    <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+                      ${subjectsByGroup.get(group.id)?.map(subject => `<span class="badge badge-gray">${escapeHtml(subject.name)}</span>`).join("")}
+                    </div>
+                  ` : `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.35rem;">No group subjects yet.</div>`}
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
+
+        <div id="modal-subject-${c.id}" class="modal-target modal-overlay">
+          <div class="modal-box">
+            <h3>Add Subject to ${escapeHtml(c.name)}</h3>
+            <form action="/admin/subjects" method="POST">
+              <input type="hidden" name="class_id" value="${c.id}">
+              <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:0.5rem;">Subject Name</label>
+              <input name="name" class="input" placeholder="Subject Name" style="margin-bottom:1rem;" required>
+              <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:0.5rem;">Group (optional)</label>
+              <select name="group_id" class="input" style="margin-bottom:1.5rem;">
+                <option value="">Class (no group)</option>
+                ${classGroups.map(group => `
+                  <option value="${group.id}">${escapeHtml(group.name)}</option>
+                `).join("")}
+              </select>
+              <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                <a href="#" class="btn btn-ghost">Cancel</a>
+                <button class="btn btn-primary">Add</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('') : '<div style="text-align:center; padding:3rem; color:var(--text-muted);">No classes yet. Create a class first.</div>';
+
+  return renderPage("Subjects", `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <h2 style="margin:0;">Subjects</h2>
+    </div>
+    <div class="grid">
+      ${listHtml}
+    </div>
+  `, "subjects", session);
 }
 
 function renderSettings(session: any) {
@@ -309,6 +480,80 @@ async function handleCreateGroup(request: Request, env: Env) {
 }
 
 async function handleLinkClasses(request: Request, env: Env) {
-    // Placeholder for linking logic if needed
+    const fd = await request.formData();
+    const classId = Number(fd.get("class_id"));
+    const linkClassId = Number(fd.get("link_class_id"));
+
+    if (!classId || !linkClassId || classId === linkClassId) {
+      return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
+    }
+
+    const [linkA, linkB] = await env.DB.batch([
+      env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(classId),
+      env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(linkClassId)
+    ]);
+
+    const linkIdA = (linkA.results?.[0] as { link_id?: number })?.link_id || null;
+    const linkIdB = (linkB.results?.[0] as { link_id?: number })?.link_id || null;
+
+    if (linkIdA && linkIdB && linkIdA === linkIdB) {
+      return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
+    }
+
+    let targetLinkId = linkIdA || linkIdB;
+
+    if (!targetLinkId) {
+      const classNames = await env.DB.batch([
+        env.DB.prepare("SELECT name FROM classes WHERE id = ?").bind(classId),
+        env.DB.prepare("SELECT name FROM classes WHERE id = ?").bind(linkClassId)
+      ]);
+      const nameA = (classNames[0].results?.[0] as { name?: string })?.name || "Class";
+      const nameB = (classNames[1].results?.[0] as { name?: string })?.name || "Class";
+      const linkName = `${nameA} + ${nameB}`;
+      const linkRes = await env.DB.prepare("INSERT INTO class_links (name, created_at) VALUES (?, ?)").bind(linkName, new Date().toISOString()).run();
+      targetLinkId = linkRes.meta.last_row_id as number;
+    }
+
+    if (linkIdA && linkIdB && linkIdA !== linkIdB && targetLinkId) {
+      const mergeFrom = linkIdA === targetLinkId ? linkIdB : linkIdA;
+      await env.DB.batch([
+        env.DB.prepare("UPDATE class_link_members SET link_id = ? WHERE link_id = ?").bind(targetLinkId, mergeFrom),
+        env.DB.prepare("UPDATE subjects SET link_id = ? WHERE link_id = ?").bind(targetLinkId, mergeFrom),
+        env.DB.prepare("UPDATE class_groups SET link_id = ? WHERE link_id = ?").bind(targetLinkId, mergeFrom),
+        env.DB.prepare("DELETE FROM class_links WHERE id = ?").bind(mergeFrom)
+      ]);
+    }
+
+    if (!linkIdA) {
+      await env.DB.prepare("INSERT OR IGNORE INTO class_link_members (link_id, class_id) VALUES (?, ?)").bind(targetLinkId, classId).run();
+      await env.DB.prepare("UPDATE subjects SET link_id = ?, class_id = NULL WHERE class_id = ? AND group_id IS NULL").bind(targetLinkId, classId).run();
+    }
+    if (!linkIdB) {
+      await env.DB.prepare("INSERT OR IGNORE INTO class_link_members (link_id, class_id) VALUES (?, ?)").bind(targetLinkId, linkClassId).run();
+      await env.DB.prepare("UPDATE subjects SET link_id = ?, class_id = NULL WHERE class_id = ? AND group_id IS NULL").bind(targetLinkId, linkClassId).run();
+    }
+
     return new Response(null, { status: 303, headers: { Location: "/admin/classes" } });
+}
+
+async function handleCreateSubject(request: Request, env: Env) {
+  const fd = await request.formData();
+  const classId = Number(fd.get("class_id"));
+  const groupIdRaw = fd.get("group_id");
+  const groupId = groupIdRaw ? Number(groupIdRaw) : null;
+  const name = fd.get("name")?.toString().trim();
+
+  if (!classId || !name) {
+    return new Response(null, { status: 303, headers: { Location: "/admin/subjects" } });
+  }
+
+  const linkRow = await env.DB.prepare("SELECT link_id FROM class_link_members WHERE class_id = ?").bind(classId).first<{ link_id: number }>();
+  const linkId = linkRow?.link_id || null;
+  const classIdToStore = linkId && !groupId ? null : classId;
+
+  await env.DB.prepare("INSERT INTO subjects (name, class_id, group_id, link_id, created_at) VALUES (?,?,?,?,?)")
+    .bind(name, classIdToStore, groupId, linkId, new Date().toISOString())
+    .run();
+
+  return new Response(null, { status: 303, headers: { Location: "/admin/subjects" } });
 }
