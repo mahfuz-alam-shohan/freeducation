@@ -5,6 +5,7 @@ import { renderHome } from "./public";
 export async function routeRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   
+  // We strictly separate Admin vs Public
   if (url.pathname.startsWith("/admin")) {
     return handleAdminRequest(request, env);
   }
