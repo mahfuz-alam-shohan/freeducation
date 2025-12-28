@@ -75,67 +75,74 @@ const TABLES = [
       "FOREIGN KEY (group_id) REFERENCES class_groups(id) ON DELETE CASCADE",
       "FOREIGN KEY (link_id) REFERENCES class_links(id) ON DELETE CASCADE"
     ]
+  },
+  // NEW: Chapters Table
+  {
+    name: "chapters",
+    definition: [
+      "id INTEGER PRIMARY KEY AUTOINCREMENT",
+      "subject_id INTEGER NOT NULL",
+      "name TEXT NOT NULL",
+      "sort_order INTEGER DEFAULT 0",
+      "created_at TEXT NOT NULL",
+      "FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE"
+    ]
+  },
+  // NEW: Topics Table (NCTB Topics / Explanations)
+  {
+    name: "topics",
+    definition: [
+      "id INTEGER PRIMARY KEY AUTOINCREMENT",
+      "chapter_id INTEGER NOT NULL",
+      "title TEXT NOT NULL",
+      "content_type TEXT DEFAULT 'text'", // text, video, pdf
+      "content_url TEXT",
+      "content_body TEXT",
+      "sort_order INTEGER DEFAULT 0",
+      "created_at TEXT NOT NULL",
+      "FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE"
+    ]
   }
 ];
 
 const INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token)",
-  "CREATE INDEX IF NOT EXISTS idx_admin_sessions_admin_id ON admin_sessions(admin_id)",
-  "CREATE INDEX IF NOT EXISTS idx_class_groups_class_id ON class_groups(class_id)",
-  "CREATE INDEX IF NOT EXISTS idx_class_groups_link_id ON class_groups(link_id)",
-  "CREATE INDEX IF NOT EXISTS idx_subjects_class_id ON subjects(class_id)",
-  "CREATE INDEX IF NOT EXISTS idx_subjects_group_id ON subjects(group_id)",
-  "CREATE INDEX IF NOT EXISTS idx_subjects_link_id ON subjects(link_id)"
+  "CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id)",
+  "CREATE INDEX IF NOT EXISTS idx_topics_chapter_id ON topics(chapter_id)"
 ];
 
 export async function ensureDatabase(env: Env): Promise<{ ok: boolean; message?: string }> {
   if (!env.DB) return { ok: false, message: "DB binding missing" };
 
   try {
-    // 1. Create Tables (Safe: IF NOT EXISTS)
     for (const table of TABLES) {
       await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ${table.name} (${table.definition.join(", ")})`).run();
     }
-
-    // 2. Ensure Columns Exist (Safe: ALTER TABLE ADD COLUMN)
-    // We try to add every column. If it exists, SQLite throws an error which we catch and ignore.
-    // This is the "Add Only" strategy that avoids SQLITE_AUTH errors.
+    // Simple column syncer
     for (const table of TABLES) {
-      // We skip the first definition usually because it's the primary key created with the table
       for (const colDef of table.definition) {
-        // Skip constraints like FOREIGN KEY or PRIMARY KEY definitions
         if (colDef.trim().match(/^(FOREIGN|PRIMARY|CONSTRAINT|UNIQUE|CHECK)/i)) continue;
-        
         try {
-          // Attempt to add the column. 
           await env.DB.prepare(`ALTER TABLE ${table.name} ADD COLUMN ${colDef}`).run();
         } catch (e: any) {
-          // If error is "duplicate column name", that's good! It means it exists.
-          // If it's another error, we log it but don't crash.
           if (!e.message?.includes("duplicate column name")) {
-             console.warn(`Column sync note for ${table.name}:`, e.message);
+             // console.warn(`Column sync note for ${table.name}:`, e.message);
           }
         }
       }
     }
-
-    // 3. Ensure Indexes
     for (const idx of INDEXES) {
       await env.DB.prepare(idx).run();
     }
-
     return { ok: true };
   } catch (e: any) {
-    // We allow the app to proceed even if schema sync has hiccups, to prevent lockout.
     console.error("Critical Schema Error:", e);
     return { ok: true, message: "Schema sync partial warning" };
   }
 }
 
-// Safer Reset: We try to drop known tables.
 export async function resetDatabase(env: Env) {
-  const tableNames = TABLES.map(t => t.name).reverse(); // Reverse order to drop children before parents
-  
+  const tableNames = TABLES.map(t => t.name).reverse();
   for (const t of tableNames) {
     try {
       await env.DB.prepare(`DROP TABLE IF EXISTS ${t}`).run();
@@ -143,7 +150,5 @@ export async function resetDatabase(env: Env) {
       console.error(`Failed to drop ${t}`, e);
     }
   }
-  
   await ensureDatabase(env);
 }
-
