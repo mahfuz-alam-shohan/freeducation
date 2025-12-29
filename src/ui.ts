@@ -1,29 +1,31 @@
 // CSS Variables - "Inset Grouped" Aesthetic (Beautiful & Compact)
 export const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+
 :root {
-  --primary: #007AFF; /* System Blue */
-  --primary-bg: #F2F2F7; /* System Gray 6 */
-  --bg-body: #F2F2F7;
+  --primary: #118C4F;
+  --primary-bg: #EAF6EF;
+  --bg-body: #F6F7FB;
   --bg-card: #FFFFFF;
-  --text-main: #000000;
-  --text-secondary: #8E8E93;
-  --separator: #C6C6C8;
-  --separator-light: #E5E5EA;
-  --danger: #FF3B30;
-  --success: #34C759;
-  --radius: 10px;
-  --nav-h: 60px;
+  --text-main: #121417;
+  --text-secondary: #6C7480;
+  --separator: #D0D4DA;
+  --separator-light: #E7E9EF;
+  --danger: #D6453A;
+  --success: #2E9B57;
+  --radius: 12px;
+  --nav-h: 64px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Hind Siliguri", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   background: var(--bg-body);
   color: var(--text-main);
-  font-size: 17px;
-  line-height: 1.4;
+  font-size: 16px;
+  line-height: 1.55;
   padding-bottom: calc(var(--nav-h) + 20px);
 }
 
@@ -32,26 +34,32 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 
 /* --- Layout --- */
 .container {
-  max-width: 640px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.2rem 1rem 2rem;
 }
 
 .header {
   margin-bottom: 1.5rem;
   padding: 0 0.5rem;
 }
+.header-split {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
 
 .page-title {
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.2px;
   margin: 0;
   color: var(--text-main);
 }
 
 .page-subtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   margin-top: 4px;
   font-weight: 400;
@@ -62,12 +70,17 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 
 /* --- Inset Grouped Lists (The Core Design) --- */
 .list-header {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   text-transform: uppercase;
   margin: 1.5rem 0 0.5rem 1rem;
-  font-weight: 400;
-  letter-spacing: -0.1px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  display: flex;
+  align-items: center;
+}
+.list-header-split {
+  justify-content: space-between;
 }
 
 .inset-list {
@@ -75,7 +88,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.06);
 }
 
 .list-row {
@@ -121,7 +134,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 
 .row-title {
-  font-size: 17px;
+  font-size: 16px;
   color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
@@ -129,7 +142,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 
 .row-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   margin-top: 2px;
   white-space: nowrap;
@@ -147,8 +160,8 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 /* --- Buttons & Badges --- */
 .btn-text {
   color: var(--primary);
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .btn-icon-circle {
@@ -164,6 +177,18 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 .btn-icon-circle:active { background: #D1D1D6; }
 
+.btn-icon {
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.btn-muted {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -177,6 +202,26 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 .badge.blue { color: var(--primary); background: #E0EBFF; }
 .badge.purple { color: #AF52DE; background: #F2E6FF; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: none;
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+.tag-linked::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
 
 /* --- Modals (Clean & Centered) --- */
 .modal-overlay {
@@ -209,7 +254,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   padding: 16px;
   text-align: center;
   font-weight: 600;
-  font-size: 17px;
+  font-size: 16px;
   border-bottom: 0.5px solid var(--separator-light);
   background: white;
 }
@@ -229,10 +274,27 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 .input {
   width: 100%;
   padding: 12px 0;
-  font-size: 17px;
+  font-size: 15px;
   border: none;
   outline: none;
   background: transparent;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-row-label {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.toggle {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
 }
 
 .modal-actions {
@@ -244,7 +306,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   flex: 1;
   padding: 14px;
   text-align: center;
-  font-size: 17px;
+  font-size: 15px;
   color: var(--primary);
   background: rgba(255,255,255,0.8);
   font-weight: 400;
@@ -253,6 +315,61 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 .modal-btn:last-child { border-right: none; font-weight: 600; }
 .modal-btn.danger { color: var(--danger); font-weight: 600; }
 .modal-btn:active { background: #E5E5EA; }
+.modal-btn:disabled { color: var(--text-secondary); cursor: not-allowed; }
+
+.helper-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.06);
+  margin-bottom: 1.25rem;
+}
+
+.helper-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.helper-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.helper-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.45;
+}
+
+.empty-state {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.action-row {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.linked-text {
+  color: var(--primary);
+  font-weight: 600;
+  margin-left: 4px;
+}
 
 /* --- Bottom Nav --- */
 .bottom-nav {
@@ -275,8 +392,8 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   justify-content: center;
   gap: 2px;
   color: var(--text-secondary);
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
 }
 .nav-item.active { color: var(--primary); }
 .nav-item svg { width: 24px; height: 24px; }
@@ -314,8 +431,8 @@ export const SCRIPTS = `
 
 export function renderPage(title: string, content: string, activeTab: string, user?: { name: string }, breadcrumbs?: string): Response {
   const navItems = [
-    { id: 'dashboard', href: '/admin', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>', label: 'Home' },
-    { id: 'classes', href: '/admin/classes', icon: '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path>', label: 'Classes' },
+    { id: 'dashboard', href: '/admin', icon: '<path d="M3 11l9-7 9 7"></path><path d="M5 10v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9"></path><path d="M9 21v-6h6v6"></path>', label: 'Home' },
+    { id: 'classes', href: '/admin/classes', icon: '<path d="M4 4h10a2 2 0 0 1 2 2v14"></path><path d="M4 4v14a2 2 0 0 0 2 2h12"></path><path d="M8 8h8"></path><path d="M8 12h8"></path><path d="M8 16h6"></path>', label: 'Classes' },
     { id: 'settings', href: '/admin/settings', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>', label: 'Settings' }
   ];
 
@@ -353,5 +470,3 @@ export function escapeHtml(str: string | null | undefined) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-
-
