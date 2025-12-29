@@ -41,12 +41,8 @@ app.get('/admin/logout', async c => { await clearSession(c.env, getCookie(c.req.
 
 // Admin Protected Routes
 app.use('/admin/*', async (c, next) => {
-  const cookie = c.req.header('Cookie');
-  const token = cookie?.split(';').find(x=>x.trim().startsWith('session='))?.split('=')[1];
-  // Simple check for existence, full check in handlers usually but here we can protect globally
-  // For brevity, we let the handlers do the specific db checks or we inject admin object
-  const admin = await Admin.renderDashboard(c.env, {name:'User'}); // Mock for type check, real check in logic
-  if(!token) return c.redirect('/admin/login'); 
+  const admin = await getAdmin(c);
+  if (admin.name === 'Unknown') return c.redirect('/admin/login'); 
   await next();
 });
 
@@ -71,11 +67,10 @@ app.post('/admin/topics/:id/delete', async c => { await c.env.DB.prepare('DELETE
 app.get('/admin/chapters/:id/questions', async c => Admin.renderQuestionBank(c.env, await getAdmin(c), Number(c.req.param('id'))));
 app.post('/admin/chapters/:id/questions', async c => Admin.handleAddQuestion(c.env, c.req.raw, Number(c.req.param('id'))));
 
-// Auth Helper for Routes
 async function getAdmin(c: any) {
-  // In a real app, use middleware to set c.get('admin')
   const cookie = c.req.header('Cookie');
   const token = cookie?.split(';').find((x:string)=>x.trim().startsWith('session='))?.split('=')[1];
+  if (!token) return {name: 'Unknown'};
   const row = await c.env.DB.prepare(`SELECT admins.name, admins.id FROM sessions JOIN admins ON sessions.admin_id = admins.id WHERE sessions.token = ?`).bind(token).first();
   return row || {name: 'Unknown'};
 }
