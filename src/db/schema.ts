@@ -3,10 +3,7 @@ import type { Bindings } from '../types';
 const TABLES = {
   schemaMeta: {
     name: 'schema_meta',
-    columns: {
-      key: 'TEXT PRIMARY KEY',
-      value: 'TEXT NOT NULL'
-    }
+    columns: { key: 'TEXT PRIMARY KEY', value: 'TEXT NOT NULL' }
   },
   admins: {
     name: 'admins',
@@ -33,8 +30,8 @@ const TABLES = {
     name: 'classes',
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-      name: 'TEXT NOT NULL',
-      level: 'TEXT NOT NULL',
+      name: 'TEXT NOT NULL', /* e.g. Class 9-10 */
+      level: 'TEXT NOT NULL', /* e.g. SSC */
       description: 'TEXT',
       created_at: 'TEXT NOT NULL'
     }
@@ -44,23 +41,9 @@ const TABLES = {
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       class_id: 'INTEGER NOT NULL',
-      name: 'TEXT NOT NULL',
+      name: 'TEXT NOT NULL', /* e.g. Physics */
       description: 'TEXT',
-      icon_emoji: 'TEXT' /* e.g. 📐 for Math, 🧬 for Biology */
-    }
-  },
-  /* Resources: Textbooks, Board Questions, Syllabus (Subject Level) */
-  resources: {
-    name: 'resources',
-    columns: {
-      id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-      subject_id: 'INTEGER NOT NULL',
-      category: 'TEXT NOT NULL', /* 'textbook', 'board_question', 'guide' */
-      title: 'TEXT NOT NULL',
-      r2_key: 'TEXT NOT NULL',
-      mime_type: 'TEXT',
-      meta_info: 'TEXT', /* JSON: {year: 2023, board: 'Dhaka'} */
-      created_at: 'TEXT NOT NULL'
+      icon_emoji: 'TEXT'
     }
   },
   chapters: {
@@ -68,119 +51,103 @@ const TABLES = {
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       subject_id: 'INTEGER NOT NULL',
-      name: 'TEXT NOT NULL',
+      name: 'TEXT NOT NULL', /* e.g. Motion (গতি) */
       description: 'TEXT',
       order_index: 'INTEGER DEFAULT 0'
     }
   },
-  /* Topics: The specific lessons */
+  /* TOPICS: The breakdown of a chapter */
   topics: {
     name: 'topics',
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       chapter_id: 'INTEGER NOT NULL',
-      title: 'TEXT NOT NULL',
-      type: 'TEXT DEFAULT \'note\'', /* 'note', 'math_solution', 'cq_practice' */
-      content: 'TEXT',
-      order_index: 'INTEGER DEFAULT 0',
-      created_at: 'TEXT NOT NULL'
+      title: 'TEXT NOT NULL', /* e.g. Velocity */
+      order_index: 'INTEGER DEFAULT 0'
     }
   },
-  /* Files: Attachments for specific Topics */
-  files: {
-    name: 'files',
+  /* CONTENTS: The actual text/html content for a topic (Explanation, Short Q, etc.) */
+  contents: {
+    name: 'contents',
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       topic_id: 'INTEGER NOT NULL',
+      type: 'TEXT NOT NULL', /* 'explanation', 'short_qa' (gyan mulok), 'formula' */
+      body: 'TEXT NOT NULL', /* HTML or Markdown */
+      order_index: 'INTEGER DEFAULT 0'
+    }
+  },
+  /* QUESTIONS: MCQs and Creative Questions (Srijonshil) */
+  questions: {
+    name: 'questions',
+    columns: {
+      id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      chapter_id: 'INTEGER NOT NULL',
+      type: 'TEXT NOT NULL', /* 'mcq', 'cq' (creative/srijonshil) */
+      question_text: 'TEXT NOT NULL',
+      options_json: 'TEXT', /* JSON for MCQ options e.g. ["A", "B", "C", "D"] */
+      correct_answer: 'TEXT', /* For MCQ */
+      solution_text: 'TEXT', /* Explanation of the answer */
+      created_at: 'TEXT NOT NULL'
+    }
+  },
+  /* RESOURCES: PDFs like Guides, Board Papers, Textbooks */
+  resources: {
+    name: 'resources',
+    columns: {
+      id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      subject_id: 'INTEGER NOT NULL', /* Can be linked to subject */
+      chapter_id: 'INTEGER', /* Optional: linked to specific chapter */
+      category: 'TEXT NOT NULL', /* 'textbook', 'guide', 'board_paper', 'lecture_sheet' */
       title: 'TEXT NOT NULL',
       r2_key: 'TEXT NOT NULL',
       mime_type: 'TEXT',
-      size: 'INTEGER',
       created_at: 'TEXT NOT NULL'
     }
   }
 } as const;
 
-const SCHEMA_VERSION = '2'; /* Bumped version to trigger update */
+const SCHEMA_VERSION = '3';
 
+/* --- Schema Migration Logic --- */
 const TABLE_LIST = Object.values(TABLES).map((table) => table.name);
-
-const columnDefinition = (columns: Record<string, string>) =>
-  Object.entries(columns)
-    .map(([name, type]) => `${name} ${type}`)
-    .join(', ');
-
-const createTableSQL = (table: (typeof TABLES)[keyof typeof TABLES]) =>
-  `CREATE TABLE IF NOT EXISTS ${table.name} (${columnDefinition(table.columns)})`;
-
-const getExistingTables = async (env: Bindings) => {
-  const { results } = await env.DB.prepare(
-    "SELECT name FROM sqlite_master WHERE type='table'"
-  ).all<{ name: string }>();
-  return results.map((row) => row.name);
-};
-
-const getExistingColumns = async (env: Bindings, tableName: string) => {
-  const { results } = await env.DB.prepare(`PRAGMA table_info(${tableName})`).all<{ name: string }>();
-  return results.map((row) => row.name);
-};
-
-const isSystemTable = (name: string) =>
-  name === 'sqlite_sequence' ||
-  name.startsWith('sqlite_') ||
-  name.startsWith('d1_') ||
-  name.startsWith('_d1_') ||
-  name.startsWith('_cf_');
-
-const dropExtraTables = async (env: Bindings, existing: string[]) => {
-  const extras = existing.filter(
-    (name) => !TABLE_LIST.includes(name) && !isSystemTable(name)
-  );
-  for (const name of extras) {
-    await env.DB.prepare(`DROP TABLE IF EXISTS ${name}`).run();
-  }
-};
-
-const ensureTableColumns = async (env: Bindings, table: (typeof TABLES)[keyof typeof TABLES]) => {
-  const existingColumns = await getExistingColumns(env, table.name);
-  for (const [column, type] of Object.entries(table.columns)) {
-    if (!existingColumns.includes(column)) {
-      await env.DB.prepare(`ALTER TABLE ${table.name} ADD COLUMN ${column} ${type}`).run();
-    }
-  }
+const createTableSQL = (table: any) => {
+  const cols = Object.entries(table.columns).map(([k, v]) => `${k} ${v}`).join(', ');
+  return `CREATE TABLE IF NOT EXISTS ${table.name} (${cols})`;
 };
 
 export const ensureSchema = async (env: Bindings) => {
-  const existingTables = await getExistingTables(env);
-  if (!existingTables.includes(TABLES.schemaMeta.name)) {
+  // Check version
+  const { results } = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all<{ name: string }>();
+  const existing = results.map(r => r.name);
+  
+  if (!existing.includes('schema_meta')) {
     await env.DB.prepare(createTableSQL(TABLES.schemaMeta)).run();
+    await env.DB.prepare("INSERT INTO schema_meta (key, value) VALUES ('schema_version', '0')").run();
   }
 
-  const versionRow = await env.DB.prepare(
-    `SELECT value FROM ${TABLES.schemaMeta.name} WHERE key = 'schema_version'`
-  ).first<{ value: string }>();
-
-  // For development, we auto-migrate. In prod, be careful.
-  await dropExtraTables(env, existingTables);
-
+  const ver = await env.DB.prepare("SELECT value FROM schema_meta WHERE key='schema_version'").first<{value:string}>();
+  
+  // Simple migration: If version mismatch, just create missing tables/columns
+  // In production, you'd want smarter migration, but this works for rapid dev
   for (const table of Object.values(TABLES)) {
     await env.DB.prepare(createTableSQL(table)).run();
-    await ensureTableColumns(env, table);
+    // Add columns if missing
+    const tableInfo = await env.DB.prepare(`PRAGMA table_info(${table.name})`).all<{name:string}>();
+    const existingCols = tableInfo.results.map(c => c.name);
+    for (const [colName, colType] of Object.entries(table.columns)) {
+      if (!existingCols.includes(colName)) {
+        try {
+          await env.DB.prepare(`ALTER TABLE ${table.name} ADD COLUMN ${colName} ${colType}`).run();
+        } catch (e) { console.error(`Migration error on ${table.name}.${colName}`, e); }
+      }
+    }
   }
-
-  await env.DB.prepare(
-    `INSERT OR REPLACE INTO ${TABLES.schemaMeta.name} (key, value) VALUES ('schema_version', ?)`
-  )
-    .bind(SCHEMA_VERSION)
-    .run();
+  
+  await env.DB.prepare("UPDATE schema_meta SET value = ? WHERE key = 'schema_version'").bind(SCHEMA_VERSION).run();
 };
 
 export const hasAnyAdmin = async (env: Bindings) => {
   const row = await env.DB.prepare('SELECT id FROM admins LIMIT 1').first<{ id: number }>();
   return Boolean(row?.id);
-};
-
-export const countTable = async (env: Bindings, table: string) => {
-  const row = await env.DB.prepare(`SELECT COUNT(*) as total FROM ${table}`).first<{ total: number }>();
-  return row?.total ?? 0;
 };
