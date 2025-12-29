@@ -1,6 +1,5 @@
 import type { Env } from "./types";
 
-// --- Schema Definition ---
 const TABLES = [
   {
     name: "admins",
@@ -76,7 +75,6 @@ const TABLES = [
       "FOREIGN KEY (link_id) REFERENCES class_links(id) ON DELETE CASCADE"
     ]
   },
-  // NEW: Chapters Table
   {
     name: "chapters",
     definition: [
@@ -88,16 +86,41 @@ const TABLES = [
       "FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE"
     ]
   },
-  // NEW: Topics Table (NCTB Topics / Explanations)
   {
     name: "topics",
     definition: [
       "id INTEGER PRIMARY KEY AUTOINCREMENT",
       "chapter_id INTEGER NOT NULL",
       "title TEXT NOT NULL",
-      "content_type TEXT DEFAULT 'text'", // text, video, pdf
-      "content_url TEXT",
-      "content_body TEXT",
+      "sort_order INTEGER DEFAULT 0",
+      "created_at TEXT NOT NULL",
+      "FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE"
+    ]
+  },
+  {
+    name: "topic_contents",
+    definition: [
+      "id INTEGER PRIMARY KEY AUTOINCREMENT",
+      "topic_id INTEGER NOT NULL",
+      "type TEXT NOT NULL", // note, video, pdf, explanation
+      "title TEXT NOT NULL",
+      "data TEXT", // URL or Body text
+      "sort_order INTEGER DEFAULT 0",
+      "created_at TEXT NOT NULL",
+      "FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE"
+    ]
+  },
+  {
+    name: "questions",
+    definition: [
+      "id INTEGER PRIMARY KEY AUTOINCREMENT",
+      "chapter_id INTEGER NOT NULL",
+      "topic_id INTEGER",
+      "type TEXT NOT NULL", // mcq, short, board
+      "question TEXT NOT NULL",
+      "options TEXT", // JSON string for MCQs
+      "answer TEXT",
+      "explanation TEXT",
       "sort_order INTEGER DEFAULT 0",
       "created_at TEXT NOT NULL",
       "FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE"
@@ -108,7 +131,9 @@ const TABLES = [
 const INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token)",
   "CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id)",
-  "CREATE INDEX IF NOT EXISTS idx_topics_chapter_id ON topics(chapter_id)"
+  "CREATE INDEX IF NOT EXISTS idx_topics_chapter_id ON topics(chapter_id)",
+  "CREATE INDEX IF NOT EXISTS idx_content_topic_id ON topic_contents(topic_id)",
+  "CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id)"
 ];
 
 export async function ensureDatabase(env: Env): Promise<{ ok: boolean; message?: string }> {
@@ -118,17 +143,13 @@ export async function ensureDatabase(env: Env): Promise<{ ok: boolean; message?:
     for (const table of TABLES) {
       await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ${table.name} (${table.definition.join(", ")})`).run();
     }
-    // Simple column syncer
+    // Simple column syncer (basic migration)
     for (const table of TABLES) {
       for (const colDef of table.definition) {
         if (colDef.trim().match(/^(FOREIGN|PRIMARY|CONSTRAINT|UNIQUE|CHECK)/i)) continue;
         try {
           await env.DB.prepare(`ALTER TABLE ${table.name} ADD COLUMN ${colDef}`).run();
-        } catch (e: any) {
-          if (!e.message?.includes("duplicate column name")) {
-             // console.warn(`Column sync note for ${table.name}:`, e.message);
-          }
-        }
+        } catch (e: any) { }
       }
     }
     for (const idx of INDEXES) {
@@ -146,9 +167,9 @@ export async function resetDatabase(env: Env) {
   for (const t of tableNames) {
     try {
       await env.DB.prepare(`DROP TABLE IF EXISTS ${t}`).run();
-    } catch(e) {
-      console.error(`Failed to drop ${t}`, e);
-    }
+    } catch(e) {}
   }
   await ensureDatabase(env);
 }
+
+
