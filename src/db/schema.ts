@@ -65,24 +65,22 @@ const TABLES = {
       order_index: 'INTEGER DEFAULT 0'
     }
   },
-  /* Detailed Explanations / Notes */
   contents: {
     name: 'contents',
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       topic_id: 'INTEGER NOT NULL',
-      type: 'TEXT NOT NULL', /* 'explanation', 'short_qa' */
+      type: 'TEXT NOT NULL',
       body: 'TEXT NOT NULL',
       order_index: 'INTEGER DEFAULT 0'
     }
   },
-  /* Question Bank (MCQ/CQ) */
   questions: {
     name: 'questions',
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       chapter_id: 'INTEGER NOT NULL',
-      type: 'TEXT NOT NULL', /* 'mcq', 'cq' */
+      type: 'TEXT NOT NULL',
       question_text: 'TEXT NOT NULL',
       options_json: 'TEXT',
       correct_answer: 'TEXT',
@@ -90,7 +88,6 @@ const TABLES = {
       created_at: 'TEXT NOT NULL'
     }
   },
-  /* PDF Library */
   resources: {
     name: 'resources',
     columns: {
@@ -103,7 +100,6 @@ const TABLES = {
       created_at: 'TEXT NOT NULL'
     }
   },
-   /* Files for Topics (Legacy support) */
   files: {
     name: 'files',
     columns: {
@@ -118,7 +114,7 @@ const TABLES = {
   }
 } as const;
 
-const SCHEMA_VERSION = '4';
+const SCHEMA_VERSION = '5';
 
 const createTableSQL = (table: any) => {
   const cols = Object.entries(table.columns).map(([k, v]) => `${k} ${v}`).join(', ');
@@ -126,33 +122,53 @@ const createTableSQL = (table: any) => {
 };
 
 export const ensureSchema = async (env: Bindings) => {
-  const { results } = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all<{ name: string }>();
-  const existing = results.map(r => r.name);
-  
-  if (!existing.includes('schema_meta')) {
+  try {
+    // 1. Ensure Meta Table Exists
     await env.DB.prepare(createTableSQL(TABLES.schemaMeta)).run();
-    await env.DB.prepare("INSERT INTO schema_meta (key, value) VALUES ('schema_version', '0')").run();
-  }
-
-  for (const table of Object.values(TABLES)) {
-    await env.DB.prepare(createTableSQL(table)).run();
-    try {
-      const tableInfo = await env.DB.prepare(`PRAGMA table_info(${table.name})`).all<{name:string}>();
-      const existingCols = tableInfo.results.map(c => c.name);
-      for (const [colName, colType] of Object.entries(table.columns)) {
-        if (!existingCols.includes(colName)) {
-          await env.DB.prepare(`ALTER TABLE ${table.name} ADD COLUMN ${colName} ${colType}`).run();
+    
+    // 2. Check Version
+    const ver = await env.DB.prepare("SELECT value FROM schema_meta WHERE key='schema_version'").first<{value:string}>();
+    
+    // 3. Create All Tables (Safe Run)
+    for (const table of Object.values(TABLES)) {
+      await env.DB.prepare(createTableSQL(table)).run();
+      
+      // 4. Safe Column Additions (Migration)
+      try {
+        const tableInfo = await env.DB.prepare(`PRAGMA table_info(${table.name})`).all<{name:string}>();
+        const existingCols = tableInfo.results.map(c => c.name);
+        for (const [colName, colType] of Object.entries(table.columns)) {
+          if (!existingCols.includes(colName)) {
+            // Use try-catch for individual columns to prevent total failure
+            try {
+              await env.DB.prepare(`ALTER TABLE ${table.name} ADD COLUMN ${colName} ${colType}`).run();
+            } catch (colErr) {
+              console.warn(`Failed to add column ${colName} to ${table.name}`, colErr);
+            }
+          }
         }
+      } catch (pragmaErr) {
+        console.warn(`Could not check columns for ${table.name}`, pragmaErr);
       }
-    } catch (e) { console.error(`Migration warning for ${table.name}`, e); }
+    }
+
+    // 5. Update Version
+    await env.DB.prepare("INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('schema_version', ?)").bind(SCHEMA_VERSION).run();
+    
+  } catch (err) {
+    console.error('Critical Schema Error:', err);
+    // We do NOT throw here to prevent Error 1101 loop. 
+    // The app might limp along, but at least it won't crash immediately.
   }
-  
-  await env.DB.prepare("UPDATE schema_meta SET value = ? WHERE key = 'schema_version'").bind(SCHEMA_VERSION).run();
 };
 
 export const hasAnyAdmin = async (env: Bindings) => {
-  const row = await env.DB.prepare('SELECT id FROM admins LIMIT 1').first<{ id: number }>();
-  return Boolean(row?.id);
+  try {
+    const row = await env.DB.prepare('SELECT id FROM admins LIMIT 1').first<{ id: number }>();
+    return Boolean(row?.id);
+  } catch (e) {
+    return false;
+  }
 };
 
 
