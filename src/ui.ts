@@ -56,16 +56,16 @@ select:focus-visible {
   height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 18px 16px;
+  padding: 0;
 }
 
 .app-frame {
-  width: min(980px, 100%);
+  width: 100%;
   background: var(--bg-surface);
-  border-radius: 26px;
-  box-shadow: var(--shadow-soft);
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
-  border: 1px solid rgba(7, 18, 43, 0.08);
+  border: none;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -141,8 +141,8 @@ select:focus-visible {
 }
 
 .container {
-  max-width: 860px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   padding: 1.4rem 1.5rem 2.5rem;
   flex: 1;
   overflow: auto;
@@ -669,18 +669,18 @@ select:focus-visible {
 .nav-item svg { width: 24px; height: 24px; }
 
 @media (max-width: 900px) {
-  .app-shell { padding: 12px 10px; }
-  .app-frame { border-radius: 20px; }
+  .app-shell { padding: 0; }
+  .app-frame { border-radius: 0; }
   .app-header { padding: 16px 16px; }
   .container { padding: 1.1rem 1rem 2rem; }
   .page-title { font-size: 26px; }
 }
 
 @media (max-width: 640px) {
-  .app-shell { padding: 10px 8px; }
+  .app-shell { padding: 0; }
   .app-frame {
-    border-radius: 18px;
-    box-shadow: 0 16px 30px rgba(15, 28, 22, 0.12);
+    border-radius: 0;
+    box-shadow: none;
   }
   .brand-logo { width: 36px; height: 36px; }
   .brand-title { font-size: 16px; }
@@ -691,6 +691,36 @@ select:focus-visible {
 
 export const SCRIPTS = `
 <script>
+  function updateQuestionForm(target) {
+    const form = target?.closest('[data-question-form]') || target;
+    if (!form) return;
+    const typeSelect = form.querySelector('select[name="type"]');
+    const typeInput = form.querySelector('input[name="type"]');
+    const type = (typeSelect && typeSelect.value) || (typeInput && typeInput.value) || form.getAttribute('data-question-type') || '';
+    const sourceField = form.querySelector('[data-question-source]');
+    const sourceInput = form.querySelector('input[name="source_label"]');
+    const needsSource = ["board", "versity", "college"].includes(type);
+    if (sourceField) sourceField.style.display = needsSource ? '' : 'none';
+    if (sourceInput) sourceInput.required = needsSource;
+
+    const mcqBlock = form.querySelector('[data-question-mcq]');
+    const answerBlock = form.querySelector('[data-question-answer]');
+    const isMcq = type === 'mcq';
+    if (mcqBlock) mcqBlock.style.display = isMcq ? '' : 'none';
+    if (answerBlock) answerBlock.style.display = isMcq ? 'none' : '';
+
+    const answerTypeSelect = form.querySelector('select[name="answer_type"]');
+    const answerMediaField = form.querySelectorAll('[data-question-attachment]');
+    if (answerTypeSelect) {
+      const showMedia = answerTypeSelect.value !== 'text';
+      answerMediaField.forEach((field, idx) => {
+        if (idx === 1 && field instanceof HTMLElement) {
+          field.style.display = showMedia ? '' : 'none';
+        }
+      });
+    }
+  }
+
   function toggleModal(id, show) {
     const el = document.getElementById(id);
     if(show) {
@@ -726,6 +756,18 @@ export const SCRIPTS = `
       row.style.display = label.includes(query) ? '' : 'none';
     });
   }
+
+  document.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.matches('select[name="type"], select[name="answer_type"]')) {
+      updateQuestionForm(target);
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-question-form]').forEach((form) => updateQuestionForm(form));
+  });
 </script>
 `;
 

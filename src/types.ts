@@ -68,13 +68,15 @@ export interface QuestionRow {
   id: number;
   chapter_id: number;
   topic_id?: number; // Optional linking to topic
-  type: 'mcq' | 'short' | 'board';
+  type: 'mcq' | 'short' | 'board' | 'versity' | 'college' | 'custom';
+  source_label?: string;
   question: string;
   options?: string; // JSON string for MCQs
   answer?: string;
+  answer_type?: 'text' | 'image' | 'pdf' | 'link';
+  answer_media?: string;
   explanation?: string;
   sort_order: number;
   created_at: string;
 }
-
 

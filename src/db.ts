@@ -116,10 +116,13 @@ const TABLES = [
       "id INTEGER PRIMARY KEY AUTOINCREMENT",
       "chapter_id INTEGER NOT NULL",
       "topic_id INTEGER",
-      "type TEXT NOT NULL", // mcq, short, board
+      "type TEXT NOT NULL", // mcq, short, board, versity, college, custom
+      "source_label TEXT",
       "question TEXT NOT NULL",
       "options TEXT", // JSON string for MCQs
       "answer TEXT",
+      "answer_type TEXT",
+      "answer_media TEXT",
       "explanation TEXT",
       "sort_order INTEGER DEFAULT 0",
       "created_at TEXT NOT NULL",
@@ -171,5 +174,4 @@ export async function resetDatabase(env: Env) {
   }
   await ensureDatabase(env);
 }
-
 
