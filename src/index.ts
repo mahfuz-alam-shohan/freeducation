@@ -8,12 +8,20 @@ import * as Admin from './handlers/admin';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// Middleware
+// Middleware: Ensure DB Schema is Ready
 app.use('*', async (c, next) => {
   await ensureSchema(c.env);
   await next();
 });
-app.onError((err, c) => c.text(`Error: ${err.message}`, 500));
+
+// Error Handler
+app.onError((err, c) => {
+  console.error(err);
+  return c.text(`Application Error: ${err.message}`, 500);
+});
+
+// Health Check (For debugging 1101)
+app.get('/health', (c) => c.text('OK'));
 
 // Assets
 app.get('/styles.css', c => c.text(styles, 200, {'Content-Type': 'text/css'}));
