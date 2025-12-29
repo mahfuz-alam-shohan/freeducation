@@ -412,3 +412,8 @@ CREATE INDEX IF NOT EXISTS idx_overrides_entity ON curriculum_overrides(entity_t
 CREATE INDEX IF NOT EXISTS idx_overrides_release ON curriculum_overrides(release_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
 CREATE INDEX IF NOT EXISTS idx_content_item_audit_logs_item ON content_item_audit_logs(content_item_id);
+CREATE INDEX IF NOT EXISTS idx_content_items_release_status_updated_at ON content_items(release_id, status, updated_at);
+CREATE INDEX IF NOT EXISTS idx_content_items_release_type_year_chapter_id ON content_items(release_id, type, year, chapter_id);
+CREATE INDEX IF NOT EXISTS idx_chapters_subject_release_id ON chapters(subject_id, release_id);
+CREATE INDEX IF NOT EXISTS idx_subjects_grade_release_id ON subjects(grade_id, release_id);
+CREATE INDEX IF NOT EXISTS idx_lesson_question_sets_lesson_id_question_set_id ON lesson_question_sets(lesson_id, question_set_id);
