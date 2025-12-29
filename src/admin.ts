@@ -234,10 +234,10 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
            <div class="row-content">
              <div class="row-title">${escapeHtml(ch.name)}</div>
            </div>
-           <button class="btn-icon-circle" onclick="openEdit('edit-chapter-modal', '/admin/chapters/edit', {id: '${ch.id}', name: '${escapeHtml(ch.name)}', sort_order: '${ch.sort_order}', subject_id: '${subjectId}'})">
+           <button class="btn-icon-circle" type="button" aria-label="Edit chapter ${escapeHtml(ch.name)}" title="Edit chapter" onclick="openEdit('edit-chapter-modal', '/admin/chapters/edit', {id: '${ch.id}', name: '${escapeHtml(ch.name)}', sort_order: '${ch.sort_order}', subject_id: '${subjectId}'})">
               <svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
            </button>
-           <div class="row-action" onclick="window.location='/admin/chapters/${ch.id}'"><svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
+           <button class="row-action" type="button" aria-label="Open chapter ${escapeHtml(ch.name)}" title="Open chapter" onclick="window.location='/admin/chapters/${ch.id}'"><svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></button>
         </div>
       `;
       }).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary);">No chapters yet</div>'}
@@ -324,7 +324,7 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
     <!-- Topics Section -->
     <div class="list-header" style="display:flex; justify-content:space-between;">
        <span>Topics</span>
-       <button onclick="toggleModal('new-topic-modal', true)" style="color:var(--primary); font-weight:600;">+</button>
+       <button onclick="toggleModal('new-topic-modal', true)" class="btn-icon" type="button" aria-label="Add topic" title="Add topic">+</button>
     </div>
     <div class="inset-list">
        ${topics.results?.map((t, idx) => {
@@ -335,10 +335,10 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
             <div class="row-content">
                <div class="row-title" style="font-size:16px;">${escapeHtml(t.title)}</div>
             </div>
-            <button class="btn-icon-circle" onclick="event.stopPropagation(); openEdit('edit-topic-modal', '/admin/topics/edit', {id: '${t.id}', title: '${escapeHtml(t.title)}', sort_order: '${t.sort_order}', chapter_id: '${chapterId}'})">
+            <button class="btn-icon-circle" type="button" aria-label="Edit topic ${escapeHtml(t.title)}" title="Edit topic" onclick="event.stopPropagation(); openEdit('edit-topic-modal', '/admin/topics/edit', {id: '${t.id}', title: '${escapeHtml(t.title)}', sort_order: '${t.sort_order}', chapter_id: '${chapterId}'})">
               <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
             </button>
-            <div class="row-action">›</div>
+            <div class="row-action" aria-hidden="true">›</div>
          </div>
        `;
        }).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary); font-size:14px;">No topics added</div>'}
@@ -449,7 +449,7 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
 
     <div class="list-header" style="display:flex; justify-content:space-between;">
        <span>Content</span>
-       <button onclick="toggleModal('new-content-modal', true)" style="color:var(--primary); font-weight:600;">+ Add</button>
+       <button onclick="toggleModal('new-content-modal', true)" class="btn-text" type="button" aria-label="Add content">+ Add</button>
     </div>
 
     <div class="inset-list">
@@ -467,7 +467,7 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
             <form action="/admin/content/delete" method="POST" onsubmit="return confirm('Delete?');" style="margin:0;">
                <input type="hidden" name="id" value="${c.id}">
                <input type="hidden" name="topic_id" value="${topicId}">
-               <button class="row-action" style="color:var(--danger);"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+               <button class="row-action" type="submit" aria-label="Delete content ${escapeHtml(c.title)}" title="Delete content" style="color:var(--danger);"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
             </form>
          </div>
       `).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary); font-size:14px;">No content yet</div>'}
@@ -595,7 +595,7 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
 
     <div class="list-header" style="display:flex; justify-content:space-between;">
        <span>${questions.results?.length || 0} Questions</span>
-       <button onclick="toggleModal('new-q-modal', true)" style="color:var(--primary); font-weight:600;">+ Add</button>
+       <button onclick="toggleModal('new-q-modal', true)" class="btn-text" type="button" aria-label="Add question">+ Add</button>
     </div>
 
     <div class="inset-list">
@@ -620,7 +620,7 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
                <input type="hidden" name="chapter_id" value="${chapterId}">
                <input type="hidden" name="type" value="${type || ''}">
                ${topicId ? `<input type="hidden" name="topic_id" value="${topicId}">` : ''}
-               <button style="color:var(--danger); font-size:20px;">×</button>
+               <button type="submit" aria-label="Delete question ${escapeHtml(q.question)}" title="Delete question" style="color:var(--danger); font-size:20px;">×</button>
              </form>
           </div>
        `).join('') || '<div style="padding:20px; text-align:center; color:var(--text-secondary);">Empty</div>'}
