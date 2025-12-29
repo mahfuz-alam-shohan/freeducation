@@ -23,6 +23,11 @@ async function requireAuth(request: Request, env: Env) {
   return session;
 }
 
+function displayOrder(order: number | null | undefined, fallback: number) {
+  if (typeof order === "number" && order > 0) return order;
+  return fallback;
+}
+
 // --- Main Handler ---
 export async function handleAdminRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -172,9 +177,11 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
     </div>
 
     <div class="inset-list">
-      ${chapters.results?.map((ch, idx) => `
+      ${chapters.results?.map((ch, idx) => {
+        const chapterNo = displayOrder(ch.sort_order, idx + 1);
+        return `
         <div class="list-row">
-           <div style="font-size:15px; font-weight:600; color:var(--text-secondary); width:30px; text-align:center;">${idx+1}</div>
+           <div class="order-chip"><span>Ch</span>${chapterNo}</div>
            <div class="row-content">
              <div class="row-title">${escapeHtml(ch.name)}</div>
            </div>
@@ -183,7 +190,8 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
            </button>
            <div class="row-action" onclick="window.location='/admin/chapters/${ch.id}'"><svg width="20" height="20" fill="none" stroke="#C7C7CC" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
         </div>
-      `).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary);">No chapters yet</div>'}
+      `;
+      }).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary);">No chapters yet</div>'}
     </div>
 
     <div style="text-align:center;">
@@ -197,8 +205,8 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
         <form action="/admin/chapters" method="POST">
            <input type="hidden" name="subject_id" value="${subjectId}">
            <div class="modal-body">
-             <div class="input-group"><input name="name" class="input" required placeholder="Chapter Name"></div>
-             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Order (Optional)"></div>
+             <div class="input-group"><input name="name" class="input" required placeholder="Chapter title"></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Chapter No. (textbook order)"></div>
            </div>
            <div class="modal-actions">
              <div class="modal-btn" onclick="toggleModal('new-chapter-modal', false)">Cancel</div>
@@ -217,7 +225,7 @@ async function renderSubjectDetail(session: any, env: Env, subjectId: number) {
            <input type="hidden" name="subject_id">
            <div class="modal-body">
              <div class="input-group"><input name="name" class="input" required></div>
-             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Order"></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Chapter No."></div>
            </div>
            <div class="modal-actions">
              <div class="modal-btn" onclick="toggleModal('edit-chapter-modal', false)">Cancel</div>
@@ -240,6 +248,7 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
   const chapter = await env.DB.prepare("SELECT * FROM chapters WHERE id = ?").bind(chapterId).first<ChapterRow>();
   if (!chapter) return new Response("Not found", { status: 404 });
   const subject = await env.DB.prepare("SELECT * FROM subjects WHERE id = ?").bind(chapter.subject_id).first<SubjectRow>();
+  const chapterNo = displayOrder(chapter.sort_order, 0);
   
   const topics = await env.DB.prepare("SELECT * FROM topics WHERE chapter_id = ? ORDER BY sort_order ASC").bind(chapterId).all<TopicRow>();
   
@@ -254,25 +263,28 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
 
   return renderPage(chapter.name, `
     <div class="header">
-      <div class="page-subtitle" style="text-transform:uppercase; letter-spacing:1px; font-weight:600; font-size:11px;">Chapter</div>
+      <div class="page-subtitle" style="text-transform:uppercase; letter-spacing:1px; font-weight:600; font-size:11px;">${chapterNo ? `Chapter ${chapterNo}` : "Chapter"}</div>
       <h1 class="page-title">${escapeHtml(chapter.name)}</h1>
     </div>
 
     <!-- Topics Section -->
     <div class="list-header" style="display:flex; justify-content:space-between;">
-       <span>Learning Path</span>
+       <span>Topics</span>
        <button onclick="toggleModal('new-topic-modal', true)" style="color:var(--primary); font-weight:600;">+</button>
     </div>
     <div class="inset-list">
-       ${topics.results?.map((t, idx) => `
+       ${topics.results?.map((t, idx) => {
+         const topicNo = displayOrder(t.sort_order, idx + 1);
+         return `
          <div class="list-row" onclick="window.location='/admin/topics/${t.id}'">
-            <div style="font-size:14px; color:var(--text-secondary); margin-right:12px; font-variant-numeric:tabular-nums;">${String(idx+1).padStart(2,'0')}</div>
+            <div class="order-chip"><span>Topic</span>${topicNo}</div>
             <div class="row-content">
                <div class="row-title" style="font-size:16px;">${escapeHtml(t.title)}</div>
             </div>
             <div class="row-action">›</div>
          </div>
-       `).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary); font-size:14px;">No topics added</div>'}
+       `;
+       }).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary); font-size:14px;">No topics added</div>'}
     </div>
 
     <!-- Question Bank Section -->
@@ -299,8 +311,8 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
         <form action="/admin/topics" method="POST">
            <input type="hidden" name="chapter_id" value="${chapterId}">
            <div class="modal-body">
-             <div class="input-group"><input name="title" class="input" required placeholder="Topic Title"></div>
-             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Order"></div>
+             <div class="input-group"><input name="title" class="input" required placeholder="Topic title"></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Topic No."></div>
            </div>
            <div class="modal-actions">
              <div class="modal-btn" onclick="toggleModal('new-topic-modal', false)">Cancel</div>
@@ -316,6 +328,8 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
   const topic = await env.DB.prepare("SELECT * FROM topics WHERE id = ?").bind(topicId).first<TopicRow>();
   if(!topic) return new Response("Not found", {status:404});
   const chapter = await env.DB.prepare("SELECT * FROM chapters WHERE id = ?").bind(topic.chapter_id).first<ChapterRow>();
+  const chapterNo = chapter ? displayOrder(chapter.sort_order, 0) : 0;
+  const topicNo = displayOrder(topic.sort_order, 0);
   
   const contents = await env.DB.prepare("SELECT * FROM topic_contents WHERE topic_id = ? ORDER BY sort_order ASC").bind(topicId).all<ContentRow>();
 
@@ -323,7 +337,7 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
 
   return renderPage(topic.title, `
     <div class="header">
-      <div class="page-subtitle">Topic</div>
+      <div class="page-subtitle">${chapterNo ? `Chapter ${chapterNo}` : "Chapter"}${topicNo ? ` • Topic ${topicNo}` : ""}</div>
       <h1 class="page-title" style="font-size:24px;">${escapeHtml(topic.title)}</h1>
     </div>
 
