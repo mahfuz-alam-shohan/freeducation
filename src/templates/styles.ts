@@ -244,4 +244,9 @@ h1, h2, h3, h4 {
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .mb-4 { margin-bottom: 1rem; }
 .mt-2 { margin-top: 0.5rem; }
+.flex-wrap { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.stack { display: flex; flex-direction: column; gap: 1rem; }
+input, select, textarea { width: 100%; padding: 0.75rem; border-radius: 12px; border: 1px solid #e2e8f0; font-family: inherit; }
 `;
+
+
