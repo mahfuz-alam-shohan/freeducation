@@ -79,3 +79,5 @@ label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--slate-
   .sidebar { display: none; } /* Mobile menu logic would go here */
 }
 `;
+
+
