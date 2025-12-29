@@ -28,6 +28,24 @@ function displayOrder(order: number | null | undefined, fallback: number) {
   return fallback;
 }
 
+const QUESTION_TYPE_LABELS: Record<QuestionRow["type"], string> = {
+  mcq: "MCQs",
+  short: "Short Questions",
+  board: "Board Questions",
+  versity: "Versity Questions",
+  college: "College Test Questions",
+  custom: "Custom Questions"
+};
+
+const QUESTION_TYPE_OPTIONS = [
+  { value: "mcq", label: QUESTION_TYPE_LABELS.mcq },
+  { value: "short", label: QUESTION_TYPE_LABELS.short },
+  { value: "board", label: QUESTION_TYPE_LABELS.board },
+  { value: "versity", label: QUESTION_TYPE_LABELS.versity },
+  { value: "college", label: QUESTION_TYPE_LABELS.college },
+  { value: "custom", label: QUESTION_TYPE_LABELS.custom }
+];
+
 // --- Main Handler ---
 export async function handleAdminRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -99,6 +117,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
 
   // --- Topics ---
   if (path === "/admin/topics") { if (method === "POST") return handleCreateTopic(request, env); return redirect("/admin/classes"); }
+  if (path === "/admin/topics/edit" && method === "POST") return handleEditTopic(request, env);
   if (path === "/admin/topics/delete" && method === "POST") return handleDeleteTopic(request, env);
   if (path.match(/^\/admin\/topics\/(\d+)$/)) return renderTopicDetail(session, env, parseInt(path.split('/').pop()!));
 
@@ -286,8 +305,13 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
     SELECT type, COUNT(*) as c FROM questions WHERE chapter_id = ? GROUP BY type
   `).bind(chapterId).all<{type:string, c:number}>();
   
-  const counts = { mcq: 0, short: 0, board: 0 };
-  qCounts.results?.forEach(r => { if(counts[r.type as keyof typeof counts] !== undefined) counts[r.type as keyof typeof counts] = r.c; });
+  const counts = { mcq: 0, short: 0, board: 0, versity: 0, college: 0, custom: 0 };
+  qCounts.results?.forEach(r => {
+    if (counts[r.type as keyof typeof counts] !== undefined) {
+      counts[r.type as keyof typeof counts] = r.c;
+    }
+  });
+  const totalQuestions = Object.values(counts).reduce((acc, val) => acc + val, 0);
 
   const breadcrumbs = `<a href="/admin/classes">Classes</a> / ... / <a href="/admin/subjects/${chapter.subject_id}">${subject?.name}</a>`;
 
@@ -311,6 +335,9 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
             <div class="row-content">
                <div class="row-title" style="font-size:16px;">${escapeHtml(t.title)}</div>
             </div>
+            <button class="btn-icon-circle" onclick="event.stopPropagation(); openEdit('edit-topic-modal', '/admin/topics/edit', {id: '${t.id}', title: '${escapeHtml(t.title)}', sort_order: '${t.sort_order}', chapter_id: '${chapterId}'})">
+              <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+            </button>
             <div class="row-action">›</div>
          </div>
        `;
@@ -318,8 +345,12 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
     </div>
 
     <!-- Question Bank Section -->
-    <div class="list-header">Question Bank</div>
+    <div class="list-header">Central Question Bank</div>
     <div class="inset-list">
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${chapterId}'">
+          <div class="row-content"><div class="row-title">All Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${totalQuestions} ›</div>
+       </div>
        <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${chapterId}&type=mcq'">
           <div class="row-content"><div class="row-title">MCQs</div></div>
           <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.mcq} ›</div>
@@ -331,6 +362,18 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
        <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${chapterId}&type=board'">
           <div class="row-content"><div class="row-title">Board Questions</div></div>
           <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.board} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${chapterId}&type=versity'">
+          <div class="row-content"><div class="row-title">Versity Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.versity} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${chapterId}&type=college'">
+          <div class="row-content"><div class="row-title">College Test Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.college} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${chapterId}&type=custom'">
+          <div class="row-content"><div class="row-title">Custom Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.custom} ›</div>
        </div>
     </div>
 
@@ -351,6 +394,26 @@ async function renderChapterDetail(session: any, env: Env, chapterId: number) {
         </form>
       </div>
     </div>
+
+    <!-- Edit Topic Modal -->
+    <div id="edit-topic-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">Edit Topic</div>
+        <form method="POST">
+           <input type="hidden" name="id">
+           <input type="hidden" name="chapter_id" value="${chapterId}">
+           <input type="hidden" name="return_to" value="/admin/chapters/${chapterId}">
+           <div class="modal-body">
+             <div class="input-group"><input name="title" class="input" required placeholder="Topic title"></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Topic No."></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('edit-topic-modal', false)">Cancel</div>
+             <button class="modal-btn">Save</button>
+           </div>
+        </form>
+      </div>
+    </div>
   `, "classes", session, breadcrumbs);
 }
 
@@ -362,6 +425,16 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
   const topicNo = displayOrder(topic.sort_order, 0);
   
   const contents = await env.DB.prepare("SELECT * FROM topic_contents WHERE topic_id = ? ORDER BY sort_order ASC").bind(topicId).all<ContentRow>();
+  const qCounts = await env.DB.prepare(`
+    SELECT type, COUNT(*) as c FROM questions WHERE topic_id = ? GROUP BY type
+  `).bind(topicId).all<{type:string, c:number}>();
+  const counts = { mcq: 0, short: 0, board: 0, versity: 0, college: 0, custom: 0 };
+  qCounts.results?.forEach(r => {
+    if (counts[r.type as keyof typeof counts] !== undefined) {
+      counts[r.type as keyof typeof counts] = r.c;
+    }
+  });
+  const totalQuestions = Object.values(counts).reduce((acc, val) => acc + val, 0);
 
   const breadcrumbs = `<a href="/admin/chapters/${topic.chapter_id}">${chapter?.name}</a>`;
 
@@ -369,6 +442,9 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
     <div class="header">
       <div class="page-subtitle">${chapterNo ? `Chapter ${chapterNo}` : "Chapter"}${topicNo ? ` • Topic ${topicNo}` : ""}</div>
       <h1 class="page-title" style="font-size:24px;">${escapeHtml(topic.title)}</h1>
+    </div>
+    <div class="action-row">
+       <button onclick="openEdit('edit-topic-modal', '/admin/topics/edit', {id: '${topicId}', title: '${escapeHtml(topic.title)}', sort_order: '${topic.sort_order}', chapter_id: '${topic.chapter_id}'})" class="btn-text">Edit Topic</button>
     </div>
 
     <div class="list-header" style="display:flex; justify-content:space-between;">
@@ -395,6 +471,38 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
             </form>
          </div>
       `).join('') || '<div style="padding:16px; text-align:center; color:var(--text-secondary); font-size:14px;">No content yet</div>'}
+    </div>
+
+    <div class="list-header">Topic Question Bank</div>
+    <div class="inset-list">
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}'">
+          <div class="row-content"><div class="row-title">All Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${totalQuestions} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}&type=mcq'">
+          <div class="row-content"><div class="row-title">MCQs</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.mcq} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}&type=short'">
+          <div class="row-content"><div class="row-title">Short Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.short} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}&type=board'">
+          <div class="row-content"><div class="row-title">Board Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.board} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}&type=versity'">
+          <div class="row-content"><div class="row-title">Versity Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.versity} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}&type=college'">
+          <div class="row-content"><div class="row-title">College Test Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.college} ›</div>
+       </div>
+       <div class="list-row" onclick="window.location='/admin/questions/view?chapter_id=${topic.chapter_id}&topic_id=${topicId}&type=custom'">
+          <div class="row-content"><div class="row-title">Custom Questions</div></div>
+          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.custom} ›</div>
+       </div>
     </div>
     
     <div style="text-align:center; margin-top:20px;">
@@ -430,18 +538,54 @@ async function renderTopicDetail(session: any, env: Env, topicId: number) {
         </form>
       </div>
     </div>
+
+    <!-- Edit Topic Modal -->
+    <div id="edit-topic-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">Edit Topic</div>
+        <form method="POST">
+           <input type="hidden" name="id">
+           <input type="hidden" name="chapter_id" value="${topic.chapter_id}">
+           <input type="hidden" name="return_to" value="/admin/topics/${topicId}">
+           <div class="modal-body">
+             <div class="input-group"><input name="title" class="input" required placeholder="Topic title"></div>
+             <div class="input-group"><input name="sort_order" type="number" class="input" placeholder="Topic No."></div>
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('edit-topic-modal', false)">Cancel</div>
+             <button class="modal-btn">Save</button>
+           </div>
+        </form>
+      </div>
+    </div>
   `, "classes", session, breadcrumbs);
 }
 
 async function renderQuestionList(session: any, env: Env, params: URLSearchParams) {
   const chapterId = parseInt(params.get("chapter_id")!);
-  const type = params.get("type") as 'mcq' | 'short' | 'board';
+  const topicIdParam = params.get("topic_id");
+  const topicId = topicIdParam ? parseInt(topicIdParam) : null;
+  const typeParam = params.get("type") as QuestionRow["type"] | null;
+  const type = typeParam && typeParam !== ("all" as QuestionRow["type"]) ? typeParam : null;
   
   const chapter = await env.DB.prepare("SELECT * FROM chapters WHERE id = ?").bind(chapterId).first<ChapterRow>();
-  const questions = await env.DB.prepare("SELECT * FROM questions WHERE chapter_id = ? AND type = ? ORDER BY sort_order ASC").bind(chapterId, type).all<QuestionRow>();
+  const topic = topicId ? await env.DB.prepare("SELECT * FROM topics WHERE id = ?").bind(topicId).first<TopicRow>() : null;
+  const questions = await env.DB.prepare(`
+    SELECT q.*, t.title as topic_title
+    FROM questions q
+    LEFT JOIN topics t ON t.id = q.topic_id
+    WHERE q.chapter_id = ?
+    ${topicId ? "AND q.topic_id = ?" : ""}
+    ${type ? "AND q.type = ?" : ""}
+    ORDER BY q.sort_order ASC, q.created_at DESC
+  `).bind(
+    chapterId,
+    ...(topicId ? [topicId] : []),
+    ...(type ? [type] : [])
+  ).all<(QuestionRow & { topic_title?: string })>();
   
-  const typeLabel = type === 'mcq' ? 'MCQs' : type === 'short' ? 'Short Questions' : 'Board Questions';
-  const breadcrumbs = `<a href="/admin/chapters/${chapterId}">${chapter?.name}</a>`;
+  const typeLabel = type ? QUESTION_TYPE_LABELS[type] : "All Questions";
+  const breadcrumbs = `<a href="/admin/chapters/${chapterId}">${chapter?.name}</a>${topic ? ` / <a href="/admin/topics/${topic.id}">${topic.title}</a>` : ''}`;
 
   return renderPage(`${typeLabel}`, `
     <div class="header">
@@ -459,13 +603,23 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
           <div class="list-row" style="align-items:flex-start; padding:12px 16px;">
              <div style="font-weight:600; font-size:14px; color:var(--text-secondary); margin-right:12px; margin-top:2px;">${i+1}</div>
              <div class="row-content">
-                <div style="font-size:15px; margin-bottom:4px;">${escapeHtml(q.question)}</div>
-                ${q.type === 'mcq' ? `<div style="font-size:12px; color:var(--text-secondary);">Answer: ${escapeHtml(q.answer)}</div>` : ''}
+                <div style="font-size:15px; margin-bottom:6px;">${escapeHtml(q.question)}</div>
+                <div class="inline-actions" style="flex-wrap:wrap;">
+                  <span class="badge">${escapeHtml(QUESTION_TYPE_LABELS[q.type] || q.type.toUpperCase())}</span>
+                  ${q.topic_title ? `<span class="badge blue">Topic: ${escapeHtml(q.topic_title)}</span>` : ''}
+                  ${q.source_label ? `<span class="badge purple">${escapeHtml(
+                    q.type === "board" ? `Board: ${q.source_label}` : q.type === "versity" ? `University: ${q.source_label}` : q.type === "college" ? `College: ${q.source_label}` : q.source_label
+                  )}</span>` : ''}
+                </div>
+                ${q.type === 'mcq' && q.answer ? `<div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Answer: ${escapeHtml(q.answer)}</div>` : ''}
+                ${q.answer && q.type !== 'mcq' && (!q.answer_type || q.answer_type === 'text') ? `<div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Answer: ${escapeHtml(q.answer)}</div>` : ''}
+                ${q.answer_media ? `<div style="font-size:12px; margin-top:6px;"><a href="${escapeHtml(q.answer_media)}" target="_blank" rel="noopener">View ${escapeHtml(q.answer_type || 'answer')}</a></div>` : ''}
              </div>
              <form action="/admin/questions/delete" method="POST" onsubmit="return confirm('Delete?');" style="margin-left:8px;">
                <input type="hidden" name="id" value="${q.id}">
                <input type="hidden" name="chapter_id" value="${chapterId}">
-               <input type="hidden" name="type" value="${type}">
+               <input type="hidden" name="type" value="${type || ''}">
+               ${topicId ? `<input type="hidden" name="topic_id" value="${topicId}">` : ''}
                <button style="color:var(--danger); font-size:20px;">×</button>
              </form>
           </div>
@@ -476,22 +630,46 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
     <div id="new-q-modal" class="modal-overlay">
       <div class="modal-card">
         <div class="modal-header">New ${typeLabel}</div>
-        <form action="/admin/questions" method="POST">
+        <form action="/admin/questions" method="POST" data-question-form ${type ? `data-question-type="${type}"` : ''}>
            <input type="hidden" name="chapter_id" value="${chapterId}">
-           <input type="hidden" name="type" value="${type}">
+           ${topicId ? `<input type="hidden" name="topic_id" value="${topicId}">` : ''}
+           ${type ? `<input type="hidden" name="type" value="${type}">` : `
+             <div class="modal-body" style="padding-bottom:0;">
+               <div class="input-group">
+                 <select name="type" class="input" onchange="updateQuestionForm(this)">
+                   ${QUESTION_TYPE_OPTIONS.map(option => `<option value="${option.value}">${option.label}</option>`).join('')}
+                 </select>
+               </div>
+             </div>
+           `}
            <div class="modal-body">
              <div class="input-group">
                <textarea name="question" class="input" required placeholder="Question Text" style="height:60px;"></textarea>
              </div>
-             ${type === 'mcq' ? `
+             <div class="input-group" data-question-source>
+               <input name="source_label" class="input" placeholder="Board / University / College name">
+             </div>
+             <div data-question-mcq>
                <div class="input-group"><input name="option_a" class="input" placeholder="Option A"></div>
                <div class="input-group"><input name="option_b" class="input" placeholder="Option B"></div>
                <div class="input-group"><input name="option_c" class="input" placeholder="Option C"></div>
                <div class="input-group"><input name="option_d" class="input" placeholder="Option D"></div>
                <div class="input-group"><input name="answer" class="input" placeholder="Correct Answer (e.g. A)"></div>
-             ` : `
-               <div class="input-group"><textarea name="answer" class="input" placeholder="Model Answer / Key Points" style="height:80px;"></textarea></div>
-             `}
+             </div>
+             <div class="input-group" data-question-answer>
+               <textarea name="answer" class="input" placeholder="Model Answer / Key Points" style="height:80px;"></textarea>
+             </div>
+             <div class="input-group" data-question-attachment>
+               <select name="answer_type" class="input">
+                 <option value="text">Answer as text</option>
+                 <option value="image">Answer as image (URL)</option>
+                 <option value="pdf">Answer as PDF (URL)</option>
+                 <option value="link">Answer as link (URL)</option>
+               </select>
+             </div>
+             <div class="input-group" data-question-attachment>
+               <input name="answer_media" class="input" placeholder="Answer URL (image/pdf/link)">
+             </div>
            </div>
            <div class="modal-actions">
              <div class="modal-btn" onclick="toggleModal('new-q-modal', false)">Cancel</div>
@@ -625,6 +803,14 @@ async function handleCreateTopic(request: Request, env: Env) {
     .bind(fd.get("chapter_id"), fd.get("title"), fd.get("sort_order")||0, new Date().toISOString()).run();
   return redirect(`/admin/chapters/${fd.get("chapter_id")}`);
 }
+async function handleEditTopic(request: Request, env: Env) {
+  const fd = await request.formData();
+  await env.DB.prepare("UPDATE topics SET title = ?, sort_order = ? WHERE id = ?")
+    .bind(fd.get("title"), fd.get("sort_order") || 0, fd.get("id")).run();
+  const returnTo = fd.get("return_to");
+  if (returnTo) return redirect(returnTo.toString());
+  return redirect(`/admin/chapters/${fd.get("chapter_id")}`);
+}
 async function handleDeleteTopic(request: Request, env: Env) {
   const fd = await request.formData();
   await env.DB.prepare("DELETE FROM topics WHERE id = ?").bind(fd.get("id")).run();
@@ -645,19 +831,47 @@ async function handleDeleteContent(request: Request, env: Env) {
 
 async function handleCreateQuestion(request: Request, env: Env) {
   const fd = await request.formData();
-  const type = fd.get("type") as string;
+  const type = fd.get("type") as QuestionRow["type"];
+  const sourceLabel = fd.get("source_label")?.toString().trim();
+  if (["board", "versity", "college"].includes(type) && !sourceLabel) {
+    return new Response("Source name required for board, versity, or college questions.", { status: 400 });
+  }
   let options = null;
   if(type === 'mcq') {
     options = JSON.stringify({
       A: fd.get("option_a"), B: fd.get("option_b"), C: fd.get("option_c"), D: fd.get("option_d")
     });
   }
-  await env.DB.prepare("INSERT INTO questions (chapter_id, type, question, options, answer, created_at) VALUES (?,?,?,?,?,?)")
-    .bind(fd.get("chapter_id"), type, fd.get("question"), options, fd.get("answer"), new Date().toISOString()).run();
-  return redirect(`/admin/questions/view?chapter_id=${fd.get("chapter_id")}&type=${type}`);
+  const answerType = (fd.get("answer_type")?.toString() || "text") as QuestionRow["answer_type"];
+  const answerMedia = fd.get("answer_media")?.toString().trim() || null;
+  await env.DB.prepare(`
+    INSERT INTO questions (chapter_id, topic_id, type, source_label, question, options, answer, answer_type, answer_media, created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?)
+  `).bind(
+    fd.get("chapter_id"),
+    fd.get("topic_id") || null,
+    type,
+    sourceLabel || null,
+    fd.get("question"),
+    options,
+    fd.get("answer"),
+    answerType,
+    answerMedia,
+    new Date().toISOString()
+  ).run();
+  const params = new URLSearchParams({ chapter_id: fd.get("chapter_id") as string });
+  const topicId = fd.get("topic_id");
+  if (topicId) params.set("topic_id", topicId.toString());
+  if (type) params.set("type", type.toString());
+  return redirect(`/admin/questions/view?${params.toString()}`);
 }
 async function handleDeleteQuestion(request: Request, env: Env) {
   const fd = await request.formData();
   await env.DB.prepare("DELETE FROM questions WHERE id = ?").bind(fd.get("id")).run();
-  return redirect(`/admin/questions/view?chapter_id=${fd.get("chapter_id")}&type=${fd.get("type")}`);
+  const type = fd.get("type");
+  const topicId = fd.get("topic_id");
+  const params = new URLSearchParams({ chapter_id: fd.get("chapter_id") as string });
+  if (topicId) params.set("topic_id", topicId.toString());
+  if (type) params.set("type", type.toString());
+  return redirect(`/admin/questions/view?${params.toString()}`);
 }
