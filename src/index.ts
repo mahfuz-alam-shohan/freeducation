@@ -18,6 +18,19 @@ type AnswerPayload = {
   answer_text?: string;
 };
 
+type ContentDashboardFilters = {
+  release_id: string;
+  grade_id?: string;
+  subject_id?: string;
+  coordinator_id?: string;
+};
+
+type DashboardLimits = {
+  approvals: number;
+  reviews: number;
+  timeline: number;
+};
+
 const jsonResponse = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -35,6 +48,11 @@ const parseJson = async (request: Request) => {
 const normalizeAnswer = (value: string) => value.trim().toLowerCase();
 
 const ensureArray = (value: unknown) => (Array.isArray(value) ? value : []);
+
+const parseLimit = (value: string | null, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+};
 
 const buildFilters = (filters: PracticeTestFilters) => {
   const conditions: string[] = ["cqs.release_id = ?"];
@@ -72,6 +90,220 @@ const buildFilters = (filters: PracticeTestFilters) => {
   }
 
   return { conditions, params };
+};
+
+const buildContentDashboardFilters = (filters: ContentDashboardFilters) => {
+  const conditions: string[] = ["ci.release_id = ?"];
+  const params: unknown[] = [filters.release_id];
+
+  if (filters.grade_id) {
+    conditions.push("g.id = ?");
+    params.push(filters.grade_id);
+  }
+
+  if (filters.subject_id) {
+    conditions.push("s.id = ?");
+    params.push(filters.subject_id);
+  }
+
+  if (filters.coordinator_id) {
+    conditions.push("ci.owner_id = ?");
+    params.push(filters.coordinator_id);
+  }
+
+  return { conditions, params };
+};
+
+const buildWhereClause = (conditions: string[]) =>
+  conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+const fetchContentDashboard = async (
+  db: D1Database,
+  filters: ContentDashboardFilters,
+  limits: DashboardLimits
+) => {
+  const { conditions, params } = buildContentDashboardFilters(filters);
+  const baseJoin = `
+    FROM content_items ci
+    LEFT JOIN chapters ch ON ci.chapter_id = ch.id
+    LEFT JOIN subjects s ON ch.subject_id = s.id
+    LEFT JOIN grades g ON s.grade_id = g.id
+  `;
+  const whereClause = buildWhereClause(conditions);
+
+  const statusRows = await db
+    .prepare(
+      `
+      SELECT ci.status, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY ci.status
+      ORDER BY ci.status
+      `
+    )
+    .bind(...params)
+    .all<{ status: string; count: number }>();
+
+  const typeRows = await db
+    .prepare(
+      `
+      SELECT ci.type, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY ci.type
+      ORDER BY count DESC
+      `
+    )
+    .bind(...params)
+    .all<{ type: string; count: number }>();
+
+  const approvalsConditions = [...conditions, "ci.status = ?"];
+  const approvalsWhere = buildWhereClause(approvalsConditions);
+  const approvalsRows = await db
+    .prepare(
+      `
+      SELECT ci.id, ci.title, ci.type, ci.status, ci.updated_at, ci.owner_id,
+             ch.name AS chapter_name, s.name AS subject_name, g.name AS grade_name
+      ${baseJoin}
+      ${approvalsWhere}
+      ORDER BY ci.updated_at DESC
+      LIMIT ?
+      `
+    )
+    .bind(...params, "approved", limits.approvals)
+    .all<{
+      id: string;
+      title: string;
+      type: string;
+      status: string;
+      updated_at: string;
+      owner_id: string | null;
+      chapter_name: string | null;
+      subject_name: string | null;
+      grade_name: string | null;
+    }>();
+
+  const reviewConditions = [...conditions, "ci.status = ?"];
+  const reviewWhere = buildWhereClause(reviewConditions);
+  const reviewRows = await db
+    .prepare(
+      `
+      SELECT ci.id, ci.title, ci.type, ci.status, ci.updated_at, ci.owner_id,
+             ch.name AS chapter_name, s.name AS subject_name, g.name AS grade_name
+      ${baseJoin}
+      ${reviewWhere}
+      ORDER BY ci.updated_at DESC
+      LIMIT ?
+      `
+    )
+    .bind(...params, "review", limits.reviews)
+    .all<{
+      id: string;
+      title: string;
+      type: string;
+      status: string;
+      updated_at: string;
+      owner_id: string | null;
+      chapter_name: string | null;
+      subject_name: string | null;
+      grade_name: string | null;
+    }>();
+
+  const gradeWhere = buildWhereClause([...conditions, "g.id IS NOT NULL"]);
+  const gradeRows = await db
+    .prepare(
+      `
+      SELECT g.id AS grade_id, g.name AS grade_name, g.sequence AS grade_sequence, COUNT(*) AS count
+      ${baseJoin}
+      ${gradeWhere}
+      GROUP BY g.id, g.name, g.sequence
+      ORDER BY g.sequence
+      `
+    )
+    .bind(...params)
+    .all<{ grade_id: string; grade_name: string; grade_sequence: number; count: number }>();
+
+  const subjectWhere = buildWhereClause([...conditions, "s.id IS NOT NULL"]);
+  const subjectRows = await db
+    .prepare(
+      `
+      SELECT s.id AS subject_id, s.name AS subject_name, COUNT(*) AS count
+      ${baseJoin}
+      ${subjectWhere}
+      GROUP BY s.id, s.name
+      ORDER BY count DESC
+      `
+    )
+    .bind(...params)
+    .all<{ subject_id: string; subject_name: string; count: number }>();
+
+  const coordinatorWhere = buildWhereClause([...conditions, "ci.owner_id IS NOT NULL"]);
+  const coordinatorRows = await db
+    .prepare(
+      `
+      SELECT ci.owner_id AS coordinator_id, COUNT(*) AS count
+      ${baseJoin}
+      ${coordinatorWhere}
+      GROUP BY ci.owner_id
+      ORDER BY count DESC
+      `
+    )
+    .bind(...params)
+    .all<{ coordinator_id: string; count: number }>();
+
+  const timelineWhere = buildWhereClause(conditions);
+  const timelineRows = await db
+    .prepare(
+      `
+      SELECT logs.id, logs.content_item_id, logs.action, logs.actor_id,
+             logs.from_status, logs.to_status, logs.created_at,
+             ci.title, ci.type, s.name AS subject_name, g.name AS grade_name
+      FROM content_item_audit_logs logs
+      JOIN content_items ci ON ci.id = logs.content_item_id
+      LEFT JOIN chapters ch ON ci.chapter_id = ch.id
+      LEFT JOIN subjects s ON ch.subject_id = s.id
+      LEFT JOIN grades g ON s.grade_id = g.id
+      ${timelineWhere}
+      ORDER BY logs.created_at DESC
+      LIMIT ?
+      `
+    )
+    .bind(...params, limits.timeline)
+    .all<{
+      id: string;
+      content_item_id: string;
+      action: string;
+      actor_id: string | null;
+      from_status: string | null;
+      to_status: string | null;
+      created_at: string;
+      title: string;
+      type: string;
+      subject_name: string | null;
+      grade_name: string | null;
+    }>();
+
+  return jsonResponse({
+    filters,
+    content_status: {
+      by_status: statusRows.results ?? [],
+      by_type: typeRows.results ?? [],
+    },
+    approvals: {
+      total: approvalsRows.results?.length ?? 0,
+      items: approvalsRows.results ?? [],
+    },
+    pending_reviews: {
+      total: reviewRows.results?.length ?? 0,
+      items: reviewRows.results ?? [],
+    },
+    analytics: {
+      by_grade: gradeRows.results ?? [],
+      by_subject: subjectRows.results ?? [],
+      by_coordinator: coordinatorRows.results ?? [],
+    },
+    activity_timeline: timelineRows.results ?? [],
+  });
 };
 
 const selectQuestionsForPracticeTest = async (
@@ -407,6 +639,25 @@ export default {
         return jsonResponse({ error: "Invalid JSON payload" }, 400);
       }
       return createPracticeTest(env.DB, payload as Record<string, unknown>);
+    }
+
+    if (request.method === "GET" && pathname === "/dashboard/content") {
+      const releaseId = url.searchParams.get("release_id");
+      if (!releaseId) {
+        return jsonResponse({ error: "release_id is required" }, 400);
+      }
+      const filters: ContentDashboardFilters = {
+        release_id: releaseId,
+        grade_id: url.searchParams.get("grade_id") ?? undefined,
+        subject_id: url.searchParams.get("subject_id") ?? undefined,
+        coordinator_id: url.searchParams.get("coordinator_id") ?? undefined,
+      };
+      const limits: DashboardLimits = {
+        approvals: parseLimit(url.searchParams.get("approval_limit"), 12),
+        reviews: parseLimit(url.searchParams.get("review_limit"), 12),
+        timeline: parseLimit(url.searchParams.get("timeline_limit"), 20),
+      };
+      return fetchContentDashboard(env.DB, filters, limits);
     }
 
     const attemptMatch = pathname.match(/^\/practice-tests\/([^/]+)\/attempts\/?$/);
