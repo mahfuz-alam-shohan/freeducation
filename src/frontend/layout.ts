@@ -1,3 +1,7 @@
+import { landingHeaderComponent } from "./components/header";
+import { navBarComponent } from "./components/navbar";
+import { classSidebarComponent } from "./components/sidebar";
+
 export function renderAppHtml(initialView: string) {
   return `
 <!DOCTYPE html>
@@ -92,6 +96,11 @@ export function renderAppHtml(initialView: string) {
             );
         };
 
+        // --- LAYOUT COMPONENTS ---
+${navBarComponent}
+${landingHeaderComponent}
+${classSidebarComponent}
+
         // --- MAIN APP CONTAINER ---
 
         function App() {
@@ -144,28 +153,7 @@ export function renderAppHtml(initialView: string) {
             return (
                 <div className="min-h-screen flex flex-col">
                     {/* Navigation Bar */}
-                    <nav className="glass-panel sticky top-0 z-40 border-b border-gray-200 shadow-sm">
-                        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
-                                <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold font-serif text-2xl shadow-lg">F</div>
-                                <span className="font-bold text-2xl tracking-tight text-gray-800 font-serif">Freeducation</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                {user ? (
-                                    <Button variant="ghost" onClick={() => setView('admin')}>
-                                        <i className="fas fa-columns mr-2"></i> Dashboard
-                                    </Button>
-                                ) : (
-                                    <button 
-                                        onClick={() => setView(hasAdmin ? 'login' : 'register')} 
-                                        className="text-sm font-medium text-gray-500 hover:text-blue-600 transition"
-                                    >
-                                        {hasAdmin ? 'Staff Login' : 'System Setup'}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </nav>
+                    <NavBar user={user} hasAdmin={hasAdmin} onNavigate={setView} />
 
                     {/* Main Content Area */}
                     <main className="flex-grow bg-gray-50">
@@ -210,41 +198,11 @@ export function renderAppHtml(initialView: string) {
             return (
                 <div className="animate-fade-in">
                     {/* Hero Section */}
-                    <div className="bg-blue-600 text-white py-24 px-4 text-center relative overflow-hidden">
-                         {/* FIXED: Removed extra curly brace inside the className */}
-                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                         <div className="relative z-10 max-w-4xl mx-auto">
-                            <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6 drop-shadow-md">Learn Without Limits.</h1>
-                            <p className="text-xl md:text-2xl text-blue-100 mb-10 font-light max-w-2xl mx-auto">
-                                High-quality notes, question banks, and resources for every student in Bangladesh.
-                            </p>
-                            
-                            {/* Search Bar */}
-                            <div className="max-w-xl mx-auto relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <i className="fas fa-search text-gray-400 group-focus-within:text-blue-500 transition"></i>
-                                </div>
-                                <input 
-                                    className="w-full py-4 pl-12 pr-6 rounded-full text-gray-800 shadow-xl focus:ring-4 focus:ring-blue-400/50 outline-none text-lg transition" 
-                                    placeholder="Search topics, chapters, or subjects..." 
-                                    value={searchQuery} 
-                                    onChange={e => setSearchQuery(e.target.value)} 
-                                />
-                                {searchResults.length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 bg-white rounded-xl shadow-2xl mt-3 overflow-hidden text-left z-20 border border-gray-100">
-                                        {searchResults.map((res, idx) => (
-                                            <div key={idx} className="p-4 hover:bg-gray-50 border-b last:border-0 cursor-pointer flex items-center justify-between group/item">
-                                                <span className="font-medium text-gray-700">{res.title}</span>
-                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-100 px-2 py-1 rounded group-hover/item:bg-blue-100 group-hover/item:text-blue-600 transition">
-                                                    {res.type}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                         </div>
-                    </div>
+                    <LandingHeader
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        searchResults={searchResults}
+                    />
 
                     {/* Class Browser */}
                     <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-20 pb-20">
@@ -324,32 +282,12 @@ export function renderAppHtml(initialView: string) {
 
                     <div className="flex flex-col md:flex-row gap-8">
                         {/* Sidebar: Groups */}
-                        <div className="w-full md:w-72 flex-shrink-0">
-                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
-                                <h3 className="font-bold text-gray-900 mb-1 text-lg">{cls.name}</h3>
-                                <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider">Filter by Group</p>
-                                
-                                <div className="space-y-2">
-                                    <button 
-                                        onClick={() => setSelectedGroupId(null)}
-                                        className={\`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition flex justify-between items-center \${selectedGroupId === null ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}\`}
-                                    >
-                                        Common / All
-                                        {selectedGroupId === null && <i className="fas fa-check"></i>}
-                                    </button>
-                                    {groups.map(g => (
-                                        <button 
-                                            key={g.id}
-                                            onClick={() => setSelectedGroupId(g.id)}
-                                            className={\`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition flex justify-between items-center \${selectedGroupId === g.id ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}\`}
-                                        >
-                                            {g.name}
-                                            {selectedGroupId === g.id && <i className="fas fa-check"></i>}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        <ClassSidebar
+                            cls={cls}
+                            groups={groups}
+                            selectedGroupId={selectedGroupId}
+                            onSelectGroup={setSelectedGroupId}
+                        />
 
                         {/* Main Grid: Subjects */}
                         <div className="flex-1">
