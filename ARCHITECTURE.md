@@ -53,15 +53,48 @@ Key goals:
 - Catalog of resources (titles, subjects, grades, tags)
 - Content discovery, search, and metadata
 - Delivery of PDFs/ebooks/notes via R2
+- Submission intake, review workflow, and publishing lifecycle
 
 **Data ownership**:
-- **D1 tables**: `content_items`, `content_tags`, `content_categories`, `content_versions`
-- **R2 buckets**: `content-assets`
+- **D1 tables**: `content_items`, `content_tags`, `content_categories`, `content_versions`, `content_submissions`, `content_reviews`
+- **R2 buckets**: `content-assets` (source files and published binaries)
 
 **Interfaces**:
 - `GET /content` (list)
 - `GET /content/:id` (metadata)
 - `GET /content/:id/download` (signed URL)
+- `POST /content/submit` (teacher/coordinator upload)
+- `GET /content/review/queue` (reviewer queue)
+- `POST /content/:id/publish` (promote reviewed submission)
+
+### Content Submission & Review Workflow
+**Submission flow (teacher/coordinator upload)**:
+1. **Upload initiation**: Teacher/coordinator calls `POST /content/submit` with metadata (title, subject, grade, tags, curriculum release) and file info.
+2. **File storage**: Worker issues a signed R2 upload URL; client uploads the file to `content-assets` with a `submission/{submission_id}/original` key.
+3. **Metadata persistence**: Worker creates a `content_submissions` record in D1 with `status = submitted`, `submitted_by`, `r2_key`, and metadata snapshot.
+4. **Acknowledgement**: API returns submission id and review queue status.
+
+**Review queues**:
+- **Queues by status** in D1 (`submitted`, `in_review`, `changes_requested`, `approved`, `rejected`, `published`).
+- Reviewers query `GET /content/review/queue?status=submitted` to pull the next items.
+- Review actions write to `content_reviews` with reviewer id, decision, notes, and timestamps.
+- Queue transitions are performed atomically in D1 to avoid double-claiming (e.g., `submitted` → `in_review` with a reviewer lock).
+
+**Content validation**:
+- **Automated checks** on ingestion: file type/size, virus scan hook, required metadata, curriculum alignment, and duplicate detection (hash + title/grade).
+- **Schema validation**: Metadata is validated against required fields and enums before a submission is accepted.
+- **Manual checks** in review: formatting quality, correctness, copyright/licensing, and pedagogical alignment.
+- Validation failures update `content_submissions.status = changes_requested` with reviewer notes.
+
+**Version history & publishing**:
+- Approved submissions create a new row in `content_versions`, linked to `content_items`.
+- Publishing promotes the latest approved version to `content_items.current_version_id`.
+- Each version stores `r2_key`, checksum, and `published_at` timestamp.
+- Older versions remain addressable for rollback or audit, and versioned download URLs are supported.
+
+**Storage**:
+- **R2** stores binaries for both submissions and published versions (versioned keys).
+- **D1** stores all metadata, review history, and version lineage.
 
 ### Curriculum Data Model
 **Core entities**:
