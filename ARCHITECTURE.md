@@ -15,6 +15,27 @@ Key goals:
 - **Edge Auth**: JWT validation, session lookups, and rate limiting performed at the edge.
 - **Cache API**: Used for aggressive caching of read-heavy endpoints.
 
+### Governance & Safety
+- **Edge rate limiting (Workers)**:
+  - **Buckets**: per-IP, per-user, and per-org limits enforced at the edge for every request; limits are additive and the strictest bucket wins.
+  - **Anonymous vs authenticated**: anonymous traffic is constrained to lower per-IP thresholds and reduced burst capacity; authenticated traffic uses per-user + per-org buckets with higher steady-state limits.
+  - **Exam-window bursts**: during configured exam windows, read endpoints allow a larger short-term burst (e.g., 2–3x token bucket size) while write endpoints keep normal limits to protect D1.
+  - **Abuse controls**: repeated 429s trigger short-lived edge bans (per-IP) and can flag accounts/orgs for moderation review.
+- **Moderation workflow (content submissions)**:
+  - **Automated checks on ingestion**: file type/size, malware scan, metadata completeness, curriculum release validity, and duplicate detection (hash + title/grade) before `content_submissions.status = submitted`.
+  - **Human review triggers**: automated failures, policy keywords, high-risk file types, repeat submitter offenses, or user reports create `content_reviews` entries with `flag_reason` and move items to `in_review`.
+  - **Escalation**: reviewers can escalate to a safety queue for suspected copyright, harassment, or exam integrity issues; escalations block publishing until resolved.
+  - **Outcomes**: `approved`, `changes_requested`, or `rejected` decisions are persisted with reviewer notes and timestamps for audit.
+- **Abuse reporting flow**:
+  - **Entry point**: `POST /abuse/report` accepts content id, reporter id (optional), category, free-text, and evidence URLs.
+  - **Storage**: reports persist in D1 (`abuse_reports`) with status (`new`, `triaged`, `actioned`, `dismissed`), links to `content_items`/`content_submissions`, and reviewer notes.
+  - **Triage ownership**: Trust & Safety owns intake and assigns to content reviewers or legal/compliance as needed; actioned reports can lock content from publishing.
+- **Data retention**:
+  - **User submissions**: accepted submissions and published versions are retained for the lifetime of the curriculum release; rejected or withdrawn submissions are retained for 180 days, then hard-deleted from R2 and D1.
+  - **Moderation artifacts**: `content_reviews`, flags, and abuse reports are retained for 2 years for auditability; escalations retain linked evidence for the same window.
+  - **Logs**: request logs and rate-limit events retained for 30 days; security/audit logs retained for 180 days.
+  - **Deletion policy**: deletes cascade to related objects (e.g., `content_submissions` → R2 keys, review artifacts); curriculum releases follow the retention rules defined in `schema/curriculum.sql` (no destructive deletes for active/archived releases).
+
 ### D1 (SQLite)
 - **Structured data**: Users, assessments, metadata, access control, and content catalog.
 - **Transactional integrity** for assessment submissions and user preferences.
