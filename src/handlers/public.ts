@@ -2,24 +2,15 @@ import type { Bindings } from '../types';
 import { publicLayout, escapeHtml } from '../templates/layout';
 import { dbAll, dbFirst } from '../utils/db';
 
-// Safely parse JSON to avoid crashes
-const safeJSON = (str: string | null) => {
-  if (!str) return [];
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return [];
-  }
-};
+const safeJSON = (str: string | null) => { try { return str ? JSON.parse(str) : []; } catch { return []; } };
 
 export const renderHome = async (env: Bindings) => {
   const classes = await dbAll(env, 'SELECT * FROM classes ORDER BY id');
-  
   const body = `
     <div style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color:white; padding:4rem 0; text-align:center;">
       <div class="container">
         <h1 style="font-size:2.5rem; margin-bottom:1rem; font-family: var(--font-bn);">Master Your Curriculum</h1>
-        <p style="font-size:1.2rem; opacity:0.9; max-width:600px; margin:0 auto;">Free access to notes, creative questions, and board papers for Bangladeshi students.</p>
+        <p style="font-size:1.2rem; opacity:0.9; max-width:600px; margin:0 auto;">Free access to notes, creative questions, and board papers.</p>
       </div>
     </div>
     <div class="container" style="margin-top:-2rem;">
@@ -32,6 +23,7 @@ export const renderHome = async (env: Bindings) => {
           </a>
         `).join('')}
       </div>
+      ${classes.length === 0 ? '<p class="text-center" style="margin-top:2rem;">No classes found.</p>' : ''}
     </div>
   `;
   return publicLayout('Home', body);
@@ -42,7 +34,6 @@ export const renderClass = async (env: Bindings, id: number) => {
   if (!cls) return publicLayout('Not Found', '<div class="container">Class not found</div>');
   
   const subjects = await dbAll(env, 'SELECT * FROM subjects WHERE class_id=?', id);
-  
   const body = `
     <div class="container" style="padding:2rem 1rem;">
       <h2>${escapeHtml(cls.name)} <span class="text-muted" style="font-size:1rem;">Subjects</span></h2>
@@ -73,7 +64,6 @@ export const renderSubject = async (env: Bindings, id: number) => {
         <span class="badge badge-blue">Subject</span>
         <h1>${escapeHtml(sub.name)}</h1>
       </div>
-      
       <div class="grid-2">
         <div>
           <h3 style="margin-bottom:1rem;">Chapters</h3>
@@ -89,7 +79,6 @@ export const renderSubject = async (env: Bindings, id: number) => {
             `).join('')}
           </div>
         </div>
-        
         <div>
           <h3 style="margin-bottom:1rem;">Downloads</h3>
           <div class="card stack">
@@ -113,8 +102,12 @@ export const renderChapter = async (env: Bindings, id: number) => {
   if (!chapter) return publicLayout('Not Found', '<div class="container">Chapter not found</div>');
   
   const topics = await dbAll(env, 'SELECT * FROM topics WHERE chapter_id=? ORDER BY order_index', id);
-  const contents = await dbAll(env, `SELECT * FROM contents WHERE topic_id IN (SELECT id FROM topics WHERE chapter_id=?)`, id);
-  const questions = await dbAll(env, 'SELECT * FROM questions WHERE chapter_id=?', id);
+  // Safe handling if 'contents' table or columns missing
+  let contents: any[] = [];
+  try { contents = await dbAll(env, `SELECT * FROM contents WHERE topic_id IN (SELECT id FROM topics WHERE chapter_id=?)`, id); } catch(e) {}
+  
+  let questions: any[] = [];
+  try { questions = await dbAll(env, 'SELECT * FROM questions WHERE chapter_id=?', id); } catch(e) {}
 
   const body = `
     <div class="container" style="padding:2rem 1rem;">
@@ -130,12 +123,11 @@ export const renderChapter = async (env: Bindings, id: number) => {
              <div id="topic-${t.id}" style="margin-bottom:3rem;">
                <h2 style="border-bottom:2px solid var(--slate-200); padding-bottom:0.5rem; margin-bottom:1.5rem;">${escapeHtml(t.title)}</h2>
                ${topicContents.map((c:any) => `
-                 <div class="content-block ${c.type}">
+                 <div class="content-block ${c.type || 'explanation'}">
                    ${c.type==='short_qa' ? '<strong>📌 Short Q: </strong>' : ''}
                    ${c.body} 
                  </div>
                `).join('')}
-               ${topicContents.length === 0 ? '<p class="text-muted">No detailed notes added yet.</p>' : ''}
              </div>
            `;
         }).join('')}
@@ -147,7 +139,7 @@ export const renderChapter = async (env: Bindings, id: number) => {
           <div class="grid-2">
              ${questions.map((q:any) => `
                <div class="card">
-                 <div class="badge ${q.type==='mcq'?'badge-blue':'badge-orange'}">${q.type.toUpperCase()}</div>
+                 <div class="badge ${q.type==='mcq'?'badge-blue':'badge-orange'}">${(q.type||'').toUpperCase()}</div>
                  <div style="font-weight:600; margin-top:0.5rem;">${escapeHtml(q.question_text)}</div>
                  ${q.type === 'mcq' ? `<div class="text-muted" style="margin-top:0.5rem; font-size:0.9rem;">${safeJSON(q.options_json).map((o:string, i:number)=>`<div>${String.fromCharCode(65+i)}) ${escapeHtml(o)}</div>`).join('')}</div>` : ''}
                  <details style="margin-top:1rem; cursor:pointer;">
@@ -166,5 +158,3 @@ export const renderChapter = async (env: Bindings, id: number) => {
   `;
   return publicLayout(chapter.name, body);
 };
-
-
