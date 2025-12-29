@@ -3,23 +3,23 @@ export const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
 
 :root {
-  --primary: #1f8d5d;
-  --primary-dark: #136b45;
-  --primary-bg: #e8f6ee;
-  --bg-body: #f2f6f4;
+  --primary: #2d7ff9;
+  --primary-dark: #1f5ec7;
+  --primary-bg: #e7f0ff;
+  --bg-body: #eef2f8;
   --bg-card: #ffffff;
-  --bg-surface: #f9fbfa;
-  --text-main: #0f1c16;
-  --text-secondary: #4f5b55;
-  --text-muted: #778078;
-  --separator: #d7e0db;
-  --separator-light: #e8eeeb;
+  --bg-surface: #f7f9fc;
+  --text-main: #0b1421;
+  --text-secondary: #4a5563;
+  --text-muted: #7a8596;
+  --separator: #d9e2ef;
+  --separator-light: #e7edf6;
   --danger: #d6453a;
   --success: #2e9b57;
-  --radius: 16px;
-  --nav-h: 64px;
-  --shadow-soft: 0 12px 30px rgba(15, 28, 22, 0.08);
-  --shadow-card: 0 10px 24px rgba(15, 28, 22, 0.06);
+  --radius: 18px;
+  --nav-h: 68px;
+  --shadow-soft: 0 18px 40px rgba(7, 18, 43, 0.08);
+  --shadow-card: 0 12px 28px rgba(7, 18, 43, 0.06);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -27,11 +27,10 @@ export const CSS = `
 body {
   margin: 0;
   font-family: "Hind Siliguri", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background: linear-gradient(180deg, #f4f8f6 0%, #eef3f1 100%);
+  background: var(--bg-body);
   color: var(--text-main);
   font-size: 16px;
   line-height: 1.55;
-  padding-bottom: calc(var(--nav-h) + 20px);
 }
 
 a { text-decoration: none; color: inherit; }
@@ -42,16 +41,19 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 18px 16px 110px;
+  padding: 18px 16px;
 }
 
 .app-frame {
   width: min(980px, 100%);
   background: var(--bg-surface);
-  border-radius: 24px;
+  border-radius: 26px;
   box-shadow: var(--shadow-soft);
   overflow: hidden;
-  border: 1px solid rgba(15, 28, 22, 0.04);
+  border: 1px solid rgba(7, 18, 43, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 82vh;
 }
 
 .app-header {
@@ -62,9 +64,13 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
+  background: var(--bg-card);
   border-bottom: 1px solid var(--separator-light);
+}
+
+.app-body {
+  flex: 1;
+  background: var(--bg-surface);
 }
 
 .brand {
@@ -81,9 +87,9 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top, #2ab878 0%, var(--primary) 60%, var(--primary-dark) 100%);
+  background: radial-gradient(circle at top left, #6fd6ff 0%, var(--primary) 55%, var(--primary-dark) 100%);
   color: white;
-  box-shadow: 0 10px 24px rgba(31, 141, 93, 0.3);
+  box-shadow: 0 12px 24px rgba(45, 127, 249, 0.35);
 }
 
 .brand-title {
@@ -465,6 +471,27 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   line-height: 1.45;
 }
 
+.order-chip {
+  min-width: 54px;
+  padding: 6px 10px;
+  margin-right: 12px;
+  border-radius: 999px;
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+}
+
+.order-chip span {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 .empty-state {
   padding: 16px;
   text-align: center;
@@ -494,11 +521,10 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 
 /* --- Bottom Nav --- */
 .bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-top: 0.5px solid var(--separator);
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--separator-light);
   display: flex;
   justify-content: space-around;
   padding-bottom: env(safe-area-inset-bottom);
@@ -520,7 +546,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 .nav-item svg { width: 24px; height: 24px; }
 
 @media (max-width: 900px) {
-  .app-shell { padding: 12px 10px 100px; }
+  .app-shell { padding: 12px 10px; }
   .app-frame { border-radius: 20px; }
   .app-header { padding: 16px 16px; }
   .container { padding: 1.1rem 1rem 2rem; }
@@ -528,8 +554,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 
 @media (max-width: 640px) {
-  body { padding-bottom: calc(var(--nav-h) + 8px); }
-  .app-shell { padding: 10px 8px 92px; }
+  .app-shell { padding: 10px 8px; }
   .app-frame {
     border-radius: 18px;
     box-shadow: 0 16px 30px rgba(15, 28, 22, 0.12);
@@ -574,10 +599,9 @@ export const SCRIPTS = `
 export function renderPage(title: string, content: string, activeTab: string, user?: { name: string }, breadcrumbs?: string): Response {
   const logoMark = `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 6h9a4 4 0 0 1 4 4v10a3 3 0 0 0-3-3H4z"></path>
-      <path d="M20 6h-4a3 3 0 0 0-3 3v11"></path>
-      <path d="M8 4v2"></path>
-      <path d="M12 4v2"></path>
+      <path d="M4 8l8-4 8 4-8 4-8-4z"></path>
+      <path d="M8 12v4.5c0 .9 3.2 2.5 4 2.5s4-1.6 4-2.5V12"></path>
+      <path d="M4 8v5c0 2.5 4 4.5 8 4.5"></path>
     </svg>
   `;
   const navItems = [
@@ -609,24 +633,25 @@ export function renderPage(title: string, content: string, activeTab: string, us
           ${user ? `<span class="user-chip">${user.name}</span>` : `<span class="user-chip">Admin Console</span>`}
         </div>
       </header>
-      <div class="container">
-        ${breadcrumbs ? `<div class="breadcrumbs">${breadcrumbs}</div>` : ''}
-        ${content}
+      <div class="app-body">
+        <div class="container">
+          ${breadcrumbs ? `<div class="breadcrumbs">${breadcrumbs}</div>` : ''}
+          ${content}
+        </div>
       </div>
+      ${user ? `
+        <nav class="bottom-nav">
+          ${navItems.map(i => `
+            <a href="${i.href}" class="nav-item ${activeTab === i.id ? 'active' : ''}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.icon}</svg>
+              <span>${i.label}</span>
+            </a>
+          `).join('')}
+        </nav>
+      ` : ''}
     </div>
   </div>
 
-  ${user ? `
-    <nav class="bottom-nav">
-      ${navItems.map(i => `
-        <a href="${i.href}" class="nav-item ${activeTab === i.id ? 'active' : ''}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.icon}</svg>
-          <span>${i.label}</span>
-        </a>
-      `).join('')}
-    </nav>
-  ` : ''}
-  
   ${SCRIPTS}
 </body>
 </html>`, { headers: { "Content-Type": "text/html" } });
