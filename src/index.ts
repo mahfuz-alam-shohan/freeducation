@@ -4,11 +4,13 @@ import { ensureSchema, hasAnyAdmin } from './db/schema';
 import {
   handleCreateChapter,
   handleCreateClass,
+  handleCreateResource,
   handleCreateSubject,
   handleCreateTopic,
   handleDeleteChapter,
   handleDeleteClass,
   handleDeleteFile,
+  handleDeleteResource,
   handleDeleteSubject,
   handleDeleteTopic,
   handleLogin,
@@ -18,7 +20,6 @@ import {
   handleUpdateSubject,
   handleUpdateTopic,
   handleUploadFile,
-  renderChapters,
   renderClasses,
   renderDashboard,
   renderEditChapter,
@@ -28,6 +29,7 @@ import {
   renderFiles,
   renderLogin,
   renderSetup,
+  renderSubjectDashboard,
   renderSubjects,
   renderTopics,
   requireAdmin
@@ -38,19 +40,11 @@ import { clearSession, getCookie } from './utils/auth';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// --- ERROR HANDLING & MIDDLEWARE ---
 app.onError((err, c) => {
   const message = err instanceof Error ? err.message : String(err);
-  const stack = err instanceof Error ? err.stack : undefined;
-  console.error('Unhandled error', {
-    method: c.req.method,
-    path: c.req.path,
-    message,
-    stack
-  });
-  const body = stack
-    ? `Internal Server Error\n\n${message}\n\n${stack}`
-    : `Internal Server Error\n\n${message}`;
-  return c.text(body, 500);
+  console.error('Error:', message);
+  return c.text(`Internal Server Error: ${message}`, 500);
 });
 
 app.use('*', async (c, next) => {
@@ -58,6 +52,7 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+// --- PUBLIC ASSETS & ROUTES ---
 app.get('/styles.css', (c) => {
   return c.text(styles, 200, { 'Content-Type': 'text/css' });
 });
@@ -87,6 +82,7 @@ app.get('/topic/:id', async (c) => {
   return c.html(html);
 });
 
+// File Downloader (Binary)
 app.get('/files/:id', async (c) => {
   const fileId = Number(c.req.param('id'));
   const file = await c.env.DB.prepare(
@@ -94,13 +90,11 @@ app.get('/files/:id', async (c) => {
   )
     .bind(fileId)
     .first<{ title: string; r2_key: string; mime_type: string | null }>();
-  if (!file) {
-    return c.text('File not found', 404);
-  }
+  if (!file) return c.text('File not found', 404);
+  
   const object = await c.env.BUCKET.get(file.r2_key);
-  if (!object) {
-    return c.text('File not found in storage', 404);
-  }
+  if (!object) return c.text('File content missing', 404);
+  
   return new Response(object.body, {
     headers: {
       'Content-Type': file.mime_type || 'application/octet-stream',
@@ -109,6 +103,26 @@ app.get('/files/:id', async (c) => {
   });
 });
 
+// Resource Viewer (PDF/Inline)
+app.get('/resource/:id', async (c) => {
+  const id = Number(c.req.param('id'));
+  const res = await c.env.DB.prepare('SELECT title, r2_key, mime_type FROM resources WHERE id = ?').bind(id).first<{title:string, r2_key:string, mime_type:string}>();
+  if(!res) return c.text('Resource not found', 404);
+  
+  const object = await c.env.BUCKET.get(res.r2_key);
+  if(!object) return c.text('Resource content missing', 404);
+
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': res.mime_type || 'application/pdf',
+      'Content-Disposition': `inline; filename="${res.title}"` // "inline" allows browser preview
+    }
+  });
+});
+
+// --- ADMIN ROUTES ---
+
+// Admin Entry Check
 app.get('/admin', async (c) => {
   const { admin } = await requireAdmin(c.env, c.req.raw);
   if (!admin) {
@@ -120,148 +134,95 @@ app.get('/admin', async (c) => {
   return c.redirect('/admin/dashboard');
 });
 
-app.get('/admin/setup', async (c) => {
-  const html = await renderSetup(c.env);
-  return c.html(html);
-});
-
-app.post('/admin/setup', async (c) => {
-  return handleSetup(c.env, c.req.raw);
-});
-
-app.get('/admin/login', (c) => {
-  return c.html(renderLogin());
-});
-
-app.post('/admin/login', async (c) => {
-  return handleLogin(c.env, c.req.raw);
-});
-
+// Auth
+app.get('/admin/setup', async (c) => c.html(await renderSetup(c.env)));
+app.post('/admin/setup', async (c) => handleSetup(c.env, c.req.raw));
+app.get('/admin/login', (c) => c.html(renderLogin()));
+app.post('/admin/login', async (c) => handleLogin(c.env, c.req.raw));
 app.get('/admin/logout', async (c) => {
   const sessionToken = getCookie(c.req.header('Cookie') ?? null, 'session');
   await clearSession(c.env, sessionToken);
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: '/',
-      'Set-Cookie': 'session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax'
-    }
-  });
+  return c.redirect('/');
 });
 
+// Admin Middleware
 app.use('/admin/*', async (c, next) => {
   const { admin } = await requireAdmin(c.env, c.req.raw);
-  if (!admin) {
-    return c.redirect('/admin/login');
-  }
+  if (!admin) return c.redirect('/admin/login');
   c.set('admin', admin);
   await next();
 });
 
+// Dashboard
 app.get('/admin/dashboard', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderDashboard(c.env, admin.name));
 });
 
+// Classes
 app.get('/admin/classes', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderClasses(c.env, admin.name));
 });
-
-app.post('/admin/classes', async (c) => {
-  return handleCreateClass(c.env, c.req.raw);
-});
-
+app.post('/admin/classes', async (c) => handleCreateClass(c.env, c.req.raw));
 app.get('/admin/classes/:id/edit', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderEditClass(c.env, admin.name, Number(c.req.param('id'))));
 });
+app.post('/admin/classes/:id/edit', async (c) => handleUpdateClass(c.env, c.req.raw, Number(c.req.param('id'))));
+app.post('/admin/classes/:id/delete', async (c) => handleDeleteClass(c.env, Number(c.req.param('id'))));
 
-app.post('/admin/classes/:id/edit', async (c) => {
-  return handleUpdateClass(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
-app.post('/admin/classes/:id/delete', async (c) => {
-  return handleDeleteClass(c.env, Number(c.req.param('id')));
-});
-
+// Subjects
 app.get('/admin/classes/:id/subjects', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderSubjects(c.env, admin.name, Number(c.req.param('id'))));
 });
-
-app.post('/admin/classes/:id/subjects', async (c) => {
-  return handleCreateSubject(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
+app.post('/admin/classes/:id/subjects', async (c) => handleCreateSubject(c.env, c.req.raw, Number(c.req.param('id'))));
 app.get('/admin/subjects/:id/edit', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderEditSubject(c.env, admin.name, Number(c.req.param('id'))));
 });
+app.post('/admin/subjects/:id/edit', async (c) => handleUpdateSubject(c.env, c.req.raw, Number(c.req.param('id'))));
+app.post('/admin/subjects/:id/delete', async (c) => handleDeleteSubject(c.env, Number(c.req.param('id'))));
 
-app.post('/admin/subjects/:id/edit', async (c) => {
-  return handleUpdateSubject(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
-app.post('/admin/subjects/:id/delete', async (c) => {
-  return handleDeleteSubject(c.env, Number(c.req.param('id')));
-});
-
-app.get('/admin/subjects/:id/chapters', async (c) => {
+// Subject Dashboard (Chapters + Resources)
+app.get('/admin/subjects/:id/dashboard', async (c) => {
   const admin = c.get('admin') as { name: string };
-  return c.html(await renderChapters(c.env, admin.name, Number(c.req.param('id'))));
+  return c.html(await renderSubjectDashboard(c.env, admin.name, Number(c.req.param('id'))));
 });
 
-app.post('/admin/subjects/:id/chapters', async (c) => {
-  return handleCreateChapter(c.env, c.req.raw, Number(c.req.param('id')));
-});
+// Resources (New)
+app.post('/admin/subjects/:id/resources', async (c) => handleCreateResource(c.env, c.req.raw, Number(c.req.param('id'))));
+app.post('/admin/resources/:id/delete', async (c) => handleDeleteResource(c.env, Number(c.req.param('id'))));
 
+// Chapters
+app.post('/admin/subjects/:id/chapters', async (c) => handleCreateChapter(c.env, c.req.raw, Number(c.req.param('id'))));
 app.get('/admin/chapters/:id/edit', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderEditChapter(c.env, admin.name, Number(c.req.param('id'))));
 });
+app.post('/admin/chapters/:id/edit', async (c) => handleUpdateChapter(c.env, c.req.raw, Number(c.req.param('id'))));
+app.post('/admin/chapters/:id/delete', async (c) => handleDeleteChapter(c.env, Number(c.req.param('id'))));
 
-app.post('/admin/chapters/:id/edit', async (c) => {
-  return handleUpdateChapter(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
-app.post('/admin/chapters/:id/delete', async (c) => {
-  return handleDeleteChapter(c.env, Number(c.req.param('id')));
-});
-
+// Topics
 app.get('/admin/chapters/:id/topics', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderTopics(c.env, admin.name, Number(c.req.param('id'))));
 });
-
-app.post('/admin/chapters/:id/topics', async (c) => {
-  return handleCreateTopic(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
+app.post('/admin/chapters/:id/topics', async (c) => handleCreateTopic(c.env, c.req.raw, Number(c.req.param('id'))));
 app.get('/admin/topics/:id/edit', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderEditTopic(c.env, admin.name, Number(c.req.param('id'))));
 });
+app.post('/admin/topics/:id/edit', async (c) => handleUpdateTopic(c.env, c.req.raw, Number(c.req.param('id'))));
+app.post('/admin/topics/:id/delete', async (c) => handleDeleteTopic(c.env, Number(c.req.param('id'))));
 
-app.post('/admin/topics/:id/edit', async (c) => {
-  return handleUpdateTopic(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
-app.post('/admin/topics/:id/delete', async (c) => {
-  return handleDeleteTopic(c.env, Number(c.req.param('id')));
-});
-
+// Files
 app.get('/admin/topics/:id/files', async (c) => {
   const admin = c.get('admin') as { name: string };
   return c.html(await renderFiles(c.env, admin.name, Number(c.req.param('id'))));
 });
-
-app.post('/admin/topics/:id/files', async (c) => {
-  return handleUploadFile(c.env, c.req.raw, Number(c.req.param('id')));
-});
-
-app.post('/admin/files/:id/delete', async (c) => {
-  return handleDeleteFile(c.env, Number(c.req.param('id')));
-});
+app.post('/admin/topics/:id/files', async (c) => handleUploadFile(c.env, c.req.raw, Number(c.req.param('id'))));
+app.post('/admin/files/:id/delete', async (c) => handleDeleteFile(c.env, Number(c.req.param('id'))));
 
 export default app;
