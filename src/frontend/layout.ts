@@ -211,7 +211,8 @@ export function renderAppHtml(initialView: string) {
                 <div className="animate-fade-in">
                     {/* Hero Section */}
                     <div className="bg-blue-600 text-white py-24 px-4 text-center relative overflow-hidden">
-                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"}></div>
+                         {/* FIXED: Removed extra curly brace inside the className */}
+                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                          <div className="relative z-10 max-w-4xl mx-auto">
                             <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6 drop-shadow-md">Learn Without Limits.</h1>
                             <p className="text-xl md:text-2xl text-blue-100 mb-10 font-light max-w-2xl mx-auto">
