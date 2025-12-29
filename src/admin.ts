@@ -127,6 +127,7 @@ export async function handleAdminRequest(request: Request, env: Env): Promise<Re
 
   // --- Questions ---
   if (path === "/admin/questions") { if (method === "POST") return handleCreateQuestion(request, env); return redirect("/admin/classes"); }
+  if (path === "/admin/questions/cq" && method === "POST") return handleCreateCqQuestions(request, env);
   if (path === "/admin/questions/delete" && method === "POST") return handleDeleteQuestion(request, env);
   if (path === "/admin/questions/view") return renderQuestionList(session, env, url.searchParams);
 
@@ -570,6 +571,18 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
   
   const chapter = await env.DB.prepare("SELECT * FROM chapters WHERE id = ?").bind(chapterId).first<ChapterRow>();
   const topic = topicId ? await env.DB.prepare("SELECT * FROM topics WHERE id = ?").bind(topicId).first<TopicRow>() : null;
+  const subjectChapters = chapter
+    ? await env.DB.prepare("SELECT * FROM chapters WHERE subject_id = ? ORDER BY sort_order ASC, created_at ASC").bind(chapter.subject_id).all<ChapterRow>()
+    : { results: [] as ChapterRow[] };
+  const chapterIds = subjectChapters.results?.map((item) => item.id).filter(Boolean) || [];
+  let chapterTopics: TopicRow[] = [];
+  if (chapterIds.length > 0) {
+    const placeholders = chapterIds.map(() => "?").join(", ");
+    const topicsResult = await env.DB.prepare(
+      `SELECT * FROM topics WHERE chapter_id IN (${placeholders}) ORDER BY sort_order ASC, created_at ASC`
+    ).bind(...chapterIds).all<TopicRow>();
+    chapterTopics = topicsResult.results || [];
+  }
   const questions = await env.DB.prepare(`
     SELECT q.*, t.title as topic_title
     FROM questions q
@@ -586,6 +599,24 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
   
   const typeLabel = type ? QUESTION_TYPE_LABELS[type] : "All Questions";
   const breadcrumbs = `<a href="/admin/chapters/${chapterId}">${chapter?.name}</a>${topic ? ` / <a href="/admin/topics/${topic.id}">${topic.title}</a>` : ''}`;
+  const scenarioGroups = new Set<string>();
+
+  const renderScenarioBlock = (q: QuestionRow) => {
+    if (!q.cq_group_id || !q.cq_related) return "";
+    if (!q.scenario_text && !q.scenario_media_url) return "";
+    if (scenarioGroups.has(q.cq_group_id)) return "";
+    scenarioGroups.add(q.cq_group_id);
+    const mediaLabel = q.scenario_media_type ? `View scenario ${q.scenario_media_type}` : "View scenario attachment";
+    return `
+      <div class="list-row" style="align-items:flex-start; padding:12px 16px; background:rgba(142,142,147,0.08);">
+        <div class="row-content">
+          <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-secondary); font-weight:600;">Scenario</div>
+          ${q.scenario_text ? `<div style="font-size:15px; margin-top:6px;">${escapeHtml(q.scenario_text)}</div>` : ''}
+          ${q.scenario_media_url ? `<div style="font-size:12px; margin-top:6px;"><a href="${escapeHtml(q.scenario_media_url)}" target="_blank" rel="noopener">${escapeHtml(mediaLabel)}</a></div>` : ''}
+        </div>
+      </div>
+    `;
+  };
 
   return renderPage(`${typeLabel}`, `
     <div class="header">
@@ -593,19 +624,24 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
       <h1 class="page-title" style="font-size:24px;">${typeLabel}</h1>
     </div>
 
-    <div class="list-header" style="display:flex; justify-content:space-between;">
+    <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
        <span>${questions.results?.length || 0} Questions</span>
-       <button onclick="toggleModal('new-q-modal', true)" class="btn-text" type="button" aria-label="Add question">+ Add</button>
+       <div class="inline-actions">
+         ${type === "board" ? `<button onclick="toggleModal('new-cq-modal', true)" class="btn-text" type="button" aria-label="Add CQ scenario">+ Add CQ</button>` : ''}
+         <button onclick="toggleModal('new-q-modal', true)" class="btn-text" type="button" aria-label="Add question">+ Add</button>
+       </div>
     </div>
 
     <div class="inset-list">
        ${questions.results?.map((q, i) => `
+          ${renderScenarioBlock(q)}
           <div class="list-row" style="align-items:flex-start; padding:12px 16px;">
              <div style="font-weight:600; font-size:14px; color:var(--text-secondary); margin-right:12px; margin-top:2px;">${i+1}</div>
              <div class="row-content">
                 <div style="font-size:15px; margin-bottom:6px;">${escapeHtml(q.question)}</div>
                 <div class="inline-actions" style="flex-wrap:wrap;">
                   <span class="badge">${escapeHtml(QUESTION_TYPE_LABELS[q.type] || q.type.toUpperCase())}</span>
+                  ${q.cq_label ? `<span class="badge blue">CQ: ${escapeHtml(q.cq_label)}</span>` : ''}
                   ${q.topic_title ? `<span class="badge blue">Topic: ${escapeHtml(q.topic_title)}</span>` : ''}
                   ${q.source_label ? `<span class="badge purple">${escapeHtml(
                     q.type === "board" ? `Board: ${q.source_label}` : q.type === "versity" ? `University: ${q.source_label}` : q.type === "college" ? `College: ${q.source_label}` : q.source_label
@@ -678,6 +714,65 @@ async function renderQuestionList(session: any, env: Env, params: URLSearchParam
         </form>
       </div>
     </div>
+
+    ${type === "board" ? `
+    <div id="new-cq-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">New CQ Scenario</div>
+        <form action="/admin/questions/cq" method="POST">
+           <input type="hidden" name="chapter_id" value="${chapterId}">
+           <div class="modal-body">
+             <div class="input-group">
+               <textarea name="scenario_text" class="input" placeholder="Scenario details" style="height:90px;"></textarea>
+             </div>
+             <div class="input-group">
+               <select name="scenario_media_type" class="input">
+                 <option value="">No scenario attachment</option>
+                 <option value="image">Scenario image (URL)</option>
+                 <option value="pdf">Scenario PDF (URL)</option>
+                 <option value="link">Scenario link (URL)</option>
+               </select>
+             </div>
+             <div class="input-group">
+               <input name="scenario_media_url" class="input" placeholder="Scenario URL (image/pdf/link)">
+             </div>
+             <div class="input-group">
+               <input name="source_label" class="input" required placeholder="Board name">
+             </div>
+           </div>
+           <div class="modal-body" style="border-top:0.5px solid var(--separator);">
+             ${["ক", "খ", "গ", "ঘ"].map((label, index) => `
+               <div data-cq-question style="padding-bottom:12px; margin-bottom:12px; border-bottom:0.5px solid var(--separator);">
+                 <div style="font-weight:600; margin-bottom:8px;">${label} প্রশ্ন</div>
+                 <div class="input-group">
+                   <textarea name="cq_question_${index + 1}" class="input" required placeholder="Question text" style="height:70px;"></textarea>
+                 </div>
+                 <div class="input-group form-row">
+                   <span class="form-row-label">Scenario related</span>
+                   <input type="checkbox" name="cq_related_${index + 1}" value="1" class="toggle" ${index > 1 ? "checked" : ""}>
+                 </div>
+                 <div class="input-group">
+                   <select name="cq_chapter_id_${index + 1}" class="input" required data-cq-chapter>
+                     ${(subjectChapters.results || []).map((ch) => `<option value="${ch.id}" ${ch.id === chapterId ? "selected" : ""}>${escapeHtml(ch.name)}</option>`).join('')}
+                   </select>
+                 </div>
+                 <div class="input-group">
+                   <select name="cq_topic_id_${index + 1}" class="input" data-cq-topic>
+                     <option value="">No topic</option>
+                     ${chapterTopics.map((tp) => `<option value="${tp.id}" data-chapter-id="${tp.chapter_id}">${escapeHtml(tp.title)}</option>`).join('')}
+                   </select>
+                 </div>
+               </div>
+             `).join('')}
+           </div>
+           <div class="modal-actions">
+             <div class="modal-btn" onclick="toggleModal('new-cq-modal', false)">Cancel</div>
+             <button class="modal-btn">Save CQ</button>
+           </div>
+        </form>
+      </div>
+    </div>
+    ` : ''}
   `, "classes", session, breadcrumbs);
 }
 
@@ -842,17 +937,30 @@ async function handleCreateQuestion(request: Request, env: Env) {
       A: fd.get("option_a"), B: fd.get("option_b"), C: fd.get("option_c"), D: fd.get("option_d")
     });
   }
+  const cqGroupId = fd.get("cq_group_id")?.toString().trim() || null;
+  const cqLabel = fd.get("cq_label")?.toString().trim() || null;
+  const cqRelated = fd.get("cq_related") ? 1 : 0;
+  const scenarioText = fd.get("scenario_text")?.toString().trim() || null;
+  const scenarioMediaUrl = fd.get("scenario_media_url")?.toString().trim() || null;
+  const scenarioMediaTypeRaw = fd.get("scenario_media_type")?.toString().trim() || null;
+  const scenarioMediaType = scenarioMediaUrl ? scenarioMediaTypeRaw : null;
   const answerType = (fd.get("answer_type")?.toString() || "text") as QuestionRow["answer_type"];
   const answerMedia = fd.get("answer_media")?.toString().trim() || null;
   await env.DB.prepare(`
-    INSERT INTO questions (chapter_id, topic_id, type, source_label, question, options, answer, answer_type, answer_media, created_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?)
+    INSERT INTO questions (chapter_id, topic_id, type, source_label, question, cq_group_id, cq_label, cq_related, scenario_text, scenario_media_type, scenario_media_url, options, answer, answer_type, answer_media, created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).bind(
     fd.get("chapter_id"),
     fd.get("topic_id") || null,
     type,
     sourceLabel || null,
     fd.get("question"),
+    cqGroupId,
+    cqLabel,
+    cqRelated,
+    scenarioText,
+    scenarioMediaType,
+    scenarioMediaUrl,
     options,
     fd.get("answer"),
     answerType,
@@ -863,6 +971,53 @@ async function handleCreateQuestion(request: Request, env: Env) {
   const topicId = fd.get("topic_id");
   if (topicId) params.set("topic_id", topicId.toString());
   if (type) params.set("type", type.toString());
+  return redirect(`/admin/questions/view?${params.toString()}`);
+}
+
+async function handleCreateCqQuestions(request: Request, env: Env) {
+  const fd = await request.formData();
+  const chapterId = fd.get("chapter_id")?.toString();
+  const sourceLabel = fd.get("source_label")?.toString().trim();
+  if (!sourceLabel) {
+    return new Response("Board name required for CQ questions.", { status: 400 });
+  }
+  const scenarioText = fd.get("scenario_text")?.toString().trim() || null;
+  const scenarioMediaUrl = fd.get("scenario_media_url")?.toString().trim() || null;
+  const scenarioMediaTypeRaw = fd.get("scenario_media_type")?.toString().trim() || null;
+  const scenarioMediaType = scenarioMediaUrl ? scenarioMediaTypeRaw : null;
+  const cqGroupId = crypto.randomUUID();
+  const labels = ["ক", "খ", "গ", "ঘ"];
+
+  for (let index = 0; index < labels.length; index += 1) {
+    const position = index + 1;
+    const question = fd.get(`cq_question_${position}`)?.toString().trim();
+    if (!question) continue;
+    const questionChapterId = fd.get(`cq_chapter_id_${position}`)?.toString();
+    if (!questionChapterId) continue;
+    const topicIdRaw = fd.get(`cq_topic_id_${position}`)?.toString();
+    const related = fd.get(`cq_related_${position}`) ? 1 : 0;
+    await env.DB.prepare(`
+      INSERT INTO questions (chapter_id, topic_id, type, source_label, question, cq_group_id, cq_label, cq_related, scenario_text, scenario_media_type, scenario_media_url, sort_order, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `).bind(
+      questionChapterId,
+      topicIdRaw || null,
+      "board",
+      sourceLabel,
+      question,
+      cqGroupId,
+      labels[index],
+      related,
+      related ? scenarioText : null,
+      related ? scenarioMediaType : null,
+      related ? scenarioMediaUrl : null,
+      position,
+      new Date().toISOString()
+    ).run();
+  }
+
+  const params = new URLSearchParams({ chapter_id: chapterId || "" });
+  params.set("type", "board");
   return redirect(`/admin/questions/view?${params.toString()}`);
 }
 async function handleDeleteQuestion(request: Request, env: Env) {

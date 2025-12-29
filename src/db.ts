@@ -119,6 +119,12 @@ const TABLES = [
       "type TEXT NOT NULL", // mcq, short, board, versity, college, custom
       "source_label TEXT",
       "question TEXT NOT NULL",
+      "cq_group_id TEXT",
+      "cq_label TEXT",
+      "cq_related INTEGER DEFAULT 0",
+      "scenario_text TEXT",
+      "scenario_media_type TEXT",
+      "scenario_media_url TEXT",
       "options TEXT", // JSON string for MCQs
       "answer TEXT",
       "answer_type TEXT",
@@ -174,4 +180,3 @@ export async function resetDatabase(env: Env) {
   }
   await ensureDatabase(env);
 }
-

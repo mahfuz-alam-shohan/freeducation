@@ -67,16 +67,41 @@ export const SCRIPTS = `
     });
   }
 
+  function updateCqTopicOptions(chapterSelect) {
+    const wrapper = chapterSelect.closest('[data-cq-question]');
+    if (!wrapper) return;
+    const topicSelect = wrapper.querySelector('select[data-cq-topic]');
+    if (!topicSelect) return;
+    const chapterId = chapterSelect.value;
+    const options = Array.from(topicSelect.options);
+    options.forEach((option) => {
+      if (!option.value) {
+        option.hidden = false;
+        return;
+      }
+      const matches = option.getAttribute('data-chapter-id') === chapterId;
+      option.hidden = !matches;
+    });
+    if (!topicSelect.value || topicSelect.selectedOptions[0]?.hidden) {
+      const firstVisible = options.find((option) => !option.hidden);
+      if (firstVisible) topicSelect.value = firstVisible.value;
+    }
+  }
+
   document.addEventListener('change', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (target.matches('select[name="type"], select[name="answer_type"]')) {
       updateQuestionForm(target);
     }
+    if (target.matches('select[data-cq-chapter]')) {
+      updateCqTopicOptions(target);
+    }
   });
 
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-question-form]').forEach((form) => updateQuestionForm(form));
+    document.querySelectorAll('select[data-cq-chapter]').forEach((select) => updateCqTopicOptions(select));
   });
 </script>
 `;
