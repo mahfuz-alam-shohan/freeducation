@@ -2,6 +2,16 @@ import type { Bindings } from '../types';
 import { publicLayout, escapeHtml } from '../templates/layout';
 import { dbAll, dbFirst } from '../utils/db';
 
+// Safely parse JSON to avoid crashes
+const safeJSON = (str: string | null) => {
+  if (!str) return [];
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return [];
+  }
+};
+
 export const renderHome = async (env: Bindings) => {
   const classes = await dbAll(env, 'SELECT * FROM classes ORDER BY id');
   
@@ -139,7 +149,7 @@ export const renderChapter = async (env: Bindings, id: number) => {
                <div class="card">
                  <div class="badge ${q.type==='mcq'?'badge-blue':'badge-orange'}">${q.type.toUpperCase()}</div>
                  <div style="font-weight:600; margin-top:0.5rem;">${escapeHtml(q.question_text)}</div>
-                 ${q.type === 'mcq' ? `<div class="text-muted" style="margin-top:0.5rem; font-size:0.9rem;">${JSON.parse(q.options_json).map((o:string, i:number)=>`<div>${String.fromCharCode(65+i)}) ${escapeHtml(o)}</div>`).join('')}</div>` : ''}
+                 ${q.type === 'mcq' ? `<div class="text-muted" style="margin-top:0.5rem; font-size:0.9rem;">${safeJSON(q.options_json).map((o:string, i:number)=>`<div>${String.fromCharCode(65+i)}) ${escapeHtml(o)}</div>`).join('')}</div>` : ''}
                  <details style="margin-top:1rem; cursor:pointer;">
                    <summary class="text-muted">View Solution</summary>
                    <div style="margin-top:0.5rem; padding:0.5rem; background:#f0fdf4; border-radius:6px; font-size:0.9rem;">
