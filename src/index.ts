@@ -34,6 +34,12 @@ type ContentSearchFilters = {
   year?: number;
 };
 
+type ContentRatingPayload = {
+  rating: number;
+  comment?: string;
+  user_id?: string;
+};
+
 type DashboardLimits = {
   approvals: number;
   reviews: number;
@@ -997,6 +1003,303 @@ const submitPracticeTestAttempt = async (
   });
 };
 
+const upsertContentRating = async (
+  db: D1Database,
+  contentItemId: string,
+  payload: ContentRatingPayload
+) => {
+  if (!Number.isFinite(payload.rating)) {
+    return jsonResponse({ error: "rating is required" }, 400);
+  }
+  const rating = Math.round(payload.rating);
+  if (rating < 1 || rating > 5) {
+    return jsonResponse({ error: "rating must be between 1 and 5" }, 400);
+  }
+
+  const ratingId = crypto.randomUUID();
+  const userId = typeof payload.user_id === "string" ? payload.user_id : null;
+  const comment = typeof payload.comment === "string" ? payload.comment : null;
+
+  await db
+    .prepare(
+      `INSERT INTO content_ratings
+      (id, content_item_id, user_id, rating, comment)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT (content_item_id, user_id)
+      DO UPDATE SET rating = excluded.rating, comment = excluded.comment, updated_at = CURRENT_TIMESTAMP`
+    )
+    .bind(ratingId, contentItemId, userId, rating, comment)
+    .run();
+
+  return jsonResponse({ content_item_id: contentItemId, rating, comment, user_id: userId }, 201);
+};
+
+const refreshQuestionAccuracyAggregates = async (db: D1Database, releaseId: string) => {
+  const accuracyRows = await db
+    .prepare(
+      `
+      WITH answer_rows AS (
+        SELECT q.outcome_id AS outcome_id, qa.is_correct AS is_correct
+        FROM question_set_attempt_answers qa
+        JOIN question_set_attempts qsa ON qsa.id = qa.attempt_id
+        JOIN question_sets qs ON qs.content_item_id = qsa.question_set_id
+        JOIN content_items ci ON ci.id = qs.content_item_id
+        JOIN questions q ON q.id = qa.question_id
+        WHERE ci.release_id = ? AND q.outcome_id IS NOT NULL
+        UNION ALL
+        SELECT q.outcome_id AS outcome_id, pta.is_correct AS is_correct
+        FROM practice_test_attempt_answers pta
+        JOIN practice_test_attempts ptt ON ptt.id = pta.attempt_id
+        JOIN practice_tests pt ON pt.id = ptt.practice_test_id
+        JOIN questions q ON q.id = pta.question_id
+        WHERE pt.release_id = ? AND q.outcome_id IS NOT NULL
+      )
+      SELECT outcome_id,
+             COUNT(*) AS question_count,
+             SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct_count
+      FROM answer_rows
+      GROUP BY outcome_id
+      `
+    )
+    .bind(releaseId, releaseId)
+    .all<{ outcome_id: string; question_count: number; correct_count: number }>();
+
+  const statements = (accuracyRows.results ?? []).map((row) =>
+    db
+      .prepare(
+        `INSERT INTO question_topic_accuracy
+        (release_id, outcome_id, question_count, correct_count, accuracy_rate, last_calculated_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT (release_id, outcome_id)
+        DO UPDATE SET question_count = excluded.question_count,
+                      correct_count = excluded.correct_count,
+                      accuracy_rate = excluded.accuracy_rate,
+                      last_calculated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(
+        releaseId,
+        row.outcome_id,
+        row.question_count,
+        row.correct_count,
+        row.question_count > 0 ? row.correct_count / row.question_count : 0
+      )
+  );
+
+  if (statements.length > 0) {
+    await db.batch(statements);
+  }
+};
+
+const refreshLessonCompletionAggregates = async (db: D1Database, releaseId: string) => {
+  const completionRows = await db
+    .prepare(
+      `
+      SELECT lp.lesson_id,
+             SUM(CASE WHEN lp.status IN ('in_progress', 'completed') THEN 1 ELSE 0 END) AS started_count,
+             SUM(CASE WHEN lp.status = 'completed' THEN 1 ELSE 0 END) AS completed_count
+      FROM lesson_progress lp
+      JOIN content_items ci ON ci.id = lp.lesson_id
+      WHERE ci.release_id = ?
+      GROUP BY lp.lesson_id
+      `
+    )
+    .bind(releaseId)
+    .all<{ lesson_id: string; started_count: number; completed_count: number }>();
+
+  const statements = (completionRows.results ?? []).map((row) =>
+    db
+      .prepare(
+        `INSERT INTO lesson_completion_rates
+        (release_id, lesson_id, started_count, completed_count, completion_rate, last_calculated_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT (release_id, lesson_id)
+        DO UPDATE SET started_count = excluded.started_count,
+                      completed_count = excluded.completed_count,
+                      completion_rate = excluded.completion_rate,
+                      last_calculated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(
+        releaseId,
+        row.lesson_id,
+        row.started_count,
+        row.completed_count,
+        row.started_count > 0 ? row.completed_count / row.started_count : 0
+      )
+  );
+
+  if (statements.length > 0) {
+    await db.batch(statements);
+  }
+};
+
+const refreshContentRatingAggregates = async (db: D1Database, releaseId: string) => {
+  const ratingRows = await db
+    .prepare(
+      `
+      SELECT cr.content_item_id,
+             COUNT(*) AS rating_count,
+             AVG(cr.rating) AS rating_average
+      FROM content_ratings cr
+      JOIN content_items ci ON ci.id = cr.content_item_id
+      WHERE ci.release_id = ?
+      GROUP BY cr.content_item_id
+      `
+    )
+    .bind(releaseId)
+    .all<{ content_item_id: string; rating_count: number; rating_average: number }>();
+
+  const statements = (ratingRows.results ?? []).map((row) =>
+    db
+      .prepare(
+        `INSERT INTO content_rating_aggregates
+        (release_id, content_item_id, rating_count, rating_average, last_calculated_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT (release_id, content_item_id)
+        DO UPDATE SET rating_count = excluded.rating_count,
+                      rating_average = excluded.rating_average,
+                      last_calculated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(releaseId, row.content_item_id, row.rating_count, row.rating_average ?? 0)
+  );
+
+  if (statements.length > 0) {
+    await db.batch(statements);
+  }
+};
+
+const fetchAdminLearningReport = async (db: D1Database, releaseId: string) => {
+  await refreshQuestionAccuracyAggregates(db, releaseId);
+  await refreshLessonCompletionAggregates(db, releaseId);
+  await refreshContentRatingAggregates(db, releaseId);
+
+  const questionAccuracyRows = await db
+    .prepare(
+      `
+      SELECT qa.outcome_id,
+             o.description AS outcome_description,
+             ch.id AS chapter_id,
+             ch.name AS chapter_name,
+             s.id AS subject_id,
+             s.name AS subject_name,
+             g.id AS grade_id,
+             g.name AS grade_name,
+             qa.question_count,
+             qa.correct_count,
+             qa.accuracy_rate,
+             qa.last_calculated_at
+      FROM question_topic_accuracy qa
+      JOIN outcomes o ON o.id = qa.outcome_id
+      JOIN chapters ch ON ch.id = o.chapter_id
+      JOIN subjects s ON s.id = ch.subject_id
+      JOIN grades g ON g.id = s.grade_id
+      WHERE qa.release_id = ?
+      ORDER BY qa.accuracy_rate ASC, qa.question_count DESC
+      `
+    )
+    .bind(releaseId)
+    .all<{
+      outcome_id: string;
+      outcome_description: string;
+      chapter_id: string;
+      chapter_name: string;
+      subject_id: string;
+      subject_name: string;
+      grade_id: string;
+      grade_name: string;
+      question_count: number;
+      correct_count: number;
+      accuracy_rate: number;
+      last_calculated_at: string;
+    }>();
+
+  const lessonCompletionRows = await db
+    .prepare(
+      `
+      SELECT lcr.lesson_id,
+             ci.title AS lesson_title,
+             ch.id AS chapter_id,
+             ch.name AS chapter_name,
+             s.id AS subject_id,
+             s.name AS subject_name,
+             g.id AS grade_id,
+             g.name AS grade_name,
+             lcr.started_count,
+             lcr.completed_count,
+             lcr.completion_rate,
+             lcr.last_calculated_at
+      FROM lesson_completion_rates lcr
+      JOIN content_items ci ON ci.id = lcr.lesson_id
+      LEFT JOIN chapters ch ON ch.id = ci.chapter_id
+      LEFT JOIN subjects s ON s.id = ch.subject_id
+      LEFT JOIN grades g ON g.id = s.grade_id
+      WHERE lcr.release_id = ?
+      ORDER BY lcr.completion_rate ASC, lcr.started_count DESC
+      `
+    )
+    .bind(releaseId)
+    .all<{
+      lesson_id: string;
+      lesson_title: string;
+      chapter_id: string | null;
+      chapter_name: string | null;
+      subject_id: string | null;
+      subject_name: string | null;
+      grade_id: string | null;
+      grade_name: string | null;
+      started_count: number;
+      completed_count: number;
+      completion_rate: number;
+      last_calculated_at: string;
+    }>();
+
+  const ratingRows = await db
+    .prepare(
+      `
+      SELECT cra.content_item_id,
+             ci.title AS content_title,
+             ci.type AS content_type,
+             ch.id AS chapter_id,
+             ch.name AS chapter_name,
+             s.id AS subject_id,
+             s.name AS subject_name,
+             g.id AS grade_id,
+             g.name AS grade_name,
+             cra.rating_count,
+             cra.rating_average,
+             cra.last_calculated_at
+      FROM content_rating_aggregates cra
+      JOIN content_items ci ON ci.id = cra.content_item_id
+      LEFT JOIN chapters ch ON ch.id = ci.chapter_id
+      LEFT JOIN subjects s ON s.id = ch.subject_id
+      LEFT JOIN grades g ON g.id = s.grade_id
+      WHERE cra.release_id = ?
+      ORDER BY cra.rating_average DESC, cra.rating_count DESC
+      `
+    )
+    .bind(releaseId)
+    .all<{
+      content_item_id: string;
+      content_title: string;
+      content_type: string;
+      chapter_id: string | null;
+      chapter_name: string | null;
+      subject_id: string | null;
+      subject_name: string | null;
+      grade_id: string | null;
+      grade_name: string | null;
+      rating_count: number;
+      rating_average: number;
+      last_calculated_at: string;
+    }>();
+
+  return jsonResponse({
+    release_id: releaseId,
+    question_accuracy_by_topic: questionAccuracyRows.results ?? [],
+    lesson_completion_rates: lessonCompletionRows.results ?? [],
+    content_rating_summary: ratingRows.results ?? [],
+  });
+};
+
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
@@ -1080,6 +1383,23 @@ export default {
         submitMatch[2],
         payload as Record<string, unknown>
       );
+    }
+
+    const ratingMatch = pathname.match(/^\/content\/([^/]+)\/ratings\/?$/);
+    if (request.method === "POST" && ratingMatch) {
+      const payload = await parseJson(request);
+      if (!payload) {
+        return jsonResponse({ error: "Invalid JSON payload" }, 400);
+      }
+      return upsertContentRating(env.DB, ratingMatch[1], payload as ContentRatingPayload);
+    }
+
+    if (request.method === "GET" && pathname === "/admin/reports/learning") {
+      const releaseId = url.searchParams.get("release_id");
+      if (!releaseId) {
+        return jsonResponse({ error: "release_id is required" }, 400);
+      }
+      return fetchAdminLearningReport(env.DB, releaseId);
     }
 
     return jsonResponse({ error: "Not Found" }, 404);

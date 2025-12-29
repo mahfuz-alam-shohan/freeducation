@@ -332,6 +332,56 @@ CREATE TABLE IF NOT EXISTS question_set_attempt_answers (
   FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 
+-- Learner engagement and feedback tracking.
+CREATE TABLE IF NOT EXISTS content_ratings (
+  id TEXT PRIMARY KEY,
+  content_item_id TEXT NOT NULL,
+  user_id TEXT,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (content_item_id, user_id),
+  FOREIGN KEY (content_item_id) REFERENCES content_items(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Aggregated reporting tables for admin dashboards.
+CREATE TABLE IF NOT EXISTS question_topic_accuracy (
+  release_id TEXT NOT NULL,
+  outcome_id TEXT NOT NULL,
+  question_count INTEGER NOT NULL,
+  correct_count INTEGER NOT NULL,
+  accuracy_rate REAL NOT NULL,
+  last_calculated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (release_id, outcome_id),
+  FOREIGN KEY (release_id) REFERENCES curriculum_releases(id),
+  FOREIGN KEY (outcome_id) REFERENCES outcomes(id)
+);
+
+CREATE TABLE IF NOT EXISTS lesson_completion_rates (
+  release_id TEXT NOT NULL,
+  lesson_id TEXT NOT NULL,
+  started_count INTEGER NOT NULL,
+  completed_count INTEGER NOT NULL,
+  completion_rate REAL NOT NULL,
+  last_calculated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (release_id, lesson_id),
+  FOREIGN KEY (release_id) REFERENCES curriculum_releases(id),
+  FOREIGN KEY (lesson_id) REFERENCES content_items(id)
+);
+
+CREATE TABLE IF NOT EXISTS content_rating_aggregates (
+  release_id TEXT NOT NULL,
+  content_item_id TEXT NOT NULL,
+  rating_count INTEGER NOT NULL,
+  rating_average REAL NOT NULL,
+  last_calculated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (release_id, content_item_id),
+  FOREIGN KEY (release_id) REFERENCES curriculum_releases(id),
+  FOREIGN KEY (content_item_id) REFERENCES content_items(id)
+);
+
 -- Admin overrides: non-destructive edits layered on top of baseline records.
 -- override_data stores partial updates (e.g. {"name": "New Name"}).
 CREATE TABLE IF NOT EXISTS curriculum_overrides (
@@ -418,6 +468,11 @@ CREATE INDEX IF NOT EXISTS idx_question_set_attempts_user_status_started_at
 CREATE INDEX IF NOT EXISTS idx_question_set_attempts_user_status_submitted_at
   ON question_set_attempts(user_id, status, submitted_at);
 CREATE INDEX IF NOT EXISTS idx_question_set_attempt_answers_attempt ON question_set_attempt_answers(attempt_id);
+CREATE INDEX IF NOT EXISTS idx_content_ratings_item ON content_ratings(content_item_id);
+CREATE INDEX IF NOT EXISTS idx_content_ratings_user ON content_ratings(user_id);
+CREATE INDEX IF NOT EXISTS idx_question_topic_accuracy_release ON question_topic_accuracy(release_id);
+CREATE INDEX IF NOT EXISTS idx_lesson_completion_rates_release ON lesson_completion_rates(release_id);
+CREATE INDEX IF NOT EXISTS idx_content_rating_aggregates_release ON content_rating_aggregates(release_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_entity ON curriculum_overrides(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_release ON curriculum_overrides(release_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
