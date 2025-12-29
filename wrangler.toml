@@ -1,6 +1,5 @@
 name = "freeducation"
-main = "src/index.ts"
-compatibility_date = "2024-10-01"
+
 
 # D1 Database Binding
 [[d1_databases]]
