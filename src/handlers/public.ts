@@ -3,58 +3,43 @@ import { dbAll, dbFirst } from '../utils/db';
 import { escapeHtml, publicLayout } from '../templates/layout';
 
 // Helper for empty states
-const emptyState = (message: string) => `
-  <div class="text-center" style="padding: 4rem 1rem;">
-    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-    <h3>Nothing here yet</h3>
-    <p>${message}</p>
+const emptyState = (message: string, icon = '📚') => `
+  <div class="glass-card" style="text-align: center; padding: 3rem;">
+    <div style="font-size: 3rem; margin-bottom: 0.5rem;">${icon}</div>
+    <h3 style="color: var(--primary); font-family: var(--font-bn);">এখনও যোগ করা হয়নি</h3>
+    <p class="text-muted">${message}</p>
   </div>
 `;
 
 export const renderHome = async (env: Bindings) => {
   const classes = await dbAll<{ id: number; name: string; level: string; description: string | null }>(
     env,
-    'SELECT id, name, level, description FROM classes ORDER BY id ASC' // Changed to ASC for logical class ordering (6, 7, 8...)
+    'SELECT id, name, level, description FROM classes ORDER BY id ASC'
   );
 
   const body = `
-    <section class="hero">
+    <div class="hero-section">
       <div class="container">
-        <h1>Unlock Your Potential <br/> <span style="color: var(--primary);">With Free Education</span></h1>
-        <p>Access the entire Bangladeshi curriculum (NCTB) for free. Class notes, lectures, and resources tailored for your success.</p>
-        <div class="flex-wrap" style="justify-content: center;">
-          <a href="#browse-classes" class="btn btn-primary">Start Learning</a>
-        </div>
-      </div>
-    </section>
-
-    <div class="container" id="browse-classes">
-      <div class="section-header text-center">
-        <span class="badge">Academic Library</span>
-        <h2 style="margin-top: 0.5rem;">Select Your Class</h2>
-      </div>
-
-      ${classes.length === 0 ? emptyState('No classes have been added yet.') : ''}
-
-      <div class="grid three">
-        ${classes
-          .map(
-            (item) => `
-          <a href="/class/${item.id}" style="text-decoration: none;">
-            <article class="card">
-              <div class="card-decoration"></div>
-              <div class="card-content">
-                <span class="badge">${escapeHtml(item.level)}</span>
-                <h3>${escapeHtml(item.name)}</h3>
-                <p class="text-sm" style="flex-grow: 1;">${escapeHtml(item.description ?? 'General studies and resources.')}</p>
-                <div style="margin-top: 0.5rem; font-weight: 600; color: var(--primary); font-size: 0.9rem;">
-                  Browse Subjects &rarr;
+        <span class="tag tag-board" style="margin-bottom: 1rem;">NCTB Syllabus 2025</span>
+        <h1 class="hero-title">বাংলাদেশের সকল শিক্ষার্থীর জন্য <br/> <span style="color: var(--primary);">বিনামূল্যে শিক্ষার আয়োজন</span></h1>
+        <p style="font-size: 1.2rem; color: #475569; max-width: 600px; margin: 0 auto 2rem; font-family: var(--font-bn);">
+          Textbooks, Board Questions, and Solution Guides - everything you need to ace your SSC and HSC exams.
+        </p>
+        
+        <div class="grid-3" style="margin-top: 3rem; text-align: left;">
+          ${classes.map(c => `
+            <a href="/class/${c.id}" style="text-decoration: none;">
+              <div class="glass-card" style="height: 100%;">
+                <div class="card-header">
+                  <span class="tag tag-guide">${escapeHtml(c.level)}</span>
+                  <span style="font-size: 1.5rem;">➔</span>
                 </div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${escapeHtml(c.name)}</h2>
+                <p class="text-muted">${escapeHtml(c.description || 'Full Syllabus Access')}</p>
               </div>
-            </article>
-          </a>`
-          )
-          .join('')}
+            </a>
+          `).join('')}
+        </div>
       </div>
     </div>
   `;
@@ -68,204 +53,241 @@ export const renderClass = async (env: Bindings, classId: number) => {
     'SELECT name, description, level FROM classes WHERE id = ?',
     classId
   );
-  if (!classRow) {
-    return publicLayout('Class not found', '<div class="container"><div class="card">Class not found.</div></div>');
-  }
-  const subjects = await dbAll<{ id: number; name: string; description: string | null }>(
+  if (!classRow) return publicLayout('Not Found', 'Class not found');
+
+  const subjects = await dbAll<{ id: number; name: string; description: string | null; icon_emoji: string | null }>(
     env,
-    'SELECT id, name, description FROM subjects WHERE class_id = ? ORDER BY id ASC',
+    'SELECT id, name, description, icon_emoji FROM subjects WHERE class_id = ? ORDER BY id ASC',
     classId
   );
   
   const body = `
-    <div style="background: var(--primary); color: white; padding: 3rem 0; margin-bottom: 2rem;">
+    <div style="background: var(--primary); color: white; padding: 4rem 0 3rem; margin-bottom: -2rem;">
       <div class="container">
-        <span style="opacity: 0.8; font-weight: 500;">${escapeHtml(classRow.level)}</span>
-        <h1 style="color: white; margin-top: 0.5rem;">${escapeHtml(classRow.name)}</h1>
-        <p style="color: rgba(255,255,255,0.8); max-width: 600px;">${escapeHtml(classRow.description ?? '')}</p>
+        <span class="tag" style="background: rgba(255,255,255,0.2); color: white;">${escapeHtml(classRow.level)}</span>
+        <h1 style="color: white; font-size: 2.5rem; margin-top: 0.5rem;">${escapeHtml(classRow.name)}</h1>
       </div>
     </div>
 
-    <div class="container">
-      <div class="section-header">
-        <h2>Subjects</h2>
-        <p>Choose a subject to start learning chapters.</p>
-      </div>
-
-      ${subjects.length === 0 ? emptyState('No subjects added to this class yet.') : ''}
-
-      <div class="grid four">
-        ${subjects
-          .map(
-            (subject) => `
+    <div class="container" style="position: relative; z-index: 2;">
+      <h3 class="mb-4" style="color: white; opacity: 0.9;">বিষয়সমূহ (Subjects)</h3>
+      
+      <div class="grid-4">
+        ${subjects.map(subject => `
           <a href="/subject/${subject.id}" style="text-decoration: none;">
-            <div class="card" style="text-align: center; height: 100%; justify-content: center; padding: 2rem 1.5rem;">
-              <div style="width: 50px; height: 50px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem; font-weight: bold;">
-                ${subject.name.charAt(0).toUpperCase()}
+            <div class="glass-card" style="text-align: center; height: 100%;">
+              <div class="subject-icon" style="background: ${getSubjectColor(subject.name)}; color: white;">
+                ${subject.icon_emoji || getSubjectIcon(subject.name)}
               </div>
-              <h3 style="font-size: 1.1rem;">${escapeHtml(subject.name)}</h3>
-              <p class="text-sm" style="margin-top: 0.5rem;">${escapeHtml(subject.description ?? 'View Chapters')}</p>
+              <h3 style="font-size: 1.2rem;">${escapeHtml(subject.name)}</h3>
+              <p class="text-muted text-sm mt-2">${escapeHtml(subject.description || 'View Chapters & Papers')}</p>
             </div>
-          </a>`
-          )
-          .join('')}
+          </a>
+        `).join('')}
       </div>
+      
+      ${subjects.length === 0 ? emptyState('No subjects added yet.') : ''}
     </div>
   `;
-  return publicLayout(`${classRow.name}`, body);
+  return publicLayout(classRow.name, body);
 };
 
 export const renderSubject = async (env: Bindings, subjectId: number) => {
-  const subject = await dbFirst<{ name: string; description: string | null; class_name: string; class_id: number }>(
+  const subject = await dbFirst<{ name: string; class_id: number; class_name: string }>(
     env,
-    `SELECT subjects.name, subjects.description, classes.name as class_name, classes.id as class_id 
-     FROM subjects 
-     JOIN classes ON subjects.class_id = classes.id 
+    `SELECT subjects.name, classes.id as class_id, classes.name as class_name 
+     FROM subjects JOIN classes ON subjects.class_id = classes.id 
      WHERE subjects.id = ?`,
     subjectId
   );
+  if (!subject) return publicLayout('Not Found', 'Subject not found');
 
-  if (!subject) {
-    return publicLayout('Subject not found', '<div class="container">Subject not found.</div>');
-  }
-
-  const chapters = await dbAll<{ id: number; name: string; description: string | null }>(
+  // Fetch Resources (Books, Papers)
+  const resources = await dbAll<{ id: number; category: string; title: string; meta_info: string }>(
     env,
-    'SELECT id, name, description FROM chapters WHERE subject_id = ? ORDER BY order_index ASC, id ASC',
+    'SELECT id, category, title, meta_info FROM resources WHERE subject_id = ?',
     subjectId
   );
 
+  // Fetch Chapters
+  const chapters = await dbAll<{ id: number; name: string; description: string | null }>(
+    env,
+    'SELECT id, name, description FROM chapters WHERE subject_id = ? ORDER BY order_index ASC',
+    subjectId
+  );
+
+  const textbooks = resources.filter(r => r.category === 'textbook');
+  const questions = resources.filter(r => r.category === 'board_question');
+  
   const body = `
-    <div class="container" style="margin-top: 2rem;">
-      <a href="/class/${subject.class_id}" class="btn btn-outline btn-sm" style="margin-bottom: 1rem;">&larr; Back to ${escapeHtml(subject.class_name)}</a>
+    <div class="container" style="padding-top: 2rem;">
+      <a href="/class/${subject.class_id}" class="btn btn-soft mb-4">⬅ Back to ${escapeHtml(subject.class_name)}</a>
       
-      <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--secondary);">
-        <h1 style="color: var(--secondary); margin-bottom: 0.5rem;">${escapeHtml(subject.name)}</h1>
-        <p class="text-sm">Course Material</p>
+      <div class="flex-between mb-4">
+        <div>
+           <span class="tag tag-guide">Course Material</span>
+           <h1 style="font-size: 2.2rem; color: var(--primary-dark);">${escapeHtml(subject.name)}</h1>
+        </div>
       </div>
 
-      <div class="section-header">
-        <h2>Course Chapters</h2>
-      </div>
-
-      <div class="list-group">
-        ${chapters.length === 0 ? '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">No chapters available yet.</div>' : ''}
-        ${chapters
-          .map(
-            (chapter, index) => `
-          <div class="list-item">
-            <div style="flex-grow: 1;">
-              <div class="text-sm" style="color: var(--primary); font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Chapter ${index + 1}</div>
-              <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">${escapeHtml(chapter.name)}</h3>
-              <p class="text-sm">${escapeHtml(chapter.description ?? '')}</p>
+      <div class="grid">
+        <!-- Section 1: Digital Bookshelf -->
+        ${textbooks.length > 0 ? `
+          <div class="glass-card" style="background: #fffbeb;">
+            <h3 style="color: #b45309; margin-bottom: 1rem;">📖 পাঠ্যবই (Textbooks)</h3>
+            <div class="shelf-grid">
+              ${textbooks.map(book => `
+                <a href="/resource/${book.id}" style="text-decoration: none; color: inherit;">
+                  <div class="book-spine" style="background: ${getSubjectColor(subject.name)}; color: white;">
+                     <div style="font-weight: bold; font-family: var(--font-bn);">${escapeHtml(book.title)}</div>
+                  </div>
+                  <div class="text-center text-sm mt-2 font-bold">Download PDF</div>
+                </a>
+              `).join('')}
             </div>
-            <a class="btn btn-primary btn-sm" href="/chapter/${chapter.id}">Start</a>
-          </div>`
-          )
-          .join('')}
+          </div>
+        ` : ''}
+
+        <!-- Section 2: Board Questions -->
+        ${questions.length > 0 ? `
+          <div class="glass-card" style="background: #eff6ff;">
+            <h3 style="color: #1e40af; margin-bottom: 1rem;">📝 বোর্ড প্রশ্ন (Previous Years)</h3>
+            <div class="grid-3">
+              ${questions.map(q => `
+                <div style="background: white; padding: 1rem; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                  <div>
+                    <div style="font-weight: bold;">${escapeHtml(q.title)}</div>
+                    <div class="text-xs text-muted">PDF Download</div>
+                  </div>
+                  <a href="/resource/${q.id}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">⬇</a>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Section 3: Chapters / Study Guide -->
+        <div>
+          <h3 class="mb-4">অধ্যায়সমূহ (Chapters)</h3>
+          <div class="grid-2">
+            ${chapters.map((chapter, idx) => `
+              <a href="/chapter/${chapter.id}" style="text-decoration: none;">
+                <div class="glass-card">
+                   <div class="text-sm text-muted mb-2">Chapter ${idx + 1}</div>
+                   <h3 style="margin-bottom: 0.5rem;">${escapeHtml(chapter.name)}</h3>
+                   <p class="text-muted text-sm">${escapeHtml(chapter.description || 'Start learning...')}</p>
+                   <div class="mt-2" style="text-align: right; color: var(--primary); font-weight: bold; font-size: 0.9rem;">Read Notes &rarr;</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+          ${chapters.length === 0 ? emptyState('No chapters yet.') : ''}
+        </div>
       </div>
     </div>
   `;
-  return publicLayout(`${subject.name}`, body);
+  return publicLayout(subject.name, body);
 };
 
 export const renderChapter = async (env: Bindings, chapterId: number) => {
-  const chapter = await dbFirst<{ name: string; description: string | null; subject_id: number; subject_name: string }>(
+  const chapter = await dbFirst<{ name: string; subject_id: number; subject_name: string }>(
     env,
-    `SELECT chapters.name, chapters.description, chapters.subject_id, subjects.name as subject_name
-     FROM chapters 
-     JOIN subjects ON chapters.subject_id = subjects.id
-     WHERE chapters.id = ?`,
+    `SELECT chapters.name, chapters.subject_id, subjects.name as subject_name 
+     FROM chapters JOIN subjects ON chapters.subject_id = subjects.id WHERE chapters.id = ?`,
     chapterId
   );
+  if (!chapter) return publicLayout('Not found', 'Chapter not found');
 
-  if (!chapter) {
-    return publicLayout('Chapter not found', 'Not found');
-  }
-
-  const topics = await dbAll<{ id: number; title: string; content: string | null }>(
+  const topics = await dbAll<{ id: number; title: string; content: string; type: string }>(
     env,
-    'SELECT id, title, content FROM topics WHERE chapter_id = ? ORDER BY order_index ASC, id ASC',
+    'SELECT id, title, content, type FROM topics WHERE chapter_id = ? ORDER BY order_index ASC',
     chapterId
   );
 
   const body = `
-    <div class="container" style="margin-top: 2rem;">
-      <a href="/subject/${chapter.subject_id}" class="btn btn-outline btn-sm" style="margin-bottom: 1rem;">&larr; Back to ${escapeHtml(chapter.subject_name)}</a>
-
-      <header style="margin-bottom: 3rem; text-align: center;">
-        <h1 style="margin-bottom: 1rem;">${escapeHtml(chapter.name)}</h1>
-        <p style="font-size: 1.1rem; max-width: 700px; margin: 0 auto;">${escapeHtml(chapter.description ?? '')}</p>
-      </header>
-
-      <div class="grid two">
-        ${topics
-          .map(
-            (topic) => `
-          <article class="card" style="border-top: 4px solid var(--accent);">
-            <h3>${escapeHtml(topic.title)}</h3>
-            <p style="margin: 1rem 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-              ${escapeHtml(topic.content ?? 'Click to read more details about this topic.')}
-            </p>
-            <div style="margin-top: auto;">
-              <a href="/topic/${topic.id}" class="btn btn-outline btn-sm" style="width: 100%;">Read & Download</a>
-            </div>
-          </article>`
-          )
-          .join('')}
+    <div class="container" style="padding-top: 2rem;">
+      <a href="/subject/${chapter.subject_id}" class="btn btn-soft mb-4">⬅ Back to ${escapeHtml(chapter.subject_name)}</a>
+      
+      <div class="glass-card mb-4" style="background: linear-gradient(to right, #6366f1, #8b5cf6); color: white;">
+        <h1>${escapeHtml(chapter.name)}</h1>
       </div>
-       ${topics.length === 0 ? emptyState('No topics in this chapter yet.') : ''}
+
+      <div class="grid">
+        ${topics.map(topic => `
+          <div class="glass-card">
+            <div class="flex-between mb-4">
+              <h2 style="font-size: 1.5rem;">${escapeHtml(topic.title)}</h2>
+              ${getTypeTag(topic.type)}
+            </div>
+            <div style="font-size: 1.1rem; color: #334155; white-space: pre-wrap;">${escapeHtml(topic.content || '')}</div>
+            
+            <div class="mt-2 text-right">
+              <a href="/topic/${topic.id}" class="btn btn-soft">View Details & Files</a>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+       ${topics.length === 0 ? emptyState('No notes added to this chapter yet.', '📝') : ''}
     </div>
   `;
-  return publicLayout(`${chapter.name}`, body);
+  return publicLayout(chapter.name, body);
 };
 
 export const renderTopic = async (env: Bindings, topicId: number) => {
-  const topic = await dbFirst<{ title: string; content: string | null; chapter_id: number; chapter_name: string }>(
-    env,
-    `SELECT topics.title, topics.content, topics.chapter_id, chapters.name as chapter_name 
-     FROM topics 
-     JOIN chapters ON topics.chapter_id = chapters.id
-     WHERE topics.id = ?`,
-    topicId
-  );
+    // Basic topic view logic (similar to previous, but styled)
+    // For brevity, using simplified version
+    const topic = await dbFirst<{ title: string; content: string; chapter_id: number }>(env, 'SELECT * FROM topics WHERE id = ?', topicId);
+    if(!topic) return publicLayout('Not found', 'Topic not found');
+    
+    const files = await dbAll<{id:number, title:string}>(env, 'SELECT id, title FROM files WHERE topic_id = ?', topicId);
 
-  if (!topic) {
-    return publicLayout('Topic not found', 'Not found');
-  }
-
-  const files = await dbAll<{ id: number; title: string; mime_type: string | null; size: number | null }>(
-    env,
-    'SELECT id, title, mime_type, size FROM files WHERE topic_id = ? ORDER BY id DESC',
-    topicId
-  );
-
-  const body = `
-    <div class="container" style="margin-top: 2rem; max-width: 800px;">
-      <a href="/chapter/${topic.chapter_id}" class="btn btn-outline btn-sm" style="margin-bottom: 1rem;">&larr; Back to ${escapeHtml(topic.chapter_name)}</a>
-      
-      <article class="card" style="margin-bottom: 2rem;">
-        <h1 style="font-size: 2rem; margin-bottom: 1.5rem; color: var(--primary);">${escapeHtml(topic.title)}</h1>
-        <div style="font-size: 1.1rem; line-height: 1.8; color: var(--text-main); white-space: pre-wrap;">${escapeHtml(topic.content ?? '')}</div>
-      </article>
-
-      ${files.length > 0 ? `
-        <div class="card" style="background: var(--bg-body); border: none;">
-          <h3 style="margin-bottom: 1rem;">⬇️ Downloadable Resources</h3>
-          <div class="list-group">
-            ${files.map(file => `
-              <div class="list-item">
-                <div>
-                  <strong>${escapeHtml(file.title)}</strong>
-                  <div class="text-sm text-muted">${Math.round((file.size || 0) / 1024)} KB · ${file.mime_type?.split('/')[1] || 'File'}</div>
-                </div>
-                <a href="/files/${file.id}" class="btn btn-primary btn-sm">Download</a>
-              </div>
-            `).join('')}
-          </div>
+    const body = `
+        <div class="container" style="padding-top: 2rem;">
+            <a href="/chapter/${topic.chapter_id}" class="btn btn-soft mb-4">⬅ Back to Chapter</a>
+            <div class="glass-card">
+                <h1>${escapeHtml(topic.title)}</h1>
+                <div style="margin: 2rem 0; font-size: 1.1rem;">${escapeHtml(topic.content || '')}</div>
+                
+                ${files.length > 0 ? `
+                <h3 style="border-top: 1px solid #eee; padding-top: 1rem;">Attached Files</h3>
+                <div class="grid-2">
+                    ${files.map(f => `
+                        <a href="/files/${f.id}" class="btn btn-soft" style="justify-content: space-between;">
+                            ${escapeHtml(f.title)} <span>⬇</span>
+                        </a>
+                    `).join('')}
+                </div>` : ''}
+            </div>
         </div>
-      ` : ''}
-    </div>
-  `;
-  return publicLayout(`${topic.title}`, body);
-};
+    `;
+    return publicLayout(topic.title, body);
+}
+
+// --- Helpers ---
+
+function getSubjectColor(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes('math') || n.includes('গণিত')) return '#f59e0b'; // Orange
+  if (n.includes('physics') || n.includes('পদার্থ')) return '#6366f1'; // Indigo
+  if (n.includes('chem') || n.includes('রসায়ন')) return '#ec4899'; // Pink
+  if (n.includes('bio') || n.includes('জীব')) return '#10b981'; // Green
+  if (n.includes('bangla') || n.includes('বাংলা')) return '#ef4444'; // Red
+  return '#3b82f6'; // Blue default
+}
+
+function getSubjectIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes('math') || n.includes('গণিত')) return '📐';
+  if (n.includes('physics') || n.includes('পদার্থ')) return '⚛️';
+  if (n.includes('chem') || n.includes('রসায়ন')) return '🧪';
+  if (n.includes('bio') || n.includes('জীব')) return '🧬';
+  if (n.includes('english')) return 'abc';
+  return '📚';
+}
+
+function getTypeTag(type: string) {
+    if (type === 'math_solution') return '<span class="tag tag-math">Math Solution</span>';
+    if (type === 'cq_practice') return '<span class="tag tag-guide">Creative Question</span>';
+    return '<span class="tag" style="background: #eee;">Note</span>';
+}
+`;
