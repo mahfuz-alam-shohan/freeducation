@@ -45,7 +45,22 @@ const TABLES = {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       class_id: 'INTEGER NOT NULL',
       name: 'TEXT NOT NULL',
-      description: 'TEXT'
+      description: 'TEXT',
+      icon_emoji: 'TEXT' /* e.g. 📐 for Math, 🧬 for Biology */
+    }
+  },
+  /* Resources: Textbooks, Board Questions, Syllabus (Subject Level) */
+  resources: {
+    name: 'resources',
+    columns: {
+      id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      subject_id: 'INTEGER NOT NULL',
+      category: 'TEXT NOT NULL', /* 'textbook', 'board_question', 'guide' */
+      title: 'TEXT NOT NULL',
+      r2_key: 'TEXT NOT NULL',
+      mime_type: 'TEXT',
+      meta_info: 'TEXT', /* JSON: {year: 2023, board: 'Dhaka'} */
+      created_at: 'TEXT NOT NULL'
     }
   },
   chapters: {
@@ -58,17 +73,20 @@ const TABLES = {
       order_index: 'INTEGER DEFAULT 0'
     }
   },
+  /* Topics: The specific lessons */
   topics: {
     name: 'topics',
     columns: {
       id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
       chapter_id: 'INTEGER NOT NULL',
       title: 'TEXT NOT NULL',
+      type: 'TEXT DEFAULT \'note\'', /* 'note', 'math_solution', 'cq_practice' */
       content: 'TEXT',
       order_index: 'INTEGER DEFAULT 0',
       created_at: 'TEXT NOT NULL'
     }
   },
+  /* Files: Attachments for specific Topics */
   files: {
     name: 'files',
     columns: {
@@ -83,7 +101,7 @@ const TABLES = {
   }
 } as const;
 
-const SCHEMA_VERSION = '1';
+const SCHEMA_VERSION = '2'; /* Bumped version to trigger update */
 
 const TABLE_LIST = Object.values(TABLES).map((table) => table.name);
 
@@ -142,10 +160,7 @@ export const ensureSchema = async (env: Bindings) => {
     `SELECT value FROM ${TABLES.schemaMeta.name} WHERE key = 'schema_version'`
   ).first<{ value: string }>();
 
-  if (versionRow?.value === SCHEMA_VERSION) {
-    return;
-  }
-
+  // For development, we auto-migrate. In prod, be careful.
   await dropExtraTables(env, existingTables);
 
   for (const table of Object.values(TABLES)) {
