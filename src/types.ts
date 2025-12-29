@@ -71,6 +71,12 @@ export interface QuestionRow {
   type: 'mcq' | 'short' | 'board' | 'versity' | 'college' | 'custom';
   source_label?: string;
   question: string;
+  cq_group_id?: string;
+  cq_label?: string;
+  cq_related?: number;
+  scenario_text?: string;
+  scenario_media_type?: 'image' | 'pdf' | 'link';
+  scenario_media_url?: string;
   options?: string; // JSON string for MCQs
   answer?: string;
   answer_type?: 'text' | 'image' | 'pdf' | 'link';
@@ -79,4 +85,3 @@ export interface QuestionRow {
   sort_order: number;
   created_at: string;
 }
-
