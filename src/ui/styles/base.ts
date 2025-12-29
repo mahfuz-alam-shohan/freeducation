@@ -1,5 +1,5 @@
-// CSS Variables - "Inset Grouped" Aesthetic (Beautiful & Compact)
-export const CSS = `
+export const baseStyles = `
+
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
 
 :root {
@@ -96,7 +96,9 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--separator-light);
 }
@@ -118,8 +120,8 @@ select:focus-visible {
 }
 
 .brand-logo {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -129,7 +131,7 @@ select:focus-visible {
 }
 
 .brand-title {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .brand-subtitle {
@@ -137,6 +139,7 @@ select:focus-visible {
   color: var(--text-muted);
   margin-top: 2px;
   font-weight: 500;
+  display: none;
 }
 
 .header-actions {
@@ -160,7 +163,7 @@ select:focus-visible {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.4rem 1.5rem 2.5rem;
+  padding: 1rem 0.9rem 1.8rem;
   flex: 1;
   overflow: auto;
   min-height: 0;
@@ -180,7 +183,7 @@ select:focus-visible {
 }
 
 .page-title {
-  font-size: 30px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.2px;
   margin: 0;
@@ -587,6 +590,9 @@ select:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .stat-label {
@@ -691,7 +697,7 @@ select:focus-visible {
   display: flex;
   justify-content: space-around;
   padding-bottom: env(safe-area-inset-bottom);
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   z-index: 500;
 }
 .nav-item {
@@ -708,179 +714,30 @@ select:focus-visible {
 .nav-item.active { color: var(--primary); }
 .nav-item svg { width: 24px; height: 24px; }
 
-@media (max-width: 900px) {
-  .app-shell { padding: 0; }
-  .app-frame { border-radius: 0; }
-  .app-header { padding: 16px 16px; flex-wrap: wrap; gap: 10px; }
+@media (min-width: 640px) {
+  .app-header { padding: 18px 20px; }
   .container { padding: 1.1rem 1rem 2rem; }
-  .page-title { font-size: 26px; }
-  .stat-card { flex-direction: column; align-items: flex-start; gap: 12px; }
-}
-
-@media (max-width: 640px) {
-  .app-shell { padding: 0; }
-  .app-frame {
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .brand-logo { width: 36px; height: 36px; }
-  .brand-title { font-size: 16px; }
-  .brand-subtitle { display: none; }
-  .container { padding: 1rem 0.9rem 1.8rem; }
   .header-split { align-items: flex-start; }
-  .page-title { font-size: 22px; }
+  .page-title { font-size: 26px; }
   .action-row { padding: 0; }
   .search-row { padding: 10px 12px; }
   .list-row { padding: 12px 12px; }
   .btn-text { padding: 8px 12px; }
-  .bottom-nav { height: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
+}
+
+@media (min-width: 900px) {
+  .app-shell { padding: 24px; }
+  .app-frame {
+    border-radius: 26px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--separator-light);
+  }
+  .app-header { padding: 18px 22px; }
+  .brand-logo { width: 40px; height: 40px; }
+  .brand-title { font-size: 18px; }
+  .brand-subtitle { display: block; }
+  .container { padding: 1.4rem 1.5rem 2.5rem; }
+  .page-title { font-size: 30px; }
+  .stat-card { flex-direction: row; align-items: center; }
 }
 `;
-
-export const SCRIPTS = `
-<script>
-  function updateQuestionForm(target) {
-    const form = target?.closest('[data-question-form]') || target;
-    if (!form) return;
-    const typeSelect = form.querySelector('select[name="type"]');
-    const typeInput = form.querySelector('input[name="type"]');
-    const type = (typeSelect && typeSelect.value) || (typeInput && typeInput.value) || form.getAttribute('data-question-type') || '';
-    const sourceField = form.querySelector('[data-question-source]');
-    const sourceInput = form.querySelector('input[name="source_label"]');
-    const needsSource = ["board", "versity", "college"].includes(type);
-    if (sourceField) sourceField.style.display = needsSource ? '' : 'none';
-    if (sourceInput) sourceInput.required = needsSource;
-
-    const mcqBlock = form.querySelector('[data-question-mcq]');
-    const answerBlock = form.querySelector('[data-question-answer]');
-    const isMcq = type === 'mcq';
-    if (mcqBlock) mcqBlock.style.display = isMcq ? '' : 'none';
-    if (answerBlock) answerBlock.style.display = isMcq ? 'none' : '';
-
-    const answerTypeSelect = form.querySelector('select[name="answer_type"]');
-    const answerMediaField = form.querySelectorAll('[data-question-attachment]');
-    if (answerTypeSelect) {
-      const showMedia = answerTypeSelect.value !== 'text';
-      answerMediaField.forEach((field, idx) => {
-        if (idx === 1 && field instanceof HTMLElement) {
-          field.style.display = showMedia ? '' : 'none';
-        }
-      });
-    }
-  }
-
-  function toggleModal(id, show) {
-    const el = document.getElementById(id);
-    if(show) {
-      el.classList.add('open');
-    } else {
-      el.classList.remove('open');
-    }
-  }
-
-  function openEdit(modalId, action, data) {
-    const modal = document.getElementById(modalId);
-    if(!modal) return;
-    const form = modal.querySelector('form');
-    if(form) form.action = action;
-    
-    // Auto-fill
-    for (const [key, val] of Object.entries(data)) {
-      const input = form.elements[key];
-      if(input) {
-        if(input.type === 'checkbox') input.checked = !!val;
-        else input.value = val;
-      }
-    }
-    toggleModal(modalId, true);
-  }
-
-  function filterList(inputId, rowSelector) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const query = input.value.toLowerCase().trim();
-    document.querySelectorAll(rowSelector).forEach((row) => {
-      const label = (row.getAttribute('data-filter') || row.textContent || '').toLowerCase();
-      row.style.display = label.includes(query) ? '' : 'none';
-    });
-  }
-
-  document.addEventListener('change', (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
-    if (target.matches('select[name="type"], select[name="answer_type"]')) {
-      updateQuestionForm(target);
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-question-form]').forEach((form) => updateQuestionForm(form));
-  });
-</script>
-`;
-
-export function renderPage(title: string, content: string, activeTab: string, user?: { name: string }, breadcrumbs?: string): Response {
-  const logoMark = `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 8l8-4 8 4-8 4-8-4z"></path>
-      <path d="M8 12v4.5c0 .9 3.2 2.5 4 2.5s4-1.6 4-2.5V12"></path>
-      <path d="M4 8v5c0 2.5 4 4.5 8 4.5"></path>
-    </svg>
-  `;
-  const navItems = [
-    { id: 'dashboard', href: '/admin', icon: '<path d="M3 11l9-7 9 7"></path><path d="M5 10v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9"></path><path d="M9 21v-6h6v6"></path>', label: 'Home' },
-    { id: 'classes', href: '/admin/classes', icon: '<path d="M4 4h10a2 2 0 0 1 2 2v14"></path><path d="M4 4v14a2 2 0 0 0 2 2h12"></path><path d="M8 8h8"></path><path d="M8 12h8"></path><path d="M8 16h6"></path>', label: 'Classes' },
-    { id: 'settings', href: '/admin/settings', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>', label: 'Settings' }
-  ];
-
-  return new Response(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title} | Admin</title>
-  <style>${CSS}</style>
-</head>
-<body>
-  <div class="app-shell">
-    <div class="app-frame">
-      <header class="app-header">
-        <div class="brand">
-          <div class="brand-logo">${logoMark}</div>
-          <div>
-            <div class="brand-title">Freeducation</div>
-            <div class="brand-subtitle">Admin Workspace</div>
-          </div>
-        </div>
-        <div class="header-actions">
-          ${user ? `<span class="user-chip">${user.name}</span>` : `<span class="user-chip">Admin Console</span>`}
-        </div>
-      </header>
-      <div class="app-body">
-        <div class="container">
-          ${breadcrumbs ? `<div class="breadcrumbs">${breadcrumbs}</div>` : ''}
-          ${content}
-        </div>
-      </div>
-      ${user ? `
-        <nav class="bottom-nav">
-          ${navItems.map(i => `
-            <a href="${i.href}" class="nav-item ${activeTab === i.id ? 'active' : ''}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.icon}</svg>
-              <span>${i.label}</span>
-            </a>
-          `).join('')}
-        </nav>
-      ` : ''}
-    </div>
-  </div>
-
-  ${SCRIPTS}
-</body>
-</html>`, { headers: { "Content-Type": "text/html" } });
-}
-
-export function escapeHtml(str: string | null | undefined) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
