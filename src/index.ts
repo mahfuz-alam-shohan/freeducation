@@ -52,6 +52,12 @@ const jsonResponse = (data: unknown, status = 200) =>
     headers: { "content-type": "application/json" },
   });
 
+const htmlResponse = (html: string, status = 200) =>
+  new Response(html, {
+    status,
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+
 const parseJson = async (request: Request) => {
   try {
     return await request.json();
@@ -168,6 +174,433 @@ const buildSearchFilters = (filters: ContentSearchFilters) => {
 
 const buildWhereClause = (conditions: string[]) =>
   conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+const renderHomePage = () => `<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Freeducation LMS — NCTB Focused Learning</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --brand: #1a4b8c;
+        --accent: #f4b400;
+        --ink: #0c1526;
+        --muted: #5f6b7a;
+        --surface: #f7f8fb;
+        --card: #ffffff;
+      }
+      * {
+        box-sizing: border-box;
+        font-family: "Noto Sans Bengali", "Hind Siliguri", "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--surface);
+        line-height: 1.6;
+      }
+      header {
+        background: linear-gradient(120deg, #0d2b57 0%, #1a4b8c 55%, #2767c9 100%);
+        color: white;
+        padding: 32px 24px 48px;
+      }
+      nav {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      nav a {
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 16px;
+      }
+      .hero {
+        max-width: 1120px;
+        margin: 32px auto 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+        align-items: center;
+      }
+      .hero h1 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin: 0 0 12px;
+      }
+      .hero p {
+        margin: 0 0 16px;
+        color: #e8eef8;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .btn {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #1a1a1a;
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.18);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      main {
+        max-width: 1120px;
+        margin: -32px auto 56px;
+        padding: 0 24px;
+      }
+      .highlight {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(12, 21, 38, 0.08);
+      }
+      .highlight strong {
+        font-size: 1.1rem;
+      }
+      section {
+        margin-top: 40px;
+      }
+      h2 {
+        font-size: 1.8rem;
+        margin-bottom: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #e6eaf0;
+      }
+      .card h3 {
+        margin-top: 0;
+      }
+      .timeline {
+        display: grid;
+        gap: 12px;
+      }
+      .timeline div {
+        background: white;
+        padding: 16px;
+        border-radius: 14px;
+        border-left: 4px solid var(--brand);
+      }
+      footer {
+        background: #0d1e3b;
+        color: white;
+        padding: 32px 24px;
+      }
+      footer p {
+        margin: 0;
+        color: #d6dbea;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #f5f7ff;
+        border-radius: 999px;
+        font-weight: 600;
+        color: var(--brand);
+        font-size: 0.9rem;
+      }
+      .list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .list li {
+        margin: 8px 0;
+        color: var(--muted);
+      }
+      @media (max-width: 600px) {
+        nav {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        nav div {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <div><strong>Freeducation LMS</strong></div>
+        <div>
+          <a href="#curriculum">কারিকুলাম</a>
+          <a href="#practice">প্র্যাকটিস</a>
+          <a href="#dashboard">ড্যাশবোর্ড</a>
+          <a href="#about">আমাদের লক্ষ্য</a>
+        </div>
+      </nav>
+      <div class="hero">
+        <div>
+          <p class="pill">NCTB + Custom Curriculum</p>
+          <h1>পড়া → দাগ দেওয়া → নোট → প্র্যাকটিস</h1>
+          <p>
+            হাজারো শিক্ষার্থী ও শিক্ষককে এক জায়গায় এনে দেয়ার জন্য তৈরি
+            বাংলাদেশি স্টাডি‑স্টাইল ভিত্তিক ফ্রি LMS।
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#practice">ফ্রি প্রশ্নব্যাংক</a>
+            <a class="btn btn-secondary" href="#dashboard">অ্যাডমিন ড্যাশবোর্ড</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3>আজকের ফিচার সেট</h3>
+          <ul class="list">
+            <li>✅ NCTB বেইসড বিষয়ভিত্তিক নোট</li>
+            <li>✅ বোর্ড + বিশ্ববিদ্যালয় প্রশ্ন ব্যাংক</li>
+            <li>✅ CQ/MCQ অনুশীলন সেট</li>
+            <li>✅ শিক্ষক ও কো-অর্ডিনেটর ওয়ার্কফ্লো</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section class="highlight" id="about">
+        <div>
+          <strong>বাংলাদেশি স্টাডি ফ্লো</strong>
+          <p>বই পড়া, দাগ দেওয়া, নোট লেখা এবং সাথে সাথে প্রশ্ন অনুশীলন।</p>
+        </div>
+        <div>
+          <strong>সম্পূর্ণ ফ্রি</strong>
+          <p>সকল ক্লাস, নোট, ট্রিকস, বোর্ড প্রশ্ন এবং পরীক্ষা ফ্রি।</p>
+        </div>
+        <div>
+          <strong>স্কেল করার জন্য তৈরি</strong>
+          <p>Cloudflare Workers + D1 + R2—হাজার হাজার ইউজারের জন্য প্রস্তুত।</p>
+        </div>
+      </section>
+
+      <section id="curriculum">
+        <h2>কারিকুলাম স্টুডিও</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>NCTB বেইসলাইন</h3>
+            <p>প্রাথমিক, মাধ্যমিক, উচ্চ মাধ্যমিক স্তর ধরে সব সাবজেক্ট ম্যাপিং।</p>
+          </div>
+          <div class="card">
+            <h3>কাস্টম ওভাররাইড</h3>
+            <p>নিজস্ব অধ্যায়, আউটকাম ও কন্টেন্ট যোগ করার সুযোগ।</p>
+          </div>
+          <div class="card">
+            <h3>রিলিজ সিস্টেম</h3>
+            <p>পরীক্ষা ও কন্টেন্ট নির্দিষ্ট রিলিজ ভার্সনে লক থাকবে।</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="practice">
+        <h2>প্র্যাকটিস &amp; প্রশ্নব্যাংক</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>প্রশ্ন সেট</h3>
+            <p>বিভাগ, বছর, বোর্ড, ইউনিভার্সিটি এবং টপিক ভিত্তিক ফিল্টার।</p>
+          </div>
+          <div class="card">
+            <h3>ইন্টার‍্যাক্টিভ টেস্ট</h3>
+            <p>টাইমড টেস্ট, ইনস্ট্যান্ট রেজাল্ট, ডিফিকাল্টি মিক্স।</p>
+          </div>
+          <div class="card">
+            <h3>স্মার্ট রিকমেন্ডেশন</h3>
+            <p>দূর্বল টপিকে বেশি প্রশ্ন অনুশীলনের সাজেশন।</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard">
+        <h2>অ্যাডমিন ও কো-অর্ডিনেটর ড্যাশবোর্ড</h2>
+        <div class="timeline">
+          <div><strong>১.</strong> শিক্ষক সাবমিশন → অটোমেটেড চেক → রিভিউ কিউ</div>
+          <div><strong>২.</strong> কনটেন্ট রিভিউ → অ্যাপ্রুভ → প্রকাশ</div>
+          <div><strong>৩.</strong> রিপোর্টিং: জনপ্রিয় লেসন, প্রশ্নের পারফরম্যান্স, রেটিং</div>
+          <div><strong>৪.</strong> কাস্টম রিলিজ ও কারিকুলাম ম্যাপিং ম্যানেজমেন্ট</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>শিক্ষার্থীদের জন্য সহজ ডিজাইন</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>এক নজরে লেসন</h3>
+            <p>নোট, আন্ডারলাইন, ট্রিকস ও দ্রুত প্র্যাকটিস বোতাম।</p>
+          </div>
+          <div class="card">
+            <h3>মোবাইল‑ফার্স্ট</h3>
+            <p>লো‑ব্যান্ডউইথেও দ্রুত লোড হবে এবং সহজ নেভিগেশন।</p>
+          </div>
+          <div class="card">
+            <h3>ফিউচার লগইন</h3>
+            <p>ভবিষ্যতে নাম/ইমেইল দিয়ে প্রগ্রেস সেভ করা যাবে।</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>Freeducation LMS — বাংলাদেশের শিক্ষার্থীদের জন্য ফ্রি লার্নিং প্ল্যাটফর্ম।</p>
+    </footer>
+  </body>
+</html>`;
+
+const renderAdminOverview = () => `<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Freeducation Admin Studio</title>
+    <style>
+      :root {
+        --ink: #101828;
+        --muted: #667085;
+        --brand: #1a4b8c;
+        --surface: #f4f6fb;
+        --card: #ffffff;
+      }
+      * {
+        box-sizing: border-box;
+        font-family: "Noto Sans Bengali", "Hind Siliguri", "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+        background: var(--surface);
+        color: var(--ink);
+      }
+      header {
+        background: var(--brand);
+        color: white;
+        padding: 24px;
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 18px;
+        border: 1px solid #e5e7eb;
+      }
+      .card h3 {
+        margin-top: 0;
+      }
+      .badge {
+        display: inline-block;
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Admin Studio</h1>
+      <p>কনটেন্ট, রিভিউ, রিলিজ ও এনালিটিক্স পরিচালনার প্রোটোটাইপ।</p>
+    </header>
+    <main>
+      <div class="grid">
+        <div class="card">
+          <h3>কনটেন্ট স্ট্যাটাস</h3>
+          <p class="badge">Pending Reviews: 24</p>
+          <p class="badge">Drafts: 18</p>
+          <p class="badge">Published: 340</p>
+        </div>
+        <div class="card">
+          <h3>কারিকুলাম রিলিজ</h3>
+          <p>Active Release: <strong>NCTB-2025</strong></p>
+          <p>Next Draft: <strong>Custom-Alpha</strong></p>
+        </div>
+        <div class="card">
+          <h3>কো-অর্ডিনেটর ফ্লো</h3>
+          <p>Assigned reviews, escalation queue, QA sign-off.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>রিভিউ কিউ (উদাহরণ)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>কনটেন্ট</th>
+              <th>বিষয়</th>
+              <th>ক্লাস</th>
+              <th>স্ট্যাটাস</th>
+              <th>অ্যাসাইনড</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>গণিত - অধ্যায় ৩ নোট</td>
+              <td>গণিত</td>
+              <td>৮ম</td>
+              <td>Review</td>
+              <td>Coordinator A</td>
+            </tr>
+            <tr>
+              <td>ভৌতবিজ্ঞান MCQ সেট</td>
+              <td>ফিজিক্স</td>
+              <td>১০ম</td>
+              <td>Draft</td>
+              <td>Coordinator B</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </body>
+</html>`;
 
 const fetchContentDashboard = async (
   db: D1Database,
@@ -1304,6 +1737,14 @@ export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
     const pathname = url.pathname;
+
+    if (request.method === "GET" && pathname === "/") {
+      return htmlResponse(renderHomePage());
+    }
+
+    if (request.method === "GET" && pathname === "/admin") {
+      return htmlResponse(renderAdminOverview());
+    }
 
     if (request.method === "POST" && pathname === "/practice-tests/generate") {
       const payload = await parseJson(request);
