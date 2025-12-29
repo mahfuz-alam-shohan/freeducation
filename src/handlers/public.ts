@@ -9,21 +9,39 @@ export const renderHome = async (env: Bindings) => {
   );
 
   const body = `
+    <section class="hero">
+      <div class="page-header">
+        <h1>Freeducation Learning Hub</h1>
+        <p class="page-subtitle">Build structured learning paths for students nationwide with clear class, subject, and topic navigation.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="button" href="/admin">Admin console</a>
+        <a class="button outline" href="/admin/classes">Manage classes</a>
+      </div>
+    </section>
     <section class="card">
-      <h2>Bangladeshi Class Library</h2>
-      <p class="muted">Browse classes, subjects, chapters, and topic notes curated by administrators.</p>
-      <div class="grid two">
-        ${classes
-          .map(
-            (item) => `
-          <article class="card">
-            <h3>${escapeHtml(item.name)}</h3>
-            <p class="muted">${escapeHtml(item.level)}</p>
-            <p>${escapeHtml(item.description ?? 'No description yet.')}</p>
-            <a class="button" href="/class/${item.id}">View subjects</a>
+      <div class="stack">
+        <div class="page-header">
+          <h2>Bangladeshi Class Library</h2>
+          <p class="page-subtitle">Browse classes, subjects, chapters, and topic notes curated by administrators.</p>
+        </div>
+        <div class="grid three">
+          ${classes
+            .map(
+              (item) => `
+          <article class="card compact">
+            <div class="stack">
+              <div>
+                <h3>${escapeHtml(item.name)}</h3>
+                <p class="muted meta">${escapeHtml(item.level)}</p>
+              </div>
+              <p>${escapeHtml(item.description ?? 'No description yet.')}</p>
+              <a class="button small" href="/class/${item.id}">View subjects</a>
+            </div>
           </article>`
-          )
-          .join('')}
+            )
+            .join('')}
+        </div>
       </div>
     </section>
   `;
@@ -52,15 +70,20 @@ export const renderClass = async (env: Bindings, classId: number) => {
       <p>${escapeHtml(classRow.description ?? 'No description yet.')}</p>
     </section>
     <section class="card">
-      <h3>Subjects</h3>
+      <div class="page-header">
+        <h3>Subjects</h3>
+        <p class="page-subtitle">Select a subject to review chapters and materials.</p>
+      </div>
       <ul class="list">
         ${subjects
           .map(
             (subject) => `
-          <li>
+          <li class="list-item">
             <strong>${escapeHtml(subject.name)}</strong>
-            <p class="muted">${escapeHtml(subject.description ?? 'No description yet.')}</p>
-            <a class="button outline" href="/subject/${subject.id}">View chapters</a>
+            <p class="muted meta">${escapeHtml(subject.description ?? 'No description yet.')}</p>
+            <div class="actions">
+              <a class="button outline small" href="/subject/${subject.id}">View chapters</a>
+            </div>
           </li>`
           )
           .join('')}
@@ -90,15 +113,20 @@ export const renderSubject = async (env: Bindings, subjectId: number) => {
       <p>${escapeHtml(subject.description ?? 'No description yet.')}</p>
     </section>
     <section class="card">
-      <h3>Chapters</h3>
+      <div class="page-header">
+        <h3>Chapters</h3>
+        <p class="page-subtitle">Follow the ordered chapters to keep learning on track.</p>
+      </div>
       <ul class="list">
         ${chapters
           .map(
             (chapter) => `
-          <li>
+          <li class="list-item">
             <strong>${escapeHtml(chapter.name)}</strong>
-            <p class="muted">${escapeHtml(chapter.description ?? 'No description yet.')}</p>
-            <a class="button outline" href="/chapter/${chapter.id}">View topics</a>
+            <p class="muted meta">${escapeHtml(chapter.description ?? 'No description yet.')}</p>
+            <div class="actions">
+              <a class="button outline small" href="/chapter/${chapter.id}">View topics</a>
+            </div>
           </li>`
           )
           .join('')}
@@ -128,15 +156,20 @@ export const renderChapter = async (env: Bindings, chapterId: number) => {
       <p>${escapeHtml(chapter.description ?? 'No description yet.')}</p>
     </section>
     <section class="card">
-      <h3>Topics</h3>
+      <div class="page-header">
+        <h3>Topics</h3>
+        <p class="page-subtitle">Open a topic to read the lesson summary and resources.</p>
+      </div>
       <ul class="list">
         ${topics
           .map(
             (topic) => `
-          <li>
+          <li class="list-item">
             <strong>${escapeHtml(topic.title)}</strong>
-            <p class="muted">${escapeHtml(topic.content ?? 'No summary yet.')}</p>
-            <a class="button outline" href="/topic/${topic.id}">Open topic</a>
+            <p class="muted meta">${escapeHtml(topic.content ?? 'No summary yet.')}</p>
+            <div class="actions">
+              <a class="button outline small" href="/topic/${topic.id}">Open topic</a>
+            </div>
           </li>`
           )
           .join('')}
@@ -166,18 +199,23 @@ export const renderTopic = async (env: Bindings, topicId: number) => {
       <p>${escapeHtml(topic.content ?? 'No content yet.')}</p>
     </section>
     <section class="card">
-      <h3>Files</h3>
+      <div class="page-header">
+        <h3>Files</h3>
+        <p class="page-subtitle">Download lesson assets and supporting documents.</p>
+      </div>
       <ul class="list">
         ${files
           .map(
             (file) => `
-          <li>
+          <li class="list-item">
             <strong>${escapeHtml(file.title)}</strong>
-            <p class="muted">${escapeHtml(file.mime_type ?? 'File')} · ${file.size ?? 0} bytes</p>
-            <a class="button outline" href="/files/${file.id}">Download</a>
+            <p class="muted meta">${escapeHtml(file.mime_type ?? 'File')} · ${file.size ?? 0} bytes</p>
+            <div class="actions">
+              <a class="button outline small" href="/files/${file.id}">Download</a>
+            </div>
           </li>`
           )
-          .join('') || '<li class="muted">No files uploaded yet.</li>'}
+          .join('') || '<li class="list-item muted">No files uploaded yet.</li>'}
       </ul>
     </section>
   `;
