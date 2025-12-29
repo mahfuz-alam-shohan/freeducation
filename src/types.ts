@@ -15,7 +15,7 @@ export interface ClassRow {
   has_groups: number;
   created_at: string;
   link_id?: number | null;
-  link_name?: string | null; // Joined field
+  link_name?: string | null;
 }
 
 export interface GroupRow {
@@ -32,8 +32,6 @@ export interface SubjectRow {
   group_id?: number | null;
   link_id?: number | null;
   created_at: string;
-  
-  // Joined fields for UI convenience
   group_name?: string | null;
   chapter_count?: number;
 }
@@ -44,15 +42,39 @@ export interface ChapterRow {
   name: string;
   sort_order: number;
   created_at: string;
+  topic_count?: number;
+  question_count?: number;
 }
 
 export interface TopicRow {
   id: number;
   chapter_id: number;
   title: string;
-  content_type: 'text' | 'video' | 'pdf';
-  content_url?: string; // For video/PDF
-  content_body?: string; // For text explanation
   sort_order: number;
   created_at: string;
 }
+
+export interface ContentRow {
+  id: number;
+  topic_id: number;
+  type: 'note' | 'video' | 'pdf' | 'explanation';
+  title: string;
+  data: string; // URL or Text body
+  sort_order: number;
+  created_at: string;
+}
+
+export interface QuestionRow {
+  id: number;
+  chapter_id: number;
+  topic_id?: number; // Optional linking to topic
+  type: 'mcq' | 'short' | 'board';
+  question: string;
+  options?: string; // JSON string for MCQs
+  answer?: string;
+  explanation?: string;
+  sort_order: number;
+  created_at: string;
+}
+
+
