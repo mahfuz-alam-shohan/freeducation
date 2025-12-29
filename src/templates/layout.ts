@@ -17,7 +17,7 @@ export const publicLayout = (title: string, body: string) => `<!doctype html>
   <body class="bg-surface">
     <header class="topbar">
       <div class="container">
-        <div class="brand">Freeducation LMS</div>
+        <div class="brand"><span class="brand-mark">FL</span> Freeducation LMS</div>
         <nav class="topnav">
           <a href="/">Home</a>
           <a href="/admin">Admin</a>
@@ -44,7 +44,7 @@ export const adminLayout = (title: string, body: string, adminName?: string) => 
   <body class="app-shell">
     <div class="sidebar">
       <div>
-        <div class="brand">Admin Console</div>
+        <div class="brand"><span class="brand-mark">AD</span> Admin Console</div>
         <p class="muted">Manage classes, subjects, chapters, topics, and files.</p>
       </div>
       <nav class="nav-links">
