@@ -1,782 +1,412 @@
 import type { Bindings } from '../types';
-import { adminLayout, escapeHtml, publicLayout } from '../templates/layout';
+import { adminLayout, publicLayout } from '../templates/layout';
 import { dbAll, dbFirst, dbRun } from '../utils/db';
 import { createSalt, createSession, getSessionAdmin, hashPassword, verifyPassword } from '../utils/auth';
 import { hasAnyAdmin } from '../db/schema';
 
-const parseFormValue = (form: FormData, key: string) => {
-  const value = form.get(key);
-  if (!value || typeof value !== 'string') {
-    return '';
-  }
-  return value.trim();
+// --- Auth Middleware & Utilities ---
+const parseForm = (form: FormData, key: string) => { const v = form.get(key); return (typeof v === 'string') ? v.trim() : ''; };
+const requireAuth = async (env: Bindings, req: Request) => {
+  const cookie = req.headers.get('Cookie');
+  const token = cookie?.split(';').find(c => c.trim().startsWith('session='))?.split('=')[1];
+  const admin = await getSessionAdmin(env, token);
+  return admin;
 };
 
-// --- AUTH & SETUP ---
-
-export const renderSetup = async (env: Bindings) => {
-  if (await hasAnyAdmin(env)) {
-    return publicLayout('Setup complete', '<div class="glass-card" style="text-align:center;"><h3>Admin already exists</h3><a href="/admin/login" class="btn btn-primary mt-2">Go to Login</a></div>');
-  }
-  const body = `
-    <div style="max-width: 400px; margin: 0 auto;">
-      <h2 class="text-center mb-4">Admin Setup</h2>
-      <form class="stack" method="post" action="/admin/setup">
-        <label>
-          <span class="text-sm font-bold">Name</span>
-          <input name="name" required placeholder="Instructor Name" />
-        </label>
-        <label>
-          <span class="text-sm font-bold">Email</span>
-          <input type="email" name="email" required placeholder="admin@school.com" />
-        </label>
-        <label>
-          <span class="text-sm font-bold">Password</span>
-          <input type="password" name="password" required placeholder="••••••••" />
-        </label>
-        <button class="btn btn-primary" type="submit">Create Admin Account</button>
+// --- AUTH HANDLERS ---
+export const renderLogin = () => publicLayout('Instructor Login', `
+  <div style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 400px;">
+      <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">Instructor Portal</h2>
+      <form class="stack" method="post" action="/admin/login">
+        <div><label>Email</label><input type="email" name="email" required placeholder="admin@freeducation.bd"></div>
+        <div><label>Password</label><input type="password" name="password" required></div>
+        <button class="btn btn-primary" style="justify-content: center;">Secure Login</button>
       </form>
     </div>
-  `;
-  return publicLayout('Admin Setup', body);
+  </div>
+`);
+
+export const handleLogin = async (env: Bindings, req: Request) => {
+  const form = await req.formData();
+  const email = parseForm(form, 'email');
+  const password = parseForm(form, 'password');
+  const admin = await dbFirst<{id:number, password_hash:string, password_salt:string}>(env, 'SELECT * FROM admins WHERE email=?', email);
+  
+  if (admin && await verifyPassword(password, admin.password_salt, admin.password_hash)) {
+    const session = await createSession(env, admin.id);
+    return new Response(null, { status: 302, headers: { Location: '/admin/dashboard', 'Set-Cookie': `session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=43200` }});
+  }
+  return new Response('Invalid credentials', { status: 401 });
 };
 
-export const handleSetup = async (env: Bindings, request: Request) => {
-  if (await hasAnyAdmin(env)) {
-    return new Response('Admin already exists', { status: 400 });
-  }
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const email = parseFormValue(form, 'email');
-  const password = parseFormValue(form, 'password');
-  if (!name || !email || !password) {
-    return new Response('Missing fields', { status: 400 });
-  }
+export const renderSetup = async (env: Bindings) => {
+  if (await hasAnyAdmin(env)) return new Response('Admin exists', {status: 403});
+  return publicLayout('Setup', `<form method="post" class="container stack" style="max-width:400px; margin-top:4rem;"><h2 class="text-center">System Setup</h2><input name="name" placeholder="Name"><input name="email" placeholder="Email"><input type="password" name="password" placeholder="Password"><button class="btn btn-primary">Create Owner</button></form>`);
+};
+export const handleSetup = async (env: Bindings, req: Request) => {
+  if (await hasAnyAdmin(env)) return new Response('Forbidden', {status: 403});
+  const form = await req.formData();
   const salt = createSalt();
-  const hash = await hashPassword(password, salt);
-  await dbRun(
-    env,
-    'INSERT INTO admins (name, email, password_hash, password_salt, created_at) VALUES (?, ?, ?, ?, ?)',
-    name,
-    email,
-    hash,
-    salt,
-    new Date().toISOString()
-  );
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: '/admin/login'
-    }
-  });
-};
-
-export const renderLogin = () => {
-  const body = `
-    <div style="max-width: 400px; margin: 4rem auto;">
-      <div class="glass-card">
-        <h2 class="text-center mb-4" style="color: var(--primary);">Instructor Login</h2>
-        <form class="stack" method="post" action="/admin/login">
-          <label>
-            <span class="text-sm font-bold">Email</span>
-            <input type="email" name="email" required />
-          </label>
-          <label>
-            <span class="text-sm font-bold">Password</span>
-            <input type="password" name="password" required />
-          </label>
-          <button class="btn btn-primary" type="submit">Sign In</button>
-        </form>
-      </div>
-    </div>
-  `;
-  return publicLayout('Admin Login', body);
-};
-
-export const handleLogin = async (env: Bindings, request: Request) => {
-  const form = await request.formData();
-  const email = parseFormValue(form, 'email');
-  const password = parseFormValue(form, 'password');
-  const admin = await dbFirst<{
-    id: number;
-    password_hash: string;
-    password_salt: string;
-  }>(env, 'SELECT id, password_hash, password_salt FROM admins WHERE email = ?', email);
-
-  if (!admin) {
-    return new Response('Invalid credentials', { status: 401 });
-  }
-  const valid = await verifyPassword(password, admin.password_salt, admin.password_hash);
-  if (!valid) {
-    return new Response('Invalid credentials', { status: 401 });
-  }
-  const session = await createSession(env, admin.id);
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: '/admin/dashboard',
-      'Set-Cookie': `session=${session.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 12}`
-    }
-  });
+  const hash = await hashPassword(parseForm(form, 'password'), salt);
+  await dbRun(env, 'INSERT INTO admins (name, email, password_hash, password_salt, created_at) VALUES (?,?,?,?,?)', parseForm(form, 'name'), parseForm(form, 'email'), hash, salt, new Date().toISOString());
+  return new Response(null, { status: 302, headers: { Location: '/admin/login' }});
 };
 
 // --- DASHBOARD & CLASSES ---
-
-export const renderDashboard = async (env: Bindings, adminName: string) => {
-  const counts = await Promise.all([
-    dbFirst<{ total: number }>(env, 'SELECT COUNT(*) as total FROM classes'),
-    dbFirst<{ total: number }>(env, 'SELECT COUNT(*) as total FROM subjects'),
-    dbFirst<{ total: number }>(env, 'SELECT COUNT(*) as total FROM chapters'),
-    dbFirst<{ total: number }>(env, 'SELECT COUNT(*) as total FROM resources')
-  ]);
-
+export const renderDashboard = async (env: Bindings, admin: {name: string}) => {
+  const stats = await dbFirst<{classes:number, subjects:number, chapters:number}>(env, 
+    'SELECT (SELECT COUNT(*) FROM classes) as classes, (SELECT COUNT(*) FROM subjects) as subjects, (SELECT COUNT(*) FROM chapters) as chapters');
+  
   const body = `
-    <div class="grid-2 mb-4">
-      <div class="glass-card" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
-        <h3>Welcome, ${escapeHtml(adminName)}</h3>
-        <p style="opacity: 0.9;">Manage your digital curriculum efficiently.</p>
+    <div class="grid-3">
+      <div class="card" style="border-left: 4px solid var(--primary);">
+        <div class="text-muted">Total Classes</div>
+        <div style="font-size: 2rem; font-weight: 700;">${stats?.classes || 0}</div>
       </div>
-      <div class="glass-card flex-between">
-         <div>
-            <div class="text-muted text-sm">Total Classes</div>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">${counts[0]?.total ?? 0}</div>
-         </div>
-         <div>
-            <div class="text-muted text-sm">Subjects</div>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--secondary);">${counts[1]?.total ?? 0}</div>
-         </div>
-         <div>
-            <div class="text-muted text-sm">Resources</div>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--accent);">${counts[3]?.total ?? 0}</div>
-         </div>
+      <div class="card" style="border-left: 4px solid var(--secondary);">
+        <div class="text-muted">Active Subjects</div>
+        <div style="font-size: 2rem; font-weight: 700;">${stats?.subjects || 0}</div>
+      </div>
+      <div class="card" style="border-left: 4px solid var(--accent);">
+        <div class="text-muted">Learning Chapters</div>
+        <div style="font-size: 2rem; font-weight: 700;">${stats?.chapters || 0}</div>
       </div>
     </div>
     
-    <div class="glass-card">
-        <h3>Quick Actions</h3>
-        <div class="flex-wrap mt-2">
-            <a href="/admin/classes" class="btn btn-primary">Manage Classes</a>
-            <a href="/" target="_blank" class="btn btn-soft">View Live Site ↗</a>
-        </div>
+    <div class="card" style="margin-top: 2rem;">
+      <h3>Quick Actions</h3>
+      <div class="grid-3" style="margin-top: 1rem;">
+        <a href="/admin/classes" class="btn btn-outline">Manage Classes & Syllabus</a>
+        <a href="/" target="_blank" class="btn btn-outline">View Live Site</a>
+      </div>
     </div>
   `;
-  return adminLayout('Dashboard', body, adminName);
+  return adminLayout('Dashboard', body, admin.name, 'dashboard');
 };
 
-export const renderClasses = async (env: Bindings, adminName: string) => {
-  const classes = await dbAll<{ id: number; name: string; level: string; description: string | null }>(
-    env,
-    'SELECT id, name, level, description FROM classes ORDER BY id DESC'
-  );
-
+export const renderClasses = async (env: Bindings, admin: {name:string}) => {
+  const classes = await dbAll(env, 'SELECT * FROM classes ORDER BY id DESC');
   const body = `
     <div class="grid-2">
-        <div>
-            <h3 class="mb-4">All Classes</h3>
-            <table class="admin-table">
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Level</th>
-                    <th style="text-align: right;">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                ${classes
-                    .map(
-                    (item) => `
-                    <tr>
-                    <td>${escapeHtml(item.name)}</td>
-                    <td><span class="tag tag-board">${escapeHtml(item.level)}</span></td>
-                    <td style="text-align: right;">
-                        <a class="btn btn-soft" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" href="/admin/classes/${item.id}/subjects">Subjects</a>
-                        <a class="btn btn-soft" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" href="/admin/classes/${item.id}/edit">Edit</a>
-                    </td>
-                    </tr>`
-                    )
-                    .join('')}
-                </tbody>
-            </table>
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+          <h3>Academic Classes</h3>
         </div>
-        
-        <div class="glass-card" style="height: fit-content;">
-            <h3>Add New Class</h3>
-            <form class="stack mt-2" method="post" action="/admin/classes">
-                <input name="name" placeholder="Class Name (e.g. Class 10)" required />
-                <input name="level" placeholder="Level (e.g. SSC, HSC)" required />
-                <textarea name="description" placeholder="Description..."></textarea>
-                <button class="btn btn-primary" type="submit">Create Class</button>
-            </form>
-        </div>
-    </div>
-  `;
-  return adminLayout('Manage Classes', body, adminName);
-};
-
-export const handleCreateClass = async (env: Bindings, request: Request) => {
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const level = parseFormValue(form, 'level');
-  const description = parseFormValue(form, 'description');
-  if (!name || !level) return new Response('Missing fields', { status: 400 });
-  
-  await dbRun(
-    env,
-    'INSERT INTO classes (name, level, description, created_at) VALUES (?, ?, ?, ?)',
-    name, level, description || null, new Date().toISOString()
-  );
-  return new Response(null, { status: 302, headers: { Location: '/admin/classes' } });
-};
-
-export const renderEditClass = async (env: Bindings, adminName: string, classId: number) => {
-  const classRow = await dbFirst<{ id: number; name: string; level: string; description: string | null }>(
-    env,
-    'SELECT id, name, level, description FROM classes WHERE id = ?',
-    classId
-  );
-  if (!classRow) return adminLayout('Error', 'Class not found', adminName);
-
-  const body = `
-    <div style="max-width: 600px;">
-        <form class="stack" method="post" action="/admin/classes/${classRow.id}/edit">
-            <label>Name <input name="name" value="${escapeHtml(classRow.name)}" required /></label>
-            <label>Level <input name="level" value="${escapeHtml(classRow.level)}" required /></label>
-            <label>Description <textarea name="description">${escapeHtml(classRow.description ?? '')}</textarea></label>
-            
-            <div class="flex-between">
-                <button class="btn btn-primary" type="submit">Save Changes</button>
-                <button class="btn btn-soft" style="color: red; background: #fee2e2;" form="delete-form">Delete Class</button>
+        <div class="stack">
+          ${classes.map((c: any) => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:700; font-size: 1.1rem;">${c.name}</div>
+                <div class="badge badge-blue">${c.level}</div>
+              </div>
+              <a href="/admin/classes/${c.id}/subjects" class="btn btn-primary btn-sm">Manage Subjects →</a>
             </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="card" style="height: fit-content;">
+        <h3>Add New Class</h3>
+        <form method="post" action="/admin/classes" class="stack" style="margin-top:1rem;">
+          <input name="name" placeholder="Class Name (e.g. Class 9-10)" required>
+          <input name="level" placeholder="Level (e.g. SSC Science)" required>
+          <button class="btn btn-primary">Create Class</button>
         </form>
-        <form id="delete-form" method="post" action="/admin/classes/${classRow.id}/delete" onsubmit="return confirm('Are you sure?');"></form>
+      </div>
     </div>
   `;
-  return adminLayout('Edit Class', body, adminName);
+  return adminLayout('Classes', body, admin.name, 'classes');
 };
 
-export const handleUpdateClass = async (env: Bindings, request: Request, classId: number) => {
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const level = parseFormValue(form, 'level');
-  const description = parseFormValue(form, 'description');
-  if (!name || !level) return new Response('Missing fields', { status: 400 });
-
-  await dbRun(env, 'UPDATE classes SET name = ?, level = ?, description = ? WHERE id = ?', name, level, description || null, classId);
-  return new Response(null, { status: 302, headers: { Location: '/admin/classes' } });
-};
-
-export const handleDeleteClass = async (env: Bindings, classId: number) => {
-  await dbRun(env, 'DELETE FROM classes WHERE id = ?', classId);
-  return new Response(null, { status: 302, headers: { Location: '/admin/classes' } });
-};
-
-// --- SUBJECTS ---
-
-export const renderSubjects = async (env: Bindings, adminName: string, classId: number) => {
-  const classRow = await dbFirst<{ name: string }>(env, 'SELECT name FROM classes WHERE id = ?', classId);
-  if (!classRow) return adminLayout('Error', 'Class not found', adminName);
-
-  const subjects = await dbAll<{ id: number; name: string; description: string | null }>(
-    env,
-    'SELECT id, name, description FROM subjects WHERE class_id = ? ORDER BY id DESC',
-    classId
-  );
-
-  const body = `
-    <div class="flex-between mb-4">
-        <h3>Subjects for ${escapeHtml(classRow.name)}</h3>
-        <a href="/admin/classes" class="btn btn-soft">Back to Classes</a>
-    </div>
-
-    <div class="grid-2">
-        <div>
-            <table class="admin-table">
-                <thead><tr><th>Subject</th><th style="text-align: right;">Manage</th></tr></thead>
-                <tbody>
-                ${subjects.map((subject) => `
-                    <tr>
-                    <td>
-                        <strong>${escapeHtml(subject.name)}</strong>
-                        <div class="text-muted text-sm">${escapeHtml(subject.description ?? '')}</div>
-                    </td>
-                    <td style="text-align: right;">
-                        <a class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" href="/admin/subjects/${subject.id}/dashboard">Manage Content</a>
-                        <a class="btn btn-soft" style="padding: 0.3rem 0.5rem;" href="/admin/subjects/${subject.id}/edit">⚙️</a>
-                    </td>
-                    </tr>`
-                ).join('')}
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="glass-card" style="height: fit-content;">
-            <h3>Add Subject</h3>
-            <form class="stack mt-2" method="post" action="/admin/classes/${classId}/subjects">
-                <input name="name" placeholder="Subject Name (e.g. Mathematics)" required />
-                <textarea name="description" placeholder="Description..."></textarea>
-                <button class="btn btn-primary" type="submit">Add Subject</button>
-            </form>
-        </div>
-    </div>
-  `;
-  return adminLayout('Manage Subjects', body, adminName);
-};
-
-export const handleCreateSubject = async (env: Bindings, request: Request, classId: number) => {
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const description = parseFormValue(form, 'description');
-  if (!name) return new Response('Missing name', { status: 400 });
-
-  await dbRun(env, 'INSERT INTO subjects (class_id, name, description) VALUES (?, ?, ?)', classId, name, description || null);
-  return new Response(null, { status: 302, headers: { Location: `/admin/classes/${classId}/subjects` } });
-};
-
-export const renderEditSubject = async (env: Bindings, adminName: string, subjectId: number) => {
-  const subject = await dbFirst<{ id: number; name: string; description: string | null; class_id: number }>(
-    env,
-    'SELECT id, name, description, class_id FROM subjects WHERE id = ?',
-    subjectId
-  );
-  if (!subject) return adminLayout('Error', 'Subject not found', adminName);
-
-  const body = `
-    <div style="max-width: 600px;">
-      <form class="stack" method="post" action="/admin/subjects/${subjectId}/edit">
-        <label>Name <input name="name" value="${escapeHtml(subject.name)}" required /></label>
-        <label>Description <textarea name="description">${escapeHtml(subject.description ?? '')}</textarea></label>
-        <div class="flex-between">
-            <button class="btn btn-primary" type="submit">Save Changes</button>
-            <button class="btn btn-soft" style="color: red; background: #fee2e2;" form="delete-form">Delete Subject</button>
-        </div>
-      </form>
-      <form id="delete-form" method="post" action="/admin/subjects/${subjectId}/delete" onsubmit="return confirm('Are you sure?');"></form>
-    </div>
-  `;
-  return adminLayout('Edit Subject', body, adminName);
-};
-
-export const handleUpdateSubject = async (env: Bindings, request: Request, subjectId: number) => {
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const description = parseFormValue(form, 'description');
-  if (!name) return new Response('Missing name', { status: 400 });
-
-  const subject = await dbFirst<{class_id: number}>(env, 'SELECT class_id FROM subjects WHERE id=?', subjectId);
-  await dbRun(env, 'UPDATE subjects SET name = ?, description = ? WHERE id = ?', name, description || null, subjectId);
-  return new Response(null, { status: 302, headers: { Location: `/admin/classes/${subject?.class_id}/subjects` } });
-};
-
-export const handleDeleteSubject = async (env: Bindings, subjectId: number) => {
-  const subject = await dbFirst<{class_id: number}>(env, 'SELECT class_id FROM subjects WHERE id=?', subjectId);
-  await dbRun(env, 'DELETE FROM subjects WHERE id = ?', subjectId);
-  return new Response(null, { status: 302, headers: { Location: `/admin/classes/${subject?.class_id}/subjects` } });
-};
-
-// --- SUBJECT DASHBOARD (MERGED CHAPTERS + RESOURCES) ---
-
-export const renderSubjectDashboard = async (env: Bindings, adminName: string, subjectId: number) => {
-  const subject = await dbFirst<{ name: string; class_id: number }>(env, 'SELECT name, class_id FROM subjects WHERE id = ?', subjectId);
-  if (!subject) return adminLayout('Error', 'Subject not found', adminName);
-
-  const chapters = await dbAll<{ id: number; name: string; order_index: number }>(
-    env,
-    'SELECT id, name, order_index FROM chapters WHERE subject_id = ? ORDER BY order_index ASC',
-    subjectId
-  );
+// --- SUBJECT & CHAPTER MANAGER ---
+export const renderSubjects = async (env: Bindings, admin: {name:string}, classId: number) => {
+  const cls = await dbFirst(env, 'SELECT * FROM classes WHERE id=?', classId) as any;
+  const subjects = await dbAll(env, 'SELECT * FROM subjects WHERE class_id=?', classId);
   
-  const resources = await dbAll<{ id: number; title: string; category: string }>(
-    env,
-    'SELECT id, title, category FROM resources WHERE subject_id = ? ORDER BY id DESC',
-    subjectId
-  );
+  const body = `
+    <div style="margin-bottom: 1.5rem;">
+      <a href="/admin/classes" class="text-muted">← Back to Classes</a>
+      <h2>${cls.name} Subjects</h2>
+    </div>
+    <div class="grid-2">
+      <div class="stack">
+        ${subjects.map((s: any) => `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between;">
+              <h3 style="color: var(--primary);">${s.name}</h3>
+              <a href="/admin/subjects/${s.id}/dashboard" class="btn btn-outline btn-sm">Open Course Manager</a>
+            </div>
+            <p class="text-muted" style="margin-top:0.5rem;">${s.description || 'No description'}</p>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card" style="height: fit-content;">
+        <h3>Add Subject</h3>
+        <form method="post" action="/admin/classes/${classId}/subjects" class="stack">
+          <input name="name" placeholder="Subject Name (e.g. Higher Math)" required>
+          <textarea name="description" placeholder="Description"></textarea>
+          <button class="btn btn-primary">Add Subject</button>
+        </form>
+      </div>
+    </div>
+  `;
+  return adminLayout(`${cls.name} Subjects`, body, admin.name, 'classes');
+};
+
+// --- COURSE MANAGER (The Professional Dashboard) ---
+export const renderCourseDashboard = async (env: Bindings, admin: {name:string}, subjectId: number) => {
+  const sub = await dbFirst(env, 'SELECT * FROM subjects WHERE id=?', subjectId) as any;
+  const chapters = await dbAll(env, 'SELECT * FROM chapters WHERE subject_id=? ORDER BY order_index', subjectId);
+  const resources = await dbAll(env, 'SELECT * FROM resources WHERE subject_id=? ORDER BY created_at DESC', subjectId);
 
   const body = `
-    <div class="flex-between mb-4">
-        <div>
-           <h2 class="text-primary">${escapeHtml(subject.name)} Content Manager</h2>
-           <p class="text-muted text-sm">Organize chapters and library assets.</p>
-        </div>
-        <a href="/admin/classes/${subject.class_id}/subjects" class="btn btn-soft">Back</a>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+      <div>
+        <a href="/admin/classes/${sub.class_id}/subjects" class="text-muted">← Back to Subjects</a>
+        <h1>${sub.name} <span class="badge badge-orange">Course Manager</span></h1>
+      </div>
     </div>
 
     <div class="grid-2">
-       <!-- LEFT: CHAPTERS -->
-       <div class="glass-card">
-         <h3 class="mb-4">📘 Chapters (Lessons)</h3>
-         <form method="post" action="/admin/subjects/${subjectId}/chapters" class="mb-4" style="display: flex; gap: 0.5rem;">
-            <input name="name" placeholder="Chapter Name" required style="flex:1;" />
-            <input name="order_index" type="number" placeholder="#" style="width: 60px;" value="${chapters.length + 1}" />
+      <!-- Left: Chapter Syllabus -->
+      <div>
+        <h3 style="margin-bottom:1rem;">📖 Syllabus & Chapters</h3>
+        <div class="stack">
+          ${chapters.map((c: any) => `
+            <div class="card" style="border-left: 4px solid var(--primary);">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div class="text-muted" style="font-size:0.8rem;">Chapter ${c.order_index}</div>
+                  <div style="font-weight:700; font-size:1.1rem;">${c.name}</div>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                   <a href="/admin/chapters/${c.id}/content" class="btn btn-primary btn-sm">Edit Content</a>
+                   <a href="/admin/chapters/${c.id}/questions" class="btn btn-outline btn-sm">Question Bank</a>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="card" style="margin-top:1rem; background: var(--slate-50);">
+          <h4>Add Chapter</h4>
+          <form method="post" action="/admin/subjects/${subjectId}/chapters" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <input name="order_index" type="number" placeholder="#" style="width:60px;" value="${chapters.length+1}">
+            <input name="name" placeholder="Chapter Title" required>
             <button class="btn btn-primary">Add</button>
-         </form>
-         
-         <table class="admin-table">
-            ${chapters.length === 0 ? '<tr><td class="text-muted">No chapters yet.</td></tr>' : ''}
-            ${chapters.map(c => `
-               <tr>
-                 <td style="width: 30px; color: var(--text-muted);">#${c.order_index}</td>
-                 <td>${escapeHtml(c.name)}</td>
-                 <td style="text-align: right;">
-                    <a href="/admin/chapters/${c.id}/topics" class="btn btn-soft" style="font-size: 0.8rem;">Manage Topics</a>
-                    <a href="/admin/chapters/${c.id}/edit" class="btn btn-soft" style="font-size: 0.8rem;">Edit</a>
-                 </td>
-               </tr>
-            `).join('')}
-         </table>
-       </div>
+          </form>
+        </div>
+      </div>
 
-       <!-- RIGHT: RESOURCES -->
-       <div class="glass-card" style="background: #f8fafc;">
-         <h3 class="mb-4">📚 Library (Books & Papers)</h3>
-         <form method="post" action="/admin/subjects/${subjectId}/resources" enctype="multipart/form-data" class="mb-4 stack">
-            <input name="title" placeholder="Title (e.g. Math Textbook 2024)" required />
-            <div class="flex-between">
-                <select name="category" required style="flex:1; margin-right: 0.5rem;">
-                    <option value="textbook">Textbook (NCTB)</option>
-                    <option value="board_question">Board Question</option>
-                    <option value="guide">Guide Book</option>
-                </select>
-                <input type="file" name="file" required style="flex:1;" />
-            </div>
-            <button class="btn btn-secondary" style="background: var(--secondary); color: white;">Upload Resource</button>
-         </form>
-         
-         <table class="admin-table">
-            ${resources.length === 0 ? '<tr><td class="text-muted">No resources uploaded.</td></tr>' : ''}
-            ${resources.map(r => `
-               <tr>
-                 <td>
-                    <strong>${escapeHtml(r.title)}</strong><br/>
-                    <span class="tag" style="font-size: 0.7rem;">${r.category}</span>
-                 </td>
-                 <td style="text-align: right;">
-                    <form method="post" action="/admin/resources/${r.id}/delete" onsubmit="return confirm('Delete this file?');">
-                        <button class="btn btn-soft" style="color: red; padding: 0.2rem 0.6rem;">×</button>
-                    </form>
-                 </td>
-               </tr>
-            `).join('')}
-         </table>
-       </div>
+      <!-- Right: Digital Library -->
+      <div>
+        <h3 style="margin-bottom:1rem;">📚 Digital Library (PDFs)</h3>
+        <div class="card">
+          <form method="post" action="/admin/subjects/${subjectId}/resources" enctype="multipart/form-data" class="stack">
+            <label>Upload New Resource</label>
+            <input name="title" placeholder="Title (e.g. Lecture Sheet 1)" required>
+            <select name="category">
+              <option value="guide">Lecture Sheet / Guide</option>
+              <option value="board_paper">Board Question Paper</option>
+              <option value="textbook">Textbook</option>
+            </select>
+            <input type="file" name="file" required>
+            <button class="btn btn-outline">Upload PDF</button>
+          </form>
+        </div>
+        <div class="stack" style="margin-top:1rem;">
+           ${resources.map((r: any) => `
+             <div style="background:white; padding:0.8rem; border-radius:8px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;">
+               <div>
+                 <div style="font-weight:600;">${r.title}</div>
+                 <div class="badge badge-green">${r.category}</div>
+               </div>
+               <a href="/resource/${r.id}" target="_blank" class="btn btn-sm btn-outline">View</a>
+             </div>
+           `).join('')}
+        </div>
+      </div>
     </div>
   `;
-  return adminLayout(`Manage ${subject.name}`, body, adminName);
+  return adminLayout(`${sub.name} Manager`, body, admin.name, 'classes');
 };
 
-// --- RESOURCE HANDLERS ---
-
-export const handleCreateResource = async (env: Bindings, request: Request, subjectId: number) => {
-  const form = await request.formData();
-  const title = parseFormValue(form, 'title');
-  const category = parseFormValue(form, 'category');
-  const file = form.get('file');
-
-  if (!title || !category || !(file instanceof File)) return new Response('Bad Request', { status: 400 });
-
-  const buffer = await file.arrayBuffer();
-  const key = `res-${subjectId}/${Date.now()}-${file.name}`;
-  
-  await env.BUCKET.put(key, buffer, {
-      httpMetadata: { contentType: file.type || 'application/pdf' }
-  });
-
-  await dbRun(
-      env,
-      'INSERT INTO resources (subject_id, category, title, r2_key, mime_type, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      subjectId, category, title, key, file.type, new Date().toISOString()
-  );
-
-  return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${subjectId}/dashboard` } });
-};
-
-export const handleDeleteResource = async (env: Bindings, resourceId: number) => {
-    const res = await dbFirst<{r2_key: string, subject_id: number}>(env, 'SELECT r2_key, subject_id FROM resources WHERE id = ?', resourceId);
-    if(res) {
-        await env.BUCKET.delete(res.r2_key);
-        await dbRun(env, 'DELETE FROM resources WHERE id = ?', resourceId);
-        return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${res.subject_id}/dashboard` } });
-    }
-    return new Response('Not found', {status: 404});
-};
-
-// --- CHAPTERS ---
-
-export const handleCreateChapter = async (env: Bindings, request: Request, subjectId: number) => {
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const orderIndex = Number(parseFormValue(form, 'order_index')) || 0;
-  
-  if (!name) return new Response('Missing name', { status: 400 });
-
-  await dbRun(env, 'INSERT INTO chapters (subject_id, name, order_index) VALUES (?, ?, ?)', subjectId, name, orderIndex);
-  return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${subjectId}/dashboard` } });
-};
-
-export const renderEditChapter = async (env: Bindings, adminName: string, chapterId: number) => {
-  const chapter = await dbFirst<{ id: number; name: string; description: string | null; order_index: number; subject_id: number }>(
-    env,
-    'SELECT id, name, description, order_index, subject_id FROM chapters WHERE id = ?',
-    chapterId
-  );
-  if (!chapter) return adminLayout('Error', 'Chapter not found', adminName);
+// --- CHAPTER CONTENT EDITOR (Topics & Explanations) ---
+export const renderChapterContent = async (env: Bindings, admin: {name:string}, chapterId: number) => {
+  const chapter = await dbFirst(env, 'SELECT * FROM chapters WHERE id=?', chapterId) as any;
+  const topics = await dbAll(env, 'SELECT * FROM topics WHERE chapter_id=? ORDER BY order_index', chapterId);
+  // Get contents for all topics to display summary
+  const contents = await dbAll(env, `SELECT * FROM contents WHERE topic_id IN (SELECT id FROM topics WHERE chapter_id=?)`, chapterId);
 
   const body = `
-    <div style="max-width: 600px;">
-        <form class="stack" method="post" action="/admin/chapters/${chapterId}/edit">
-            <label>Name <input name="name" value="${escapeHtml(chapter.name)}" required /></label>
-            <label>Order <input type="number" name="order_index" value="${chapter.order_index}" /></label>
-            <label>Description <textarea name="description">${escapeHtml(chapter.description ?? '')}</textarea></label>
-            
-            <div class="flex-between">
-                <button class="btn btn-primary" type="submit">Update Chapter</button>
-                <button class="btn btn-soft" style="color: red; background: #fee2e2;" form="delete-form">Delete Chapter</button>
-            </div>
-        </form>
-        <form id="delete-form" method="post" action="/admin/chapters/${chapterId}/delete" onsubmit="return confirm('Delete this chapter and all topics?');"></form>
-    </div>
-  `;
-  return adminLayout('Edit Chapter', body, adminName);
-};
-
-export const handleUpdateChapter = async (env: Bindings, request: Request, chapterId: number) => {
-  const form = await request.formData();
-  const name = parseFormValue(form, 'name');
-  const description = parseFormValue(form, 'description');
-  const orderIndex = Number(parseFormValue(form, 'order_index')) || 0;
-  
-  if (!name) return new Response('Missing name', { status: 400 });
-
-  const chapter = await dbFirst<{subject_id: number}>(env, 'SELECT subject_id FROM chapters WHERE id=?', chapterId);
-  await dbRun(env, 'UPDATE chapters SET name = ?, description = ?, order_index = ? WHERE id = ?', name, description || null, orderIndex, chapterId);
-  
-  return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${chapter?.subject_id}/dashboard` } });
-};
-
-export const handleDeleteChapter = async (env: Bindings, chapterId: number) => {
-  const chapter = await dbFirst<{subject_id: number}>(env, 'SELECT subject_id FROM chapters WHERE id=?', chapterId);
-  await dbRun(env, 'DELETE FROM chapters WHERE id = ?', chapterId);
-  return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${chapter?.subject_id}/dashboard` } });
-};
-
-// --- TOPICS (LESSONS) ---
-
-export const renderTopics = async (env: Bindings, adminName: string, chapterId: number) => {
-  const chapter = await dbFirst<{ name: string; subject_id: number }>(env, 'SELECT name, subject_id FROM chapters WHERE id = ?', chapterId);
-  if (!chapter) return adminLayout('Error', 'Chapter not found', adminName);
-
-  const topics = await dbAll<{ id: number; title: string; type: string; order_index: number }>(
-    env,
-    'SELECT id, title, type, order_index FROM topics WHERE chapter_id = ? ORDER BY order_index ASC',
-    chapterId
-  );
-
-  const body = `
-    <div class="flex-between mb-4">
-        <h3>Topics in ${escapeHtml(chapter.name)}</h3>
-        <a href="/admin/subjects/${chapter.subject_id}/dashboard" class="btn btn-soft">Back to Subject</a>
+    <div style="margin-bottom:2rem;">
+       <a href="/admin/subjects/${chapter.subject_id}/dashboard" class="text-muted">← Back to Course</a>
+       <h2>${chapter.name}: Content Editor</h2>
+       <p class="text-muted">Break down the chapter into topics and explanations.</p>
     </div>
 
     <div class="grid-2">
-        <div>
-            <table class="admin-table">
-                <thead><tr><th>Order</th><th>Title</th><th>Type</th><th style="text-align: right;">Actions</th></tr></thead>
-                <tbody>
-                ${topics.map(t => `
-                    <tr>
-                    <td>${t.order_index}</td>
-                    <td>${escapeHtml(t.title)}</td>
-                    <td><span class="tag" style="font-size: 0.7rem;">${t.type || 'note'}</span></td>
-                    <td style="text-align: right;">
-                        <a href="/admin/topics/${t.id}/files" class="btn btn-soft" style="font-size: 0.8rem;">Files</a>
-                        <a href="/admin/topics/${t.id}/edit" class="btn btn-soft" style="font-size: 0.8rem;">Edit</a>
-                    </td>
-                    </tr>
-                `).join('')}
-                </tbody>
-            </table>
-        </div>
+       <div class="stack">
+         ${topics.map((t: any) => {
+            const topicContents = contents.filter((c:any) => c.topic_id === t.id);
+            return `
+            <div class="card">
+               <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                 <h3>${t.title}</h3>
+                 <form method="post" action="/admin/topics/${t.id}/delete" onsubmit="return confirm('Delete topic?');"><button class="text-muted" style="background:none; border:none; cursor:pointer;">×</button></form>
+               </div>
+               
+               <!-- Existing Contents List -->
+               <div style="margin-bottom:1rem; padding-left:0.5rem; border-left:2px solid #e2e8f0;">
+                 ${topicContents.map((c:any) => `
+                    <div style="font-size:0.85rem; margin-bottom:0.3rem;">
+                       ${c.type === 'explanation' ? '📝 Explanation' : '💡 Short Q&A'} 
+                       <span class="text-muted">(${c.body.substring(0, 30)}...)</span>
+                    </div>
+                 `).join('')}
+               </div>
 
-        <div class="glass-card" style="height: fit-content;">
-            <h3>Add Topic</h3>
-            <form class="stack mt-2" method="post" action="/admin/chapters/${chapterId}/topics">
-                <input name="title" placeholder="Topic Title (e.g. Newton's 2nd Law)" required />
-                <select name="type">
-                    <option value="note">Standard Note</option>
-                    <option value="math_solution">Math Solution</option>
-                    <option value="cq_practice">Creative Question</option>
-                </select>
-                <textarea name="content" placeholder="Summary or Main Content..."></textarea>
-                <input type="number" name="order_index" value="${topics.length + 1}" placeholder="Order" />
-                <button class="btn btn-primary">Create Topic</button>
-            </form>
-        </div>
-    </div>
-  `;
-  return adminLayout(`Topics: ${chapter.name}`, body, adminName);
-};
-
-export const handleCreateTopic = async (env: Bindings, request: Request, chapterId: number) => {
-  const form = await request.formData();
-  const title = parseFormValue(form, 'title');
-  const type = parseFormValue(form, 'type');
-  const content = parseFormValue(form, 'content');
-  const orderIndex = Number(parseFormValue(form, 'order_index')) || 0;
-
-  if (!title) return new Response('Missing title', { status: 400 });
-
-  await dbRun(
-    env,
-    'INSERT INTO topics (chapter_id, title, content, type, order_index, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-    chapterId, title, content || null, type || 'note', orderIndex, new Date().toISOString()
-  );
-  return new Response(null, { status: 302, headers: { Location: `/admin/chapters/${chapterId}/topics` } });
-};
-
-export const renderEditTopic = async (env: Bindings, adminName: string, topicId: number) => {
-  const topic = await dbFirst<{ id: number; title: string; content: string | null; type: string; order_index: number }>(
-    env,
-    'SELECT id, title, content, type, order_index FROM topics WHERE id = ?',
-    topicId
-  );
-  if (!topic) return adminLayout('Error', 'Topic not found', adminName);
-
-  const body = `
-    <div style="max-width: 800px;">
-        <form class="stack" method="post" action="/admin/topics/${topicId}/edit">
-            <label>Title <input name="title" value="${escapeHtml(topic.title)}" required /></label>
-            <label>Type 
-                <select name="type">
-                    <option value="note" ${topic.type === 'note' ? 'selected' : ''}>Standard Note</option>
-                    <option value="math_solution" ${topic.type === 'math_solution' ? 'selected' : ''}>Math Solution</option>
-                    <option value="cq_practice" ${topic.type === 'cq_practice' ? 'selected' : ''}>Creative Question</option>
-                </select>
-            </label>
-            <label>Order <input type="number" name="order_index" value="${topic.order_index}" /></label>
-            <label>Content <textarea name="content" style="min-height: 200px;">${escapeHtml(topic.content ?? '')}</textarea></label>
-            
-            <div class="flex-between">
-                <button class="btn btn-primary" type="submit">Update Topic</button>
-                <button class="btn btn-soft" style="color: red; background: #fee2e2;" form="delete-form">Delete Topic</button>
+               <!-- Add Content Form -->
+               <form method="post" action="/admin/topics/${t.id}/contents" class="stack" style="background:#f8fafc; padding:0.8rem; border-radius:8px;">
+                 <select name="type" style="padding:0.4rem;">
+                   <option value="explanation">Detailed Explanation</option>
+                   <option value="short_qa">Short Question (Gyan Mulok)</option>
+                   <option value="formula">Key Formula</option>
+                 </select>
+                 <textarea name="body" placeholder="Write content here (Markdown/HTML supported)..." rows="3"></textarea>
+                 <button class="btn btn-sm btn-outline">Add Content Block</button>
+               </form>
             </div>
-        </form>
-        <form id="delete-form" method="post" action="/admin/topics/${topicId}/delete" onsubmit="return confirm('Delete this topic?');"></form>
+            `;
+         }).join('')}
+         
+         <div class="card" style="border: 2px dashed #cbd5e1; text-align:center;">
+            <h4>Add New Topic</h4>
+            <form method="post" action="/admin/chapters/${chapterId}/topics" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+               <input name="title" placeholder="Topic Title (e.g. Newton's 2nd Law)" required>
+               <input name="order_index" type="number" placeholder="#" style="width:50px;" value="${topics.length+1}">
+               <button class="btn btn-primary">Add Topic</button>
+            </form>
+         </div>
+       </div>
+       
+       <div class="card">
+         <h3>Tips for Instructors</h3>
+         <ul class="text-muted">
+           <li>Use <strong>Explanations</strong> for long-form theory.</li>
+           <li>Use <strong>Short Question</strong> for 1-mark "Gyan Mulok" Q&A.</li>
+           <li>Break large chapters into 3-5 small topics for better readability.</li>
+         </ul>
+       </div>
     </div>
   `;
-  return adminLayout('Edit Topic', body, adminName);
+  return adminLayout(`Edit Content: ${chapter.name}`, body, admin.name, 'classes');
 };
 
-export const handleUpdateTopic = async (env: Bindings, request: Request, topicId: number) => {
-  const form = await request.formData();
-  const title = parseFormValue(form, 'title');
-  const type = parseFormValue(form, 'type');
-  const content = parseFormValue(form, 'content');
-  const orderIndex = Number(parseFormValue(form, 'order_index')) || 0;
-
-  const topic = await dbFirst<{chapter_id: number}>(env, 'SELECT chapter_id FROM topics WHERE id=?', topicId);
-
-  await dbRun(
-    env,
-    'UPDATE topics SET title = ?, content = ?, type = ?, order_index = ? WHERE id = ?',
-    title, content || null, type, orderIndex, topicId
-  );
-  return new Response(null, { status: 302, headers: { Location: `/admin/chapters/${topic?.chapter_id}/topics` } });
-};
-
-export const handleDeleteTopic = async (env: Bindings, topicId: number) => {
-  const topic = await dbFirst<{chapter_id: number}>(env, 'SELECT chapter_id FROM topics WHERE id=?', topicId);
-  await dbRun(env, 'DELETE FROM topics WHERE id = ?', topicId);
-  return new Response(null, { status: 302, headers: { Location: `/admin/chapters/${topic?.chapter_id}/topics` } });
-};
-
-// --- FILES FOR TOPICS ---
-
-export const renderFiles = async (env: Bindings, adminName: string, topicId: number) => {
-  const topic = await dbFirst<{ title: string; chapter_id: number }>(env, 'SELECT title, chapter_id FROM topics WHERE id = ?', topicId);
-  if (!topic) return adminLayout('Error', 'Topic not found', adminName);
-
-  const files = await dbAll<{ id: number; title: string; size: number }>(
-    env,
-    'SELECT id, title, size FROM files WHERE topic_id = ? ORDER BY id DESC',
-    topicId
-  );
+// --- QUESTION BANK EDITOR (MCQ & CQ) ---
+export const renderQuestionBank = async (env: Bindings, admin: {name:string}, chapterId: number) => {
+  const chapter = await dbFirst(env, 'SELECT * FROM chapters WHERE id=?', chapterId) as any;
+  const questions = await dbAll(env, 'SELECT * FROM questions WHERE chapter_id=? ORDER BY created_at DESC', chapterId);
 
   const body = `
-    <div class="flex-between mb-4">
-        <h3>Files for: ${escapeHtml(topic.title)}</h3>
-        <a href="/admin/chapters/${topic.chapter_id}/topics" class="btn btn-soft">Back to Topics</a>
+    <div style="margin-bottom:2rem;">
+       <a href="/admin/subjects/${chapter.subject_id}/dashboard" class="text-muted">← Back to Course</a>
+       <h2>${chapter.name}: Question Bank</h2>
     </div>
 
     <div class="grid-2">
-        <div class="glass-card">
-            <h4 class="mb-4">Upload File</h4>
-            <form class="stack" method="post" action="/admin/topics/${topicId}/files" enctype="multipart/form-data">
-                <input name="title" placeholder="File Display Name" required />
-                <input type="file" name="file" required />
-                <button class="btn btn-primary">Upload</button>
-            </form>
-        </div>
+       <div>
+         <h3 style="margin-bottom:1rem;">Existing Questions</h3>
+         ${questions.map((q: any) => `
+           <div class="question-item">
+             <div class="badge ${q.type === 'mcq' ? 'badge-blue' : 'badge-green'}">${q.type.toUpperCase()}</div>
+             <div style="margin-top:0.5rem; font-weight:500;">${q.question_text}</div>
+             ${q.type === 'mcq' ? `<div class="text-muted" style="font-size:0.85rem; margin-top:0.3rem;">Options: ${q.options_json} | Ans: ${q.correct_answer}</div>` : ''}
+             <div style="margin-top:0.5rem; font-size:0.85rem; color:#64748b;">Solution: ${q.solution_text || 'N/A'}</div>
+           </div>
+         `).join('')}
+       </div>
 
-        <div>
-            <table class="admin-table">
-                <thead><tr><th>File</th><th>Size</th><th>Action</th></tr></thead>
-                <tbody>
-                ${files.map(f => `
-                    <tr>
-                        <td>${escapeHtml(f.title)}</td>
-                        <td>${Math.round(f.size / 1024)} KB</td>
-                        <td>
-                            <form method="post" action="/admin/files/${f.id}/delete">
-                                <button class="btn btn-soft" style="color: red; padding: 0.2rem 0.6rem;">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                `).join('')}
-                </tbody>
-            </table>
-        </div>
+       <div class="stack">
+         <div class="card">
+           <h3>Add MCQ</h3>
+           <form method="post" action="/admin/chapters/${chapterId}/questions" class="stack">
+             <input type="hidden" name="type" value="mcq">
+             <textarea name="question" placeholder="Question Text" required></textarea>
+             <input name="option_a" placeholder="Option A" required>
+             <input name="option_b" placeholder="Option B" required>
+             <input name="option_c" placeholder="Option C" required>
+             <input name="option_d" placeholder="Option D" required>
+             <select name="correct_answer">
+               <option value="A">Answer: A</option>
+               <option value="B">Answer: B</option>
+               <option value="C">Answer: C</option>
+               <option value="D">Answer: D</option>
+             </select>
+             <textarea name="solution" placeholder="Explanation (Optional)"></textarea>
+             <button class="btn btn-primary">Save MCQ</button>
+           </form>
+         </div>
+
+         <div class="card">
+           <h3>Add Creative Question (CQ)</h3>
+           <form method="post" action="/admin/chapters/${chapterId}/questions" class="stack">
+             <input type="hidden" name="type" value="cq">
+             <textarea name="question" placeholder="Stem / Stimulus (Uddipok)" rows="4" required></textarea>
+             <textarea name="solution" placeholder="Solution Guidelines" rows="4"></textarea>
+             <button class="btn btn-success" style="background:var(--success); color:white; border:none;">Save CQ</button>
+           </form>
+         </div>
+       </div>
     </div>
   `;
-  return adminLayout('Manage Files', body, adminName);
+  return adminLayout(`QB: ${chapter.name}`, body, admin.name, 'classes');
 };
 
-export const handleUploadFile = async (env: Bindings, request: Request, topicId: number) => {
-  const form = await request.formData();
-  const title = parseFormValue(form, 'title');
-  const file = form.get('file');
-  if (!title || !(file instanceof File)) return new Response('Missing file', { status: 400 });
-
-  const buffer = await file.arrayBuffer();
-  const key = `topic-${topicId}/${Date.now()}-${file.name}`;
-  
-  await env.BUCKET.put(key, buffer, { httpMetadata: { contentType: file.type || 'application/octet-stream' } });
-  
-  await dbRun(
-    env,
-    'INSERT INTO files (topic_id, title, r2_key, mime_type, size, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-    topicId, title, key, file.type || null, buffer.byteLength, new Date().toISOString()
-  );
-  return new Response(null, { status: 302, headers: { Location: `/admin/topics/${topicId}/files` } });
+// --- DATA ACTION HANDLERS ---
+// (These handle POST requests for the forms above)
+export const handleCreateClass = async (env: Bindings, req: Request) => {
+  const form = await req.formData();
+  await dbRun(env, 'INSERT INTO classes (name, level, created_at) VALUES (?,?,?)', parseForm(form, 'name'), parseForm(form, 'level'), new Date().toISOString());
+  return new Response(null, { status: 302, headers: { Location: '/admin/classes' }});
 };
-
-export const handleDeleteFile = async (env: Bindings, fileId: number) => {
-  const file = await dbFirst<{ r2_key: string; topic_id: number }>(env, 'SELECT r2_key, topic_id FROM files WHERE id = ?', fileId);
-  if (file) {
-    if (file.r2_key) await env.BUCKET.delete(file.r2_key);
-    await dbRun(env, 'DELETE FROM files WHERE id = ?', fileId);
-    return new Response(null, { status: 302, headers: { Location: `/admin/topics/${file.topic_id}/files` } });
+export const handleCreateSubject = async (env: Bindings, req: Request, classId: number) => {
+  const form = await req.formData();
+  await dbRun(env, 'INSERT INTO subjects (class_id, name, description) VALUES (?,?,?)', classId, parseForm(form, 'name'), parseForm(form, 'description'));
+  return new Response(null, { status: 302, headers: { Location: `/admin/classes/${classId}/subjects` }});
+};
+export const handleCreateChapter = async (env: Bindings, req: Request, subjectId: number) => {
+  const form = await req.formData();
+  await dbRun(env, 'INSERT INTO chapters (subject_id, name, order_index) VALUES (?,?,?)', subjectId, parseForm(form, 'name'), parseForm(form, 'order_index'));
+  return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${subjectId}/dashboard` }});
+};
+export const handleCreateTopic = async (env: Bindings, req: Request, chapterId: number) => {
+  const form = await req.formData();
+  await dbRun(env, 'INSERT INTO topics (chapter_id, title, order_index) VALUES (?,?,?)', chapterId, parseForm(form, 'title'), parseForm(form, 'order_index'));
+  return new Response(null, { status: 302, headers: { Location: `/admin/chapters/${chapterId}/content` }});
+};
+export const handleAddContent = async (env: Bindings, req: Request, topicId: number) => {
+  const form = await req.formData();
+  const t = await dbFirst(env, 'SELECT chapter_id FROM topics WHERE id=?', topicId) as any;
+  await dbRun(env, 'INSERT INTO contents (topic_id, type, body) VALUES (?,?,?)', topicId, parseForm(form, 'type'), parseForm(form, 'body'));
+  return new Response(null, { status: 302, headers: { Location: `/admin/chapters/${t.chapter_id}/content` }});
+};
+export const handleAddQuestion = async (env: Bindings, req: Request, chapterId: number) => {
+  const form = await req.formData();
+  const type = parseForm(form, 'type');
+  let options = null;
+  if (type === 'mcq') {
+    options = JSON.stringify([parseForm(form, 'option_a'), parseForm(form, 'option_b'), parseForm(form, 'option_c'), parseForm(form, 'option_d')]);
   }
-  return new Response('File not found', { status: 404 });
+  await dbRun(env, 'INSERT INTO questions (chapter_id, type, question_text, options_json, correct_answer, solution_text, created_at) VALUES (?,?,?,?,?,?,?)',
+    chapterId, type, parseForm(form, 'question'), options, parseForm(form, 'correct_answer'), parseForm(form, 'solution'), new Date().toISOString());
+  return new Response(null, { status: 302, headers: { Location: `/admin/chapters/${chapterId}/questions` }});
 };
-
-// --- AUTH HELPER ---
-
-export const requireAdmin = async (env: Bindings, request: Request) => {
-  const cookieHeader = request.headers.get('Cookie');
-  const sessionToken = cookieHeader
-    ?.split(';')
-    .map((chunk) => chunk.trim())
-    .find((chunk) => chunk.startsWith('session='))
-    ?.split('=')[1];
-  const admin = await getSessionAdmin(env, sessionToken);
-  return { admin, sessionToken };
+export const handleUploadResource = async (env: Bindings, req: Request, subjectId: number) => {
+  const form = await req.formData();
+  const file = form.get('file') as File;
+  const key = `res-${subjectId}-${Date.now()}-${file.name}`;
+  await env.BUCKET.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type }});
+  await dbRun(env, 'INSERT INTO resources (subject_id, category, title, r2_key, mime_type, created_at) VALUES (?,?,?,?,?,?)',
+    subjectId, parseForm(form, 'category'), parseForm(form, 'title'), key, file.type, new Date().toISOString());
+  return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${subjectId}/dashboard` }});
 };
