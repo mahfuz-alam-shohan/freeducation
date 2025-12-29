@@ -244,6 +244,94 @@ CREATE TABLE IF NOT EXISTS practice_test_attempt_answers (
   FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 
+-- User models and learner progress (future auth integration planned via external identities).
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  user_type TEXT NOT NULL CHECK (user_type IN ('student', 'teacher')),
+  display_name TEXT NOT NULL,
+  email TEXT,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  last_login_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Maps users to external auth providers (e.g. OAuth, SSO). No auth logic implemented yet.
+CREATE TABLE IF NOT EXISTS user_auth_identities (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  provider_subject TEXT NOT NULL,
+  email_verified INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (provider, provider_subject),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS student_profiles (
+  user_id TEXT PRIMARY KEY,
+  grade_id TEXT,
+  enrollment_year INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (grade_id) REFERENCES grades(id)
+);
+
+CREATE TABLE IF NOT EXISTS teacher_profiles (
+  user_id TEXT PRIMARY KEY,
+  organization TEXT,
+  region TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS lesson_progress (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  lesson_id TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('not_started', 'in_progress', 'completed')),
+  started_at TEXT,
+  completed_at TEXT,
+  last_viewed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, lesson_id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (lesson_id) REFERENCES content_items(id)
+);
+
+CREATE TABLE IF NOT EXISTS question_set_attempts (
+  id TEXT PRIMARY KEY,
+  question_set_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('in_progress', 'submitted', 'expired')),
+  started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  submitted_at TEXT,
+  score REAL,
+  max_score REAL,
+  time_limit_seconds INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (question_set_id) REFERENCES question_sets(content_item_id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS question_set_attempt_answers (
+  attempt_id TEXT NOT NULL,
+  question_id TEXT NOT NULL,
+  selected_choice_ids TEXT,
+  answer_text TEXT,
+  is_correct INTEGER,
+  awarded_points REAL,
+  answered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (attempt_id, question_id),
+  FOREIGN KEY (attempt_id) REFERENCES question_set_attempts(id),
+  FOREIGN KEY (question_id) REFERENCES questions(id)
+);
+
 -- Admin overrides: non-destructive edits layered on top of baseline records.
 -- override_data stores partial updates (e.g. {"name": "New Name"}).
 CREATE TABLE IF NOT EXISTS curriculum_overrides (
@@ -310,6 +398,16 @@ CREATE INDEX IF NOT EXISTS idx_practice_test_questions_test ON practice_test_que
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_test ON practice_test_attempts(practice_test_id);
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_user ON practice_test_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempt_answers_attempt ON practice_test_attempt_answers(attempt_id);
+CREATE INDEX IF NOT EXISTS idx_users_type ON users(user_type);
+CREATE INDEX IF NOT EXISTS idx_user_auth_provider ON user_auth_identities(provider);
+CREATE INDEX IF NOT EXISTS idx_user_auth_user ON user_auth_identities(user_id);
+CREATE INDEX IF NOT EXISTS idx_student_profiles_grade ON student_profiles(grade_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_profiles_region ON teacher_profiles(region);
+CREATE INDEX IF NOT EXISTS idx_lesson_progress_user ON lesson_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_lesson_progress_lesson ON lesson_progress(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_question_set_attempts_set ON question_set_attempts(question_set_id);
+CREATE INDEX IF NOT EXISTS idx_question_set_attempts_user ON question_set_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_question_set_attempt_answers_attempt ON question_set_attempt_answers(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_entity ON curriculum_overrides(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_release ON curriculum_overrides(release_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
