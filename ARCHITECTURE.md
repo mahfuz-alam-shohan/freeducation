@@ -131,6 +131,17 @@ Key goals:
 - Content items and assessments reference a release id to lock to a stable curriculum version.
 - New releases can be created by cloning baseline entities and applying new overrides.
 
+**Release Quality Gates**:
+- Before promoting a release from `draft` to `active`, the platform must complete:
+  - **Content completeness** checks (required chapters/outcomes populated, minimum content coverage met).
+  - **Alignment validation** (content aligned to outcomes for the targeted grade/subject).
+  - **Assessment difficulty distribution** validation (expected mix of easy/medium/hard).
+  - **Plagiarism/duplication** checks across content and assessments.
+  - **Metadata validation** (required tags, grade/subject, version lineage, release linkage).
+- **Sign-off requirements**: promotions require approvals from the curriculum lead, QA, and moderation.
+- **Rollback policy**: if critical issues appear post-release, revert the release to `archived` and re-activate the prior stable release; content and assessments should continue to reference the prior release id while fixes are applied.
+- **Schema mapping**: these gates align with the curriculum release entity in `schema/curriculum.sql` (release table + status fields). Future lifecycle markers (e.g., `release_status`, `promoted_at`, `rolled_back_at`, and approval audit tables) will track gate completion and sign-off.
+
 **Schema reference**:
 - See `schema/curriculum.sql` for D1 table definitions and indexes.
 
