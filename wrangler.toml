@@ -7,7 +7,7 @@ compatibility_date = "2024-10-01"
 binding = "DB"
 database_name = "freeducation"
 database_id = "ffb6494a-52e3-487a-b259-c396438ac565"
-migrations_dir = "migrations" # <--- This is the Key for automation
+
 
 # R2 Bucket Binding
 [[r2_buckets]]
