@@ -479,7 +479,8 @@ export const adminComponents = `
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-[10px] font-bold bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{q.type}</span>
                                     <span className="text-[10px] text-gray-400">
-                                        {JSON.parse(q.metadata).board} {JSON.parse(q.metadata).year}
+                                        {/* FIX: Removed JSON.parse here as API returns object now */}
+                                        {q.metadata && q.metadata.board} {q.metadata && q.metadata.year}
                                     </span>
                                 </div>
                                 <p className="font-medium text-gray-800 text-sm truncate">{q.question_text}</p>
