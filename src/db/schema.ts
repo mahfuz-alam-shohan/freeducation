@@ -107,9 +107,16 @@ const getExistingColumns = async (env: Bindings, tableName: string) => {
   return results.map((row) => row.name);
 };
 
+const isSystemTable = (name: string) =>
+  name === 'sqlite_sequence' ||
+  name.startsWith('sqlite_') ||
+  name.startsWith('d1_') ||
+  name.startsWith('_d1_') ||
+  name.startsWith('_cf_');
+
 const dropExtraTables = async (env: Bindings, existing: string[]) => {
   const extras = existing.filter(
-    (name) => !TABLE_LIST.includes(name) && name !== 'sqlite_sequence'
+    (name) => !TABLE_LIST.includes(name) && !isSystemTable(name)
   );
   for (const name of extras) {
     await env.DB.prepare(`DROP TABLE IF EXISTS ${name}`).run();
