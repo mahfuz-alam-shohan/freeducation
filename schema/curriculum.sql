@@ -67,11 +67,15 @@ CREATE TABLE IF NOT EXISTS content_items (
   chapter_id TEXT,
   outcome_id TEXT,
   type TEXT NOT NULL CHECK (type IN ('lesson', 'note', 'question_set', 'resource')),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'review', 'approved', 'published')),
   title TEXT NOT NULL,
   description TEXT,
   difficulty TEXT CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
   year INTEGER,
   board_university TEXT,
+  owner_id TEXT,
+  created_by TEXT,
+  updated_by TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (release_id) REFERENCES curriculum_releases(id),
@@ -255,6 +259,26 @@ CREATE TABLE IF NOT EXISTS curriculum_overrides (
   FOREIGN KEY (release_id) REFERENCES curriculum_releases(id)
 );
 
+-- Admin roles and ownership/audit tracking.
+CREATE TABLE IF NOT EXISTS user_roles (
+  user_id TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('super_admin', 'content_admin', 'coordinator', 'reviewer')),
+  assigned_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, role)
+);
+
+CREATE TABLE IF NOT EXISTS content_item_audit_logs (
+  id TEXT PRIMARY KEY,
+  content_item_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  actor_id TEXT,
+  from_status TEXT CHECK (from_status IN ('draft', 'review', 'approved', 'published')),
+  to_status TEXT CHECK (to_status IN ('draft', 'review', 'approved', 'published')),
+  details_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (content_item_id) REFERENCES content_items(id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_grades_release ON grades(release_id);
 CREATE INDEX IF NOT EXISTS idx_subjects_grade ON subjects(grade_id);
 CREATE INDEX IF NOT EXISTS idx_subjects_release ON subjects(release_id);
@@ -266,6 +290,8 @@ CREATE INDEX IF NOT EXISTS idx_content_items_release ON content_items(release_id
 CREATE INDEX IF NOT EXISTS idx_content_items_chapter ON content_items(chapter_id);
 CREATE INDEX IF NOT EXISTS idx_content_items_outcome ON content_items(outcome_id);
 CREATE INDEX IF NOT EXISTS idx_content_items_type ON content_items(type);
+CREATE INDEX IF NOT EXISTS idx_content_items_status ON content_items(status);
+CREATE INDEX IF NOT EXISTS idx_content_items_owner ON content_items(owner_id);
 CREATE INDEX IF NOT EXISTS idx_content_tags_name ON content_tags(name);
 CREATE INDEX IF NOT EXISTS idx_content_item_tags_tag ON content_item_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_lesson_notes_note ON lesson_notes(note_id);
@@ -286,3 +312,5 @@ CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_user ON practice_test_atte
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempt_answers_attempt ON practice_test_attempt_answers(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_entity ON curriculum_overrides(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_release ON curriculum_overrides(release_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
+CREATE INDEX IF NOT EXISTS idx_content_item_audit_logs_item ON content_item_audit_logs(content_item_id);
