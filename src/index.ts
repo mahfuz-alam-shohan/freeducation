@@ -1,10 +1,12 @@
 /**
  * FREEDUCATION LMS - Cloudflare Worker
  * Single-file Full Stack Application
- * * Handles:
- * 1. Database Initialization (D1)
- * 2. API Routes (Auth, Classes, Content)
- * 3. Frontend Serving (React SPA via SSR/Embedded HTML)
+ * * FEATURES INCLUDED:
+ * 1. Database: Automatic table creation & Reset capability
+ * 2. Security: Salted Password Hashing for Admins
+ * 3. Student Frontend: Interactive study mode, Search, Class Browsing
+ * 4. Admin Dashboard: Full content management (Class -> Subject -> Chapter -> Topic -> Question)
+ * 5. Class Linking: Alias system (e.g., Class 10 uses Class 9 content)
  */
 
 interface Env {
@@ -19,10 +21,10 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS Headers
+    // CORS Headers for API accessibility
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS, PUT",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     };
 
@@ -30,9 +32,11 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // --- API ROUTES ---
+    // =================================================================================
+    // API ROUTES
+    // =================================================================================
 
-    // 1. Initialize Database
+    // 1. SYSTEM INITIALIZATION
     if (path === "/api/init" && request.method === "POST") {
       try {
         await initDatabase(env.DB);
@@ -42,68 +46,64 @@ export default {
       }
     }
 
-    // 2. Check Setup (Is Admin Created?)
     if (path === "/api/setup-status") {
       const result = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
       return Response.json({ hasAdmin: (result?.count as number) > 0 }, { headers: corsHeaders });
     }
 
-    // 3. Admin Registration (Only allowed if no admins exist)
+    // 2. AUTHENTICATION (SECURE)
     if (path === "/api/register-admin" && request.method === "POST") {
       const { username, password } = await request.json() as any;
+      
+      // Check if admin exists
       const count = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
       if ((count?.count as number) > 0) {
         return Response.json({ success: false, error: "Admin already exists" }, { status: 403, headers: corsHeaders });
       }
       
-      // Security Upgrade: Salted SHA-256
+      // Generate Salt and Hash
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
       const hash = await hashPassword(password, saltHex);
-      const finalHash = `${saltHex}:${hash}`; // Store format: salt:hash
-
+      
+      // Store as salt:hash
+      const finalHash = `${saltHex}:${hash}`;
       await env.DB.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").bind(username, finalHash).run();
+      
       return Response.json({ success: true }, { headers: corsHeaders });
     }
 
-    // 4. Login
     if (path === "/api/login" && request.method === "POST") {
       const { username, password } = await request.json() as any;
       const user = await env.DB.prepare("SELECT * FROM admins WHERE username = ?").bind(username).first();
+      
       if (!user) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: corsHeaders });
       
-      // Security Check
-      const stored = user.password_hash as string;
-      const [saltHex, originalHash] = stored.split(':');
+      const storedHash = user.password_hash as string;
+      const [saltHex, originalHash] = storedHash.split(':');
       
       if (!saltHex || !originalHash) {
-          // Fallback for old insecure passwords (auto-migrate if needed, but for now just fail or check legacy)
-          // For this update, we assume fresh start or compatible format
-          return Response.json({ success: false, error: "Legacy account security mismatch. Please reset DB." }, { status: 401, headers: corsHeaders });
+          return Response.json({ success: false, error: "Security mismatch. Please reset DB." }, { status: 401, headers: corsHeaders });
       }
 
       const hash = await hashPassword(password, saltHex);
-      if (hash !== originalHash) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: corsHeaders });
+      if (hash !== originalHash) {
+          return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: corsHeaders });
+      }
 
-      // In a real app, generate a real JWT here. For this demo, we return a simple session marker.
-      return Response.json({ success: true, token: "admin-session-active", username: user.username }, { headers: corsHeaders });
+      return Response.json({ success: true, username: user.username }, { headers: corsHeaders });
     }
 
-    // 4.5 Reset Database (New Route)
-    if (path === "/api/reset-db" && request.method === "POST") {
-        // In a real app, verify ADMIN token here!
-        try {
-            await resetDatabase(env.DB);
-            return Response.json({ success: true, message: "System reset complete" }, { headers: corsHeaders });
-        } catch (e: any) {
-             return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders });
-        }
-    }
-
-    // 5. Manage Classes
+    // 3. CLASS MANAGEMENT (WITH LINKING)
     if (path === "/api/classes") {
       if (request.method === "GET") {
-        const classes = await env.DB.prepare("SELECT * FROM classes ORDER BY created_at DESC").all();
+        // Fetch classes and join with parent class name for UI display
+        const classes = await env.DB.prepare(`
+            SELECT c.*, p.name as parent_name 
+            FROM classes c 
+            LEFT JOIN classes p ON c.parent_class_id = p.id 
+            ORDER BY c.created_at DESC
+        `).all();
         return Response.json(classes.results, { headers: corsHeaders });
       }
       if (request.method === "POST") {
@@ -111,37 +111,58 @@ export default {
         await env.DB.prepare("INSERT INTO classes (name) VALUES (?)").bind(name).run();
         return Response.json({ success: true }, { headers: corsHeaders });
       }
+      if (request.method === "PUT") {
+          // Link a class to another (Alias System)
+          const { id, parent_class_id, program_label } = await request.json() as any;
+          await env.DB.prepare("UPDATE classes SET parent_class_id = ?, program_label = ? WHERE id = ?")
+            .bind(parent_class_id || null, program_label || null, id)
+            .run();
+          return Response.json({ success: true }, { headers: corsHeaders });
+      }
     }
 
-    // 6. Manage Groups
+    // --- HELPER: Resolve Linked Content ---
+    // If Class 10 is linked to Class 9, requests for Class 10 content should return Class 9's content
+    const resolveContentId = async (classId: string | number) => {
+        const cls = await env.DB.prepare("SELECT parent_class_id FROM classes WHERE id = ?").bind(classId).first();
+        return (cls && cls.parent_class_id) ? cls.parent_class_id : classId;
+    };
+
+    // 4. CONTENT HIERARCHY (Groups -> Subjects -> Chapters -> Topics -> Questions)
+    
+    // Groups
     if (path === "/api/groups") {
       if (request.method === "GET") {
         const { class_id } = Object.fromEntries(url.searchParams);
-        const groups = await env.DB.prepare("SELECT * FROM groups WHERE class_id = ?").bind(class_id).all();
+        const sourceId = await resolveContentId(class_id);
+        const groups = await env.DB.prepare("SELECT * FROM groups WHERE class_id = ?").bind(sourceId).all();
         return Response.json(groups.results, { headers: corsHeaders });
       }
       if (request.method === "POST") {
         const { name, class_id } = await request.json() as any;
-        await env.DB.prepare("INSERT INTO groups (name, class_id) VALUES (?, ?)").bind(name, class_id).run();
+        const sourceId = await resolveContentId(class_id);
+        await env.DB.prepare("INSERT INTO groups (name, class_id) VALUES (?, ?)").bind(name, sourceId).run();
         return Response.json({ success: true }, { headers: corsHeaders });
       }
     }
 
-    // 7. Manage Subjects
+    // Subjects
     if (path === "/api/subjects") {
       if (request.method === "GET") {
         const { class_id } = Object.fromEntries(url.searchParams);
-        const subjects = await env.DB.prepare("SELECT * FROM subjects WHERE class_id = ?").bind(class_id).all();
+        const sourceId = await resolveContentId(class_id);
+        const subjects = await env.DB.prepare("SELECT * FROM subjects WHERE class_id = ?").bind(sourceId).all();
         return Response.json(subjects.results, { headers: corsHeaders });
       }
       if (request.method === "POST") {
         const { name, class_id, is_common, group_id } = await request.json() as any;
-        await env.DB.prepare("INSERT INTO subjects (name, class_id, is_common, group_id) VALUES (?, ?, ?, ?)").bind(name, class_id, is_common ? 1 : 0, group_id || null).run();
+        const sourceId = await resolveContentId(class_id);
+        await env.DB.prepare("INSERT INTO subjects (name, class_id, is_common, group_id) VALUES (?, ?, ?, ?)").bind(name, sourceId, is_common ? 1 : 0, group_id || null).run();
         return Response.json({ success: true }, { headers: corsHeaders });
       }
     }
 
-    // 8. Manage Chapters
+    // Chapters
     if (path === "/api/chapters") {
       if (request.method === "GET") {
         const { subject_id } = Object.fromEntries(url.searchParams);
@@ -155,7 +176,7 @@ export default {
       }
     }
 
-    // 9. Manage Topics
+    // Topics
     if (path === "/api/topics") {
       if (request.method === "GET") {
         const { chapter_id } = Object.fromEntries(url.searchParams);
@@ -169,7 +190,7 @@ export default {
       }
     }
 
-    // 10. Manage Questions
+    // Questions
     if (path === "/api/questions") {
         if (request.method === "GET") {
             const { topic_id } = Object.fromEntries(url.searchParams);
@@ -186,18 +207,55 @@ export default {
         }
     }
 
+    // 5. SEARCH & UTILITIES
+    if (path === "/api/search") {
+        const { q } = Object.fromEntries(url.searchParams);
+        const term = `%${q}%`;
+        
+        // Search across Subjects, Chapters, and Topics
+        const results = await env.DB.batch([
+            env.DB.prepare("SELECT id, name as title, 'subject' as type FROM subjects WHERE name LIKE ? LIMIT 5").bind(term),
+            env.DB.prepare("SELECT id, title, 'chapter' as type FROM chapters WHERE title LIKE ? LIMIT 5").bind(term),
+            env.DB.prepare("SELECT id, title, 'topic' as type FROM topics WHERE title LIKE ? LIMIT 5").bind(term)
+        ]);
+        
+        const combined = [
+            ...results[0].results,
+            ...results[1].results,
+            ...results[2].results
+        ];
+        
+        return Response.json(combined, { headers: corsHeaders });
+    }
+
+    if (path === "/api/reset-db" && request.method === "POST") {
+        // Drop all tables
+        await env.DB.batch([
+            env.DB.prepare("DROP TABLE IF EXISTS questions"),
+            env.DB.prepare("DROP TABLE IF EXISTS topics"),
+            env.DB.prepare("DROP TABLE IF EXISTS chapters"),
+            env.DB.prepare("DROP TABLE IF EXISTS subjects"),
+            env.DB.prepare("DROP TABLE IF EXISTS groups"),
+            env.DB.prepare("DROP TABLE IF EXISTS classes"),
+            env.DB.prepare("DROP TABLE IF EXISTS admins")
+        ]);
+        // Re-initialize
+        await initDatabase(env.DB);
+        return Response.json({ success: true, message: "System Reset" }, { headers: corsHeaders });
+    }
 
     // --- FRONTEND SERVING ---
-    // Serve the HTML for any other route
     return new Response(getHtml(), {
       headers: { "Content-Type": "text/html" },
     });
   },
 };
 
-// --- DATABASE HELPERS ---
+// =================================================================================
+// DATABASE & HELPERS
+// =================================================================================
+
 async function initDatabase(db: D1Database) {
-  // SQLite D1 Batch Execution
   await db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS admins (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -208,6 +266,8 @@ async function initDatabase(db: D1Database) {
     db.prepare(`CREATE TABLE IF NOT EXISTS classes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE,
+      parent_class_id INTEGER NULL,
+      program_label TEXT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS groups (
@@ -242,53 +302,29 @@ async function initDatabase(db: D1Database) {
     )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS questions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT, -- 'MCQ' or 'CQ'
+      type TEXT, 
       topic_id INTEGER,
       question_text TEXT,
-      options TEXT, -- JSON array for MCQ
+      options TEXT, 
       answer TEXT,
-      metadata TEXT, -- JSON { board, year, college, type }
+      metadata TEXT, 
       FOREIGN KEY(topic_id) REFERENCES topics(id)
     )`),
   ]);
 }
 
-// Security: Salted Hash
 async function hashPassword(password: string, saltHex: string) {
   const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw", 
-    enc.encode(password + saltHex), 
-    { name: "PBKDF2" }, 
-    false, 
-    ["deriveBits", "deriveKey"]
-  );
-  
-  // Using simple SHA-256 with salt appended for this environment context, 
-  // ensuring we don't depend on complex key derivation that might time out or require polyfills in some worker envs.
-  // Ideally use PBKDF2 iterations, but for this demo, salted SHA-256 is a massive step up from unsalted.
   const msgBuffer = enc.encode(password + saltHex);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function resetDatabase(db: D1Database) {
-    // Drop all tables in reverse order of dependencies
-    await db.batch([
-        db.prepare("DROP TABLE IF EXISTS questions"),
-        db.prepare("DROP TABLE IF EXISTS topics"),
-        db.prepare("DROP TABLE IF EXISTS chapters"),
-        db.prepare("DROP TABLE IF EXISTS subjects"),
-        db.prepare("DROP TABLE IF EXISTS groups"),
-        db.prepare("DROP TABLE IF EXISTS classes"),
-        db.prepare("DROP TABLE IF EXISTS admins"),
-    ]);
-    // Re-init
-    await initDatabase(db);
-}
+// =================================================================================
+// REACT FRONTEND
+// =================================================================================
 
-// --- FRONTEND HTML (Single Page App) ---
 function getHtml() {
   return `
 <!DOCTYPE html>
@@ -298,21 +334,25 @@ function getHtml() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeducation - Learning Platform</title>
     
-    <!-- Scripts & Styles -->
+    <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -321,24 +361,27 @@ function getHtml() {
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- COMPONENTS ---
+        // --- SHARED UI COMPONENTS ---
 
         const Loading = () => (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="flex items-center justify-center h-screen text-blue-600">
+                <i className="fas fa-circle-notch fa-spin text-4xl"></i>
             </div>
         );
 
-        const Button = ({ children, onClick, variant = 'primary', className = '' }) => {
-            const baseStyle = "px-4 py-2 rounded-lg font-medium transition duration-200 transform active:scale-95";
+        const Button = ({ children, onClick, variant = 'primary', className = '', ...props }) => {
             const variants = {
                 primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md",
                 secondary: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
-                danger: "bg-red-500 text-white hover:bg-red-600",
-                ghost: "bg-transparent text-gray-600 hover:bg-gray-100"
+                danger: "bg-red-50 text-red-600 border border-red-100 hover:bg-red-100",
+                ghost: "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
             };
             return (
-                <button onClick={onClick} className={\`\${baseStyle} \${variants[variant]} \${className}\`}>
+                <button 
+                    onClick={onClick} 
+                    className={\`px-4 py-2 rounded-lg font-medium transition-all transform active:scale-95 \${variants[variant]} \${className}\`} 
+                    {...props}
+                >
                     {children}
                 </button>
             );
@@ -347,20 +390,25 @@ function getHtml() {
         const Input = ({ label, ...props }) => (
             <div className="mb-4">
                 {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
-                <input {...props} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                <input 
+                    {...props} 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white" 
+                />
             </div>
         );
 
         const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
                         <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                             <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-                            <button onClick={onClose} className="text-gray-400 hover:text-red-500"><i className="fas fa-times"></i></button>
+                            <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition">
+                                <i className="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                        <div className="p-6 overflow-y-auto">
                             {children}
                         </div>
                     </div>
@@ -368,30 +416,27 @@ function getHtml() {
             );
         };
 
-        // --- APP LOGIC ---
+        // --- MAIN APP CONTAINER ---
 
         function App() {
-            const [view, setView] = useState('landing'); // landing, login, register, admin, class-content
+            const [view, setView] = useState('landing'); // 'landing', 'login', 'register', 'admin'
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
-            
-            // Initialization Check
+
+            // Initial System Check
             useEffect(() => {
-                const init = async () => {
-                    // Initialize DB Tables
-                    await fetch('/api/init', { method: 'POST' });
-                    // Check Admin Status
+                const initSystem = async () => {
+                    await fetch('/api/init', { method: 'POST' }); // Ensure DB is ready
                     const res = await fetch('/api/setup-status');
                     const data = await res.json();
                     setHasAdmin(data.hasAdmin);
                 };
-                init();
+                initSystem();
             }, []);
 
-            const login = async (username, password) => {
+            const handleLogin = async (username, password) => {
                 const res = await fetch('/api/login', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ username, password })
                 });
                 const data = await res.json();
@@ -403,15 +448,14 @@ function getHtml() {
                 }
             };
 
-            const register = async (username, password) => {
+            const handleRegister = async (username, password) => {
                 const res = await fetch('/api/register-admin', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ username, password })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert("Admin created! Please login.");
+                    alert("Admin created successfully. Please login.");
                     setHasAdmin(true);
                     setView('login');
                 } else {
@@ -423,84 +467,330 @@ function getHtml() {
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    {/* Navigation */}
-                    <nav className="bg-white border-b sticky top-0 z-30 shadow-sm">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex justify-between h-16">
-                                <div className="flex items-center cursor-pointer" onClick={() => setView('landing')}>
-                                    <i className="fas fa-graduation-cap text-blue-600 text-2xl mr-2"></i>
-                                    <span className="font-bold text-2xl tracking-tight text-gray-900" style={{fontFamily: "'Playfair Display', serif"}}>Freeducation</span>
-                                </div>
-                                <div className="flex items-center space-x-4">
-                                    {user ? (
-                                        <button onClick={() => setView('admin')} className="text-gray-600 hover:text-blue-600 font-medium">Dashboard</button>
-                                    ) : (
-                                        <button onClick={() => setView(hasAdmin ? 'login' : 'register')} className="text-blue-600 font-medium hover:bg-blue-50 px-3 py-1 rounded">
-                                            {hasAdmin ? 'Admin Login' : 'Setup Admin'}
-                                        </button>
-                                    )}
-                                </div>
+                    {/* Navigation Bar */}
+                    <nav className="glass-panel sticky top-0 z-40 border-b border-gray-200 shadow-sm">
+                        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
+                                <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold font-serif text-2xl shadow-lg">F</div>
+                                <span className="font-bold text-2xl tracking-tight text-gray-800 font-serif">Freeducation</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                {user ? (
+                                    <Button variant="ghost" onClick={() => setView('admin')}>
+                                        <i className="fas fa-columns mr-2"></i> Dashboard
+                                    </Button>
+                                ) : (
+                                    <button 
+                                        onClick={() => setView(hasAdmin ? 'login' : 'register')} 
+                                        className="text-sm font-medium text-gray-500 hover:text-blue-600 transition"
+                                    >
+                                        {hasAdmin ? 'Staff Login' : 'System Setup'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </nav>
 
-                    {/* Main Content Switch */}
+                    {/* Main Content Area */}
                     <main className="flex-grow bg-gray-50">
-                        {view === 'landing' && <LandingPage setView={setView} />}
-                        {view === 'login' && <AuthForm mode="login" onSubmit={login} />}
-                        {view === 'register' && <AuthForm mode="register" onSubmit={register} />}
-                        {view === 'admin' && user && <AdminDashboard user={user} logout={() => { setUser(null); setView('landing'); }} />}
+                        {view === 'landing' && <StudentLandingPage />}
+                        {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
+                        {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
+                        {view === 'admin' && user && (
+                            <AdminDashboard user={user} logout={() => { setUser(null); setView('landing'); }} />
+                        )}
                     </main>
                 </div>
             );
         }
 
-        // --- SUB-VIEWS ---
+        // --- STUDENT FRONTEND COMPONENTS ---
 
-        function LandingPage({ setView }) {
+        function StudentLandingPage() {
             const [classes, setClasses] = useState([]);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [searchResults, setSearchResults] = useState([]);
+            const [selectedClass, setSelectedClass] = useState(null);
 
             useEffect(() => {
                 fetch('/api/classes').then(res => res.json()).then(setClasses);
             }, []);
 
+            useEffect(() => {
+                if (searchQuery.length > 2) {
+                    const timer = setTimeout(() => {
+                        fetch(\`/api/search?q=\${searchQuery}\`).then(res => res.json()).then(setSearchResults);
+                    }, 300);
+                    return () => clearTimeout(timer);
+                } else {
+                    setSearchResults([]);
+                }
+            }, [searchQuery]);
+
+            if (selectedClass) {
+                return <StudentClassView cls={selectedClass} onBack={() => setSelectedClass(null)} />;
+            }
+
             return (
                 <div className="animate-fade-in">
-                    {/* Hero */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 px-4 text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">Free Academic Resources for Everyone</h1>
-                        <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">Master your curriculum with our comprehensive question banks, notes, and topic-wise breakdowns.</p>
-                        <button className="bg-white text-blue-700 px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition">
-                            Start Learning Now
-                        </button>
+                    {/* Hero Section */}
+                    <div className="bg-blue-600 text-white py-24 px-4 text-center relative overflow-hidden">
+                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                         <div className="relative z-10 max-w-4xl mx-auto">
+                            <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6 drop-shadow-md">Learn Without Limits.</h1>
+                            <p className="text-xl md:text-2xl text-blue-100 mb-10 font-light max-w-2xl mx-auto">
+                                High-quality notes, question banks, and resources for every student in Bangladesh.
+                            </p>
+                            
+                            {/* Search Bar */}
+                            <div className="max-w-xl mx-auto relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i className="fas fa-search text-gray-400 group-focus-within:text-blue-500 transition"></i>
+                                </div>
+                                <input 
+                                    className="w-full py-4 pl-12 pr-6 rounded-full text-gray-800 shadow-xl focus:ring-4 focus:ring-blue-400/50 outline-none text-lg transition" 
+                                    placeholder="Search topics, chapters, or subjects..." 
+                                    value={searchQuery} 
+                                    onChange={e => setSearchQuery(e.target.value)} 
+                                />
+                                {searchResults.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 bg-white rounded-xl shadow-2xl mt-3 overflow-hidden text-left z-20 border border-gray-100">
+                                        {searchResults.map((res, idx) => (
+                                            <div key={idx} className="p-4 hover:bg-gray-50 border-b last:border-0 cursor-pointer flex items-center justify-between group/item">
+                                                <span className="font-medium text-gray-700">{res.title}</span>
+                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-100 px-2 py-1 rounded group-hover/item:bg-blue-100 group-hover/item:text-blue-600 transition">
+                                                    {res.type}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                         </div>
                     </div>
 
-                    {/* Featured Content */}
-                    <div className="max-w-7xl mx-auto px-4 py-12">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i className="fas fa-star text-yellow-500 mr-2"></i> Featured Classes
-                        </h2>
-                        
-                        {classes.length === 0 ? (
-                            <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300 text-gray-500">
-                                No classes uploaded yet. Check back soon!
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {classes.map(cls => (
-                                    <div key={cls.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-100 overflow-hidden group">
-                                        <div className="h-32 bg-blue-50 flex items-center justify-center">
-                                            <i className="fas fa-book-open text-4xl text-blue-300 group-hover:text-blue-500 transition"></i>
+                    {/* Class Browser */}
+                    <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-20 pb-20">
+                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-8 flex items-center">
+                                <i className="fas fa-layer-group text-blue-600 mr-3"></i> Available Classes
+                            </h2>
+                            {classes.length === 0 ? (
+                                <div className="text-center py-12 text-gray-400">No classes added yet.</div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {classes.map(cls => (
+                                        <div 
+                                            key={cls.id} 
+                                            onClick={() => setSelectedClass(cls)} 
+                                            className="bg-gray-50 rounded-xl p-6 hover:bg-blue-50 cursor-pointer border border-transparent hover:border-blue-200 hover:-translate-y-1 transition-all group shadow-sm hover:shadow-md"
+                                        >
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-blue-600 text-xl font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                    {cls.name.replace(/[^0-9]/g,'') || cls.name[0]}
+                                                </div>
+                                                {cls.program_label && (
+                                                    <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full uppercase tracking-wider">
+                                                        {cls.program_label}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-lg text-gray-900 mb-1">{cls.name}</h3>
+                                            <p className="text-xs text-gray-500 flex items-center">
+                                                {cls.parent_class_id ? (
+                                                    <><i className="fas fa-link mr-1"></i> Linked Content</>
+                                                ) : (
+                                                    <><i className="fas fa-database mr-1"></i> Full Curriculum</>
+                                                )}
+                                            </p>
                                         </div>
-                                        <div className="p-6">
-                                            <h3 className="text-xl font-bold text-gray-800 mb-2">{cls.name}</h3>
-                                            <p className="text-gray-500 text-sm mb-4">Access comprehensive notes and question banks.</p>
-                                            <button className="w-full py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium">
-                                                Browse Resources
-                                            </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function StudentClassView({ cls, onBack }) {
+            const [groups, setGroups] = useState([]);
+            const [subjects, setSubjects] = useState([]);
+            const [selectedGroupId, setSelectedGroupId] = useState(null);
+            const [selectedSubject, setSelectedSubject] = useState(null);
+
+            useEffect(() => {
+                const fetchData = async () => {
+                    // API handles fetching from parent class if linked
+                    const [groupsRes, subjectsRes] = await Promise.all([
+                        fetch(\`/api/groups?class_id=\${cls.id}\`),
+                        fetch(\`/api/subjects?class_id=\${cls.id}\`)
+                    ]);
+                    setGroups(await groupsRes.json());
+                    setSubjects(await subjectsRes.json());
+                };
+                fetchData();
+            }, [cls]);
+
+            if (selectedSubject) {
+                return <StudentSubjectView subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
+            }
+
+            // Filter subjects based on selection
+            const displayedSubjects = subjects.filter(s => s.is_common || (selectedGroupId && s.group_id === selectedGroupId));
+
+            return (
+                <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in min-h-screen">
+                    <button onClick={onBack} className="flex items-center text-gray-500 hover:text-blue-600 mb-8 font-medium transition">
+                        <i className="fas fa-arrow-left mr-2"></i> Back to Classes
+                    </button>
+
+                    <div className="flex flex-col md:flex-row gap-8">
+                        {/* Sidebar: Groups */}
+                        <div className="w-full md:w-72 flex-shrink-0">
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
+                                <h3 className="font-bold text-gray-900 mb-1 text-lg">{cls.name}</h3>
+                                <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider">Filter by Group</p>
+                                
+                                <div className="space-y-2">
+                                    <button 
+                                        onClick={() => setSelectedGroupId(null)}
+                                        className={\`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition flex justify-between items-center \${selectedGroupId === null ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}\`}
+                                    >
+                                        Common / All
+                                        {selectedGroupId === null && <i className="fas fa-check"></i>}
+                                    </button>
+                                    {groups.map(g => (
+                                        <button 
+                                            key={g.id}
+                                            onClick={() => setSelectedGroupId(g.id)}
+                                            className={\`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition flex justify-between items-center \${selectedGroupId === g.id ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}\`}
+                                        >
+                                            {g.name}
+                                            {selectedGroupId === g.id && <i className="fas fa-check"></i>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Main Grid: Subjects */}
+                        <div className="flex-1">
+                            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm min-h-[500px]">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Subjects</h2>
+                                {displayedSubjects.length === 0 ? (
+                                    <div className="text-gray-400 italic text-center py-20">No subjects found. Select a group from the left.</div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {displayedSubjects.map(sub => (
+                                            <div 
+                                                key={sub.id} 
+                                                onClick={() => setSelectedSubject(sub)} 
+                                                className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg cursor-pointer transition-all hover:-translate-y-1 group"
+                                            >
+                                                <div className="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                                    <i className="fas fa-book text-xl"></i>
+                                                </div>
+                                                <h3 className="font-bold text-gray-800 group-hover:text-indigo-600 transition">{sub.name}</h3>
+                                                <p className="text-xs text-gray-500 mt-2">Tap to view chapters</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function StudentSubjectView({ subject, onBack }) {
+            const [chapters, setChapters] = useState([]);
+            const [activeTopic, setActiveTopic] = useState(null);
+            const [topics, setTopics] = useState([]);
+            const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+
+            useEffect(() => {
+                fetch(\`/api/chapters?subject_id=\${subject.id}\`).then(r => r.json()).then(setChapters);
+            }, [subject]);
+
+            const loadTopicsForChapter = async (chapter) => {
+                setIsLoadingTopics(true);
+                const res = await fetch(\`/api/topics?chapter_id=\${chapter.id}\`);
+                const data = await res.json();
+                setTopics(data);
+                if (data.length > 0) setActiveTopic(data[0]);
+                else setActiveTopic(null);
+                setIsLoadingTopics(false);
+            };
+
+            return (
+                <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row bg-white fixed inset-0 top-16 z-30">
+                    {/* Chapter Sidebar */}
+                    <div className="w-full md:w-80 bg-gray-50 border-r flex flex-col h-full">
+                        <div className="p-4 border-b bg-white flex items-center justify-between">
+                            <div className="flex items-center overflow-hidden">
+                                <button onClick={onBack} className="mr-3 text-gray-400 hover:text-blue-600 transition">
+                                    <i className="fas fa-arrow-left"></i>
+                                </button>
+                                <h2 className="font-bold text-gray-800 truncate">{subject.name}</h2>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+                            {chapters.length === 0 && <p className="text-center text-gray-400 text-sm mt-10">No chapters yet.</p>}
+                            {chapters.map((ch, idx) => (
+                                <div key={ch.id}>
+                                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">
+                                        Chapter {ch.order_num}
+                                    </div>
+                                    <button 
+                                        onClick={() => loadTopicsForChapter(ch)} 
+                                        className="w-full text-left bg-white p-3 rounded-lg border shadow-sm hover:shadow-md hover:border-blue-300 transition group"
+                                    >
+                                        <span className="font-medium text-gray-700 group-hover:text-blue-600">{ch.title}</span>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Topic & Content Area */}
+                    <div className="flex-1 overflow-y-auto bg-white custom-scrollbar relative">
+                        {topics.length > 0 && activeTopic ? (
+                            <div className="max-w-4xl mx-auto p-8 pb-24">
+                                {/* Topic Navigation (Tabs) */}
+                                <div className="flex overflow-x-auto space-x-2 mb-8 pb-2 border-b">
+                                    {topics.map((t, idx) => (
+                                        <button 
+                                            key={t.id}
+                                            onClick={() => setActiveTopic(t)}
+                                            className={\`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition \${activeTopic.id === t.id ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}\`}
+                                        >
+                                            {idx + 1}. {t.title}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <h1 className="text-4xl font-serif font-bold text-gray-900 mb-8">{activeTopic.title}</h1>
+                                
+                                {/* Study Notes */}
+                                <div className="prose max-w-none mb-12">
+                                    <div className="bg-amber-50 p-8 rounded-2xl border border-amber-100 relative shadow-sm">
+                                        <i className="fas fa-lightbulb text-amber-300 absolute top-6 right-6 text-3xl"></i>
+                                        <h4 className="font-bold text-amber-800 mb-4 uppercase text-xs tracking-widest">Study Notes</h4>
+                                        <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-lg">
+                                            {activeTopic.content || "No detailed notes available for this topic."}
                                         </div>
                                     </div>
-                                ))}
+                                </div>
+
+                                {/* Questions */}
+                                <InteractiveQuestions topicId={activeTopic.id} />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                <i className="fas fa-book-open text-6xl mb-4 opacity-20"></i>
+                                <p className="text-lg">Select a chapter from the sidebar to start studying.</p>
                             </div>
                         )}
                     </div>
@@ -508,145 +798,202 @@ function getHtml() {
             );
         }
 
+        function InteractiveQuestions({ topicId }) {
+            const [questions, setQuestions] = useState([]);
+            const [revealed, setRevealed] = useState({}); // Stores user answers/reveal state
+
+            useEffect(() => {
+                fetch(\`/api/questions?topic_id=\${topicId}\`).then(r => r.json()).then(setQuestions);
+                setRevealed({});
+            }, [topicId]);
+
+            const handleMCQSelect = (qId, option, correctAnswer) => {
+                if (revealed[qId]) return; // Prevent changing answer
+                setRevealed(prev => ({ ...prev, [qId]: option }));
+            };
+
+            const toggleCQAnswer = (qId) => {
+                setRevealed(prev => ({ ...prev, [qId]: !prev[qId] }));
+            };
+
+            if (questions.length === 0) return null;
+
+            return (
+                <div className="space-y-8 border-t pt-10">
+                    <h3 className="text-2xl font-bold text-gray-800 flex items-center">
+                        <i className="fas fa-clipboard-question text-blue-600 mr-3"></i> Practice Questions
+                    </h3>
+                    
+                    {questions.map((q, idx) => (
+                        <div key={q.id} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition">
+                            <div className="flex justify-between mb-3">
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                                    Question {idx + 1} • {q.type}
+                                </span>
+                                {JSON.parse(q.metadata).board && (
+                                    <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded font-medium border border-blue-100">
+                                        {JSON.parse(q.metadata).board}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <p className="font-medium text-gray-800 mb-6 text-lg">{q.question_text}</p>
+
+                            {q.type === 'MCQ' ? (
+                                <div className="grid gap-3">
+                                    {JSON.parse(q.options).map((opt, i) => {
+                                        const isSelected = revealed[q.id] === opt;
+                                        const isCorrect = opt === q.answer;
+                                        const hasAnswered = revealed[q.id] !== undefined;
+                                        
+                                        let btnClass = "p-4 rounded-lg border text-left transition relative font-medium ";
+                                        if (!hasAnswered) {
+                                            btnClass += "bg-white hover:bg-gray-50 hover:border-blue-300 cursor-pointer";
+                                        } else {
+                                            if (isCorrect) btnClass += "bg-green-50 border-green-400 text-green-800";
+                                            else if (isSelected) btnClass += "bg-red-50 border-red-400 text-red-800";
+                                            else btnClass += "bg-gray-50 opacity-60";
+                                        }
+
+                                        return (
+                                            <div 
+                                                key={i} 
+                                                onClick={() => handleMCQSelect(q.id, opt, q.answer)}
+                                                className={btnClass}
+                                            >
+                                                <span className="font-bold mr-3 opacity-50">{String.fromCharCode(65+i)}.</span> {opt}
+                                                {hasAnswered && isCorrect && <i className="fas fa-check absolute right-4 top-4 text-green-600"></i>}
+                                                {hasAnswered && isSelected && !isCorrect && <i className="fas fa-times absolute right-4 top-4 text-red-600"></i>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div>
+                                    <button 
+                                        onClick={() => toggleCQAnswer(q.id)} 
+                                        className="text-blue-600 font-semibold hover:underline flex items-center"
+                                    >
+                                        {revealed[q.id] ? 'Hide Answer' : 'Show Answer'}
+                                        <i className={\`fas fa-chevron-\${revealed[q.id] ? 'up' : 'down'} ml-2\`}></i>
+                                    </button>
+                                    {revealed[q.id] && (
+                                        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-100 text-green-900 animate-fade-in">
+                                            <span className="font-bold mr-2">Answer:</span> {q.answer}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // --- AUTH FORMS ---
+
         function AuthForm({ mode, onSubmit }) {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
 
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                onSubmit(username, password);
-            };
-
             return (
-                <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-                        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-                            {mode === 'login' ? 'Admin Login' : 'Create Owner Account'}
-                        </h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex items-center justify-center min-h-[80vh]">
+                    <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-serif font-bold text-gray-800 mb-2">
+                                {mode === 'login' ? 'Welcome Back' : 'System Setup'}
+                            </h2>
+                            <p className="text-gray-500">Secure Admin Access</p>
+                        </div>
+                        <form onSubmit={(e) => { e.preventDefault(); onSubmit(username, password); }}>
                             <Input label="Username" value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter username" />
                             <Input label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
-                            <Button className="w-full">{mode === 'login' ? 'Sign In' : 'Create Account'}</Button>
+                            <Button className="w-full mt-4 py-3 text-lg">{mode === 'login' ? 'Sign In' : 'Create Admin'}</Button>
                         </form>
                     </div>
                 </div>
             );
         }
 
-        function AdminDashboard({ user, logout }) {
-            const [activeTab, setActiveTab] = useState('classes'); // classes, settings
-            const [isSidebarOpen, setSidebarOpen] = useState(true);
+        // --- ADMIN DASHBOARD ---
 
-            // Responsive Sidebar Toggle
-            useEffect(() => {
-                const handleResize = () => setSidebarOpen(window.innerWidth > 768);
-                window.addEventListener('resize', handleResize);
-                handleResize();
-                return () => window.removeEventListener('resize', handleResize);
-            }, []);
+        function AdminDashboard({ user, logout }) {
+            const [activeTab, setActiveTab] = useState('classes');
 
             return (
                 <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-                    {/* Sidebar (Desktop) */}
-                    <div className={\`bg-white border-r w-64 flex-shrink-0 transition-all duration-300 \${isSidebarOpen ? 'translate-x-0' : '-translate-x-64 hidden md:flex md:translate-x-0'}\`}>
-                        <div className="p-4 w-full flex flex-col h-full">
-                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Main Menu</div>
-                            <nav className="flex-1 space-y-2">
-                                <NavItem icon="fas fa-chalkboard-teacher" label="Classes & Content" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
-                                <NavItem icon="fas fa-cog" label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
-                            </nav>
-                            <div className="pt-4 border-t">
-                                <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
-                                        {user.username[0].toUpperCase()}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">{user.username}</p>
-                                        <p className="text-xs text-gray-500">Administrator</p>
-                                    </div>
-                                    <button onClick={logout} className="text-gray-400 hover:text-red-500"><i className="fas fa-sign-out-alt"></i></button>
+                    {/* Admin Sidebar */}
+                    <div className="w-64 bg-white border-r hidden md:flex flex-col">
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
+                                    {user.username[0].toUpperCase()}
+                                </div>
+                                <div className="overflow-hidden">
+                                    <h4 className="font-bold text-gray-800 truncate">{user.username}</h4>
+                                    <p className="text-xs text-green-600 font-semibold">● Online</p>
                                 </div>
                             </div>
+                            
+                            <nav className="space-y-1">
+                                <AdminNavItem icon="fas fa-book" label="Classes & Content" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
+                                <AdminNavItem icon="fas fa-cog" label="System Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+                            </nav>
+                        </div>
+                        <div className="mt-auto p-6 border-t">
+                            <button onClick={logout} className="flex items-center text-red-600 hover:text-red-700 font-medium transition">
+                                <i className="fas fa-sign-out-alt mr-3"></i> Logout
+                            </button>
                         </div>
                     </div>
 
-                    {/* Content Area */}
-                    <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 custom-scrollbar pb-20 md:pb-8">
+                    {/* Admin Content */}
+                    <div className="flex-1 overflow-y-auto bg-gray-50 p-8">
                         {activeTab === 'classes' && <ClassManager />}
-                        {activeTab === 'settings' && (
-                            <div className="max-w-2xl bg-white p-6 rounded-xl shadow-sm">
-                                <h2 className="text-xl font-bold mb-4">Settings</h2>
-                                <p className="text-gray-600 mb-6">Platform configuration.</p>
-                                
-                                {/* Database Reset Section */}
-                                <div className="border border-red-200 bg-red-50 rounded-xl p-6">
-                                    <h3 className="text-red-800 font-bold flex items-center mb-2">
-                                        <i className="fas fa-exclamation-triangle mr-2"></i> Danger Zone
-                                    </h3>
-                                    <p className="text-red-600 text-sm mb-4">
-                                        Resetting the database will permanently delete all admins, classes, subjects, topics, and questions. This action cannot be undone.
-                                    </p>
-                                    <button 
-                                        onClick={async () => {
-                                            if(confirm("ARE YOU SURE? This will wipe everything and log you out.")) {
-                                                await fetch('/api/reset-db', { method: 'POST' });
-                                                alert("System reset. Reloading...");
-                                                window.location.reload();
-                                            }
-                                        }}
-                                        className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 shadow-sm"
-                                    >
-                                        Reset Database & Start Fresh
-                                    </button>
-                                </div>
-
-                                <div className="mt-8 p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
-                                    <i className="fas fa-info-circle mr-2"></i> Version 1.1.0 - Secure & Enhanced
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Mobile Bottom Nav */}
-                    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 z-40">
-                         <MobileNavItem icon="fas fa-chalkboard-teacher" label="Classes" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
-                         <MobileNavItem icon="fas fa-cog" label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+                        {activeTab === 'settings' && <SettingsManager />}
                     </div>
                 </div>
             );
         }
 
-        const NavItem = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={\`w-full flex items-center px-4 py-3 rounded-lg transition-colors \${active ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}\`}>
-                <i className={\`\${icon} w-6 text-center mr-3 \${active ? 'text-blue-600' : 'text-gray-400'}\`}></i>
+        const AdminNavItem = ({ icon, label, active, onClick }) => (
+            <button 
+                onClick={onClick} 
+                className={\`w-full flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all \${active ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}\`}
+            >
+                <i className={\`\${icon} w-6 text-center mr-2 \${active ? 'text-blue-600' : 'text-gray-400'}\`}></i>
                 {label}
             </button>
         );
 
-        const MobileNavItem = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={\`flex flex-col items-center justify-center w-full \${active ? 'text-blue-600' : 'text-gray-400'}\`}>
-                <i className={\`\${icon} text-xl mb-1\`}></i>
-                <span className="text-[10px] font-medium">{label}</span>
-            </button>
-        );
-
-        // --- CONTENT MANAGEMENT (The Complex Part) ---
+        // --- ADMIN CONTENT MANAGERS (Drill-Down) ---
 
         function ClassManager() {
             const [classes, setClasses] = useState([]);
-            const [selectedClass, setSelectedClass] = useState(null);
-            const [isCreateModalOpen, setCreateModalOpen] = useState(false);
             const [newClassName, setNewClassName] = useState('');
+            const [selectedClass, setSelectedClass] = useState(null);
+            const [linkModalClass, setLinkModalClass] = useState(null); // For linking functionality
 
-            const loadClasses = () => fetch('/api/classes').then(res => res.json()).then(setClasses);
-
+            const loadClasses = () => fetch('/api/classes').then(r => r.json()).then(setClasses);
             useEffect(() => { loadClasses(); }, []);
 
-            const handleCreateClass = async () => {
+            const createClass = async () => {
                 if (!newClassName) return;
                 await fetch('/api/classes', { method: 'POST', body: JSON.stringify({ name: newClassName }) });
                 setNewClassName('');
-                setCreateModalOpen(false);
+                loadClasses();
+            };
+
+            const saveLink = async (parentId, label) => {
+                await fetch('/api/classes', { 
+                    method: 'PUT', 
+                    body: JSON.stringify({ 
+                        id: linkModalClass.id, 
+                        parent_class_id: parentId, 
+                        program_label: label 
+                    }) 
+                });
+                setLinkModalClass(null);
                 loadClasses();
             };
 
@@ -655,45 +1002,114 @@ function getHtml() {
             }
 
             return (
-                <div>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Classes Management</h2>
-                        <Button onClick={() => setCreateModalOpen(true)}><i className="fas fa-plus mr-2"></i> Add Class</Button>
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-2xl font-bold text-gray-800">Class Management</h2>
+                        <div className="flex gap-3">
+                            <input 
+                                value={newClassName} 
+                                onChange={e => setNewClassName(e.target.value)} 
+                                placeholder="New Class Name" 
+                                className="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <Button onClick={createClass}><i className="fas fa-plus mr-2"></i> Add Class</Button>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {classes.map(cls => (
-                            <div key={cls.id} onClick={() => setSelectedClass(cls)} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-blue-300 transition group">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="text-lg font-bold text-gray-800">{cls.name}</h3>
-                                    <i className="fas fa-chevron-right text-gray-300 group-hover:text-blue-500"></i>
+                            <div key={cls.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-800">{cls.name}</h3>
+                                        {cls.parent_class_id ? (
+                                            <span className="inline-flex items-center mt-2 px-2 py-1 rounded-md text-xs font-bold bg-orange-100 text-orange-700">
+                                                <i className="fas fa-link mr-1"></i> Linked to {cls.parent_name}
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center mt-2 px-2 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700">
+                                                <i className="fas fa-database mr-1"></i> Source Content
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <button onClick={() => setLinkModalClass(cls)} className="text-gray-400 hover:text-blue-600 p-1" title="Link/Alias">
+                                            <i className="fas fa-link"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-gray-500 mt-2">Manage subjects, groups, and questions.</p>
+                                
+                                <div className="mt-6">
+                                    {!cls.parent_class_id ? (
+                                        <Button variant="secondary" className="w-full" onClick={() => setSelectedClass(cls)}>
+                                            Manage Content
+                                        </Button>
+                                    ) : (
+                                        <div className="text-center text-sm text-gray-500 italic py-2">
+                                            Content inherited from parent class.
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
 
-                    <Modal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} title="Create New Class">
-                        <Input label="Class Name" placeholder="e.g., Class 11, HSC 2025" value={newClassName} onChange={e => setNewClassName(e.target.value)} />
-                        <div className="flex justify-end mt-4">
-                            <Button onClick={handleCreateClass}>Create Class</Button>
-                        </div>
-                    </Modal>
+                    {linkModalClass && (
+                        <LinkClassModal 
+                            cls={linkModalClass} 
+                            allClasses={classes} 
+                            onClose={() => setLinkModalClass(null)} 
+                            onSave={saveLink} 
+                        />
+                    )}
                 </div>
             );
         }
 
+        function LinkClassModal({ cls, allClasses, onClose, onSave }) {
+            const [parentId, setParentId] = useState(cls.parent_class_id || '');
+            const [label, setLabel] = useState(cls.program_label || '');
+
+            return (
+                <Modal isOpen={true} onClose={onClose} title={\`Link \${cls.name} to Content\`}>
+                    <p className="text-gray-600 text-sm mb-6">
+                        Linking allows this class to inherit all subjects, chapters, and questions from another class. 
+                        Useful for grouping classes (e.g., Class 9 & 10 both using SSC content).
+                    </p>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Content Source (Parent Class)</label>
+                        <select 
+                            className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                            value={parentId}
+                            onChange={e => setParentId(e.target.value)}
+                        >
+                            <option value="">-- No Link (Use Own Content) --</option>
+                            {allClasses.filter(c => c.id !== cls.id).map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    {parentId && (
+                        <Input 
+                            label="Program Label (e.g. SSC, HSC)" 
+                            value={label} 
+                            onChange={e => setLabel(e.target.value)} 
+                            placeholder="SSC"
+                        />
+                    )}
+                    <div className="flex justify-end mt-6">
+                        <Button onClick={() => onSave(parentId, label)}>Save Configuration</Button>
+                    </div>
+                </Modal>
+            );
+        }
+
         function ClassDetail({ cls, onBack }) {
-            // State for Groups, Subjects, etc.
             const [groups, setGroups] = useState([]);
             const [subjects, setSubjects] = useState([]);
-            const [activeTab, setActiveTab] = useState('structure'); // structure, subjects
-            const [isGroupModalOpen, setGroupModalOpen] = useState(false);
             const [newGroupName, setNewGroupName] = useState('');
-            const [isSubjectModalOpen, setSubjectModalOpen] = useState(false);
             const [newSubject, setNewSubject] = useState({ name: '', is_common: true, group_id: '' });
-            
-            const [selectedSubject, setSelectedSubject] = useState(null); // For drilling down
+            const [selectedSubject, setSelectedSubject] = useState(null);
 
             const refreshData = async () => {
                 const [gRes, sRes] = await Promise.all([
@@ -706,97 +1122,77 @@ function getHtml() {
 
             useEffect(() => { refreshData(); }, [cls]);
 
-            const createGroup = async () => {
+            const addGroup = async () => {
+                if (!newGroupName) return;
                 await fetch('/api/groups', { method: 'POST', body: JSON.stringify({ name: newGroupName, class_id: cls.id }) });
-                setGroupModalOpen(false); setNewGroupName(''); refreshData();
+                setNewGroupName(''); refreshData();
             };
 
-            const createSubject = async () => {
+            const addSubject = async () => {
+                if (!newSubject.name) return;
                 await fetch('/api/subjects', { method: 'POST', body: JSON.stringify({ ...newSubject, class_id: cls.id }) });
-                setSubjectModalOpen(false); setNewSubject({ name: '', is_common: true, group_id: '' }); refreshData();
+                setNewSubject({ name: '', is_common: true, group_id: '' }); refreshData();
             };
 
-            if (selectedSubject) {
-                return <SubjectManager subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
-            }
+            if (selectedSubject) return <SubjectManager subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
 
             return (
                 <div className="animate-fade-in">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 flex items-center text-sm font-medium">
+                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-6 font-medium">
                         <i className="fas fa-arrow-left mr-2"></i> Back to Classes
                     </button>
-                    
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">{cls.name} <span className="text-lg font-normal text-gray-500">/ Dashboard</span></h2>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-8">{cls.name} Content Manager</h2>
 
-                    {/* Stats / Quick Actions */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-white p-6 rounded-xl border shadow-sm">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-gray-700">Groups</h3>
-                                <Button variant="ghost" onClick={() => setGroupModalOpen(true)} className="text-xs">+ Add Group</Button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Groups Panel */}
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 className="font-bold text-gray-800 mb-4 text-lg">Student Groups</h3>
+                            <div className="flex gap-2 mb-6">
+                                <input className="border rounded-lg px-3 py-2 flex-1" placeholder="e.g. Science" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
+                                <Button onClick={addGroup}>Add</Button>
                             </div>
                             <div className="space-y-2">
-                                {groups.length === 0 && <p className="text-sm text-gray-400 italic">No groups (e.g., Science, Arts)</p>}
                                 {groups.map(g => (
-                                    <div key={g.id} className="flex items-center text-sm bg-gray-50 p-2 rounded">
-                                        <div className="w-2 h-2 rounded-full bg-green-400 mr-2"></div> {g.name}
+                                    <div key={g.id} className="p-3 bg-gray-50 rounded-lg flex items-center">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
+                                        {g.name}
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl border shadow-sm">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-gray-700">Subjects</h3>
-                                <Button variant="ghost" onClick={() => setSubjectModalOpen(true)} className="text-xs">+ Add Subject</Button>
+                        {/* Subjects Panel */}
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 className="font-bold text-gray-800 mb-4 text-lg">Subjects</h3>
+                            <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-100">
+                                <input className="border rounded-lg px-3 py-2 w-full mb-3" placeholder="Subject Name" value={newSubject.name} onChange={e => setNewSubject({...newSubject, name: e.target.value})} />
+                                <div className="flex items-center gap-4 mb-3">
+                                    <label className="flex items-center cursor-pointer">
+                                        <input type="checkbox" className="mr-2" checked={newSubject.is_common} onChange={e => setNewSubject({...newSubject, is_common: e.target.checked})} />
+                                        <span className="text-sm">Common Subject</span>
+                                    </label>
+                                    {!newSubject.is_common && (
+                                        <select className="border rounded px-2 py-1 text-sm flex-1" value={newSubject.group_id} onChange={e => setNewSubject({...newSubject, group_id: e.target.value})}>
+                                            <option value="">Select Group...</option>
+                                            {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                        </select>
+                                    )}
+                                </div>
+                                <Button className="w-full" onClick={addSubject}>Add Subject</Button>
                             </div>
-                            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                {subjects.length === 0 && <p className="text-sm text-gray-400 italic">No subjects added.</p>}
-                                {subjects.map(s => {
-                                    const groupName = groups.find(g => g.id === s.group_id)?.name;
-                                    return (
-                                        <div key={s.id} onClick={() => setSelectedSubject(s)} className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded cursor-pointer hover:bg-blue-50 transition">
-                                            <span className="font-medium">{s.name}</span>
-                                            <span className="text-xs px-2 py-1 rounded bg-gray-200 text-gray-600">
-                                                {s.is_common ? 'Common' : groupName || 'Group Specific'}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
+                            
+                            <div className="max-h-96 overflow-y-auto space-y-2 custom-scrollbar">
+                                {subjects.map(s => (
+                                    <div key={s.id} onClick={() => setSelectedSubject(s)} className="p-3 border rounded-lg hover:bg-blue-50 cursor-pointer flex justify-between items-center transition">
+                                        <span className="font-medium">{s.name}</span>
+                                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">
+                                            {s.is_common ? 'Common' : (groups.find(g => g.id == s.group_id)?.name || 'Group')}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
-
-                    <Modal isOpen={isGroupModalOpen} onClose={() => setGroupModalOpen(false)} title="Add Class Group">
-                        <Input label="Group Name" placeholder="e.g. Science, Commerce" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
-                        <div className="flex justify-end"><Button onClick={createGroup}>Save</Button></div>
-                    </Modal>
-
-                    <Modal isOpen={isSubjectModalOpen} onClose={() => setSubjectModalOpen(false)} title="Add Subject">
-                        <Input label="Subject Name" placeholder="e.g. Physics 1st Paper" value={newSubject.name} onChange={e => setNewSubject({...newSubject, name: e.target.value})} />
-                        
-                        <div className="mb-4">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input type="checkbox" checked={newSubject.is_common} onChange={e => setNewSubject({...newSubject, is_common: e.target.checked})} className="form-checkbox h-4 w-4 text-blue-600" />
-                                <span className="text-sm text-gray-700">This is a common subject (for all groups)</span>
-                            </label>
-                        </div>
-
-                        {!newSubject.is_common && (
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Group</label>
-                                <select 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
-                                    value={newSubject.group_id}
-                                    onChange={e => setNewSubject({...newSubject, group_id: parseInt(e.target.value)})}
-                                >
-                                    <option value="">Select Group...</option>
-                                    {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                                </select>
-                            </div>
-                        )}
-                        <div className="flex justify-end"><Button onClick={createSubject}>Save Subject</Button></div>
-                    </Modal>
                 </div>
             );
         }
@@ -804,69 +1200,48 @@ function getHtml() {
         function SubjectManager({ subject, onBack }) {
             const [chapters, setChapters] = useState([]);
             const [selectedChapter, setSelectedChapter] = useState(null);
-            const [isChapterModalOpen, setChapterModalOpen] = useState(false);
-            const [newChapterTitle, setNewChapterTitle] = useState('');
+            const [newChapter, setNewChapter] = useState({ title: '', order: '' });
 
-            const loadChapters = () => fetch(\`/api/chapters?subject_id=\${subject.id}\`).then(res => res.json()).then(setChapters);
+            const loadChapters = () => fetch(\`/api/chapters?subject_id=\${subject.id}\`).then(r => r.json()).then(setChapters);
             useEffect(() => { loadChapters(); }, [subject]);
 
-            const createChapter = async () => {
-                await fetch('/api/chapters', { method: 'POST', body: JSON.stringify({ title: newChapterTitle, subject_id: subject.id, order_num: chapters.length + 1 }) });
-                setChapterModalOpen(false); setNewChapterTitle(''); loadChapters();
+            const addChapter = async () => {
+                await fetch('/api/chapters', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        title: newChapter.title, 
+                        subject_id: subject.id, 
+                        order_num: newChapter.order || chapters.length + 1 
+                    }) 
+                });
+                setNewChapter({ title: '', order: '' });
+                loadChapters();
             };
 
-            if (selectedChapter) {
-                return <TopicManager chapter={selectedChapter} onBack={() => setSelectedChapter(null)} />;
-            }
+            if (selectedChapter) return <TopicManager chapter={selectedChapter} onBack={() => setSelectedChapter(null)} />;
 
             return (
                 <div className="animate-fade-in">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 flex items-center text-sm font-medium">
-                        <i className="fas fa-arrow-left mr-2"></i> Back to Subject
+                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-6 font-medium">
+                        <i className="fas fa-arrow-left mr-2"></i> Back to {subject.name}
                     </button>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{subject.name} <span className="text-gray-400">/ Chapters</span></h2>
-                        <Button onClick={() => setChapterModalOpen(true)}>+ Add Chapter</Button>
+                    <h2 className="text-2xl font-bold mb-6">Chapters</h2>
+                    
+                    <div className="bg-white p-4 rounded-xl border mb-6 flex gap-4 items-center">
+                        <input className="border rounded-lg px-3 py-2 w-20 text-center" placeholder="No." type="number" value={newChapter.order} onChange={e => setNewChapter({...newChapter, order: e.target.value})} />
+                        <input className="border rounded-lg px-3 py-2 flex-1" placeholder="Chapter Title" value={newChapter.title} onChange={e => setNewChapter({...newChapter, title: e.target.value})} />
+                        <Button onClick={addChapter}>Add Chapter</Button>
                     </div>
 
                     <div className="space-y-3">
-                        {chapters.map((ch, idx) => (
-                            <div key={ch.id} onClick={() => setSelectedChapter(ch)} className="bg-white p-4 rounded-lg border hover:border-blue-400 cursor-pointer flex justify-between items-center shadow-sm">
-                                <div className="flex items-center">
-                                    {/* Display Chapter Number Explicitly */}
-                                    <div className="mr-4 flex flex-col items-center justify-center bg-blue-50 w-12 h-12 rounded-lg text-blue-700">
-                                        <span className="text-[10px] font-bold uppercase">Ch.</span>
-                                        <span className="text-lg font-bold leading-none">{ch.order_num}</span>
-                                    </div>
-                                    <span className="font-semibold text-gray-800 text-lg">{ch.title}</span>
-                                </div>
+                        {chapters.map(ch => (
+                            <div key={ch.id} onClick={() => setSelectedChapter(ch)} className="bg-white p-4 rounded-lg border hover:border-blue-400 cursor-pointer flex items-center shadow-sm transition">
+                                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-500 mr-4">{ch.order_num}</div>
+                                <div className="flex-1 font-semibold text-gray-800">{ch.title}</div>
                                 <i className="fas fa-chevron-right text-gray-300"></i>
                             </div>
                         ))}
                     </div>
-
-                    <Modal isOpen={isChapterModalOpen} onClose={() => setChapterModalOpen(false)} title="New Chapter">
-                        <div className="flex space-x-4">
-                            <div className="w-1/3">
-                                <Input type="number" label="Chapter No." value={newChapterTitle.order_num || chapters.length + 1} onChange={e => setNewChapterTitle({...newChapterTitle, order_num: e.target.value})} />
-                            </div>
-                            <div className="w-2/3">
-                                <Input label="Chapter Name" value={newChapterTitle.title || ''} onChange={e => setNewChapterTitle({...newChapterTitle, title: e.target.value})} placeholder="e.g. Thermodynamics" />
-                            </div>
-                        </div>
-                        <div className="flex justify-end"><Button onClick={() => {
-                            // Wrapper to handle object state change in this specific component diff
-                            const create = async () => {
-                                await fetch('/api/chapters', { method: 'POST', body: JSON.stringify({ 
-                                    title: newChapterTitle.title, 
-                                    subject_id: subject.id, 
-                                    order_num: newChapterTitle.order_num || chapters.length + 1 
-                                }) });
-                                setChapterModalOpen(false); setNewChapterTitle({}); loadChapters();
-                            };
-                            create();
-                        }}>Add Chapter</Button></div>
-                    </Modal>
                 </div>
             );
         }
@@ -874,171 +1249,195 @@ function getHtml() {
         function TopicManager({ chapter, onBack }) {
             const [topics, setTopics] = useState([]);
             const [selectedTopic, setSelectedTopic] = useState(null);
-            const [isTopicModalOpen, setTopicModalOpen] = useState(false);
             const [newTopic, setNewTopic] = useState({ title: '', content: '' });
 
-            const loadTopics = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(res => res.json()).then(setTopics);
+            const loadTopics = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(r => r.json()).then(setTopics);
             useEffect(() => { loadTopics(); }, [chapter]);
 
-            const createTopic = async () => {
-                await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ ...newTopic, chapter_id: chapter.id, order_num: topics.length + 1 }) });
-                setTopicModalOpen(false); setNewTopic({ title: '', content: '' }); loadTopics();
+            const addTopic = async () => {
+                await fetch('/api/topics', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        ...newTopic, 
+                        chapter_id: chapter.id, 
+                        order_num: topics.length + 1 
+                    }) 
+                });
+                setNewTopic({ title: '', content: '' });
+                loadTopics();
             };
 
             if (selectedTopic) return <QuestionManager topic={selectedTopic} onBack={() => setSelectedTopic(null)} />;
 
             return (
                 <div className="animate-fade-in">
-                     <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 flex items-center text-sm font-medium">
-                        <i className="fas fa-arrow-left mr-2"></i> Back to Chapters (Ch. {chapter.order_num})
+                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-6 font-medium">
+                        <i className="fas fa-arrow-left mr-2"></i> Back to Chapters
                     </button>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{chapter.title} <span className="text-gray-400">/ Topics</span></h2>
-                        <Button onClick={() => setTopicModalOpen(true)}>+ Add Topic</Button>
+                    <h2 className="text-2xl font-bold mb-6">Topics in {chapter.title}</h2>
+                    
+                    <div className="bg-white p-6 rounded-xl border mb-6">
+                        <Input label="Topic Title" value={newTopic.title} onChange={e => setNewTopic({...newTopic, title: e.target.value})} />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Notes / Content</label>
+                            <textarea 
+                                className="w-full border rounded-lg p-3 h-32" 
+                                placeholder="Enter study notes here..." 
+                                value={newTopic.content} 
+                                onChange={e => setNewTopic({...newTopic, content: e.target.value})}
+                            ></textarea>
+                        </div>
+                        <Button onClick={addTopic}>Add Topic</Button>
                     </div>
+
                     <div className="space-y-3">
-                        {topics.map((t, idx) => (
-                            <div key={t.id} onClick={() => setSelectedTopic(t)} className="bg-white p-4 rounded-lg border hover:border-blue-400 cursor-pointer shadow-sm group">
-                                <div className="flex justify-between items-start">
-                                    <h4 className="font-bold text-gray-800 mb-1">{idx + 1}. {t.title}</h4>
-                                    <i className="fas fa-chevron-right text-gray-300 group-hover:text-blue-500"></i>
-                                </div>
-                                {/* Displaying the Note/Content prominently as requested */}
-                                {t.content && (
-                                    <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded border border-gray-100">
-                                        <span className="font-bold text-xs text-blue-600 uppercase tracking-wide">Note:</span> {t.content}
-                                    </div>
-                                )}
+                        {topics.map(t => (
+                            <div key={t.id} onClick={() => setSelectedTopic(t)} className="bg-white p-4 rounded-lg border hover:border-blue-400 cursor-pointer shadow-sm">
+                                <h4 className="font-bold text-gray-800">{t.title}</h4>
+                                <p className="text-sm text-gray-500 truncate mt-1">{t.content}</p>
                             </div>
                         ))}
                     </div>
-
-                    <Modal isOpen={isTopicModalOpen} onClose={() => setTopicModalOpen(false)} title="New Topic">
-                        <Input label="Topic Title" value={newTopic.title} onChange={e => setNewTopic({...newTopic, title: e.target.value})} />
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Topic Notes / Summary</label>
-                            <textarea className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" rows="4" placeholder="Enter key notes, formulas, or summary for this topic..." value={newTopic.content} onChange={e => setNewTopic({...newTopic, content: e.target.value})}></textarea>
-                        </div>
-                        <div className="flex justify-end"><Button onClick={createTopic}>Add Topic</Button></div>
-                    </Modal>
                 </div>
-            )
+            );
         }
 
         function QuestionManager({ topic, onBack }) {
             const [questions, setQuestions] = useState([]);
-            const [isQModalOpen, setQModalOpen] = useState(false);
-            const [qType, setQType] = useState('MCQ'); // MCQ or CQ
-            const [newQ, setNewQ] = useState({
-                question_text: '',
-                options: ['', '', '', ''],
-                answer: '',
-                metadata: { board: '', year: '', college: '', type: 'NCTB' } // type: NCTB, Custom
+            const [qType, setQType] = useState('MCQ');
+            const [newQ, setNewQ] = useState({ 
+                text: '', 
+                options: ['', '', '', ''], 
+                answer: '', 
+                metadata: { board: '', year: '' } 
             });
 
-            const loadQuestions = () => fetch(\`/api/questions?topic_id=\${topic.id}\`).then(res => res.json()).then(setQuestions);
-            useEffect(() => { loadQuestions(); }, [topic]);
+            const loadQs = () => fetch(\`/api/questions?topic_id=\${topic.id}\`).then(r => r.json()).then(setQuestions);
+            useEffect(() => { loadQs(); }, [topic]);
 
             const saveQuestion = async () => {
                 await fetch('/api/questions', { 
                     method: 'POST', 
-                    body: JSON.stringify({ 
-                        type: qType, 
-                        topic_id: topic.id, 
-                        question_text: newQ.question_text, 
-                        options: qType === 'MCQ' ? newQ.options : [], 
-                        answer: newQ.answer, 
-                        metadata: newQ.metadata 
-                    }) 
+                    body: JSON.stringify({
+                        type: qType,
+                        topic_id: topic.id,
+                        question_text: newQ.text,
+                        options: qType === 'MCQ' ? newQ.options : [],
+                        answer: newQ.answer,
+                        metadata: newQ.metadata
+                    })
                 });
-                setQModalOpen(false); 
-                // Reset form slightly but keep metadata for speed
-                setNewQ({ ...newQ, question_text: '', options: ['', '', '', ''], answer: '' });
-                loadQuestions();
+                setNewQ({ text: '', options: ['', '', '', ''], answer: '', metadata: { board: '', year: '' } });
+                loadQs();
             };
 
             const updateOption = (idx, val) => {
-                const newOpts = [...newQ.options];
-                newOpts[idx] = val;
-                setNewQ({ ...newQ, options: newOpts });
+                const opts = [...newQ.options];
+                opts[idx] = val;
+                setNewQ({ ...newQ, options: opts });
             };
 
             return (
-                <div className="animate-fade-in">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 flex items-center text-sm font-medium">
+                <div className="animate-fade-in pb-20">
+                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-6 font-medium">
                         <i className="fas fa-arrow-left mr-2"></i> Back to Topics
                     </button>
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900">{topic.title}</h2>
-                            <p className="text-sm text-gray-500">Question Bank Manager</p>
+                    <h2 className="text-2xl font-bold mb-6">Question Bank: {topic.title}</h2>
+
+                    <div className="bg-white p-6 rounded-xl border shadow-sm mb-8">
+                        {/* Type Toggle */}
+                        <div className="flex bg-gray-100 p-1 rounded-lg mb-4 w-fit">
+                            {['MCQ', 'CQ'].map(t => (
+                                <button 
+                                    key={t}
+                                    onClick={() => setQType(t)}
+                                    className={\`px-4 py-1 rounded-md text-sm font-bold transition \${qType === t ? 'bg-white shadow text-blue-600' : 'text-gray-500'}\`}
+                                >
+                                    {t}
+                                </button>
+                            ))}
                         </div>
-                        <Button onClick={() => setQModalOpen(true)}>+ Add Question</Button>
+
+                        {/* Metadata */}
+                        <div className="flex gap-4 mb-4">
+                            <div className="flex-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase">Board</label>
+                                <input className="w-full border rounded px-2 py-1" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} placeholder="e.g. Dhaka" />
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase">Year</label>
+                                <input className="w-full border rounded px-2 py-1" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} placeholder="2023" />
+                            </div>
+                        </div>
+
+                        {/* Question Text */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-bold mb-1">Question</label>
+                            <textarea className="w-full border rounded p-2" rows="3" value={newQ.text} onChange={e => setNewQ({...newQ, text: e.target.value})}></textarea>
+                        </div>
+
+                        {/* Options / Answer */}
+                        {qType === 'MCQ' ? (
+                            <div className="space-y-2 mb-6">
+                                <label className="block text-sm font-bold">Options (Select Correct)</label>
+                                {newQ.options.map((opt, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <span className="w-6 font-bold text-gray-400">{String.fromCharCode(65+i)}</span>
+                                        <input className="flex-1 border rounded px-2 py-1" value={opt} onChange={e => updateOption(i, e.target.value)} />
+                                        <input type="radio" name="correct" checked={newQ.answer === opt && opt !== ''} onChange={() => setNewQ({...newQ, answer: opt})} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="mb-6">
+                                <label className="block text-sm font-bold mb-1">Answer Key / Solution</label>
+                                <textarea className="w-full border rounded p-2" rows="3" value={newQ.answer} onChange={e => setNewQ({...newQ, answer: e.target.value})}></textarea>
+                            </div>
+                        )}
+
+                        <Button className="w-full" onClick={saveQuestion}>Save Question</Button>
                     </div>
 
                     <div className="space-y-4">
                         {questions.map((q, i) => (
-                            <div key={q.id} className="bg-white p-5 rounded-lg border shadow-sm">
-                                <div className="flex justify-between mb-2">
-                                    <span className={\`text-xs font-bold px-2 py-1 rounded \${q.type === 'MCQ' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}\`}>{q.type}</span>
-                                    <div className="text-xs text-gray-400 space-x-2">
-                                        {JSON.parse(q.metadata).board && <span>{JSON.parse(q.metadata).board}</span>}
-                                        {JSON.parse(q.metadata).year && <span>{JSON.parse(q.metadata).year}</span>}
-                                    </div>
+                            <div key={q.id} className="bg-white p-4 rounded-lg border shadow-sm">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold bg-gray-100 px-2 py-1 rounded">{q.type}</span>
+                                    <span className="text-xs text-gray-500">
+                                        {JSON.parse(q.metadata).board} {JSON.parse(q.metadata).year}
+                                    </span>
                                 </div>
-                                <p className="font-medium text-gray-800 mb-3">{q.question_text}</p>
-                                {q.type === 'MCQ' && (
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {JSON.parse(q.options).map((opt, idx) => (
-                                            <div key={idx} className={\`text-sm p-2 rounded border \${opt === q.answer ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-500'}\`}>
-                                                {String.fromCharCode(65+idx)}. {opt}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {q.type === 'CQ' && <div className="text-sm text-gray-500 italic border-l-2 border-gray-300 pl-3">Answer Key: {q.answer}</div>}
+                                <p className="font-medium text-gray-800">{q.question_text}</p>
                             </div>
                         ))}
                     </div>
+                </div>
+            );
+        }
 
-                    <Modal isOpen={isQModalOpen} onClose={() => setQModalOpen(false)} title="Add Question">
-                        <div className="flex space-x-4 mb-4">
-                            <button onClick={() => setQType('MCQ')} className={\`flex-1 py-2 rounded-lg font-bold text-sm \${qType === 'MCQ' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}\`}>MCQ</button>
-                            <button onClick={() => setQType('CQ')} className={\`flex-1 py-2 rounded-lg font-bold text-sm \${qType === 'CQ' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}\`}>Creative Question (CQ)</button>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 mb-4">
-                            <Input label="Board Name" placeholder="Dhaka Board" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} />
-                            <Input label="Year" placeholder="2023" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} />
-                        </div>
+        function SettingsManager() {
+            const handleReset = async () => {
+                if (confirm("WARNING: This will delete ALL data (Admins, Classes, Questions). Are you sure?")) {
+                    await fetch('/api/reset-db', { method: 'POST' });
+                    window.location.reload();
+                }
+            };
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
-                            <textarea className="w-full border rounded-lg p-2" rows="3" value={newQ.question_text} onChange={e => setNewQ({...newQ, question_text: e.target.value})}></textarea>
-                        </div>
-
-                        {qType === 'MCQ' && (
-                            <div className="space-y-2 mb-4">
-                                <label className="block text-sm font-medium text-gray-700">Options</label>
-                                {newQ.options.map((opt, idx) => (
-                                    <div key={idx} className="flex items-center">
-                                        <span className="w-6 font-bold text-gray-400">{String.fromCharCode(65+idx)}</span>
-                                        <input className="flex-1 border rounded px-2 py-1" value={opt} onChange={e => updateOption(idx, e.target.value)} placeholder={\`Option \${idx+1}\`} />
-                                        <input type="radio" name="correct_ans" className="ml-2" onChange={() => setNewQ({...newQ, answer: opt})} checked={newQ.answer === opt && opt !== ''} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {qType === 'CQ' && (
-                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Answer Key / Hints</label>
-                                <textarea className="w-full border rounded-lg p-2" rows="2" value={newQ.answer} onChange={e => setNewQ({...newQ, answer: e.target.value})}></textarea>
-                            </div>
-                        )}
-
-                        <div className="flex justify-end"><Button onClick={saveQuestion}>Save Question</Button></div>
-                    </Modal>
+            return (
+                <div className="max-w-2xl bg-white p-8 rounded-xl shadow-sm">
+                    <h2 className="text-xl font-bold mb-6">System Settings</h2>
+                    
+                    <div className="border border-red-200 bg-red-50 rounded-xl p-6">
+                        <h3 className="text-red-800 font-bold mb-2 flex items-center">
+                            <i className="fas fa-exclamation-triangle mr-2"></i> Danger Zone
+                        </h3>
+                        <p className="text-red-600 text-sm mb-6">
+                            Resetting the database will permanently wipe all users, classes, subjects, notes, and questions. This action is irreversible.
+                        </p>
+                        <Button variant="danger" onClick={handleReset}>
+                            Reset Database & Start Fresh
+                        </Button>
+                    </div>
                 </div>
             );
         }
