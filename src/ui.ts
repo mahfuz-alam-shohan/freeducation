@@ -3,18 +3,23 @@ export const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
 
 :root {
-  --primary: #118C4F;
-  --primary-bg: #EAF6EF;
-  --bg-body: #F6F7FB;
-  --bg-card: #FFFFFF;
-  --text-main: #121417;
-  --text-secondary: #6C7480;
-  --separator: #D0D4DA;
-  --separator-light: #E7E9EF;
-  --danger: #D6453A;
-  --success: #2E9B57;
-  --radius: 12px;
+  --primary: #1f8d5d;
+  --primary-dark: #136b45;
+  --primary-bg: #e8f6ee;
+  --bg-body: #f2f6f4;
+  --bg-card: #ffffff;
+  --bg-surface: #f9fbfa;
+  --text-main: #0f1c16;
+  --text-secondary: #4f5b55;
+  --text-muted: #778078;
+  --separator: #d7e0db;
+  --separator-light: #e8eeeb;
+  --danger: #d6453a;
+  --success: #2e9b57;
+  --radius: 16px;
   --nav-h: 64px;
+  --shadow-soft: 0 12px 30px rgba(15, 28, 22, 0.08);
+  --shadow-card: 0 10px 24px rgba(15, 28, 22, 0.06);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -22,7 +27,7 @@ export const CSS = `
 body {
   margin: 0;
   font-family: "Hind Siliguri", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background: var(--bg-body);
+  background: linear-gradient(180deg, #f4f8f6 0%, #eef3f1 100%);
   color: var(--text-main);
   font-size: 16px;
   line-height: 1.55;
@@ -33,10 +38,87 @@ a { text-decoration: none; color: inherit; }
 button { font-family: inherit; border: none; background: none; padding: 0; cursor: pointer; }
 
 /* --- Layout --- */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 18px 16px 110px;
+}
+
+.app-frame {
+  width: min(980px, 100%);
+  background: var(--bg-surface);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  border: 1px solid rgba(15, 28, 22, 0.04);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--separator-light);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at top, #2ab878 0%, var(--primary) 60%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 10px 24px rgba(31, 141, 93, 0.3);
+}
+
+.brand-title {
+  font-size: 18px;
+}
+
+.brand-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  font-weight: 600;
+  font-size: 12px;
+}
+
 .container {
-  max-width: 720px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 1.2rem 1rem 2rem;
+  padding: 1.4rem 1.5rem 2.5rem;
 }
 
 .header {
@@ -68,6 +150,16 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   gap: 4px;
 }
 
+.breadcrumbs {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0.5rem;
+}
+
 /* --- Inset Grouped Lists (The Core Design) --- */
 .list-header {
   font-size: 12px;
@@ -88,7 +180,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: 1.5rem;
-  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .list-row {
@@ -102,7 +194,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 
 .list-row:active {
-  background: #E5E5EA;
+  background: #f1f4f2;
 }
 
 /* Separator lines that don't touch the left edge (like iOS) */
@@ -162,6 +254,35 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   color: var(--primary);
   font-size: 15px;
   font-weight: 600;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 12px 24px rgba(19, 107, 69, 0.24);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--separator-light);
+  color: var(--text-main);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .btn-icon-circle {
@@ -321,7 +442,7 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   background: var(--bg-card);
   border-radius: var(--radius);
   padding: 14px 16px;
-  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.06);
+  box-shadow: var(--shadow-card);
   margin-bottom: 1.25rem;
 }
 
@@ -397,6 +518,27 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 }
 .nav-item.active { color: var(--primary); }
 .nav-item svg { width: 24px; height: 24px; }
+
+@media (max-width: 900px) {
+  .app-shell { padding: 12px 10px 100px; }
+  .app-frame { border-radius: 20px; }
+  .app-header { padding: 16px 16px; }
+  .container { padding: 1.1rem 1rem 2rem; }
+  .page-title { font-size: 26px; }
+}
+
+@media (max-width: 640px) {
+  body { padding-bottom: calc(var(--nav-h) + 8px); }
+  .app-shell { padding: 10px 8px 92px; }
+  .app-frame {
+    border-radius: 18px;
+    box-shadow: 0 16px 30px rgba(15, 28, 22, 0.12);
+  }
+  .brand-logo { width: 36px; height: 36px; }
+  .brand-title { font-size: 16px; }
+  .brand-subtitle { display: none; }
+  .container { padding: 1rem 0.9rem 1.8rem; }
+}
 `;
 
 export const SCRIPTS = `
@@ -430,6 +572,14 @@ export const SCRIPTS = `
 `;
 
 export function renderPage(title: string, content: string, activeTab: string, user?: { name: string }, breadcrumbs?: string): Response {
+  const logoMark = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 6h9a4 4 0 0 1 4 4v10a3 3 0 0 0-3-3H4z"></path>
+      <path d="M20 6h-4a3 3 0 0 0-3 3v11"></path>
+      <path d="M8 4v2"></path>
+      <path d="M12 4v2"></path>
+    </svg>
+  `;
   const navItems = [
     { id: 'dashboard', href: '/admin', icon: '<path d="M3 11l9-7 9 7"></path><path d="M5 10v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9"></path><path d="M9 21v-6h6v6"></path>', label: 'Home' },
     { id: 'classes', href: '/admin/classes', icon: '<path d="M4 4h10a2 2 0 0 1 2 2v14"></path><path d="M4 4v14a2 2 0 0 0 2 2h12"></path><path d="M8 8h8"></path><path d="M8 12h8"></path><path d="M8 16h6"></path>', label: 'Classes' },
@@ -445,9 +595,25 @@ export function renderPage(title: string, content: string, activeTab: string, us
   <style>${CSS}</style>
 </head>
 <body>
-  <div class="container">
-    ${breadcrumbs ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:0.5rem; display:flex; align-items:center; gap:6px;">${breadcrumbs}</div>` : ''}
-    ${content}
+  <div class="app-shell">
+    <div class="app-frame">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-logo">${logoMark}</div>
+          <div>
+            <div class="brand-title">Freeducation</div>
+            <div class="brand-subtitle">Admin Workspace</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          ${user ? `<span class="user-chip">${user.name}</span>` : `<span class="user-chip">Admin Console</span>`}
+        </div>
+      </header>
+      <div class="container">
+        ${breadcrumbs ? `<div class="breadcrumbs">${breadcrumbs}</div>` : ''}
+        ${content}
+      </div>
+    </div>
   </div>
 
   ${user ? `
