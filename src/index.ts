@@ -25,6 +25,15 @@ type ContentDashboardFilters = {
   coordinator_id?: string;
 };
 
+type ContentSearchFilters = {
+  release_id: string;
+  grade_id?: string;
+  subject_id?: string;
+  chapter_id?: string;
+  type?: string;
+  year?: number;
+};
+
 type DashboardLimits = {
   approvals: number;
   reviews: number;
@@ -52,6 +61,11 @@ const ensureArray = (value: unknown) => (Array.isArray(value) ? value : []);
 const parseLimit = (value: string | null, fallback: number) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+};
+
+const parseOffset = (value: string | null, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
 };
 
 const buildFilters = (filters: PracticeTestFilters) => {
@@ -109,6 +123,38 @@ const buildContentDashboardFilters = (filters: ContentDashboardFilters) => {
   if (filters.coordinator_id) {
     conditions.push("ci.owner_id = ?");
     params.push(filters.coordinator_id);
+  }
+
+  return { conditions, params };
+};
+
+const buildSearchFilters = (filters: ContentSearchFilters) => {
+  const conditions: string[] = ["ci.release_id = ?"];
+  const params: unknown[] = [filters.release_id];
+
+  if (filters.grade_id) {
+    conditions.push("g.id = ?");
+    params.push(filters.grade_id);
+  }
+
+  if (filters.subject_id) {
+    conditions.push("s.id = ?");
+    params.push(filters.subject_id);
+  }
+
+  if (filters.chapter_id) {
+    conditions.push("ch.id = ?");
+    params.push(filters.chapter_id);
+  }
+
+  if (filters.type) {
+    conditions.push("ci.type = ?");
+    params.push(filters.type);
+  }
+
+  if (filters.year) {
+    conditions.push("ci.year = ?");
+    params.push(filters.year);
   }
 
   return { conditions, params };
@@ -303,6 +349,144 @@ const fetchContentDashboard = async (
       by_coordinator: coordinatorRows.results ?? [],
     },
     activity_timeline: timelineRows.results ?? [],
+  });
+};
+
+const fetchContentSearch = async (
+  db: D1Database,
+  filters: ContentSearchFilters,
+  limit: number,
+  offset: number
+) => {
+  const { conditions, params } = buildSearchFilters(filters);
+  const baseJoin = `
+    FROM content_items ci
+    JOIN chapters ch ON ci.chapter_id = ch.id
+    JOIN subjects s ON ch.subject_id = s.id
+    JOIN grades g ON s.grade_id = g.id
+  `;
+  const whereClause = buildWhereClause(conditions);
+
+  const totalRow = await db
+    .prepare(
+      `
+      SELECT COUNT(*) AS total
+      ${baseJoin}
+      ${whereClause}
+      `
+    )
+    .bind(...params)
+    .first<{ total: number }>();
+
+  const itemsResult = await db
+    .prepare(
+      `
+      SELECT ci.id, ci.title, ci.type, ci.status, ci.year, ci.chapter_id,
+             ch.name AS chapter_name,
+             s.id AS subject_id, s.name AS subject_name,
+             g.id AS grade_id, g.name AS grade_name
+      ${baseJoin}
+      ${whereClause}
+      ORDER BY ci.updated_at DESC
+      LIMIT ? OFFSET ?
+      `
+    )
+    .bind(...params, limit, offset)
+    .all<{
+      id: string;
+      title: string;
+      type: string;
+      status: string;
+      year: number | null;
+      chapter_id: string | null;
+      chapter_name: string | null;
+      subject_id: string | null;
+      subject_name: string | null;
+      grade_id: string | null;
+      grade_name: string | null;
+    }>();
+
+  const gradeFacetRows = await db
+    .prepare(
+      `
+      SELECT g.id AS grade_id, g.name AS grade_name, g.sequence AS grade_sequence, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY g.id, g.name, g.sequence
+      ORDER BY g.sequence
+      `
+    )
+    .bind(...params)
+    .all<{ grade_id: string; grade_name: string; grade_sequence: number; count: number }>();
+
+  const subjectFacetRows = await db
+    .prepare(
+      `
+      SELECT s.id AS subject_id, s.name AS subject_name, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY s.id, s.name
+      ORDER BY count DESC
+      `
+    )
+    .bind(...params)
+    .all<{ subject_id: string; subject_name: string; count: number }>();
+
+  const chapterFacetRows = await db
+    .prepare(
+      `
+      SELECT ch.id AS chapter_id, ch.name AS chapter_name, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY ch.id, ch.name
+      ORDER BY count DESC
+      `
+    )
+    .bind(...params)
+    .all<{ chapter_id: string; chapter_name: string; count: number }>();
+
+  const typeFacetRows = await db
+    .prepare(
+      `
+      SELECT ci.type AS type, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY ci.type
+      ORDER BY count DESC
+      `
+    )
+    .bind(...params)
+    .all<{ type: string; count: number }>();
+
+  const yearFacetRows = await db
+    .prepare(
+      `
+      SELECT ci.year AS year, COUNT(*) AS count
+      ${baseJoin}
+      ${whereClause}
+      GROUP BY ci.year
+      ORDER BY ci.year DESC
+      `
+    )
+    .bind(...params)
+    .all<{ year: number | null; count: number }>();
+
+  return jsonResponse({
+    filters,
+    pagination: {
+      total: totalRow?.total ?? 0,
+      limit,
+      offset,
+      returned: itemsResult.results?.length ?? 0,
+    },
+    items: itemsResult.results ?? [],
+    facets: {
+      by_grade: gradeFacetRows.results ?? [],
+      by_subject: subjectFacetRows.results ?? [],
+      by_chapter: chapterFacetRows.results ?? [],
+      by_type: typeFacetRows.results ?? [],
+      by_year: yearFacetRows.results ?? [],
+    },
   });
 };
 
@@ -658,6 +842,26 @@ export default {
         timeline: parseLimit(url.searchParams.get("timeline_limit"), 20),
       };
       return fetchContentDashboard(env.DB, filters, limits);
+    }
+
+    if (request.method === "GET" && pathname === "/content/search") {
+      const releaseId = url.searchParams.get("release_id");
+      if (!releaseId) {
+        return jsonResponse({ error: "release_id is required" }, 400);
+      }
+      const yearParam = url.searchParams.get("year");
+      const yearValue = yearParam ? Number(yearParam) : null;
+      const filters: ContentSearchFilters = {
+        release_id: releaseId,
+        grade_id: url.searchParams.get("grade_id") ?? undefined,
+        subject_id: url.searchParams.get("subject_id") ?? undefined,
+        chapter_id: url.searchParams.get("chapter_id") ?? undefined,
+        type: url.searchParams.get("type") ?? undefined,
+        year: Number.isFinite(yearValue) ? yearValue ?? undefined : undefined,
+      };
+      const limit = parseLimit(url.searchParams.get("limit"), 25);
+      const offset = parseOffset(url.searchParams.get("offset"), 0);
+      return fetchContentSearch(env.DB, filters, limit, offset);
     }
 
     const attemptMatch = pathname.match(/^\/practice-tests\/([^/]+)\/attempts\/?$/);
