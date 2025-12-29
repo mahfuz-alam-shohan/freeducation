@@ -63,6 +63,23 @@ Key goals:
 - `GET /content/:id` (metadata)
 - `GET /content/:id/download` (signed URL)
 
+### Curriculum Data Model
+**Core entities**:
+- **Grade** → **Subject** → **Chapter** → **Outcome** (learning outcome).
+- Each entity is attached to a **curriculum release** so content and exams can target a stable version.
+
+**Custom override layer**:
+- Admin edits are stored as non-destructive overrides keyed by entity + release.
+- Read paths merge overrides on top of baseline entities, preserving the original structure and history.
+
+**Versioned releases**:
+- Releases can be `draft`, `active`, or `archived`.
+- Content items and assessments reference a release id to lock to a stable curriculum version.
+- New releases can be created by cloning baseline entities and applying new overrides.
+
+**Schema reference**:
+- See `schema/curriculum.sql` for D1 table definitions and indexes.
+
 ### 2) Assessment Service
 **Responsibilities**:
 - Exam preparation quizzes, practice tests
@@ -122,4 +139,3 @@ Key goals:
 - **Rate limiting** applied at edge to protect D1 and R2.
 - **Observability** via Cloudflare logs + custom analytics events.
 - **Backup/Recovery**: Scheduled D1 exports to R2.
-
