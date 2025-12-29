@@ -35,6 +35,14 @@ body {
 
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; border: none; background: none; padding: 0; cursor: pointer; }
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(45, 127, 249, 0.35);
+  outline-offset: 2px;
+}
 
 /* --- Layout --- */
 .app-shell {
@@ -202,6 +210,9 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
 .list-row:active {
   background: #f1f4f2;
 }
+.list-row:hover {
+  background: #f5f7fb;
+}
 
 /* Separator lines that don't touch the left edge (like iOS) */
 .list-row:not(:last-child)::after {
@@ -260,6 +271,9 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   color: var(--primary);
   font-size: 15px;
   font-weight: 600;
+}
+.btn-text:focus-visible {
+  border-radius: 999px;
 }
 
 .btn {
@@ -406,6 +420,9 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   outline: none;
   background: transparent;
 }
+.input::placeholder {
+  color: var(--text-muted);
+}
 
 .form-row {
   display: flex;
@@ -469,6 +486,68 @@ button { font-family: inherit; border: none; background: none; padding: 0; curso
   color: var(--text-secondary);
   text-align: center;
   line-height: 1.45;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--separator-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  display: grid;
+  place-items: center;
+}
+
+.search-row {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--separator-light);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  font-size: 15px;
+  flex: 1;
+  background: transparent;
 }
 
 .order-chip {
@@ -592,6 +671,16 @@ export const SCRIPTS = `
       }
     }
     toggleModal(modalId, true);
+  }
+
+  function filterList(inputId, rowSelector) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    document.querySelectorAll(rowSelector).forEach((row) => {
+      const label = (row.getAttribute('data-filter') || row.textContent || '').toLowerCase();
+      row.style.display = label.includes(query) ? '' : 'none';
+    });
   }
 </script>
 `;
