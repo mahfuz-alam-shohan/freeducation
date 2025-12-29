@@ -1,4 +1,5 @@
 name = "freeducation"
+main = "src/index.ts"
 
 
 # D1 Database Binding
