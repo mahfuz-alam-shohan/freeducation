@@ -1,19 +1,13 @@
 import type { Bindings } from '../types';
-import { adminLayout, publicLayout } from '../templates/layout';
+import { adminLayout, publicLayout, escapeHtml } from '../templates/layout';
 import { dbAll, dbFirst, dbRun } from '../utils/db';
 import { createSalt, createSession, getSessionAdmin, hashPassword, verifyPassword } from '../utils/auth';
 import { hasAnyAdmin } from '../db/schema';
 
-// --- Auth Middleware & Utilities ---
+// --- Auth Utilities ---
 const parseForm = (form: FormData, key: string) => { const v = form.get(key); return (typeof v === 'string') ? v.trim() : ''; };
-const requireAuth = async (env: Bindings, req: Request) => {
-  const cookie = req.headers.get('Cookie');
-  const token = cookie?.split(';').find(c => c.trim().startsWith('session='))?.split('=')[1];
-  const admin = await getSessionAdmin(env, token);
-  return admin;
-};
 
-// --- AUTH HANDLERS ---
+// --- LOGIN & SETUP ---
 export const renderLogin = () => publicLayout('Instructor Login', `
   <div style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
     <div class="card" style="width: 100%; max-width: 400px;">
@@ -21,7 +15,7 @@ export const renderLogin = () => publicLayout('Instructor Login', `
       <form class="stack" method="post" action="/admin/login">
         <div><label>Email</label><input type="email" name="email" required placeholder="admin@freeducation.bd"></div>
         <div><label>Password</label><input type="password" name="password" required></div>
-        <button class="btn btn-primary" style="justify-content: center;">Secure Login</button>
+        <button class="btn btn-primary" style="justify-content: center; width: 100%;">Secure Login</button>
       </form>
     </div>
   </div>
@@ -44,6 +38,7 @@ export const renderSetup = async (env: Bindings) => {
   if (await hasAnyAdmin(env)) return new Response('Admin exists', {status: 403});
   return publicLayout('Setup', `<form method="post" class="container stack" style="max-width:400px; margin-top:4rem;"><h2 class="text-center">System Setup</h2><input name="name" placeholder="Name"><input name="email" placeholder="Email"><input type="password" name="password" placeholder="Password"><button class="btn btn-primary">Create Owner</button></form>`);
 };
+
 export const handleSetup = async (env: Bindings, req: Request) => {
   if (await hasAnyAdmin(env)) return new Response('Forbidden', {status: 403});
   const form = await req.formData();
@@ -73,7 +68,6 @@ export const renderDashboard = async (env: Bindings, admin: {name: string}) => {
         <div style="font-size: 2rem; font-weight: 700;">${stats?.chapters || 0}</div>
       </div>
     </div>
-    
     <div class="card" style="margin-top: 2rem;">
       <h3>Quick Actions</h3>
       <div class="grid-3" style="margin-top: 1rem;">
@@ -97,8 +91,8 @@ export const renderClasses = async (env: Bindings, admin: {name:string}) => {
           ${classes.map((c: any) => `
             <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <div style="font-weight:700; font-size: 1.1rem;">${c.name}</div>
-                <div class="badge badge-blue">${c.level}</div>
+                <div style="font-weight:700; font-size: 1.1rem;">${escapeHtml(c.name)}</div>
+                <div class="badge badge-blue">${escapeHtml(c.level)}</div>
               </div>
               <a href="/admin/classes/${c.id}/subjects" class="btn btn-primary btn-sm">Manage Subjects →</a>
             </div>
@@ -118,25 +112,23 @@ export const renderClasses = async (env: Bindings, admin: {name:string}) => {
   return adminLayout('Classes', body, admin.name, 'classes');
 };
 
-// --- SUBJECT & CHAPTER MANAGER ---
 export const renderSubjects = async (env: Bindings, admin: {name:string}, classId: number) => {
   const cls = await dbFirst(env, 'SELECT * FROM classes WHERE id=?', classId) as any;
   const subjects = await dbAll(env, 'SELECT * FROM subjects WHERE class_id=?', classId);
-  
   const body = `
     <div style="margin-bottom: 1.5rem;">
       <a href="/admin/classes" class="text-muted">← Back to Classes</a>
-      <h2>${cls.name} Subjects</h2>
+      <h2>${escapeHtml(cls.name)} Subjects</h2>
     </div>
     <div class="grid-2">
       <div class="stack">
         ${subjects.map((s: any) => `
           <div class="card">
             <div style="display:flex; justify-content:space-between;">
-              <h3 style="color: var(--primary);">${s.name}</h3>
+              <h3 style="color: var(--primary);">${escapeHtml(s.name)}</h3>
               <a href="/admin/subjects/${s.id}/dashboard" class="btn btn-outline btn-sm">Open Course Manager</a>
             </div>
-            <p class="text-muted" style="margin-top:0.5rem;">${s.description || 'No description'}</p>
+            <p class="text-muted" style="margin-top:0.5rem;">${escapeHtml(s.description || 'No description')}</p>
           </div>
         `).join('')}
       </div>
@@ -153,7 +145,7 @@ export const renderSubjects = async (env: Bindings, admin: {name:string}, classI
   return adminLayout(`${cls.name} Subjects`, body, admin.name, 'classes');
 };
 
-// --- COURSE MANAGER (The Professional Dashboard) ---
+// --- COURSE MANAGER ---
 export const renderCourseDashboard = async (env: Bindings, admin: {name:string}, subjectId: number) => {
   const sub = await dbFirst(env, 'SELECT * FROM subjects WHERE id=?', subjectId) as any;
   const chapters = await dbAll(env, 'SELECT * FROM chapters WHERE subject_id=? ORDER BY order_index', subjectId);
@@ -163,12 +155,10 @@ export const renderCourseDashboard = async (env: Bindings, admin: {name:string},
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
       <div>
         <a href="/admin/classes/${sub.class_id}/subjects" class="text-muted">← Back to Subjects</a>
-        <h1>${sub.name} <span class="badge badge-orange">Course Manager</span></h1>
+        <h1>${escapeHtml(sub.name)} <span class="badge badge-orange">Course Manager</span></h1>
       </div>
     </div>
-
     <div class="grid-2">
-      <!-- Left: Chapter Syllabus -->
       <div>
         <h3 style="margin-bottom:1rem;">📖 Syllabus & Chapters</h3>
         <div class="stack">
@@ -177,7 +167,7 @@ export const renderCourseDashboard = async (env: Bindings, admin: {name:string},
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                   <div class="text-muted" style="font-size:0.8rem;">Chapter ${c.order_index}</div>
-                  <div style="font-weight:700; font-size:1.1rem;">${c.name}</div>
+                  <div style="font-weight:700; font-size:1.1rem;">${escapeHtml(c.name)}</div>
                 </div>
                 <div style="display:flex; gap:0.5rem;">
                    <a href="/admin/chapters/${c.id}/content" class="btn btn-primary btn-sm">Edit Content</a>
@@ -196,8 +186,6 @@ export const renderCourseDashboard = async (env: Bindings, admin: {name:string},
           </form>
         </div>
       </div>
-
-      <!-- Right: Digital Library -->
       <div>
         <h3 style="margin-bottom:1rem;">📚 Digital Library (PDFs)</h3>
         <div class="card">
@@ -217,8 +205,8 @@ export const renderCourseDashboard = async (env: Bindings, admin: {name:string},
            ${resources.map((r: any) => `
              <div style="background:white; padding:0.8rem; border-radius:8px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;">
                <div>
-                 <div style="font-weight:600;">${r.title}</div>
-                 <div class="badge badge-green">${r.category}</div>
+                 <div style="font-weight:600;">${escapeHtml(r.title)}</div>
+                 <div class="badge badge-green">${escapeHtml(r.category)}</div>
                </div>
                <a href="/resource/${r.id}" target="_blank" class="btn btn-sm btn-outline">View</a>
              </div>
@@ -230,20 +218,17 @@ export const renderCourseDashboard = async (env: Bindings, admin: {name:string},
   return adminLayout(`${sub.name} Manager`, body, admin.name, 'classes');
 };
 
-// --- CHAPTER CONTENT EDITOR (Topics & Explanations) ---
 export const renderChapterContent = async (env: Bindings, admin: {name:string}, chapterId: number) => {
   const chapter = await dbFirst(env, 'SELECT * FROM chapters WHERE id=?', chapterId) as any;
   const topics = await dbAll(env, 'SELECT * FROM topics WHERE chapter_id=? ORDER BY order_index', chapterId);
-  // Get contents for all topics to display summary
   const contents = await dbAll(env, `SELECT * FROM contents WHERE topic_id IN (SELECT id FROM topics WHERE chapter_id=?)`, chapterId);
 
   const body = `
     <div style="margin-bottom:2rem;">
        <a href="/admin/subjects/${chapter.subject_id}/dashboard" class="text-muted">← Back to Course</a>
-       <h2>${chapter.name}: Content Editor</h2>
+       <h2>${escapeHtml(chapter.name)}: Content Editor</h2>
        <p class="text-muted">Break down the chapter into topics and explanations.</p>
     </div>
-
     <div class="grid-2">
        <div class="stack">
          ${topics.map((t: any) => {
@@ -251,81 +236,62 @@ export const renderChapterContent = async (env: Bindings, admin: {name:string}, 
             return `
             <div class="card">
                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                 <h3>${t.title}</h3>
+                 <h3>${escapeHtml(t.title)}</h3>
                  <form method="post" action="/admin/topics/${t.id}/delete" onsubmit="return confirm('Delete topic?');"><button class="text-muted" style="background:none; border:none; cursor:pointer;">×</button></form>
                </div>
-               
-               <!-- Existing Contents List -->
                <div style="margin-bottom:1rem; padding-left:0.5rem; border-left:2px solid #e2e8f0;">
                  ${topicContents.map((c:any) => `
                     <div style="font-size:0.85rem; margin-bottom:0.3rem;">
                        ${c.type === 'explanation' ? '📝 Explanation' : '💡 Short Q&A'} 
-                       <span class="text-muted">(${c.body.substring(0, 30)}...)</span>
+                       <span class="text-muted">(${escapeHtml(c.body.substring(0, 30))}...)</span>
                     </div>
                  `).join('')}
                </div>
-
-               <!-- Add Content Form -->
                <form method="post" action="/admin/topics/${t.id}/contents" class="stack" style="background:#f8fafc; padding:0.8rem; border-radius:8px;">
                  <select name="type" style="padding:0.4rem;">
                    <option value="explanation">Detailed Explanation</option>
                    <option value="short_qa">Short Question (Gyan Mulok)</option>
                    <option value="formula">Key Formula</option>
                  </select>
-                 <textarea name="body" placeholder="Write content here (Markdown/HTML supported)..." rows="3"></textarea>
+                 <textarea name="body" placeholder="Write content here..." rows="3"></textarea>
                  <button class="btn btn-sm btn-outline">Add Content Block</button>
                </form>
             </div>
             `;
          }).join('')}
-         
          <div class="card" style="border: 2px dashed #cbd5e1; text-align:center;">
             <h4>Add New Topic</h4>
             <form method="post" action="/admin/chapters/${chapterId}/topics" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-               <input name="title" placeholder="Topic Title (e.g. Newton's 2nd Law)" required>
+               <input name="title" placeholder="Topic Title" required>
                <input name="order_index" type="number" placeholder="#" style="width:50px;" value="${topics.length+1}">
                <button class="btn btn-primary">Add Topic</button>
             </form>
          </div>
-       </div>
-       
-       <div class="card">
-         <h3>Tips for Instructors</h3>
-         <ul class="text-muted">
-           <li>Use <strong>Explanations</strong> for long-form theory.</li>
-           <li>Use <strong>Short Question</strong> for 1-mark "Gyan Mulok" Q&A.</li>
-           <li>Break large chapters into 3-5 small topics for better readability.</li>
-         </ul>
        </div>
     </div>
   `;
   return adminLayout(`Edit Content: ${chapter.name}`, body, admin.name, 'classes');
 };
 
-// --- QUESTION BANK EDITOR (MCQ & CQ) ---
 export const renderQuestionBank = async (env: Bindings, admin: {name:string}, chapterId: number) => {
   const chapter = await dbFirst(env, 'SELECT * FROM chapters WHERE id=?', chapterId) as any;
   const questions = await dbAll(env, 'SELECT * FROM questions WHERE chapter_id=? ORDER BY created_at DESC', chapterId);
-
   const body = `
     <div style="margin-bottom:2rem;">
        <a href="/admin/subjects/${chapter.subject_id}/dashboard" class="text-muted">← Back to Course</a>
-       <h2>${chapter.name}: Question Bank</h2>
+       <h2>${escapeHtml(chapter.name)}: Question Bank</h2>
     </div>
-
     <div class="grid-2">
        <div>
          <h3 style="margin-bottom:1rem;">Existing Questions</h3>
          ${questions.map((q: any) => `
-           <div class="question-item">
+           <div class="question-item" style="background:white; padding:1rem; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:1rem;">
              <div class="badge ${q.type === 'mcq' ? 'badge-blue' : 'badge-green'}">${q.type.toUpperCase()}</div>
-             <div style="margin-top:0.5rem; font-weight:500;">${q.question_text}</div>
-             ${q.type === 'mcq' ? `<div class="text-muted" style="font-size:0.85rem; margin-top:0.3rem;">Options: ${q.options_json} | Ans: ${q.correct_answer}</div>` : ''}
-             <div style="margin-top:0.5rem; font-size:0.85rem; color:#64748b;">Solution: ${q.solution_text || 'N/A'}</div>
+             <div style="margin-top:0.5rem; font-weight:500;">${escapeHtml(q.question_text)}</div>
+             <div style="margin-top:0.5rem; font-size:0.85rem; color:#64748b;">Solution: ${escapeHtml(q.solution_text || 'N/A')}</div>
            </div>
          `).join('')}
        </div>
-
        <div class="stack">
          <div class="card">
            <h3>Add MCQ</h3>
@@ -346,7 +312,6 @@ export const renderQuestionBank = async (env: Bindings, admin: {name:string}, ch
              <button class="btn btn-primary">Save MCQ</button>
            </form>
          </div>
-
          <div class="card">
            <h3>Add Creative Question (CQ)</h3>
            <form method="post" action="/admin/chapters/${chapterId}/questions" class="stack">
@@ -362,8 +327,7 @@ export const renderQuestionBank = async (env: Bindings, admin: {name:string}, ch
   return adminLayout(`QB: ${chapter.name}`, body, admin.name, 'classes');
 };
 
-// --- DATA ACTION HANDLERS ---
-// (These handle POST requests for the forms above)
+// --- DATA HANDLERS ---
 export const handleCreateClass = async (env: Bindings, req: Request) => {
   const form = await req.formData();
   await dbRun(env, 'INSERT INTO classes (name, level, created_at) VALUES (?,?,?)', parseForm(form, 'name'), parseForm(form, 'level'), new Date().toISOString());
