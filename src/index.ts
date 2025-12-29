@@ -21,8 +21,10 @@ export default {
       return apiResponse;
     }
 
+    const url = new URL(request.url);
+
     // --- FRONTEND SERVING ---
-    return new Response(getHtml(), {
+    return new Response(getHtml(url.pathname), {
       headers: { "Content-Type": "text/html" },
     });
   },
