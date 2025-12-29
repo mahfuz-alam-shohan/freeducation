@@ -24,6 +24,11 @@ export const CSS = `
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: "Hind Siliguri", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -31,6 +36,7 @@ body {
   color: var(--text-main);
   font-size: 16px;
   line-height: 1.55;
+  overflow: hidden;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -47,6 +53,7 @@ select:focus-visible {
 /* --- Layout --- */
 .app-shell {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   justify-content: center;
   padding: 18px 16px;
@@ -61,7 +68,8 @@ select:focus-visible {
   border: 1px solid rgba(7, 18, 43, 0.08);
   display: flex;
   flex-direction: column;
-  min-height: 82vh;
+  height: 100%;
+  min-height: 0;
 }
 
 .app-header {
@@ -79,6 +87,9 @@ select:focus-visible {
 .app-body {
   flex: 1;
   background: var(--bg-surface);
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .brand {
@@ -133,6 +144,9 @@ select:focus-visible {
   max-width: 860px;
   margin: 0 auto;
   padding: 1.4rem 1.5rem 2.5rem;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
 }
 
 .header {
@@ -268,12 +282,29 @@ select:focus-visible {
 
 /* --- Buttons & Badges --- */
 .btn-text {
-  color: var(--primary);
-  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--separator-light);
+  background: var(--bg-card);
+  color: var(--primary-dark);
+  font-size: 13px;
   font-weight: 600;
+  box-shadow: 0 8px 18px rgba(7, 18, 43, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 .btn-text:focus-visible {
   border-radius: 999px;
+}
+.btn-text:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(7, 18, 43, 0.12);
+}
+.btn-text:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .btn {
@@ -306,17 +337,22 @@ select:focus-visible {
 }
 
 .btn-icon-circle {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--primary-bg);
-  color: var(--primary);
+  background: white;
+  color: var(--primary-dark);
+  border: 1px solid var(--separator-light);
+  box-shadow: 0 8px 18px rgba(7, 18, 43, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
 }
-.btn-icon-circle:active { background: #D1D1D6; }
+.btn-icon-circle:active {
+  background: #E8EDF6;
+  box-shadow: none;
+}
 
 .btn-icon {
   color: var(--primary);
@@ -325,9 +361,17 @@ select:focus-visible {
 }
 
 .btn-muted {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--separator-light);
+  background: white;
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 12px rgba(7, 18, 43, 0.06);
 }
 
 .badge {

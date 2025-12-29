@@ -58,7 +58,7 @@ export async function renderClassesList(session: any, env: Env) {
               ${c.has_groups ? ' • Groups' : ''}
             </div>
           </div>
-          <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-class-modal', '/admin/classes/edit', {id: '${c.id}', name: '${escapeHtml(c.name)}', has_groups: ${c.has_groups}})">
+          <button class="btn-icon-circle" onclick="openEdit('edit-class-modal', '/admin/classes/edit', {id: '${c.id}', name: '${escapeHtml(c.name)}', has_groups: ${c.has_groups}})">
             <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
           </button>
           <div class="row-action" onclick="window.location='/admin/classes/${c.id}'">
@@ -66,11 +66,6 @@ export async function renderClassesList(session: any, env: Env) {
           </div>
         </div>
       `}).join('') || '<div class="empty-state">No classes found. Tap Add Class to create one.</div>'}
-    </div>
-
-    <div class="helper-card">
-      <div class="helper-title">Curriculum Flow</div>
-      <div class="helper-subtitle">Classes → Subjects → Chapters → Topics → Content & Questions</div>
     </div>
 
     <!-- Create Class Modal -->
@@ -185,11 +180,6 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
       </div>
     </div>
 
-    <div class="helper-card">
-      <div class="helper-title">Class flow</div>
-      <div class="helper-subtitle">Classes → Subjects → Chapters → Topics → Content & Questions</div>
-    </div>
-
     <div class="action-row">
        ${classData.has_groups ? `<button onclick="toggleModal('new-group-modal', true)" class="btn-text">+ Group</button>` : ''}
        <button onclick="toggleModal('link-modal', true)" class="btn-text">Link Class</button>
@@ -206,7 +196,7 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
            <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'" style="cursor:pointer;">
              <div class="row-title">${escapeHtml(s.name)}</div>
            </div>
-           <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
+           <button class="btn-icon-circle" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
              <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
            </button>
            <div class="row-action" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
@@ -229,7 +219,7 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
              <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'" style="cursor:pointer;">
                <div class="row-title">${escapeHtml(s.name)}</div>
              </div>
-             <button class="btn-icon-circle" style="background:none;" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
+             <button class="btn-icon-circle" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
                <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
              </button>
              <div class="row-action" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
