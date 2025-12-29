@@ -151,3 +151,5 @@ export const hasAnyAdmin = async (env: Bindings) => {
   const row = await env.DB.prepare('SELECT id FROM admins LIMIT 1').first<{ id: number }>();
   return Boolean(row?.id);
 };
+
+
