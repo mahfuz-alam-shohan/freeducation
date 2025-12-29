@@ -4,55 +4,57 @@ export const adminComponents = `
             const [sidebarOpen, setSidebarOpen] = useState(false);
 
             return (
-                <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden relative">
+                <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-gray-50">
                     {/* Mobile Header */}
-                    <div className="md:hidden bg-white border-b p-3 flex justify-between items-center z-20">
+                    <div className="md:hidden bg-white border-b p-4 flex justify-between items-center sticky top-16 z-30 shadow-sm">
                         <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
                                 {user.username[0].toUpperCase()}
                             </div>
                             <span className="font-bold text-gray-700 text-sm">{user.username}</span>
                         </div>
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-600 p-2">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition">
                             <i className={\`fas \${sidebarOpen ? 'fa-times' : 'fa-bars'}\`}></i>
                         </button>
                     </div>
 
-                    {/* Admin Sidebar */}
+                    {/* Admin Sidebar - Sticky on Desktop */}
                     <div className={\`
-                        fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:flex flex-col
+                        fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out 
+                        md:translate-x-0 md:static md:sticky md:top-16 md:h-[calc(100vh-64px)] flex flex-col shadow-xl md:shadow-none
                         \${sidebarOpen ? 'translate-x-0 top-[64px]' : '-translate-x-full'}
-                        md:top-0 h-full
                     \`}>
-                        <div className="p-4 hidden md:block">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
+                        <div className="p-6 hidden md:block border-b border-gray-100">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
                                     {user.username[0].toUpperCase()}
                                 </div>
                                 <div className="overflow-hidden">
-                                    <h4 className="font-bold text-gray-800 truncate text-sm">{user.username}</h4>
-                                    <p className="text-[10px] text-green-600 font-semibold">● Online</p>
+                                    <h4 className="font-bold text-gray-900 truncate">{user.username}</h4>
+                                    <p className="text-xs text-green-600 font-semibold flex items-center mt-1">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> Online
+                                    </p>
                                 </div>
                             </div>
                         </div>
                         
-                        <nav className="p-2 space-y-1 flex-1">
-                            <AdminNavItem icon="fas fa-book" label="Classes & Content" active={activeTab === 'classes'} onClick={() => { setActiveTab('classes'); setSidebarOpen(false); }} />
-                            <AdminNavItem icon="fas fa-cog" label="System Settings" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }} />
+                        <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
+                            <AdminNavItem icon="fas fa-layer-group" label="Classes & Content" active={activeTab === 'classes'} onClick={() => { setActiveTab('classes'); setSidebarOpen(false); }} />
+                            <AdminNavItem icon="fas fa-cogs" label="System Settings" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }} />
                         </nav>
                         
-                        <div className="p-4 border-t">
-                            <button onClick={logout} className="flex items-center text-red-600 hover:text-red-700 font-medium text-sm transition w-full">
-                                <i className="fas fa-sign-out-alt mr-3"></i> Logout
+                        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                            <button onClick={logout} className="flex items-center justify-center text-red-600 hover:bg-red-50 hover:text-red-700 font-medium text-sm transition w-full py-2.5 rounded-lg border border-transparent hover:border-red-100">
+                                <i className="fas fa-sign-out-alt mr-2"></i> Logout
                             </button>
                         </div>
                     </div>
 
-                    {/* Overlay for mobile */}
-                    {sidebarOpen && <div className="fixed inset-0 bg-black/20 z-30 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
+                    {/* Overlay for mobile sidebar */}
+                    {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden backdrop-blur-sm" onClick={() => setSidebarOpen(false)}></div>}
 
-                    {/* Admin Content */}
-                    <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6 w-full">
+                    {/* Admin Content Area - Fluid Width */}
+                    <div className="flex-1 p-4 md:p-8 w-full overflow-x-hidden">
                         {activeTab === 'classes' && <ClassManager />}
                         {activeTab === 'settings' && <SettingsManager />}
                     </div>
@@ -63,9 +65,9 @@ export const adminComponents = `
         const AdminNavItem = ({ icon, label, active, onClick }) => (
             <button 
                 onClick={onClick} 
-                className={\`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all \${active ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}\`}
+                className={\`w-full flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 \${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}\`}
             >
-                <i className={\`\${icon} w-5 text-center mr-2 \${active ? 'text-blue-600' : 'text-gray-400'}\`}></i>
+                <i className={\`\${icon} w-6 text-center mr-3 text-lg \${active ? 'text-white' : 'text-gray-400'}\`}></i>
                 {label}
             </button>
         );
@@ -98,51 +100,65 @@ export const adminComponents = `
             if (selectedClass) return <ClassDetail cls={selectedClass} onBack={() => setSelectedClass(null)} />;
 
             return (
-                <div className="max-w-5xl mx-auto">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                        <h2 className="text-xl font-bold text-gray-800">Class Management</h2>
+                <div className="w-full">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800">Class Management</h2>
+                            <p className="text-gray-500 text-sm mt-1">Create and manage your academic structure.</p>
+                        </div>
                         <div className="flex w-full sm:w-auto gap-2">
                             <input 
                                 value={newClassName} 
                                 onChange={e => setNewClassName(e.target.value)} 
-                                placeholder="New Class Name" 
-                                className="flex-1 sm:w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g. Class 11" 
+                                className="flex-1 sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all"
                             />
-                            <Button size="md" onClick={createClass}><i className="fas fa-plus"></i></Button>
+                            <Button size="md" onClick={createClass} className="whitespace-nowrap px-6">
+                                <i className="fas fa-plus mr-2"></i> Create Class
+                            </Button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {classes.map(cls => (
                             <div 
                                 key={cls.id} 
                                 onClick={() => !cls.parent_class_id && setSelectedClass(cls)}
-                                className={\`bg-white p-4 rounded-lg border border-gray-200 shadow-sm transition relative group \${!cls.parent_class_id ? 'cursor-pointer hover:border-blue-400 hover:shadow-md' : 'opacity-90'}\`}
+                                className={\`
+                                    bg-white p-6 rounded-2xl border transition-all duration-300 relative group flex flex-col justify-between min-h-[160px]
+                                    \${!cls.parent_class_id 
+                                        ? 'cursor-pointer hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 border-gray-200' 
+                                        : 'border-orange-200 bg-orange-50/30'
+                                    }
+                                \`}
                             >
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-gray-800 text-lg">{cls.name}</h3>
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="font-bold text-gray-800 text-xl tracking-tight">{cls.name}</h3>
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); setLinkModalClass(cls); }} 
-                                        className="text-gray-300 hover:text-blue-600 p-1" 
+                                        className="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition" 
                                         title="Link Content"
                                     >
-                                        <i className="fas fa-link text-xs"></i>
+                                        <i className="fas fa-link text-sm"></i>
                                     </button>
                                 </div>
                                 
-                                {cls.parent_class_id ? (
-                                    <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded inline-block font-medium">
-                                        <i className="fas fa-share mr-1"></i> Linked to {cls.parent_name}
-                                    </div>
-                                ) : (
-                                    <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded inline-block font-medium">
-                                        <i className="fas fa-database mr-1"></i> {classes.length} Items
-                                    </div>
-                                )}
+                                <div>
+                                    {cls.parent_class_id ? (
+                                        <div className="text-xs text-orange-700 bg-orange-100 px-3 py-1.5 rounded-full inline-flex items-center font-medium">
+                                            <i className="fas fa-share mr-1.5"></i> 
+                                            Linked to <span className="font-bold ml-1">{cls.parent_name}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-green-700 bg-green-100 px-3 py-1.5 rounded-full inline-flex items-center font-medium">
+                                            <i className="fas fa-database mr-1.5"></i> Independent Source
+                                        </div>
+                                    )}
+                                </div>
                                 
                                 {!cls.parent_class_id && (
-                                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 text-xs font-bold">
-                                        Manage <i className="fas fa-arrow-right ml-1"></i>
+                                    <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 text-blue-600 text-sm font-bold flex items-center">
+                                        Open <i className="fas fa-arrow-right ml-2"></i>
                                     </div>
                                 )}
                             </div>
@@ -167,27 +183,29 @@ export const adminComponents = `
 
             return (
                 <Modal isOpen={true} onClose={onClose} title="Content Linking">
-                    <p className="text-gray-500 text-xs mb-4">
-                        Link <strong>{cls.name}</strong> to use content from another class.
-                    </p>
-                    <div className="mb-3">
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Source Class</label>
+                    <div className="bg-blue-50 p-4 rounded-lg mb-4 text-blue-800 text-sm">
+                        <i className="fas fa-info-circle mr-2"></i>
+                        Linking <strong>{cls.name}</strong> will make it display content from another class. Great for merging batches.
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Source Class</label>
                         <select 
-                            className="w-full border p-2 rounded-lg text-sm bg-white"
+                            className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                             value={parentId}
                             onChange={e => setParentId(e.target.value)}
                         >
-                            <option value="">-- Independent Class --</option>
+                            <option value="">-- No Link (Independent) --</option>
                             {allClasses.filter(c => c.id !== cls.id).map(c => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
                     </div>
                     {parentId && (
-                        <Input label="Label (e.g. SSC)" value={label} onChange={e => setLabel(e.target.value)} placeholder="SSC" />
+                        <Input label="Program Label (Optional)" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. SSC 2024" />
                     )}
-                    <div className="flex justify-end mt-4">
-                        <Button size="sm" onClick={() => onSave(parentId, label)}>Save</Button>
+                    <div className="flex justify-end mt-6 gap-2">
+                        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+                        <Button size="md" onClick={() => onSave(parentId, label)}>Save Configuration</Button>
                     </div>
                 </Modal>
             );
@@ -226,44 +244,71 @@ export const adminComponents = `
             if (selectedSubject) return <SubjectManager subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
 
             return (
-                <div className="animate-fade-in max-w-5xl mx-auto">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 font-medium text-sm">
-                        <i className="fas fa-arrow-left mr-2"></i> {cls.name}
-                    </button>
+                <div className="w-full animate-fade-in">
+                    <div className="flex items-center mb-6">
+                         <button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition">
+                            <i className="fas fa-arrow-left text-gray-600"></i>
+                        </button>
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800">{cls.name}</h2>
+                            <p className="text-gray-500 text-sm">Manage groups and subjects for this class.</p>
+                        </div>
+                    </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                         {/* Groups Panel */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm h-fit">
-                            <h3 className="font-bold text-gray-800 mb-3 text-sm">Groups</h3>
-                            <div className="flex gap-2 mb-4">
-                                <input className="border rounded px-2 py-1 text-sm flex-1" placeholder="e.g. Science" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
-                                <Button size="sm" onClick={addGroup}>+</Button>
+                        <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-fit sticky top-24">
+                            <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide flex justify-between items-center">
+                                Groups 
+                                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{groups.length}</span>
+                            </h3>
+                            
+                            <div className="flex gap-2 mb-6">
+                                <input 
+                                    className="border rounded-lg px-3 py-2 text-sm flex-1 bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500" 
+                                    placeholder="e.g. Science" 
+                                    value={newGroupName} 
+                                    onChange={e => setNewGroupName(e.target.value)} 
+                                />
+                                <Button size="sm" onClick={addGroup}><i className="fas fa-plus"></i></Button>
                             </div>
-                            <div className="space-y-1">
+                            
+                            <div className="space-y-2">
                                 {groups.map(g => (
-                                    <div key={g.id} className="px-3 py-2 bg-gray-50 rounded text-sm flex items-center">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2"></div>
+                                    <div key={g.id} className="px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 flex items-center border border-transparent hover:border-gray-200 transition">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
                                         {g.name}
                                     </div>
                                 ))}
+                                {groups.length === 0 && <div className="text-gray-400 text-xs text-center py-4">No groups added.</div>}
                             </div>
                         </div>
 
                         {/* Subjects Panel */}
-                        <div className="lg:col-span-2 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                            <h3 className="font-bold text-gray-800 mb-3 text-sm">Subjects</h3>
-                            <div className="bg-gray-50 p-3 rounded-lg mb-4 border border-gray-100 text-sm">
-                                <div className="flex gap-2 mb-2">
-                                    <input className="border rounded px-2 py-1 flex-1" placeholder="Subject Name" value={newSubject.name} onChange={e => setNewSubject({...newSubject, name: e.target.value})} />
-                                    <Button size="sm" onClick={addSubject}>Add</Button>
+                        <div className="lg:col-span-3 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                            <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide">Subjects</h3>
+                            
+                            <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-100">
+                                <div className="flex flex-col sm:flex-row gap-3 mb-3">
+                                    <input 
+                                        className="border rounded-lg px-4 py-2.5 flex-1 outline-none focus:ring-2 focus:ring-blue-500" 
+                                        placeholder="Enter Subject Name" 
+                                        value={newSubject.name} 
+                                        onChange={e => setNewSubject({...newSubject, name: e.target.value})} 
+                                    />
+                                    <Button size="md" onClick={addSubject} className="sm:w-32">Add Subject</Button>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <label className="flex items-center cursor-pointer">
-                                        <input type="checkbox" className="mr-2" checked={newSubject.is_common} onChange={e => setNewSubject({...newSubject, is_common: e.target.checked})} />
-                                        <span className="text-xs text-gray-600">Common</span>
+                                <div className="flex items-center gap-4 pl-1">
+                                    <label className="flex items-center cursor-pointer select-none">
+                                        <input type="checkbox" className="w-4 h-4 text-blue-600 rounded mr-2" checked={newSubject.is_common} onChange={e => setNewSubject({...newSubject, is_common: e.target.checked})} />
+                                        <span className="text-sm text-gray-700 font-medium">Common Subject</span>
                                     </label>
                                     {!newSubject.is_common && (
-                                        <select className="border rounded px-2 py-1 text-xs flex-1" value={newSubject.group_id} onChange={e => setNewSubject({...newSubject, group_id: e.target.value})}>
+                                        <select 
+                                            className="border rounded-lg px-3 py-1.5 text-sm flex-1 max-w-[200px] outline-none" 
+                                            value={newSubject.group_id} 
+                                            onChange={e => setNewSubject({...newSubject, group_id: e.target.value})}
+                                        >
                                             <option value="">Select Group...</option>
                                             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                                         </select>
@@ -271,13 +316,22 @@ export const adminComponents = `
                                 </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {subjects.map(s => (
-                                    <div key={s.id} onClick={() => setSelectedSubject(s)} className="px-3 py-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center transition group">
-                                        <span className="font-medium text-sm text-gray-700 group-hover:text-blue-700">{s.name}</span>
-                                        <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">
-                                            {s.is_common ? 'All' : (groups.find(g => g.id == s.group_id)?.name || 'Group')}
-                                        </span>
+                                    <div 
+                                        key={s.id} 
+                                        onClick={() => setSelectedSubject(s)} 
+                                        className="p-4 border rounded-xl hover:bg-blue-50 hover:border-blue-300 cursor-pointer flex flex-col justify-between transition-all group h-32 relative bg-gradient-to-br from-white to-gray-50"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <span className="font-bold text-gray-800 text-lg group-hover:text-blue-700 line-clamp-2">{s.name}</span>
+                                            <i className="fas fa-chevron-right text-gray-300 group-hover:text-blue-400 transition"></i>
+                                        </div>
+                                        <div className="mt-auto">
+                                            <span className={\`text-[10px] uppercase font-bold px-2 py-1 rounded-md \${s.is_common ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'}\`}>
+                                                {s.is_common ? 'All Groups' : (groups.find(g => g.id == s.group_id)?.name || 'Specific Group')}
+                                            </span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -311,23 +365,28 @@ export const adminComponents = `
             if (selectedChapter) return <TopicManager chapter={selectedChapter} onBack={() => setSelectedChapter(null)} />;
 
             return (
-                <div className="animate-fade-in max-w-4xl mx-auto">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 font-medium text-sm">
-                        <i className="fas fa-arrow-left mr-2"></i> {subject.name}
-                    </button>
+                <div className="w-full animate-fade-in max-w-6xl mx-auto">
+                    <div className="flex items-center mb-6">
+                        <button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition">
+                            <i className="fas fa-arrow-left text-gray-600"></i>
+                        </button>
+                        <h2 className="text-2xl font-bold text-gray-800">{subject.name} <span className="text-gray-400 font-normal">/ Chapters</span></h2>
+                    </div>
                     
-                    <div className="bg-white p-3 rounded-xl border mb-4 flex gap-2 items-center text-sm">
-                        <input className="border rounded px-2 py-1 w-16 text-center" placeholder="#" type="number" value={newChapter.order} onChange={e => setNewChapter({...newChapter, order: e.target.value})} />
-                        <input className="border rounded px-2 py-1 flex-1" placeholder="Chapter Title" value={newChapter.title} onChange={e => setNewChapter({...newChapter, title: e.target.value})} />
-                        <Button size="sm" onClick={addChapter}>Add</Button>
+                    <div className="bg-white p-4 rounded-xl border mb-6 flex gap-3 items-center shadow-sm">
+                        <input className="border rounded-lg px-3 py-2 w-20 text-center font-mono text-sm" placeholder="#" type="number" value={newChapter.order} onChange={e => setNewChapter({...newChapter, order: e.target.value})} />
+                        <input className="border rounded-lg px-4 py-2 flex-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="New Chapter Title" value={newChapter.title} onChange={e => setNewChapter({...newChapter, title: e.target.value})} />
+                        <Button size="md" onClick={addChapter}>Add Chapter</Button>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {chapters.map(ch => (
-                            <div key={ch.id} onClick={() => setSelectedChapter(ch)} className="bg-white px-4 py-3 rounded-lg border hover:border-blue-300 cursor-pointer flex items-center shadow-sm transition">
-                                <span className="text-gray-400 font-bold mr-3 text-sm">{ch.order_num}.</span>
-                                <div className="flex-1 font-semibold text-gray-800 text-sm">{ch.title}</div>
-                                <i className="fas fa-chevron-right text-xs text-gray-300"></i>
+                            <div key={ch.id} onClick={() => setSelectedChapter(ch)} className="bg-white px-6 py-4 rounded-xl border border-gray-100 hover:border-blue-400 cursor-pointer flex items-center shadow-sm transition hover:shadow-md group">
+                                <span className="text-gray-300 font-black text-2xl mr-5 w-8 text-center group-hover:text-blue-200 transition">{ch.order_num}</span>
+                                <div className="flex-1 font-bold text-gray-800 text-lg group-hover:text-blue-700 transition">{ch.title}</div>
+                                <div className="w-8 h-8 rounded-full bg-gray-50 group-hover:bg-blue-50 flex items-center justify-center text-gray-400 group-hover:text-blue-600 transition">
+                                    <i className="fas fa-chevron-right text-sm"></i>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -335,6 +394,7 @@ export const adminComponents = `
             );
         }
 
+        // Reuse previous TopicManager and QuestionManager but remove max-w constraints where appropriate
         function TopicManager({ chapter, onBack }) {
             const [topics, setTopics] = useState([]);
             const [selectedTopic, setSelectedTopic] = useState(null);
@@ -359,30 +419,35 @@ export const adminComponents = `
             if (selectedTopic) return <QuestionManager topic={selectedTopic} onBack={() => setSelectedTopic(null)} />;
 
             return (
-                <div className="animate-fade-in max-w-4xl mx-auto">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 font-medium text-sm">
-                        <i className="fas fa-arrow-left mr-2"></i> {chapter.title}
-                    </button>
+                <div className="w-full animate-fade-in max-w-6xl mx-auto">
+                    <div className="flex items-center mb-6">
+                        <button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition">
+                            <i className="fas fa-arrow-left text-gray-600"></i>
+                        </button>
+                        <h2 className="text-2xl font-bold text-gray-800">{chapter.title} <span className="text-gray-400 font-normal">/ Topics</span></h2>
+                    </div>
                     
-                    <div className="bg-white p-4 rounded-xl border mb-4 shadow-sm">
-                        <Input label="Topic Title" value={newTopic.title} onChange={e => setNewTopic({...newTopic, title: e.target.value})} />
-                        <div className="mb-3">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Content / Notes</label>
+                    <div className="bg-white p-6 rounded-2xl border border-gray-200 mb-8 shadow-sm">
+                        <Input label="Topic Title" value={newTopic.title} onChange={e => setNewTopic({...newTopic, title: e.target.value})} placeholder="e.g. Introduction to Motion" />
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Content / Notes</label>
                             <textarea 
-                                className="w-full border rounded-lg p-2 h-24 text-sm" 
-                                placeholder="Paste study notes here..." 
+                                className="w-full border border-gray-300 rounded-lg p-3 h-32 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                                placeholder="Write your study notes here using Markdown..." 
                                 value={newTopic.content} 
                                 onChange={e => setNewTopic({...newTopic, content: e.target.value})}
                             ></textarea>
                         </div>
-                        <Button size="sm" onClick={addTopic}>Save Topic</Button>
+                        <div className="flex justify-end">
+                            <Button size="md" onClick={addTopic}>Save Topic</Button>
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {topics.map(t => (
-                            <div key={t.id} onClick={() => setSelectedTopic(t)} className="bg-white px-4 py-3 rounded-lg border hover:border-blue-400 cursor-pointer shadow-sm">
-                                <h4 className="font-bold text-gray-800 text-sm">{t.title}</h4>
-                                <p className="text-xs text-gray-500 truncate mt-1">{t.content || "No content preview"}</p>
+                            <div key={t.id} onClick={() => setSelectedTopic(t)} className="bg-white px-6 py-4 rounded-xl border border-gray-100 hover:border-blue-400 cursor-pointer shadow-sm transition group">
+                                <h4 className="font-bold text-gray-800 text-lg group-hover:text-blue-700 mb-1">{t.title}</h4>
+                                <p className="text-sm text-gray-500 truncate">{t.content || "No content preview"}</p>
                             </div>
                         ))}
                     </div>
@@ -426,64 +491,68 @@ export const adminComponents = `
             };
 
             return (
-                <div className="animate-fade-in pb-20 max-w-3xl mx-auto">
-                    <button onClick={onBack} className="text-gray-500 hover:text-blue-600 mb-4 font-medium text-sm">
-                        <i className="fas fa-arrow-left mr-2"></i> {topic.title}
-                    </button>
+                <div className="w-full animate-fade-in pb-20 max-w-6xl mx-auto">
+                    <div className="flex items-center mb-6">
+                        <button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition">
+                            <i className="fas fa-arrow-left text-gray-600"></i>
+                        </button>
+                        <h2 className="text-2xl font-bold text-gray-800">{topic.title} <span className="text-gray-400 font-normal">/ Questions</span></h2>
+                    </div>
 
-                    <div className="bg-white p-5 rounded-xl border shadow-sm mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                             <div className="flex bg-gray-100 p-1 rounded-lg">
+                    <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm mb-8">
+                        <div className="flex justify-between items-center mb-6 border-b pb-4">
+                             <div className="flex bg-gray-100 p-1.5 rounded-xl">
                                 {['MCQ', 'CQ'].map(t => (
                                     <button 
                                         key={t}
                                         onClick={() => setQType(t)}
-                                        className={\`px-3 py-1 rounded-md text-xs font-bold transition \${qType === t ? 'bg-white shadow text-blue-600' : 'text-gray-500'}\`}
+                                        className={\`px-6 py-2 rounded-lg text-sm font-bold transition \${qType === t ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}\`}
                                     >
                                         {t}
                                     </button>
                                 ))}
                             </div>
-                            <div className="flex gap-2">
-                                <input className="w-20 border rounded px-2 py-1 text-xs" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} placeholder="Board" />
-                                <input className="w-16 border rounded px-2 py-1 text-xs" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} placeholder="Year" />
+                            <div className="flex gap-3">
+                                <input className="w-24 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} placeholder="Board" />
+                                <input className="w-20 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} placeholder="Year" />
                             </div>
                         </div>
 
-                        <div className="mb-3">
-                            <textarea className="w-full border rounded p-2 text-sm" rows="2" placeholder="Question Text" value={newQ.text} onChange={e => setNewQ({...newQ, text: e.target.value})}></textarea>
+                        <div className="mb-6">
+                            <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Question Text</label>
+                            <textarea className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Enter the question here..." value={newQ.text} onChange={e => setNewQ({...newQ, text: e.target.value})}></textarea>
                         </div>
 
                         {qType === 'MCQ' ? (
-                            <div className="space-y-2 mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 {newQ.options.map((opt, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <span className="w-4 font-bold text-gray-400 text-xs">{String.fromCharCode(65+i)}.</span>
-                                        <input className="flex-1 border rounded px-2 py-1 text-sm" value={opt} onChange={e => updateOption(i, e.target.value)} placeholder={\`Option \${i+1}\`} />
-                                        <input type="radio" name="correct" checked={newQ.answer === opt && opt !== ''} onChange={() => setNewQ({...newQ, answer: opt})} />
+                                    <div key={i} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span className="w-6 font-bold text-blue-500 text-sm bg-blue-100 rounded-full h-6 flex items-center justify-center">{String.fromCharCode(65+i)}</span>
+                                        <input className="flex-1 bg-transparent border-none outline-none text-sm" value={opt} onChange={e => updateOption(i, e.target.value)} placeholder={\`Option \${String.fromCharCode(65+i)}\`} />
+                                        <input type="radio" name="correct" className="w-5 h-5 text-blue-600" checked={newQ.answer === opt && opt !== ''} onChange={() => setNewQ({...newQ, answer: opt})} />
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="mb-4">
-                                <textarea className="w-full border rounded p-2 text-sm" rows="2" placeholder="Answer Key" value={newQ.answer} onChange={e => setNewQ({...newQ, answer: e.target.value})}></textarea>
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Answer / Marking Scheme</label>
+                                <textarea className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Enter the answer key..." value={newQ.answer} onChange={e => setNewQ({...newQ, answer: e.target.value})}></textarea>
                             </div>
                         )}
 
-                        <Button size="sm" className="w-full" onClick={saveQuestion}>Add Question</Button>
+                        <Button size="lg" className="w-full font-bold shadow-lg shadow-blue-200" onClick={saveQuestion}>Add Question</Button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {questions.map((q, i) => (
-                            <div key={q.id} className="bg-white p-3 rounded-lg border shadow-sm">
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-[10px] font-bold bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{q.type}</span>
-                                    <span className="text-[10px] text-gray-400">
-                                        {/* FIX: Removed JSON.parse here as API returns object now */}
+                            <div key={q.id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded uppercase tracking-wider">{q.type}</span>
+                                    <span className="text-xs font-medium text-gray-400">
                                         {q.metadata && q.metadata.board} {q.metadata && q.metadata.year}
                                     </span>
                                 </div>
-                                <p className="font-medium text-gray-800 text-sm truncate">{q.question_text}</p>
+                                <p className="font-medium text-gray-800 text-base">{q.question_text}</p>
                             </div>
                         ))}
                     </div>
@@ -500,15 +569,23 @@ export const adminComponents = `
             };
 
             return (
-                <div className="max-w-xl bg-white p-6 rounded-xl shadow-sm border border-red-100">
-                    <h2 className="text-lg font-bold mb-4">System Danger Zone</h2>
-                    <p className="text-gray-600 text-sm mb-4">
-                        Resetting will delete all questions, subjects, and admin accounts.
+                <div className="max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-red-100">
+                    <h2 className="text-xl font-bold mb-2 text-gray-800">System Danger Zone</h2>
+                    <p className="text-gray-500 text-sm mb-6">
+                        Irreversible actions are performed here. Proceed with caution.
                     </p>
-                    <Button variant="danger" size="sm" onClick={handleReset}>
-                        Reset Database
-                    </Button>
+                    <div className="flex items-center justify-between bg-red-50 p-4 rounded-xl border border-red-100">
+                        <div>
+                            <h4 className="font-bold text-red-700 text-sm">Reset Database</h4>
+                            <p className="text-red-500 text-xs mt-1">Deletes all subjects, questions, and admins.</p>
+                        </div>
+                        <Button variant="danger" size="sm" onClick={handleReset}>
+                            Reset Everything
+                        </Button>
+                    </div>
                 </div>
             );
         }
 `;
+
+
