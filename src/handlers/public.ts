@@ -150,3 +150,5 @@ export const renderChapter = async (env: Bindings, id: number) => {
   `;
   return publicLayout(chapter.name, body);
 };
+
+
