@@ -22,6 +22,7 @@ const randomHex = (length: number) => {
 };
 
 export const hashPassword = async (password: string, salt: string) => {
+  const iterations = 100000;
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(password),
@@ -33,7 +34,7 @@ export const hashPassword = async (password: string, salt: string) => {
     {
       name: 'PBKDF2',
       salt: fromHex(salt),
-      iterations: 120000,
+      iterations,
       hash: 'SHA-256'
     },
     key,
