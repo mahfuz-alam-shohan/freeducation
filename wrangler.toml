@@ -6,7 +6,7 @@ compatibility_date = "2024-10-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "freeducation"
-database_id = "ffb6494a-52e3-487a-b259-c396438ac565"
+database_id = "d1ee4396-df92-460b-9642-87a1d4cba323"
 
 
 # R2 Bucket Binding
