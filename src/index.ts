@@ -38,6 +38,21 @@ import { clearSession, getCookie } from './utils/auth';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+app.onError((err, c) => {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  console.error('Unhandled error', {
+    method: c.req.method,
+    path: c.req.path,
+    message,
+    stack
+  });
+  const body = stack
+    ? `Internal Server Error\n\n${message}\n\n${stack}`
+    : `Internal Server Error\n\n${message}`;
+  return c.text(body, 500);
+});
+
 app.use('*', async (c, next) => {
   await ensureSchema(c.env);
   await next();
