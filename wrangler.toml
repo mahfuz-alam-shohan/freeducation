@@ -1,6 +1,6 @@
 name = "freeducation"
 main = "src/index.ts"
-
+compatibility_date = "2025-12-29"
 
 # D1 Database Binding
 [[d1_databases]]
