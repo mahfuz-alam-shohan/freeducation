@@ -410,3 +410,5 @@ export const handleUploadResource = async (env: Bindings, req: Request, subjectI
     subjectId, parseForm(form, 'category'), parseForm(form, 'title'), key, file.type, new Date().toISOString());
   return new Response(null, { status: 302, headers: { Location: `/admin/subjects/${subjectId}/dashboard` }});
 };
+
+
