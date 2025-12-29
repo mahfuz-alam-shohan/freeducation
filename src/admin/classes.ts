@@ -39,13 +39,18 @@ export async function renderClassesList(session: any, env: Env) {
       <button onclick="toggleModal('new-class-modal', true)" class="btn-text">Add Class</button>
     </div>
 
+    <div class="search-row">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+      <input id="class-filter" class="search-input" type="search" placeholder="Search classes..." oninput="filterList('class-filter', '[data-filter-row]')">
+    </div>
+
     <div class="inset-list">
       ${classes.results?.map(c => {
         const linkedWith = c.link_id ? linkMap.get(c.link_id)?.filter(n => n !== c.name) : [];
         const linkText = linkedWith && linkedWith.length > 0 ? `Linked with ${linkedWith.join(', ')}` : '';
         
         return `
-        <div class="list-row">
+        <div class="list-row" data-filter-row data-filter="${escapeHtml(c.name)} ${escapeHtml(linkText)}">
           <div class="row-content" onclick="window.location='/admin/classes/${c.id}'" style="cursor:pointer;">
             <div class="row-title">${escapeHtml(c.name)}</div>
             <div class="row-subtitle">

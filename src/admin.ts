@@ -149,15 +149,45 @@ async function renderDashboard(session: any, env: Env) {
        <h1 class="page-title">Admin</h1>
        <div class="page-subtitle">Welcome back, ${session.name}</div>
     </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Classes</div>
+          <div class="stat-value">${counts.classes}</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path></svg>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Subjects</div>
+          <div class="stat-value">${counts.subjects}</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M4 4v16a2 2 0 002 2h14"></path><path d="M8 7h10"></path><path d="M8 11h10"></path><path d="M8 15h7"></path></svg>
+        </div>
+      </div>
+    </div>
     
-    <div class="list-header">Overview</div>
+    <div class="list-header">Quick Actions</div>
     <div class="inset-list">
       <div class="list-row" onclick="window.location='/admin/classes'">
          <div class="row-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"></path><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path></svg></div>
          <div class="row-content">
-           <div class="row-title">Classes</div>
+           <div class="row-title">Manage Classes</div>
+           <div class="row-subtitle">Organize subjects and groups</div>
          </div>
          <div class="row-action" style="color:var(--text-main); font-weight:600;">${counts.classes} ›</div>
+      </div>
+      <div class="list-row" onclick="window.location='/admin/settings'">
+         <div class="row-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+         <div class="row-content">
+           <div class="row-title">Settings</div>
+           <div class="row-subtitle">Manage admin access and resets</div>
+         </div>
+         <div class="row-action">›</div>
       </div>
     </div>
   `, "dashboard", session);
