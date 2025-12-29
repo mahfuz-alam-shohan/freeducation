@@ -12,7 +12,11 @@ export const studentComponents = `
             useEffect(() => {
                 if (searchQuery.length > 2) {
                     const timer = setTimeout(() => {
-                        fetch(\`/api/search?q=\${searchQuery}\`).then(res => res.json()).then(setSearchResults);
+                        // FIX: Added encodeURIComponent to prevent URL errors with special chars
+                        fetch(\`/api/search?q=\${encodeURIComponent(searchQuery)}\`)
+                            .then(res => res.json())
+                            .then(setSearchResults)
+                            .catch(err => console.error("Search failed", err));
                     }, 300);
                     return () => clearTimeout(timer);
                 } else {
@@ -262,18 +266,18 @@ export const studentComponents = `
                         <div key={q.id} className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
                             <div className="flex justify-between mb-2">
                                 <span className="text-[10px] font-bold text-gray-400 uppercase">Q{idx + 1} • {q.type}</span>
-                                {JSON.parse(q.metadata).board && (
+                                {q.metadata && q.metadata.board && (
                                     <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">
-                                        {JSON.parse(q.metadata).board}
+                                        {q.metadata.board}
                                     </span>
                                 )}
                             </div>
                             
                             <p className="font-medium text-gray-800 mb-4 text-base">{q.question_text}</p>
 
-                            {q.type === 'MCQ' ? (
+                            {q.type === 'MCQ' && q.options ? (
                                 <div className="grid gap-2">
-                                    {JSON.parse(q.options).map((opt, i) => {
+                                    {q.options.map((opt, i) => {
                                         const isSelected = revealed[q.id] === opt;
                                         const isCorrect = opt === q.answer;
                                         const hasAnswered = revealed[q.id] !== undefined;
