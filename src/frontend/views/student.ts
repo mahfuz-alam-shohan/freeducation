@@ -12,11 +12,11 @@ export const studentComponents = `
             useEffect(() => {
                 if (searchQuery.length > 2) {
                     const timer = setTimeout(() => {
-                        // FIX: Added encodeURIComponent to prevent URL errors with special chars
+                        // FIX: encodeURIComponent prevents crashes with special characters
                         fetch(\`/api/search?q=\${encodeURIComponent(searchQuery)}\`)
                             .then(res => res.json())
                             .then(setSearchResults)
-                            .catch(err => console.error("Search failed", err));
+                            .catch(e => console.error(e));
                     }, 300);
                     return () => clearTimeout(timer);
                 } else {
@@ -31,6 +31,7 @@ export const studentComponents = `
             return (
                 <div className="animate-fade-in pb-12">
                     {/* Hero Section */}
+                    {/* Header is z-30, so its dropdown will naturally appear above the content below */}
                     <LandingHeader
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
@@ -38,8 +39,11 @@ export const studentComponents = `
                     />
 
                     {/* Class Browser */}
-                    <div className="max-w-7xl mx-auto px-4 -mt-10 relative z-10">
-                        <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
+                    {/* FIX: Removed '-mt-10' and added 'mt-8'. 
+                        This places the container cleanly AFTER the header.
+                        z-10 ensures it sits below the Header's z-30 stacking context. */}
+                    <div className="max-w-7xl mx-auto px-4 mt-8 relative z-10">
+                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
                                 <i className="fas fa-layer-group text-blue-600 mr-2"></i> Available Classes
                             </h2>
@@ -275,6 +279,7 @@ export const studentComponents = `
                             
                             <p className="font-medium text-gray-800 mb-4 text-base">{q.question_text}</p>
 
+                            {/* CLEANED UP: No JSON.parse needed here anymore */}
                             {q.type === 'MCQ' && q.options ? (
                                 <div className="grid gap-2">
                                     {q.options.map((opt, i) => {
