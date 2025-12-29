@@ -1,12 +1,23 @@
 import { hashPassword } from "./auth";
 import { initDatabase, resolveContentId } from "./db";
-import type { Env } from "./types";
+import type { Env, Question } from "./types";
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS, PUT",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+
+/**
+ * Helper to parse raw DB results into typed objects
+ * Specifically handles the JSON string columns in Questions
+ */
+const parseQuestion = (q: any): Question => ({
+  ...q,
+  options: q.options ? JSON.parse(q.options as string) : [],
+  metadata: q.metadata ? JSON.parse(q.metadata as string) : {},
+  // Ensure boolean conversion for other tables if needed
+});
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
@@ -31,22 +42,19 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     return Response.json({ hasAdmin: (result?.count as number) > 0 }, { headers: corsHeaders });
   }
 
-  // 2. AUTHENTICATION (SECURE)
+  // 2. AUTHENTICATION
   if (path === "/api/register-admin" && request.method === "POST") {
     const { username, password } = await request.json() as any;
 
-    // Check if admin exists
     const count = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
     if ((count?.count as number) > 0) {
       return Response.json({ success: false, error: "Admin already exists" }, { status: 403, headers: corsHeaders });
     }
 
-    // Generate Salt and Hash
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
     const hash = await hashPassword(password, saltHex);
 
-    // Store as salt:hash
     const finalHash = `${saltHex}:${hash}`;
     await env.DB.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").bind(username, finalHash).run();
 
@@ -74,10 +82,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     return Response.json({ success: true, username: user.username }, { headers: corsHeaders });
   }
 
-  // 3. CLASS MANAGEMENT (WITH LINKING)
+  // 3. CLASS MANAGEMENT
   if (path === "/api/classes") {
     if (request.method === "GET") {
-      // Fetch classes and join with parent class name for UI display
       const classes = await env.DB.prepare(`
             SELECT c.*, p.name as parent_name 
             FROM classes c 
@@ -92,7 +99,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       return Response.json({ success: true }, { headers: corsHeaders });
     }
     if (request.method === "PUT") {
-      // Link a class to another (Alias System)
       const { id, parent_class_id, program_label } = await request.json() as any;
       await env.DB.prepare("UPDATE classes SET parent_class_id = ?, program_label = ? WHERE id = ?")
         .bind(parent_class_id || null, program_label || null, id)
@@ -101,9 +107,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
   }
 
-  // 4. CONTENT HIERARCHY (Groups -> Subjects -> Chapters -> Topics -> Questions)
-
-  // Groups
+  // 4. CONTENT HIERARCHY
   if (path === "/api/groups") {
     if (request.method === "GET") {
       const { class_id } = Object.fromEntries(url.searchParams);
@@ -119,13 +123,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
   }
 
-  // Subjects
   if (path === "/api/subjects") {
     if (request.method === "GET") {
       const { class_id } = Object.fromEntries(url.searchParams);
       const sourceId = await resolveContentId(env.DB, class_id);
       const subjects = await env.DB.prepare("SELECT * FROM subjects WHERE class_id = ?").bind(sourceId).all();
-      return Response.json(subjects.results, { headers: corsHeaders });
+      // Ensure is_common is boolean
+      const cleanSubjects = subjects.results.map((s: any) => ({ ...s, is_common: !!s.is_common }));
+      return Response.json(cleanSubjects, { headers: corsHeaders });
     }
     if (request.method === "POST") {
       const { name, class_id, is_common, group_id } = await request.json() as any;
@@ -136,7 +141,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
   }
 
-  // Chapters
   if (path === "/api/chapters") {
     if (request.method === "GET") {
       const { subject_id } = Object.fromEntries(url.searchParams);
@@ -150,7 +154,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
   }
 
-  // Topics
   if (path === "/api/topics") {
     if (request.method === "GET") {
       const { chapter_id } = Object.fromEntries(url.searchParams);
@@ -165,29 +168,37 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
   }
 
-  // Questions
+  // Questions - THIS IS WHERE WE FIX THE PARSING
   if (path === "/api/questions") {
     if (request.method === "GET") {
       const { topic_id } = Object.fromEntries(url.searchParams);
       const questions = await env.DB.prepare("SELECT * FROM questions WHERE topic_id = ?").bind(topic_id).all();
-      return Response.json(questions.results, { headers: corsHeaders });
+      // Fix: Parse the JSON strings into objects before returning to frontend
+      const cleanQuestions = questions.results.map(parseQuestion);
+      return Response.json(cleanQuestions, { headers: corsHeaders });
     }
     if (request.method === "POST") {
       const { type, topic_id, question_text, options, answer, metadata } = await request.json() as any;
       await env.DB.prepare(`
                 INSERT INTO questions (type, topic_id, question_text, options, answer, metadata) 
                 VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(type, topic_id, question_text, JSON.stringify(options), answer, JSON.stringify(metadata)).run();
+            `).bind(
+        type, 
+        topic_id, 
+        question_text, 
+        JSON.stringify(options), // Serialize only on write
+        answer, 
+        JSON.stringify(metadata) // Serialize only on write
+      ).run();
       return Response.json({ success: true }, { headers: corsHeaders });
     }
   }
 
-  // 5. SEARCH & UTILITIES
+  // 5. SEARCH
   if (path === "/api/search") {
     const { q } = Object.fromEntries(url.searchParams);
     const term = `%${q}%`;
 
-    // Search across Subjects, Chapters, and Topics
     const results = await env.DB.batch([
       env.DB.prepare("SELECT id, name as title, 'subject' as type FROM subjects WHERE name LIKE ? LIMIT 5").bind(term),
       env.DB.prepare("SELECT id, title, 'chapter' as type FROM chapters WHERE title LIKE ? LIMIT 5").bind(term),
@@ -204,7 +215,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
   }
 
   if (path === "/api/reset-db" && request.method === "POST") {
-    // Drop all tables
     await env.DB.batch([
       env.DB.prepare("DROP TABLE IF EXISTS questions"),
       env.DB.prepare("DROP TABLE IF EXISTS topics"),
@@ -214,7 +224,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       env.DB.prepare("DROP TABLE IF EXISTS classes"),
       env.DB.prepare("DROP TABLE IF EXISTS admins")
     ]);
-    // Re-initialize
     await initDatabase(env.DB);
     return Response.json({ success: true, message: "System Reset" }, { headers: corsHeaders });
   }
