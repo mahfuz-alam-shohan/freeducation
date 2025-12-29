@@ -490,6 +490,191 @@ const fetchContentSearch = async (
   });
 };
 
+const fetchContinueLearning = async (
+  db: D1Database,
+  userId: string,
+  limit: number,
+  recommendationLimit: number
+) => {
+  const activityQuery = `
+    WITH activity AS (
+      SELECT lesson_id AS content_item_id,
+             'lesson' AS content_type,
+             last_viewed_at AS last_activity_at,
+             status,
+             1 AS priority,
+             last_viewed_at AS sort_at
+      FROM lesson_progress
+      WHERE user_id = ? AND status = 'in_progress' AND last_viewed_at IS NOT NULL
+      UNION ALL
+      SELECT question_set_id AS content_item_id,
+             'question_set' AS content_type,
+             started_at AS last_activity_at,
+             status,
+             2 AS priority,
+             started_at AS sort_at
+      FROM question_set_attempts
+      WHERE user_id = ? AND status = 'in_progress'
+      UNION ALL
+      SELECT practice_test_id AS content_item_id,
+             'practice_test' AS content_type,
+             started_at AS last_activity_at,
+             status,
+             2 AS priority,
+             started_at AS sort_at
+      FROM practice_test_attempts
+      WHERE user_id = ? AND status = 'in_progress'
+      UNION ALL
+      SELECT lesson_id AS content_item_id,
+             'lesson' AS content_type,
+             completed_at AS last_activity_at,
+             status,
+             3 AS priority,
+             completed_at AS sort_at
+      FROM lesson_progress
+      WHERE user_id = ? AND status = 'completed' AND completed_at IS NOT NULL
+      UNION ALL
+      SELECT question_set_id AS content_item_id,
+             'question_set' AS content_type,
+             submitted_at AS last_activity_at,
+             status,
+             3 AS priority,
+             submitted_at AS sort_at
+      FROM question_set_attempts
+      WHERE user_id = ? AND status = 'submitted' AND submitted_at IS NOT NULL
+      UNION ALL
+      SELECT practice_test_id AS content_item_id,
+             'practice_test' AS content_type,
+             submitted_at AS last_activity_at,
+             status,
+             3 AS priority,
+             submitted_at AS sort_at
+      FROM practice_test_attempts
+      WHERE user_id = ? AND status = 'submitted' AND submitted_at IS NOT NULL
+    )
+    SELECT activity.content_item_id,
+           activity.content_type,
+           activity.last_activity_at,
+           activity.status,
+           COALESCE(ci.title, pt.title) AS title,
+           ch.id AS chapter_id,
+           ch.name AS chapter_name,
+           s.id AS subject_id,
+           s.name AS subject_name,
+           g.id AS grade_id,
+           g.name AS grade_name
+    FROM activity
+    LEFT JOIN content_items ci
+      ON ci.id = activity.content_item_id
+      AND activity.content_type IN ('lesson', 'question_set', 'note', 'resource')
+    LEFT JOIN practice_tests pt
+      ON pt.id = activity.content_item_id
+      AND activity.content_type = 'practice_test'
+    LEFT JOIN chapters ch ON ci.chapter_id = ch.id
+    LEFT JOIN subjects s ON ch.subject_id = s.id
+    LEFT JOIN grades g ON s.grade_id = g.id
+    ORDER BY activity.priority ASC, activity.sort_at DESC
+    LIMIT ?
+  `;
+
+  const activityRows = await db
+    .prepare(activityQuery)
+    .bind(userId, userId, userId, userId, userId, userId, limit)
+    .all<{
+      content_item_id: string;
+      content_type: string;
+      last_activity_at: string | null;
+      status: string;
+      title: string | null;
+      chapter_id: string | null;
+      chapter_name: string | null;
+      subject_id: string | null;
+      subject_name: string | null;
+      grade_id: string | null;
+      grade_name: string | null;
+    }>();
+
+  const items = activityRows.results ?? [];
+  const hasInProgress = items.some((item) => item.status === "in_progress");
+  let recommendations: Array<{
+    content_item_id: string;
+    content_type: string;
+    last_activity_at: string | null;
+    status: string;
+    title: string;
+    chapter_id: string | null;
+    chapter_name: string | null;
+    subject_id: string | null;
+    subject_name: string | null;
+    grade_id: string | null;
+    grade_name: string | null;
+  }> = [];
+
+  if (!hasInProgress && items.length > 0) {
+    const recentCompleted = items[0];
+    if (recentCompleted.chapter_id || recentCompleted.subject_id) {
+      const conditions = ["ci.id != ?"];
+      const params: unknown[] = [recentCompleted.content_item_id];
+
+      if (recentCompleted.chapter_id && recentCompleted.subject_id) {
+        conditions.push("(ci.chapter_id = ? OR s.id = ?)");
+        params.push(recentCompleted.chapter_id, recentCompleted.subject_id);
+      } else if (recentCompleted.chapter_id) {
+        conditions.push("ci.chapter_id = ?");
+        params.push(recentCompleted.chapter_id);
+      } else if (recentCompleted.subject_id) {
+        conditions.push("s.id = ?");
+        params.push(recentCompleted.subject_id);
+      }
+
+      const recommendationsQuery = `
+        SELECT ci.id AS content_item_id,
+               ci.type AS content_type,
+               NULL AS last_activity_at,
+               'recommended' AS status,
+               ci.title AS title,
+               ch.id AS chapter_id,
+               ch.name AS chapter_name,
+               s.id AS subject_id,
+               s.name AS subject_name,
+               g.id AS grade_id,
+               g.name AS grade_name
+        FROM content_items ci
+        LEFT JOIN chapters ch ON ci.chapter_id = ch.id
+        LEFT JOIN subjects s ON ch.subject_id = s.id
+        LEFT JOIN grades g ON s.grade_id = g.id
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY ci.updated_at DESC
+        LIMIT ?
+      `;
+
+      const recommendationRows = await db
+        .prepare(recommendationsQuery)
+        .bind(...params, recommendationLimit)
+        .all<{
+          content_item_id: string;
+          content_type: string;
+          last_activity_at: string | null;
+          status: string;
+          title: string;
+          chapter_id: string | null;
+          chapter_name: string | null;
+          subject_id: string | null;
+          subject_name: string | null;
+          grade_id: string | null;
+          grade_name: string | null;
+        }>();
+
+      recommendations = recommendationRows.results ?? [];
+    }
+  }
+
+  return jsonResponse({
+    items,
+    recommendations,
+  });
+};
+
 const selectQuestionsForPracticeTest = async (
   db: D1Database,
   filters: PracticeTestFilters,
@@ -862,6 +1047,16 @@ export default {
       const limit = parseLimit(url.searchParams.get("limit"), 25);
       const offset = parseOffset(url.searchParams.get("offset"), 0);
       return fetchContentSearch(env.DB, filters, limit, offset);
+    }
+
+    const continueLearningMatch = pathname.match(/^\/users\/([^/]+)\/continue-learning\/?$/);
+    if (request.method === "GET" && continueLearningMatch) {
+      const limit = parseLimit(url.searchParams.get("limit"), 10);
+      const recommendationLimit = parseLimit(
+        url.searchParams.get("recommendation_limit"),
+        5
+      );
+      return fetchContinueLearning(env.DB, continueLearningMatch[1], limit, recommendationLimit);
     }
 
     const attemptMatch = pathname.match(/^\/practice-tests\/([^/]+)\/attempts\/?$/);

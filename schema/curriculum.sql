@@ -397,6 +397,10 @@ CREATE INDEX IF NOT EXISTS idx_practice_tests_rule ON practice_tests(scoring_rul
 CREATE INDEX IF NOT EXISTS idx_practice_test_questions_test ON practice_test_questions(practice_test_id);
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_test ON practice_test_attempts(practice_test_id);
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_user ON practice_test_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_user_status_started_at
+  ON practice_test_attempts(user_id, status, started_at);
+CREATE INDEX IF NOT EXISTS idx_practice_test_attempts_user_status_submitted_at
+  ON practice_test_attempts(user_id, status, submitted_at);
 CREATE INDEX IF NOT EXISTS idx_practice_test_attempt_answers_attempt ON practice_test_attempt_answers(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_users_type ON users(user_type);
 CREATE INDEX IF NOT EXISTS idx_user_auth_provider ON user_auth_identities(provider);
@@ -405,8 +409,14 @@ CREATE INDEX IF NOT EXISTS idx_student_profiles_grade ON student_profiles(grade_
 CREATE INDEX IF NOT EXISTS idx_teacher_profiles_region ON teacher_profiles(region);
 CREATE INDEX IF NOT EXISTS idx_lesson_progress_user ON lesson_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_lesson_progress_lesson ON lesson_progress(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_lesson_progress_user_status_last_viewed_at
+  ON lesson_progress(user_id, status, last_viewed_at);
 CREATE INDEX IF NOT EXISTS idx_question_set_attempts_set ON question_set_attempts(question_set_id);
 CREATE INDEX IF NOT EXISTS idx_question_set_attempts_user ON question_set_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_question_set_attempts_user_status_started_at
+  ON question_set_attempts(user_id, status, started_at);
+CREATE INDEX IF NOT EXISTS idx_question_set_attempts_user_status_submitted_at
+  ON question_set_attempts(user_id, status, submitted_at);
 CREATE INDEX IF NOT EXISTS idx_question_set_attempt_answers_attempt ON question_set_attempt_answers(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_entity ON curriculum_overrides(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_overrides_release ON curriculum_overrides(release_id);
