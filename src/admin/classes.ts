@@ -58,12 +58,12 @@ export async function renderClassesList(session: any, env: Env) {
               ${c.has_groups ? ' • Groups' : ''}
             </div>
           </div>
-          <button class="btn-icon-circle" onclick="openEdit('edit-class-modal', '/admin/classes/edit', {id: '${c.id}', name: '${escapeHtml(c.name)}', has_groups: ${c.has_groups}})">
+          <button class="btn-icon-circle" type="button" aria-label="Edit class ${escapeHtml(c.name)}" title="Edit class" onclick="openEdit('edit-class-modal', '/admin/classes/edit', {id: '${c.id}', name: '${escapeHtml(c.name)}', has_groups: ${c.has_groups}})">
             <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
           </button>
-          <div class="row-action" onclick="window.location='/admin/classes/${c.id}'">
+          <button class="row-action" type="button" aria-label="Open class ${escapeHtml(c.name)}" title="Open class" onclick="window.location='/admin/classes/${c.id}'">
             <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg>
-          </div>
+          </button>
         </div>
       `}).join('') || '<div class="empty-state">No classes found. Tap Add Class to create one.</div>'}
     </div>
@@ -188,7 +188,7 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
     <!-- COMMON SUBJECTS -->
     <div class="list-header list-header-split">
        <span>Common Subjects</span>
-       <button onclick="openEdit('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ''})" class="btn-icon">+</button>
+       <button onclick="openEdit('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ''})" class="btn-icon" type="button" aria-label="Add common subject" title="Add subject">+</button>
     </div>
     <div class="inset-list">
       ${commonSubjects.map(s => `
@@ -196,10 +196,10 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
            <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'" style="cursor:pointer;">
              <div class="row-title">${escapeHtml(s.name)}</div>
            </div>
-           <button class="btn-icon-circle" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
+           <button class="btn-icon-circle" type="button" aria-label="Edit subject ${escapeHtml(s.name)}" title="Edit subject" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
              <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
            </button>
-           <div class="row-action" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
+           <button class="row-action" type="button" aria-label="Open subject ${escapeHtml(s.name)}" title="Open subject" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></button>
         </div>
       `).join('') || '<div class="empty-state">No common subjects</div>'}
     </div>
@@ -209,8 +209,8 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
       <div class="list-header list-header-split">
          <span>${escapeHtml(g.name)}</span>
          <div class="inline-actions">
-            <button onclick="openEdit('delete-group-modal', '/admin/classes/group/delete', {id: '${g.id}'})" class="btn-muted">Trash</button>
-            <button onclick="openEdit('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ${g.id}})" class="btn-icon">+</button>
+            <button onclick="openEdit('delete-group-modal', '/admin/classes/group/delete', {id: '${g.id}'})" class="btn-muted" type="button">Trash</button>
+            <button onclick="openEdit('new-subject-modal', '/admin/subjects', {class_id: ${classId}, group_id: ${g.id}})" class="btn-icon" type="button" aria-label="Add subject to ${escapeHtml(g.name)}" title="Add subject">+</button>
          </div>
       </div>
       <div class="inset-list">
@@ -219,10 +219,10 @@ export async function renderClassDetail(session: any, env: Env, classId: number)
              <div class="row-content" onclick="window.location='/admin/subjects/${s.id}'" style="cursor:pointer;">
                <div class="row-title">${escapeHtml(s.name)}</div>
              </div>
-             <button class="btn-icon-circle" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
+             <button class="btn-icon-circle" type="button" aria-label="Edit subject ${escapeHtml(s.name)}" title="Edit subject" onclick="openEdit('edit-subject-modal', '/admin/subjects/edit', {id: '${s.id}', name: '${escapeHtml(s.name)}', class_id: '${classId}'})">
                <svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
              </button>
-             <div class="row-action" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></div>
+             <button class="row-action" type="button" aria-label="Open subject ${escapeHtml(s.name)}" title="Open subject" onclick="window.location='/admin/subjects/${s.id}'"><svg width="20" height="20" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></button>
            </div>
          `).join('') || '<div class="empty-state">No subjects in this group</div>'}
       </div>

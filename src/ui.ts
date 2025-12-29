@@ -41,6 +41,23 @@ body {
 
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; border: none; background: none; padding: 0; cursor: pointer; }
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -141,12 +158,13 @@ select:focus-visible {
 }
 
 .container {
-  max-width: 100%;
-  margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 1.4rem 1.5rem 2.5rem;
   flex: 1;
   overflow: auto;
   min-height: 0;
+  width: 100%;
 }
 
 .header {
@@ -158,6 +176,7 @@ select:focus-visible {
   justify-content: space-between;
   align-items: flex-end;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .page-title {
@@ -278,6 +297,17 @@ select:focus-visible {
   margin-left: 8px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.row-action:hover {
+  background: #f2f6ff;
+  border-color: var(--separator-light);
+  color: var(--primary-dark);
 }
 
 /* --- Buttons & Badges --- */
@@ -337,8 +367,8 @@ select:focus-visible {
 }
 
 .btn-icon-circle {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: white;
   color: var(--primary-dark);
@@ -355,9 +385,18 @@ select:focus-visible {
 }
 
 .btn-icon {
-  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--separator-light);
+  background: #ffffff;
+  color: var(--primary-dark);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 6px 12px rgba(7, 18, 43, 0.08);
 }
 
 .btn-muted {
@@ -584,6 +623,7 @@ select:focus-visible {
   align-items: center;
   gap: 12px;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .search-input {
@@ -671,9 +711,10 @@ select:focus-visible {
 @media (max-width: 900px) {
   .app-shell { padding: 0; }
   .app-frame { border-radius: 0; }
-  .app-header { padding: 16px 16px; }
+  .app-header { padding: 16px 16px; flex-wrap: wrap; gap: 10px; }
   .container { padding: 1.1rem 1rem 2rem; }
   .page-title { font-size: 26px; }
+  .stat-card { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 
 @media (max-width: 640px) {
@@ -686,6 +727,13 @@ select:focus-visible {
   .brand-title { font-size: 16px; }
   .brand-subtitle { display: none; }
   .container { padding: 1rem 0.9rem 1.8rem; }
+  .header-split { align-items: flex-start; }
+  .page-title { font-size: 22px; }
+  .action-row { padding: 0; }
+  .search-row { padding: 10px 12px; }
+  .list-row { padding: 12px 12px; }
+  .btn-text { padding: 8px 12px; }
+  .bottom-nav { height: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
 }
 `;
 
@@ -789,7 +837,7 @@ export function renderPage(title: string, content: string, activeTab: string, us
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title} | Admin</title>
   <style>${CSS}</style>
 </head>
