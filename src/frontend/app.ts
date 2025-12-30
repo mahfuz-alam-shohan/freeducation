@@ -1,28 +1,26 @@
 export const mainApp = `
         function App() {
-            const viewToPath = {
-                landing: '/',
-                login: '/login',
-                register: '/register',
-                admin: '/admin'
-            };
-            const pathToView = {
-                '/': 'landing',
-                '/login': 'login',
-                '/register': 'register',
-                '/admin': 'admin'
-            };
-            const getViewFromPath = (path) => pathToView[path] || 'landing';
-            const initialView = window.__INITIAL_VIEW || getViewFromPath(window.location.pathname);
+            const initialRoute = parseRoute(window.location.pathname);
+            const initialView = window.__INITIAL_VIEW || initialRoute.view;
             const [view, setView] = useState(initialView);
             const [isLoading, setIsLoading] = useState(true);
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
+            const [routeState, setRouteState] = useState(initialRoute);
 
             const navigate = (nextView, options = {}) => {
                 const { replace = false } = options;
                 setView(nextView);
-                const nextPath = viewToPath[nextView] || '/';
+                let nextPath = '/';
+                if (nextView === 'admin') {
+                    nextPath = buildAdminPath(routeState.admin);
+                } else if (nextView === 'landing') {
+                    nextPath = buildStudentPath(routeState.student);
+                } else if (nextView === 'login') {
+                    nextPath = '/login';
+                } else if (nextView === 'register') {
+                    nextPath = '/register';
+                }
                 if (window.location.pathname !== nextPath) {
                     const method = replace ? 'replaceState' : 'pushState';
                     window.history[method]({ view: nextView }, '', nextPath);
@@ -31,10 +29,17 @@ export const mainApp = `
 
             useEffect(() => {
                 const handlePopState = () => {
-                    setView(getViewFromPath(window.location.pathname));
+                    const nextRoute = parseRoute(window.location.pathname);
+                    setRouteState(nextRoute);
+                    setView(nextRoute.view);
                 };
                 window.addEventListener('popstate', handlePopState);
                 return () => window.removeEventListener('popstate', handlePopState);
+            }, []);
+
+            useEffect(() => {
+                const nextRoute = parseRoute(window.location.pathname);
+                setRouteState(nextRoute);
             }, []);
 
             // 1. Initial System Check & Session Restore
@@ -120,11 +125,11 @@ export const mainApp = `
                 <div className="min-h-screen flex flex-col">
                     <NavBar user={user} hasAdmin={hasAdmin} onNavigate={navigate} activeView={view} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
-                        {view === 'landing' && <StudentLandingPage />}
+                        {view === 'landing' && <StudentLandingPage routeState={routeState} setRouteState={setRouteState} />}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
                         {view === 'admin' && user && (
-                            <AdminDashboard user={user} logout={handleLogout} />
+                            <AdminDashboard user={user} logout={handleLogout} routeState={routeState} setRouteState={setRouteState} />
                         )}
                     </main>
                 </div>
