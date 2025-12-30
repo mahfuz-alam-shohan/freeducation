@@ -1,11 +1,29 @@
 export const adminComponents = `
         /* --- API HELPERS (Scoped) --- */
         const adminApi = {
-            get: (url) => fetch(url).then(r => r.json()),
-            post: (url, body) => fetch(url, { method: 'POST', body: JSON.stringify(body) }),
-            put: (url, body) => fetch(url, { method: 'PUT', body: JSON.stringify(body) }),
-            update: (type, id, value) => fetch('/api/request', { method: 'PUT', body: JSON.stringify({ type, id, value }) }),
-            del: (type, id) => fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type, id }) })
+            request: async (url, options = {}) => {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const message = await response.text().catch(() => '');
+                    throw new Error(message || \`Request failed (\${response.status})\`);
+                }
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    return response.json();
+                }
+                return response.text();
+            },
+            get: (url) => adminApi.request(url),
+            post: (url, body) => adminApi.request(url, { method: 'POST', body: JSON.stringify(body) }),
+            put: (url, body) => adminApi.request(url, { method: 'PUT', body: JSON.stringify(body) }),
+            update: (type, id, value) => adminApi.request('/api/request', { method: 'PUT', body: JSON.stringify({ type, id, value }) }),
+            del: (type, id) => adminApi.request('/api/request', { method: 'DELETE', body: JSON.stringify({ type, id }) })
         };
 
         /* --- UI COMPONENTS --- */
@@ -440,9 +458,13 @@ export const adminComponents = `
             
             const addQuestion = async (data) => { 
                 const payload = topic.isChapter ? { ...data, topic_id: null, chapter_id: topic.realId } : { ...data, topic_id: topic.id };
-                await adminApi.post('/api/questions', payload); 
-                setIsQModalOpen(false); 
-                await loadQs(); 
+                try {
+                    await adminApi.post('/api/questions', payload); 
+                    setIsQModalOpen(false); 
+                    await loadQs(); 
+                } catch (error) {
+                    alert(error?.message || 'Unable to save question. Please try again.');
+                }
             };
             
             const delQuestion = async (id) => { if(confirm('Delete question?')) { await adminApi.del('question', id); await loadQs(); } };
@@ -641,5 +663,4 @@ export const adminComponents = `
             return <div className="max-w-xl bg-white p-6 border border-gray-300"><h2 className="text-lg font-bold mb-4">Danger Zone</h2><Button variant="danger" size="sm" onClick={handleReset}>Reset Database</Button></div>;
         }
 `;
-
 
