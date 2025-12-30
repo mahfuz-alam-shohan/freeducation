@@ -7,7 +7,7 @@ export const adminComponents = `
                         <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">{title}</h4>
                         <input className="w-full border rounded p-2 text-sm mb-4 focus:ring-2 focus:ring-blue-500 outline-none" value={val} onChange={e => setVal(e.target.value)} autoFocus />
                         <div className="flex justify-between items-center">
-                            {onDelete && <button onClick={() => { if(confirm('Delete this item?')) onDelete(); }} className="text-red-500 text-xs hover:bg-red-50 p-1.5 rounded"><i className="fas fa-trash"></i></button>}
+                            {onDelete && <button onClick={() => { if(confirm('Permanently delete this item?')) onDelete(); }} className="text-red-500 text-xs hover:bg-red-50 p-2 rounded flex items-center"><i className="fas fa-trash mr-1"></i> Delete</button>}
                             <div className="flex gap-2">
                                 <button onClick={onClose} className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
                                 <button onClick={() => onSave(val)} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
@@ -64,6 +64,11 @@ export const adminComponents = `
             <button onClick={onClick} className={\`flex flex-col items-center p-1 \${active ? 'text-blue-600' : 'text-gray-400'}\`}><i className={\`\${icon} text-lg mb-1\`}></i><span className="text-[10px]">{label}</span></button>
         );
 
+        // --- API HELPERS ---
+        const api = {
+            del: async (type, id) => fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type, id }) }) // Using generic handler
+        };
+
         function ClassStructureManager() {
             const [classes, setClasses] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,7 +78,7 @@ export const adminComponents = `
             const loadClasses = () => fetch('/api/classes').then(r => r.json()).then(setClasses);
             const createClass = async (name) => { if(!name) return; await fetch('/api/classes', { method: 'POST', body: JSON.stringify({ name }) }); setIsModalOpen(false); loadClasses(); };
             const updateClass = async (id, name) => { await fetch('/api/classes', { method: 'PUT', body: JSON.stringify({ id, name }) }); loadClasses(); }; 
-            // Note: Delete API not implemented in backend yet, handled gracefully
+            const deleteClass = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'class', id }) }); loadClasses(); };
 
             if (selectedClass) return <StructureDetail cls={selectedClass} onBack={() => setSelectedClass(null)} />;
 
@@ -81,12 +86,12 @@ export const adminComponents = `
                 <div className="w-full max-w-5xl mx-auto">
                     <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold text-gray-800">Academic Structure</h2><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center"><i className="fas fa-plus"></i></button></div>
                     <div className="bg-white border rounded overflow-hidden">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 border-b text-gray-500 uppercase text-xs"><tr><th className="px-4 py-3 w-16">ID</th><th className="px-4 py-3">Class Name</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
+                        <table className="w-full text-xs md:text-sm text-left">
+                            <thead className="bg-gray-50 border-b text-gray-500 uppercase text-[10px] md:text-xs"><tr><th className="px-4 py-3 w-16">ID</th><th className="px-4 py-3">Class Name</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
                             <tbody className="divide-y">{classes.map(c => (
                                 <tr key={c.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3 text-gray-400 font-mono">{c.id}</td>
-                                    <td className="px-4 py-3 font-medium"><TableCell label="Class Name" value={c.name} onUpdate={(v) => updateClass(c.id, v)} /></td>
+                                    <td className="px-4 py-3 font-medium"><TableCell label="Class Name" value={c.name} onUpdate={(v) => updateClass(c.id, v)} onDelete={() => deleteClass(c.id)} /></td>
                                     <td className="px-4 py-3 text-right"><button onClick={() => setSelectedClass(c)} className="text-blue-600 hover:bg-blue-50 px-3 py-1 rounded text-xs border border-blue-200">Manage Structure</button></td>
                                 </tr>
                             ))}</tbody>
@@ -100,7 +105,7 @@ export const adminComponents = `
         function StructureDetail({ cls, onBack }) {
             const [groups, setGroups] = useState([]);
             const [subjects, setSubjects] = useState([]);
-            const [modal, setModal] = useState(null); // 'group' or 'subject'
+            const [modal, setModal] = useState(null);
             const [selSubject, setSelSubject] = useState(null);
 
             useEffect(() => { refresh(); }, [cls]);
@@ -108,6 +113,8 @@ export const adminComponents = `
             
             const addGroup = async (name) => { await fetch('/api/groups', { method: 'POST', body: JSON.stringify({ name, class_id: cls.id }) }); setModal(null); refresh(); };
             const addSubject = async (data) => { await fetch('/api/subjects', { method: 'POST', body: JSON.stringify({ ...data, class_id: cls.id }) }); setModal(null); refresh(); };
+            const delGroup = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'group', id }) }); refresh(); };
+            const delSubject = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'subject', id }) }); refresh(); };
 
             if (selSubject) return <ChapterStructureManager subject={selSubject} onBack={() => setSelSubject(null)} />;
 
@@ -117,11 +124,11 @@ export const adminComponents = `
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1">
                             <div className="flex justify-between items-center mb-2"><h3 className="font-bold text-gray-700 text-sm">Groups</h3><button onClick={() => setModal('group')} className="text-blue-600 text-sm hover:bg-blue-50 px-2 rounded"><i className="fas fa-plus"></i></button></div>
-                            <div className="bg-white border rounded"><table className="w-full text-sm"><tbody className="divide-y">{groups.map(g => <tr key={g.id}><td className="px-3 py-2"><TableCell label="Group" value={g.name} onUpdate={() => {}} /></td></tr>)}</tbody></table></div>
+                            <div className="bg-white border rounded"><table className="w-full text-xs md:text-sm"><tbody className="divide-y">{groups.map(g => <tr key={g.id}><td className="px-3 py-2"><TableCell label="Group" value={g.name} onUpdate={() => {}} onDelete={() => delGroup(g.id)} /></td></tr>)}</tbody></table></div>
                         </div>
                         <div className="md:col-span-2">
                             <div className="flex justify-between items-center mb-2"><h3 className="font-bold text-gray-700 text-sm">Subjects</h3><button onClick={() => setModal('subject')} className="text-blue-600 text-sm hover:bg-blue-50 px-2 rounded"><i className="fas fa-plus"></i></button></div>
-                            <div className="bg-white border rounded"><table className="w-full text-sm"><thead className="bg-gray-50 border-b text-xs text-gray-500 text-left"><tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Group</th><th className="px-3 py-2 text-right"></th></tr></thead><tbody className="divide-y">{subjects.map(s => <tr key={s.id}><td className="px-3 py-2 font-medium"><TableCell label="Subject" value={s.name} onUpdate={() => {}} /></td><td className="px-3 py-2 text-gray-500 text-xs">{s.is_common ? 'Common' : groups.find(g => g.id == s.group_id)?.name}</td><td className="px-3 py-2 text-right"><button onClick={() => setSelSubject(s)} className="text-blue-600 hover:underline text-xs">Chapters</button></td></tr>)}</tbody></table></div>
+                            <div className="bg-white border rounded"><table className="w-full text-xs md:text-sm"><thead className="bg-gray-50 border-b text-[10px] md:text-xs text-gray-500 text-left"><tr><th className="px-3 py-2">Name</th><th className="px-3 py-2">Group</th><th className="px-3 py-2 text-right"></th></tr></thead><tbody className="divide-y">{subjects.map(s => <tr key={s.id}><td className="px-3 py-2 font-medium"><TableCell label="Subject" value={s.name} onUpdate={() => {}} onDelete={() => delSubject(s.id)} /></td><td className="px-3 py-2 text-gray-500 text-xs">{s.is_common ? 'Common' : groups.find(g => g.id == s.group_id)?.name}</td><td className="px-3 py-2 text-right"><button onClick={() => setSelSubject(s)} className="text-blue-600 hover:underline text-xs">Chapters</button></td></tr>)}</tbody></table></div>
                         </div>
                     </div>
                     {modal === 'group' && <SimpleInputModal title="New Group" onClose={() => setModal(null)} onSave={addGroup} />}
@@ -138,6 +145,7 @@ export const adminComponents = `
             useEffect(() => { load(); }, [subject]);
             const load = () => fetch(\`/api/chapters?subject_id=\${subject.id}\`).then(r => r.json()).then(setChapters);
             const create = async (data) => { await fetch('/api/chapters', { method: 'POST', body: JSON.stringify({ ...data, subject_id: subject.id, order_num: data.order || chapters.length + 1 }) }); setIsModalOpen(false); load(); };
+            const del = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'chapter', id }) }); load(); };
 
             if (selChapter) return <TopicStructureManager chapter={selChapter} onBack={() => setSelChapter(null)} />;
 
@@ -145,7 +153,7 @@ export const adminComponents = `
                 <div className="w-full max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-4"><div className="flex items-center"><button onClick={onBack} className="text-gray-400 hover:text-blue-600 mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{subject.name} <span className="text-gray-400 font-normal">/ Chapters</span></h2></div><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center"><i className="fas fa-plus"></i></button></div>
                     <div className="bg-white border rounded overflow-hidden">
-                        <table className="w-full text-sm text-left"><thead className="bg-gray-50 border-b text-xs text-gray-500"><tr><th className="px-4 py-3 w-16">#</th><th className="px-4 py-3">Chapter Title</th><th className="px-4 py-3 text-right"></th></tr></thead><tbody className="divide-y">{chapters.map(c => <tr key={c.id} className="hover:bg-gray-50"><td className="px-4 py-3 text-gray-400">{c.order_num}</td><td className="px-4 py-3 font-medium"><TableCell label="Chapter" value={c.title} onUpdate={() => {}} /></td><td className="px-4 py-3 text-right"><button onClick={() => setSelChapter(c)} className="text-blue-600 hover:underline text-xs">Topics</button></td></tr>)}</tbody></table>
+                        <table className="w-full text-xs md:text-sm text-left"><thead className="bg-gray-50 border-b text-[10px] md:text-xs text-gray-500"><tr><th className="px-4 py-3 w-16">#</th><th className="px-4 py-3">Chapter Title</th><th className="px-4 py-3 text-right"></th></tr></thead><tbody className="divide-y">{chapters.map(c => <tr key={c.id} className="hover:bg-gray-50"><td className="px-4 py-3 text-gray-400">{c.order_num}</td><td className="px-4 py-3 font-medium"><TableCell label="Chapter" value={c.title} onUpdate={() => {}} onDelete={() => del(c.id)} /></td><td className="px-4 py-3 text-right"><button onClick={() => setSelChapter(c)} className="text-blue-600 hover:underline text-xs">Topics</button></td></tr>)}</tbody></table>
                         {chapters.length === 0 && <div className="p-6 text-center text-gray-400 italic text-xs">No chapters defined.</div>}
                     </div>
                     {isModalOpen && <CreateChapterModal onClose={() => setIsModalOpen(false)} onSave={create} />}
@@ -160,12 +168,13 @@ export const adminComponents = `
             useEffect(() => { load(); }, [chapter]);
             const load = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(r => r.json()).then(setTopics);
             const create = async (title) => { await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ title, content: '', chapter_id: chapter.id, order_num: topics.length + 1 }) }); setIsModalOpen(false); load(); };
+            const del = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'topic', id }) }); load(); };
 
             return (
                 <div className="w-full max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-4"><div className="flex items-center"><button onClick={onBack} className="text-gray-400 hover:text-blue-600 mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{chapter.title} <span className="text-gray-400 font-normal">/ Topics</span></h2></div><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center"><i className="fas fa-plus"></i></button></div>
                     <div className="bg-white border rounded overflow-hidden">
-                        <table className="w-full text-sm text-left"><thead className="bg-gray-50 border-b text-xs text-gray-500"><tr><th className="px-4 py-3">Topic Title</th><th className="px-4 py-3 w-32 text-right">Status</th></tr></thead><tbody className="divide-y">{topics.map(t => <tr key={t.id} className="hover:bg-gray-50"><td className="px-4 py-3 font-medium"><TableCell label="Topic" value={t.title} onUpdate={() => {}} /></td><td className="px-4 py-3 text-right text-xs text-gray-400">Created</td></tr>)}</tbody></table>
+                        <table className="w-full text-xs md:text-sm text-left"><thead className="bg-gray-50 border-b text-[10px] md:text-xs text-gray-500"><tr><th className="px-4 py-3">Topic Title</th><th className="px-4 py-3 w-32 text-right">Status</th></tr></thead><tbody className="divide-y">{topics.map(t => <tr key={t.id} className="hover:bg-gray-50"><td className="px-4 py-3 font-medium"><TableCell label="Topic" value={t.title} onUpdate={() => {}} onDelete={() => del(t.id)} /></td><td className="px-4 py-3 text-right text-xs text-gray-400">Created</td></tr>)}</tbody></table>
                         {topics.length === 0 && <div className="p-6 text-center text-gray-400 italic text-xs">No topics defined. Add one to start adding content later.</div>}
                     </div>
                     {isModalOpen && <SimpleInputModal title="New Topic" onClose={() => setIsModalOpen(false)} onSave={create} />}
@@ -173,7 +182,6 @@ export const adminComponents = `
             );
         }
 
-        // --- CONTENT MANAGER SECTION ---
         function ContentManagerLanding() {
             const [classes, setClasses] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
@@ -185,7 +193,7 @@ export const adminComponents = `
                 <div className="w-full max-w-5xl mx-auto">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Content Manager</h2>
                     <div className="bg-white border rounded overflow-hidden">
-                        <table className="w-full text-sm text-left"><thead className="bg-gray-50 border-b text-xs text-gray-500"><tr><th className="px-4 py-3">Select Class to Manage Content</th><th className="px-4 py-3 text-right"></th></tr></thead><tbody className="divide-y">{classes.map(c => <tr key={c.id} onClick={() => setSelectedClass(c)} className="hover:bg-blue-50 cursor-pointer group"><td className="px-4 py-3 font-medium text-gray-700 group-hover:text-blue-700">{c.name}</td><td className="px-4 py-3 text-right"><i className="fas fa-chevron-right text-gray-300"></i></td></tr>)}</tbody></table>
+                        <table className="w-full text-xs md:text-sm text-left"><thead className="bg-gray-50 border-b text-[10px] md:text-xs text-gray-500"><tr><th className="px-4 py-3">Select Class to Manage Content</th><th className="px-4 py-3 text-right"></th></tr></thead><tbody className="divide-y">{classes.map(c => <tr key={c.id} onClick={() => setSelectedClass(c)} className="hover:bg-blue-50 cursor-pointer group"><td className="px-4 py-3 font-medium text-gray-700 group-hover:text-blue-700">{c.name}</td><td className="px-4 py-3 text-right"><i className="fas fa-chevron-right text-gray-300"></i></td></tr>)}</tbody></table>
                     </div>
                 </div>
             );
@@ -245,6 +253,7 @@ export const adminComponents = `
             
             const saveNotes = async () => { await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ ...topic, content, order_num: topic.order_num }) }); alert('Notes Saved'); };
             const addQuestion = async (data) => { await fetch('/api/questions', { method: 'POST', body: JSON.stringify({ ...data, topic_id: topic.id }) }); setIsQModalOpen(false); fetch(\`/api/questions?topic_id=\${topic.id}\`).then(r => r.json()).then(setQuestions); };
+            const delQuestion = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'question', id }) }); fetch(\`/api/questions?topic_id=\${topic.id}\`).then(r => r.json()).then(setQuestions); };
 
             return (
                 <div className="w-full h-full flex flex-col">
@@ -257,7 +266,7 @@ export const adminComponents = `
                     ) : (
                         <div className="flex-1 bg-white border rounded flex flex-col">
                             <div className="p-4 border-b flex justify-between items-center"><h3 className="font-bold text-sm">Question Bank</h3><button onClick={() => setIsQModalOpen(true)} className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700"><i className="fas fa-plus mr-1"></i> Add Question</button></div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3">{questions.map((q, i) => <div key={q.id} className="p-3 border rounded bg-gray-50"><div className="flex justify-between mb-1"><span className="text-[10px] font-bold text-blue-600 uppercase">{q.type}</span><span className="text-[10px] text-gray-400">{q.metadata?.board}</span></div><p className="text-sm font-medium text-gray-800">{q.question_text}</p></div>)}</div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">{questions.map((q, i) => <div key={q.id} className="p-3 border rounded bg-gray-50 relative group"><div className="flex justify-between mb-1"><span className="text-[10px] font-bold text-blue-600 uppercase">{q.type}</span><div className="flex gap-2"><span className="text-[10px] text-gray-400">{q.metadata?.board}</span><button onClick={() => delQuestion(q.id)} className="text-red-400 hover:text-red-600 text-xs opacity-0 group-hover:opacity-100"><i className="fas fa-trash"></i></button></div></div><p className="text-sm font-medium text-gray-800">{q.question_text}</p></div>)}</div>
                         </div>
                     )}
                     {isQModalOpen && <CreateQuestionModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} />}
@@ -265,7 +274,6 @@ export const adminComponents = `
             );
         }
 
-        // --- UTILS & MODALS ---
         function SimpleInputModal({ title, onClose, onSave }) {
             const [val, setVal] = useState('');
             return <Modal isOpen={true} onClose={onClose} title={title}><Input value={val} onChange={e => setVal(e.target.value)} autoFocus /><div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave(val)}>Save</Button></div></Modal>;
