@@ -51,7 +51,7 @@ export const mainApp = `
                     if (token) {
                         try {
                             const meRes = await fetch('/api/me', {
-                                headers: { 'Authorization': `Bearer ${token}` }
+                                headers: { 'Authorization': 'Bearer ' + token }
                             });
                             const meData = await meRes.json();
                             if (meData.user) {
