@@ -512,7 +512,7 @@ export const adminComponents = `
                         type: 'CQ-Part',
                         question_text: singleText,
                         options: [],
-                        answer: singleAnswer, // Storing single answer here
+                        answer: singleAnswer,
                         metadata: { board, year, school, part: singlePart }
                     });
                 } else {
