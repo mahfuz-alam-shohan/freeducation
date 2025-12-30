@@ -445,14 +445,13 @@ export const adminComponents = `
             const [year, setYear] = useState('');
             const [school, setSchool] = useState('');
             const [subQs, setSubQs] = useState([
-                { id: 'k', text: '', connected: false, chapterId: '', topicId: '' },
-                { id: 'kh', text: '', connected: false, chapterId: '', topicId: '' },
-                { id: 'g', text: '', connected: true, chapterId: '', topicId: '' },
-                { id: 'gh', text: '', connected: true, chapterId: '', topicId: '' }
+                { id: 'ক', text: '', connected: false, chapterId: '', topicId: '' },
+                { id: 'খ', text: '', connected: false, chapterId: '', topicId: '' },
+                { id: 'গ', text: '', connected: true, chapterId: '', topicId: '' },
+                { id: 'ঘ', text: '', connected: true, chapterId: '', topicId: '' }
             ]);
             const [topicsMap, setTopicsMap] = useState({});
 
-            // Load topics when a chapter is selected for a sub-question
             const handleChapterChange = async (idx, chapterId) => {
                 const newQs = [...subQs];
                 newQs[idx].chapterId = chapterId;
@@ -518,12 +517,12 @@ export const adminComponents = `
         }
         function CreateChapterModal({ onClose, onSave }) {
             const [title, setTitle] = useState(''); const [order, setOrder] = useState('');
-            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="#" type="number" value={order} onChange={e => setOrder(e.target.value)} /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div></div><div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
+            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="#" type="number" value={order} onChange={e => setOrder(e.target.value)} /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div></div><div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
         }
         function CreateQuestionModal({ onClose, onSave }) {
             const [type, setType] = useState('MCQ'); const [text, setText] = useState(''); const [options, setOptions] = useState(['', '', '', '']); const [answer, setAnswer] = useState(''); const [board, setBoard] = useState(''); const [year, setYear] = useState('');
             const updateOption = (i, v) => { const n = [...options]; n[i] = v; setOptions(n); };
-            return <Modal isOpen={true} onClose={onClose} title="Add Question"><div className="flex gap-2 mb-3 border-b pb-2"><button onClick={() => setType('MCQ')} className={\`px-3 py-1 text-xs font-bold \${type==='MCQ'?'bg-blue-100 text-blue-800':'text-gray-500'}\`}>MCQ</button><button onClick={() => setType('CQ')} className={\`px-3 py-1 text-xs font-bold \${type==='CQ'?'bg-blue-100 text-blue-800':'text-gray-500'}\`}>CQ</button></div><div className="flex gap-2 mb-3"><div className="flex-1"><Input label="Board" value={board} onChange={e => setBoard(e.target.value)} /></div><div className="w-24"><Input label="Year" value={year} onChange={e => setYear(e.target.value)} /></div></div><div className="mb-3"><label className="block text-xs font-bold mb-1">Question</label><textarea className="w-full border p-2 rounded text-sm h-20" value={text} onChange={e => setText(e.target.value)}></textarea></div>{type === 'MCQ' ? <div className="space-y-2 mb-3">{options.map((o, i) => <div key={i} className="flex items-center gap-2"><span className="text-xs font-bold w-4">{String.fromCharCode(65+i)}</span><input className="flex-1 border p-1.5 rounded text-sm" value={o} onChange={e => updateOption(i, e.target.value)} /><input type="radio" name="ans" checked={answer===o && o!==''} onChange={() => setAnswer(o)} /></div>)}</div> : <div className="mb-3"><label className="block text-xs font-bold mb-1">Answer Key</label><textarea className="w-full border p-2 rounded text-sm h-20" value={answer} onChange={e => setAnswer(e.target.value)}></textarea></div>}<div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ type, question_text: text, options: type==='MCQ'?options:[], answer, metadata: { board, year } })}>Save</Button></div></Modal>;
+            return <Modal isOpen={true} onClose={onClose} title="Add Question"><div className="flex gap-2 mb-3 border-b pb-2"><button onClick={() => setType('MCQ')} className={\`px-3 py-1 text-xs font-bold \${type==='MCQ'?'bg-blue-100 text-blue-800':'text-gray-500'}\`}>MCQ</button><button onClick={() => setType('CQ')} className={\`px-3 py-1 text-xs font-bold \${type==='CQ'?'bg-blue-100 text-blue-800':'text-gray-500'}\`}>CQ</button></div><div className="flex gap-2 mb-3"><div className="flex-1"><Input label="Board" value={board} onChange={e => setBoard(e.target.value)} /></div><div className="w-24"><Input label="Year" value={year} onChange={e => setYear(e.target.value)} /></div></div><div className="mb-3"><label className="block text-xs font-bold mb-1">Question</label><textarea className="w-full border p-2 rounded text-sm h-20" value={text} onChange={e => setText(e.target.value)}></textarea></div>{type === 'MCQ' ? <div className="space-y-2 mb-3">{options.map((o, i) => <div key={i} className="flex items-center gap-2"><span className="text-xs font-bold w-4">{String.fromCharCode(65+i)}</span><input className="flex-1 border p-1.5 rounded text-sm" value={o} onChange={e => updateOption(i, e.target.value)} /><input type="radio" name="ans" checked={answer===o && o!==''} onChange={() => setAnswer(o)} /></div>)}</div> : <div className="mb-3"><label className="block text-xs font-bold mb-1">Answer Key</label><textarea className="w-full border p-2 rounded text-sm h-20" value={answer} onChange={e => setAnswer(e.target.value)}></textarea></div>}<div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave({ type, question_text: text, options: type==='MCQ'?options:[], answer, metadata: { board, year } })}>Save</Button></div></Modal>;
         }
         function LinkClassModal({ cls, allClasses, onClose, onSave }) {
             const [parentId, setParentId] = useState(cls.parent_class_id || ''); const [label, setLabel] = useState(cls.program_label || '');
