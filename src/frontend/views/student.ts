@@ -375,9 +375,29 @@ export const studentComponents = `
 
             const partOrder = ['ক', 'খ', 'গ', 'ঘ'];
             const cqPartQuestions = questions.filter(q => q.type === 'CQ-Part');
-            const otherQuestions = questions.filter(q => q.type !== 'CQ-Part');
+            const cqScenarioQuestions = questions.filter(q => q.type === 'CQ');
+            const expandCqParts = (cqQuestion) => (cqQuestion.options || []).map((opt, idx) => {
+                const isLinked = opt.connected !== false;
+                return {
+                    ...cqQuestion,
+                    id: \`\${cqQuestion.id}-\${opt.id || idx}\`,
+                    type: 'CQ-Part',
+                    question_text: opt.text,
+                    answer: opt.answer,
+                    options: [],
+                    metadata: {
+                        ...(cqQuestion.metadata || {}),
+                        part: opt.id,
+                        scenario: cqQuestion.question_text,
+                        linked: isLinked
+                    }
+                };
+            });
+            const expandedCqParts = cqScenarioQuestions.flatMap(expandCqParts);
+            const combinedCqParts = [...cqPartQuestions, ...expandedCqParts];
+            const otherQuestions = questions.filter(q => q.type !== 'CQ-Part' && q.type !== 'CQ');
             const groupedCqParts = partOrder
-                .map(part => ({ part, items: cqPartQuestions.filter(q => q.metadata?.part === part) }))
+                .map(part => ({ part, items: combinedCqParts.filter(q => q.metadata?.part === part) }))
                 .filter(group => group.items.length > 0);
             let questionNumber = 0;
 
@@ -408,6 +428,11 @@ export const studentComponents = `
                                 <>
                                     {q.question_text && q.type !== 'CQ-Part' && (
                                         <p className="text-gray-700 whitespace-pre-line">{q.question_text}</p>
+                                    )}
+                                    {q.type === 'CQ-Part' && q.metadata?.scenario && q.metadata?.linked && (
+                                        <div className="rounded border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-900 whitespace-pre-line">
+                                            <span className="font-bold uppercase text-[10px] text-blue-600">Scenario:</span> {q.metadata.scenario}
+                                        </div>
                                     )}
                                     <div className="flex items-center gap-3 text-xs">
                                         <button
@@ -471,11 +496,12 @@ export const studentComponents = `
                 );
             };
 
-            const cqQuestions = [...groupedCqParts.flatMap(group => group.items), ...otherQuestions.filter(q => q.type === 'CQ' || q.type === 'WRITTEN')];
-            const regularQuestions = otherQuestions.filter(q => q.type !== 'CQ' && q.type !== 'WRITTEN');
+            const writtenQuestions = otherQuestions.filter(q => q.type === 'WRITTEN');
+            const regularQuestions = otherQuestions.filter(q => q.type !== 'WRITTEN');
+            const cqQuestions = [...groupedCqParts.flatMap(group => group.items), ...writtenQuestions];
             const orderedQuestions = viewMode === 'cq'
                 ? cqQuestions
-                : [...groupedCqParts.flatMap(group => group.items), ...regularQuestions, ...otherQuestions.filter(q => q.type === 'CQ' || q.type === 'WRITTEN')];
+                : [...groupedCqParts.flatMap(group => group.items), ...regularQuestions, ...writtenQuestions];
 
             return (
                 <div className="space-y-4">
