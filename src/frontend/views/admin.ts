@@ -49,11 +49,11 @@ export const adminComponents = `
             };
 
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20" onClick={onClose}>
-                    <div className="bg-white border border-gray-400 p-4 w-80 shadow-lg" onClick={e => e.stopPropagation()}>
-                        <h4 className="font-bold text-sm mb-3">{title}</h4>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white border border-gray-200 p-5 w-80 shadow-xl rounded-2xl" onClick={e => e.stopPropagation()}>
+                        <h4 className="font-bold text-sm mb-3 text-gray-800">{title}</h4>
                         <input 
-                            className="w-full border border-gray-300 p-2 text-sm mb-4 outline-none focus:border-blue-500" 
+                            className="w-full border border-gray-300 p-2.5 text-sm mb-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg" 
                             value={val} 
                             onChange={e => setVal(e.target.value)} 
                             autoFocus 
@@ -64,8 +64,8 @@ export const adminComponents = `
                                 <button onClick={handleDelete} className="text-red-600 hover:underline text-xs" disabled={isSaving}>Delete</button>
                             ) : <div></div>}
                             <div className="flex gap-2">
-                                <button onClick={onClose} className="px-3 py-1 text-xs border border-gray-300 hover:bg-gray-100" disabled={isSaving}>Cancel</button>
-                                <button onClick={handleSave} className="px-3 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700" disabled={isSaving}>
+                                <button onClick={onClose} className="px-3 py-1 text-xs border border-gray-300 hover:bg-gray-100 rounded-lg" disabled={isSaving}>Cancel</button>
+                                <button onClick={handleSave} className="px-3 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700 rounded-lg" disabled={isSaving}>
                                     {isSaving ? '...' : 'Save'}
                                 </button>
                             </div>
@@ -104,39 +104,44 @@ export const adminComponents = `
             const activeTab = route?.section || 'structure';
             
             return (
-                <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-white font-sans text-gray-800">
-                    <div className="hidden md:flex flex-col w-60 border-r border-gray-300 h-[calc(100vh-64px)] sticky top-16 bg-gray-50">
-                        <div className="p-2 space-y-1 mt-2">
+                <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-slate-50 font-sans text-gray-800">
+                    <div className="hidden md:flex flex-col w-64 border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 bg-white">
+                        <div className="p-4 space-y-2 mt-2">
+                            <div className="px-3 py-2 rounded-2xl bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                Admin Workspace
+                            </div>
                             <AdminNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'structure'} onClick={() => onNavigate({ section: 'structure' })} />
                             <AdminNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => onNavigate({ section: 'content' })} />
                             <div className="h-px bg-gray-200 my-2"></div>
                             <AdminNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => onNavigate({ section: 'settings' })} />
                         </div>
-                        <div className="mt-auto p-2 border-t border-gray-300">
-                            <button onClick={logout} className="w-full text-left px-3 py-2 text-red-600 text-xs font-bold hover:bg-red-50 transition-colors">
+                        <div className="mt-auto p-4 border-t border-gray-200">
+                            <button onClick={logout} className="w-full text-left px-3 py-2 text-red-600 text-xs font-bold hover:bg-red-50 transition-colors rounded-lg">
                                 <i className="fas fa-sign-out-alt mr-2"></i> Log Out
                             </button>
                         </div>
                     </div>
 
-                    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 z-50 flex justify-around p-2">
+                    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 flex justify-around p-2">
                         <MobileNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'structure'} onClick={() => onNavigate({ section: 'structure' })} />
                         <MobileNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => onNavigate({ section: 'content' })} />
                         <MobileNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => onNavigate({ section: 'settings' })} />
                     </div>
 
-                    <div className="flex-1 p-4 w-full overflow-x-hidden pb-20 md:pb-4 bg-white">
-                        {activeTab === 'structure' && <ClassStructureManager route={route} onNavigate={onNavigate} />}
-                        {activeTab === 'content' && <ContentManagerLanding route={route} onNavigate={onNavigate} />}
-                        {activeTab === 'settings' && <SettingsManager />}
+                    <div className="flex-1 p-4 md:p-8 w-full overflow-x-hidden pb-24 md:pb-8 bg-slate-50">
+                        <div className="max-w-6xl mx-auto">
+                            {activeTab === 'structure' && <ClassStructureManager route={route} onNavigate={onNavigate} />}
+                            {activeTab === 'content' && <ContentManagerLanding route={route} onNavigate={onNavigate} />}
+                            {activeTab === 'settings' && <SettingsManager />}
+                        </div>
                     </div>
                 </div>
             );
         }
 
         const AdminNavItem = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={\`w-full flex items-center px-3 py-2 text-sm transition-colors \${active ? 'bg-blue-100 text-blue-800 font-bold border-r-2 border-blue-600' : 'text-gray-700 hover:bg-gray-200'}\`}>
-                <i className={\`\${icon} w-5 text-center mr-2 opacity-70\`}></i> {label}
+            <button onClick={onClick} className={\`w-full flex items-center px-3 py-2.5 text-sm transition-colors rounded-xl \${active ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-100' : 'text-gray-700 hover:bg-gray-100'}\`}>
+                <i className={\`\${icon} w-5 text-center mr-2 opacity-80\`}></i> {label}
             </button>
         );
         const MobileNavItem = ({ icon, label, active, onClick }) => (
@@ -184,19 +189,25 @@ export const adminComponents = `
             }
 
             return (
-                <div className="w-full max-w-6xl mx-auto">
-                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <h2 className="text-lg font-bold text-gray-800">Academic Structure</h2>
-                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
+                <div className="w-full">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3">
+                        <div>
+                            <p className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-2">Structure</p>
+                            <h2 className="text-2xl font-bold text-gray-900">Academic Structure</h2>
+                            <p className="text-sm text-gray-500">Keep classes, groups, and subjects organized for quick navigation.</p>
+                        </div>
+                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 text-sm font-semibold flex items-center gap-2 shadow-sm">
+                            <i className="fas fa-plus text-xs"></i> Add Class
+                        </button>
                     </div>
 
-                    <div className="border border-gray-300">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-100 border-b border-gray-300 text-xs font-bold text-gray-600">
+                            <thead className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                 <tr>
-                                    <th className="px-4 py-2 w-16 border-r border-gray-300">ID</th>
-                                    <th className="px-4 py-2 border-r border-gray-300">Class Name</th>
-                                    <th className="px-4 py-2 w-32 text-right">Actions</th>
+                                    <th className="px-4 py-3 w-16 border-r border-gray-200">ID</th>
+                                    <th className="px-4 py-3 border-r border-gray-200">Class Name</th>
+                                    <th className="px-4 py-3 w-32 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">

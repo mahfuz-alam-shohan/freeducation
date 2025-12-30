@@ -25,17 +25,22 @@ export function renderAppHtml(initialView: string) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-text-size-adjust: 100%; }
+        :root {
+            color-scheme: light;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
         input, select, textarea { font-size: 16px; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        .panel-shadow { box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
 <body>
