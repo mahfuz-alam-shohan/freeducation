@@ -26,6 +26,21 @@ export const adminComponents = `
             del: (type, id) => adminApi.request('/api/request', { method: 'DELETE', body: JSON.stringify({ type, id }) })
         };
 
+        const updateAdminRoute = (setRouteState, nextAdminState, options = {}) => {
+            const { replace = false } = options;
+            const nextPath = buildAdminPath(nextAdminState);
+            const method = replace ? 'replaceState' : 'pushState';
+            window.history[method]({ view: 'admin' }, '', nextPath);
+            setRouteState(prev => ({
+                ...prev,
+                view: 'admin',
+                admin: {
+                    ...prev.admin,
+                    ...nextAdminState
+                }
+            }));
+        };
+
         /* --- UI COMPONENTS --- */
         const EditModal = ({ title, value, onSave, onDelete, onClose }) => {
             const [val, setVal] = useState(value);
@@ -100,17 +115,35 @@ export const adminComponents = `
         };
 
         /* --- MAIN DASHBOARD --- */
-        function AdminDashboard({ user, logout }) {
-            const [activeTab, setActiveTab] = useState('classes');
+        function AdminDashboard({ user, logout, routeState, setRouteState }) {
+            const [activeTab, setActiveTab] = useState(routeState?.admin?.section || 'classes');
+
+            useEffect(() => {
+                if (routeState?.admin?.section && routeState.admin.section !== activeTab) {
+                    setActiveTab(routeState.admin.section);
+                }
+            }, [routeState]);
+
+            const handleTabChange = (tab) => {
+                setActiveTab(tab);
+                updateAdminRoute(setRouteState, {
+                    section: tab,
+                    classId: null,
+                    subjectId: null,
+                    chapterId: null,
+                    topicId: null,
+                    detailTab: null
+                });
+            };
             
             return (
                 <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-white font-sans text-gray-800">
                     <div className="hidden md:flex flex-col w-60 border-r border-gray-300 h-[calc(100vh-64px)] sticky top-16 bg-gray-50">
                         <div className="p-2 space-y-1 mt-2">
-                            <AdminNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
-                            <AdminNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => setActiveTab('content')} />
+                            <AdminNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'classes'} onClick={() => handleTabChange('classes')} />
+                            <AdminNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => handleTabChange('content')} />
                             <div className="h-px bg-gray-200 my-2"></div>
-                            <AdminNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+                            <AdminNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => handleTabChange('settings')} />
                         </div>
                         <div className="mt-auto p-2 border-t border-gray-300">
                             <button onClick={logout} className="w-full text-left px-3 py-2 text-red-600 text-xs font-bold hover:bg-red-50 transition-colors">
@@ -120,14 +153,14 @@ export const adminComponents = `
                     </div>
 
                     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 z-50 flex justify-around p-2">
-                        <MobileNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
-                        <MobileNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => setActiveTab('content')} />
-                        <MobileNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+                        <MobileNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'classes'} onClick={() => handleTabChange('classes')} />
+                        <MobileNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => handleTabChange('content')} />
+                        <MobileNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => handleTabChange('settings')} />
                     </div>
 
                     <div className="flex-1 p-4 w-full overflow-x-hidden pb-20 md:pb-4 bg-white">
-                        {activeTab === 'classes' && <ClassStructureManager />}
-                        {activeTab === 'content' && <ContentManagerLanding />}
+                        {activeTab === 'classes' && <ClassStructureManager routeState={routeState} setRouteState={setRouteState} />}
+                        {activeTab === 'content' && <ContentManagerLanding routeState={routeState} setRouteState={setRouteState} />}
                         {activeTab === 'settings' && <SettingsManager />}
                     </div>
                 </div>
@@ -146,14 +179,20 @@ export const adminComponents = `
         );
 
         /* --- 1. CLASS & STRUCTURE MANAGEMENT --- */
-        function ClassStructureManager() {
+        function ClassStructureManager({ routeState, setRouteState }) {
             const [classes, setClasses] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [selectedClass, setSelectedClass] = useState(null);
             const [linkModalClass, setLinkModalClass] = useState(null);
+            const routeClassId = routeState?.admin?.classId;
 
             const loadData = async () => { setClasses(await adminApi.get('/api/classes')); };
             useEffect(() => { loadData(); }, []);
+            useEffect(() => {
+                if (!routeClassId || classes.length === 0) return;
+                const found = classes.find(c => String(c.id) === String(routeClassId));
+                if (found) setSelectedClass(found);
+            }, [routeClassId, classes]);
 
             const handleCreate = async (name) => { await adminApi.post('/api/classes', { name }); setIsModalOpen(false); await loadData(); };
             const handleUpdate = async (id, val) => { await adminApi.update('class', id, val); await loadData(); };
@@ -163,7 +202,19 @@ export const adminComponents = `
                 setLinkModalClass(null); await loadData();
             };
 
-            if (selectedClass) return <StructureDetail cls={selectedClass} onBack={() => setSelectedClass(null)} />;
+            if (selectedClass) {
+                return (
+                    <StructureDetail
+                        cls={selectedClass}
+                        onBack={() => {
+                            setSelectedClass(null);
+                            updateAdminRoute(setRouteState, { section: 'classes', classId: null, subjectId: null, chapterId: null, topicId: null });
+                        }}
+                        routeState={routeState}
+                        setRouteState={setRouteState}
+                    />
+                );
+            }
 
             return (
                 <div className="w-full max-w-6xl mx-auto">
@@ -192,7 +243,17 @@ export const adminComponents = `
                                         <td className="px-4 py-2 text-right">
                                             <div className="flex justify-end gap-2">
                                                 <button onClick={() => setLinkModalClass(c)} className="text-gray-500 hover:text-blue-600" title="Link"><i className="fas fa-link"></i></button>
-                                                {!c.parent_class_id && <button onClick={() => setSelectedClass(c)} className="text-blue-700 hover:underline text-xs font-bold">Manage</button>}
+                                                {!c.parent_class_id && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedClass(c);
+                                                            updateAdminRoute(setRouteState, { section: 'classes', classId: c.id, subjectId: null, chapterId: null, topicId: null });
+                                                        }}
+                                                        className="text-blue-700 hover:underline text-xs font-bold"
+                                                    >
+                                                        Manage
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -208,11 +269,12 @@ export const adminComponents = `
             );
         }
 
-        function StructureDetail({ cls, onBack }) {
+        function StructureDetail({ cls, onBack, routeState, setRouteState }) {
             const [groups, setGroups] = useState([]);
             const [subjects, setSubjects] = useState([]);
             const [modal, setModal] = useState(null);
             const [selSubject, setSelSubject] = useState(null);
+            const routeSubjectId = routeState?.admin?.subjectId;
 
             const loadData = async () => {
                 const [g, s] = await Promise.all([adminApi.get(\`/api/groups?class_id=\${cls.id}\`), adminApi.get(\`/api/subjects?class_id=\${cls.id}\`)]);
@@ -228,7 +290,25 @@ export const adminComponents = `
             const handleUpdateSubject = async (id, v) => { await adminApi.update('subject', id, v); await loadData(); };
             const handleDeleteSubject = async (id) => { await adminApi.del('subject', id); await loadData(); };
 
-            if (selSubject) return <ChapterStructureManager subject={selSubject} onBack={() => setSelSubject(null)} />;
+            useEffect(() => {
+                if (!routeSubjectId || subjects.length === 0) return;
+                const found = subjects.find(s => String(s.id) === String(routeSubjectId));
+                if (found) setSelSubject(found);
+            }, [routeSubjectId, subjects]);
+
+            if (selSubject) {
+                return (
+                    <ChapterStructureManager
+                        subject={selSubject}
+                        onBack={() => {
+                            setSelSubject(null);
+                            updateAdminRoute(setRouteState, { section: 'classes', classId: cls.id, subjectId: null, chapterId: null, topicId: null });
+                        }}
+                        routeState={routeState}
+                        setRouteState={setRouteState}
+                    />
+                );
+            }
 
             return (
                 <div className="w-full max-w-6xl mx-auto">
@@ -269,7 +349,17 @@ export const adminComponents = `
                                         <tr key={s.id} className="hover:bg-gray-50 group">
                                             <td className="px-2 py-2 border-r border-gray-200 font-medium"><TableCell label="Subject" value={s.name} onUpdate={v => handleUpdateSubject(s.id, v)} onDelete={() => handleDeleteSubject(s.id)} /></td>
                                             <td className="px-2 py-2 border-r border-gray-200 text-xs text-gray-500">{s.is_common ? 'Common' : groups.find(g => g.id == s.group_id)?.name || '-'}</td>
-                                            <td className="px-2 py-2 text-right"><button onClick={() => setSelSubject(s)} className="text-blue-700 hover:underline text-xs">Chapters</button></td>
+                                            <td className="px-2 py-2 text-right">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelSubject(s);
+                                                        updateAdminRoute(setRouteState, { section: 'classes', classId: cls.id, subjectId: s.id, chapterId: null, topicId: null });
+                                                    }}
+                                                    className="text-blue-700 hover:underline text-xs"
+                                                >
+                                                    Chapters
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -283,19 +373,35 @@ export const adminComponents = `
             );
         }
 
-        function ChapterStructureManager({ subject, onBack }) {
+        function ChapterStructureManager({ subject, onBack, routeState, setRouteState }) {
             const [chapters, setChapters] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [selChapter, setSelChapter] = useState(null);
+            const routeChapterId = routeState?.admin?.chapterId;
 
             const loadData = async () => { setChapters(await adminApi.get(\`/api/chapters?subject_id=\${subject.id}\`)); };
             useEffect(() => { loadData(); }, [subject]);
+            useEffect(() => {
+                if (!routeChapterId || chapters.length === 0) return;
+                const found = chapters.find(c => String(c.id) === String(routeChapterId));
+                if (found) setSelChapter(found);
+            }, [routeChapterId, chapters]);
 
             const handleCreate = async (data) => { await adminApi.post('/api/chapters', { ...data, subject_id: subject.id, order_num: data.order || chapters.length + 1 }); setIsModalOpen(false); await loadData(); };
             const handleUpdate = async (id, v) => { await adminApi.update('chapter', id, v); await loadData(); };
             const handleDelete = async (id) => { await adminApi.del('chapter', id); await loadData(); };
 
-            if (selChapter) return <TopicStructureManager chapter={selChapter} onBack={() => setSelChapter(null)} />;
+            if (selChapter) {
+                return (
+                    <TopicStructureManager
+                        chapter={selChapter}
+                        onBack={() => {
+                            setSelChapter(null);
+                            updateAdminRoute(setRouteState, { section: 'classes', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: null, topicId: null });
+                        }}
+                    />
+                );
+            }
 
             return (
                 <div className="w-full max-w-4xl mx-auto">
@@ -311,7 +417,17 @@ export const adminComponents = `
                                     <tr key={c.id} className="hover:bg-gray-50 group">
                                         <td className="px-4 py-2 text-gray-500 font-mono text-xs border-r border-gray-300">{c.order_num}</td>
                                         <td className="px-4 py-2 border-r border-gray-300 font-medium"><TableCell label="Chapter" value={c.title} onUpdate={v => handleUpdate(c.id, v)} onDelete={() => handleDelete(c.id)} /></td>
-                                        <td className="px-4 py-2 text-right"><button onClick={() => setSelChapter(c)} className="text-blue-700 hover:underline text-xs">Topics</button></td>
+                                        <td className="px-4 py-2 text-right">
+                                            <button
+                                                onClick={() => {
+                                                    setSelChapter(c);
+                                                    updateAdminRoute(setRouteState, { section: 'classes', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: c.id, topicId: null });
+                                                }}
+                                                className="text-blue-700 hover:underline text-xs"
+                                            >
+                                                Topics
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -360,44 +476,91 @@ export const adminComponents = `
         }
 
         /* --- 2. CONTENT MANAGER --- */
-        function ContentManagerLanding() {
+        function ContentManagerLanding({ routeState, setRouteState }) {
             const [classes, setClasses] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
+            const routeClassId = routeState?.admin?.classId;
             useEffect(() => { adminApi.get('/api/classes').then(setClasses); }, []);
 
-            if (selectedClass) return <ContentClassView cls={selectedClass} onBack={() => setSelectedClass(null)} />;
+            useEffect(() => {
+                if (!routeClassId || classes.length === 0) return;
+                const found = classes.find(c => String(c.id) === String(routeClassId));
+                if (found) setSelectedClass(found);
+            }, [routeClassId, classes]);
+
+            if (selectedClass) {
+                return (
+                    <ContentClassView
+                        cls={selectedClass}
+                        onBack={() => {
+                            setSelectedClass(null);
+                            updateAdminRoute(setRouteState, { section: 'content', classId: null, subjectId: null, chapterId: null, topicId: null, detailTab: null });
+                        }}
+                        routeState={routeState}
+                        setRouteState={setRouteState}
+                    />
+                );
+            }
 
             return (
                 <div className="w-full max-w-5xl mx-auto">
                     <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-300">Content Manager</h2>
                     <div className="border border-gray-300 bg-white">
-                        <table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2">Select Class to Manage Content</th><th className="px-4 py-2 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{classes.map(c => <tr key={c.id} onClick={() => setSelectedClass(c)} className="hover:bg-blue-50 cursor-pointer"><td className="px-4 py-2 font-medium text-gray-800">{c.name}</td><td className="px-4 py-2 text-right text-gray-400"><i className="fas fa-chevron-right"></i></td></tr>)}</tbody></table>
+                        <table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2">Select Class to Manage Content</th><th className="px-4 py-2 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{classes.map(c => <tr key={c.id} onClick={() => {
+                            setSelectedClass(c);
+                            updateAdminRoute(setRouteState, { section: 'content', classId: c.id, subjectId: null, chapterId: null, topicId: null, detailTab: null });
+                        }} className="hover:bg-blue-50 cursor-pointer"><td className="px-4 py-2 font-medium text-gray-800">{c.name}</td><td className="px-4 py-2 text-right text-gray-400"><i className="fas fa-chevron-right"></i></td></tr>)}</tbody></table>
                     </div>
                 </div>
             );
         }
 
-        function ContentClassView({ cls, onBack }) {
+        function ContentClassView({ cls, onBack, routeState, setRouteState }) {
             const [subjects, setSubjects] = useState([]);
             const [selSubject, setSelSubject] = useState(null);
+            const routeSubjectId = routeState?.admin?.subjectId;
             useEffect(() => { adminApi.get(\`/api/subjects?class_id=\${cls.id}\`).then(setSubjects); }, [cls]);
 
-            if (selSubject) return <ContentSubjectView subject={selSubject} onBack={() => setSelSubject(null)} />;
+            useEffect(() => {
+                if (!routeSubjectId || subjects.length === 0) return;
+                const found = subjects.find(s => String(s.id) === String(routeSubjectId));
+                if (found) setSelSubject(found);
+            }, [routeSubjectId, subjects]);
+
+            if (selSubject) {
+                return (
+                    <ContentSubjectView
+                        subject={selSubject}
+                        onBack={() => {
+                            setSelSubject(null);
+                            updateAdminRoute(setRouteState, { section: 'content', classId: cls.id, subjectId: null, chapterId: null, topicId: null, detailTab: null });
+                        }}
+                        routeState={routeState}
+                        setRouteState={setRouteState}
+                    />
+                );
+            }
 
             return (
                 <div className="w-full max-w-5xl mx-auto">
                     <div className="flex items-center mb-4 pb-2 border-b border-gray-300"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{cls.name} / Select Subject</h2></div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{subjects.map(s => <div key={s.id} onClick={() => setSelSubject(s)} className="bg-white border border-gray-300 p-4 hover:border-blue-500 cursor-pointer"><h3 className="font-bold text-gray-800">{s.name}</h3><p className="text-xs text-gray-500 mt-1">Manage Content</p></div>)}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{subjects.map(s => <div key={s.id} onClick={() => {
+                        setSelSubject(s);
+                        updateAdminRoute(setRouteState, { section: 'content', classId: cls.id, subjectId: s.id, chapterId: null, topicId: null, detailTab: null });
+                    }} className="bg-white border border-gray-300 p-4 hover:border-blue-500 cursor-pointer"><h3 className="font-bold text-gray-800">{s.name}</h3><p className="text-xs text-gray-500 mt-1">Manage Content</p></div>)}</div>
                 </div>
             );
         }
 
-        function ContentSubjectView({ subject, onBack }) {
+        function ContentSubjectView({ subject, onBack, routeState, setRouteState }) {
             const [chapters, setChapters] = useState([]);
             const [activeChapter, setActiveChapter] = useState(null);
             const [topics, setTopics] = useState([]);
             const [selTopic, setSelTopic] = useState(null);
             const [directTarget, setDirectTarget] = useState(null);
+            const routeChapterId = routeState?.admin?.chapterId;
+            const routeTopicId = routeState?.admin?.topicId;
+            const routeDetailTab = routeState?.admin?.detailTab || 'questions';
 
             useEffect(() => { adminApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
             const loadTopics = async (ch) => { 
@@ -405,6 +568,32 @@ export const adminComponents = `
                 setDirectTarget(null);
                 setTopics(await adminApi.get(\`/api/topics?chapter_id=\${ch.id}\`)); 
             };
+
+            useEffect(() => {
+                if (!routeChapterId || chapters.length === 0) return;
+                if (routeDetailTab && !routeTopicId) return;
+                const found = chapters.find(c => String(c.id) === String(routeChapterId));
+                if (found) loadTopics(found);
+            }, [routeChapterId, chapters, routeDetailTab, routeTopicId]);
+
+            useEffect(() => {
+                if (!routeTopicId || topics.length === 0) return;
+                const found = topics.find(t => String(t.id) === String(routeTopicId));
+                if (found) setSelTopic(found);
+            }, [routeTopicId, topics]);
+
+            useEffect(() => {
+                if (!routeDetailTab || routeTopicId) return;
+                if (routeChapterId) {
+                    const chapterMatch = chapters.find(c => String(c.id) === String(routeChapterId));
+                    if (chapterMatch) {
+                        setActiveChapter(chapterMatch);
+                        setDirectTarget({ type: 'chapter', id: chapterMatch.id, title: chapterMatch.title });
+                    }
+                    return;
+                }
+                setDirectTarget({ type: 'subject', id: subject.id, title: subject.name });
+            }, [routeDetailTab, routeTopicId, routeChapterId, chapters, subject]);
 
             if (selTopic || directTarget) {
                 const directTopic = directTarget
@@ -415,8 +604,14 @@ export const adminComponents = `
                 return (
                     <TopicContentEditor 
                         topic={directTopic || selTopic} 
-                        onBack={() => { setSelTopic(null); setDirectTarget(null); }} 
+                        onBack={() => { 
+                            setSelTopic(null); 
+                            setDirectTarget(null); 
+                            updateAdminRoute(setRouteState, { section: 'content', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: activeChapter?.id || null, topicId: null, detailTab: null });
+                        }} 
                         chapters={chapters} 
+                        detailTab={routeDetailTab}
+                        onTabChange={(tab) => updateAdminRoute(setRouteState, { section: 'content', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: activeChapter?.id || null, topicId: directTopic ? null : (directTopic || selTopic).id, detailTab: tab })}
                     />
                 ); 
             }
@@ -429,7 +624,10 @@ export const adminComponents = `
                             <p className="text-xs text-gray-500">Manage chapters, topics, and direct subject questions.</p>
                         </div>
                         <button
-                            onClick={() => setDirectTarget({ type: 'subject', id: subject.id, title: subject.name })}
+                            onClick={() => {
+                                setDirectTarget({ type: 'subject', id: subject.id, title: subject.name });
+                                updateAdminRoute(setRouteState, { section: 'content', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: null, topicId: null, detailTab: 'questions' });
+                            }}
                             className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded hover:bg-purple-200 font-bold"
                         >
                             Subject Questions
@@ -438,16 +636,25 @@ export const adminComponents = `
                     <div className="w-full flex flex-col md:flex-row gap-4 flex-1 min-h-0">
                         <div className="w-full md:w-60 bg-white border border-gray-300 flex flex-col">
                             <div className="p-2 border-b border-gray-300 bg-gray-100 flex items-center"><button onClick={onBack} className="mr-2 text-gray-500"><i className="fas fa-arrow-left"></i></button><span className="font-bold text-xs uppercase text-gray-600">Chapters</span></div>
-                            <div className="flex-1 overflow-y-auto">{chapters.map(c => <button key={c.id} onClick={() => loadTopics(c)} className={\`w-full text-left px-3 py-2 text-sm border-b border-gray-200 \${activeChapter?.id === c.id ? 'bg-blue-50 text-blue-800 font-bold' : 'hover:bg-gray-50'}\`}>{c.title}</button>)}</div>
+                            <div className="flex-1 overflow-y-auto">{chapters.map(c => <button key={c.id} onClick={() => {
+                                loadTopics(c);
+                                updateAdminRoute(setRouteState, { section: 'content', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: c.id, topicId: null, detailTab: null });
+                            }} className={\`w-full text-left px-3 py-2 text-sm border-b border-gray-200 \${activeChapter?.id === c.id ? 'bg-blue-50 text-blue-800 font-bold' : 'hover:bg-gray-50'}\`}>{c.title}</button>)}</div>
                         </div>
                         <div className="flex-1 bg-white border border-gray-300 p-4 overflow-y-auto">
                             {!activeChapter ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Select a chapter.</div> : 
                             <>
                                 <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
                                     <h3 className="font-bold text-gray-800">{activeChapter.title} / Topics</h3>
-                                    <button onClick={() => setDirectTarget({ type: 'chapter', id: activeChapter.id, title: activeChapter.title })} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">Chapter Questions</button>
+                                    <button onClick={() => {
+                                        setDirectTarget({ type: 'chapter', id: activeChapter.id, title: activeChapter.title });
+                                        updateAdminRoute(setRouteState, { section: 'content', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: activeChapter.id, topicId: null, detailTab: 'questions' });
+                                    }} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">Chapter Questions</button>
                                 </div>
-                                <div className="space-y-2">{topics.map(t => <div key={t.id} onClick={() => setSelTopic(t)} className="flex justify-between items-center p-3 border border-gray-300 hover:bg-gray-50 cursor-pointer"><span className="text-sm font-medium">{t.title}</span><span className="text-xs text-blue-600">Edit <i className="fas fa-pen ml-1"></i></span></div>)}</div>
+                                <div className="space-y-2">{topics.map(t => <div key={t.id} onClick={() => {
+                                    setSelTopic(t);
+                                    updateAdminRoute(setRouteState, { section: 'content', classId: routeState?.admin?.classId, subjectId: subject.id, chapterId: activeChapter.id, topicId: t.id, detailTab: 'questions' });
+                                }} className="flex justify-between items-center p-3 border border-gray-300 hover:bg-gray-50 cursor-pointer"><span className="text-sm font-medium">{t.title}</span><span className="text-xs text-blue-600">Edit <i className="fas fa-pen ml-1"></i></span></div>)}</div>
                                 {topics.length === 0 && <div className="text-center text-gray-400 text-sm py-10">No topics. Add direct questions if needed.</div>}
                             </>}
                         </div>
@@ -456,14 +663,18 @@ export const adminComponents = `
             );
         }
 
-        function TopicContentEditor({ topic, onBack, chapters }) {
+        function TopicContentEditor({ topic, onBack, chapters, detailTab = 'questions', onTabChange }) {
             const [content, setContent] = useState(topic.content || '');
             const [questions, setQuestions] = useState([]);
-            const [activeTab, setActiveTab] = useState('questions');
+            const [activeTab, setActiveTab] = useState(detailTab || 'questions');
             const [isQModalOpen, setIsQModalOpen] = useState(false);
             const [isSavingNote, setIsSavingNote] = useState(false);
             const [partFilter, setPartFilter] = useState('all');
             const [editingQuestion, setEditingQuestion] = useState(null);
+
+            useEffect(() => {
+                setActiveTab(detailTab || 'questions');
+            }, [detailTab]);
 
             const url = topic.isSubject
                 ? \`/api/questions?subject_id=\${topic.realId}\`
@@ -544,8 +755,26 @@ export const adminComponents = `
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-300">
                         <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title} {topic.isSubject ? '(Subject Questions)' : topic.isChapter ? '(Chapter Questions)' : ''}</h2></div>
                         <div className="flex border border-gray-300">
-                            {!topic.isChapter && !topic.isSubject && <button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button>}
-                            <button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questionCount})</button>
+                            {!topic.isChapter && !topic.isSubject && (
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('notes');
+                                        onTabChange?.('notes');
+                                    }}
+                                    className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}
+                                >
+                                    Notes
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setActiveTab('questions');
+                                    onTabChange?.('questions');
+                                }}
+                                className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}
+                            >
+                                Questions ({questionCount})
+                            </button>
                         </div>
                     </div>
                     {activeTab === 'notes' && !topic.isChapter && !topic.isSubject ? (
