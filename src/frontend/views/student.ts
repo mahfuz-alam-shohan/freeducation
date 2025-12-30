@@ -350,9 +350,15 @@ export const studentComponents = `
 
         function InteractiveQuestions({ topicId, chapterId, subjectId }) {
             const [questions, setQuestions] = useState([]);
+            const [selectedType, setSelectedType] = useState(null);
+            const [cqFilter, setCqFilter] = useState('full');
 
             useEffect(() => {
                 studentApi.get(\`/api/questions?topic_id=\${topicId}&chapter_id=\${chapterId}&subject_id=\${subjectId}&level=all\`).then(setQuestions);
+            }, [topicId, chapterId, subjectId]);
+            useEffect(() => {
+                setSelectedType(null);
+                setCqFilter('full');
             }, [topicId, chapterId, subjectId]);
 
             if (questions.length === 0) return null;
@@ -380,19 +386,50 @@ export const studentComponents = `
             });
             const expandedCqParts = cqScenarioQuestions.flatMap(expandCqParts);
             const combinedCqParts = [...cqPartQuestions, ...expandedCqParts];
-            const groupedCqParts = partOrder
-                .map(part => ({ part, items: combinedCqParts.filter(q => q.metadata?.part === part) }))
-                .filter(group => group.items.length > 0);
+            const cqAvailable = cqScenarioQuestions.length > 0 || combinedCqParts.length > 0;
+            const availableTypes = [
+                ...(cqAvailable ? [{ key: 'CQ', label: 'CQ', count: cqScenarioQuestions.length + combinedCqParts.length, color: 'bg-blue-600' }] : []),
+                ...(mcqQuestions.length > 0 ? [{ key: 'MCQ', label: 'MCQ', count: mcqQuestions.length, color: 'bg-emerald-600' }] : [])
+            ];
 
-            if (groupedCqParts.length === 0 && mcqQuestions.length === 0) return null;
+            if (availableTypes.length === 0) return null;
+
+            const cqFilteredParts = cqFilter === 'full'
+                ? []
+                : combinedCqParts.filter(q => q.metadata?.part === cqFilter);
 
             return (
                 <div className="space-y-8">
-                    {mcqQuestions.length > 0 && (
+                    {!selectedType && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {availableTypes.map(type => (
+                                <button
+                                    key={type.key}
+                                    onClick={() => setSelectedType(type.key)}
+                                    className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={`inline-flex items-center justify-center w-11 h-11 rounded-full ${type.color} text-white text-lg font-bold shadow`}>
+                                            {type.label}
+                                        </span>
+                                        <div className="text-left">
+                                            <div className="text-sm font-semibold text-gray-900">{type.label} Questions</div>
+                                            <div className="text-xs text-gray-500">{type.count} available</div>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-semibold text-blue-600">View</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {selectedType === 'MCQ' && (
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white text-lg font-bold shadow">MCQ</span>
-                                <h3 className="text-lg font-bold text-gray-900">Multiple Choice Questions</h3>
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white text-lg font-bold shadow">MCQ</span>
+                                    <h3 className="text-lg font-bold text-gray-900">Multiple Choice Questions</h3>
+                                </div>
+                                <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
                             </div>
                             <div className="space-y-4">
                                 {mcqQuestions.map((q, index) => (
@@ -415,41 +452,95 @@ export const studentComponents = `
                             </div>
                         </div>
                     )}
-                    {groupedCqParts.map(group => (
-                        <div key={group.part}>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white text-2xl font-bold shadow">{group.part}</span>
-                                <h3 className="text-lg font-bold text-gray-900">Part {group.part}</h3>
+                    {selectedType === 'CQ' && cqAvailable && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white text-lg font-bold shadow">CQ</span>
+                                    <h3 className="text-lg font-bold text-gray-900">Creative Questions</h3>
+                                </div>
+                                <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
                             </div>
-                            <div className="space-y-4">
-                                {group.items.map((q, index) => {
-                                    const isLinked = q.metadata?.linked;
-                                    const scenarioText = q.metadata?.scenario;
-                                    return (
-                                        <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
-                                            {isLinked && scenarioText ? (
-                                                <div className="flex items-start gap-2 text-sm text-gray-900">
-                                                    <span className="font-bold text-gray-700">{index + 1}.</span>
-                                                    <div className="space-y-1">
-                                                        <div className="whitespace-pre-line">
-                                                            <span className="font-semibold text-gray-800">Scene:</span> {scenarioText}
-                                                        </div>
-                                                        <div className="whitespace-pre-line">{q.question_text}</div>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setCqFilter('full')}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-full border ${cqFilter === 'full' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                                >
+                                    Full CQ
+                                </button>
+                                {partOrder.map(part => (
+                                    <button
+                                        key={part}
+                                        onClick={() => setCqFilter(part)}
+                                        className={`px-3 py-1.5 text-xs font-bold rounded-full border ${cqFilter === part ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                                    >
+                                        {part}
+                                    </button>
+                                ))}
+                            </div>
+                            {cqFilter === 'full' && (
+                                <div className="space-y-4">
+                                    {cqScenarioQuestions.map((q, index) => (
+                                        <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-3">
+                                            <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                <span className="font-bold text-gray-700">{index + 1}.</span>
+                                                <div className="whitespace-pre-line">
+                                                    <span className="font-semibold text-gray-800">Ques:</span> {q.question_text}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2 pl-6 text-sm text-gray-700">
+                                                {(q.options || []).map((opt, idx) => (
+                                                    <div key={opt.id || idx} className="flex items-start gap-2">
+                                                        <span className="font-bold text-gray-500">{opt.id || partOrder[idx] || idx + 1}.</span>
+                                                        <span className="whitespace-pre-line">{opt.text}</span>
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-start gap-2 text-sm text-gray-900">
-                                                    <span className="font-bold text-gray-700">{index + 1}.</span>
-                                                    <span className="whitespace-pre-line">{q.question_text}</span>
-                                                </div>
-                                            )}
-                                            <div className="text-sm text-gray-700 whitespace-pre-line pl-6"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    ))}
+                                    {cqScenarioQuestions.length === 0 && (
+                                        <div className="text-sm text-gray-500">No full CQ available.</div>
+                                    )}
+                                </div>
+                            )}
+                            {cqFilter !== 'full' && (
+                                <div className="space-y-4">
+                                    {cqFilteredParts.map((q, index) => {
+                                        const isLinked = q.metadata?.linked;
+                                        const scenarioText = q.metadata?.scenario;
+                                        return (
+                                            <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
+                                                {isLinked && scenarioText ? (
+                                                    <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                        <span className="font-bold text-gray-700">{index + 1}.</span>
+                                                        <div className="space-y-1">
+                                                            <div className="whitespace-pre-line">
+                                                                <span className="font-semibold text-gray-800">Scene:</span> {scenarioText}
+                                                            </div>
+                                                            <div className="whitespace-pre-line">
+                                                                <span className="font-semibold text-gray-800">Ques:</span> {q.question_text}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                        <span className="font-bold text-gray-700">{index + 1}.</span>
+                                                        <span className="whitespace-pre-line">
+                                                            <span className="font-semibold text-gray-800">Ques:</span> {q.question_text}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="text-sm text-gray-700 whitespace-pre-line pl-6"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                            </div>
+                                        );
+                                    })}
+                                    {cqFilteredParts.length === 0 && (
+                                        <div className="text-sm text-gray-500">No questions available for this part.</div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    ))}
+                    )}
                 </div>
             );
         }
