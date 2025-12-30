@@ -511,7 +511,7 @@ export const adminComponents = `
                 const isLinked = opt.connected !== false;
                 return {
                     ...cqQuestion,
-                    id: `${cqQuestion.id}-${opt.id || idx}`,
+                    id: `\${cqQuestion.id}-\${opt.id || idx}`,
                     type: 'CQ-Part',
                     question_text: opt.text,
                     answer: opt.answer,
