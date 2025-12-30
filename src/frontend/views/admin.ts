@@ -443,10 +443,12 @@ export const adminComponents = `
             const [activeTab, setActiveTab] = useState('questions');
             const [isQModalOpen, setIsQModalOpen] = useState(false);
             const [isSavingNote, setIsSavingNote] = useState(false);
+            const [partFilter, setPartFilter] = useState('all');
+            const [editingQuestion, setEditingQuestion] = useState(null);
 
             const url = topic.isChapter ? \`/api/questions?chapter_id=\${topic.realId}\` : \`/api/questions?topic_id=\${topic.id}\`;
             const loadQs = async () => { setQuestions(await adminApi.get(url)); };
-            useEffect(() => { loadQs(); }, [topic]);
+            useEffect(() => { loadQs(); setPartFilter('all'); }, [topic]);
             
             const saveNotes = async () => { 
                 if(topic.isChapter) { alert('Notes not supported for chapters directly yet.'); return; }
@@ -466,8 +468,23 @@ export const adminComponents = `
                     alert(error?.message || 'Unable to save question. Please try again.');
                 }
             };
+
+            const updateQuestion = async (data) => {
+                await adminApi.put('/api/questions', data);
+                setEditingQuestion(null);
+                await loadQs();
+            };
             
             const delQuestion = async (id) => { if(confirm('Delete question?')) { await adminApi.del('question', id); await loadQs(); } };
+
+            const partOrder = ['ক', 'খ', 'গ', 'ঘ'];
+            const cqPartQuestions = questions.filter(q => q.type === 'CQ-Part');
+            const otherQuestions = questions.filter(q => q.type !== 'CQ-Part');
+            const filteredCqParts = partFilter === 'all' ? cqPartQuestions : cqPartQuestions.filter(q => q.metadata?.part === partFilter);
+            const groupedCqParts = partOrder
+                .map(part => ({ part, items: filteredCqParts.filter(q => q.metadata?.part === part) }))
+                .filter(group => group.items.length > 0);
+            const hasCqParts = cqPartQuestions.length > 0;
 
             return (
                 <div className="w-full h-full flex flex-col">
@@ -485,16 +502,189 @@ export const adminComponents = `
                         </div>
                     ) : (
                         <div className="flex-1 border border-gray-300 bg-white flex flex-col">
-                            <div className="p-2 border-b border-gray-300 bg-gray-100 flex justify-between items-center"><span className="font-bold text-xs uppercase text-gray-600">Question Bank</span><button onClick={() => setIsQModalOpen(true)} className="bg-blue-600 text-white text-xs px-2 py-1 hover:bg-blue-700">Add Question</button></div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-2">{questions.map((q, i) => <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group"><div className="flex justify-between mb-1"><span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span><div className="flex gap-2"><span className="text-[10px] text-gray-500">{q.metadata?.board}</span><button onClick={() => delQuestion(q.id)} className="text-red-500 hover:underline text-xs">Delete</button></div></div><p className="text-sm text-gray-800">{q.question_text}</p></div>)}</div>
+                            <div className="p-2 border-b border-gray-300 bg-gray-100 flex justify-between items-center">
+                                <span className="font-bold text-xs uppercase text-gray-600">Question Bank</span>
+                                <button onClick={() => setIsQModalOpen(true)} className="bg-blue-600 text-white text-xs px-2 py-1 hover:bg-blue-700">Add Question</button>
+                            </div>
+                            {hasCqParts && (
+                                <div className="px-4 py-2 border-b border-gray-200 bg-white flex flex-wrap items-center gap-2 text-xs">
+                                    <span className="font-bold text-gray-500 uppercase">Filter:</span>
+                                    {['all', ...partOrder].map(part => (
+                                        <button
+                                            key={part}
+                                            onClick={() => setPartFilter(part)}
+                                            className={\`px-2 py-1 border rounded \${partFilter === part ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}\`}
+                                        >
+                                            {part === 'all' ? 'All' : part}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                                {groupedCqParts.map(group => (
+                                    <div key={group.part} className="space-y-2">
+                                        <div className="text-xs font-bold uppercase text-gray-500">Part {group.part}</div>
+                                        {group.items.map(q => (
+                                            <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group">
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                                    <div className="flex gap-2 items-center">
+                                                        <span className="text-[10px] text-gray-500">{q.metadata?.board}</span>
+                                                        <button onClick={() => setEditingQuestion(q)} className="text-xs text-blue-600 hover:underline">Edit</button>
+                                                        <button onClick={() => delQuestion(q.id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-800 whitespace-pre-wrap">{q.question_text}</p>
+                                                <div className="mt-2 text-xs text-gray-600"><span className="font-bold">Answer:</span> {q.answer || '—'}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                                {otherQuestions.map(q => (
+                                    <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group">
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                            <div className="flex gap-2 items-center">
+                                                <span className="text-[10px] text-gray-500">{q.metadata?.board}</span>
+                                                <button onClick={() => setEditingQuestion(q)} className="text-xs text-blue-600 hover:underline">Edit</button>
+                                                <button onClick={() => delQuestion(q.id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{q.question_text}</p>
+                                        {q.type === 'MCQ' && (
+                                            <div className="mt-2 text-xs text-gray-600"><span className="font-bold">Answer:</span> {q.answer || '—'}</div>
+                                        )}
+                                        {(q.type === 'CQ' || q.type === 'WRITTEN') && (
+                                            <div className="mt-2 space-y-1 text-xs text-gray-600">
+                                                {(q.options || []).map((opt, idx) => (
+                                                    <div key={idx}><span className="font-bold">{opt.id}.</span> {opt.answer || '—'}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {groupedCqParts.length === 0 && otherQuestions.length === 0 && (
+                                    <div className="text-sm text-gray-400 text-center py-10">No questions yet.</div>
+                                )}
+                            </div>
                         </div>
                     )}
                     {isQModalOpen && <CreateCQModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} allChapters={chapters} />}
+                    {editingQuestion && <EditQuestionModal question={editingQuestion} onClose={() => setEditingQuestion(null)} onSave={updateQuestion} />}
                 </div>
             );
         }
 
         /* --- ADVANCED CQ MODAL (Refined for Universal Written) --- */
+        function EditQuestionModal({ question, onClose, onSave }) {
+            const [questionText, setQuestionText] = useState(question.question_text || '');
+            const [answer, setAnswer] = useState(question.answer || '');
+            const [metadata, setMetadata] = useState(question.metadata || {});
+            const [options, setOptions] = useState(question.options || []);
+            const [part, setPart] = useState(question.metadata?.part || 'ক');
+
+            const updateOption = (idx, field, value) => {
+                const updated = [...options];
+                if (typeof updated[idx] === 'object') {
+                    updated[idx] = { ...updated[idx], [field]: value };
+                } else {
+                    updated[idx] = value;
+                }
+                setOptions(updated);
+            };
+
+            const handleMcqOptionChange = (idx, value) => {
+                const updated = [...options];
+                const prev = updated[idx];
+                updated[idx] = value;
+                setOptions(updated);
+                if (answer === prev) {
+                    setAnswer(value);
+                }
+            };
+
+            const addMcqOption = () => setOptions([...options, '']);
+            const removeMcqOption = (idx) => setOptions(options.filter((_, i) => i !== idx));
+
+            const handleSave = () => {
+                const finalMetadata = question.type === 'CQ-Part'
+                    ? { ...metadata, part }
+                    : { ...metadata };
+                onSave({
+                    id: question.id,
+                    question_text: questionText,
+                    answer,
+                    options,
+                    metadata: finalMetadata
+                });
+            };
+
+            return (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white w-[720px] max-h-[90vh] overflow-y-auto border border-gray-400 shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50">
+                            <h3 className="font-bold text-gray-800">Edit Question</h3>
+                            <button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="text-xs font-bold uppercase text-blue-600">{question.type}</div>
+                            {question.type === 'CQ-Part' && (
+                                <div className="flex gap-2">
+                                    {['ক', 'খ', 'গ', 'ঘ'].map(p => (
+                                        <button key={p} onClick={() => setPart(p)} className={\`w-10 h-10 border rounded font-bold \${part === p ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'}\`}>{p}</button>
+                                    ))}
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Question Text</label>
+                                <textarea className="w-full border p-3 text-sm h-28" value={questionText} onChange={e => setQuestionText(e.target.value)}></textarea>
+                            </div>
+                            {question.type === 'MCQ' && (
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold mb-1">Options</label>
+                                    {options.map((opt, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                            <span className="text-xs font-bold w-4">{String.fromCharCode(65 + idx)}</span>
+                                            <input className="flex-1 border p-1.5 text-sm" value={opt} onChange={e => handleMcqOptionChange(idx, e.target.value)} />
+                                            <input type="radio" name="mcq-edit-ans" checked={answer === opt && opt !== ''} onChange={() => setAnswer(opt)} />
+                                            {options.length > 2 && (
+                                                <button onClick={() => removeMcqOption(idx)} className="text-red-500 text-xs">Remove</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button onClick={addMcqOption} className="text-xs font-bold text-blue-600 hover:underline"><i className="fas fa-plus mr-1"></i>Add option</button>
+                                </div>
+                            )}
+                            {question.type === 'CQ-Part' && (
+                                <div>
+                                    <label className="block text-xs font-bold mb-1">Answer / Solution</label>
+                                    <textarea className="w-full border p-3 text-sm h-24" value={answer} onChange={e => setAnswer(e.target.value)}></textarea>
+                                </div>
+                            )}
+                            {(question.type === 'CQ' || question.type === 'WRITTEN') && (
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold mb-1">Sub-Questions</label>
+                                    {options.map((opt, idx) => (
+                                        <div key={idx} className="flex gap-2 items-start">
+                                            <span className="font-bold text-sm w-6 pt-2 text-center">{opt.id}.</span>
+                                            <div className="flex-1 space-y-1">
+                                                <input className="w-full border p-2 text-sm" value={opt.text} onChange={e => updateOption(idx, 'text', e.target.value)} />
+                                                <input className="w-full border p-2 text-xs bg-gray-50" value={opt.answer} onChange={e => updateOption(idx, 'answer', e.target.value)} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3">
+                            <button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button>
+                            <button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         function CreateCQModal({ onClose, onSave, allChapters }) {
             const [mode, setMode] = useState('full'); // full, single, written
             const [scenario, setScenario] = useState('');
@@ -663,4 +853,3 @@ export const adminComponents = `
             return <div className="max-w-xl bg-white p-6 border border-gray-300"><h2 className="text-lg font-bold mb-4">Danger Zone</h2><Button variant="danger" size="sm" onClick={handleReset}>Reset Database</Button></div>;
         }
 `;
-
