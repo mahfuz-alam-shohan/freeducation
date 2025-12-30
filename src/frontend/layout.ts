@@ -6,7 +6,6 @@ import { authComponents } from "./views/auth";
 import { studentComponents } from "./views/student";
 import { adminComponents } from "./views/admin";
 import { mainApp } from "./app";
-import { routerUtilities } from "./routing";
 
 export function renderAppHtml(initialView: string) {
   return `
@@ -27,15 +26,10 @@ export function renderAppHtml(initialView: string) {
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        html, body, #root { min-height: 100%; }
-        html { -webkit-text-size-adjust: 100%; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 640px) {
-            input, select, textarea { font-size: 16px; }
-        }
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -45,54 +39,12 @@ export function renderAppHtml(initialView: string) {
 </head>
 <body>
     <div id="root"></div>
-    <div id="app-error" style="display:none; position:fixed; inset:0; background:#0f172a; color:#f8fafc; padding:24px; overflow:auto; z-index:9999;">
-        <h1 style="font-size:20px; font-weight:700; margin-bottom:12px;">Freeducation UI Error</h1>
-        <pre id="app-error-message" style="white-space:pre-wrap; font-size:14px; line-height:1.5;"></pre>
-    </div>
 
     <script>
         window.__INITIAL_VIEW = ${JSON.stringify(initialView)};
-        window.__reportAppError = function(message) {
-            var container = document.getElementById('app-error');
-            var messageEl = document.getElementById('app-error-message');
-            if (!container || !messageEl) return;
-            messageEl.textContent = message || 'Unknown error';
-            container.style.display = 'block';
-        };
-        window.addEventListener('error', function(event) {
-            var error = event.error || {};
-            var message = error.stack || error.message || event.message || String(event);
-            window.__reportAppError(message);
-        });
-        window.addEventListener('unhandledrejection', function(event) {
-            var reason = event.reason || {};
-            var message = reason.stack || reason.message || String(reason);
-            window.__reportAppError(message);
-        });
     </script>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        class ErrorBoundary extends React.Component {
-            constructor(props) {
-                super(props);
-                this.state = { hasError: false, error: null };
-            }
-            static getDerivedStateFromError(error) {
-                return { hasError: true, error };
-            }
-            componentDidCatch(error) {
-                const message = error && (error.stack || error.message || String(error));
-                if (window.__reportAppError) {
-                    window.__reportAppError(message);
-                }
-            }
-            render() {
-                if (this.state.hasError) {
-                    return null;
-                }
-                return this.props.children;
-            }
-        }
 
         // --- SHARED UI COMPONENTS ---
         ${uiComponents}
@@ -107,18 +59,11 @@ export function renderAppHtml(initialView: string) {
         ${studentComponents}
         ${adminComponents}
 
-        // --- ROUTING UTILITIES ---
-        ${routerUtilities}
-
         // --- MAIN APP ---
         ${mainApp}
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-            <ErrorBoundary>
-                <App />
-            </ErrorBoundary>
-        );
+        root.render(<App />);
     </script>
 </body>
 </html>
