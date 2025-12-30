@@ -191,21 +191,18 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
               query += " WHERE topic_id = ?";
               params.push(topic_id);
           } else if (chapter_id) {
-              // Fetch by chapter (using metadata search as fallback if no direct link)
-              // Since we don't have a strict chapter_id column in questions schema, we fetch all and filter or rely on the caller to provide topic_id if possible.
-              // BUT for direct chapter questions, we insert with topic_id = 0. So we can fetch WHERE topic_id = 0 AND ... wait, we store chapter_id in metadata.
-              // SQLite D1 JSON filtering is limited.
-              // WORKAROUND: We will rely on the frontend passing the correct query or just fetch all for that chapter if possible.
-              // Actually, simplest is to just return empty here if no topic_id, but the user wants direct chapter questions.
-              // Let's assume we use a special topic_id '0' for direct questions and rely on client-side filtering or just return none for now until schema update.
-              // BETTER: Just return all questions for now if no topic_id, or rely on the frontend to filter.
-              // Safe fallback:
-              return Response.json([], { headers: corsHeaders });
+              query += " WHERE topic_id = ?";
+              params.push(0);
           }
 
           if (params.length > 0) {
               const questions = await env.DB.prepare(query).bind(...params).all();
-              return Response.json(questions.results.map(parseQuestion), { headers: corsHeaders });
+              const parsedQuestions = questions.results.map(parseQuestion);
+              if (chapter_id && !topic_id) {
+                const filtered = parsedQuestions.filter((q) => String(q.metadata?.chapter_id) === String(chapter_id));
+                return Response.json(filtered, { headers: corsHeaders });
+              }
+              return Response.json(parsedQuestions, { headers: corsHeaders });
           }
           return Response.json([], { headers: corsHeaders });
         }
@@ -270,5 +267,4 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
   return null;
 }
-
 
