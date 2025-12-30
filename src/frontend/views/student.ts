@@ -185,105 +185,152 @@ export const studentComponents = `
         /* --- SUBJECT VIEW (Chapters & Topics) --- */
         function StudentSubjectView({ subject, onBack }) {
             const [chapters, setChapters] = useState([]);
+            const [activeChapter, setActiveChapter] = useState(null); // Used on Desktop as selected sidebar item
             const [activeTopic, setActiveTopic] = useState(null);
             const [topics, setTopics] = useState([]);
-            const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+            
+            // On load, fetch chapters
             useEffect(() => { studentApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
 
-            const loadTopics = async (chapter) => {
+            const loadTopicsForChapter = async (chapter) => {
+                setActiveChapter(chapter);
                 const data = await studentApi.get(\`/api/topics?chapter_id=\${chapter.id}\`);
                 setTopics(data);
                 if (data.length > 0) setActiveTopic(data[0]);
                 else setActiveTopic(null);
-                setMobileMenuOpen(false);
             };
 
+            // If a chapter is selected (Desktop logic or Mobile drill-down), show content
+            // We differentiate view based on whether 'activeChapter' is set.
+            // On mobile, if no chapter selected, we show list. If selected, we show content.
+            // On desktop, we show split view (Sidebar + Content).
+
+            // Mobile: If chapter selected, show content view.
+            if (activeChapter && window.innerWidth < 768) {
+                return (
+                    <StudentTopicView 
+                        chapter={activeChapter} 
+                        topics={topics} 
+                        activeTopic={activeTopic} 
+                        setActiveTopic={setActiveTopic} 
+                        onBack={() => { setActiveChapter(null); setActiveTopic(null); }} 
+                    />
+                );
+            }
+
             return (
-                <div className="flex h-screen bg-white overflow-hidden font-sans text-gray-800">
-                    {/* Sidebar (Responsive) */}
-                    <div className={\`
-                        fixed inset-0 z-40 bg-white md:static md:z-auto md:w-80 md:flex-shrink-0 border-r border-gray-200 flex flex-col transition-transform duration-300
-                        \${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                    \`}>
-                        <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-                            <div className="flex items-center overflow-hidden">
-                                <button onClick={onBack} className="mr-3 text-gray-500 hover:text-black transition-colors"><i className="fas fa-arrow-left"></i></button>
-                                <h2 className="font-bold text-sm text-gray-800 truncate" title={subject.name}>{subject.name}</h2>
-                            </div>
-                            <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-gray-500 p-2"><i className="fas fa-times"></i></button>
+                <div className="flex flex-col h-screen bg-white font-sans text-gray-800 animate-fade-in">
+                    {/* Header */}
+                    <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white z-10">
+                        <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
+                        <div>
+                            <h2 className="font-bold text-gray-900">{subject.name}</h2>
+                            <p className="text-xs text-gray-500 hidden md:block">Select a chapter to begin.</p>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-0">
-                            {chapters.length === 0 && <div className="p-6 text-center text-xs text-gray-400">No chapters found.</div>}
-                            {chapters.map((ch, idx) => (
-                                <div key={ch.id} className="border-b border-gray-100 last:border-0">
-                                    <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 mt-2">Chapter {ch.order_num}</div>
-                                    <button 
-                                        onClick={() => loadTopics(ch)} 
-                                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors block focus:outline-none focus:bg-blue-50"
-                                    >
-                                        {ch.title}
-                                    </button>
+                    </div>
+
+                    <div className="flex-1 flex overflow-hidden">
+                        {/* Desktop Sidebar (Visible md+) */}
+                        <div className="hidden md:flex md:w-80 border-r border-gray-200 flex-col bg-gray-50 overflow-y-auto">
+                            <div className="p-4 font-bold text-xs text-gray-400 uppercase tracking-wider">Chapters</div>
+                            {chapters.map((ch) => (
+                                <button 
+                                    key={ch.id} 
+                                    onClick={() => loadTopicsForChapter(ch)}
+                                    className={\`w-full text-left px-6 py-3 text-sm font-medium border-l-4 transition-all \${activeChapter?.id === ch.id ? 'bg-white border-blue-600 text-blue-700 shadow-sm' : 'border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900'}\`}
+                                >
+                                    {ch.title}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 flex flex-col min-w-0 bg-white relative">
+                            {/* Mobile Chapter List (Visible only on Mobile when no chapter selected) */}
+                            <div className="md:hidden flex-1 overflow-y-auto p-4">
+                                <h3 className="font-bold text-lg mb-4 text-gray-800">Chapters</h3>
+                                <div className="space-y-3">
+                                    {chapters.length === 0 && <div className="text-center text-gray-400 py-8">No chapters found.</div>}
+                                    {chapters.map((ch) => (
+                                        <div 
+                                            key={ch.id}
+                                            onClick={() => loadTopicsForChapter(ch)}
+                                            className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 active:bg-gray-50 cursor-pointer transition-all flex justify-between items-center"
+                                        >
+                                            <div>
+                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Chapter {ch.order_num}</span>
+                                                <span className="font-medium text-gray-900">{ch.title}</span>
+                                            </div>
+                                            <i className="fas fa-chevron-right text-gray-300"></i>
+                                        </div>
+                                    ))}
                                 </div>
+                            </div>
+
+                            {/* Desktop Content Placeholder or Actual Content */}
+                            <div className="hidden md:flex flex-1 flex-col h-full">
+                                {activeChapter ? (
+                                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={activeChapter.title} />
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-center p-10 text-gray-400">
+                                        <i className="fas fa-book-reader text-5xl mb-4 opacity-20"></i>
+                                        <p>Select a chapter from the sidebar to view contents.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        /* --- MOBILE TOPIC VIEW (Drill Down) --- */
+        function StudentTopicView({ chapter, topics, activeTopic, setActiveTopic, onBack }) {
+            return (
+                <div className="flex flex-col h-screen bg-white font-sans animate-fade-in fixed inset-0 z-50">
+                    <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white">
+                        <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
+                        <h2 className="font-bold text-gray-900 truncate">{chapter.title}</h2>
+                    </div>
+                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={chapter.title} />
+                </div>
+            );
+        }
+
+        /* --- SHARED CONTENT COMPONENT --- */
+        function StudentTopicContent({ topics, activeTopic, setActiveTopic, chapterTitle }) {
+            if (topics.length === 0) return <div className="p-10 text-center text-gray-400">No topics found in this chapter.</div>;
+            if (!activeTopic) return null;
+
+            return (
+                <div className="flex-1 flex flex-col min-h-0">
+                    {/* Topic Tabs */}
+                    <div className="flex-shrink-0 border-b border-gray-200 bg-white z-10 px-4 pt-2 overflow-x-auto scrollbar-hide">
+                        <div className="flex space-x-4">
+                            {topics.map((t, idx) => (
+                                <button 
+                                    key={t.id}
+                                    onClick={() => setActiveTopic(t)}
+                                    className={\`pb-3 border-b-2 whitespace-nowrap text-sm font-medium transition-colors \${activeTopic.id === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}\`}
+                                >
+                                    {idx + 1}. {t.title}
+                                </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Overlay for Mobile */}
-                    {mobileMenuOpen && <div className="fixed inset-0 bg-black/20 z-30 md:hidden backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>}
-
-                    {/* Main Content Area */}
-                    <div className="flex-1 flex flex-col h-full min-w-0 bg-white">
-                        {/* Mobile Header Trigger */}
-                        <div className="md:hidden p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-shrink-0">
-                            <button onClick={() => setMobileMenuOpen(true)} className="flex items-center text-sm font-bold text-gray-800">
-                                <i className="fas fa-bars mr-3 text-gray-500"></i> {subject.name}
-                            </button>
-                            <button onClick={onBack} className="text-gray-400"><i className="fas fa-arrow-left"></i></button>
-                        </div>
-
-                        {/* Content Scrollable */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-10 lg:p-12">
-                            {topics.length > 0 && activeTopic ? (
-                                <div className="max-w-4xl mx-auto w-full">
-                                    {/* Topic Tabs */}
-                                    <div className="flex overflow-x-auto gap-2 mb-8 pb-1 scrollbar-hide border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-10 pt-2">
-                                        {topics.map((t, idx) => (
-                                            <button 
-                                                key={t.id}
-                                                onClick={() => setActiveTopic(t)}
-                                                className={\`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-t-lg border-b-2 transition-all \${activeTopic.id === t.id ? 'border-blue-600 text-blue-700 bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'}\`}
-                                            >
-                                                {idx + 1}. {t.title}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <div className="animate-fade-in">
-                                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight">{activeTopic.title}</h1>
-                                        
-                                        <div className="prose prose-lg max-w-none text-gray-800 leading-relaxed font-serif">
-                                            {activeTopic.content ? (
-                                                <div className="whitespace-pre-wrap">{activeTopic.content}</div>
-                                            ) : (
-                                                <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 italic text-center">No notes available for this topic.</div>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-16 pt-10 border-t border-gray-200">
-                                            <InteractiveQuestions topicId={activeTopic.id} />
-                                        </div>
-                                    </div>
+                    {/* Scrollable Body */}
+                    <div className="flex-1 overflow-y-auto p-4 md:p-10">
+                        <div className="max-w-3xl mx-auto">
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">{activeTopic.title}</h1>
+                            <article className="prose prose-gray max-w-none mb-12">
+                                <div className="whitespace-pre-wrap leading-relaxed text-gray-800">
+                                    {activeTopic.content || "No notes available."}
                                 </div>
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-300">
-                                        <i className="fas fa-book-reader text-4xl"></i>
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-800 mb-2">Ready to Start?</h3>
-                                    <p className="text-gray-500 max-w-md mx-auto">Select a chapter from the sidebar menu to begin browsing topics and questions.</p>
-                                </div>
-                            )}
+                            </article>
+                            <div className="border-t border-gray-100 pt-8">
+                                <InteractiveQuestions topicId={activeTopic.id} />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -309,19 +356,19 @@ export const studentComponents = `
             return (
                 <div className="space-y-8">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
-                        <h3 className="text-2xl font-bold text-gray-900">Practice Questions</h3>
+                        <div className="h-6 w-1 bg-blue-600 rounded-full"></div>
+                        <h3 className="text-xl font-bold text-gray-900">Practice Questions</h3>
                     </div>
                     
                     {questions.map((q, idx) => (
-                        <div key={q.id} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                            <div className="bg-gray-50 px-6 py-3 border-b border-gray-100 flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Question {idx + 1}</span>
-                                <span className="text-[10px] font-mono text-gray-400">{q.metadata?.board} {q.metadata?.year}</span>
+                        <div key={q.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                            <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+                                <span className="text-xs font-bold text-gray-500 uppercase">Q{idx + 1}</span>
+                                <span className="text-[10px] font-mono text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">{q.metadata?.board || 'N/A'}</span>
                             </div>
                             
-                            <div className="p-6 md:p-8">
-                                <p className="font-medium text-lg text-gray-900 mb-6 leading-relaxed">{q.question_text}</p>
+                            <div className="p-5 md:p-6">
+                                <p className="font-medium text-gray-900 mb-5 leading-relaxed">{q.question_text}</p>
 
                                 {q.type === 'MCQ' && q.options ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -330,17 +377,17 @@ export const studentComponents = `
                                             const isCorrect = opt === q.answer;
                                             const hasAnswered = revealed[q.id] !== undefined;
                                             
-                                            let btnClass = "w-full text-left p-4 rounded-lg border-2 text-sm transition-all relative flex items-center ";
-                                            if (!hasAnswered) btnClass += "bg-white border-gray-100 hover:border-blue-300 hover:bg-blue-50 cursor-pointer";
-                                            else if (isCorrect) btnClass += "bg-green-50 border-green-500 text-green-900 shadow-sm";
+                                            let btnClass = "w-full text-left p-3 rounded border text-sm transition-all relative flex items-center ";
+                                            if (!hasAnswered) btnClass += "bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
+                                            else if (isCorrect) btnClass += "bg-green-50 border-green-500 text-green-900 font-medium";
                                             else if (isSelected) btnClass += "bg-red-50 border-red-400 text-red-900";
-                                            else btnClass += "bg-gray-50 border-transparent opacity-50";
+                                            else btnClass += "bg-gray-50 border-gray-100 text-gray-400 opacity-60";
 
                                             return (
                                                 <button key={i} onClick={() => handleMCQSelect(q.id, opt)} className={btnClass} disabled={hasAnswered}>
-                                                    <span className={\`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold mr-3 \${hasAnswered && isCorrect ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-500'}\`}>{String.fromCharCode(65+i)}</span>
-                                                    <span className="font-medium">{opt}</span>
-                                                    {hasAnswered && isCorrect && <i className="fas fa-check absolute right-4 text-green-600"></i>}
+                                                    <span className="w-6 font-bold mr-2 text-gray-400">{String.fromCharCode(65+i)}.</span>
+                                                    <span className="flex-1">{opt}</span>
+                                                    {hasAnswered && isCorrect && <i className="fas fa-check text-green-600"></i>}
                                                 </button>
                                             );
                                         })}
@@ -351,11 +398,11 @@ export const studentComponents = `
                                             onClick={() => setRevealed(p => ({...p, [q.id]: !p[q.id]}))} 
                                             className="text-blue-600 text-sm font-bold hover:underline flex items-center"
                                         >
-                                            {revealed[q.id] ? <><i className="fas fa-eye-slash mr-2"></i> Hide Answer</> : <><i className="fas fa-eye mr-2"></i> Show Answer</>}
+                                            {revealed[q.id] ? 'Hide Answer' : 'Show Answer'}
                                         </button>
                                         {revealed[q.id] && (
-                                            <div className="mt-4 p-4 bg-green-50 border border-green-100 rounded-lg text-green-900 text-sm animate-fade-in">
-                                                <span className="font-bold block mb-1">Correct Answer:</span> {q.answer}
+                                            <div className="mt-3 p-4 bg-green-50 border-l-4 border-green-500 text-green-900 text-sm">
+                                                <span className="font-bold block mb-1">Answer:</span> {q.answer}
                                             </div>
                                         )}
                                     </div>
