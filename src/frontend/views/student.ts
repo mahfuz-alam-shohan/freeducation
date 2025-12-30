@@ -373,11 +373,11 @@ export const studentComponents = `
                             </div>
                             
                             <div className="p-5 md:p-6">
-                                {q.type === 'CQ' || q.type === 'CQ-Part' ? (
+                                {q.type === 'CQ' || q.type === 'CQ-Part' || q.type === 'WRITTEN' ? (
                                     <>
                                         {/* Scenario */}
                                         {q.question_text && (
-                                            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-300 text-gray-800 text-sm italic rounded-r">
+                                            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-300 text-gray-800 text-sm italic rounded-r leading-relaxed whitespace-pre-line">
                                                 {q.question_text}
                                             </div>
                                         )}
@@ -389,7 +389,7 @@ export const studentComponents = `
                                                 <div key={i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                                                     <p className="font-medium text-gray-900 text-sm mb-2">
                                                         <span className="font-bold mr-2 text-gray-500">{opt.id}.</span> 
-                                                        {q.type === 'CQ-Part' ? q.question_text : opt.text}
+                                                        {q.type === 'CQ-Part' ? '' : opt.text}
                                                     </p>
                                                     
                                                     {/* Toggle Answer Button */}
