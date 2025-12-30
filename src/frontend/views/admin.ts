@@ -128,7 +128,7 @@ export const adminComponents = `
                         <MobileNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => onNavigate({ section: 'settings' })} />
                     </div>
 
-                    <div className="flex-1 p-4 md:p-6 w-full overflow-x-hidden pb-24 md:pb-8 bg-slate-50">
+                    <div className="flex-1 p-3 sm:p-4 md:p-6 w-full overflow-x-hidden pb-24 md:pb-8 bg-slate-50">
                         <div className="max-w-[1800px] mx-auto">
                             {activeTab === 'structure' && <ClassStructureManager route={route} onNavigate={onNavigate} />}
                             {activeTab === 'content' && <ContentManagerLanding route={route} onNavigate={onNavigate} />}
@@ -281,7 +281,7 @@ export const adminComponents = `
                 <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex items-center mb-4 pb-2 border-b border-gray-300">
                         <button onClick={onBack} className="mr-2 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
-                        <h2 className="text-lg font-bold">{cls.name} / Structure</h2>
+                        <h2 className="text-base sm:text-lg font-bold truncate">{cls.name} / Structure</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -363,7 +363,7 @@ export const adminComponents = `
             return (
                 <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{subject.name} / Chapters</h2></div>
+                        <div className="flex items-center min-w-0"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-base sm:text-lg font-bold truncate">{subject.name} / Chapters</h2></div>
                         <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
                     </div>
                     <div className="border border-gray-300 bg-white">
@@ -400,7 +400,7 @@ export const adminComponents = `
             return (
                 <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{chapter.title} / Topics</h2></div>
+                        <div className="flex items-center min-w-0"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-base sm:text-lg font-bold truncate">{chapter.title} / Topics</h2></div>
                         <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
                     </div>
                     <div className="border border-gray-300 bg-white">
@@ -485,7 +485,7 @@ export const adminComponents = `
 
             return (
                 <div className="w-full max-w-[1800px] mx-auto">
-                    <div className="flex items-center mb-4 pb-2 border-b border-gray-300"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{cls.name} / Select Subject</h2></div>
+                    <div className="flex items-center mb-4 pb-2 border-b border-gray-300"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-base sm:text-lg font-bold truncate">{cls.name} / Select Subject</h2></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{subjects.map(s => <div key={s.id} onClick={() => onNavigate({ section: 'content', classId: cls.id, subjectId: s.id })} className="bg-white border border-gray-300 p-4 hover:border-blue-500 cursor-pointer"><h3 className="font-bold text-gray-800">{s.name}</h3><p className="text-xs text-gray-500 mt-1">Manage Content</p></div>)}</div>
                 </div>
             );
@@ -691,7 +691,7 @@ export const adminComponents = `
             return (
                 <div className="w-full h-full flex flex-col">
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-300">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title} {topic.isSubject ? '(Subject Questions)' : topic.isChapter ? '(Chapter Questions)' : ''}</h2></div>
+                        <div className="flex items-center min-w-0"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-base sm:text-lg font-bold truncate">{topic.title} <span className="hidden sm:inline">{topic.isSubject ? '(Subject Questions)' : topic.isChapter ? '(Chapter Questions)' : ''}</span></h2></div>
                         <div className="flex border border-gray-300">
                             {!topic.isChapter && !topic.isSubject && <button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button>}
                             <button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questionCount})</button>

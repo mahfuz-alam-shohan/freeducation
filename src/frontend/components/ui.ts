@@ -10,7 +10,7 @@ export const uiComponents = `
                     </svg>
                 </div>
                 <div className="flex flex-col leading-tight">
-                    <span className={\`text-lg sm:text-xl font-bold \${textClassName || 'text-gray-900'}\`}>Freeducation</span>
+                    <span className={\`text-base sm:text-lg font-bold \${textClassName || 'text-gray-900'}\`}>Freeducation</span>
                     {!compact && (
                         <span className={\`text-[11px] uppercase tracking-[0.2em] \${textClassName ? 'text-white/70' : 'text-gray-500'}\`}>{subtitle}</span>
                     )}
