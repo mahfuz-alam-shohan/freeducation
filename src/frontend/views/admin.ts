@@ -1,30 +1,13 @@
 export const adminComponents = `
         function AdminDashboard({ user, logout }) {
             const [activeTab, setActiveTab] = useState('classes');
-            const [sidebarOpen, setSidebarOpen] = useState(false);
 
             return (
                 <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-gray-50">
-                    {/* Mobile Header */}
-                    <div className="md:hidden bg-white border-b p-4 flex justify-between items-center sticky top-16 z-30 shadow-sm">
-                        <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                                {user.username[0].toUpperCase()}
-                            </div>
-                            <span className="font-bold text-gray-700 text-sm">{user.username}</span>
-                        </div>
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition">
-                            <i className={\`fas \${sidebarOpen ? 'fa-times' : 'fa-bars'}\`}></i>
-                        </button>
-                    </div>
-
-                    {/* Admin Sidebar - Sticky on Desktop */}
-                    <div className={\`
-                        fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out 
-                        md:translate-x-0 md:static md:sticky md:top-16 md:h-[calc(100vh-64px)] flex flex-col shadow-xl md:shadow-none
-                        \${sidebarOpen ? 'translate-x-0 top-[64px]' : '-translate-x-full'}
-                    \`}>
-                        <div className="p-6 hidden md:block border-b border-gray-100">
+                    
+                    {/* --- DESKTOP SIDEBAR (Hidden on Mobile) --- */}
+                    <div className="hidden md:flex flex-col w-72 bg-white border-r border-gray-200 sticky top-16 h-[calc(100vh-64px)]">
+                        <div className="p-6 border-b border-gray-100">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
                                     {user.username[0].toUpperCase()}
@@ -39,8 +22,8 @@ export const adminComponents = `
                         </div>
                         
                         <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-                            <AdminNavItem icon="fas fa-layer-group" label="Classes & Content" active={activeTab === 'classes'} onClick={() => { setActiveTab('classes'); setSidebarOpen(false); }} />
-                            <AdminNavItem icon="fas fa-cogs" label="System Settings" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }} />
+                            <AdminNavItem icon="fas fa-layer-group" label="Classes & Content" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
+                            <AdminNavItem icon="fas fa-cogs" label="System Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
                         </nav>
                         
                         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
@@ -50,11 +33,35 @@ export const adminComponents = `
                         </div>
                     </div>
 
-                    {/* Overlay for mobile sidebar */}
-                    {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden backdrop-blur-sm" onClick={() => setSidebarOpen(false)}></div>}
+                    {/* --- MOBILE BOTTOM NAVIGATION (Hidden on Desktop) --- */}
+                    {/* Added pb-4 to ensure safe distance from bottom gesture bar */}
+                    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 flex justify-around p-2 pb-5 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                        <MobileNavItem 
+                            icon="fas fa-layer-group" 
+                            label="Classes" 
+                            active={activeTab === 'classes'} 
+                            onClick={() => setActiveTab('classes')} 
+                        />
+                        <MobileNavItem 
+                            icon="fas fa-cogs" 
+                            label="Settings" 
+                            active={activeTab === 'settings'} 
+                            onClick={() => setActiveTab('settings')} 
+                        />
+                        <button 
+                            onClick={logout} 
+                            className="flex flex-col items-center justify-center w-full p-2 active:scale-95 transition-transform"
+                        >
+                             <div className="w-12 h-8 flex items-center justify-center rounded-full mb-1 text-red-500">
+                                <i className="fas fa-sign-out-alt text-lg"></i>
+                             </div>
+                             <span className="text-[10px] font-medium text-red-500">Logout</span>
+                        </button>
+                    </div>
 
-                    {/* Admin Content Area - Fluid Width */}
-                    <div className="flex-1 p-4 md:p-8 w-full overflow-x-hidden">
+                    {/* --- CONTENT AREA --- */}
+                    {/* pb-24 added for mobile to prevent content hiding behind bottom nav */}
+                    <div className="flex-1 p-4 md:p-8 w-full overflow-x-hidden pb-24 md:pb-8">
                         {activeTab === 'classes' && <ClassManager />}
                         {activeTab === 'settings' && <SettingsManager />}
                     </div>
@@ -69,6 +76,18 @@ export const adminComponents = `
             >
                 <i className={\`\${icon} w-6 text-center mr-3 text-lg \${active ? 'text-white' : 'text-gray-400'}\`}></i>
                 {label}
+            </button>
+        );
+
+        const MobileNavItem = ({ icon, label, active, onClick }) => (
+            <button 
+                onClick={onClick} 
+                className={\`flex flex-col items-center justify-center w-full p-2 active:scale-95 transition-transform \${active ? 'text-blue-600' : 'text-gray-400'}\`}
+            >
+                <div className={\`w-12 h-8 flex items-center justify-center rounded-full mb-1 transition-colors \${active ? 'bg-blue-50' : 'bg-transparent'}\`}>
+                    <i className={\`\${icon} text-lg\`}></i>
+                </div>
+                <span className="text-[10px] font-medium">{label}</span>
             </button>
         );
 
@@ -101,19 +120,19 @@ export const adminComponents = `
 
             return (
                 <div className="w-full">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">Class Management</h2>
                             <p className="text-gray-500 text-sm mt-1">Create and manage your academic structure.</p>
                         </div>
-                        <div className="flex w-full sm:w-auto gap-2">
+                        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-2">
                             <input 
                                 value={newClassName} 
                                 onChange={e => setNewClassName(e.target.value)} 
                                 placeholder="e.g. Class 11" 
                                 className="flex-1 sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all"
                             />
-                            <Button size="md" onClick={createClass} className="whitespace-nowrap px-6">
+                            <Button size="md" onClick={createClass} className="whitespace-nowrap px-6 w-full sm:w-auto">
                                 <i className="fas fa-plus mr-2"></i> Create Class
                             </Button>
                         </div>
@@ -289,6 +308,7 @@ export const adminComponents = `
                             <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide">Subjects</h3>
                             
                             <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-100">
+                                {/* FIX: Stack on mobile to prevent overflow */}
                                 <div className="flex flex-col sm:flex-row gap-3 mb-3">
                                     <input 
                                         className="border rounded-lg px-4 py-2.5 flex-1 outline-none focus:ring-2 focus:ring-blue-500" 
@@ -296,16 +316,16 @@ export const adminComponents = `
                                         value={newSubject.name} 
                                         onChange={e => setNewSubject({...newSubject, name: e.target.value})} 
                                     />
-                                    <Button size="md" onClick={addSubject} className="sm:w-32">Add Subject</Button>
+                                    <Button size="md" onClick={addSubject} className="sm:w-32 w-full">Add Subject</Button>
                                 </div>
-                                <div className="flex items-center gap-4 pl-1">
+                                <div className="flex flex-wrap items-center gap-4 pl-1">
                                     <label className="flex items-center cursor-pointer select-none">
                                         <input type="checkbox" className="w-4 h-4 text-blue-600 rounded mr-2" checked={newSubject.is_common} onChange={e => setNewSubject({...newSubject, is_common: e.target.checked})} />
                                         <span className="text-sm text-gray-700 font-medium">Common Subject</span>
                                     </label>
                                     {!newSubject.is_common && (
                                         <select 
-                                            className="border rounded-lg px-3 py-1.5 text-sm flex-1 max-w-[200px] outline-none" 
+                                            className="border rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[150px] outline-none" 
                                             value={newSubject.group_id} 
                                             onChange={e => setNewSubject({...newSubject, group_id: e.target.value})}
                                         >
@@ -373,10 +393,11 @@ export const adminComponents = `
                         <h2 className="text-2xl font-bold text-gray-800">{subject.name} <span className="text-gray-400 font-normal">/ Chapters</span></h2>
                     </div>
                     
-                    <div className="bg-white p-4 rounded-xl border mb-6 flex gap-3 items-center shadow-sm">
-                        <input className="border rounded-lg px-3 py-2 w-20 text-center font-mono text-sm" placeholder="#" type="number" value={newChapter.order} onChange={e => setNewChapter({...newChapter, order: e.target.value})} />
+                    {/* FIX: Stack vertically on mobile to prevent overflow */}
+                    <div className="bg-white p-4 rounded-xl border mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center shadow-sm">
+                        <input className="border rounded-lg px-3 py-2 w-full sm:w-20 text-center font-mono text-sm" placeholder="#" type="number" value={newChapter.order} onChange={e => setNewChapter({...newChapter, order: e.target.value})} />
                         <input className="border rounded-lg px-4 py-2 flex-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="New Chapter Title" value={newChapter.title} onChange={e => setNewChapter({...newChapter, title: e.target.value})} />
-                        <Button size="md" onClick={addChapter}>Add Chapter</Button>
+                        <Button size="md" onClick={addChapter} className="w-full sm:w-auto">Add Chapter</Button>
                     </div>
 
                     <div className="space-y-3">
@@ -500,21 +521,22 @@ export const adminComponents = `
                     </div>
 
                     <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm mb-8">
-                        <div className="flex justify-between items-center mb-6 border-b pb-4">
-                             <div className="flex bg-gray-100 p-1.5 rounded-xl">
+                        {/* FIX: Stack vertically on mobile to prevent overflow */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
+                             <div className="flex bg-gray-100 p-1.5 rounded-xl w-full sm:w-auto">
                                 {['MCQ', 'CQ'].map(t => (
                                     <button 
                                         key={t}
                                         onClick={() => setQType(t)}
-                                        className={\`px-6 py-2 rounded-lg text-sm font-bold transition \${qType === t ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}\`}
+                                        className={\`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition \${qType === t ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}\`}
                                     >
                                         {t}
                                     </button>
                                 ))}
                             </div>
-                            <div className="flex gap-3">
-                                <input className="w-24 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} placeholder="Board" />
-                                <input className="w-20 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} placeholder="Year" />
+                            <div className="flex gap-3 w-full sm:w-auto">
+                                <input className="flex-1 sm:w-24 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} placeholder="Board" />
+                                <input className="flex-1 sm:w-20 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} placeholder="Year" />
                             </div>
                         </div>
 
