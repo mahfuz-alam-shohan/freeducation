@@ -108,7 +108,13 @@ export const studentComponents = `
 
             if (selectedSubject) return <StudentSubjectView subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
 
-            const displayedSubjects = subjects.filter(s => s.is_common || (selectedGroupId && s.group_id === selectedGroupId));
+            // FIX: Correct filtering logic
+            // 1. If NO group selected (All Subjects view): Show ALL subjects (common + any group).
+            // 2. If group SELECTED: Show common subjects + subjects for THAT group only.
+            const displayedSubjects = subjects.filter(s => {
+                if (selectedGroupId === null) return true; // Show everything if "All Subjects" selected
+                return s.is_common || s.group_id === selectedGroupId; // Show common OR group-specific
+            });
 
             return (
                 <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
@@ -167,7 +173,9 @@ export const studentComponents = `
                                             <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-white rounded-bl-full -mr-8 -mt-8 z-0"></div>
                                             <h4 className="font-bold text-lg text-gray-900 mb-2 relative z-10 group-hover:text-blue-700 transition-colors">{sub.name}</h4>
                                             <div className="flex justify-between items-end mt-4 relative z-10">
-                                                <span className="text-xs text-gray-500 font-medium">View Chapters</span>
+                                                <span className={\`text-[10px] uppercase font-bold px-2 py-0.5 rounded border \${sub.is_common ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-100'}\`}>
+                                                    {sub.is_common ? 'Common' : (groups.find(g => g.id == sub.group_id)?.name || 'Group Subject')}
+                                                </span>
                                                 <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
                                                     <i className="fas fa-chevron-right text-xs"></i>
                                                 </div>
@@ -368,7 +376,7 @@ export const studentComponents = `
                             </div>
                             
                             <div className="p-5 md:p-6">
-                                <p className="font-medium text-gray-900 mb-5 leading-relaxed">{q.question_text}</p>
+                                <p className="font-medium text-lg text-gray-900 mb-5 leading-relaxed">{q.question_text}</p>
 
                                 {q.type === 'MCQ' && q.options ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -398,7 +406,7 @@ export const studentComponents = `
                                             onClick={() => setRevealed(p => ({...p, [q.id]: !p[q.id]}))} 
                                             className="text-blue-600 text-sm font-bold hover:underline flex items-center"
                                         >
-                                            {revealed[q.id] ? 'Hide Answer' : 'Show Answer'}
+                                            {revealed[q.id] ? <><i className="fas fa-eye-slash mr-2"></i> Hide Answer</> : <><i className="fas fa-eye mr-2"></i> Show Answer</>}
                                         </button>
                                         {revealed[q.id] && (
                                             <div className="mt-3 p-4 bg-green-50 border-l-4 border-green-500 text-green-900 text-sm">
