@@ -55,24 +55,25 @@ export const studentComponents = `
 
             return (
                 <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-10 animate-fade-in font-sans text-gray-800">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Academic Programs</h1>
-                            <p className="text-gray-500 text-sm mt-1">Select a program to browse available courses.</p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-2">Student Workspace</p>
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Academic Programs</h1>
+                            <p className="text-gray-500 text-sm mt-2 max-w-xl">Choose a program and start learning with organized notes, topics, and question banks.</p>
                         </div>
-                        <div className="w-full md:w-96 relative">
+                        <div className="w-full lg:w-[420px] relative">
                             <input 
                                 type="text" 
-                                className="w-full border border-gray-300 rounded-lg py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all bg-gray-50 focus:bg-white"
-                                placeholder="Search..."
+                                className="w-full border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white shadow-sm"
+                                placeholder="Search programs, subjects, or chapters..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <i className="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                             {searchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-1 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-2 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto">
                                     {searchResults.map((r, i) => (
-                                        <div key={i} className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
+                                        <div key={i} className="p-3 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors">
                                             <div className="font-semibold text-sm text-gray-800">{r.title}</div>
                                             <div className="text-xs text-gray-500 capitalize">{r.type}</div>
                                         </div>
@@ -82,7 +83,7 @@ export const studentComponents = `
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                         {classes.length === 0 ? (
                             <div className="col-span-full py-12 text-center border border-dashed border-gray-300 rounded-xl bg-gray-50">
                                 <p className="text-gray-500 text-sm">No classes available at the moment.</p>
@@ -92,20 +93,22 @@ export const studentComponents = `
                                 <div 
                                     key={cls.id} 
                                     onClick={() => onNavigate({ level: 'class', classId: cls.id })} 
-                                    className="bg-white border border-gray-200 p-5 rounded-lg hover:border-blue-500 hover:shadow-sm cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
+                                    className="bg-white border border-gray-200 p-6 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
                                 >
                                     <div>
-                                        <div className="flex justify-between items-start mb-2">
+                                        <div className="flex justify-between items-start gap-3 mb-3">
                                             <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-700 transition-colors line-clamp-2">{cls.name}</h3>
-                                            {cls.program_label && <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">{cls.program_label}</span>}
+                                            {cls.program_label && <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-100">{cls.program_label}</span>}
                                         </div>
-                                        <p className="text-xs text-gray-500 line-clamp-2">Access comprehensive study materials, notes, and questions for {cls.name}.</p>
+                                        <p className="text-sm text-gray-500 line-clamp-2">Access notes, structured chapters, and question banks for {cls.name}.</p>
                                     </div>
-                                    <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-                                        <span className={\`text-[10px] font-medium px-2 py-0.5 rounded \${cls.parent_class_id ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'}\`}>
+                                    <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                        <span className={\`text-[10px] font-semibold px-2.5 py-1 rounded-full \${cls.parent_class_id ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}\`}>
                                             {cls.parent_class_id ? "Linked Program" : "Original Program"}
                                         </span>
-                                        <i className="fas fa-arrow-right text-gray-300 group-hover:text-blue-600 transition-colors text-sm"></i>
+                                        <span className="text-xs font-semibold text-blue-600 flex items-center gap-2">
+                                            Open <i className="fas fa-arrow-right"></i>
+                                        </span>
                                     </div>
                                 </div>
                             ))
@@ -163,42 +166,50 @@ export const studentComponents = `
 
             return (
                 <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
-                    <div className="flex items-center mb-6 pb-4 border-b border-gray-200">
-                        <button onClick={onBack} className="text-gray-500 hover:text-black mr-3 transition-colors"><i className="fas fa-arrow-left"></i></button>
-                        <nav className="flex items-center text-sm">
-                            <span className="text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onBack}>Programs</span>
-                            <span className="mx-2 text-gray-300">/</span>
-                            <span className="font-bold text-gray-900">{cls.name}</span>
-                        </nav>
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 flex-wrap gap-3">
+                        <div className="flex items-center">
+                            <button onClick={onBack} className="text-gray-500 hover:text-black mr-3 transition-colors"><i className="fas fa-arrow-left"></i></button>
+                            <nav className="flex items-center text-sm">
+                                <span className="text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onBack}>Programs</span>
+                                <span className="mx-2 text-gray-300">/</span>
+                                <span className="font-bold text-gray-900">{cls.name}</span>
+                            </nav>
+                        </div>
+                        <span className="text-xs text-gray-400 uppercase tracking-[0.3em]">Select Subjects</span>
                     </div>
 
-                    <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    <div className="flex flex-col xl:flex-row gap-8 items-start">
                         {/* Filter Sidebar (Desktop: Left, Mobile: Top) */}
-                        <div className="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-24">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Filter by Group</h3>
-                            <div className="flex flex-wrap lg:flex-col gap-2">
-                                <button 
-                                    onClick={() => setSelectedGroupId(null)}
-                                    className={\`px-4 py-2 rounded-lg text-sm font-medium transition-all text-left border \${selectedGroupId === null ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
-                                >
-                                    All Subjects
-                                </button>
-                                {groups.map(g => (
+                        <div className="w-full xl:w-72 flex-shrink-0 xl:sticky xl:top-24">
+                            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Filter by Group</h3>
+                                <div className="flex flex-wrap xl:flex-col gap-2">
                                     <button 
-                                        key={g.id}
-                                        onClick={() => setSelectedGroupId(g.id)}
-                                        className={\`px-4 py-2 rounded-lg text-sm font-medium transition-all text-left border \${selectedGroupId === g.id ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
+                                        onClick={() => setSelectedGroupId(null)}
+                                        className={\`px-4 py-2 rounded-xl text-sm font-semibold transition-all text-left border \${selectedGroupId === null ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
                                     >
-                                        {g.name}
+                                        All Subjects
                                     </button>
-                                ))}
+                                    {groups.map(g => (
+                                        <button 
+                                            key={g.id}
+                                            onClick={() => setSelectedGroupId(g.id)}
+                                            className={\`px-4 py-2 rounded-xl text-sm font-semibold transition-all text-left border \${selectedGroupId === g.id ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
+                                        >
+                                            {g.name}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
                         {/* Subject Grid */}
                         <div className="flex-1 w-full">
                             <div className="flex justify-between items-end mb-4 px-1">
-                                <h2 className="text-lg font-bold text-gray-800">Subjects</h2>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">Subjects</h2>
+                                    <p className="text-sm text-gray-500">Pick a subject to explore chapters and topics.</p>
+                                </div>
                                 <span className="text-xs text-gray-500">{displayedSubjects.length} available</span>
                             </div>
                             
@@ -208,20 +219,20 @@ export const studentComponents = `
                                     <p className="text-gray-500 text-sm">No subjects found for this selection.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                                     {displayedSubjects.map(sub => (
                                         <div 
                                             key={sub.id} 
                                             onClick={() => onNavigate({ level: 'subject', classId: cls.id, subjectId: sub.id })} 
-                                            className="bg-white border border-gray-200 p-5 rounded-lg hover:border-blue-500 hover:shadow-md cursor-pointer transition-all duration-200 group relative overflow-hidden"
+                                            className="bg-white border border-gray-200 p-6 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group relative overflow-hidden"
                                         >
-                                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-white rounded-bl-full -mr-8 -mt-8 z-0"></div>
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-white rounded-bl-full -mr-10 -mt-10 z-0"></div>
                                             <h4 className="font-bold text-lg text-gray-900 mb-2 relative z-10 group-hover:text-blue-700 transition-colors">{sub.name}</h4>
                                             <div className="flex justify-between items-end mt-4 relative z-10">
-                                                <span className={\`text-[10px] uppercase font-bold px-2 py-0.5 rounded border \${sub.is_common ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-100'}\`}>
+                                                <span className={\`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border \${sub.is_common ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-100'}\`}>
                                                     {sub.is_common ? 'Common' : (groups.find(g => g.id == sub.group_id)?.name || 'Group Subject')}
                                                 </span>
-                                                <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                                <div className="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
                                                     <i className="fas fa-chevron-right text-xs"></i>
                                                 </div>
                                             </div>
@@ -295,9 +306,9 @@ export const studentComponents = `
             }
 
             return (
-                <div className="flex flex-col h-screen bg-white font-sans text-gray-800 animate-fade-in">
+                <div className="flex flex-col h-screen bg-slate-50 font-sans text-gray-800 animate-fade-in">
                     {/* Header */}
-                    <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white z-10">
+                    <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white z-10 shadow-sm">
                         <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
                         <div>
                             <h2 className="font-bold text-gray-900">{subject.name}</h2>
@@ -307,13 +318,13 @@ export const studentComponents = `
 
                     <div className="flex-1 flex overflow-hidden">
                         {/* Desktop Sidebar (Visible md+) */}
-                        <div className="hidden md:flex md:w-80 border-r border-gray-200 flex-col bg-gray-50 overflow-y-auto">
-                            <div className="p-4 font-bold text-xs text-gray-400 uppercase tracking-wider">Chapters</div>
+                        <div className="hidden md:flex md:w-80 border-r border-gray-200 flex-col bg-white overflow-y-auto">
+                            <div className="p-4 font-bold text-xs text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-slate-50">Chapters</div>
                             {chapters.map((ch) => (
                                 <button 
                                     key={ch.id} 
                                     onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
-                                    className={\`w-full text-left px-6 py-3 text-sm font-medium border-l-4 transition-all \${activeChapter?.id === ch.id ? 'bg-white border-blue-600 text-blue-700 shadow-sm' : 'border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900'}\`}
+                                    className={\`w-full text-left px-6 py-3 text-sm font-medium border-l-4 transition-all \${activeChapter?.id === ch.id ? 'bg-blue-50 border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:bg-slate-50 hover:text-gray-900'}\`}
                                 >
                                     {ch.title}
                                 </button>
@@ -331,7 +342,7 @@ export const studentComponents = `
                                         <div 
                                             key={ch.id}
                                             onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
-                                            className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 active:bg-gray-50 cursor-pointer transition-all flex justify-between items-center"
+                                            className="p-4 border border-gray-200 rounded-2xl hover:border-blue-500 active:bg-gray-50 cursor-pointer transition-all flex justify-between items-center bg-white shadow-sm"
                                         >
                                             <div>
                                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Chapter {ch.order_num}</span>
@@ -397,10 +408,12 @@ export const studentComponents = `
                 return (
                     <div className="flex-1 overflow-y-auto p-4 md:p-10">
                         <div className="max-w-3xl mx-auto">
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{chapterTitle}</h1>
-                            <p className="text-gray-500 mb-8">No topics found in this chapter.</p>
-                            <div className="border-t border-gray-100 pt-8">
-                                <InteractiveQuestions topicId={null} chapterId={chapterId} subjectId={subjectId} />
+                            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{chapterTitle}</h1>
+                                <p className="text-gray-500 mb-8">No topics found in this chapter.</p>
+                                <div className="border-t border-gray-100 pt-8">
+                                    <InteractiveQuestions topicId={null} chapterId={chapterId} subjectId={subjectId} />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -411,8 +424,8 @@ export const studentComponents = `
             return (
                 <div className="flex-1 flex flex-col min-h-0">
                     {/* Topic Tabs */}
-                    <div className="flex-shrink-0 border-b border-gray-200 bg-white z-10 px-4 pt-2 overflow-x-auto scrollbar-hide">
-                        <div className="flex space-x-4">
+                    <div className="flex-shrink-0 border-b border-gray-200 bg-white z-10 px-4 pt-3 overflow-x-auto scrollbar-hide">
+                        <div className="flex space-x-3">
                             {topics.map((t, idx) => (
                                 <button 
                                     key={t.id}
@@ -426,7 +439,7 @@ export const studentComponents = `
                                             topicId: t.id
                                         });
                                     }}
-                                    className={\`pb-3 border-b-2 whitespace-nowrap text-sm font-medium transition-colors \${activeTopic.id === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}\`}
+                                    className={\`pb-3 px-2 border-b-2 whitespace-nowrap text-sm font-medium transition-colors \${activeTopic.id === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}\`}
                                 >
                                     {idx + 1}. {t.title}
                                 </button>
@@ -437,12 +450,12 @@ export const studentComponents = `
                     {/* Scrollable Body */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-10">
                         <div className="max-w-3xl mx-auto">
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">{activeTopic.title}</h1>
-                            <article className="prose prose-gray max-w-none mb-12">
-                                <div className="whitespace-pre-wrap leading-relaxed text-gray-800">
+                            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm mb-8">
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{activeTopic.title}</h1>
+                                <div className="whitespace-pre-wrap leading-relaxed text-gray-700">
                                     {activeTopic.content || "No notes available."}
                                 </div>
-                            </article>
+                            </div>
                             <div className="border-t border-gray-100 pt-8">
                                 <InteractiveQuestions topicId={activeTopic.id} chapterId={chapterId} subjectId={subjectId} />
                             </div>
@@ -510,7 +523,7 @@ export const studentComponents = `
                                 <button
                                     key={type.key}
                                     onClick={() => setSelectedType(type.key)}
-                                    className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition flex items-center justify-between"
+                                    className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className={"inline-flex items-center justify-center w-11 h-11 rounded-full " + type.color + " text-white text-lg font-bold shadow"}>
@@ -537,7 +550,7 @@ export const studentComponents = `
                             </div>
                             <div className="space-y-4">
                                 {mcqQuestions.map((q, index) => (
-                                    <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
+                                    <div key={q.id} className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm space-y-2">
                                         <div className="flex items-start gap-2 text-sm text-gray-900">
                                             <span className="font-bold text-gray-700">{index + 1}.</span>
                                             <span className="whitespace-pre-line font-medium">{q.question_text}</span>
@@ -585,7 +598,7 @@ export const studentComponents = `
                             {cqFilter === 'full' && (
                                 <div className="space-y-4">
                                     {cqScenarioQuestions.map((q, index) => (
-                                        <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-3">
+                                        <div key={q.id} className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm space-y-3">
                                             <div className="flex items-start gap-2 text-sm text-gray-900">
                                                 <span className="font-bold text-gray-700">{index + 1}.</span>
                                                 <div className="whitespace-pre-line">
