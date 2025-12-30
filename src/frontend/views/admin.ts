@@ -74,19 +74,10 @@ export const adminComponents = `
 
             return (
                 <div className="w-full">
-                    {/* Header Section */}
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-gray-800">Class Management</h2>
-                        <button 
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-blue-600 text-white w-9 h-9 rounded hover:bg-blue-700 flex items-center justify-center transition shadow-sm"
-                            title="Add New Class"
-                        >
-                            <i className="fas fa-plus"></i>
-                        </button>
+                        <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center transition" title="Add New Class"><i className="fas fa-plus"></i></button>
                     </div>
-
-                    {/* Flat Table */}
                     <div className="bg-white border border-gray-300 overflow-x-auto">
                         <table className="w-full text-left text-sm text-gray-800">
                             <thead className="bg-gray-100 border-b border-gray-300 font-semibold text-gray-700">
@@ -98,54 +89,17 @@ export const adminComponents = `
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {classes.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="4" className="px-4 py-8 text-center text-gray-500 italic">
-                                            No classes found. Click + to add.
-                                        </td>
+                                {classes.length === 0 ? <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-500 italic">No classes found.</td></tr> : classes.map((cls) => (
+                                    <tr key={cls.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3 border-r border-gray-200 font-mono text-xs">{cls.id}</td>
+                                        <td className="px-4 py-3 border-r border-gray-200 font-medium">{cls.name}</td>
+                                        <td className="px-4 py-3 border-r border-gray-200">{cls.parent_class_id ? <span className="text-orange-600"><i className="fas fa-link text-xs mr-1"></i>Linked</span> : <span className="text-green-600"><i className="fas fa-database text-xs mr-1"></i>Original</span>}</td>
+                                        <td className="px-4 py-3 text-right"><div className="flex justify-end gap-3"><button onClick={() => setLinkModalClass(cls)} className="text-gray-400 hover:text-blue-600" title="Link"><i className="fas fa-link"></i></button>{!cls.parent_class_id && <button onClick={() => setSelectedClass(cls)} className="text-blue-600 hover:underline text-xs font-semibold">Manage</button>}</div></td>
                                     </tr>
-                                ) : (
-                                    classes.map((cls) => (
-                                        <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-500">{cls.id}</td>
-                                            <td className="px-4 py-3 border-r border-gray-200 font-medium">{cls.name}</td>
-                                            <td className="px-4 py-3 border-r border-gray-200">
-                                                {cls.parent_class_id ? (
-                                                    <span className="text-orange-600 flex items-center gap-1">
-                                                        <i className="fas fa-link text-xs"></i> Linked ({cls.parent_name})
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-green-600 flex items-center gap-1">
-                                                        <i className="fas fa-database text-xs"></i> Original
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <div className="flex justify-end gap-3">
-                                                    <button 
-                                                        onClick={() => setLinkModalClass(cls)}
-                                                        className="text-gray-400 hover:text-blue-600 transition" 
-                                                        title="Link Content"
-                                                    >
-                                                        <i className="fas fa-link"></i>
-                                                    </button>
-                                                    {!cls.parent_class_id && (
-                                                        <button 
-                                                            onClick={() => setSelectedClass(cls)}
-                                                            className="text-blue-600 hover:text-blue-800 font-semibold text-xs border border-blue-200 hover:border-blue-600 px-2 py-1 rounded bg-blue-50 hover:bg-white transition"
-                                                        >
-                                                            Manage
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
+                                ))}
                             </tbody>
                         </table>
                     </div>
-
                     {isCreateModalOpen && <CreateClassModal onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateClass} />}
                     {linkModalClass && <LinkClassModal cls={linkModalClass} allClasses={classes} onClose={() => setLinkModalClass(null)} onSave={saveLink} />}
                 </div>
@@ -154,139 +108,227 @@ export const adminComponents = `
 
         function CreateClassModal({ onClose, onSave }) {
             const [name, setName] = useState('');
-            return (
-                <Modal isOpen={true} onClose={onClose} title="Create New Class">
-                    <div className="mb-4">
-                        <Input label="Class Name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Class 11" autoFocus />
-                    </div>
-                    <div className="flex justify-end gap-2 mt-6">
-                        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-                        <Button size="md" onClick={() => onSave(name)}>Create</Button>
-                    </div>
-                </Modal>
-            );
+            return <Modal isOpen={true} onClose={onClose} title="Create New Class"><div className="mb-4"><Input label="Class Name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Class 11" autoFocus /></div><div className="flex justify-end gap-2 mt-6"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(name)}>Create</Button></div></Modal>;
         }
 
         function LinkClassModal({ cls, allClasses, onClose, onSave }) {
             const [parentId, setParentId] = useState(cls.parent_class_id || '');
             const [label, setLabel] = useState(cls.program_label || '');
-            return (
-                <Modal isOpen={true} onClose={onClose} title="Content Linking">
-                    <div className="bg-blue-50 p-4 rounded-lg mb-4 text-blue-800 text-sm"><i className="fas fa-info-circle mr-2"></i>Linking <strong>{cls.name}</strong> allows merging batches.</div>
-                    <div className="mb-4"><label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Source Class</label><select className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={parentId} onChange={e => setParentId(e.target.value)}><option value="">-- No Link (Independent) --</option>{allClasses.filter(c => c.id !== cls.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-                    {parentId && <Input label="Program Label (Optional)" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. SSC 2024" />}
-                    <div className="flex justify-end mt-6 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(parentId, label)}>Save</Button></div>
-                </Modal>
-            );
+            return <Modal isOpen={true} onClose={onClose} title="Content Linking"><div className="bg-blue-50 p-4 rounded-lg mb-4 text-blue-800 text-sm"><i className="fas fa-info-circle mr-2"></i>Link <strong>{cls.name}</strong> to merge content.</div><div className="mb-4"><label className="block text-xs font-bold text-gray-700 mb-1">Source Class</label><select className="w-full border p-2 rounded text-sm" value={parentId} onChange={e => setParentId(e.target.value)}><option value="">-- Independent --</option>{allClasses.filter(c => c.id !== cls.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>{parentId && <Input label="Label" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. SSC" />}<div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(parentId, label)}>Save</Button></div></Modal>;
         }
 
         function ClassDetail({ cls, onBack }) {
             const [groups, setGroups] = useState([]);
             const [subjects, setSubjects] = useState([]);
-            const [newGroupName, setNewGroupName] = useState('');
-            const [newSubject, setNewSubject] = useState({ name: '', is_common: true, group_id: '' });
+            const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+            const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
             const [selectedSubject, setSelectedSubject] = useState(null);
 
             useEffect(() => { refreshData(); }, [cls]);
-            const refreshData = async () => {
-                const [gRes, sRes] = await Promise.all([fetch(\`/api/groups?class_id=\${cls.id}\`), fetch(\`/api/subjects?class_id=\${cls.id}\`)]);
-                setGroups(await gRes.json()); setSubjects(await sRes.json());
-            };
-            const addGroup = async () => { if (!newGroupName) return; await fetch('/api/groups', { method: 'POST', body: JSON.stringify({ name: newGroupName, class_id: cls.id }) }); setNewGroupName(''); refreshData(); };
-            const addSubject = async () => { if (!newSubject.name) return; await fetch('/api/subjects', { method: 'POST', body: JSON.stringify({ ...newSubject, class_id: cls.id }) }); setNewSubject({ name: '', is_common: true, group_id: '' }); refreshData(); };
+            const refreshData = async () => { const [gRes, sRes] = await Promise.all([fetch(\`/api/groups?class_id=\${cls.id}\`), fetch(\`/api/subjects?class_id=\${cls.id}\`)]); setGroups(await gRes.json()); setSubjects(await sRes.json()); };
+            
+            const handleCreateGroup = async (name) => { await fetch('/api/groups', { method: 'POST', body: JSON.stringify({ name, class_id: cls.id }) }); setIsGroupModalOpen(false); refreshData(); };
+            const handleCreateSubject = async (data) => { await fetch('/api/subjects', { method: 'POST', body: JSON.stringify({ ...data, class_id: cls.id }) }); setIsSubjectModalOpen(false); refreshData(); };
 
             if (selectedSubject) return <SubjectManager subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
 
             return (
-                <div className="w-full animate-fade-in">
-                    <div className="flex items-center mb-6"><button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition"><i className="fas fa-arrow-left text-gray-600"></i></button><div><h2 className="text-2xl font-bold text-gray-800">{cls.name}</h2><p className="text-gray-500 text-sm">Manage groups and subjects.</p></div></div>
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                        <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-fit sticky top-24">
-                            <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide flex justify-between items-center">Groups <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{groups.length}</span></h3>
-                            <div className="flex gap-2 mb-6"><input className="border rounded-lg px-3 py-2 text-sm flex-1 bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Science" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} /><Button size="sm" onClick={addGroup}><i className="fas fa-plus"></i></Button></div>
-                            <div className="space-y-2">{groups.map(g => <div key={g.id} className="px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 flex items-center border border-transparent hover:border-gray-200 transition"><div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>{g.name}</div>)}</div>
-                        </div>
-                        <div className="lg:col-span-3 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                            <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-100">
-                                <div className="flex flex-col sm:flex-row gap-3 mb-3"><input className="border rounded-lg px-4 py-2.5 flex-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Subject Name" value={newSubject.name} onChange={e => setNewSubject({...newSubject, name: e.target.value})} /><Button size="md" onClick={addSubject} className="sm:w-32 w-full">Add Subject</Button></div>
-                                <div className="flex flex-wrap items-center gap-4 pl-1"><label className="flex items-center cursor-pointer select-none"><input type="checkbox" className="w-4 h-4 text-blue-600 rounded mr-2" checked={newSubject.is_common} onChange={e => setNewSubject({...newSubject, is_common: e.target.checked})} /><span className="text-sm text-gray-700 font-medium">Common Subject</span></label>{!newSubject.is_common && <select className="border rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[150px] outline-none" value={newSubject.group_id} onChange={e => setNewSubject({...newSubject, group_id: e.target.value})}><option value="">Select Group...</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select>}</div>
+                <div className="w-full">
+                     <div className="flex items-center mb-6"><button onClick={onBack} className="text-gray-500 hover:text-blue-600 mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-xl font-bold text-gray-800">{cls.name} / Content</h2></div>
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Groups Table */}
+                        <div className="md:col-span-1">
+                            <div className="flex justify-between items-center mb-2"><h3 className="font-bold text-gray-700">Groups</h3><button onClick={() => setIsGroupModalOpen(true)} className="text-blue-600 hover:bg-blue-50 px-2 rounded"><i className="fas fa-plus"></i></button></div>
+                            <div className="bg-white border border-gray-300">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-100 border-b"><tr><th className="px-3 py-2">Name</th></tr></thead>
+                                    <tbody className="divide-y">{groups.map(g => <tr key={g.id}><td className="px-3 py-2">{g.name}</td></tr>)}</tbody>
+                                </table>
+                                {groups.length === 0 && <div className="p-3 text-center text-gray-400 text-xs">No groups.</div>}
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">{subjects.map(s => <div key={s.id} onClick={() => setSelectedSubject(s)} className="p-4 border rounded-xl hover:bg-blue-50 hover:border-blue-300 cursor-pointer flex flex-col justify-between transition-all group h-32 relative bg-gradient-to-br from-white to-gray-50"><div className="flex justify-between items-start"><span className="font-bold text-gray-800 text-lg group-hover:text-blue-700 line-clamp-2">{s.name}</span><i className="fas fa-chevron-right text-gray-300 group-hover:text-blue-400 transition"></i></div><div className="mt-auto"><span className={\`text-[10px] uppercase font-bold px-2 py-1 rounded-md \${s.is_common ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'}\`}>{s.is_common ? 'All Groups' : (groups.find(g => g.id == s.group_id)?.name || 'Specific Group')}</span></div></div>)}</div>
                         </div>
-                    </div>
+
+                        {/* Subjects Table */}
+                        <div className="md:col-span-2">
+                             <div className="flex justify-between items-center mb-2"><h3 className="font-bold text-gray-700">Subjects</h3><button onClick={() => setIsSubjectModalOpen(true)} className="text-blue-600 hover:bg-blue-50 px-2 rounded"><i className="fas fa-plus"></i></button></div>
+                             <div className="bg-white border border-gray-300">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-100 border-b"><tr><th className="px-3 py-2 border-r">Name</th><th className="px-3 py-2 border-r">Group</th><th className="px-3 py-2 text-right">Action</th></tr></thead>
+                                    <tbody className="divide-y">
+                                        {subjects.map(s => (
+                                            <tr key={s.id} className="hover:bg-gray-50">
+                                                <td className="px-3 py-2 border-r font-medium">{s.name}</td>
+                                                <td className="px-3 py-2 border-r text-gray-500 text-xs">{s.is_common ? 'Common' : groups.find(g => g.id == s.group_id)?.name || '-'}</td>
+                                                <td className="px-3 py-2 text-right"><button onClick={() => setSelectedSubject(s)} className="text-blue-600 hover:underline text-xs">Open</button></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {subjects.length === 0 && <div className="p-3 text-center text-gray-400 text-xs">No subjects.</div>}
+                            </div>
+                        </div>
+                     </div>
+                     
+                     {isGroupModalOpen && <CreateGroupModal onClose={() => setIsGroupModalOpen(false)} onSave={handleCreateGroup} />}
+                     {isSubjectModalOpen && <CreateSubjectModal groups={groups} onClose={() => setIsSubjectModalOpen(false)} onSave={handleCreateSubject} />}
                 </div>
             );
+        }
+
+        function CreateGroupModal({ onClose, onSave }) {
+            const [name, setName] = useState('');
+            return <Modal isOpen={true} onClose={onClose} title="Add Group"><Input label="Group Name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Science" autoFocus /><div className="flex justify-end gap-2 mt-4"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(name)}>Save</Button></div></Modal>;
+        }
+
+        function CreateSubjectModal({ groups, onClose, onSave }) {
+            const [name, setName] = useState('');
+            const [isCommon, setIsCommon] = useState(true);
+            const [groupId, setGroupId] = useState('');
+            return <Modal isOpen={true} onClose={onClose} title="Add Subject">
+                <div className="mb-3"><Input label="Subject Name" value={name} onChange={e => setName(e.target.value)} placeholder="Physics" autoFocus /></div>
+                <div className="flex items-center gap-2 mb-3"><input type="checkbox" checked={isCommon} onChange={e => setIsCommon(e.target.checked)} id="common" /><label htmlFor="common" className="text-sm">Common Subject (All Groups)</label></div>
+                {!isCommon && <div className="mb-3"><label className="block text-xs font-bold mb-1">Group</label><select className="w-full border p-2 rounded text-sm" value={groupId} onChange={e => setGroupId(e.target.value)}><option value="">Select Group</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>}
+                <div className="flex justify-end gap-2 mt-4"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ name, is_common: isCommon, group_id: groupId })}>Save</Button></div>
+            </Modal>;
         }
 
         function SubjectManager({ subject, onBack }) {
             const [chapters, setChapters] = useState([]);
             const [selectedChapter, setSelectedChapter] = useState(null);
-            const [newChapter, setNewChapter] = useState({ title: '', order: '' });
+            const [isModalOpen, setIsModalOpen] = useState(false);
 
             useEffect(() => { loadChapters(); }, [subject]);
             const loadChapters = () => fetch(\`/api/chapters?subject_id=\${subject.id}\`).then(r => r.json()).then(setChapters);
-            const addChapter = async () => { await fetch('/api/chapters', { method: 'POST', body: JSON.stringify({ title: newChapter.title, subject_id: subject.id, order_num: newChapter.order || chapters.length + 1 }) }); setNewChapter({ title: '', order: '' }); loadChapters(); };
+            const handleCreate = async (data) => { await fetch('/api/chapters', { method: 'POST', body: JSON.stringify({ ...data, subject_id: subject.id, order_num: data.order || chapters.length + 1 }) }); setIsModalOpen(false); loadChapters(); };
 
             if (selectedChapter) return <TopicManager chapter={selectedChapter} onBack={() => setSelectedChapter(null)} />;
+
             return (
-                <div className="w-full animate-fade-in max-w-6xl mx-auto">
-                    <div className="flex items-center mb-6"><button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition"><i className="fas fa-arrow-left text-gray-600"></i></button><h2 className="text-2xl font-bold text-gray-800">{subject.name} <span className="text-gray-400 font-normal">/ Chapters</span></h2></div>
-                    <div className="bg-white p-4 rounded-xl border mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center shadow-sm"><input className="border rounded-lg px-3 py-2 w-full sm:w-20 text-center font-mono text-sm" placeholder="#" type="number" value={newChapter.order} onChange={e => setNewChapter({...newChapter, order: e.target.value})} /><input className="border rounded-lg px-4 py-2 flex-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="New Chapter Title" value={newChapter.title} onChange={e => setNewChapter({...newChapter, title: e.target.value})} /><Button size="md" onClick={addChapter} className="w-full sm:w-auto">Add Chapter</Button></div>
-                    <div className="space-y-3">{chapters.map(ch => <div key={ch.id} onClick={() => setSelectedChapter(ch)} className="bg-white px-6 py-4 rounded-xl border border-gray-100 hover:border-blue-400 cursor-pointer flex items-center shadow-sm transition hover:shadow-md group"><span className="text-gray-300 font-black text-2xl mr-5 w-8 text-center group-hover:text-blue-200 transition">{ch.order_num}</span><div className="flex-1 font-bold text-gray-800 text-lg group-hover:text-blue-700 transition">{ch.title}</div><div className="w-8 h-8 rounded-full bg-gray-50 group-hover:bg-blue-50 flex items-center justify-center text-gray-400 group-hover:text-blue-600 transition"><i className="fas fa-chevron-right text-sm"></i></div></div>)}</div>
+                <div className="w-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-blue-600 mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-xl font-bold text-gray-800">{subject.name} / Chapters</h2></div>
+                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center transition"><i className="fas fa-plus"></i></button>
+                    </div>
+                    <div className="bg-white border border-gray-300">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-100 border-b"><tr><th className="px-4 py-3 border-r w-16">#</th><th className="px-4 py-3 border-r">Chapter Title</th><th className="px-4 py-3 text-right w-24">Action</th></tr></thead>
+                            <tbody className="divide-y">{chapters.map(ch => (
+                                <tr key={ch.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 border-r font-mono text-xs text-gray-500">{ch.order_num}</td>
+                                    <td className="px-4 py-3 border-r font-medium">{ch.title}</td>
+                                    <td className="px-4 py-3 text-right"><button onClick={() => setSelectedChapter(ch)} className="text-blue-600 hover:underline text-xs">Manage</button></td>
+                                </tr>
+                            ))}</tbody>
+                        </table>
+                        {chapters.length === 0 && <div className="p-6 text-center text-gray-400 italic">No chapters added yet.</div>}
+                    </div>
+                    {isModalOpen && <CreateChapterModal onClose={() => setIsModalOpen(false)} onSave={handleCreate} />}
                 </div>
             );
+        }
+
+        function CreateChapterModal({ onClose, onSave }) {
+            const [title, setTitle] = useState('');
+            const [order, setOrder] = useState('');
+            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="Order" type="number" value={order} onChange={e => setOrder(e.target.value)} placeholder="#" /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Chapter Name" autoFocus /></div></div><div className="flex justify-end gap-2 mt-4"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
         }
 
         function TopicManager({ chapter, onBack }) {
             const [topics, setTopics] = useState([]);
             const [selectedTopic, setSelectedTopic] = useState(null);
-            const [newTopic, setNewTopic] = useState({ title: '', content: '' });
+            const [isModalOpen, setIsModalOpen] = useState(false);
 
             useEffect(() => { loadTopics(); }, [chapter]);
             const loadTopics = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(r => r.json()).then(setTopics);
-            const addTopic = async () => { await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ ...newTopic, chapter_id: chapter.id, order_num: topics.length + 1 }) }); setNewTopic({ title: '', content: '' }); loadTopics(); };
+            const handleCreate = async (data) => { await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ ...data, chapter_id: chapter.id, order_num: topics.length + 1 }) }); setIsModalOpen(false); loadTopics(); };
 
             if (selectedTopic) return <QuestionManager topic={selectedTopic} onBack={() => setSelectedTopic(null)} />;
             return (
-                <div className="w-full animate-fade-in max-w-6xl mx-auto">
-                    <div className="flex items-center mb-6"><button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition"><i className="fas fa-arrow-left text-gray-600"></i></button><h2 className="text-2xl font-bold text-gray-800">{chapter.title} <span className="text-gray-400 font-normal">/ Topics</span></h2></div>
-                    <div className="bg-white p-6 rounded-2xl border border-gray-200 mb-8 shadow-sm"><Input label="Topic Title" value={newTopic.title} onChange={e => setNewTopic({...newTopic, title: e.target.value})} placeholder="e.g. Introduction to Motion" /><div className="mb-4"><label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Content / Notes</label><textarea className="w-full border border-gray-300 rounded-lg p-3 h-32 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Write your study notes here using Markdown..." value={newTopic.content} onChange={e => setNewTopic({...newTopic, content: e.target.value})}></textarea></div><div className="flex justify-end"><Button size="md" onClick={addTopic}>Save Topic</Button></div></div>
-                    <div className="space-y-3">{topics.map(t => <div key={t.id} onClick={() => setSelectedTopic(t)} className="bg-white px-6 py-4 rounded-xl border border-gray-100 hover:border-blue-400 cursor-pointer shadow-sm transition group"><h4 className="font-bold text-gray-800 text-lg group-hover:text-blue-700 mb-1">{t.title}</h4><p className="text-sm text-gray-500 truncate">{t.content || "No content preview"}</p></div>)}</div>
+                <div className="w-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-blue-600 mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-xl font-bold text-gray-800">{chapter.title} / Topics</h2></div>
+                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center transition"><i className="fas fa-plus"></i></button>
+                    </div>
+                    <div className="bg-white border border-gray-300">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-100 border-b"><tr><th className="px-4 py-3 border-r">Topic Title</th><th className="px-4 py-3 border-r">Content Preview</th><th className="px-4 py-3 text-right w-24">Action</th></tr></thead>
+                            <tbody className="divide-y">{topics.map(t => (
+                                <tr key={t.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 border-r font-medium">{t.title}</td>
+                                    <td className="px-4 py-3 border-r text-gray-500 truncate max-w-xs">{t.content || '-'}</td>
+                                    <td className="px-4 py-3 text-right"><button onClick={() => setSelectedTopic(t)} className="text-blue-600 hover:underline text-xs">Questions</button></td>
+                                </tr>
+                            ))}</tbody>
+                        </table>
+                        {topics.length === 0 && <div className="p-6 text-center text-gray-400 italic">No topics added yet.</div>}
+                    </div>
+                    {isModalOpen && <CreateTopicModal onClose={() => setIsModalOpen(false)} onSave={handleCreate} />}
                 </div>
             );
         }
 
+        function CreateTopicModal({ onClose, onSave }) {
+            const [title, setTitle] = useState('');
+            const [content, setContent] = useState('');
+            return <Modal isOpen={true} onClose={onClose} title="Add Topic"><div className="mb-3"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div><div className="mb-3"><label className="block text-xs font-bold mb-1">Content (Markdown)</label><textarea className="w-full border p-2 rounded text-sm h-32" value={content} onChange={e => setContent(e.target.value)}></textarea></div><div className="flex justify-end gap-2 mt-4"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ title, content })}>Save</Button></div></Modal>;
+        }
+
         function QuestionManager({ topic, onBack }) {
             const [questions, setQuestions] = useState([]);
-            const [qType, setQType] = useState('MCQ');
-            const [newQ, setNewQ] = useState({ text: '', options: ['', '', '', ''], answer: '', metadata: { board: '', year: '' } });
+            const [isModalOpen, setIsModalOpen] = useState(false);
 
             useEffect(() => { loadQs(); }, [topic]);
             const loadQs = () => fetch(\`/api/questions?topic_id=\${topic.id}\`).then(r => r.json()).then(setQuestions);
-            const saveQuestion = async () => { await fetch('/api/questions', { method: 'POST', body: JSON.stringify({ type: qType, topic_id: topic.id, question_text: newQ.text, options: qType === 'MCQ' ? newQ.options : [], answer: newQ.answer, metadata: newQ.metadata }) }); setNewQ({ text: '', options: ['', '', '', ''], answer: '', metadata: { board: '', year: '' } }); loadQs(); };
-            const updateOption = (idx, val) => { const opts = [...newQ.options]; opts[idx] = val; setNewQ({ ...newQ, options: opts }); };
+            const handleCreate = async (data) => { await fetch('/api/questions', { method: 'POST', body: JSON.stringify({ ...data, topic_id: topic.id }) }); setIsModalOpen(false); loadQs(); };
 
             return (
-                <div className="w-full animate-fade-in pb-20 max-w-6xl mx-auto">
-                    <div className="flex items-center mb-6"><button onClick={onBack} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center mr-4 transition"><i className="fas fa-arrow-left text-gray-600"></i></button><h2 className="text-2xl font-bold text-gray-800">{topic.title} <span className="text-gray-400 font-normal">/ Questions</span></h2></div>
-                    <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm mb-8">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
-                            <div className="flex bg-gray-100 p-1.5 rounded-xl w-full sm:w-auto">{['MCQ', 'CQ'].map(t => <button key={t} onClick={() => setQType(t)} className={\`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition \${qType === t ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}\`}>{t}</button>)}</div>
-                            <div className="flex gap-3 w-full sm:w-auto"><input className="flex-1 sm:w-24 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.board} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, board: e.target.value}})} placeholder="Board" /><input className="flex-1 sm:w-20 border rounded-lg px-3 py-2 text-sm text-center" value={newQ.metadata.year} onChange={e => setNewQ({...newQ, metadata: {...newQ.metadata, year: e.target.value}})} placeholder="Year" /></div>
-                        </div>
-                        <div className="mb-6"><label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Question Text</label><textarea className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Enter the question here..." value={newQ.text} onChange={e => setNewQ({...newQ, text: e.target.value})}></textarea></div>
-                        {qType === 'MCQ' ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">{newQ.options.map((opt, i) => <div key={i} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200"><span className="w-6 font-bold text-blue-500 text-sm bg-blue-100 rounded-full h-6 flex items-center justify-center">{String.fromCharCode(65+i)}</span><input className="flex-1 bg-transparent border-none outline-none text-sm" value={opt} onChange={e => updateOption(i, e.target.value)} placeholder={\`Option \${String.fromCharCode(65+i)}\`} /><input type="radio" name="correct" className="w-5 h-5 text-blue-600" checked={newQ.answer === opt && opt !== ''} onChange={() => setNewQ({...newQ, answer: opt})} /></div>)}</div> : <div className="mb-6"><label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Answer / Marking Scheme</label><textarea className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Enter the answer key..." value={newQ.answer} onChange={e => setNewQ({...newQ, answer: e.target.value})}></textarea></div>}
-                        <Button size="lg" className="w-full font-bold shadow-lg shadow-blue-200" onClick={saveQuestion}>Add Question</Button>
+                <div className="w-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-blue-600 mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-xl font-bold text-gray-800">{topic.title} / Questions</h2></div>
+                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center transition"><i className="fas fa-plus"></i></button>
                     </div>
-                    <div className="space-y-4">{questions.map((q, i) => <div key={q.id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition"><div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded uppercase tracking-wider">{q.type}</span><span className="text-xs font-medium text-gray-400">{q.metadata && q.metadata.board} {q.metadata && q.metadata.year}</span></div><p className="font-medium text-gray-800 text-base">{q.question_text}</p></div>)}</div>
+                    <div className="bg-white border border-gray-300">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-100 border-b"><tr><th className="px-4 py-3 border-r w-16">Type</th><th className="px-4 py-3 border-r">Question</th><th className="px-4 py-3 border-r">Meta</th></tr></thead>
+                            <tbody className="divide-y">{questions.map(q => (
+                                <tr key={q.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 border-r font-bold text-xs text-gray-500">{q.type}</td>
+                                    <td className="px-4 py-3 border-r font-medium">{q.question_text}</td>
+                                    <td className="px-4 py-3 border-r text-xs text-gray-500">{q.metadata && q.metadata.board} {q.metadata && q.metadata.year}</td>
+                                </tr>
+                            ))}</tbody>
+                        </table>
+                        {questions.length === 0 && <div className="p-6 text-center text-gray-400 italic">No questions added yet.</div>}
+                    </div>
+                    {isModalOpen && <CreateQuestionModal onClose={() => setIsModalOpen(false)} onSave={handleCreate} />}
                 </div>
             );
+        }
+
+        function CreateQuestionModal({ onClose, onSave }) {
+            const [type, setType] = useState('MCQ');
+            const [text, setText] = useState('');
+            const [options, setOptions] = useState(['', '', '', '']);
+            const [answer, setAnswer] = useState('');
+            const [board, setBoard] = useState('');
+            const [year, setYear] = useState('');
+
+            const updateOption = (i, v) => { const n = [...options]; n[i] = v; setOptions(n); };
+
+            return <Modal isOpen={true} onClose={onClose} title="Add Question">
+                <div className="flex gap-2 mb-3 border-b pb-2"><button onClick={() => setType('MCQ')} className={\`px-3 py-1 rounded text-xs font-bold \${type==='MCQ'?'bg-blue-100 text-blue-700':'text-gray-500'}\`}>MCQ</button><button onClick={() => setType('CQ')} className={\`px-3 py-1 rounded text-xs font-bold \${type==='CQ'?'bg-blue-100 text-blue-700':'text-gray-500'}\`}>CQ</button></div>
+                <div className="flex gap-2 mb-3"><div className="flex-1"><Input label="Board" value={board} onChange={e => setBoard(e.target.value)} placeholder="Dhaka" /></div><div className="w-24"><Input label="Year" value={year} onChange={e => setYear(e.target.value)} placeholder="2023" /></div></div>
+                <div className="mb-3"><label className="block text-xs font-bold mb-1">Question</label><textarea className="w-full border p-2 rounded text-sm h-20" value={text} onChange={e => setText(e.target.value)}></textarea></div>
+                {type === 'MCQ' ? <div className="space-y-2 mb-3">{options.map((o, i) => <div key={i} className="flex items-center gap-2"><span className="text-xs font-bold w-4">{String.fromCharCode(65+i)}</span><input className="flex-1 border p-1.5 rounded text-sm" value={o} onChange={e => updateOption(i, e.target.value)} /><input type="radio" name="ans" checked={answer===o && o!==''} onChange={() => setAnswer(o)} /></div>)}</div> : <div className="mb-3"><label className="block text-xs font-bold mb-1">Answer Key</label><textarea className="w-full border p-2 rounded text-sm h-20" value={answer} onChange={e => setAnswer(e.target.value)}></textarea></div>}
+                <div className="flex justify-end gap-2 mt-4"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ type, question_text: text, options: type==='MCQ'?options:[], answer, metadata: { board, year } })}>Save</Button></div>
+            </Modal>;
         }
 
         function SettingsManager() {
             const handleReset = async () => { if (confirm("Permanently delete ALL data?")) { await fetch('/api/reset-db', { method: 'POST' }); window.location.reload(); } };
             return (
-                <div className="max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-red-100"><h2 className="text-xl font-bold mb-2 text-gray-800">System Danger Zone</h2><p className="text-gray-500 text-sm mb-6">Irreversible actions are performed here. Proceed with caution.</p><div className="flex items-center justify-between bg-red-50 p-4 rounded-xl border border-red-100"><div><h4 className="font-bold text-red-700 text-sm">Reset Database</h4><p className="text-red-500 text-xs mt-1">Deletes all subjects, questions, and admins.</p></div><Button variant="danger" size="sm" onClick={handleReset}>Reset Everything</Button></div></div>
+                <div className="max-w-xl bg-white p-6 rounded-xl shadow-sm border border-red-100"><h2 className="text-lg font-bold mb-4">System Danger Zone</h2><p className="text-gray-600 text-sm mb-4">Irreversible actions are performed here. Proceed with caution.</p><Button variant="danger" size="sm" onClick={handleReset}>Reset Database</Button></div>
             );
         }
 `;
