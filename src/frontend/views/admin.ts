@@ -51,17 +51,18 @@ export const adminComponents = `
 
         function ClassManager() {
             const [classes, setClasses] = useState([]);
-            const [newClassName, setNewClassName] = useState('');
+            const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
             const [selectedClass, setSelectedClass] = useState(null);
             const [linkModalClass, setLinkModalClass] = useState(null);
 
             useEffect(() => { loadClasses(); }, []);
             const loadClasses = () => fetch('/api/classes').then(r => r.json()).then(setClasses);
 
-            const createClass = async () => {
-                if (!newClassName) return;
-                await fetch('/api/classes', { method: 'POST', body: JSON.stringify({ name: newClassName }) });
-                setNewClassName(''); loadClasses();
+            const handleCreateClass = async (name) => {
+                if (!name) return;
+                await fetch('/api/classes', { method: 'POST', body: JSON.stringify({ name }) });
+                setIsCreateModalOpen(false);
+                loadClasses();
             };
 
             const saveLink = async (parentId, label) => {
@@ -73,23 +74,93 @@ export const adminComponents = `
 
             return (
                 <div className="w-full">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div><h2 className="text-2xl font-bold text-gray-800">Class Management</h2><p className="text-gray-500 text-sm mt-1">Create and manage your academic structure.</p></div>
-                        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-2">
-                            <input value={newClassName} onChange={e => setNewClassName(e.target.value)} placeholder="e.g. Class 11" className="flex-1 sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all" />
-                            <Button size="md" onClick={createClass} className="whitespace-nowrap px-6 w-full sm:w-auto"><i className="fas fa-plus mr-2"></i> Create Class</Button>
+                    <div className="flex justify-between items-center mb-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800">Class Management</h2>
+                            <p className="text-gray-500 text-sm mt-1">Manage your academic structure.</p>
+                        </div>
+                        <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+                            <i className="fas fa-plus mr-2"></i> Add Class
+                        </Button>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm text-gray-600">
+                                <thead className="bg-gray-50 text-xs uppercase font-bold text-gray-500 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-4">ID</th>
+                                        <th className="px-6 py-4">Class Name</th>
+                                        <th className="px-6 py-4">Type</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {classes.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-8 text-center text-gray-400 italic">
+                                                No classes found. Add one to get started.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        classes.map((cls) => (
+                                            <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-6 py-4 font-mono text-xs text-gray-400">#{cls.id}</td>
+                                                <td className="px-6 py-4 font-bold text-gray-800 text-base">{cls.name}</td>
+                                                <td className="px-6 py-4">
+                                                    {cls.parent_class_id ? (
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                            <i className="fas fa-link mr-1.5"></i> Linked: {cls.parent_name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                            <i className="fas fa-database mr-1.5"></i> Original Source
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right space-x-2">
+                                                    <button 
+                                                        onClick={() => setLinkModalClass(cls)}
+                                                        className="text-gray-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition" 
+                                                        title="Link Content"
+                                                    >
+                                                        <i className="fas fa-link"></i>
+                                                    </button>
+                                                    {!cls.parent_class_id && (
+                                                        <button 
+                                                            onClick={() => setSelectedClass(cls)}
+                                                            className="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                                        >
+                                                            Manage <i className="fas fa-arrow-right ml-1"></i>
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {classes.map(cls => (
-                            <div key={cls.id} onClick={() => !cls.parent_class_id && setSelectedClass(cls)} className={\`bg-white p-6 rounded-2xl border transition-all duration-300 relative group flex flex-col justify-between min-h-[160px] \${!cls.parent_class_id ? 'cursor-pointer hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 border-gray-200' : 'border-orange-200 bg-orange-50/30'}\`}>
-                                <div className="flex justify-between items-start mb-4"><h3 className="font-bold text-gray-800 text-xl tracking-tight">{cls.name}</h3><button onClick={(e) => { e.stopPropagation(); setLinkModalClass(cls); }} className="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition"><i className="fas fa-link text-sm"></i></button></div>
-                                <div>{cls.parent_class_id ? <div className="text-xs text-orange-700 bg-orange-100 px-3 py-1.5 rounded-full inline-flex items-center font-medium"><i className="fas fa-share mr-1.5"></i> Linked to <span className="font-bold ml-1">{cls.parent_name}</span></div> : <div className="text-xs text-green-700 bg-green-100 px-3 py-1.5 rounded-full inline-flex items-center font-medium"><i className="fas fa-database mr-1.5"></i> Independent Source</div>}</div>
-                            </div>
-                        ))}
-                    </div>
+
+                    {isCreateModalOpen && <CreateClassModal onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateClass} />}
                     {linkModalClass && <LinkClassModal cls={linkModalClass} allClasses={classes} onClose={() => setLinkModalClass(null)} onSave={saveLink} />}
                 </div>
+            );
+        }
+
+        function CreateClassModal({ onClose, onSave }) {
+            const [name, setName] = useState('');
+            return (
+                <Modal isOpen={true} onClose={onClose} title="Create New Class">
+                    <div className="mb-4">
+                        <Input label="Class Name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Class 11" autoFocus />
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+                        <Button size="md" onClick={() => onSave(name)}>Create Class</Button>
+                    </div>
+                </Modal>
             );
         }
 
