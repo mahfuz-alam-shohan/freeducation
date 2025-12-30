@@ -74,54 +74,57 @@ export const adminComponents = `
 
             return (
                 <div className="w-full">
-                    <div className="flex justify-between items-center mb-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800">Class Management</h2>
-                            <p className="text-gray-500 text-sm mt-1">Manage your academic structure.</p>
-                        </div>
-                        <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-                            <i className="fas fa-plus mr-2"></i> Add Class
-                        </Button>
+                    {/* Header Section */}
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold text-gray-800">Class Management</h2>
+                        <button 
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-blue-600 text-white w-9 h-9 rounded hover:bg-blue-700 flex items-center justify-center transition shadow-sm"
+                            title="Add New Class"
+                        >
+                            <i className="fas fa-plus"></i>
+                        </button>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm text-gray-600">
-                                <thead className="bg-gray-50 text-xs uppercase font-bold text-gray-500 border-b border-gray-200">
+                    {/* Flat Table */}
+                    <div className="bg-white border border-gray-300 overflow-x-auto">
+                        <table className="w-full text-left text-sm text-gray-800">
+                            <thead className="bg-gray-100 border-b border-gray-300 font-semibold text-gray-700">
+                                <tr>
+                                    <th className="px-4 py-3 border-r border-gray-200 w-16">ID</th>
+                                    <th className="px-4 py-3 border-r border-gray-200">Class Name</th>
+                                    <th className="px-4 py-3 border-r border-gray-200">Type</th>
+                                    <th className="px-4 py-3 text-right w-40">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {classes.length === 0 ? (
                                     <tr>
-                                        <th className="px-6 py-4">ID</th>
-                                        <th className="px-6 py-4">Class Name</th>
-                                        <th className="px-6 py-4">Type</th>
-                                        <th className="px-6 py-4 text-right">Actions</th>
+                                        <td colSpan="4" className="px-4 py-8 text-center text-gray-500 italic">
+                                            No classes found. Click + to add.
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {classes.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="4" className="px-6 py-8 text-center text-gray-400 italic">
-                                                No classes found. Add one to get started.
+                                ) : (
+                                    classes.map((cls) => (
+                                        <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-500">{cls.id}</td>
+                                            <td className="px-4 py-3 border-r border-gray-200 font-medium">{cls.name}</td>
+                                            <td className="px-4 py-3 border-r border-gray-200">
+                                                {cls.parent_class_id ? (
+                                                    <span className="text-orange-600 flex items-center gap-1">
+                                                        <i className="fas fa-link text-xs"></i> Linked ({cls.parent_name})
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-green-600 flex items-center gap-1">
+                                                        <i className="fas fa-database text-xs"></i> Original
+                                                    </span>
+                                                )}
                                             </td>
-                                        </tr>
-                                    ) : (
-                                        classes.map((cls) => (
-                                            <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 font-mono text-xs text-gray-400">#{cls.id}</td>
-                                                <td className="px-6 py-4 font-bold text-gray-800 text-base">{cls.name}</td>
-                                                <td className="px-6 py-4">
-                                                    {cls.parent_class_id ? (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                            <i className="fas fa-link mr-1.5"></i> Linked: {cls.parent_name}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            <i className="fas fa-database mr-1.5"></i> Original Source
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-right space-x-2">
+                                            <td className="px-4 py-3 text-right">
+                                                <div className="flex justify-end gap-3">
                                                     <button 
                                                         onClick={() => setLinkModalClass(cls)}
-                                                        className="text-gray-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition" 
+                                                        className="text-gray-400 hover:text-blue-600 transition" 
                                                         title="Link Content"
                                                     >
                                                         <i className="fas fa-link"></i>
@@ -129,18 +132,18 @@ export const adminComponents = `
                                                     {!cls.parent_class_id && (
                                                         <button 
                                                             onClick={() => setSelectedClass(cls)}
-                                                            className="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                                            className="text-blue-600 hover:text-blue-800 font-semibold text-xs border border-blue-200 hover:border-blue-600 px-2 py-1 rounded bg-blue-50 hover:bg-white transition"
                                                         >
-                                                            Manage <i className="fas fa-arrow-right ml-1"></i>
+                                                            Manage
                                                         </button>
                                                     )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
 
                     {isCreateModalOpen && <CreateClassModal onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateClass} />}
@@ -158,7 +161,7 @@ export const adminComponents = `
                     </div>
                     <div className="flex justify-end gap-2 mt-6">
                         <Button variant="ghost" onClick={onClose}>Cancel</Button>
-                        <Button size="md" onClick={() => onSave(name)}>Create Class</Button>
+                        <Button size="md" onClick={() => onSave(name)}>Create</Button>
                     </div>
                 </Modal>
             );
@@ -172,7 +175,7 @@ export const adminComponents = `
                     <div className="bg-blue-50 p-4 rounded-lg mb-4 text-blue-800 text-sm"><i className="fas fa-info-circle mr-2"></i>Linking <strong>{cls.name}</strong> allows merging batches.</div>
                     <div className="mb-4"><label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Source Class</label><select className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={parentId} onChange={e => setParentId(e.target.value)}><option value="">-- No Link (Independent) --</option>{allClasses.filter(c => c.id !== cls.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                     {parentId && <Input label="Program Label (Optional)" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. SSC 2024" />}
-                    <div className="flex justify-end mt-6 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(parentId, label)}>Save Configuration</Button></div>
+                    <div className="flex justify-end mt-6 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(parentId, label)}>Save</Button></div>
                 </Modal>
             );
         }
