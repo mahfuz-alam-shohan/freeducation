@@ -1,4 +1,4 @@
-import { hashPassword } from "./auth";
+import { hashPassword, createToken, verifyToken } from "./auth";
 import { initDatabase, resolveContentId } from "./db";
 import type { Env, Question } from "./types";
 
@@ -8,15 +8,10 @@ export const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-/**
- * Helper to parse raw DB results into typed objects
- * Specifically handles the JSON string columns in Questions
- */
 const parseQuestion = (q: any): Question => ({
   ...q,
   options: q.options ? JSON.parse(q.options as string) : [],
   metadata: q.metadata ? JSON.parse(q.metadata as string) : {},
-  // Ensure boolean conversion for other tables if needed
 });
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
@@ -70,16 +65,30 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     const storedHash = user.password_hash as string;
     const [saltHex, originalHash] = storedHash.split(':');
 
-    if (!saltHex || !originalHash) {
-      return Response.json({ success: false, error: "Security mismatch. Please reset DB." }, { status: 401, headers: corsHeaders });
-    }
-
     const hash = await hashPassword(password, saltHex);
     if (hash !== originalHash) {
       return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: corsHeaders });
     }
 
-    return Response.json({ success: true, username: user.username }, { headers: corsHeaders });
+    // Generate Token
+    const token = await createToken({ username: user.username, id: user.id }, env.JWT_SECRET || "default_secret_please_change");
+
+    return Response.json({ success: true, username: user.username, token }, { headers: corsHeaders });
+  }
+
+  if (path === "/api/me" && request.method === "GET") {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return Response.json({ user: null }, { headers: corsHeaders });
+    }
+    const token = authHeader.split(" ")[1];
+    const payload = await verifyToken(token, env.JWT_SECRET || "default_secret_please_change");
+    
+    if (!payload) {
+        return Response.json({ user: null }, { headers: corsHeaders });
+    }
+
+    return Response.json({ user: { username: payload.username } }, { headers: corsHeaders });
   }
 
   // 3. CLASS MANAGEMENT
@@ -128,7 +137,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       const { class_id } = Object.fromEntries(url.searchParams);
       const sourceId = await resolveContentId(env.DB, class_id);
       const subjects = await env.DB.prepare("SELECT * FROM subjects WHERE class_id = ?").bind(sourceId).all();
-      // Ensure is_common is boolean
       const cleanSubjects = subjects.results.map((s: any) => ({ ...s, is_common: !!s.is_common }));
       return Response.json(cleanSubjects, { headers: corsHeaders });
     }
@@ -168,12 +176,10 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
   }
 
-  // Questions - THIS IS WHERE WE FIX THE PARSING
   if (path === "/api/questions") {
     if (request.method === "GET") {
       const { topic_id } = Object.fromEntries(url.searchParams);
       const questions = await env.DB.prepare("SELECT * FROM questions WHERE topic_id = ?").bind(topic_id).all();
-      // Fix: Parse the JSON strings into objects before returning to frontend
       const cleanQuestions = questions.results.map(parseQuestion);
       return Response.json(cleanQuestions, { headers: corsHeaders });
     }
@@ -186,15 +192,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         type, 
         topic_id, 
         question_text, 
-        JSON.stringify(options), // Serialize only on write
+        JSON.stringify(options), 
         answer, 
-        JSON.stringify(metadata) // Serialize only on write
+        JSON.stringify(metadata)
       ).run();
       return Response.json({ success: true }, { headers: corsHeaders });
     }
   }
 
-  // 5. SEARCH
   if (path === "/api/search") {
     const { q } = Object.fromEntries(url.searchParams);
     const term = `%${q}%`;
@@ -230,3 +235,5 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
   return null;
 }
+
+
