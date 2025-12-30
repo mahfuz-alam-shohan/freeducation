@@ -15,19 +15,18 @@ export const navBarComponent = `
                     {/* Actions Area */}
                     <div className="flex items-center gap-4">
                         {user ? (
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs text-gray-500 hidden sm:block">
-                                    Logged in as <span className="font-bold text-gray-800">{user.username}</span>
+                            <button 
+                                onClick={() => onNavigate('admin')}
+                                className="flex items-center gap-2 pl-1 pr-3 py-1.5 rounded-full hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
+                                title="Go to Admin Dashboard"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                                    {user.username.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="font-bold text-gray-700 text-sm hidden sm:block">
+                                    {user.username}
                                 </span>
-                                <Button 
-                                    variant="primary" 
-                                    size="sm"
-                                    onClick={() => onNavigate('admin')}
-                                    className="flex items-center shadow-blue-200 shadow-md"
-                                >
-                                    <i className="fas fa-tools mr-2"></i> Admin Panel
-                                </Button>
-                            </div>
+                            </button>
                         ) : (
                             <button 
                                 onClick={() => onNavigate(hasAdmin ? 'login' : 'register')} 
@@ -41,4 +40,5 @@ export const navBarComponent = `
             </nav>
         );
 `;
+
 
