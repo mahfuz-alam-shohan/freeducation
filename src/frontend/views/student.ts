@@ -1,6 +1,6 @@
 export const studentComponents = `
-        /* --- API HELPERS --- */
-        const api = {
+        /* --- API HELPERS (Scoped) --- */
+        const studentApi = {
             get: (url) => fetch(url).then(r => r.json()),
         };
 
@@ -11,7 +11,7 @@ export const studentComponents = `
             const [searchResults, setSearchResults] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
 
-            useEffect(() => { api.get('/api/classes').then(setClasses); }, []);
+            useEffect(() => { studentApi.get('/api/classes').then(setClasses); }, []);
 
             useEffect(() => {
                 if (searchQuery.length > 2) {
@@ -30,7 +30,7 @@ export const studentComponents = `
             if (selectedClass) return <StudentClassView cls={selectedClass} onBack={() => setSelectedClass(null)} />;
 
             return (
-                <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-10 animate-fade-in">
+                <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-10 animate-fade-in font-sans text-gray-800">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Academic Programs</h1>
@@ -100,7 +100,7 @@ export const studentComponents = `
 
             useEffect(() => {
                 const fetchD = async () => {
-                    const [g, s] = await Promise.all([api.get(\`/api/groups?class_id=\${cls.id}\`), api.get(\`/api/subjects?class_id=\${cls.id}\`)]);
+                    const [g, s] = await Promise.all([studentApi.get(\`/api/groups?class_id=\${cls.id}\`), studentApi.get(\`/api/subjects?class_id=\${cls.id}\`)]);
                     setGroups(g); setSubjects(s);
                 };
                 fetchD();
@@ -111,7 +111,7 @@ export const studentComponents = `
             const displayedSubjects = subjects.filter(s => s.is_common || (selectedGroupId && s.group_id === selectedGroupId));
 
             return (
-                <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col">
+                <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
                     <div className="flex items-center mb-6 pb-4 border-b border-gray-200">
                         <button onClick={onBack} className="text-gray-500 hover:text-black mr-3 transition-colors"><i className="fas fa-arrow-left"></i></button>
                         <nav className="flex items-center text-sm">
@@ -189,10 +189,10 @@ export const studentComponents = `
             const [topics, setTopics] = useState([]);
             const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-            useEffect(() => { api.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
+            useEffect(() => { studentApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
 
             const loadTopics = async (chapter) => {
-                const data = await api.get(\`/api/topics?chapter_id=\${chapter.id}\`);
+                const data = await studentApi.get(\`/api/topics?chapter_id=\${chapter.id}\`);
                 setTopics(data);
                 if (data.length > 0) setActiveTopic(data[0]);
                 else setActiveTopic(null);
@@ -200,7 +200,7 @@ export const studentComponents = `
             };
 
             return (
-                <div className="flex h-screen bg-white overflow-hidden">
+                <div className="flex h-screen bg-white overflow-hidden font-sans text-gray-800">
                     {/* Sidebar (Responsive) */}
                     <div className={\`
                         fixed inset-0 z-40 bg-white md:static md:z-auto md:w-80 md:flex-shrink-0 border-r border-gray-200 flex flex-col transition-transform duration-300
@@ -295,7 +295,7 @@ export const studentComponents = `
             const [revealed, setRevealed] = useState({});
 
             useEffect(() => {
-                api.get(\`/api/questions?topic_id=\${topicId}\`).then(setQuestions);
+                studentApi.get(\`/api/questions?topic_id=\${topicId}\`).then(setQuestions);
                 setRevealed({});
             }, [topicId]);
 
