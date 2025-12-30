@@ -25,7 +25,8 @@ export function renderAppHtml(initialView: string) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-text-size-adjust: 100%; }
+        input, select, textarea { font-size: 16px; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
