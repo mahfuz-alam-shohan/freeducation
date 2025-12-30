@@ -26,7 +26,7 @@ export const adminComponents = `
                         <span className="truncate">{value}</span>
                         <i className="fas fa-pen text-[10px] text-gray-300 group-hover:text-blue-400 opacity-0 group-hover:opacity-100"></i>
                     </div>
-                    {isEditing && <EditModal title={\`Edit \${label}\`} value={value} onClose={() => setIsEditing(false)} onSave={(v) => { onUpdate(v); setIsEditing(false); }} onDelete={onDelete ? () => { onDelete(); setIsEditing(false); } : null} />}
+                    {isEditing && <EditModal title={\`Edit \${label}\`} value={value} onClose={() => setIsEditing(false)} onSave={async (v) => { await onUpdate(v); setIsEditing(false); }} onDelete={onDelete ? async () => { await onDelete(); setIsEditing(false); } : null} />}
                 </>
             );
         };
@@ -70,13 +70,13 @@ export const adminComponents = `
             const [selectedClass, setSelectedClass] = useState(null);
             const [linkModalClass, setLinkModalClass] = useState(null);
             
-            useEffect(() => { loadClasses(); }, []);
             const loadClasses = () => fetch('/api/classes').then(r => r.json()).then(setClasses);
+            useEffect(() => { loadClasses(); }, []);
+            
             const createClass = async (name) => { if(!name) return; await fetch('/api/classes', { method: 'POST', body: JSON.stringify({ name }) }); setIsModalOpen(false); loadClasses(); };
             const updateClass = async (id, name) => { await fetch('/api/classes', { method: 'PUT', body: JSON.stringify({ id, name }) }); loadClasses(); }; 
             const deleteClass = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'class', id }) }); loadClasses(); };
             
-            // Restored Logic: Save Link
             const saveLink = async (parentId, label) => {
                 await fetch('/api/classes', { method: 'PUT', body: JSON.stringify({ id: linkModalClass.id, parent_class_id: parentId, program_label: label }) });
                 setLinkModalClass(null); loadClasses();
@@ -99,7 +99,6 @@ export const adminComponents = `
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex justify-end gap-2">
-                                            {/* Restored Link Button */}
                                             <button onClick={() => setLinkModalClass(c)} className="text-gray-400 hover:text-orange-600 px-2 py-1 rounded hover:bg-orange-50" title="Link Content"><i className="fas fa-link"></i></button>
                                             {!c.parent_class_id && <button onClick={() => setSelectedClass(c)} className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-xs border border-blue-200">Manage</button>}
                                         </div>
@@ -109,13 +108,11 @@ export const adminComponents = `
                         </table>
                     </div>
                     {isModalOpen && <SimpleInputModal title="New Class" onClose={() => setIsModalOpen(false)} onSave={createClass} />}
-                    {/* Restored Modal */}
                     {linkModalClass && <LinkClassModal cls={linkModalClass} allClasses={classes} onClose={() => setLinkModalClass(null)} onSave={saveLink} />}
                 </div>
             );
         }
 
-        // Restored Link Class Modal Component
         function LinkClassModal({ cls, allClasses, onClose, onSave }) {
             const [parentId, setParentId] = useState(cls.parent_class_id || '');
             const [label, setLabel] = useState(cls.program_label || '');
@@ -135,13 +132,14 @@ export const adminComponents = `
             const [modal, setModal] = useState(null);
             const [selSubject, setSelSubject] = useState(null);
 
-            useEffect(() => { refresh(); }, [cls]);
             const refresh = async () => { const [g, s] = await Promise.all([fetch(\`/api/groups?class_id=\${cls.id}\`), fetch(\`/api/subjects?class_id=\${cls.id}\`)]); setGroups(await g.json()); setSubjects(await s.json()); };
+            useEffect(() => { refresh(); }, [cls]);
             
             const addGroup = async (name) => { await fetch('/api/groups', { method: 'POST', body: JSON.stringify({ name, class_id: cls.id }) }); setModal(null); refresh(); };
             const addSubject = async (data) => { await fetch('/api/subjects', { method: 'POST', body: JSON.stringify({ ...data, class_id: cls.id }) }); setModal(null); refresh(); };
             const delGroup = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'group', id }) }); refresh(); };
             const delSubject = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'subject', id }) }); refresh(); };
+            // Note: Currently no edit API for groups/subjects name in backend, would require updating handleApiRequest
 
             if (selSubject) return <ChapterStructureManager subject={selSubject} onBack={() => setSelSubject(null)} />;
 
@@ -169,8 +167,9 @@ export const adminComponents = `
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [selChapter, setSelChapter] = useState(null);
 
-            useEffect(() => { load(); }, [subject]);
             const load = () => fetch(\`/api/chapters?subject_id=\${subject.id}\`).then(r => r.json()).then(setChapters);
+            useEffect(() => { load(); }, [subject]);
+            
             const create = async (data) => { await fetch('/api/chapters', { method: 'POST', body: JSON.stringify({ ...data, subject_id: subject.id, order_num: data.order || chapters.length + 1 }) }); setIsModalOpen(false); load(); };
             const del = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'chapter', id }) }); load(); };
 
@@ -192,8 +191,9 @@ export const adminComponents = `
             const [topics, setTopics] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
 
-            useEffect(() => { load(); }, [chapter]);
             const load = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(r => r.json()).then(setTopics);
+            useEffect(() => { load(); }, [chapter]);
+            
             const create = async (title) => { await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ title, content: '', chapter_id: chapter.id, order_num: topics.length + 1 }) }); setIsModalOpen(false); load(); };
             const del = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'topic', id }) }); load(); };
 
