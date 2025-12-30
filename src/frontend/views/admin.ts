@@ -397,41 +397,60 @@ export const adminComponents = `
             const [activeChapter, setActiveChapter] = useState(null);
             const [topics, setTopics] = useState([]);
             const [selTopic, setSelTopic] = useState(null);
-            const [isDirectQMode, setIsDirectQMode] = useState(false);
+            const [directTarget, setDirectTarget] = useState(null);
 
             useEffect(() => { adminApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
             const loadTopics = async (ch) => { 
                 setActiveChapter(ch); 
-                setIsDirectQMode(false);
+                setDirectTarget(null);
                 setTopics(await adminApi.get(\`/api/topics?chapter_id=\${ch.id}\`)); 
             };
 
-            if (selTopic || isDirectQMode) {
+            if (selTopic || directTarget) {
+                const directTopic = directTarget
+                    ? directTarget.type === 'subject'
+                        ? { id: 'subject_'+directTarget.id, title: directTarget.title, isSubject: true, realId: directTarget.id }
+                        : { id: 'chapter_'+directTarget.id, title: directTarget.title, isChapter: true, realId: directTarget.id }
+                    : null;
                 return (
                     <TopicContentEditor 
-                        topic={isDirectQMode ? { id: 'chapter_'+activeChapter.id, title: activeChapter.title, isChapter: true, realId: activeChapter.id } : selTopic} 
-                        onBack={() => { setSelTopic(null); setIsDirectQMode(false); }} 
+                        topic={directTopic || selTopic} 
+                        onBack={() => { setSelTopic(null); setDirectTarget(null); }} 
                         chapters={chapters} 
                     />
                 ); 
             }
 
             return (
-                <div className="w-full flex flex-col md:flex-row gap-4 h-[calc(100vh-140px)]">
-                    <div className="w-full md:w-60 bg-white border border-gray-300 flex flex-col">
-                        <div className="p-2 border-b border-gray-300 bg-gray-100 flex items-center"><button onClick={onBack} className="mr-2 text-gray-500"><i className="fas fa-arrow-left"></i></button><span className="font-bold text-xs uppercase text-gray-600">Chapters</span></div>
-                        <div className="flex-1 overflow-y-auto">{chapters.map(c => <button key={c.id} onClick={() => loadTopics(c)} className={\`w-full text-left px-3 py-2 text-sm border-b border-gray-200 \${activeChapter?.id === c.id ? 'bg-blue-50 text-blue-800 font-bold' : 'hover:bg-gray-50'}\`}>{c.title}</button>)}</div>
+                <div className="w-full flex flex-col gap-4 h-[calc(100vh-140px)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800">{subject.name}</h2>
+                            <p className="text-xs text-gray-500">Manage chapters, topics, and direct subject questions.</p>
+                        </div>
+                        <button
+                            onClick={() => setDirectTarget({ type: 'subject', id: subject.id, title: subject.name })}
+                            className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded hover:bg-purple-200 font-bold"
+                        >
+                            Subject Questions
+                        </button>
                     </div>
-                    <div className="flex-1 bg-white border border-gray-300 p-4 overflow-y-auto">
-                        {!activeChapter ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Select a chapter.</div> : 
-                        <>
-                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
-                                <h3 className="font-bold text-gray-800">{activeChapter.title} / Topics</h3>
-                                <button onClick={() => setIsDirectQMode(true)} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">Direct Questions</button>
-                            </div>
-                            <div className="space-y-2">{topics.map(t => <div key={t.id} onClick={() => setSelTopic(t)} className="flex justify-between items-center p-3 border border-gray-300 hover:bg-gray-50 cursor-pointer"><span className="text-sm font-medium">{t.title}</span><span className="text-xs text-blue-600">Edit <i className="fas fa-pen ml-1"></i></span></div>)}</div>
-                            {topics.length === 0 && <div className="text-center text-gray-400 text-sm py-10">No topics. Add direct questions if needed.</div>}
-                        </>}
+                    <div className="w-full flex flex-col md:flex-row gap-4 flex-1 min-h-0">
+                        <div className="w-full md:w-60 bg-white border border-gray-300 flex flex-col">
+                            <div className="p-2 border-b border-gray-300 bg-gray-100 flex items-center"><button onClick={onBack} className="mr-2 text-gray-500"><i className="fas fa-arrow-left"></i></button><span className="font-bold text-xs uppercase text-gray-600">Chapters</span></div>
+                            <div className="flex-1 overflow-y-auto">{chapters.map(c => <button key={c.id} onClick={() => loadTopics(c)} className={\`w-full text-left px-3 py-2 text-sm border-b border-gray-200 \${activeChapter?.id === c.id ? 'bg-blue-50 text-blue-800 font-bold' : 'hover:bg-gray-50'}\`}>{c.title}</button>)}</div>
+                        </div>
+                        <div className="flex-1 bg-white border border-gray-300 p-4 overflow-y-auto">
+                            {!activeChapter ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Select a chapter.</div> : 
+                            <>
+                                <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
+                                    <h3 className="font-bold text-gray-800">{activeChapter.title} / Topics</h3>
+                                    <button onClick={() => setDirectTarget({ type: 'chapter', id: activeChapter.id, title: activeChapter.title })} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">Chapter Questions</button>
+                                </div>
+                                <div className="space-y-2">{topics.map(t => <div key={t.id} onClick={() => setSelTopic(t)} className="flex justify-between items-center p-3 border border-gray-300 hover:bg-gray-50 cursor-pointer"><span className="text-sm font-medium">{t.title}</span><span className="text-xs text-blue-600">Edit <i className="fas fa-pen ml-1"></i></span></div>)}</div>
+                                {topics.length === 0 && <div className="text-center text-gray-400 text-sm py-10">No topics. Add direct questions if needed.</div>}
+                            </>}
+                        </div>
                     </div>
                 </div>
             );
@@ -446,12 +465,16 @@ export const adminComponents = `
             const [partFilter, setPartFilter] = useState('all');
             const [editingQuestion, setEditingQuestion] = useState(null);
 
-            const url = topic.isChapter ? \`/api/questions?chapter_id=\${topic.realId}\` : \`/api/questions?topic_id=\${topic.id}\`;
+            const url = topic.isSubject
+                ? \`/api/questions?subject_id=\${topic.realId}\`
+                : topic.isChapter
+                    ? \`/api/questions?chapter_id=\${topic.realId}\`
+                    : \`/api/questions?topic_id=\${topic.id}\`;
             const loadQs = async () => { setQuestions(await adminApi.get(url)); };
             useEffect(() => { loadQs(); setPartFilter('all'); }, [topic]);
             
             const saveNotes = async () => { 
-                if(topic.isChapter) { alert('Notes not supported for chapters directly yet.'); return; }
+                if(topic.isChapter || topic.isSubject) { alert('Notes not supported for chapter/subject questions yet.'); return; }
                 setIsSavingNote(true); 
                 await adminApi.post('/api/topics', { ...topic, content, order_num: topic.order_num }); 
                 setIsSavingNote(false); 
@@ -459,7 +482,11 @@ export const adminComponents = `
             };
             
             const addQuestion = async (data) => { 
-                const payload = topic.isChapter ? { ...data, topic_id: null, chapter_id: topic.realId } : { ...data, topic_id: topic.id };
+                const payload = topic.isSubject
+                    ? { ...data, topic_id: null, subject_id: topic.realId }
+                    : topic.isChapter
+                        ? { ...data, topic_id: null, chapter_id: topic.realId }
+                        : { ...data, topic_id: topic.id };
                 try {
                     await adminApi.post('/api/questions', payload); 
                     setIsQModalOpen(false); 
@@ -489,13 +516,13 @@ export const adminComponents = `
             return (
                 <div className="w-full h-full flex flex-col">
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-300">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title} {topic.isChapter ? '(Chapter Mode)' : ''}</h2></div>
+                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title} {topic.isSubject ? '(Subject Questions)' : topic.isChapter ? '(Chapter Questions)' : ''}</h2></div>
                         <div className="flex border border-gray-300">
-                            {!topic.isChapter && <button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button>}
+                            {!topic.isChapter && !topic.isSubject && <button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button>}
                             <button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questions.length})</button>
                         </div>
                     </div>
-                    {activeTab === 'notes' && !topic.isChapter ? (
+                    {activeTab === 'notes' && !topic.isChapter && !topic.isSubject ? (
                         <div className="flex-1 flex flex-col border border-gray-300 bg-white">
                             <textarea className="flex-1 w-full p-4 text-sm font-mono outline-none resize-none" placeholder="Markdown content..." value={content} onChange={e => setContent(e.target.value)}></textarea>
                             <div className="p-2 bg-gray-100 border-t border-gray-300 flex justify-end"><button onClick={saveNotes} className="px-4 py-1 bg-blue-600 text-white text-xs hover:bg-blue-700" disabled={isSavingNote}>{isSavingNote ? 'Saving...' : 'Save'}</button></div>
@@ -527,7 +554,10 @@ export const adminComponents = `
                                         {group.items.map(q => (
                                             <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group">
                                                 <div className="flex justify-between mb-1">
-                                                    <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                                        <span className="text-[10px] font-bold uppercase text-gray-500">{q.scope || 'topic'}</span>
+                                                    </div>
                                                     <div className="flex gap-2 items-center">
                                                         <span className="text-[10px] text-gray-500">{q.metadata?.board}</span>
                                                         <button onClick={() => setEditingQuestion(q)} className="text-xs text-blue-600 hover:underline">Edit</button>
@@ -543,7 +573,10 @@ export const adminComponents = `
                                 {otherQuestions.map(q => (
                                     <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group">
                                         <div className="flex justify-between mb-1">
-                                            <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                                <span className="text-[10px] font-bold uppercase text-gray-500">{q.scope || 'topic'}</span>
+                                            </div>
                                             <div className="flex gap-2 items-center">
                                                 <span className="text-[10px] text-gray-500">{q.metadata?.board}</span>
                                                 <button onClick={() => setEditingQuestion(q)} className="text-xs text-blue-600 hover:underline">Edit</button>

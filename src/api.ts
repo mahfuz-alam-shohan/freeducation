@@ -8,11 +8,24 @@ export const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const parseQuestion = (q: any): Question => ({
-  ...q,
-  options: q.options ? JSON.parse(q.options as string) : [],
-  metadata: q.metadata ? JSON.parse(q.metadata as string) : {},
-});
+const inferQuestionScope = (q: Question): string => {
+  if (q.topic_id !== null && q.topic_id !== undefined && q.topic_id !== 0) return "topic";
+  if (q.metadata?.chapter_id !== undefined && q.metadata?.chapter_id !== null && q.metadata?.chapter_id !== "") return "chapter";
+  if (q.metadata?.subject_id !== undefined && q.metadata?.subject_id !== null && q.metadata?.subject_id !== "") return "subject";
+  return "general";
+};
+
+const parseQuestion = (q: any): Question & { scope: string } => {
+  const parsed = {
+    ...q,
+    options: q.options ? JSON.parse(q.options as string) : [],
+    metadata: q.metadata ? JSON.parse(q.metadata as string) : {},
+  };
+  return {
+    ...parsed,
+    scope: parsed.metadata?.scope || inferQuestionScope(parsed),
+  };
+};
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
@@ -183,38 +196,77 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
       if (path === "/api/questions") {
         if (request.method === "GET") {
-          const { topic_id, chapter_id } = Object.fromEntries(url.searchParams);
-          let query = "SELECT * FROM questions";
-          const params: Array<string | number> = [];
+          const { topic_id, chapter_id, subject_id, level } = Object.fromEntries(url.searchParams);
+          const normalizedTopicId = topic_id === undefined || topic_id === "" || topic_id === "null" || topic_id === "undefined" ? undefined : topic_id;
+          const normalizedChapterId = chapter_id === undefined || chapter_id === "" || chapter_id === "null" || chapter_id === "undefined" ? undefined : chapter_id;
+          const normalizedSubjectId = subject_id === undefined || subject_id === "" || subject_id === "null" || subject_id === "undefined" ? undefined : subject_id;
+          const results: Array<Question & { scope: string }> = [];
+          const seen = new Set<number>();
 
-          if (topic_id !== undefined) {
-              query += " WHERE topic_id = ?";
-              params.push(topic_id);
-          } else if (chapter_id !== undefined) {
-              query += " WHERE topic_id IS NULL OR topic_id = 0";
+          const pushQuestions = (rows: any[]) => {
+            rows.map(parseQuestion).forEach((q) => {
+              if (seen.has(q.id)) return;
+              seen.add(q.id);
+              results.push(q);
+            });
+          };
+
+          const fetchTopicQuestions = async () => {
+            if (normalizedTopicId === undefined) return;
+            const questions = await env.DB.prepare("SELECT * FROM questions WHERE topic_id = ?").bind(normalizedTopicId).all();
+            pushQuestions(questions.results);
+          };
+
+          const fetchDirectQuestions = async (matcher: (metadata: any) => boolean) => {
+            const questions = await env.DB.prepare("SELECT * FROM questions WHERE topic_id IS NULL OR topic_id = 0").all();
+            const filtered = questions.results.filter((q) => {
+              const metadata = q.metadata ? JSON.parse(q.metadata as string) : {};
+              return matcher(metadata);
+            });
+            pushQuestions(filtered);
+          };
+
+          if (level === "all") {
+            await fetchTopicQuestions();
+            if (normalizedChapterId !== undefined) {
+              await fetchDirectQuestions((metadata) => String(metadata.chapter_id) === String(normalizedChapterId));
+            }
+            if (normalizedSubjectId !== undefined) {
+              await fetchDirectQuestions((metadata) => String(metadata.subject_id) === String(normalizedSubjectId));
+            }
+            return Response.json(results, { headers: corsHeaders });
           }
 
-          if (params.length > 0 || chapter_id !== undefined) {
-              const questions = params.length > 0
-                ? await env.DB.prepare(query).bind(...params).all()
-                : await env.DB.prepare(query).all();
-              const parsedQuestions = questions.results.map(parseQuestion);
-              if (chapter_id !== undefined && topic_id === undefined) {
-                const filtered = parsedQuestions.filter((q) => String(q.metadata?.chapter_id) === String(chapter_id));
-                return Response.json(filtered, { headers: corsHeaders });
-              }
-              return Response.json(parsedQuestions, { headers: corsHeaders });
+          if (normalizedTopicId !== undefined) {
+            await fetchTopicQuestions();
+            return Response.json(results, { headers: corsHeaders });
           }
+
+          if (normalizedChapterId !== undefined) {
+            await fetchDirectQuestions((metadata) => String(metadata.chapter_id) === String(normalizedChapterId));
+            return Response.json(results, { headers: corsHeaders });
+          }
+
+          if (normalizedSubjectId !== undefined) {
+            await fetchDirectQuestions((metadata) => String(metadata.subject_id) === String(normalizedSubjectId));
+            return Response.json(results, { headers: corsHeaders });
+          }
+
           return Response.json([], { headers: corsHeaders });
         }
         
         if (request.method === "POST") {
-          const { type, topic_id, question_text, options, answer, metadata, chapter_id } = await request.json() as any;
+          const { type, topic_id, question_text, options, answer, metadata, chapter_id, subject_id } = await request.json() as any;
           
-          // Safety: topic_id might be null for direct chapter questions.
+          // Safety: topic_id might be null for direct chapter/subject questions.
           const finalTopicId = topic_id ?? null; 
-          // Store chapter_id in metadata so we can find it later if needed (even though we query by topic usually)
-          const finalMetadata = chapter_id ? { ...metadata, chapter_id: chapter_id } : { ...metadata };
+          const scope = subject_id ? "subject" : chapter_id ? "chapter" : finalTopicId !== null && finalTopicId !== undefined ? "topic" : "general";
+          const finalMetadata = {
+            ...(metadata || {}),
+            ...(chapter_id ? { chapter_id } : {}),
+            ...(subject_id ? { subject_id } : {}),
+            scope,
+          };
 
           await env.DB.prepare(`
             INSERT INTO questions (type, topic_id, question_text, options, answer, metadata) 

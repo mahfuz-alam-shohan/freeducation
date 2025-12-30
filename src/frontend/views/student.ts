@@ -212,6 +212,7 @@ export const studentComponents = `
                         activeTopic={activeTopic} 
                         setActiveTopic={setActiveTopic} 
                         onBack={() => { setActiveChapter(null); setActiveTopic(null); }} 
+                        subjectId={subject.id}
                     />
                 );
             }
@@ -268,7 +269,7 @@ export const studentComponents = `
                             {/* Desktop Content Placeholder or Actual Content */}
                             <div className="hidden md:flex flex-1 flex-col h-full">
                                 {activeChapter ? (
-                                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={activeChapter.title} />
+                                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={activeChapter.title} chapterId={activeChapter.id} subjectId={subject.id} />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-center p-10 text-gray-400">
                                         <i className="fas fa-book-reader text-5xl mb-4 opacity-20"></i>
@@ -283,21 +284,33 @@ export const studentComponents = `
         }
 
         /* --- MOBILE TOPIC VIEW (Drill Down) --- */
-        function StudentTopicView({ chapter, topics, activeTopic, setActiveTopic, onBack }) {
+        function StudentTopicView({ chapter, topics, activeTopic, setActiveTopic, onBack, subjectId }) {
             return (
                 <div className="flex flex-col h-screen bg-white font-sans animate-fade-in fixed inset-0 z-50">
                     <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white">
                         <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
                         <h2 className="font-bold text-gray-900 truncate">{chapter.title}</h2>
                     </div>
-                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={chapter.title} />
+                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={chapter.title} chapterId={chapter.id} subjectId={subjectId} />
                 </div>
             );
         }
 
         /* --- SHARED CONTENT COMPONENT --- */
-        function StudentTopicContent({ topics, activeTopic, setActiveTopic, chapterTitle }) {
-            if (topics.length === 0) return <div className="p-10 text-center text-gray-400">No topics found in this chapter.</div>;
+        function StudentTopicContent({ topics, activeTopic, setActiveTopic, chapterTitle, chapterId, subjectId }) {
+            if (topics.length === 0) {
+                return (
+                    <div className="flex-1 overflow-y-auto p-4 md:p-10">
+                        <div className="max-w-3xl mx-auto">
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{chapterTitle}</h1>
+                            <p className="text-gray-500 mb-8">No topics found in this chapter.</p>
+                            <div className="border-t border-gray-100 pt-8">
+                                <InteractiveQuestions topicId={null} chapterId={chapterId} subjectId={subjectId} />
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
             if (!activeTopic) return null;
 
             return (
@@ -327,7 +340,7 @@ export const studentComponents = `
                                 </div>
                             </article>
                             <div className="border-t border-gray-100 pt-8">
-                                <InteractiveQuestions topicId={activeTopic.id} />
+                                <InteractiveQuestions topicId={activeTopic.id} chapterId={chapterId} subjectId={subjectId} />
                             </div>
                         </div>
                     </div>
@@ -335,16 +348,16 @@ export const studentComponents = `
             );
         }
 
-        function InteractiveQuestions({ topicId }) {
+        function InteractiveQuestions({ topicId, chapterId, subjectId }) {
             const [questions, setQuestions] = useState([]);
             const [revealed, setRevealed] = useState({});
             const [partFilter, setPartFilter] = useState('all');
 
             useEffect(() => {
-                studentApi.get(\`/api/questions?topic_id=\${topicId}\`).then(setQuestions);
+                studentApi.get(\`/api/questions?topic_id=\${topicId}&chapter_id=\${chapterId}&subject_id=\${subjectId}&level=all\`).then(setQuestions);
                 setRevealed({});
                 setPartFilter('all');
-            }, [topicId]);
+            }, [topicId, chapterId, subjectId]);
 
             const handleMCQSelect = (qId, option) => {
                 if (revealed[qId]) return;
@@ -372,10 +385,14 @@ export const studentComponents = `
 
             const renderQuestionCard = (q) => {
                 questionNumber += 1;
+                const scopeLabel = q.scope === 'subject' ? 'Subject-wise' : q.scope === 'chapter' ? 'Chapter-wise' : q.scope === 'topic' ? 'Topic-wise' : 'General';
                 return (
                     <div key={q.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                         <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                            <span className="text-xs font-bold text-gray-500 uppercase">Q{questionNumber} ({q.type})</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-gray-500 uppercase">Q{questionNumber} ({q.type})</span>
+                                <span className="text-[10px] font-bold uppercase text-purple-600">{scopeLabel}</span>
+                            </div>
                             <span className="text-[10px] font-mono text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">{q.metadata?.board || 'N/A'}</span>
                         </div>
                         
@@ -482,4 +499,3 @@ export const studentComponents = `
             );
         }
 `;
-

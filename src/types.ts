@@ -6,14 +6,19 @@ export interface Env {
 
 export interface Question {
   id: number;
-  type: 'MCQ' | 'CQ';
-  topic_id: number;
+  type: 'MCQ' | 'CQ' | 'CQ-Part' | 'WRITTEN';
+  topic_id: number | null;
   question_text: string;
-  options: string[]; // Stored as JSON string in DB, but API returns string[]
+  options: any[]; // Stored as JSON string in DB, but API returns array
   answer: string;
   metadata: {
     board?: string;
     year?: string;
+    school?: string;
+    part?: string;
+    chapter_id?: number | string;
+    subject_id?: number | string;
+    scope?: string;
   }; // Stored as JSON string in DB, but API returns object
 }
 
