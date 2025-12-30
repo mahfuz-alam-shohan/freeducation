@@ -409,7 +409,7 @@ export const studentComponents = `
                                     className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className={`inline-flex items-center justify-center w-11 h-11 rounded-full ${type.color} text-white text-lg font-bold shadow`}>
+                                        <span className={"inline-flex items-center justify-center w-11 h-11 rounded-full " + type.color + " text-white text-lg font-bold shadow"}>
                                             {type.label}
                                         </span>
                                         <div className="text-left">
@@ -464,7 +464,7 @@ export const studentComponents = `
                             <div className="flex flex-wrap gap-2">
                                 <button
                                     onClick={() => setCqFilter('full')}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-full border ${cqFilter === 'full' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                                    className={"px-3 py-1.5 text-xs font-bold rounded-full border " + (cqFilter === 'full' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50')}
                                 >
                                     Full CQ
                                 </button>
@@ -472,7 +472,7 @@ export const studentComponents = `
                                     <button
                                         key={part}
                                         onClick={() => setCqFilter(part)}
-                                        className={`px-3 py-1.5 text-xs font-bold rounded-full border ${cqFilter === part ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                                        className={"px-3 py-1.5 text-xs font-bold rounded-full border " + (cqFilter === part ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50')}
                                     >
                                         {part}
                                     </button>
