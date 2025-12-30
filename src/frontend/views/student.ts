@@ -4,36 +4,14 @@ export const studentComponents = `
             get: (url) => fetch(url).then(r => r.json()),
         };
 
-        const updateStudentRoute = (setRouteState, nextStudentState, options = {}) => {
-            const { replace = false } = options;
-            const nextPath = buildStudentPath(nextStudentState);
-            const method = replace ? 'replaceState' : 'pushState';
-            window.history[method]({ view: 'landing' }, '', nextPath);
-            setRouteState(prev => ({
-                ...prev,
-                view: 'landing',
-                student: {
-                    ...prev.student,
-                    ...nextStudentState
-                }
-            }));
-        };
-
         /* --- LANDING PAGE --- */
-        function StudentLandingPage({ routeState, setRouteState }) {
+        function StudentLandingPage() {
             const [classes, setClasses] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
             const [searchResults, setSearchResults] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
-            const classIdFromRoute = routeState?.student?.classId;
 
             useEffect(() => { studentApi.get('/api/classes').then(setClasses); }, []);
-
-            useEffect(() => {
-                if (!classIdFromRoute || classes.length === 0) return;
-                const found = classes.find(c => String(c.id) === String(classIdFromRoute));
-                if (found) setSelectedClass(found);
-            }, [classIdFromRoute, classes]);
 
             useEffect(() => {
                 if (searchQuery.length > 2) {
@@ -49,19 +27,7 @@ export const studentComponents = `
                 }
             }, [searchQuery]);
 
-            if (selectedClass) {
-                return (
-                    <StudentClassView
-                        cls={selectedClass}
-                        onBack={() => {
-                            setSelectedClass(null);
-                            updateStudentRoute(setRouteState, { classId: null, subjectId: null, chapterId: null, topicId: null });
-                        }}
-                        routeState={routeState}
-                        setRouteState={setRouteState}
-                    />
-                );
-            }
+            if (selectedClass) return <StudentClassView cls={selectedClass} onBack={() => setSelectedClass(null)} />;
 
             return (
                 <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-10 animate-fade-in font-sans text-gray-800">
@@ -101,10 +67,7 @@ export const studentComponents = `
                             classes.map(cls => (
                                 <div 
                                     key={cls.id} 
-                                    onClick={() => {
-                                        setSelectedClass(cls);
-                                        updateStudentRoute(setRouteState, { classId: cls.id, subjectId: null, chapterId: null, topicId: null });
-                                    }} 
+                                    onClick={() => setSelectedClass(cls)} 
                                     className="bg-white border border-gray-200 p-5 rounded-lg hover:border-blue-500 hover:shadow-sm cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
                                 >
                                     <div>
@@ -129,12 +92,11 @@ export const studentComponents = `
         }
 
         /* --- CLASS VIEW --- */
-        function StudentClassView({ cls, onBack, routeState, setRouteState }) {
+        function StudentClassView({ cls, onBack }) {
             const [groups, setGroups] = useState([]);
             const [subjects, setSubjects] = useState([]);
             const [selectedGroupId, setSelectedGroupId] = useState(null);
             const [selectedSubject, setSelectedSubject] = useState(null);
-            const subjectIdFromRoute = routeState?.student?.subjectId;
 
             useEffect(() => {
                 const fetchD = async () => {
@@ -144,25 +106,7 @@ export const studentComponents = `
                 fetchD();
             }, [cls]);
 
-            useEffect(() => {
-                if (!subjectIdFromRoute || subjects.length === 0) return;
-                const found = subjects.find(s => String(s.id) === String(subjectIdFromRoute));
-                if (found) setSelectedSubject(found);
-            }, [subjectIdFromRoute, subjects]);
-
-            if (selectedSubject) {
-                return (
-                    <StudentSubjectView
-                        subject={selectedSubject}
-                        onBack={() => {
-                            setSelectedSubject(null);
-                            updateStudentRoute(setRouteState, { classId: cls.id, subjectId: null, chapterId: null, topicId: null });
-                        }}
-                        routeState={routeState}
-                        setRouteState={setRouteState}
-                    />
-                );
-            }
+            if (selectedSubject) return <StudentSubjectView subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
 
             const displayedSubjects = subjects.filter(s => {
                 if (selectedGroupId === null) return true; 
@@ -220,10 +164,7 @@ export const studentComponents = `
                                     {displayedSubjects.map(sub => (
                                         <div 
                                             key={sub.id} 
-                                            onClick={() => {
-                                                setSelectedSubject(sub);
-                                                updateStudentRoute(setRouteState, { classId: cls.id, subjectId: sub.id, chapterId: null, topicId: null });
-                                            }} 
+                                            onClick={() => setSelectedSubject(sub)} 
                                             className="bg-white border border-gray-200 p-5 rounded-lg hover:border-blue-500 hover:shadow-md cursor-pointer transition-all duration-200 group relative overflow-hidden"
                                         >
                                             <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-white rounded-bl-full -mr-8 -mt-8 z-0"></div>
@@ -247,13 +188,11 @@ export const studentComponents = `
         }
 
         /* --- SUBJECT VIEW (Chapters & Topics) --- */
-        function StudentSubjectView({ subject, onBack, routeState, setRouteState }) {
+        function StudentSubjectView({ subject, onBack }) {
             const [chapters, setChapters] = useState([]);
             const [activeChapter, setActiveChapter] = useState(null); // Used on Desktop as selected sidebar item
             const [activeTopic, setActiveTopic] = useState(null);
             const [topics, setTopics] = useState([]);
-            const chapterIdFromRoute = routeState?.student?.chapterId;
-            const topicIdFromRoute = routeState?.student?.topicId;
             
             useEffect(() => { studentApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
 
@@ -261,37 +200,9 @@ export const studentComponents = `
                 setActiveChapter(chapter);
                 const data = await studentApi.get(\`/api/topics?chapter_id=\${chapter.id}\`);
                 setTopics(data);
-                if (data.length > 0) {
-                    const routeTopic = data.find(t => String(t.id) === String(topicIdFromRoute));
-                    setActiveTopic(routeTopic || data[0]);
-                    updateStudentRoute(setRouteState, {
-                        classId: routeState?.student?.classId,
-                        subjectId: subject.id,
-                        chapterId: chapter.id,
-                        topicId: (routeTopic || data[0]).id
-                    });
-                } else {
-                    setActiveTopic(null);
-                    updateStudentRoute(setRouteState, {
-                        classId: routeState?.student?.classId,
-                        subjectId: subject.id,
-                        chapterId: chapter.id,
-                        topicId: null
-                    });
-                }
+                if (data.length > 0) setActiveTopic(data[0]);
+                else setActiveTopic(null);
             };
-
-            useEffect(() => {
-                if (!chapterIdFromRoute || chapters.length === 0) return;
-                const found = chapters.find(ch => String(ch.id) === String(chapterIdFromRoute));
-                if (found) loadTopicsForChapter(found);
-            }, [chapterIdFromRoute, chapters]);
-
-            useEffect(() => {
-                if (!topicIdFromRoute || topics.length === 0) return;
-                const found = topics.find(t => String(t.id) === String(topicIdFromRoute));
-                if (found) setActiveTopic(found);
-            }, [topicIdFromRoute, topics]);
 
             if (activeChapter && window.innerWidth < 768) {
                 return (
@@ -299,22 +210,8 @@ export const studentComponents = `
                         chapter={activeChapter} 
                         topics={topics} 
                         activeTopic={activeTopic} 
-                        setActiveTopic={(topic) => {
-                            setActiveTopic(topic);
-                            if (topic) {
-                                updateStudentRoute(setRouteState, {
-                                    classId: routeState?.student?.classId,
-                                    subjectId: subject.id,
-                                    chapterId: activeChapter.id,
-                                    topicId: topic.id
-                                });
-                            }
-                        }} 
-                        onBack={() => { 
-                            setActiveChapter(null); 
-                            setActiveTopic(null); 
-                            updateStudentRoute(setRouteState, { classId: routeState?.student?.classId, subjectId: subject.id, chapterId: null, topicId: null });
-                        }} 
+                        setActiveTopic={setActiveTopic} 
+                        onBack={() => { setActiveChapter(null); setActiveTopic(null); }} 
                         subjectId={subject.id}
                     />
                 );
@@ -372,24 +269,7 @@ export const studentComponents = `
                             {/* Desktop Content Placeholder or Actual Content */}
                             <div className="hidden md:flex flex-1 flex-col h-full">
                                 {activeChapter ? (
-                                    <StudentTopicContent 
-                                        topics={topics} 
-                                        activeTopic={activeTopic} 
-                                        setActiveTopic={(topic) => {
-                                            setActiveTopic(topic);
-                                            if (topic) {
-                                                updateStudentRoute(setRouteState, {
-                                                    classId: routeState?.student?.classId,
-                                                    subjectId: subject.id,
-                                                    chapterId: activeChapter.id,
-                                                    topicId: topic.id
-                                                });
-                                            }
-                                        }} 
-                                        chapterTitle={activeChapter.title} 
-                                        chapterId={activeChapter.id} 
-                                        subjectId={subject.id} 
-                                    />
+                                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={activeChapter.title} chapterId={activeChapter.id} subjectId={subject.id} />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-center p-10 text-gray-400">
                                         <i className="fas fa-book-reader text-5xl mb-4 opacity-20"></i>
