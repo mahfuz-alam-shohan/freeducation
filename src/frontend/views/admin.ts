@@ -191,9 +191,8 @@ export const adminComponents = `
             const [topics, setTopics] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
 
-            const load = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(r => r.json()).then(setTopics);
             useEffect(() => { load(); }, [chapter]);
-            
+            const load = () => fetch(\`/api/topics?chapter_id=\${chapter.id}\`).then(r => r.json()).then(setTopics);
             const create = async (title) => { await fetch('/api/topics', { method: 'POST', body: JSON.stringify({ title, content: '', chapter_id: chapter.id, order_num: topics.length + 1 }) }); setIsModalOpen(false); load(); };
             const del = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'topic', id }) }); load(); };
 
