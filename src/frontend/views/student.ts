@@ -108,12 +108,9 @@ export const studentComponents = `
 
             if (selectedSubject) return <StudentSubjectView subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
 
-            // FIX: Correct filtering logic
-            // 1. If NO group selected (All Subjects view): Show ALL subjects (common + any group).
-            // 2. If group SELECTED: Show common subjects + subjects for THAT group only.
             const displayedSubjects = subjects.filter(s => {
-                if (selectedGroupId === null) return true; // Show everything if "All Subjects" selected
-                return s.is_common || s.group_id === selectedGroupId; // Show common OR group-specific
+                if (selectedGroupId === null) return true; 
+                return s.is_common || s.group_id === selectedGroupId; 
             });
 
             return (
@@ -207,11 +204,6 @@ export const studentComponents = `
                 if (data.length > 0) setActiveTopic(data[0]);
                 else setActiveTopic(null);
             };
-
-            // If a chapter is selected (Desktop logic or Mobile drill-down), show content
-            // We differentiate view based on whether 'activeChapter' is set.
-            // On mobile, if no chapter selected, we show list. If selected, we show content.
-            // On desktop, we show split view (Sidebar + Content).
 
             // Mobile: If chapter selected, show content view.
             if (activeChapter && window.innerWidth < 768) {
