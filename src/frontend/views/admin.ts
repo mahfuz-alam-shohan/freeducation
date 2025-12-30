@@ -7,7 +7,7 @@ export const adminComponents = `
                         <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">{title}</h4>
                         <input className="w-full border rounded p-2 text-sm mb-4 focus:ring-2 focus:ring-blue-500 outline-none" value={val} onChange={e => setVal(e.target.value)} autoFocus />
                         <div className="flex justify-between items-center">
-                            {onDelete && <button onClick={() => { if(confirm('Permanently delete this item?')) onDelete(); }} className="text-red-500 text-xs hover:bg-red-50 p-2 rounded flex items-center"><i className="fas fa-trash mr-1"></i> Delete</button>}
+                            {onDelete && <button onClick={() => { if(confirm('Delete this item?')) onDelete(); }} className="text-red-500 text-xs hover:bg-red-50 p-1.5 rounded"><i className="fas fa-trash"></i></button>}
                             <div className="flex gap-2">
                                 <button onClick={onClose} className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
                                 <button onClick={() => onSave(val)} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
@@ -64,21 +64,23 @@ export const adminComponents = `
             <button onClick={onClick} className={\`flex flex-col items-center p-1 \${active ? 'text-blue-600' : 'text-gray-400'}\`}><i className={\`\${icon} text-lg mb-1\`}></i><span className="text-[10px]">{label}</span></button>
         );
 
-        // --- API HELPERS ---
-        const api = {
-            del: async (type, id) => fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type, id }) }) // Using generic handler
-        };
-
         function ClassStructureManager() {
             const [classes, setClasses] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [selectedClass, setSelectedClass] = useState(null);
+            const [linkModalClass, setLinkModalClass] = useState(null);
             
             useEffect(() => { loadClasses(); }, []);
             const loadClasses = () => fetch('/api/classes').then(r => r.json()).then(setClasses);
             const createClass = async (name) => { if(!name) return; await fetch('/api/classes', { method: 'POST', body: JSON.stringify({ name }) }); setIsModalOpen(false); loadClasses(); };
             const updateClass = async (id, name) => { await fetch('/api/classes', { method: 'PUT', body: JSON.stringify({ id, name }) }); loadClasses(); }; 
             const deleteClass = async (id) => { await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type: 'class', id }) }); loadClasses(); };
+            
+            // Restored Logic: Save Link
+            const saveLink = async (parentId, label) => {
+                await fetch('/api/classes', { method: 'PUT', body: JSON.stringify({ id: linkModalClass.id, parent_class_id: parentId, program_label: label }) });
+                setLinkModalClass(null); loadClasses();
+            };
 
             if (selectedClass) return <StructureDetail cls={selectedClass} onBack={() => setSelectedClass(null)} />;
 
@@ -87,18 +89,43 @@ export const adminComponents = `
                     <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold text-gray-800">Academic Structure</h2><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-8 h-8 rounded hover:bg-blue-700 flex items-center justify-center"><i className="fas fa-plus"></i></button></div>
                     <div className="bg-white border rounded overflow-hidden">
                         <table className="w-full text-xs md:text-sm text-left">
-                            <thead className="bg-gray-50 border-b text-gray-500 uppercase text-[10px] md:text-xs"><tr><th className="px-4 py-3 w-16">ID</th><th className="px-4 py-3">Class Name</th><th className="px-4 py-3 text-right">Actions</th></tr></thead>
+                            <thead className="bg-gray-50 border-b text-gray-500 uppercase text-[10px] md:text-xs"><tr><th className="px-4 py-3 w-16">ID</th><th className="px-4 py-3">Class Name</th><th className="px-4 py-3 w-40 text-right">Actions</th></tr></thead>
                             <tbody className="divide-y">{classes.map(c => (
                                 <tr key={c.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3 text-gray-400 font-mono">{c.id}</td>
-                                    <td className="px-4 py-3 font-medium"><TableCell label="Class Name" value={c.name} onUpdate={(v) => updateClass(c.id, v)} onDelete={() => deleteClass(c.id)} /></td>
-                                    <td className="px-4 py-3 text-right"><button onClick={() => setSelectedClass(c)} className="text-blue-600 hover:bg-blue-50 px-3 py-1 rounded text-xs border border-blue-200">Manage Structure</button></td>
+                                    <td className="px-4 py-3 font-medium">
+                                        <TableCell label="Class Name" value={c.name} onUpdate={(v) => updateClass(c.id, v)} onDelete={() => deleteClass(c.id)} />
+                                        {c.parent_class_id && <div className="text-[10px] text-orange-600 mt-1"><i className="fas fa-link mr-1"></i>Linked to: {c.parent_name}</div>}
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex justify-end gap-2">
+                                            {/* Restored Link Button */}
+                                            <button onClick={() => setLinkModalClass(c)} className="text-gray-400 hover:text-orange-600 px-2 py-1 rounded hover:bg-orange-50" title="Link Content"><i className="fas fa-link"></i></button>
+                                            {!c.parent_class_id && <button onClick={() => setSelectedClass(c)} className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-xs border border-blue-200">Manage</button>}
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}</tbody>
                         </table>
                     </div>
                     {isModalOpen && <SimpleInputModal title="New Class" onClose={() => setIsModalOpen(false)} onSave={createClass} />}
+                    {/* Restored Modal */}
+                    {linkModalClass && <LinkClassModal cls={linkModalClass} allClasses={classes} onClose={() => setLinkModalClass(null)} onSave={saveLink} />}
                 </div>
+            );
+        }
+
+        // Restored Link Class Modal Component
+        function LinkClassModal({ cls, allClasses, onClose, onSave }) {
+            const [parentId, setParentId] = useState(cls.parent_class_id || '');
+            const [label, setLabel] = useState(cls.program_label || '');
+            return (
+                <Modal isOpen={true} onClose={onClose} title="Content Linking">
+                    <div className="bg-blue-50 p-3 rounded mb-4 text-blue-800 text-xs"><i className="fas fa-info-circle mr-1"></i>Link <strong>{cls.name}</strong> to use content from another class.</div>
+                    <div className="mb-4"><label className="block text-xs font-bold text-gray-700 mb-1">Source Class</label><select className="w-full border p-2 rounded text-sm bg-white" value={parentId} onChange={e => setParentId(e.target.value)}><option value="">-- Independent (No Link) --</option>{allClasses.filter(c => c.id !== cls.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                    {parentId && <Input label="Label (e.g. SSC)" value={label} onChange={e => setLabel(e.target.value)} />}
+                    <div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(parentId, label)}>Save</Button></div>
+                </Modal>
             );
         }
 
@@ -182,6 +209,7 @@ export const adminComponents = `
             );
         }
 
+        // --- CONTENT MANAGER SECTION ---
         function ContentManagerLanding() {
             const [classes, setClasses] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
@@ -274,6 +302,7 @@ export const adminComponents = `
             );
         }
 
+        // --- UTILS & MODALS ---
         function SimpleInputModal({ title, onClose, onSave }) {
             const [val, setVal] = useState('');
             return <Modal isOpen={true} onClose={onClose} title={title}><Input value={val} onChange={e => setVal(e.target.value)} autoFocus /><div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave(val)}>Save</Button></div></Modal>;
