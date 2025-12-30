@@ -4,10 +4,9 @@ export const mainApp = `
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
 
-            // Initial System Check
             useEffect(() => {
                 const initSystem = async () => {
-                    await fetch('/api/init', { method: 'POST' }); // Ensure DB is ready
+                    await fetch('/api/init', { method: 'POST' });
                     const res = await fetch('/api/setup-status');
                     const data = await res.json();
                     setHasAdmin(data.hasAdmin);
@@ -48,10 +47,7 @@ export const mainApp = `
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    {/* Navigation Bar */}
-                    <NavBar user={user} hasAdmin={hasAdmin} onNavigate={setView} />
-
-                    {/* Main Content Area */}
+                    <NavBar user={user} hasAdmin={hasAdmin} onNavigate={setView} activeView={view} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
                         {view === 'landing' && <StudentLandingPage />}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
