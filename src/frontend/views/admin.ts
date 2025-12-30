@@ -472,23 +472,30 @@ export const adminComponents = `
             );
         }
 
-        /* --- ADVANCED CQ MODAL (Refined) --- */
+        /* --- ADVANCED CQ MODAL (Refined for Universal Written) --- */
         function CreateCQModal({ onClose, onSave, allChapters }) {
-            const [mode, setMode] = useState('full');
+            const [mode, setMode] = useState('full'); // full, single, written
             const [scenario, setScenario] = useState('');
             const [board, setBoard] = useState('');
             const [year, setYear] = useState('');
             const [school, setSchool] = useState('');
+            
+            // Full CQ
             const [subQs, setSubQs] = useState([
                 { id: 'ক', text: '', answer: '', connected: false, chapterId: '', topicId: '' },
                 { id: 'খ', text: '', answer: '', connected: false, chapterId: '', topicId: '' },
                 { id: 'গ', text: '', answer: '', connected: true, chapterId: '', topicId: '' },
                 { id: 'ঘ', text: '', answer: '', connected: true, chapterId: '', topicId: '' }
             ]);
+            
+            // Single CQ Part
             const [singlePart, setSinglePart] = useState('ক');
             const [singleText, setSingleText] = useState('');
             const [singleAnswer, setSingleAnswer] = useState('');
             
+            // Written / General
+            const [writtenQs, setWrittenQs] = useState([{ id: 'a', text: '', answer: '' }]);
+
             const [topicsMap, setTopicsMap] = useState({});
 
             const handleChapterChange = async (idx, chapterId) => {
@@ -506,44 +513,42 @@ export const adminComponents = `
             const handleAnswerChange = (idx, text) => { const newQs = [...subQs]; newQs[idx].answer = text; setSubQs(newQs); };
             const handleConnChange = (idx, val) => { const newQs = [...subQs]; newQs[idx].connected = val; setSubQs(newQs); };
 
+            // Written Handlers
+            const addWrittenRow = () => setWrittenQs([...writtenQs, { id: String.fromCharCode(97 + writtenQs.length), text: '', answer: '' }]);
+            const updateWritten = (idx, field, val) => { const n = [...writtenQs]; n[idx][field] = val; setWrittenQs(n); };
+            const removeWrittenRow = (idx) => setWrittenQs(writtenQs.filter((_, i) => i !== idx));
+
             const handleSave = () => {
+                let payload = {};
                 if (mode === 'single') {
-                    onSave({
-                        type: 'CQ-Part',
-                        question_text: singleText,
-                        options: [],
-                        answer: singleAnswer,
-                        metadata: { board, year, school, part: singlePart }
-                    });
+                    payload = { type: 'CQ-Part', question_text: singleText, options: [], answer: singleAnswer, metadata: { board, year, school, part: singlePart } };
+                } else if (mode === 'written') {
+                    payload = { type: 'WRITTEN', question_text: scenario, options: writtenQs, answer: '', metadata: { board, year, school } };
                 } else {
-                    onSave({
-                        type: 'CQ',
-                        question_text: scenario,
-                        options: subQs, 
-                        answer: '', 
-                        metadata: { board, year, school }
-                    });
+                    payload = { type: 'CQ', question_text: scenario, options: subQs, answer: '', metadata: { board, year, school } };
                 }
+                onSave(payload);
             };
 
             return (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}>
                     <div className="bg-white w-[900px] h-[90vh] flex flex-col border border-gray-400 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-gray-800">Add Creative Question</h3><button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button></div>
+                        <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-gray-800">Add Question</h3><button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button></div>
                         
-                        <div className="flex border-b border-gray-300">
-                            <button onClick={() => setMode('full')} className={\`flex-1 py-2 text-sm font-bold \${mode === 'full' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'bg-gray-100 text-gray-500'}\`}>Full Scenario CQ</button>
-                            <button onClick={() => setMode('single')} className={\`flex-1 py-2 text-sm font-bold \${mode === 'single' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'bg-gray-100 text-gray-500'}\`}>Single Question Part</button>
+                        <div className="flex border-b border-gray-300 bg-gray-50">
+                            <button onClick={() => setMode('full')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'full' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>CQ (Scenario)</button>
+                            <button onClick={() => setMode('single')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'single' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>Single Part</button>
+                            <button onClick={() => setMode('written')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'written' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>General / Written</button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6">
                             <div className="grid grid-cols-3 gap-4 mb-6">
-                                <div><label className="block text-xs font-bold mb-1">Board Name</label><input className="w-full border p-2 text-sm" placeholder="Dhaka" value={board} onChange={e => setBoard(e.target.value)} /></div>
+                                <div><label className="block text-xs font-bold mb-1">Board</label><input className="w-full border p-2 text-sm" placeholder="Dhaka" value={board} onChange={e => setBoard(e.target.value)} /></div>
                                 <div><label className="block text-xs font-bold mb-1">Year</label><input className="w-full border p-2 text-sm" placeholder="2024" value={year} onChange={e => setYear(e.target.value)} /></div>
-                                <div><label className="block text-xs font-bold mb-1">School (Optional)</label><input className="w-full border p-2 text-sm" placeholder="Ideal School" value={school} onChange={e => setSchool(e.target.value)} /></div>
+                                <div><label className="block text-xs font-bold mb-1">School</label><input className="w-full border p-2 text-sm" placeholder="Ideal School" value={school} onChange={e => setSchool(e.target.value)} /></div>
                             </div>
 
-                            {mode === 'full' ? (
+                            {mode === 'full' && (
                                 <>
                                     <div className="mb-6"><label className="block text-xs font-bold mb-1 uppercase text-blue-600">Scenario / Stem</label><textarea className="w-full border border-blue-200 p-3 text-sm h-24 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Enter the creative scenario here..." value={scenario} onChange={e => setScenario(e.target.value)}></textarea></div>
                                     <div className="space-y-4">
@@ -553,21 +558,23 @@ export const adminComponents = `
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-sm w-6 bg-gray-200 text-center rounded">{q.id}</span>
                                                         <input className="flex-1 border p-1.5 text-sm" placeholder="Question text..." value={q.text} onChange={e => handleTextChange(i, e.target.value)} />
-                                                        <label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2"><input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link Scenario</label>
+                                                        <label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2"><input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link</label>
                                                     </div>
                                                     <div className="flex gap-2 pl-8">
-                                                        <input className="flex-1 border p-1.5 text-xs bg-white" placeholder="Answer / Key Points / Solution..." value={q.answer} onChange={e => handleAnswerChange(i, e.target.value)} />
+                                                        <input className="flex-1 border p-1.5 text-xs bg-white" placeholder="Answer / Key Points..." value={q.answer} onChange={e => handleAnswerChange(i, e.target.value)} />
                                                     </div>
                                                     <div className="flex gap-2 pl-8">
-                                                        <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}><option value="">Select Chapter</option>{allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
-                                                        <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}><option value="">Select Topic</option>{topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
+                                                        <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}><option value="">Chapter (Optional)</option>{allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                                                        <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}><option value="">Topic (Optional)</option>{topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </>
-                            ) : (
+                            )}
+
+                            {mode === 'single' && (
                                 <div>
                                     <div className="mb-4">
                                         <label className="block text-xs font-bold mb-1">Select Part</label>
@@ -577,18 +584,31 @@ export const adminComponents = `
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-bold mb-1">Question Text</label>
-                                        <textarea className="w-full border p-3 text-sm h-24" placeholder="Type the question..." value={singleText} onChange={e => setSingleText(e.target.value)}></textarea>
+                                    <div className="mb-4"><label className="block text-xs font-bold mb-1">Question Text</label><textarea className="w-full border p-3 text-sm h-32" placeholder="Type the question..." value={singleText} onChange={e => setSingleText(e.target.value)}></textarea></div>
+                                    <div className="mb-4"><label className="block text-xs font-bold mb-1">Answer / Solution</label><textarea className="w-full border p-3 text-sm h-32" placeholder="Type the solution..." value={singleAnswer} onChange={e => setSingleAnswer(e.target.value)}></textarea></div>
+                                </div>
+                            )}
+
+                            {mode === 'written' && (
+                                <div>
+                                    <div className="mb-6"><label className="block text-xs font-bold mb-1 uppercase text-blue-600">Main Instruction / Passage</label><textarea className="w-full border border-blue-200 p-3 text-sm h-24 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="e.g. Fill in the blanks with suitable words..." value={scenario} onChange={e => setScenario(e.target.value)}></textarea></div>
+                                    <div className="space-y-2">
+                                        {writtenQs.map((q, i) => (
+                                            <div key={i} className="flex gap-2 items-start">
+                                                <span className="font-bold text-sm w-6 pt-2 text-center">{q.id}.</span>
+                                                <div className="flex-1 space-y-1">
+                                                    <input className="w-full border p-2 text-sm" placeholder="Question / Sub-part" value={q.text} onChange={e => updateWritten(i, 'text', e.target.value)} />
+                                                    <input className="w-full border p-2 text-xs bg-gray-50" placeholder="Answer / Solution" value={q.answer} onChange={e => updateWritten(i, 'answer', e.target.value)} />
+                                                </div>
+                                                <button onClick={() => removeWrittenRow(i)} className="text-red-500 pt-2 hover:text-red-700"><i className="fas fa-times"></i></button>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-bold mb-1">Answer / Solution</label>
-                                        <textarea className="w-full border p-3 text-sm h-24" placeholder="Type the solution or key points..." value={singleAnswer} onChange={e => setSingleAnswer(e.target.value)}></textarea>
-                                    </div>
+                                    <button onClick={addWrittenRow} className="mt-4 text-xs font-bold text-blue-600 hover:underline"><i className="fas fa-plus"></i> Add Sub-Question</button>
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3"><button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button><button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save CQ</button></div>
+                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3"><button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button><button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save</button></div>
                     </div>
                 </div>
             );
