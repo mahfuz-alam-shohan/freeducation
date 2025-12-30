@@ -507,11 +507,16 @@ export const adminComponents = `
             const partOrder = ['ক', 'খ', 'গ', 'ঘ'];
             const cqPartQuestions = questions.filter(q => q.type === 'CQ-Part');
             const otherQuestions = questions.filter(q => q.type !== 'CQ-Part');
+            const cqScenarioQuestions = questions.filter(q => q.type === 'CQ');
+            const cqScenarioPartsCount = cqScenarioQuestions.reduce((sum, q) => sum + (q.options || []).length, 0);
+            const questionCount = questions.length - cqScenarioQuestions.length + cqScenarioPartsCount;
             const filteredCqParts = partFilter === 'all' ? cqPartQuestions : cqPartQuestions.filter(q => q.metadata?.part === partFilter);
             const groupedCqParts = partOrder
                 .map(part => ({ part, items: filteredCqParts.filter(q => q.metadata?.part === part) }))
                 .filter(group => group.items.length > 0);
             const hasCqParts = cqPartQuestions.length > 0;
+            const defaultChapterId = topic.isChapter ? topic.realId : topic.isSubject ? '' : topic.chapter_id;
+            const defaultTopicId = topic.isChapter || topic.isSubject ? '' : topic.id;
 
             return (
                 <div className="w-full h-full flex flex-col">
@@ -519,7 +524,7 @@ export const adminComponents = `
                         <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title} {topic.isSubject ? '(Subject Questions)' : topic.isChapter ? '(Chapter Questions)' : ''}</h2></div>
                         <div className="flex border border-gray-300">
                             {!topic.isChapter && !topic.isSubject && <button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button>}
-                            <button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questions.length})</button>
+                            <button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questionCount})</button>
                         </div>
                     </div>
                     {activeTab === 'notes' && !topic.isChapter && !topic.isSubject ? (
@@ -588,10 +593,19 @@ export const adminComponents = `
                                             <div className="mt-2 text-xs text-gray-600"><span className="font-bold">Answer:</span> {q.answer || '—'}</div>
                                         )}
                                         {(q.type === 'CQ' || q.type === 'WRITTEN') && (
-                                            <div className="mt-2 space-y-1 text-xs text-gray-600">
-                                                {(q.options || []).map((opt, idx) => (
-                                                    <div key={idx}><span className="font-bold">{opt.id}.</span> {opt.answer || '—'}</div>
-                                                ))}
+                                            <div className="mt-2 space-y-3 text-xs text-gray-600">
+                                                <div className="space-y-1">
+                                                    <div className="font-bold text-gray-700 uppercase">Questions</div>
+                                                    {(q.options || []).map((opt, idx) => (
+                                                        <div key={idx}><span className="font-bold">{opt.id}.</span> {opt.text || '—'}</div>
+                                                    ))}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <div className="font-bold text-gray-700 uppercase">Answers</div>
+                                                    {(q.options || []).map((opt, idx) => (
+                                                        <div key={idx}><span className="font-bold">{opt.id}.</span> {opt.answer || '—'}</div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -602,19 +616,38 @@ export const adminComponents = `
                             </div>
                         </div>
                     )}
-                    {isQModalOpen && <CreateCQModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} allChapters={chapters} />}
-                    {editingQuestion && <EditQuestionModal question={editingQuestion} onClose={() => setEditingQuestion(null)} onSave={updateQuestion} />}
+                    {isQModalOpen && <CreateCQModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} allChapters={chapters} defaultChapterId={defaultChapterId} defaultTopicId={defaultTopicId} />}
+                    {editingQuestion && <EditQuestionModal question={editingQuestion} onClose={() => setEditingQuestion(null)} onSave={updateQuestion} allChapters={chapters} />}
                 </div>
             );
         }
 
         /* --- ADVANCED CQ MODAL (Refined for Universal Written) --- */
-        function EditQuestionModal({ question, onClose, onSave }) {
+        function EditQuestionModal({ question, onClose, onSave, allChapters }) {
             const [questionText, setQuestionText] = useState(question.question_text || '');
             const [answer, setAnswer] = useState(question.answer || '');
             const [metadata, setMetadata] = useState(question.metadata || {});
             const [options, setOptions] = useState(question.options || []);
             const [part, setPart] = useState(question.metadata?.part || 'ক');
+            const [topicsMap, setTopicsMap] = useState({});
+
+            useEffect(() => {
+                const loadTopics = async () => {
+                    if (question.type !== 'CQ') return;
+                    const chapterIds = Array.from(new Set((options || []).map(opt => opt.chapterId).filter(Boolean)));
+                    if (chapterIds.length === 0) return;
+                    const loaded = {};
+                    for (const chapterId of chapterIds) {
+                        if (!topicsMap[chapterId]) {
+                            loaded[chapterId] = await adminApi.get(\`/api/topics?chapter_id=\${chapterId}\`);
+                        }
+                    }
+                    if (Object.keys(loaded).length > 0) {
+                        setTopicsMap(prev => ({ ...prev, ...loaded }));
+                    }
+                };
+                loadTopics();
+            }, [question.type]);
 
             const updateOption = (idx, field, value) => {
                 const updated = [...options];
@@ -638,6 +671,15 @@ export const adminComponents = `
 
             const addMcqOption = () => setOptions([...options, '']);
             const removeMcqOption = (idx) => setOptions(options.filter((_, i) => i !== idx));
+
+            const handleCqChapterChange = async (idx, chapterId) => {
+                updateOption(idx, 'chapterId', chapterId);
+                updateOption(idx, 'topicId', '');
+                if (chapterId && !topicsMap[chapterId]) {
+                    const topics = await adminApi.get(\`/api/topics?chapter_id=\${chapterId}\`);
+                    setTopicsMap(prev => ({ ...prev, [chapterId]: topics }));
+                }
+            };
 
             const handleSave = () => {
                 const finalMetadata = question.type === 'CQ-Part'
@@ -695,15 +737,37 @@ export const adminComponents = `
                                 </div>
                             )}
                             {(question.type === 'CQ' || question.type === 'WRITTEN') && (
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                     <label className="block text-xs font-bold mb-1">Sub-Questions</label>
                                     {options.map((opt, idx) => (
-                                        <div key={idx} className="flex gap-2 items-start">
-                                            <span className="font-bold text-sm w-6 pt-2 text-center">{opt.id}.</span>
-                                            <div className="flex-1 space-y-1">
-                                                <input className="w-full border p-2 text-sm" value={opt.text} onChange={e => updateOption(idx, 'text', e.target.value)} />
-                                                <input className="w-full border p-2 text-xs bg-gray-50" value={opt.answer} onChange={e => updateOption(idx, 'answer', e.target.value)} />
+                                        <div key={idx} className="flex flex-col gap-2 border border-gray-200 rounded p-3 bg-gray-50/70">
+                                            <div className="flex gap-2 items-start">
+                                                <span className="font-bold text-sm w-6 pt-2 text-center">{opt.id}.</span>
+                                                <div className="flex-1 space-y-1">
+                                                    <input className="w-full border p-2 text-sm" value={opt.text} onChange={e => updateOption(idx, 'text', e.target.value)} />
+                                                    <input className="w-full border p-2 text-xs bg-gray-50" value={opt.answer} onChange={e => updateOption(idx, 'answer', e.target.value)} />
+                                                </div>
                                             </div>
+                                            {question.type === 'CQ' && (
+                                                <div className="flex flex-wrap gap-2 items-center pl-8">
+                                                    <label className="flex items-center gap-1 text-xs cursor-pointer select-none">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={opt.connected !== false}
+                                                            onChange={e => updateOption(idx, 'connected', e.target.checked)}
+                                                        />
+                                                        Link to scenario
+                                                    </label>
+                                                    <select className="flex-1 border p-1.5 text-xs text-gray-600" value={opt.chapterId || ''} onChange={e => handleCqChapterChange(idx, e.target.value)}>
+                                                        <option value="">Chapter (Optional)</option>
+                                                        {allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                                                    </select>
+                                                    <select className="flex-1 border p-1.5 text-xs text-gray-600" value={opt.topicId || ''} onChange={e => updateOption(idx, 'topicId', e.target.value)} disabled={!opt.chapterId}>
+                                                        <option value="">Topic (Optional)</option>
+                                                        {topicsMap[opt.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -718,7 +782,7 @@ export const adminComponents = `
             );
         }
 
-        function CreateCQModal({ onClose, onSave, allChapters }) {
+        function CreateCQModal({ onClose, onSave, allChapters, defaultChapterId, defaultTopicId }) {
             const [mode, setMode] = useState('full'); // full, single, written
             const [scenario, setScenario] = useState('');
             const [board, setBoard] = useState('');
@@ -726,12 +790,16 @@ export const adminComponents = `
             const [school, setSchool] = useState('');
             
             // Full CQ
-            const [subQs, setSubQs] = useState([
-                { id: 'ক', text: '', answer: '', connected: false, chapterId: '', topicId: '' },
-                { id: 'খ', text: '', answer: '', connected: false, chapterId: '', topicId: '' },
-                { id: 'গ', text: '', answer: '', connected: true, chapterId: '', topicId: '' },
-                { id: 'ঘ', text: '', answer: '', connected: true, chapterId: '', topicId: '' }
-            ]);
+            const [subQs, setSubQs] = useState(() => {
+                const chapterId = defaultChapterId ? String(defaultChapterId) : '';
+                const topicId = defaultTopicId ? String(defaultTopicId) : '';
+                return [
+                    { id: 'ক', text: '', answer: '', connected: false, chapterId, topicId },
+                    { id: 'খ', text: '', answer: '', connected: false, chapterId, topicId },
+                    { id: 'গ', text: '', answer: '', connected: true, chapterId, topicId },
+                    { id: 'ঘ', text: '', answer: '', connected: true, chapterId, topicId }
+                ];
+            });
             
             // Single CQ Part
             const [singlePart, setSinglePart] = useState('ক');
@@ -742,6 +810,16 @@ export const adminComponents = `
             const [writtenQs, setWrittenQs] = useState([{ id: 'a', text: '', answer: '' }]);
 
             const [topicsMap, setTopicsMap] = useState({});
+
+            useEffect(() => {
+                const loadDefaultTopics = async () => {
+                    const normalizedChapterId = defaultChapterId ? String(defaultChapterId) : '';
+                    if (!normalizedChapterId || topicsMap[normalizedChapterId]) return;
+                    const t = await adminApi.get(\`/api/topics?chapter_id=\${normalizedChapterId}\`);
+                    setTopicsMap(prev => ({ ...prev, [normalizedChapterId]: t }));
+                };
+                loadDefaultTopics();
+            }, [defaultChapterId]);
 
             const handleChapterChange = async (idx, chapterId) => {
                 const newQs = [...subQs];
