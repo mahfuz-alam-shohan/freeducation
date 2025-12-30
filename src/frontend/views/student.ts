@@ -351,12 +351,12 @@ export const studentComponents = `
         function InteractiveQuestions({ topicId, chapterId, subjectId }) {
             const [questions, setQuestions] = useState([]);
             const [revealed, setRevealed] = useState({});
-            const [partFilter, setPartFilter] = useState('all');
+            const [viewMode, setViewMode] = useState('all');
 
             useEffect(() => {
                 studentApi.get(\`/api/questions?topic_id=\${topicId}&chapter_id=\${chapterId}&subject_id=\${subjectId}&level=all\`).then(setQuestions);
                 setRevealed({});
-                setPartFilter('all');
+                setViewMode('all');
             }, [topicId, chapterId, subjectId]);
 
             const handleMCQSelect = (qId, option) => {
@@ -376,58 +376,63 @@ export const studentComponents = `
             const partOrder = ['ক', 'খ', 'গ', 'ঘ'];
             const cqPartQuestions = questions.filter(q => q.type === 'CQ-Part');
             const otherQuestions = questions.filter(q => q.type !== 'CQ-Part');
-            const filteredCqParts = partFilter === 'all' ? cqPartQuestions : cqPartQuestions.filter(q => q.metadata?.part === partFilter);
             const groupedCqParts = partOrder
-                .map(part => ({ part, items: filteredCqParts.filter(q => q.metadata?.part === part) }))
+                .map(part => ({ part, items: cqPartQuestions.filter(q => q.metadata?.part === part) }))
                 .filter(group => group.items.length > 0);
-            const hasCqParts = cqPartQuestions.length > 0;
             let questionNumber = 0;
 
-            const renderQuestionCard = (q) => {
+            const toggleAllAnswers = (qId, count) => {
+                const current = revealed[qId] || {};
+                const shouldShow = !Object.values(current).some(Boolean);
+                const updated = {};
+                for (let i = 0; i < count; i += 1) {
+                    updated[i] = shouldShow;
+                }
+                setRevealed(prev => ({ ...prev, [qId]: updated }));
+            };
+
+            const renderQuestionRow = (q) => {
                 questionNumber += 1;
                 const scopeLabel = q.scope === 'subject' ? 'Subject-wise' : q.scope === 'chapter' ? 'Chapter-wise' : q.scope === 'topic' ? 'Topic-wise' : 'General';
                 return (
-                    <div key={q.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                        <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Q{questionNumber} ({q.type})</span>
-                                <span className="text-[10px] font-bold uppercase text-purple-600">{scopeLabel}</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">{q.metadata?.board || 'N/A'}</span>
+                    <div key={q.id} className="border-b border-gray-200 py-4">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                            <span className="font-bold uppercase text-gray-600">Q{questionNumber}</span>
+                            <span className="uppercase">{q.type}</span>
+                            <span className="uppercase text-purple-600 font-semibold">{scopeLabel}</span>
+                            <span className="text-[10px] font-mono text-gray-400">{q.metadata?.board || 'N/A'}</span>
                         </div>
-                        
-                        <div className="p-5 md:p-6">
+
+                        <div className="mt-2 space-y-3 text-sm text-gray-800">
                             {q.type === 'CQ' || q.type === 'CQ-Part' || q.type === 'WRITTEN' ? (
                                 <>
-                                    {/* Scenario */}
-                                    {q.question_text && (
-                                        <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-300 text-gray-800 text-sm italic rounded-r leading-relaxed whitespace-pre-line">
-                                            {q.question_text}
-                                        </div>
+                                    {q.question_text && q.type !== 'CQ-Part' && (
+                                        <p className="text-gray-700 whitespace-pre-line">{q.question_text}</p>
                                     )}
-                                    
-                                    {/* Sub-Questions Loop */}
-                                    <div className="space-y-4">
-                                        {/* Handle Standalone Part logic vs Full CQ */}
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <button
+                                            onClick={() => toggleAllAnswers(q.id, (q.type === 'CQ-Part' ? 1 : (q.options || []).length))}
+                                            className="text-blue-600 font-semibold hover:underline"
+                                        >
+                                            {Object.values(revealed[q.id] || {}).some(Boolean) ? 'Hide all answers' : 'Show all answers'}
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
                                         {(q.type === 'CQ-Part' ? [{ id: q.metadata?.part, text: q.question_text, answer: q.answer }] : (q.options || [])).map((opt, i) => (
-                                            <div key={i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                                                <p className="font-medium text-gray-900 text-sm mb-2">
-                                                    <span className="font-bold mr-2 text-gray-500">{opt.id}.</span> 
-                                                    {q.type === 'CQ-Part' ? '' : opt.text}
-                                                </p>
-                                                
-                                                {/* Toggle Answer Button */}
-                                                <button 
+                                            <div key={i} className="flex flex-col gap-1">
+                                                <div className="flex items-start gap-2">
+                                                    <span className="font-bold text-gray-500">{opt.id}.</span>
+                                                    <span>{opt.text}</span>
+                                                </div>
+                                                <button
                                                     onClick={() => toggleAnswer(q.id, i)}
-                                                    className="text-xs text-blue-600 font-bold hover:underline flex items-center mb-2"
+                                                    className="text-xs text-blue-600 font-semibold hover:underline w-fit"
                                                 >
-                                                    {revealed[q.id]?.[i] ? <><i className="fas fa-eye-slash mr-1"></i> Hide Answer</> : <><i className="fas fa-eye mr-1"></i> View Answer</>}
+                                                    {revealed[q.id]?.[i] ? 'Hide answer' : 'View answer'}
                                                 </button>
-                                                
-                                                {/* The Answer */}
                                                 {revealed[q.id]?.[i] && (
-                                                    <div className="p-3 bg-green-50 border border-green-100 rounded text-sm text-green-900 animate-fade-in">
-                                                        <span className="font-bold block mb-1 text-xs uppercase opacity-70">Solution:</span> 
+                                                    <div className="rounded bg-green-50 border border-green-100 px-3 py-2 text-xs text-green-900">
+                                                        <span className="font-bold uppercase opacity-70">Answer:</span>{' '}
                                                         {opt.answer || (q.type === 'CQ-Part' ? q.answer : 'No answer key provided.')}
                                                     </div>
                                                 )}
@@ -436,16 +441,15 @@ export const studentComponents = `
                                     </div>
                                 </>
                             ) : (
-                                /* MCQ Logic */
                                 <>
-                                    <p className="font-medium text-lg text-gray-900 mb-5 leading-relaxed">{q.question_text}</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <p className="font-medium text-gray-900">{q.question_text}</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         {q.options.map((opt, i) => {
                                             const isSelected = revealed[q.id] === opt;
                                             const isCorrect = opt === q.answer;
                                             const hasAnswered = revealed[q.id] !== undefined;
-                                            
-                                            let btnClass = "w-full text-left p-3 rounded border text-sm transition-all relative flex items-center ";
+
+                                            let btnClass = "w-full text-left px-3 py-2 rounded border text-xs transition-all relative flex items-center ";
                                             if (!hasAnswered) btnClass += "bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
                                             else if (isCorrect) btnClass += "bg-green-50 border-green-500 text-green-900 font-medium";
                                             else if (isSelected) btnClass += "bg-red-50 border-red-400 text-red-900";
@@ -453,9 +457,9 @@ export const studentComponents = `
 
                                             return (
                                                 <button key={i} onClick={() => handleMCQSelect(q.id, opt)} className={btnClass} disabled={hasAnswered}>
-                                                    <span className="w-6 font-bold mr-2 text-gray-400">{String.fromCharCode(65+i)}.</span>
+                                                    <span className="w-5 font-bold mr-2 text-gray-400">{String.fromCharCode(65+i)}.</span>
                                                     <span className="flex-1">{opt}</span>
-                                                    {hasAnswered && isCorrect && <i className="fas fa-check absolute right-4 text-green-600"></i>}
+                                                    {hasAnswered && isCorrect && <i className="fas fa-check absolute right-3 text-green-600"></i>}
                                                 </button>
                                             );
                                         })}
@@ -467,34 +471,40 @@ export const studentComponents = `
                 );
             };
 
+            const cqQuestions = [...groupedCqParts.flatMap(group => group.items), ...otherQuestions.filter(q => q.type === 'CQ' || q.type === 'WRITTEN')];
+            const regularQuestions = otherQuestions.filter(q => q.type !== 'CQ' && q.type !== 'WRITTEN');
+            const orderedQuestions = viewMode === 'cq'
+                ? cqQuestions
+                : [...groupedCqParts.flatMap(group => group.items), ...regularQuestions, ...otherQuestions.filter(q => q.type === 'CQ' || q.type === 'WRITTEN')];
+
             return (
-                <div className="space-y-8">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="h-6 w-1 bg-blue-600 rounded-full"></div>
-                        <h3 className="text-xl font-bold text-gray-900">Practice Questions</h3>
+                <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="h-5 w-1 bg-blue-600 rounded-full"></div>
+                        <h3 className="text-lg font-bold text-gray-900">Practice Questions</h3>
+                        <div className="flex items-center gap-2 text-xs">
+                            <button
+                                onClick={() => setViewMode('all')}
+                                className={\`px-3 py-1 rounded border \${viewMode === 'all' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200'}\`}
+                            >
+                                All questions
+                            </button>
+                            <button
+                                onClick={() => setViewMode('cq')}
+                                className={\`px-3 py-1 rounded border \${viewMode === 'cq' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200'}\`}
+                            >
+                                CQ practice
+                            </button>
+                        </div>
                     </div>
-                    {hasCqParts && (
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <span className="font-bold text-gray-500 uppercase">Filter:</span>
-                            {['all', ...partOrder].map(part => (
-                                <button
-                                    key={part}
-                                    onClick={() => setPartFilter(part)}
-                                    className={\`px-2 py-1 border rounded \${partFilter === part ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}\`}
-                                >
-                                    {part === 'all' ? 'All' : part}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                    
-                    {groupedCqParts.map(group => (
-                        <div key={group.part} className="space-y-4">
-                            <div className="text-xs font-bold uppercase text-gray-500">Part {group.part}</div>
-                            {group.items.map(q => renderQuestionCard(q))}
-                        </div>
-                    ))}
-                    {otherQuestions.map(q => renderQuestionCard(q))}
+
+                    <div className="text-xs text-gray-500">
+                        CQ parts are ordered as ক → খ → গ → ঘ with compact spacing.
+                    </div>
+
+                    <div className="divide-y divide-gray-200">
+                        {orderedQuestions.map(q => renderQuestionRow(q))}
+                    </div>
                 </div>
             );
         }
