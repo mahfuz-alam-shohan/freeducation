@@ -1,8 +1,41 @@
 export const mainApp = `
         function App() {
-            const [view, setView] = useState('loading'); // Start with loading state
+            const viewToPath = {
+                landing: '/',
+                login: '/login',
+                register: '/register',
+                admin: '/admin'
+            };
+            const pathToView = {
+                '/': 'landing',
+                '/login': 'login',
+                '/register': 'register',
+                '/admin': 'admin'
+            };
+            const getViewFromPath = (path) => pathToView[path] || 'landing';
+            const initialView = window.__INITIAL_VIEW || getViewFromPath(window.location.pathname);
+            const [view, setView] = useState(initialView);
+            const [isLoading, setIsLoading] = useState(true);
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
+
+            const navigate = (nextView, options = {}) => {
+                const { replace = false } = options;
+                setView(nextView);
+                const nextPath = viewToPath[nextView] || '/';
+                if (window.location.pathname !== nextPath) {
+                    const method = replace ? 'replaceState' : 'pushState';
+                    window.history[method]({ view: nextView }, '', nextPath);
+                }
+            };
+
+            useEffect(() => {
+                const handlePopState = () => {
+                    setView(getViewFromPath(window.location.pathname));
+                };
+                window.addEventListener('popstate', handlePopState);
+                return () => window.removeEventListener('popstate', handlePopState);
+            }, []);
 
             // 1. Initial System Check & Session Restore
             useEffect(() => {
@@ -18,24 +51,28 @@ export const mainApp = `
                     if (token) {
                         try {
                             const meRes = await fetch('/api/me', {
-                                headers: { 'Authorization': \`Bearer \${token}\` }
+                                headers: { 'Authorization': `Bearer ${token}` }
                             });
                             const meData = await meRes.json();
                             if (meData.user) {
                                 setUser(meData.user);
-                                setView('admin'); // Restore to admin view
                             } else {
                                 // Invalid token
                                 localStorage.removeItem('auth_token');
-                                setView('landing');
+                                if (view === 'admin') {
+                                    navigate(data.hasAdmin ? 'login' : 'register', { replace: true });
+                                }
                             }
                         } catch (e) {
                             localStorage.removeItem('auth_token');
-                            setView('landing');
+                            if (view === 'admin') {
+                                navigate(data.hasAdmin ? 'login' : 'register', { replace: true });
+                            }
                         }
-                    } else {
-                        setView('landing');
+                    } else if (view === 'admin') {
+                        navigate(data.hasAdmin ? 'login' : 'register', { replace: true });
                     }
+                    setIsLoading(false);
                 };
                 initSystem();
             }, []);
@@ -50,7 +87,7 @@ export const mainApp = `
                     // SAVE TOKEN!
                     localStorage.setItem('auth_token', data.token);
                     setUser({ username: data.username });
-                    setView('admin');
+                    navigate('admin');
                 } else {
                     alert(data.error);
                 }
@@ -59,7 +96,7 @@ export const mainApp = `
             const handleLogout = () => {
                 localStorage.removeItem('auth_token');
                 setUser(null);
-                setView('landing');
+                navigate('landing');
             };
 
             const handleRegister = async (username, password) => {
@@ -71,17 +108,17 @@ export const mainApp = `
                 if (data.success) {
                     alert("Admin created successfully. Please login.");
                     setHasAdmin(true);
-                    setView('login');
+                    navigate('login');
                 } else {
                     alert(data.error);
                 }
             };
 
-            if (view === 'loading' || hasAdmin === null) return <Loading />;
+            if (isLoading || hasAdmin === null) return <Loading />;
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    <NavBar user={user} hasAdmin={hasAdmin} onNavigate={setView} activeView={view} />
+                    <NavBar user={user} hasAdmin={hasAdmin} onNavigate={navigate} activeView={view} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
                         {view === 'landing' && <StudentLandingPage />}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
@@ -94,5 +131,3 @@ export const mainApp = `
             );
         }
 `;
-
-
