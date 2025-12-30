@@ -54,8 +54,8 @@ export const studentComponents = `
             }
 
             return (
-                <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-10 animate-fade-in font-sans text-gray-800">
-                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
+                <div className="w-full max-w-[1800px] mx-auto px-4 md:px-6 py-6 md:py-8 animate-fade-in font-sans text-gray-800">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                         <div>
                             <p className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-2">Student Workspace</p>
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Academic Programs</h1>
@@ -64,7 +64,7 @@ export const studentComponents = `
                         <div className="w-full lg:w-[420px] relative">
                             <input 
                                 type="text" 
-                                className="w-full border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white shadow-sm"
+                                className="w-full border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white shadow-sm"
                                 placeholder="Search programs, subjects, or chapters..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -83,7 +83,7 @@ export const studentComponents = `
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {classes.length === 0 ? (
                             <div className="col-span-full py-12 text-center border border-dashed border-gray-300 rounded-xl bg-gray-50">
                                 <p className="text-gray-500 text-sm">No classes available at the moment.</p>
@@ -93,7 +93,7 @@ export const studentComponents = `
                                 <div 
                                     key={cls.id} 
                                     onClick={() => onNavigate({ level: 'class', classId: cls.id })} 
-                                    className="bg-white border border-gray-200 p-6 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
+                                    className="bg-white border border-gray-200 p-5 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
                                 >
                                     <div>
                                         <div className="flex justify-between items-start gap-3 mb-3">
@@ -102,7 +102,7 @@ export const studentComponents = `
                                         </div>
                                         <p className="text-sm text-gray-500 line-clamp-2">Access notes, structured chapters, and question banks for {cls.name}.</p>
                                     </div>
-                                    <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                    <div className="mt-5 pt-3 border-t border-gray-100 flex justify-between items-center">
                                         <span className={\`text-[10px] font-semibold px-2.5 py-1 rounded-full \${cls.parent_class_id ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}\`}>
                                             {cls.parent_class_id ? "Linked Program" : "Original Program"}
                                         </span>
@@ -165,8 +165,8 @@ export const studentComponents = `
             });
 
             return (
-                <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
-                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 flex-wrap gap-3">
+                <div className="w-full max-w-[1800px] mx-auto px-4 md:px-6 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
+                    <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-200 flex-wrap gap-3">
                         <div className="flex items-center">
                             <button onClick={onBack} className="text-gray-500 hover:text-black mr-3 transition-colors"><i className="fas fa-arrow-left"></i></button>
                             <nav className="flex items-center text-sm">
@@ -178,15 +178,15 @@ export const studentComponents = `
                         <span className="text-xs text-gray-400 uppercase tracking-[0.3em]">Select Subjects</span>
                     </div>
 
-                    <div className="flex flex-col xl:flex-row gap-8 items-start">
+                    <div className="flex flex-col xl:flex-row gap-6 items-start">
                         {/* Filter Sidebar (Desktop: Left, Mobile: Top) */}
-                        <div className="w-full xl:w-72 flex-shrink-0 xl:sticky xl:top-24">
-                            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <div className="w-full xl:w-72 flex-shrink-0 xl:sticky xl:top-20">
+                            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Filter by Group</h3>
                                 <div className="flex flex-wrap xl:flex-col gap-2">
                                     <button 
                                         onClick={() => setSelectedGroupId(null)}
-                                        className={\`px-4 py-2 rounded-xl text-sm font-semibold transition-all text-left border \${selectedGroupId === null ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
+                                        className={\`px-4 py-2 rounded-xl text-base font-semibold transition-all text-left border \${selectedGroupId === null ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
                                     >
                                         All Subjects
                                     </button>
@@ -194,7 +194,7 @@ export const studentComponents = `
                                         <button 
                                             key={g.id}
                                             onClick={() => setSelectedGroupId(g.id)}
-                                            className={\`px-4 py-2 rounded-xl text-sm font-semibold transition-all text-left border \${selectedGroupId === g.id ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
+                                            className={\`px-4 py-2 rounded-xl text-base font-semibold transition-all text-left border \${selectedGroupId === g.id ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
                                         >
                                             {g.name}
                                         </button>
@@ -219,12 +219,12 @@ export const studentComponents = `
                                     <p className="text-gray-500 text-sm">No subjects found for this selection.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                     {displayedSubjects.map(sub => (
                                         <div 
                                             key={sub.id} 
                                             onClick={() => onNavigate({ level: 'subject', classId: cls.id, subjectId: sub.id })} 
-                                            className="bg-white border border-gray-200 p-6 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group relative overflow-hidden"
+                                            className="bg-white border border-gray-200 p-5 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group relative overflow-hidden"
                                         >
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-white rounded-bl-full -mr-10 -mt-10 z-0"></div>
                                             <h4 className="font-bold text-lg text-gray-900 mb-2 relative z-10 group-hover:text-blue-700 transition-colors">{sub.name}</h4>

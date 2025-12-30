@@ -128,8 +128,8 @@ export const adminComponents = `
                         <MobileNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => onNavigate({ section: 'settings' })} />
                     </div>
 
-                    <div className="flex-1 p-4 md:p-8 w-full overflow-x-hidden pb-24 md:pb-8 bg-slate-50">
-                        <div className="max-w-6xl mx-auto">
+                    <div className="flex-1 p-4 md:p-6 w-full overflow-x-hidden pb-24 md:pb-8 bg-slate-50">
+                        <div className="max-w-[1800px] mx-auto">
                             {activeTab === 'structure' && <ClassStructureManager route={route} onNavigate={onNavigate} />}
                             {activeTab === 'content' && <ContentManagerLanding route={route} onNavigate={onNavigate} />}
                             {activeTab === 'settings' && <SettingsManager />}
@@ -278,7 +278,7 @@ export const adminComponents = `
             }
 
             return (
-                <div className="w-full max-w-6xl mx-auto">
+                <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex items-center mb-4 pb-2 border-b border-gray-300">
                         <button onClick={onBack} className="mr-2 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
                         <h2 className="text-lg font-bold">{cls.name} / Structure</h2>
@@ -361,7 +361,7 @@ export const adminComponents = `
             }
 
             return (
-                <div className="w-full max-w-4xl mx-auto">
+                <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
                         <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{subject.name} / Chapters</h2></div>
                         <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
@@ -398,7 +398,7 @@ export const adminComponents = `
             const handleDelete = async (id) => { await adminApi.del('topic', id); await loadData(); };
 
             return (
-                <div className="w-full max-w-4xl mx-auto">
+                <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
                         <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{chapter.title} / Topics</h2></div>
                         <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
@@ -449,7 +449,7 @@ export const adminComponents = `
             }
 
             return (
-                <div className="w-full max-w-5xl mx-auto">
+                <div className="w-full max-w-[1800px] mx-auto">
                     <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-300">Content Manager</h2>
                     <div className="border border-gray-300 bg-white">
                         <table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2">Select Class to Manage Content</th><th className="px-4 py-2 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{classes.map(c => <tr key={c.id} onClick={() => onNavigate({ section: 'content', classId: c.id })} className="hover:bg-blue-50 cursor-pointer"><td className="px-4 py-2 font-medium text-gray-800">{c.name}</td><td className="px-4 py-2 text-right text-gray-400"><i className="fas fa-chevron-right"></i></td></tr>)}</tbody></table>
@@ -484,7 +484,7 @@ export const adminComponents = `
             }
 
             return (
-                <div className="w-full max-w-5xl mx-auto">
+                <div className="w-full max-w-[1800px] mx-auto">
                     <div className="flex items-center mb-4 pb-2 border-b border-gray-300"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{cls.name} / Select Subject</h2></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{subjects.map(s => <div key={s.id} onClick={() => onNavigate({ section: 'content', classId: cls.id, subjectId: s.id })} className="bg-white border border-gray-300 p-4 hover:border-blue-500 cursor-pointer"><h3 className="font-bold text-gray-800">{s.name}</h3><p className="text-xs text-gray-500 mt-1">Manage Content</p></div>)}</div>
                 </div>

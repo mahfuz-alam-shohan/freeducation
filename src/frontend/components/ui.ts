@@ -2,10 +2,11 @@ export const uiComponents = `
         const LogoMark = ({ className = '', textClassName = '', subtitle = 'Learning that feels effortless.', compact = false }) => (
             <div className={\`flex items-center gap-3 \${className}\`}>
                 <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg flex items-center justify-center">
-                    <svg viewBox="0 0 48 48" className="w-7 h-7 text-white" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 14C10 11.7909 11.7909 10 14 10H24C27.3137 10 30 12.6863 30 16V36C30 34.3431 28.6569 33 27 33H14C11.7909 33 10 31.2091 10 29V14Z" fill="currentColor" opacity="0.9"/>
-                        <path d="M38 14C38 11.7909 36.2091 10 34 10H24C20.6863 10 18 12.6863 18 16V36C18 34.3431 19.3431 33 21 33H34C36.2091 33 38 31.2091 38 29V14Z" fill="currentColor" opacity="0.6"/>
-                        <path d="M24 13.5L25.6 16.5L29 17L26.4 19.4L27 22.8L24 21.2L21 22.8L21.6 19.4L19 17L22.4 16.5L24 13.5Z" fill="white"/>
+                    <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" />
+                        <path d="M6.5 11.2V16c0 .7.4 1.4 1.1 1.7C9 18.4 10.4 19 12 19s3-.6 4.4-1.3c.7-.3 1.1-1 1.1-1.7v-4.8" />
+                        <path d="M20.5 9.7V14" />
+                        <path d="M21.5 14h-2" />
                     </svg>
                 </div>
                 <div className="flex flex-col leading-tight">
@@ -51,7 +52,7 @@ export const uiComponents = `
                 {label && <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>}
                 <input 
                     {...props} 
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white" 
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white" 
                 />
             </div>
         );
