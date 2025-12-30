@@ -388,11 +388,9 @@ export const adminComponents = `
                 setTopics(await adminApi.get(\`/api/topics?chapter_id=\${ch.id}\`)); 
             };
 
-            // Enhanced Content Editor that works for both Topics AND Chapters (if direct questions)
             if (selTopic || isDirectQMode) {
                 return (
                     <TopicContentEditor 
-                        // If direct mode, we pass a "fake" topic object representing the chapter
                         topic={isDirectQMode ? { id: 'chapter_'+activeChapter.id, title: activeChapter.title, isChapter: true, realId: activeChapter.id } : selTopic} 
                         onBack={() => { setSelTopic(null); setIsDirectQMode(false); }} 
                         chapters={chapters} 
@@ -411,7 +409,6 @@ export const adminComponents = `
                         <>
                             <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
                                 <h3 className="font-bold text-gray-800">{activeChapter.title} / Topics</h3>
-                                {/* NEW: Direct Questions Button */}
                                 <button onClick={() => setIsDirectQMode(true)} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">Direct Questions</button>
                             </div>
                             <div className="space-y-2">{topics.map(t => <div key={t.id} onClick={() => setSelTopic(t)} className="flex justify-between items-center p-3 border border-gray-300 hover:bg-gray-50 cursor-pointer"><span className="text-sm font-medium">{t.title}</span><span className="text-xs text-blue-600">Edit <i className="fas fa-pen ml-1"></i></span></div>)}</div>
@@ -425,23 +422,12 @@ export const adminComponents = `
         function TopicContentEditor({ topic, onBack, chapters }) {
             const [content, setContent] = useState(topic.content || '');
             const [questions, setQuestions] = useState([]);
-            const [activeTab, setActiveTab] = useState('questions'); // Default to questions for Chapters
+            const [activeTab, setActiveTab] = useState('questions');
             const [isQModalOpen, setIsQModalOpen] = useState(false);
             const [isSavingNote, setIsSavingNote] = useState(false);
 
-            // If it's a chapter, use special ID format or query param
-            const topicQuery = topic.isChapter ? \`topic_id=0&chapter_id=\${topic.realId}\` : \`topic_id=\${topic.id}\`;
-
-            const loadQs = async () => { 
-                // We need to support fetching questions by chapter_id if topic_id is 0/missing
-                // For now, let's assume questions table has chapter_id column or we use a "virtual" topic_id approach.
-                // Simpler: Reuse topic_id column but for chapters we might need a workaround or API update.
-                // Updated Plan: api.ts needs to filter by chapter_id if provided.
-                // Assuming api update:
-                const url = topic.isChapter ? \`/api/questions?chapter_id=\${topic.realId}\` : \`/api/questions?topic_id=\${topic.id}\`;
-                setQuestions(await adminApi.get(url)); 
-            };
-            
+            const url = topic.isChapter ? \`/api/questions?chapter_id=\${topic.realId}\` : \`/api/questions?topic_id=\${topic.id}\`;
+            const loadQs = async () => { setQuestions(await adminApi.get(url)); };
             useEffect(() => { loadQs(); }, [topic]);
             
             const saveNotes = async () => { 
@@ -453,7 +439,6 @@ export const adminComponents = `
             };
             
             const addQuestion = async (data) => { 
-                // If chapter mode, set topic_id to 0 or null and pass chapter_id
                 const payload = topic.isChapter ? { ...data, topic_id: null, chapter_id: topic.realId } : { ...data, topic_id: topic.id };
                 await adminApi.post('/api/questions', payload); 
                 setIsQModalOpen(false); 
@@ -489,20 +474,20 @@ export const adminComponents = `
 
         /* --- ADVANCED CQ MODAL (Refined) --- */
         function CreateCQModal({ onClose, onSave, allChapters }) {
-            const [mode, setMode] = useState('full'); // 'full' (Scenario) or 'single' (Standalone)
+            const [mode, setMode] = useState('full');
             const [scenario, setScenario] = useState('');
             const [board, setBoard] = useState('');
             const [year, setYear] = useState('');
             const [school, setSchool] = useState('');
             const [subQs, setSubQs] = useState([
-                { id: 'ক', text: '', connected: false, chapterId: '', topicId: '' },
-                { id: 'খ', text: '', connected: false, chapterId: '', topicId: '' },
-                { id: 'গ', text: '', connected: true, chapterId: '', topicId: '' },
-                { id: 'ঘ', text: '', connected: true, chapterId: '', topicId: '' }
+                { id: 'ক', text: '', answer: '', connected: false, chapterId: '', topicId: '' },
+                { id: 'খ', text: '', answer: '', connected: false, chapterId: '', topicId: '' },
+                { id: 'গ', text: '', answer: '', connected: true, chapterId: '', topicId: '' },
+                { id: 'ঘ', text: '', answer: '', connected: true, chapterId: '', topicId: '' }
             ]);
-            // Standalone state
             const [singlePart, setSinglePart] = useState('ক');
             const [singleText, setSingleText] = useState('');
+            const [singleAnswer, setSingleAnswer] = useState('');
             
             const [topicsMap, setTopicsMap] = useState({});
 
@@ -518,16 +503,16 @@ export const adminComponents = `
 
             const handleTopicChange = (idx, topicId) => { const newQs = [...subQs]; newQs[idx].topicId = topicId; setSubQs(newQs); };
             const handleTextChange = (idx, text) => { const newQs = [...subQs]; newQs[idx].text = text; setSubQs(newQs); };
+            const handleAnswerChange = (idx, text) => { const newQs = [...subQs]; newQs[idx].answer = text; setSubQs(newQs); };
             const handleConnChange = (idx, val) => { const newQs = [...subQs]; newQs[idx].connected = val; setSubQs(newQs); };
 
             const handleSave = () => {
                 if (mode === 'single') {
-                    // Save as a CQ-Part type
                     onSave({
                         type: 'CQ-Part',
                         question_text: singleText,
-                        options: [], // No sub-questions
-                        answer: '',
+                        options: [],
+                        answer: singleAnswer, // Storing single answer here
                         metadata: { board, year, school, part: singlePart }
                     });
                 } else {
@@ -546,7 +531,6 @@ export const adminComponents = `
                     <div className="bg-white w-[900px] h-[90vh] flex flex-col border border-gray-400 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
                         <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-gray-800">Add Creative Question</h3><button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button></div>
                         
-                        {/* Tabs */}
                         <div className="flex border-b border-gray-300">
                             <button onClick={() => setMode('full')} className={\`flex-1 py-2 text-sm font-bold \${mode === 'full' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'bg-gray-100 text-gray-500'}\`}>Full Scenario CQ</button>
                             <button onClick={() => setMode('single')} className={\`flex-1 py-2 text-sm font-bold \${mode === 'single' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'bg-gray-100 text-gray-500'}\`}>Single Question Part</button>
@@ -565,10 +549,19 @@ export const adminComponents = `
                                     <div className="space-y-4">
                                         {subQs.map((q, i) => (
                                             <div key={q.id} className="border border-gray-200 p-4 rounded bg-gray-50/50">
-                                                <div className="flex items-center gap-2 mb-2"><span className="font-bold text-sm w-6 bg-gray-200 text-center rounded">{q.id}</span><input className="flex-1 border p-1.5 text-sm" placeholder="Question text..." value={q.text} onChange={e => handleTextChange(i, e.target.value)} /><label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2"><input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link Scenario</label></div>
-                                                <div className="flex gap-2 ml-8">
-                                                    <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}><option value="">Select Chapter</option>{allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
-                                                    <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}><option value="">Select Topic</option>{topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-sm w-6 bg-gray-200 text-center rounded">{q.id}</span>
+                                                        <input className="flex-1 border p-1.5 text-sm" placeholder="Question text..." value={q.text} onChange={e => handleTextChange(i, e.target.value)} />
+                                                        <label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2"><input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link Scenario</label>
+                                                    </div>
+                                                    <div className="flex gap-2 pl-8">
+                                                        <input className="flex-1 border p-1.5 text-xs bg-white" placeholder="Answer / Key Points / Solution..." value={q.answer} onChange={e => handleAnswerChange(i, e.target.value)} />
+                                                    </div>
+                                                    <div className="flex gap-2 pl-8">
+                                                        <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}><option value="">Select Chapter</option>{allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                                                        <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}><option value="">Select Topic</option>{topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -586,12 +579,16 @@ export const adminComponents = `
                                     </div>
                                     <div className="mb-4">
                                         <label className="block text-xs font-bold mb-1">Question Text</label>
-                                        <textarea className="w-full border p-3 text-sm h-32" placeholder="Type the question..." value={singleText} onChange={e => setSingleText(e.target.value)}></textarea>
+                                        <textarea className="w-full border p-3 text-sm h-24" placeholder="Type the question..." value={singleText} onChange={e => setSingleText(e.target.value)}></textarea>
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-xs font-bold mb-1">Answer / Solution</label>
+                                        <textarea className="w-full border p-3 text-sm h-24" placeholder="Type the solution or key points..." value={singleAnswer} onChange={e => setSingleAnswer(e.target.value)}></textarea>
                                     </div>
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3"><button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button><button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save</button></div>
+                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3"><button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button><button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save CQ</button></div>
                     </div>
                 </div>
             );
