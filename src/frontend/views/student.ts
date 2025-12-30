@@ -5,13 +5,28 @@ export const studentComponents = `
         };
 
         /* --- LANDING PAGE --- */
-        function StudentLandingPage() {
+        function StudentLandingPage({ route, onNavigate }) {
             const [classes, setClasses] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
             const [searchResults, setSearchResults] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
 
             useEffect(() => { studentApi.get('/api/classes').then(setClasses); }, []);
+
+            useEffect(() => {
+                if (!classes.length) return;
+                if (route?.level !== 'landing' && route?.classId) {
+                    const cls = classes.find(c => String(c.id) === String(route.classId));
+                    if (cls) {
+                        setSelectedClass(cls);
+                    } else {
+                        setSelectedClass(null);
+                        onNavigate({ level: 'landing' }, { replace: true });
+                    }
+                } else {
+                    setSelectedClass(null);
+                }
+            }, [classes, route?.level, route?.classId]);
 
             useEffect(() => {
                 if (searchQuery.length > 2) {
@@ -27,7 +42,16 @@ export const studentComponents = `
                 }
             }, [searchQuery]);
 
-            if (selectedClass) return <StudentClassView cls={selectedClass} onBack={() => setSelectedClass(null)} />;
+            if (selectedClass) {
+                return (
+                    <StudentClassView
+                        cls={selectedClass}
+                        route={route}
+                        onNavigate={onNavigate}
+                        onBack={() => onNavigate({ level: 'landing' })}
+                    />
+                );
+            }
 
             return (
                 <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-6 md:py-10 animate-fade-in font-sans text-gray-800">
@@ -67,7 +91,7 @@ export const studentComponents = `
                             classes.map(cls => (
                                 <div 
                                     key={cls.id} 
-                                    onClick={() => setSelectedClass(cls)} 
+                                    onClick={() => onNavigate({ level: 'class', classId: cls.id })} 
                                     className="bg-white border border-gray-200 p-5 rounded-lg hover:border-blue-500 hover:shadow-sm cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
                                 >
                                     <div>
@@ -92,7 +116,7 @@ export const studentComponents = `
         }
 
         /* --- CLASS VIEW --- */
-        function StudentClassView({ cls, onBack }) {
+        function StudentClassView({ cls, route, onNavigate, onBack }) {
             const [groups, setGroups] = useState([]);
             const [subjects, setSubjects] = useState([]);
             const [selectedGroupId, setSelectedGroupId] = useState(null);
@@ -106,7 +130,31 @@ export const studentComponents = `
                 fetchD();
             }, [cls]);
 
-            if (selectedSubject) return <StudentSubjectView subject={selectedSubject} onBack={() => setSelectedSubject(null)} />;
+            useEffect(() => {
+                if (!subjects.length) return;
+                if (route?.subjectId) {
+                    const subject = subjects.find(s => String(s.id) === String(route.subjectId));
+                    if (subject) {
+                        setSelectedSubject(subject);
+                    } else {
+                        setSelectedSubject(null);
+                        onNavigate({ level: 'class', classId: cls.id }, { replace: true });
+                    }
+                } else {
+                    setSelectedSubject(null);
+                }
+            }, [subjects, route?.subjectId]);
+
+            if (selectedSubject) {
+                return (
+                    <StudentSubjectView
+                        subject={selectedSubject}
+                        route={route}
+                        onNavigate={onNavigate}
+                        onBack={() => onNavigate({ level: 'class', classId: cls.id })}
+                    />
+                );
+            }
 
             const displayedSubjects = subjects.filter(s => {
                 if (selectedGroupId === null) return true; 
@@ -164,7 +212,7 @@ export const studentComponents = `
                                     {displayedSubjects.map(sub => (
                                         <div 
                                             key={sub.id} 
-                                            onClick={() => setSelectedSubject(sub)} 
+                                            onClick={() => onNavigate({ level: 'subject', classId: cls.id, subjectId: sub.id })} 
                                             className="bg-white border border-gray-200 p-5 rounded-lg hover:border-blue-500 hover:shadow-md cursor-pointer transition-all duration-200 group relative overflow-hidden"
                                         >
                                             <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-gray-50 to-white rounded-bl-full -mr-8 -mt-8 z-0"></div>
@@ -188,7 +236,7 @@ export const studentComponents = `
         }
 
         /* --- SUBJECT VIEW (Chapters & Topics) --- */
-        function StudentSubjectView({ subject, onBack }) {
+        function StudentSubjectView({ subject, route, onNavigate, onBack }) {
             const [chapters, setChapters] = useState([]);
             const [activeChapter, setActiveChapter] = useState(null); // Used on Desktop as selected sidebar item
             const [activeTopic, setActiveTopic] = useState(null);
@@ -196,13 +244,40 @@ export const studentComponents = `
             
             useEffect(() => { studentApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
 
-            const loadTopicsForChapter = async (chapter) => {
+            const loadTopicsForChapter = async (chapter, options = {}) => {
                 setActiveChapter(chapter);
                 const data = await studentApi.get(\`/api/topics?chapter_id=\${chapter.id}\`);
                 setTopics(data);
-                if (data.length > 0) setActiveTopic(data[0]);
-                else setActiveTopic(null);
+                let nextTopic = null;
+                if (options.topicId) {
+                    nextTopic = data.find(t => String(t.id) === String(options.topicId)) || null;
+                }
+                if (!nextTopic) {
+                    nextTopic = data.length > 0 ? data[0] : null;
+                }
+                setActiveTopic(nextTopic);
+                if (options.pushRoute) {
+                    onNavigate({ level: 'chapter', classId: route.classId, subjectId: subject.id, chapterId: chapter.id });
+                }
             };
+
+            useEffect(() => {
+                if (!chapters.length) return;
+                if (route?.chapterId) {
+                    const chapter = chapters.find(c => String(c.id) === String(route.chapterId));
+                    if (chapter) {
+                        loadTopicsForChapter(chapter, { topicId: route.topicId });
+                    } else {
+                        setActiveChapter(null);
+                        setActiveTopic(null);
+                        onNavigate({ level: 'subject', classId: route.classId, subjectId: subject.id }, { replace: true });
+                    }
+                } else {
+                    setActiveChapter(null);
+                    setActiveTopic(null);
+                    setTopics([]);
+                }
+            }, [chapters, route?.chapterId, route?.topicId]);
 
             if (activeChapter && window.innerWidth < 768) {
                 return (
@@ -211,8 +286,10 @@ export const studentComponents = `
                         topics={topics} 
                         activeTopic={activeTopic} 
                         setActiveTopic={setActiveTopic} 
-                        onBack={() => { setActiveChapter(null); setActiveTopic(null); }} 
+                        onBack={() => onNavigate({ level: 'subject', classId: route.classId, subjectId: subject.id })} 
                         subjectId={subject.id}
+                        onNavigate={onNavigate}
+                        route={route}
                     />
                 );
             }
@@ -235,7 +312,7 @@ export const studentComponents = `
                             {chapters.map((ch) => (
                                 <button 
                                     key={ch.id} 
-                                    onClick={() => loadTopicsForChapter(ch)}
+                                    onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
                                     className={\`w-full text-left px-6 py-3 text-sm font-medium border-l-4 transition-all \${activeChapter?.id === ch.id ? 'bg-white border-blue-600 text-blue-700 shadow-sm' : 'border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900'}\`}
                                 >
                                     {ch.title}
@@ -253,7 +330,7 @@ export const studentComponents = `
                                     {chapters.map((ch) => (
                                         <div 
                                             key={ch.id}
-                                            onClick={() => loadTopicsForChapter(ch)}
+                                            onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
                                             className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 active:bg-gray-50 cursor-pointer transition-all flex justify-between items-center"
                                         >
                                             <div>
@@ -269,7 +346,16 @@ export const studentComponents = `
                             {/* Desktop Content Placeholder or Actual Content */}
                             <div className="hidden md:flex flex-1 flex-col h-full">
                                 {activeChapter ? (
-                                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={activeChapter.title} chapterId={activeChapter.id} subjectId={subject.id} />
+                                    <StudentTopicContent
+                                        topics={topics}
+                                        activeTopic={activeTopic}
+                                        setActiveTopic={setActiveTopic}
+                                        chapterTitle={activeChapter.title}
+                                        chapterId={activeChapter.id}
+                                        subjectId={subject.id}
+                                        onNavigate={onNavigate}
+                                        route={route}
+                                    />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-center p-10 text-gray-400">
                                         <i className="fas fa-book-reader text-5xl mb-4 opacity-20"></i>
@@ -284,20 +370,29 @@ export const studentComponents = `
         }
 
         /* --- MOBILE TOPIC VIEW (Drill Down) --- */
-        function StudentTopicView({ chapter, topics, activeTopic, setActiveTopic, onBack, subjectId }) {
+        function StudentTopicView({ chapter, topics, activeTopic, setActiveTopic, onBack, subjectId, onNavigate, route }) {
             return (
                 <div className="flex flex-col h-screen bg-white font-sans animate-fade-in fixed inset-0 z-50">
                     <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white">
                         <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
                         <h2 className="font-bold text-gray-900 truncate">{chapter.title}</h2>
                     </div>
-                    <StudentTopicContent topics={topics} activeTopic={activeTopic} setActiveTopic={setActiveTopic} chapterTitle={chapter.title} chapterId={chapter.id} subjectId={subjectId} />
+                    <StudentTopicContent
+                        topics={topics}
+                        activeTopic={activeTopic}
+                        setActiveTopic={setActiveTopic}
+                        chapterTitle={chapter.title}
+                        chapterId={chapter.id}
+                        subjectId={subjectId}
+                        onNavigate={onNavigate}
+                        route={route}
+                    />
                 </div>
             );
         }
 
         /* --- SHARED CONTENT COMPONENT --- */
-        function StudentTopicContent({ topics, activeTopic, setActiveTopic, chapterTitle, chapterId, subjectId }) {
+        function StudentTopicContent({ topics, activeTopic, setActiveTopic, chapterTitle, chapterId, subjectId, onNavigate, route }) {
             if (topics.length === 0) {
                 return (
                     <div className="flex-1 overflow-y-auto p-4 md:p-10">
@@ -321,7 +416,16 @@ export const studentComponents = `
                             {topics.map((t, idx) => (
                                 <button 
                                     key={t.id}
-                                    onClick={() => setActiveTopic(t)}
+                                    onClick={() => {
+                                        setActiveTopic(t);
+                                        onNavigate({
+                                            level: 'topic',
+                                            classId: route.classId,
+                                            subjectId: subjectId,
+                                            chapterId: chapterId,
+                                            topicId: t.id
+                                        });
+                                    }}
                                     className={\`pb-3 border-b-2 whitespace-nowrap text-sm font-medium transition-colors \${activeTopic.id === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}\`}
                                 >
                                     {idx + 1}. {t.title}
