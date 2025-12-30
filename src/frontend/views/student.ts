@@ -496,6 +496,15 @@ export const studentComponents = `
                                                     </div>
                                                 ))}
                                             </div>
+                                            <div className="space-y-2 pl-6 text-sm text-gray-700">
+                                                <div className="font-semibold text-gray-800">Answers</div>
+                                                {(q.options || []).map((opt, idx) => (
+                                                    <div key={opt.id || idx} className="flex items-start gap-2">
+                                                        <span className="font-bold text-gray-500">{opt.id || partOrder[idx] || idx + 1}.</span>
+                                                        <span className="whitespace-pre-line">{opt.answer || ''}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                     {cqScenarioQuestions.length === 0 && (

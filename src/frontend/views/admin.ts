@@ -506,15 +506,36 @@ export const adminComponents = `
 
             const partOrder = ['ক', 'খ', 'গ', 'ঘ'];
             const cqPartQuestions = questions.filter(q => q.type === 'CQ-Part');
-            const otherQuestions = questions.filter(q => q.type !== 'CQ-Part');
             const cqScenarioQuestions = questions.filter(q => q.type === 'CQ');
+            const expandCqParts = (cqQuestion) => (cqQuestion.options || []).map((opt, idx) => {
+                const isLinked = opt.connected !== false;
+                return {
+                    ...cqQuestion,
+                    id: `${cqQuestion.id}-${opt.id || idx}`,
+                    type: 'CQ-Part',
+                    question_text: opt.text,
+                    answer: opt.answer,
+                    options: [],
+                    metadata: {
+                        ...(cqQuestion.metadata || {}),
+                        part: opt.id,
+                        scenario: cqQuestion.question_text,
+                        linked: isLinked
+                    }
+                };
+            });
+            const expandedCqParts = cqScenarioQuestions.flatMap(expandCqParts);
+            const combinedCqParts = [...cqPartQuestions, ...expandedCqParts];
+            const otherQuestions = questions.filter(q => !['CQ', 'CQ-Part'].includes(q.type));
             const cqScenarioPartsCount = cqScenarioQuestions.reduce((sum, q) => sum + (q.options || []).length, 0);
             const questionCount = questions.length - cqScenarioQuestions.length + cqScenarioPartsCount;
-            const filteredCqParts = partFilter === 'all' ? cqPartQuestions : cqPartQuestions.filter(q => q.metadata?.part === partFilter);
+            const filteredCqParts = partFilter === 'all'
+                ? combinedCqParts
+                : combinedCqParts.filter(q => q.metadata?.part === partFilter);
             const groupedCqParts = partOrder
                 .map(part => ({ part, items: filteredCqParts.filter(q => q.metadata?.part === part) }))
                 .filter(group => group.items.length > 0);
-            const hasCqParts = cqPartQuestions.length > 0;
+            const hasCqParts = combinedCqParts.length > 0;
             const defaultChapterId = topic.isChapter ? topic.realId : topic.isSubject ? '' : topic.chapter_id;
             const defaultTopicId = topic.isChapter || topic.isSubject ? '' : topic.id;
 
@@ -553,12 +574,12 @@ export const adminComponents = `
                                 </div>
                             )}
                             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                                {groupedCqParts.map(group => (
-                                    <div key={group.part} className="space-y-2">
-                                        <div className="text-xs font-bold uppercase text-gray-500">Part {group.part}</div>
-                                        {group.items.map(q => (
-                                            <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group">
-                                                <div className="flex justify-between mb-1">
+                                {partFilter === 'all' && cqScenarioQuestions.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div className="text-xs font-bold uppercase text-gray-500">Full CQ</div>
+                                        {cqScenarioQuestions.map(q => (
+                                            <div key={q.id} className="p-4 border border-gray-300 bg-gray-50 space-y-3">
+                                                <div className="flex justify-between items-start">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
                                                         <span className="text-[10px] font-bold uppercase text-gray-500">{q.scope || 'topic'}</span>
@@ -569,10 +590,54 @@ export const adminComponents = `
                                                         <button onClick={() => delQuestion(q.id)} className="text-red-500 hover:underline text-xs">Delete</button>
                                                     </div>
                                                 </div>
-                                                <p className="text-sm text-gray-800 whitespace-pre-wrap">{q.question_text}</p>
-                                                <div className="mt-2 text-xs text-gray-600"><span className="font-bold">Answer:</span> {q.answer || '—'}</div>
+                                                <div className="text-sm text-gray-800 whitespace-pre-wrap"><span className="font-semibold">Scene:</span> {q.question_text}</div>
+                                                <div className="space-y-1 text-xs text-gray-700">
+                                                    <div className="font-bold uppercase text-gray-600">Questions</div>
+                                                    {(q.options || []).map((opt, idx) => (
+                                                        <div key={opt.id || idx}><span className="font-bold">{opt.id || partOrder[idx] || idx + 1}.</span> {opt.text || '—'}</div>
+                                                    ))}
+                                                </div>
+                                                <div className="space-y-1 text-xs text-gray-700">
+                                                    <div className="font-bold uppercase text-gray-600">Answers</div>
+                                                    {(q.options || []).map((opt, idx) => (
+                                                        <div key={opt.id || idx}><span className="font-bold">{opt.id || partOrder[idx] || idx + 1}.</span> {opt.answer || '—'}</div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+                                {groupedCqParts.map(group => (
+                                    <div key={group.part} className="space-y-2">
+                                        <div className="text-xs font-bold uppercase text-gray-500">Part {group.part}</div>
+                                        {group.items.map(q => {
+                                            const isLinked = q.metadata?.linked;
+                                            const scenarioText = q.metadata?.scenario;
+                                            return (
+                                                <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group">
+                                                    <div className="flex justify-between mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span>
+                                                            <span className="text-[10px] font-bold uppercase text-gray-500">{q.scope || 'topic'}</span>
+                                                        </div>
+                                                        <div className="flex gap-2 items-center">
+                                                            <span className="text-[10px] text-gray-500">{q.metadata?.board}</span>
+                                                            <button onClick={() => setEditingQuestion(q)} className="text-xs text-blue-600 hover:underline">Edit</button>
+                                                            <button onClick={() => delQuestion(q.id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                                                        </div>
+                                                    </div>
+                                                    {isLinked && scenarioText ? (
+                                                        <div className="space-y-1 text-sm text-gray-800 whitespace-pre-wrap">
+                                                            <div><span className="font-semibold">Scene:</span> {scenarioText}</div>
+                                                            <div><span className="font-semibold">Ques:</span> {q.question_text}</div>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{q.question_text}</p>
+                                                    )}
+                                                    <div className="mt-2 text-xs text-gray-600"><span className="font-bold">Answer:</span> {q.answer || '—'}</div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ))}
                                 {otherQuestions.map(q => (
