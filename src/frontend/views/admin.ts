@@ -1,78 +1,5 @@
 export const adminComponents = `
-        /* --- UI COMPONENTS --- */
-        const EditModal = ({ title, value, onSave, onDelete, onClose }) => {
-            const [val, setVal] = useState(value);
-            const [isSaving, setIsSaving] = useState(false);
-
-            const handleSave = async () => {
-                if (val === value) return onClose();
-                setIsSaving(true);
-                await onSave(val);
-                setIsSaving(false);
-                onClose();
-            };
-
-            const handleDelete = async () => {
-                if(confirm('Delete this item?')) {
-                    setIsSaving(true);
-                    await onDelete();
-                    setIsSaving(false);
-                    onClose();
-                }
-            };
-
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20" onClick={onClose}>
-                    <div className="bg-white border border-gray-400 p-4 w-80" onClick={e => e.stopPropagation()}>
-                        <h4 className="font-bold text-sm mb-3">{title}</h4>
-                        <input 
-                            className="w-full border border-gray-300 p-2 text-sm mb-4" 
-                            value={val} 
-                            onChange={e => setVal(e.target.value)} 
-                            autoFocus 
-                            disabled={isSaving}
-                        />
-                        <div className="flex justify-between items-center">
-                            {onDelete ? (
-                                <button onClick={handleDelete} className="text-red-600 hover:underline text-xs" disabled={isSaving}>Delete</button>
-                            ) : <div></div>}
-                            <div className="flex gap-2">
-                                <button onClick={onClose} className="px-3 py-1 text-xs border border-gray-300 hover:bg-gray-100" disabled={isSaving}>Cancel</button>
-                                <button onClick={handleSave} className="px-3 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700" disabled={isSaving}>
-                                    {isSaving ? '...' : 'Save'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const TableCell = ({ value, onUpdate, onDelete, label }) => {
-            const [isEditing, setIsEditing] = useState(false);
-            return (
-                <>
-                    <div 
-                        onClick={() => setIsEditing(true)} 
-                        className="cursor-pointer hover:bg-gray-100 px-2 py-1 flex justify-between items-center h-full min-h-[24px]"
-                    >
-                        <span className="truncate">{value}</span>
-                        <i className="fas fa-pencil-alt text-[10px] text-gray-400 opacity-0 group-hover:opacity-100"></i>
-                    </div>
-                    {isEditing && (
-                        <EditModal 
-                            title={\`Edit \${label}\`} 
-                            value={value} 
-                            onClose={() => setIsEditing(false)} 
-                            onSave={onUpdate} 
-                            onDelete={onDelete} 
-                        />
-                    )}
-                </>
-            );
-        };
-
-        /* --- API HELPERS (Scoped to avoid collisions if strictly concatenated) --- */
+        /* --- API HELPERS --- */
         const adminApi = {
             get: (url) => fetch(url).then(r => r.json()),
             post: (url, body) => fetch(url, { method: 'POST', body: JSON.stringify(body) }),
@@ -81,13 +8,35 @@ export const adminComponents = `
             del: (type, id) => fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ type, id }) })
         };
 
+        /* --- UI COMPONENTS --- */
+        const EditModal = ({ title, value, onSave, onDelete, onClose }) => {
+            const [val, setVal] = useState(value);
+            const [isSaving, setIsSaving] = useState(false);
+            const handleSave = async () => { if (val === value) return onClose(); setIsSaving(true); await onSave(val); setIsSaving(false); onClose(); };
+            const handleDelete = async () => { if(confirm('Delete this item?')) { setIsSaving(true); await onDelete(); setIsSaving(false); onClose(); } };
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20" onClick={onClose}>
+                    <div className="bg-white border border-gray-400 p-4 w-80" onClick={e => e.stopPropagation()}>
+                        <h4 className="font-bold text-sm mb-3">{title}</h4>
+                        <input className="w-full border border-gray-300 p-2 text-sm mb-4" value={val} onChange={e => setVal(e.target.value)} autoFocus disabled={isSaving} />
+                        <div className="flex justify-between items-center">{onDelete ? <button onClick={handleDelete} className="text-red-600 hover:underline text-xs" disabled={isSaving}>Delete</button> : <div></div>}<div className="flex gap-2"><button onClick={onClose} className="px-3 py-1 text-xs border border-gray-300 hover:bg-gray-100" disabled={isSaving}>Cancel</button><button onClick={handleSave} className="px-3 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700" disabled={isSaving}>{isSaving ? '...' : 'Save'}</button></div></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const TableCell = ({ value, onUpdate, onDelete, label }) => {
+            const [isEditing, setIsEditing] = useState(false);
+            return (
+                <><div onClick={() => setIsEditing(true)} className="cursor-pointer hover:bg-gray-100 px-2 py-1 flex justify-between items-center h-full min-h-[24px]"><span className="truncate">{value}</span><i className="fas fa-pencil-alt text-[10px] text-gray-400 opacity-0 group-hover:opacity-100"></i></div>{isEditing && <EditModal title={\`Edit \${label}\`} value={value} onClose={() => setIsEditing(false)} onSave={onUpdate} onDelete={onDelete} />}</>
+            );
+        };
+
         /* --- MAIN DASHBOARD --- */
         function AdminDashboard({ user, logout }) {
             const [activeTab, setActiveTab] = useState('classes');
-            
             return (
                 <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-white font-sans text-gray-800">
-                    {/* Sidebar */}
                     <div className="hidden md:flex flex-col w-60 border-r border-gray-300 h-[calc(100vh-64px)] sticky top-16 bg-gray-50">
                         <div className="p-2 space-y-1 mt-2">
                             <AdminNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
@@ -95,21 +44,13 @@ export const adminComponents = `
                             <div className="h-px bg-gray-200 my-2"></div>
                             <AdminNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
                         </div>
-                        <div className="mt-auto p-2 border-t border-gray-300">
-                            <button onClick={logout} className="w-full text-left px-3 py-2 text-red-600 text-xs font-bold hover:bg-red-50 transition-colors">
-                                <i className="fas fa-sign-out-alt mr-2"></i> Log Out
-                            </button>
-                        </div>
+                        <div className="mt-auto p-2 border-t border-gray-300"><button onClick={logout} className="w-full text-left px-3 py-2 text-red-600 text-xs font-bold hover:bg-red-50 transition-colors"><i className="fas fa-sign-out-alt mr-2"></i> Log Out</button></div>
                     </div>
-
-                    {/* Mobile Nav */}
                     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 z-50 flex justify-around p-2">
                         <MobileNavItem icon="fas fa-sitemap" label="Structure" active={activeTab === 'classes'} onClick={() => setActiveTab('classes')} />
                         <MobileNavItem icon="fas fa-box-open" label="Content" active={activeTab === 'content'} onClick={() => setActiveTab('content')} />
                         <MobileNavItem icon="fas fa-cogs" label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1 p-4 w-full overflow-x-hidden pb-20 md:pb-4 bg-white">
                         {activeTab === 'classes' && <ClassStructureManager />}
                         {activeTab === 'content' && <ContentManagerLanding />}
@@ -119,16 +60,8 @@ export const adminComponents = `
             );
         }
 
-        const AdminNavItem = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={\`w-full flex items-center px-3 py-2 text-sm transition-colors \${active ? 'bg-blue-100 text-blue-800 font-bold border-r-2 border-blue-600' : 'text-gray-700 hover:bg-gray-200'}\`}>
-                <i className={\`\${icon} w-5 text-center mr-2 opacity-70\`}></i> {label}
-            </button>
-        );
-        const MobileNavItem = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={\`flex flex-col items-center p-1 \${active ? 'text-blue-700' : 'text-gray-500'}\`}>
-                <i className={\`\${icon} text-lg mb-1\`}></i><span className="text-[10px]">{label}</span>
-            </button>
-        );
+        const AdminNavItem = ({ icon, label, active, onClick }) => (<button onClick={onClick} className={\`w-full flex items-center px-3 py-2 text-sm transition-colors \${active ? 'bg-blue-100 text-blue-800 font-bold border-r-2 border-blue-600' : 'text-gray-700 hover:bg-gray-200'}\`}><i className={\`\${icon} w-5 text-center mr-2 opacity-70\`}></i> {label}</button>);
+        const MobileNavItem = ({ icon, label, active, onClick }) => (<button onClick={onClick} className={\`flex flex-col items-center p-1 \${active ? 'text-blue-700' : 'text-gray-500'}\`}><i className={\`\${icon} text-lg mb-1\`}></i><span className="text-[10px]">{label}</span></button>);
 
         /* --- 1. CLASS & STRUCTURE MANAGEMENT --- */
         function ClassStructureManager() {
@@ -139,54 +72,22 @@ export const adminComponents = `
 
             const loadData = async () => { setClasses(await adminApi.get('/api/classes')); };
             useEffect(() => { loadData(); }, []);
-
             const handleCreate = async (name) => { await adminApi.post('/api/classes', { name }); setIsModalOpen(false); await loadData(); };
             const handleUpdate = async (id, val) => { await adminApi.update('class', id, val); await loadData(); };
             const handleDelete = async (id) => { await adminApi.del('class', id); await loadData(); };
-            const handleLinkSave = async (parentId, label) => {
-                await adminApi.put('/api/classes', { id: linkModalClass.id, parent_class_id: parentId, program_label: label });
-                setLinkModalClass(null); await loadData();
-            };
+            const handleLinkSave = async (parentId, label) => { await adminApi.put('/api/classes', { id: linkModalClass.id, parent_class_id: parentId, program_label: label }); setLinkModalClass(null); await loadData(); };
 
             if (selectedClass) return <StructureDetail cls={selectedClass} onBack={() => setSelectedClass(null)} />;
 
             return (
                 <div className="w-full max-w-6xl mx-auto">
-                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <h2 className="text-lg font-bold text-gray-800">Academic Structure</h2>
-                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
-                    </div>
-
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2"><h2 className="text-lg font-bold text-gray-800">Academic Structure</h2><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button></div>
                     <div className="border border-gray-300">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-100 border-b border-gray-300 text-xs font-bold text-gray-600">
-                                <tr>
-                                    <th className="px-4 py-2 w-16 border-r border-gray-300">ID</th>
-                                    <th className="px-4 py-2 border-r border-gray-300">Class Name</th>
-                                    <th className="px-4 py-2 w-32 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {classes.map(c => (
-                                    <tr key={c.id} className="hover:bg-gray-50 group">
-                                        <td className="px-4 py-2 text-gray-500 font-mono text-xs border-r border-gray-300">#{c.id}</td>
-                                        <td className="px-4 py-2 border-r border-gray-300">
-                                            <TableCell label="Class" value={c.name} onUpdate={(v) => handleUpdate(c.id, v)} onDelete={() => handleDelete(c.id)} />
-                                            {c.parent_class_id && <div className="text-[10px] text-orange-700 mt-1"><i className="fas fa-link mr-1"></i>Linked: {c.parent_name}</div>}
-                                        </td>
-                                        <td className="px-4 py-2 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <button onClick={() => setLinkModalClass(c)} className="text-gray-500 hover:text-blue-600" title="Link"><i className="fas fa-link"></i></button>
-                                                {!c.parent_class_id && <button onClick={() => setSelectedClass(c)} className="text-blue-700 hover:underline text-xs font-bold">Manage</button>}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+                        <table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs font-bold text-gray-600"><tr><th className="px-4 py-2 w-16 border-r border-gray-300">ID</th><th className="px-4 py-2 border-r border-gray-300">Class Name</th><th className="px-4 py-2 w-32 text-right">Actions</th></tr></thead>
+                            <tbody className="divide-y divide-gray-200">{classes.map(c => <tr key={c.id} className="hover:bg-gray-50 group"><td className="px-4 py-2 text-gray-500 font-mono text-xs border-r border-gray-300">#{c.id}</td><td className="px-4 py-2 border-r border-gray-300"><TableCell label="Class" value={c.name} onUpdate={(v) => handleUpdate(c.id, v)} onDelete={() => handleDelete(c.id)} />{c.parent_class_id && <div className="text-[10px] text-orange-700 mt-1"><i className="fas fa-link mr-1"></i>Linked: {c.parent_name}</div>}</td><td className="px-4 py-2 text-right"><div className="flex justify-end gap-2"><button onClick={() => setLinkModalClass(c)} className="text-gray-500 hover:text-blue-600" title="Link"><i className="fas fa-link"></i></button>{!c.parent_class_id && <button onClick={() => setSelectedClass(c)} className="text-blue-700 hover:underline text-xs font-bold">Manage</button>}</div></td></tr>)}</tbody>
                         </table>
                         {classes.length === 0 && <div className="p-4 text-center text-sm text-gray-500">No classes found.</div>}
                     </div>
-                    
                     {isModalOpen && <SimpleInputModal title="New Class" onClose={() => setIsModalOpen(false)} onSave={handleCreate} />}
                     {linkModalClass && <LinkClassModal cls={linkModalClass} allClasses={classes} onClose={() => setLinkModalClass(null)} onSave={handleLinkSave} />}
                 </div>
@@ -199,16 +100,12 @@ export const adminComponents = `
             const [modal, setModal] = useState(null);
             const [selSubject, setSelSubject] = useState(null);
 
-            const loadData = async () => {
-                const [g, s] = await Promise.all([adminApi.get(\`/api/groups?class_id=\${cls.id}\`), adminApi.get(\`/api/subjects?class_id=\${cls.id}\`)]);
-                setGroups(g); setSubjects(s);
-            };
+            const loadData = async () => { const [g, s] = await Promise.all([adminApi.get(\`/api/groups?class_id=\${cls.id}\`), adminApi.get(\`/api/subjects?class_id=\${cls.id}\`)]); setGroups(g); setSubjects(s); };
             useEffect(() => { loadData(); }, [cls]);
 
             const handleCreateGroup = async (name) => { await adminApi.post('/api/groups', { name, class_id: cls.id }); setModal(null); await loadData(); };
             const handleUpdateGroup = async (id, v) => { await adminApi.update('group', id, v); await loadData(); };
             const handleDeleteGroup = async (id) => { await adminApi.del('group', id); await loadData(); };
-
             const handleCreateSubject = async (data) => { await adminApi.post('/api/subjects', { ...data, class_id: cls.id }); setModal(null); await loadData(); };
             const handleUpdateSubject = async (id, v) => { await adminApi.update('subject', id, v); await loadData(); };
             const handleDeleteSubject = async (id) => { await adminApi.del('subject', id); await loadData(); };
@@ -217,52 +114,10 @@ export const adminComponents = `
 
             return (
                 <div className="w-full max-w-6xl mx-auto">
-                    <div className="flex items-center mb-4 pb-2 border-b border-gray-300">
-                        <button onClick={onBack} className="mr-2 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
-                        <h2 className="text-lg font-bold">{cls.name} / Structure</h2>
-                    </div>
-
+                    <div className="flex items-center mb-4 pb-2 border-b border-gray-300"><button onClick={onBack} className="mr-2 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{cls.name} / Structure</h2></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* GROUPS */}
-                        <div className="md:col-span-1 border border-gray-300 bg-white">
-                            <div className="p-2 bg-gray-100 border-b border-gray-300 flex justify-between items-center">
-                                <h3 className="font-bold text-xs uppercase text-gray-600">Groups</h3>
-                                <button onClick={() => setModal('group')} className="text-blue-600 hover:underline text-xs"><i className="fas fa-plus"></i> Add</button>
-                            </div>
-                            <table className="w-full text-sm">
-                                <tbody className="divide-y divide-gray-200">
-                                    {groups.map(g => (
-                                        <tr key={g.id} className="hover:bg-gray-50 group">
-                                            <td className="px-2 py-2"><TableCell label="Group Name" value={g.name} onUpdate={v => handleUpdateGroup(g.id, v)} onDelete={() => handleDeleteGroup(g.id)} /></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {groups.length === 0 && <div className="p-2 text-center text-xs text-gray-400">No groups.</div>}
-                        </div>
-
-                        {/* SUBJECTS */}
-                        <div className="md:col-span-2 border border-gray-300 bg-white">
-                            <div className="p-2 bg-gray-100 border-b border-gray-300 flex justify-between items-center">
-                                <h3 className="font-bold text-xs uppercase text-gray-600">Subjects</h3>
-                                <button onClick={() => setModal('subject')} className="text-blue-600 hover:underline text-xs"><i className="fas fa-plus"></i> Add</button>
-                            </div>
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
-                                    <tr><th className="px-2 py-1 border-r border-gray-200">Name</th><th className="px-2 py-1 border-r border-gray-200">Group</th><th className="px-2 py-1 text-right"></th></tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {subjects.map(s => (
-                                        <tr key={s.id} className="hover:bg-gray-50 group">
-                                            <td className="px-2 py-2 border-r border-gray-200 font-medium"><TableCell label="Subject" value={s.name} onUpdate={v => handleUpdateSubject(s.id, v)} onDelete={() => handleDeleteSubject(s.id)} /></td>
-                                            <td className="px-2 py-2 border-r border-gray-200 text-xs text-gray-500">{s.is_common ? 'Common' : groups.find(g => g.id == s.group_id)?.name || '-'}</td>
-                                            <td className="px-2 py-2 text-right"><button onClick={() => setSelSubject(s)} className="text-blue-700 hover:underline text-xs">Chapters</button></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {subjects.length === 0 && <div className="p-2 text-center text-xs text-gray-400">No subjects.</div>}
-                        </div>
+                        <div className="md:col-span-1 border border-gray-300 bg-white"><div className="p-2 bg-gray-100 border-b border-gray-300 flex justify-between items-center"><h3 className="font-bold text-xs uppercase text-gray-600">Groups</h3><button onClick={() => setModal('group')} className="text-blue-600 hover:underline text-xs"><i className="fas fa-plus"></i> Add</button></div><table className="w-full text-sm"><tbody className="divide-y divide-gray-200">{groups.map(g => <tr key={g.id} className="hover:bg-gray-50 group"><td className="px-2 py-2"><TableCell label="Group Name" value={g.name} onUpdate={v => handleUpdateGroup(g.id, v)} onDelete={() => handleDeleteGroup(g.id)} /></td></tr>)}</tbody></table></div>
+                        <div className="md:col-span-2 border border-gray-300 bg-white"><div className="p-2 bg-gray-100 border-b border-gray-300 flex justify-between items-center"><h3 className="font-bold text-xs uppercase text-gray-600">Subjects</h3><button onClick={() => setModal('subject')} className="text-blue-600 hover:underline text-xs"><i className="fas fa-plus"></i> Add</button></div><table className="w-full text-sm text-left"><thead className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500"><tr><th className="px-2 py-1 border-r border-gray-200">Name</th><th className="px-2 py-1 border-r border-gray-200">Group</th><th className="px-2 py-1 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{subjects.map(s => <tr key={s.id} className="hover:bg-gray-50 group"><td className="px-2 py-2 border-r border-gray-200 font-medium"><TableCell label="Subject" value={s.name} onUpdate={v => handleUpdateSubject(s.id, v)} onDelete={() => handleDeleteSubject(s.id)} /></td><td className="px-2 py-2 border-r border-gray-200 text-xs text-gray-500">{s.is_common ? 'Common' : groups.find(g => g.id == s.group_id)?.name || '-'}</td><td className="px-2 py-2 text-right"><button onClick={() => setSelSubject(s)} className="text-blue-700 hover:underline text-xs">Chapters</button></td></tr>)}</tbody></table></div>
                     </div>
                     {modal === 'group' && <SimpleInputModal title="Add Group" onClose={() => setModal(null)} onSave={handleCreateGroup} />}
                     {modal === 'subject' && <CreateSubjectModal groups={groups} onClose={() => setModal(null)} onSave={handleCreateSubject} />}
@@ -277,7 +132,6 @@ export const adminComponents = `
 
             const loadData = async () => { setChapters(await adminApi.get(\`/api/chapters?subject_id=\${subject.id}\`)); };
             useEffect(() => { loadData(); }, [subject]);
-
             const handleCreate = async (data) => { await adminApi.post('/api/chapters', { ...data, subject_id: subject.id, order_num: data.order || chapters.length + 1 }); setIsModalOpen(false); await loadData(); };
             const handleUpdate = async (id, v) => { await adminApi.update('chapter', id, v); await loadData(); };
             const handleDelete = async (id) => { await adminApi.del('chapter', id); await loadData(); };
@@ -286,25 +140,8 @@ export const adminComponents = `
 
             return (
                 <div className="w-full max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{subject.name} / Chapters</h2></div>
-                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
-                    </div>
-                    <div className="border border-gray-300 bg-white">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2 w-12 border-r border-gray-300">#</th><th className="px-4 py-2 border-r border-gray-300">Chapter Title</th><th className="px-4 py-2 text-right"></th></tr></thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {chapters.map(c => (
-                                    <tr key={c.id} className="hover:bg-gray-50 group">
-                                        <td className="px-4 py-2 text-gray-500 font-mono text-xs border-r border-gray-300">{c.order_num}</td>
-                                        <td className="px-4 py-2 border-r border-gray-300 font-medium"><TableCell label="Chapter" value={c.title} onUpdate={v => handleUpdate(c.id, v)} onDelete={() => handleDelete(c.id)} /></td>
-                                        <td className="px-4 py-2 text-right"><button onClick={() => setSelChapter(c)} className="text-blue-700 hover:underline text-xs">Topics</button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {chapters.length === 0 && <div className="p-4 text-center text-gray-500 italic text-xs">No chapters.</div>}
-                    </div>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2"><div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{subject.name} / Chapters</h2></div><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button></div>
+                    <div className="border border-gray-300 bg-white"><table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2 w-12 border-r border-gray-300">#</th><th className="px-4 py-2 border-r border-gray-300">Chapter Title</th><th className="px-4 py-2 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{chapters.map(c => <tr key={c.id} className="hover:bg-gray-50 group"><td className="px-4 py-2 text-gray-500 font-mono text-xs border-r border-gray-300">{c.order_num}</td><td className="px-4 py-2 border-r border-gray-300 font-medium"><TableCell label="Chapter" value={c.title} onUpdate={v => handleUpdate(c.id, v)} onDelete={() => handleDelete(c.id)} /></td><td className="px-4 py-2 text-right"><button onClick={() => setSelChapter(c)} className="text-blue-700 hover:underline text-xs">Topics</button></td></tr>)}</tbody></table></div>
                     {isModalOpen && <CreateChapterModal onClose={() => setIsModalOpen(false)} onSave={handleCreate} />}
                 </div>
             );
@@ -316,31 +153,14 @@ export const adminComponents = `
 
             const loadData = async () => { setTopics(await adminApi.get(\`/api/topics?chapter_id=\${chapter.id}\`)); };
             useEffect(() => { loadData(); }, [chapter]);
-
             const handleCreate = async (title) => { await adminApi.post('/api/topics', { title, content: '', chapter_id: chapter.id, order_num: topics.length + 1 }); setIsModalOpen(false); await loadData(); };
             const handleUpdate = async (id, v) => { await adminApi.update('topic', id, v); await loadData(); };
             const handleDelete = async (id) => { await adminApi.del('topic', id); await loadData(); };
 
             return (
                 <div className="w-full max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{chapter.title} / Topics</h2></div>
-                        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button>
-                    </div>
-                    <div className="border border-gray-300 bg-white">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2 border-r border-gray-300">Topic Title</th><th className="px-4 py-2 text-right w-24"></th></tr></thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {topics.map(t => (
-                                    <tr key={t.id} className="hover:bg-gray-50 group">
-                                        <td className="px-4 py-2 border-r border-gray-300 font-medium"><TableCell label="Topic" value={t.title} onUpdate={v => handleUpdate(t.id, v)} onDelete={() => handleDelete(t.id)} /></td>
-                                        <td className="px-4 py-2 text-right text-xs text-gray-400">Created</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {topics.length === 0 && <div className="p-4 text-center text-gray-500 italic text-xs">No topics.</div>}
-                    </div>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-2"><div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{chapter.title} / Topics</h2></div><button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center hover:bg-blue-700"><i className="fas fa-plus text-xs"></i></button></div>
+                    <div className="border border-gray-300 bg-white"><table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2 border-r border-gray-300">Topic Title</th><th className="px-4 py-2 text-right w-24"></th></tr></thead><tbody className="divide-y divide-gray-200">{topics.map(t => <tr key={t.id} className="hover:bg-gray-50 group"><td className="px-4 py-2 border-r border-gray-300 font-medium"><TableCell label="Topic" value={t.title} onUpdate={v => handleUpdate(t.id, v)} onDelete={() => handleDelete(t.id)} /></td><td className="px-4 py-2 text-right text-xs text-gray-400">Created</td></tr>)}</tbody></table></div>
                     {isModalOpen && <SimpleInputModal title="New Topic" onClose={() => setIsModalOpen(false)} onSave={handleCreate} />}
                 </div>
             );
@@ -351,15 +171,11 @@ export const adminComponents = `
             const [classes, setClasses] = useState([]);
             const [selectedClass, setSelectedClass] = useState(null);
             useEffect(() => { adminApi.get('/api/classes').then(setClasses); }, []);
-
             if (selectedClass) return <ContentClassView cls={selectedClass} onBack={() => setSelectedClass(null)} />;
-
             return (
                 <div className="w-full max-w-5xl mx-auto">
                     <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-300">Content Manager</h2>
-                    <div className="border border-gray-300 bg-white">
-                        <table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2">Select Class to Manage Content</th><th className="px-4 py-2 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{classes.map(c => <tr key={c.id} onClick={() => setSelectedClass(c)} className="hover:bg-blue-50 cursor-pointer"><td className="px-4 py-2 font-medium text-gray-800">{c.name}</td><td className="px-4 py-2 text-right text-gray-400"><i className="fas fa-chevron-right"></i></td></tr>)}</tbody></table>
-                    </div>
+                    <div className="border border-gray-300 bg-white"><table className="w-full text-sm text-left"><thead className="bg-gray-100 border-b border-gray-300 text-xs text-gray-600"><tr><th className="px-4 py-2">Select Class to Manage Content</th><th className="px-4 py-2 text-right"></th></tr></thead><tbody className="divide-y divide-gray-200">{classes.map(c => <tr key={c.id} onClick={() => setSelectedClass(c)} className="hover:bg-blue-50 cursor-pointer"><td className="px-4 py-2 font-medium text-gray-800">{c.name}</td><td className="px-4 py-2 text-right text-gray-400"><i className="fas fa-chevron-right"></i></td></tr>)}</tbody></table></div>
                 </div>
             );
         }
@@ -368,9 +184,7 @@ export const adminComponents = `
             const [subjects, setSubjects] = useState([]);
             const [selSubject, setSelSubject] = useState(null);
             useEffect(() => { adminApi.get(\`/api/subjects?class_id=\${cls.id}\`).then(setSubjects); }, [cls]);
-
             if (selSubject) return <ContentSubjectView subject={selSubject} onBack={() => setSelSubject(null)} />;
-
             return (
                 <div className="w-full max-w-5xl mx-auto">
                     <div className="flex items-center mb-4 pb-2 border-b border-gray-300"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{cls.name} / Select Subject</h2></div>
@@ -388,7 +202,7 @@ export const adminComponents = `
             useEffect(() => { adminApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
             const loadTopics = async (ch) => { setActiveChapter(ch); setTopics(await adminApi.get(\`/api/topics?chapter_id=\${ch.id}\`)); };
 
-            if (selTopic) return <TopicContentEditor topic={selTopic} onBack={() => setSelTopic(null)} />;
+            if (selTopic) return <TopicContentEditor topic={selTopic} onBack={() => setSelTopic(null)} chapters={chapters} />;
 
             return (
                 <div className="w-full flex flex-col md:flex-row gap-4 h-[calc(100vh-140px)]">
@@ -408,7 +222,7 @@ export const adminComponents = `
             );
         }
 
-        function TopicContentEditor({ topic, onBack }) {
+        function TopicContentEditor({ topic, onBack, chapters }) {
             const [content, setContent] = useState(topic.content || '');
             const [questions, setQuestions] = useState([]);
             const [activeTab, setActiveTab] = useState('notes');
@@ -417,7 +231,6 @@ export const adminComponents = `
 
             const loadQs = async () => { setQuestions(await adminApi.get(\`/api/questions?topic_id=\${topic.id}\`)); };
             useEffect(() => { loadQs(); }, [topic]);
-            
             const saveNotes = async () => { setIsSavingNote(true); await adminApi.post('/api/topics', { ...topic, content, order_num: topic.order_num }); setIsSavingNote(false); alert('Saved!'); };
             const addQuestion = async (data) => { await adminApi.post('/api/questions', { ...data, topic_id: topic.id }); setIsQModalOpen(false); await loadQs(); };
             const delQuestion = async (id) => { if(confirm('Delete question?')) { await adminApi.del('question', id); await loadQs(); } };
@@ -435,11 +248,103 @@ export const adminComponents = `
                         </div>
                     ) : (
                         <div className="flex-1 border border-gray-300 bg-white flex flex-col">
-                            <div className="p-2 border-b border-gray-300 bg-gray-100 flex justify-between items-center"><span className="font-bold text-xs uppercase text-gray-600">Questions</span><button onClick={() => setIsQModalOpen(true)} className="bg-blue-600 text-white text-xs px-2 py-1 hover:bg-blue-700">Add Question</button></div>
+                            <div className="p-2 border-b border-gray-300 bg-gray-100 flex justify-between items-center"><span className="font-bold text-xs uppercase text-gray-600">Question Bank</span><button onClick={() => setIsQModalOpen(true)} className="bg-blue-600 text-white text-xs px-2 py-1 hover:bg-blue-700">Add Question</button></div>
                             <div className="flex-1 overflow-y-auto p-4 space-y-2">{questions.map((q, i) => <div key={q.id} className="p-3 border border-gray-300 bg-gray-50 relative group"><div className="flex justify-between mb-1"><span className="text-[10px] font-bold text-blue-700 uppercase">{q.type}</span><div className="flex gap-2"><span className="text-[10px] text-gray-500">{q.metadata?.board}</span><button onClick={() => delQuestion(q.id)} className="text-red-500 hover:underline text-xs">Delete</button></div></div><p className="text-sm text-gray-800">{q.question_text}</p></div>)}</div>
                         </div>
                     )}
-                    {isQModalOpen && <CreateQuestionModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} />}
+                    {isQModalOpen && <CreateCQModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} allChapters={chapters} />}
+                </div>
+            );
+        }
+
+        /* --- ADVANCED CQ MODAL --- */
+        function CreateCQModal({ onClose, onSave, allChapters }) {
+            const [scenario, setScenario] = useState('');
+            const [board, setBoard] = useState('');
+            const [year, setYear] = useState('');
+            const [school, setSchool] = useState('');
+            const [subQs, setSubQs] = useState([
+                { id: 'k', text: '', connected: false, chapterId: '', topicId: '' },
+                { id: 'kh', text: '', connected: false, chapterId: '', topicId: '' },
+                { id: 'g', text: '', connected: true, chapterId: '', topicId: '' },
+                { id: 'gh', text: '', connected: true, chapterId: '', topicId: '' }
+            ]);
+            const [topicsMap, setTopicsMap] = useState({});
+
+            // Load topics when a chapter is selected for a sub-question
+            const handleChapterChange = async (idx, chapterId) => {
+                const newQs = [...subQs];
+                newQs[idx].chapterId = chapterId;
+                setSubQs(newQs);
+                if (chapterId && !topicsMap[chapterId]) {
+                    const t = await adminApi.get(\`/api/topics?chapter_id=\${chapterId}\`);
+                    setTopicsMap(prev => ({ ...prev, [chapterId]: t }));
+                }
+            };
+
+            const handleTopicChange = (idx, topicId) => { const newQs = [...subQs]; newQs[idx].topicId = topicId; setSubQs(newQs); };
+            const handleTextChange = (idx, text) => { const newQs = [...subQs]; newQs[idx].text = text; setSubQs(newQs); };
+            const handleConnChange = (idx, val) => { const newQs = [...subQs]; newQs[idx].connected = val; setSubQs(newQs); };
+
+            const handleSave = () => {
+                const payload = {
+                    type: 'CQ',
+                    question_text: scenario,
+                    options: subQs, // Storing full structure in options JSON
+                    answer: '', // Not used for CQ structure usually, or store model answer
+                    metadata: { board, year, school }
+                };
+                onSave(payload);
+            };
+
+            return (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white w-[900px] h-[90vh] flex flex-col border border-gray-400 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-gray-800">Add Creative Question (CQ)</h3><button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button></div>
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {/* Metadata */}
+                            <div className="grid grid-cols-3 gap-4 mb-6">
+                                <div><label className="block text-xs font-bold mb-1">Board Name</label><input className="w-full border p-2 text-sm" placeholder="Dhaka" value={board} onChange={e => setBoard(e.target.value)} /></div>
+                                <div><label className="block text-xs font-bold mb-1">Year</label><input className="w-full border p-2 text-sm" placeholder="2024" value={year} onChange={e => setYear(e.target.value)} /></div>
+                                <div><label className="block text-xs font-bold mb-1">School (Optional)</label><input className="w-full border p-2 text-sm" placeholder="Ideal School" value={school} onChange={e => setSchool(e.target.value)} /></div>
+                            </div>
+
+                            {/* Scenario */}
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold mb-1 uppercase text-blue-600">Scenario / Stem</label>
+                                <textarea className="w-full border border-blue-200 p-3 text-sm h-24 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Enter the creative scenario here..." value={scenario} onChange={e => setScenario(e.target.value)}></textarea>
+                            </div>
+
+                            {/* Sub Questions */}
+                            <div className="space-y-4">
+                                {subQs.map((q, i) => (
+                                    <div key={q.id} className="border border-gray-200 p-4 rounded bg-gray-50/50">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="font-bold text-sm w-6 bg-gray-200 text-center rounded">{q.id}</span>
+                                            <input className="flex-1 border p-1.5 text-sm" placeholder="Question text..." value={q.text} onChange={e => handleTextChange(i, e.target.value)} />
+                                            <label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2">
+                                                <input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link Scenario
+                                            </label>
+                                        </div>
+                                        <div className="flex gap-2 ml-8">
+                                            <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}>
+                                                <option value="">Select Chapter</option>
+                                                {allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                                            </select>
+                                            <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}>
+                                                <option value="">Select Topic</option>
+                                                {topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3">
+                            <button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button>
+                            <button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save CQ</button>
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -455,12 +360,7 @@ export const adminComponents = `
         }
         function CreateChapterModal({ onClose, onSave }) {
             const [title, setTitle] = useState(''); const [order, setOrder] = useState('');
-            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="#" type="number" value={order} onChange={e => setOrder(e.target.value)} /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div></div><div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
-        }
-        function CreateQuestionModal({ onClose, onSave }) {
-            const [type, setType] = useState('MCQ'); const [text, setText] = useState(''); const [options, setOptions] = useState(['', '', '', '']); const [answer, setAnswer] = useState(''); const [board, setBoard] = useState(''); const [year, setYear] = useState('');
-            const updateOption = (i, v) => { const n = [...options]; n[i] = v; setOptions(n); };
-            return <Modal isOpen={true} onClose={onClose} title="Add Question"><div className="flex gap-2 mb-3 border-b pb-2"><button onClick={() => setType('MCQ')} className={\`px-3 py-1 text-xs font-bold \${type==='MCQ'?'bg-blue-100 text-blue-800':'text-gray-500'}\`}>MCQ</button><button onClick={() => setType('CQ')} className={\`px-3 py-1 text-xs font-bold \${type==='CQ'?'bg-blue-100 text-blue-800':'text-gray-500'}\`}>CQ</button></div><div className="flex gap-2 mb-3"><div className="flex-1"><Input label="Board" value={board} onChange={e => setBoard(e.target.value)} /></div><div className="w-24"><Input label="Year" value={year} onChange={e => setYear(e.target.value)} /></div></div><div className="mb-3"><label className="block text-xs font-bold mb-1">Question</label><textarea className="w-full border p-2 rounded text-sm h-20" value={text} onChange={e => setText(e.target.value)}></textarea></div>{type === 'MCQ' ? <div className="space-y-2 mb-3">{options.map((o, i) => <div key={i} className="flex items-center gap-2"><span className="text-xs font-bold w-4">{String.fromCharCode(65+i)}</span><input className="flex-1 border p-1.5 rounded text-sm" value={o} onChange={e => updateOption(i, e.target.value)} /><input type="radio" name="ans" checked={answer===o && o!==''} onChange={() => setAnswer(o)} /></div>)}</div> : <div className="mb-3"><label className="block text-xs font-bold mb-1">Answer Key</label><textarea className="w-full border p-2 rounded text-sm h-20" value={answer} onChange={e => setAnswer(e.target.value)}></textarea></div>}<div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave({ type, question_text: text, options: type==='MCQ'?options:[], answer, metadata: { board, year } })}>Save</Button></div></Modal>;
+            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="#" type="number" value={order} onChange={e => setOrder(e.target.value)} /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div></div><div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
         }
         function LinkClassModal({ cls, allClasses, onClose, onSave }) {
             const [parentId, setParentId] = useState(cls.parent_class_id || ''); const [label, setLabel] = useState(cls.program_label || '');
