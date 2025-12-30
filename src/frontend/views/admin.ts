@@ -379,11 +379,26 @@ export const adminComponents = `
             const [activeChapter, setActiveChapter] = useState(null);
             const [topics, setTopics] = useState([]);
             const [selTopic, setSelTopic] = useState(null);
+            const [isDirectQMode, setIsDirectQMode] = useState(false);
 
             useEffect(() => { adminApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
-            const loadTopics = async (ch) => { setActiveChapter(ch); setTopics(await adminApi.get(\`/api/topics?chapter_id=\${ch.id}\`)); };
+            const loadTopics = async (ch) => { 
+                setActiveChapter(ch); 
+                setIsDirectQMode(false);
+                setTopics(await adminApi.get(\`/api/topics?chapter_id=\${ch.id}\`)); 
+            };
 
-            if (selTopic) return <TopicContentEditor topic={selTopic} onBack={() => setSelTopic(null)} chapters={chapters} />;
+            // Enhanced Content Editor that works for both Topics AND Chapters (if direct questions)
+            if (selTopic || isDirectQMode) {
+                return (
+                    <TopicContentEditor 
+                        // If direct mode, we pass a "fake" topic object representing the chapter
+                        topic={isDirectQMode ? { id: 'chapter_'+activeChapter.id, title: activeChapter.title, isChapter: true, realId: activeChapter.id } : selTopic} 
+                        onBack={() => { setSelTopic(null); setIsDirectQMode(false); }} 
+                        chapters={chapters} 
+                    />
+                ); 
+            }
 
             return (
                 <div className="w-full flex flex-col md:flex-row gap-4 h-[calc(100vh-140px)]">
@@ -394,9 +409,13 @@ export const adminComponents = `
                     <div className="flex-1 bg-white border border-gray-300 p-4 overflow-y-auto">
                         {!activeChapter ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">Select a chapter.</div> : 
                         <>
-                            <h3 className="font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">{activeChapter.title} / Topics</h3>
+                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
+                                <h3 className="font-bold text-gray-800">{activeChapter.title} / Topics</h3>
+                                {/* NEW: Direct Questions Button */}
+                                <button onClick={() => setIsDirectQMode(true)} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">Direct Questions</button>
+                            </div>
                             <div className="space-y-2">{topics.map(t => <div key={t.id} onClick={() => setSelTopic(t)} className="flex justify-between items-center p-3 border border-gray-300 hover:bg-gray-50 cursor-pointer"><span className="text-sm font-medium">{t.title}</span><span className="text-xs text-blue-600">Edit <i className="fas fa-pen ml-1"></i></span></div>)}</div>
-                            {topics.length === 0 && <div className="text-center text-gray-400 text-sm py-10">No topics.</div>}
+                            {topics.length === 0 && <div className="text-center text-gray-400 text-sm py-10">No topics. Add direct questions if needed.</div>}
                         </>}
                     </div>
                 </div>
@@ -406,23 +425,53 @@ export const adminComponents = `
         function TopicContentEditor({ topic, onBack, chapters }) {
             const [content, setContent] = useState(topic.content || '');
             const [questions, setQuestions] = useState([]);
-            const [activeTab, setActiveTab] = useState('notes');
+            const [activeTab, setActiveTab] = useState('questions'); // Default to questions for Chapters
             const [isQModalOpen, setIsQModalOpen] = useState(false);
             const [isSavingNote, setIsSavingNote] = useState(false);
 
-            const loadQs = async () => { setQuestions(await adminApi.get(\`/api/questions?topic_id=\${topic.id}\`)); };
+            // If it's a chapter, use special ID format or query param
+            const topicQuery = topic.isChapter ? \`topic_id=0&chapter_id=\${topic.realId}\` : \`topic_id=\${topic.id}\`;
+
+            const loadQs = async () => { 
+                // We need to support fetching questions by chapter_id if topic_id is 0/missing
+                // For now, let's assume questions table has chapter_id column or we use a "virtual" topic_id approach.
+                // Simpler: Reuse topic_id column but for chapters we might need a workaround or API update.
+                // Updated Plan: api.ts needs to filter by chapter_id if provided.
+                // Assuming api update:
+                const url = topic.isChapter ? \`/api/questions?chapter_id=\${topic.realId}\` : \`/api/questions?topic_id=\${topic.id}\`;
+                setQuestions(await adminApi.get(url)); 
+            };
+            
             useEffect(() => { loadQs(); }, [topic]);
-            const saveNotes = async () => { setIsSavingNote(true); await adminApi.post('/api/topics', { ...topic, content, order_num: topic.order_num }); setIsSavingNote(false); alert('Saved!'); };
-            const addQuestion = async (data) => { await adminApi.post('/api/questions', { ...data, topic_id: topic.id }); setIsQModalOpen(false); await loadQs(); };
+            
+            const saveNotes = async () => { 
+                if(topic.isChapter) { alert('Notes not supported for chapters directly yet.'); return; }
+                setIsSavingNote(true); 
+                await adminApi.post('/api/topics', { ...topic, content, order_num: topic.order_num }); 
+                setIsSavingNote(false); 
+                alert('Saved!'); 
+            };
+            
+            const addQuestion = async (data) => { 
+                // If chapter mode, set topic_id to 0 or null and pass chapter_id
+                const payload = topic.isChapter ? { ...data, topic_id: null, chapter_id: topic.realId } : { ...data, topic_id: topic.id };
+                await adminApi.post('/api/questions', payload); 
+                setIsQModalOpen(false); 
+                await loadQs(); 
+            };
+            
             const delQuestion = async (id) => { if(confirm('Delete question?')) { await adminApi.del('question', id); await loadQs(); } };
 
             return (
                 <div className="w-full h-full flex flex-col">
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-300">
-                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title}</h2></div>
-                        <div className="flex border border-gray-300"><button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button><button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questions.length})</button></div>
+                        <div className="flex items-center"><button onClick={onBack} className="text-gray-500 hover:text-black mr-2"><i className="fas fa-arrow-left"></i></button><h2 className="text-lg font-bold">{topic.title} {topic.isChapter ? '(Chapter Mode)' : ''}</h2></div>
+                        <div className="flex border border-gray-300">
+                            {!topic.isChapter && <button onClick={() => setActiveTab('notes')} className={\`px-3 py-1 text-xs font-bold \${activeTab === 'notes' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Notes</button>}
+                            <button onClick={() => setActiveTab('questions')} className={\`px-3 py-1 text-xs font-bold border-l border-gray-300 \${activeTab === 'questions' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-50'}\`}>Questions ({questions.length})</button>
+                        </div>
                     </div>
-                    {activeTab === 'notes' ? (
+                    {activeTab === 'notes' && !topic.isChapter ? (
                         <div className="flex-1 flex flex-col border border-gray-300 bg-white">
                             <textarea className="flex-1 w-full p-4 text-sm font-mono outline-none resize-none" placeholder="Markdown content..." value={content} onChange={e => setContent(e.target.value)}></textarea>
                             <div className="p-2 bg-gray-100 border-t border-gray-300 flex justify-end"><button onClick={saveNotes} className="px-4 py-1 bg-blue-600 text-white text-xs hover:bg-blue-700" disabled={isSavingNote}>{isSavingNote ? 'Saving...' : 'Save'}</button></div>
@@ -438,8 +487,9 @@ export const adminComponents = `
             );
         }
 
-        /* --- ADVANCED CQ MODAL --- */
+        /* --- ADVANCED CQ MODAL (Refined) --- */
         function CreateCQModal({ onClose, onSave, allChapters }) {
+            const [mode, setMode] = useState('full'); // 'full' (Scenario) or 'single' (Standalone)
             const [scenario, setScenario] = useState('');
             const [board, setBoard] = useState('');
             const [year, setYear] = useState('');
@@ -450,6 +500,10 @@ export const adminComponents = `
                 { id: 'গ', text: '', connected: true, chapterId: '', topicId: '' },
                 { id: 'ঘ', text: '', connected: true, chapterId: '', topicId: '' }
             ]);
+            // Standalone state
+            const [singlePart, setSinglePart] = useState('ক');
+            const [singleText, setSingleText] = useState('');
+            
             const [topicsMap, setTopicsMap] = useState({});
 
             const handleChapterChange = async (idx, chapterId) => {
@@ -467,40 +521,77 @@ export const adminComponents = `
             const handleConnChange = (idx, val) => { const newQs = [...subQs]; newQs[idx].connected = val; setSubQs(newQs); };
 
             const handleSave = () => {
-                const payload = {
-                    type: 'CQ',
-                    question_text: scenario,
-                    options: subQs, 
-                    answer: '', 
-                    metadata: { board, year, school }
-                };
-                onSave(payload);
+                if (mode === 'single') {
+                    // Save as a CQ-Part type
+                    onSave({
+                        type: 'CQ-Part',
+                        question_text: singleText,
+                        options: [], // No sub-questions
+                        answer: '',
+                        metadata: { board, year, school, part: singlePart }
+                    });
+                } else {
+                    onSave({
+                        type: 'CQ',
+                        question_text: scenario,
+                        options: subQs, 
+                        answer: '', 
+                        metadata: { board, year, school }
+                    });
+                }
             };
 
             return (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}>
                     <div className="bg-white w-[900px] h-[90vh] flex flex-col border border-gray-400 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-gray-800">Add Creative Question (CQ)</h3><button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button></div>
+                        <div className="p-4 border-b border-gray-300 flex justify-between items-center bg-gray-50"><h3 className="font-bold text-gray-800">Add Creative Question</h3><button onClick={onClose} className="text-gray-500 hover:text-red-500"><i className="fas fa-times"></i></button></div>
+                        
+                        {/* Tabs */}
+                        <div className="flex border-b border-gray-300">
+                            <button onClick={() => setMode('full')} className={\`flex-1 py-2 text-sm font-bold \${mode === 'full' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'bg-gray-100 text-gray-500'}\`}>Full Scenario CQ</button>
+                            <button onClick={() => setMode('single')} className={\`flex-1 py-2 text-sm font-bold \${mode === 'single' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'bg-gray-100 text-gray-500'}\`}>Single Question Part</button>
+                        </div>
+
                         <div className="flex-1 overflow-y-auto p-6">
                             <div className="grid grid-cols-3 gap-4 mb-6">
                                 <div><label className="block text-xs font-bold mb-1">Board Name</label><input className="w-full border p-2 text-sm" placeholder="Dhaka" value={board} onChange={e => setBoard(e.target.value)} /></div>
                                 <div><label className="block text-xs font-bold mb-1">Year</label><input className="w-full border p-2 text-sm" placeholder="2024" value={year} onChange={e => setYear(e.target.value)} /></div>
                                 <div><label className="block text-xs font-bold mb-1">School (Optional)</label><input className="w-full border p-2 text-sm" placeholder="Ideal School" value={school} onChange={e => setSchool(e.target.value)} /></div>
                             </div>
-                            <div className="mb-6"><label className="block text-xs font-bold mb-1 uppercase text-blue-600">Scenario / Stem</label><textarea className="w-full border border-blue-200 p-3 text-sm h-24 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Enter the creative scenario here..." value={scenario} onChange={e => setScenario(e.target.value)}></textarea></div>
-                            <div className="space-y-4">
-                                {subQs.map((q, i) => (
-                                    <div key={q.id} className="border border-gray-200 p-4 rounded bg-gray-50/50">
-                                        <div className="flex items-center gap-2 mb-2"><span className="font-bold text-sm w-6 bg-gray-200 text-center rounded">{q.id}</span><input className="flex-1 border p-1.5 text-sm" placeholder="Question text..." value={q.text} onChange={e => handleTextChange(i, e.target.value)} /><label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2"><input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link Scenario</label></div>
-                                        <div className="flex gap-2 ml-8">
-                                            <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}><option value="">Select Chapter</option>{allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
-                                            <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}><option value="">Select Topic</option>{topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
+
+                            {mode === 'full' ? (
+                                <>
+                                    <div className="mb-6"><label className="block text-xs font-bold mb-1 uppercase text-blue-600">Scenario / Stem</label><textarea className="w-full border border-blue-200 p-3 text-sm h-24 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Enter the creative scenario here..." value={scenario} onChange={e => setScenario(e.target.value)}></textarea></div>
+                                    <div className="space-y-4">
+                                        {subQs.map((q, i) => (
+                                            <div key={q.id} className="border border-gray-200 p-4 rounded bg-gray-50/50">
+                                                <div className="flex items-center gap-2 mb-2"><span className="font-bold text-sm w-6 bg-gray-200 text-center rounded">{q.id}</span><input className="flex-1 border p-1.5 text-sm" placeholder="Question text..." value={q.text} onChange={e => handleTextChange(i, e.target.value)} /><label className="flex items-center gap-1 text-xs cursor-pointer select-none ml-2"><input type="checkbox" checked={q.connected} onChange={e => handleConnChange(i, e.target.checked)} /> Link Scenario</label></div>
+                                                <div className="flex gap-2 ml-8">
+                                                    <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.chapterId} onChange={e => handleChapterChange(i, e.target.value)}><option value="">Select Chapter</option>{allChapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                                                    <select className="w-1/2 border p-1.5 text-xs text-gray-600" value={q.topicId} onChange={e => handleTopicChange(i, e.target.value)} disabled={!q.chapterId}><option value="">Select Topic</option>{topicsMap[q.chapterId]?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <div className="mb-4">
+                                        <label className="block text-xs font-bold mb-1">Select Part</label>
+                                        <div className="flex gap-2">
+                                            {['ক', 'খ', 'গ', 'ঘ'].map(p => (
+                                                <button key={p} onClick={() => setSinglePart(p)} className={\`w-10 h-10 border rounded font-bold \${singlePart === p ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'}\`}>{p}</button>
+                                            ))}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="mb-4">
+                                        <label className="block text-xs font-bold mb-1">Question Text</label>
+                                        <textarea className="w-full border p-3 text-sm h-32" placeholder="Type the question..." value={singleText} onChange={e => setSingleText(e.target.value)}></textarea>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3"><button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button><button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save CQ</button></div>
+                        <div className="p-4 border-t border-gray-300 bg-gray-50 flex justify-end gap-3"><button onClick={onClose} className="px-4 py-2 text-sm border bg-white hover:bg-gray-100">Cancel</button><button onClick={handleSave} className="px-6 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-sm">Save</button></div>
                     </div>
                 </div>
             );
@@ -517,7 +608,7 @@ export const adminComponents = `
         }
         function CreateChapterModal({ onClose, onSave }) {
             const [title, setTitle] = useState(''); const [order, setOrder] = useState('');
-            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="#" type="number" value={order} onChange={e => setOrder(e.target.value)} /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div></div><div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
+            return <Modal isOpen={true} onClose={onClose} title="Add Chapter"><div className="flex gap-2 mb-3"><div className="w-20"><Input label="#" type="number" value={order} onChange={e => setOrder(e.target.value)} /></div><div className="flex-1"><Input label="Title" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div></div><div className="flex justify-end mt-4"><Button size="md" onClick={() => onSave({ title, order })}>Save</Button></div></Modal>;
         }
         function CreateQuestionModal({ onClose, onSave }) {
             const [type, setType] = useState('MCQ'); const [text, setText] = useState(''); const [options, setOptions] = useState(['', '', '', '']); const [answer, setAnswer] = useState(''); const [board, setBoard] = useState(''); const [year, setYear] = useState('');
