@@ -54,7 +54,7 @@ export const studentComponents = `
             }
 
             return (
-                <div className="w-full max-w-[1800px] mx-auto px-4 md:px-6 py-6 md:py-8 animate-fade-in font-sans text-gray-800">
+                <div className="w-full px-4 md:px-8 py-6 md:py-8 animate-fade-in font-sans text-gray-800">
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                         <div>
                             <p className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-2">Student Workspace</p>
@@ -64,14 +64,14 @@ export const studentComponents = `
                         <div className="w-full lg:w-[420px] relative">
                             <input 
                                 type="text" 
-                                className="w-full border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white shadow-sm"
+                                className="w-full border border-gray-200 rounded-md py-3 pl-12 pr-4 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
                                 placeholder="Search programs, subjects, or chapters..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             <i className="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                             {searchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-2 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
                                     {searchResults.map((r, i) => (
                                         <div key={i} className="p-3 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors">
                                             <div className="font-semibold text-sm text-gray-800">{r.title}</div>
@@ -85,7 +85,7 @@ export const studentComponents = `
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {classes.length === 0 ? (
-                            <div className="col-span-full py-12 text-center border border-dashed border-gray-300 rounded-xl bg-gray-50">
+                            <div className="col-span-full py-12 text-center border border-dashed border-gray-300 rounded-md bg-gray-50">
                                 <p className="text-gray-500 text-sm">No classes available at the moment.</p>
                             </div>
                         ) : (
@@ -93,7 +93,7 @@ export const studentComponents = `
                                 <div 
                                     key={cls.id} 
                                     onClick={() => onNavigate({ level: 'class', classId: cls.id })} 
-                                    className="bg-white border border-gray-200 p-5 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
+                                    className="bg-white border border-gray-200 p-5 rounded-md hover:border-blue-500 cursor-pointer transition-all duration-200 group flex flex-col h-full justify-between"
                                 >
                                     <div>
                                         <div className="flex justify-between items-start gap-3 mb-3">
@@ -165,7 +165,7 @@ export const studentComponents = `
             });
 
             return (
-                <div className="w-full max-w-[1800px] mx-auto px-4 md:px-6 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
+                <div className="w-full px-4 md:px-8 py-6 md:py-8 animate-fade-in min-h-screen flex flex-col font-sans text-gray-800">
                     <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-200 flex-wrap gap-3">
                         <div className="flex items-center">
                             <button onClick={onBack} className="text-gray-500 hover:text-black mr-3 transition-colors"><i className="fas fa-arrow-left"></i></button>
@@ -181,12 +181,12 @@ export const studentComponents = `
                     <div className="flex flex-col xl:flex-row gap-6 items-start">
                         {/* Filter Sidebar (Desktop: Left, Mobile: Top) */}
                         <div className="w-full xl:w-72 flex-shrink-0 xl:sticky xl:top-20">
-                            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                            <div className="bg-white border border-gray-200 rounded-md p-4">
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Filter by Group</h3>
                                 <div className="flex flex-wrap xl:flex-col gap-2">
                                     <button 
                                         onClick={() => setSelectedGroupId(null)}
-                                        className={\`px-4 py-2 rounded-xl text-base font-semibold transition-all text-left border \${selectedGroupId === null ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
+                                        className={\`px-4 py-2 rounded-md text-base font-semibold transition-all text-left border \${selectedGroupId === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
                                     >
                                         All Subjects
                                     </button>
@@ -194,7 +194,7 @@ export const studentComponents = `
                                         <button 
                                             key={g.id}
                                             onClick={() => setSelectedGroupId(g.id)}
-                                            className={\`px-4 py-2 rounded-xl text-base font-semibold transition-all text-left border \${selectedGroupId === g.id ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
+                                            className={\`px-4 py-2 rounded-md text-base font-semibold transition-all text-left border \${selectedGroupId === g.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}\`}
                                         >
                                             {g.name}
                                         </button>
@@ -214,7 +214,7 @@ export const studentComponents = `
                             </div>
                             
                             {displayedSubjects.length === 0 ? (
-                                <div className="p-12 border border-dashed border-gray-300 rounded-xl text-center">
+                                <div className="p-12 border border-dashed border-gray-300 rounded-md text-center">
                                     <div className="text-gray-400 mb-2"><i className="fas fa-folder-open text-4xl"></i></div>
                                     <p className="text-gray-500 text-sm">No subjects found for this selection.</p>
                                 </div>
@@ -224,11 +224,10 @@ export const studentComponents = `
                                         <div 
                                             key={sub.id} 
                                             onClick={() => onNavigate({ level: 'subject', classId: cls.id, subjectId: sub.id })} 
-                                            className="bg-white border border-gray-200 p-5 rounded-2xl hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200 group relative overflow-hidden"
+                                            className="bg-white border border-gray-200 p-5 rounded-md hover:border-blue-500 cursor-pointer transition-all duration-200 group"
                                         >
-                                            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-white rounded-bl-full -mr-10 -mt-10 z-0"></div>
-                                            <h4 className="font-bold text-lg text-gray-900 mb-2 relative z-10 group-hover:text-blue-700 transition-colors">{sub.name}</h4>
-                                            <div className="flex justify-between items-end mt-4 relative z-10">
+                                            <h4 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-blue-700 transition-colors">{sub.name}</h4>
+                                            <div className="flex justify-between items-end mt-4">
                                                 <span className={\`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border \${sub.is_common ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-100'}\`}>
                                                     {sub.is_common ? 'Common' : (groups.find(g => g.id == sub.group_id)?.name || 'Group Subject')}
                                                 </span>
@@ -306,7 +305,7 @@ export const studentComponents = `
             }
 
             return (
-                <div className="flex flex-col h-screen bg-slate-50 font-sans text-gray-800 animate-fade-in">
+                <div className="flex flex-col h-screen bg-white font-sans text-gray-800 animate-fade-in">
                     {/* Header */}
                     <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white z-10">
                         <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
@@ -342,7 +341,7 @@ export const studentComponents = `
                                         <div 
                                             key={ch.id}
                                             onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
-                                            className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 active:bg-blue-50 cursor-pointer transition-colors flex justify-between items-center bg-slate-50"
+                                            className="p-4 border border-gray-200 rounded-md hover:border-blue-300 active:bg-blue-50 cursor-pointer transition-colors flex justify-between items-center bg-white"
                                         >
                                             <div>
                                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Chapter {ch.order_num}</span>
@@ -408,7 +407,7 @@ export const studentComponents = `
                 return (
                     <div className="flex-1 overflow-y-auto p-4 md:p-6">
                         <div className="max-w-none">
-                            <div className="bg-slate-50 border border-gray-200 rounded-lg p-6 md:p-7">
+                            <div className="bg-white border border-gray-200 rounded-none p-6 md:p-7">
                                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{chapterTitle}</h1>
                                 <p className="text-gray-500 mb-8">No topics found in this chapter.</p>
                                 <div className="border-t border-gray-100 pt-8">
@@ -450,7 +449,7 @@ export const studentComponents = `
                     {/* Scrollable Body */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-6">
                         <div className="max-w-none">
-                            <div className="bg-slate-50 border border-gray-200 rounded-lg p-6 md:p-7 mb-6">
+                            <div className="bg-white border border-gray-200 rounded-none p-6 md:p-7 mb-6">
                                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{activeTopic.title}</h1>
                                 <div className="whitespace-pre-wrap leading-relaxed text-gray-700">
                                     {activeTopic.content || "No notes available."}
@@ -523,10 +522,10 @@ export const studentComponents = `
                                 <button
                                     key={type.key}
                                     onClick={() => setSelectedType(type.key)}
-                                    className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition flex items-center justify-between"
+                                    className="border border-gray-200 rounded-md p-5 bg-white transition flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className={"inline-flex items-center justify-center w-11 h-11 rounded-full " + type.color + " text-white text-lg font-bold shadow"}>
+                                        <span className={"inline-flex items-center justify-center w-11 h-11 rounded-full " + type.color + " text-white text-lg font-bold"}>
                                             {type.label}
                                         </span>
                                         <div className="text-left">
@@ -543,14 +542,14 @@ export const studentComponents = `
                         <div className="space-y-4">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white text-lg font-bold shadow">MCQ</span>
+                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white text-lg font-bold">MCQ</span>
                                     <h3 className="text-lg font-bold text-gray-900">Multiple Choice Questions</h3>
                                 </div>
                                 <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
                             </div>
                             <div className="space-y-4">
                                 {mcqQuestions.map((q, index) => (
-                                    <div key={q.id} className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm space-y-2">
+                                    <div key={q.id} className="border border-gray-200 rounded-md p-5 bg-white space-y-2">
                                         <div className="flex items-start gap-2 text-sm text-gray-900">
                                             <span className="font-bold text-gray-700">{index + 1}.</span>
                                             <span className="whitespace-pre-line font-medium">{q.question_text}</span>
@@ -573,7 +572,7 @@ export const studentComponents = `
                         <div className="space-y-4">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white text-lg font-bold shadow">CQ</span>
+                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white text-lg font-bold">CQ</span>
                                     <h3 className="text-lg font-bold text-gray-900">Creative Questions</h3>
                                 </div>
                                 <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
@@ -598,7 +597,7 @@ export const studentComponents = `
                             {cqFilter === 'full' && (
                                 <div className="space-y-4">
                                     {cqScenarioQuestions.map((q, index) => (
-                                        <div key={q.id} className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm space-y-3">
+                                        <div key={q.id} className="border border-gray-200 rounded-md p-5 bg-white space-y-3">
                                             <div className="flex items-start gap-2 text-sm text-gray-900">
                                                 <span className="font-bold text-gray-700">{index + 1}.</span>
                                                 <div className="whitespace-pre-line">
@@ -635,7 +634,7 @@ export const studentComponents = `
                                         const isLinked = q.metadata?.linked;
                                         const scenarioText = q.metadata?.scenario;
                                         return (
-                                            <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
+                                            <div key={q.id} className="border border-gray-200 rounded-md p-4 bg-white space-y-2">
                                                 {isLinked && scenarioText ? (
                                                     <div className="flex items-start gap-2 text-sm text-gray-900">
                                                         <span className="font-bold text-gray-700">{index + 1}.</span>
