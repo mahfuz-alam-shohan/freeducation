@@ -194,7 +194,6 @@ export const studentComponents = `
             const [activeTopic, setActiveTopic] = useState(null);
             const [topics, setTopics] = useState([]);
             
-            // On load, fetch chapters
             useEffect(() => { studentApi.get(\`/api/chapters?subject_id=\${subject.id}\`).then(setChapters); }, [subject]);
 
             const loadTopicsForChapter = async (chapter) => {
@@ -205,7 +204,6 @@ export const studentComponents = `
                 else setActiveTopic(null);
             };
 
-            // Mobile: If chapter selected, show content view.
             if (activeChapter && window.innerWidth < 768) {
                 return (
                     <StudentTopicView 
@@ -351,6 +349,13 @@ export const studentComponents = `
                 setRevealed(prev => ({ ...prev, [qId]: option }));
             };
 
+            const toggleAnswer = (qId, partId) => {
+                setRevealed(prev => ({ 
+                    ...prev, 
+                    [qId]: { ...(prev[qId] || {}), [partId]: !prev[qId]?.[partId] } 
+                }));
+            };
+
             if (questions.length === 0) return null;
 
             return (
@@ -363,49 +368,75 @@ export const studentComponents = `
                     {questions.map((q, idx) => (
                         <div key={q.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                             <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Q{idx + 1}</span>
+                                <span className="text-xs font-bold text-gray-500 uppercase">Q{idx + 1} ({q.type})</span>
                                 <span className="text-[10px] font-mono text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">{q.metadata?.board || 'N/A'}</span>
                             </div>
                             
                             <div className="p-5 md:p-6">
-                                <p className="font-medium text-lg text-gray-900 mb-5 leading-relaxed">{q.question_text}</p>
-
-                                {q.type === 'MCQ' && q.options ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {q.options.map((opt, i) => {
-                                            const isSelected = revealed[q.id] === opt;
-                                            const isCorrect = opt === q.answer;
-                                            const hasAnswered = revealed[q.id] !== undefined;
-                                            
-                                            let btnClass = "w-full text-left p-3 rounded border text-sm transition-all relative flex items-center ";
-                                            if (!hasAnswered) btnClass += "bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
-                                            else if (isCorrect) btnClass += "bg-green-50 border-green-500 text-green-900 font-medium";
-                                            else if (isSelected) btnClass += "bg-red-50 border-red-400 text-red-900";
-                                            else btnClass += "bg-gray-50 border-gray-100 text-gray-400 opacity-60";
-
-                                            return (
-                                                <button key={i} onClick={() => handleMCQSelect(q.id, opt)} className={btnClass} disabled={hasAnswered}>
-                                                    <span className="w-6 font-bold mr-2 text-gray-400">{String.fromCharCode(65+i)}.</span>
-                                                    <span className="flex-1">{opt}</span>
-                                                    {hasAnswered && isCorrect && <i className="fas fa-check text-green-600"></i>}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="mt-4">
-                                        <button 
-                                            onClick={() => setRevealed(p => ({...p, [q.id]: !p[q.id]}))} 
-                                            className="text-blue-600 text-sm font-bold hover:underline flex items-center"
-                                        >
-                                            {revealed[q.id] ? <><i className="fas fa-eye-slash mr-2"></i> Hide Answer</> : <><i className="fas fa-eye mr-2"></i> Show Answer</>}
-                                        </button>
-                                        {revealed[q.id] && (
-                                            <div className="mt-3 p-4 bg-green-50 border-l-4 border-green-500 text-green-900 text-sm">
-                                                <span className="font-bold block mb-1">Answer:</span> {q.answer}
+                                {q.type === 'CQ' || q.type === 'CQ-Part' ? (
+                                    <>
+                                        {/* Scenario */}
+                                        {q.question_text && (
+                                            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-300 text-gray-800 text-sm italic rounded-r">
+                                                {q.question_text}
                                             </div>
                                         )}
-                                    </div>
+                                        
+                                        {/* Sub-Questions Loop */}
+                                        <div className="space-y-4">
+                                            {/* Handle Standalone Part logic vs Full CQ */}
+                                            {(q.type === 'CQ-Part' ? [{ id: q.metadata?.part, text: q.question_text, answer: q.answer }] : (q.options || [])).map((opt, i) => (
+                                                <div key={i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                                                    <p className="font-medium text-gray-900 text-sm mb-2">
+                                                        <span className="font-bold mr-2 text-gray-500">{opt.id}.</span> 
+                                                        {q.type === 'CQ-Part' ? q.question_text : opt.text}
+                                                    </p>
+                                                    
+                                                    {/* Toggle Answer Button */}
+                                                    <button 
+                                                        onClick={() => toggleAnswer(q.id, i)}
+                                                        className="text-xs text-blue-600 font-bold hover:underline flex items-center mb-2"
+                                                    >
+                                                        {revealed[q.id]?.[i] ? <><i className="fas fa-eye-slash mr-1"></i> Hide Answer</> : <><i className="fas fa-eye mr-1"></i> View Answer</>}
+                                                    </button>
+                                                    
+                                                    {/* The Answer */}
+                                                    {revealed[q.id]?.[i] && (
+                                                        <div className="p-3 bg-green-50 border border-green-100 rounded text-sm text-green-900 animate-fade-in">
+                                                            <span className="font-bold block mb-1 text-xs uppercase opacity-70">Solution:</span> 
+                                                            {opt.answer || (q.type === 'CQ-Part' ? q.answer : 'No answer key provided.')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    /* MCQ Logic */
+                                    <>
+                                        <p className="font-medium text-lg text-gray-900 mb-5 leading-relaxed">{q.question_text}</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {q.options.map((opt, i) => {
+                                                const isSelected = revealed[q.id] === opt;
+                                                const isCorrect = opt === q.answer;
+                                                const hasAnswered = revealed[q.id] !== undefined;
+                                                
+                                                let btnClass = "w-full text-left p-3 rounded border text-sm transition-all relative flex items-center ";
+                                                if (!hasAnswered) btnClass += "bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
+                                                else if (isCorrect) btnClass += "bg-green-50 border-green-500 text-green-900 font-medium";
+                                                else if (isSelected) btnClass += "bg-red-50 border-red-400 text-red-900";
+                                                else btnClass += "bg-gray-50 border-gray-100 text-gray-400 opacity-60";
+
+                                                return (
+                                                    <button key={i} onClick={() => handleMCQSelect(q.id, opt)} className={btnClass} disabled={hasAnswered}>
+                                                        <span className="w-6 font-bold mr-2 text-gray-400">{String.fromCharCode(65+i)}.</span>
+                                                        <span className="flex-1">{opt}</span>
+                                                        {hasAnswered && isCorrect && <i className="fas fa-check absolute right-4 text-green-600"></i>}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>
