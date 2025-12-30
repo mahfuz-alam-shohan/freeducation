@@ -308,7 +308,7 @@ export const studentComponents = `
             return (
                 <div className="flex flex-col h-screen bg-slate-50 font-sans text-gray-800 animate-fade-in">
                     {/* Header */}
-                    <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white z-10 shadow-sm">
+                    <div className="flex-shrink-0 border-b border-gray-200 p-4 flex items-center bg-white z-10">
                         <button onClick={onBack} className="mr-4 text-gray-500 hover:text-black"><i className="fas fa-arrow-left"></i></button>
                         <div>
                             <h2 className="font-bold text-gray-900">{subject.name}</h2>
@@ -324,7 +324,7 @@ export const studentComponents = `
                                 <button 
                                     key={ch.id} 
                                     onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
-                                    className={\`w-full text-left px-6 py-3 text-sm font-medium border-l-4 transition-all \${activeChapter?.id === ch.id ? 'bg-blue-50 border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:bg-slate-50 hover:text-gray-900'}\`}
+                                    className={\`w-full text-left px-6 py-3 text-sm font-medium border-l-2 transition-colors \${activeChapter?.id === ch.id ? 'bg-blue-50 border-blue-400 text-blue-800' : 'border-transparent text-gray-600 hover:bg-slate-50 hover:text-gray-900'}\`}
                                 >
                                     {ch.title}
                                 </button>
@@ -342,7 +342,7 @@ export const studentComponents = `
                                         <div 
                                             key={ch.id}
                                             onClick={() => loadTopicsForChapter(ch, { pushRoute: true })}
-                                            className="p-4 border border-gray-200 rounded-2xl hover:border-blue-500 active:bg-gray-50 cursor-pointer transition-all flex justify-between items-center bg-white shadow-sm"
+                                            className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 active:bg-blue-50 cursor-pointer transition-colors flex justify-between items-center bg-slate-50"
                                         >
                                             <div>
                                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Chapter {ch.order_num}</span>
@@ -406,9 +406,9 @@ export const studentComponents = `
         function StudentTopicContent({ topics, activeTopic, setActiveTopic, chapterTitle, chapterId, subjectId, onNavigate, route }) {
             if (topics.length === 0) {
                 return (
-                    <div className="flex-1 overflow-y-auto p-4 md:p-10">
-                        <div className="max-w-3xl mx-auto">
-                            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                        <div className="max-w-none">
+                            <div className="bg-slate-50 border border-gray-200 rounded-lg p-6 md:p-7">
                                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{chapterTitle}</h1>
                                 <p className="text-gray-500 mb-8">No topics found in this chapter.</p>
                                 <div className="border-t border-gray-100 pt-8">
@@ -448,9 +448,9 @@ export const studentComponents = `
                     </div>
 
                     {/* Scrollable Body */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-10">
-                        <div className="max-w-3xl mx-auto">
-                            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm mb-8">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                        <div className="max-w-none">
+                            <div className="bg-slate-50 border border-gray-200 rounded-lg p-6 md:p-7 mb-6">
                                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{activeTopic.title}</h1>
                                 <div className="whitespace-pre-wrap leading-relaxed text-gray-700">
                                     {activeTopic.content || "No notes available."}
