@@ -185,20 +185,21 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (request.method === "GET") {
           const { topic_id, chapter_id } = Object.fromEntries(url.searchParams);
           let query = "SELECT * FROM questions";
-          let params = [];
-          
-          if (topic_id) {
+          const params: Array<string | number> = [];
+
+          if (topic_id !== undefined) {
               query += " WHERE topic_id = ?";
               params.push(topic_id);
-          } else if (chapter_id) {
-              query += " WHERE topic_id = ?";
-              params.push(0);
+          } else if (chapter_id !== undefined) {
+              query += " WHERE topic_id IS NULL OR topic_id = 0";
           }
 
-          if (params.length > 0) {
-              const questions = await env.DB.prepare(query).bind(...params).all();
+          if (params.length > 0 || chapter_id !== undefined) {
+              const questions = params.length > 0
+                ? await env.DB.prepare(query).bind(...params).all()
+                : await env.DB.prepare(query).all();
               const parsedQuestions = questions.results.map(parseQuestion);
-              if (chapter_id && !topic_id) {
+              if (chapter_id !== undefined && topic_id === undefined) {
                 const filtered = parsedQuestions.filter((q) => String(q.metadata?.chapter_id) === String(chapter_id));
                 return Response.json(filtered, { headers: corsHeaders });
               }
@@ -210,10 +211,10 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (request.method === "POST") {
           const { type, topic_id, question_text, options, answer, metadata, chapter_id } = await request.json() as any;
           
-          // Safety: topic_id might be null for direct chapter questions. Use 0.
-          const finalTopicId = topic_id || 0; 
+          // Safety: topic_id might be null for direct chapter questions.
+          const finalTopicId = topic_id ?? null; 
           // Store chapter_id in metadata so we can find it later if needed (even though we query by topic usually)
-          const finalMetadata = { ...metadata, chapter_id: chapter_id };
+          const finalMetadata = chapter_id ? { ...metadata, chapter_id: chapter_id } : { ...metadata };
 
           await env.DB.prepare(`
             INSERT INTO questions (type, topic_id, question_text, options, answer, metadata) 
@@ -227,6 +228,22 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             JSON.stringify(finalMetadata)
           ).run();
           
+          return Response.json({ success: true }, { headers: corsHeaders });
+        }
+
+        if (request.method === "PUT") {
+          const { id, question_text, options, answer, metadata } = await request.json() as any;
+          await env.DB.prepare(`
+            UPDATE questions
+            SET question_text = ?, options = ?, answer = ?, metadata = ?
+            WHERE id = ?
+          `).bind(
+            question_text,
+            JSON.stringify(options || []),
+            answer,
+            JSON.stringify(metadata || {}),
+            id
+          ).run();
           return Response.json({ success: true }, { headers: corsHeaders });
         }
       }
@@ -267,4 +284,3 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
   return null;
 }
-
