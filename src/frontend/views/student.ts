@@ -358,6 +358,7 @@ export const studentComponents = `
             if (questions.length === 0) return null;
 
             const partOrder = ['ক', 'খ', 'গ', 'ঘ'];
+            const mcqQuestions = questions.filter(q => q.type === 'MCQ');
             const cqPartQuestions = questions.filter(q => q.type === 'CQ-Part');
             const cqScenarioQuestions = questions.filter(q => q.type === 'CQ');
             const expandCqParts = (cqQuestion) => (cqQuestion.options || []).map((opt, idx) => {
@@ -383,23 +384,69 @@ export const studentComponents = `
                 .map(part => ({ part, items: combinedCqParts.filter(q => q.metadata?.part === part) }))
                 .filter(group => group.items.length > 0);
 
-            if (groupedCqParts.length === 0) return null;
+            if (groupedCqParts.length === 0 && mcqQuestions.length === 0) return null;
 
             return (
-                <div className="space-y-6">
-                    {groupedCqParts.map(group => (
-                        <div key={group.part}>
-                            <h3 className="text-base font-bold text-gray-900 mb-3">{group.part}</h3>
-                            <div className="space-y-3">
-                                {group.items.map((q, index) => (
-                                    <div key={q.id} className="space-y-1">
+                <div className="space-y-8">
+                    {mcqQuestions.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white text-lg font-bold shadow">MCQ</span>
+                                <h3 className="text-lg font-bold text-gray-900">Multiple Choice Questions</h3>
+                            </div>
+                            <div className="space-y-4">
+                                {mcqQuestions.map((q, index) => (
+                                    <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
                                         <div className="flex items-start gap-2 text-sm text-gray-900">
                                             <span className="font-bold text-gray-700">{index + 1}.</span>
-                                            <span className="whitespace-pre-line">{q.question_text}</span>
+                                            <span className="whitespace-pre-line font-medium">{q.question_text}</span>
                                         </div>
-                                        <div className="text-sm text-gray-700 whitespace-pre-line">{q.answer || ''}</div>
+                                        <div className="grid gap-1 pl-6 text-sm text-gray-700">
+                                            {(q.options || []).map((opt, idx) => (
+                                                <div key={idx} className="flex items-start gap-2">
+                                                    <span className="font-bold text-gray-500">{String.fromCharCode(65 + idx)}.</span>
+                                                    <span className="whitespace-pre-line">{opt}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="text-sm text-gray-700 whitespace-pre-line pl-6"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+                    {groupedCqParts.map(group => (
+                        <div key={group.part}>
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white text-2xl font-bold shadow">{group.part}</span>
+                                <h3 className="text-lg font-bold text-gray-900">Part {group.part}</h3>
+                            </div>
+                            <div className="space-y-4">
+                                {group.items.map((q, index) => {
+                                    const isLinked = q.metadata?.linked;
+                                    const scenarioText = q.metadata?.scenario;
+                                    return (
+                                        <div key={q.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
+                                            {isLinked && scenarioText ? (
+                                                <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                    <span className="font-bold text-gray-700">{index + 1}.</span>
+                                                    <div className="space-y-1">
+                                                        <div className="whitespace-pre-line">
+                                                            <span className="font-semibold text-gray-800">Scene:</span> {scenarioText}
+                                                        </div>
+                                                        <div className="whitespace-pre-line">{q.question_text}</div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                    <span className="font-bold text-gray-700">{index + 1}.</span>
+                                                    <span className="whitespace-pre-line">{q.question_text}</span>
+                                                </div>
+                                            )}
+                                            <div className="text-sm text-gray-700 whitespace-pre-line pl-6"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}

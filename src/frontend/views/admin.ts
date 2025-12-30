@@ -783,7 +783,7 @@ export const adminComponents = `
         }
 
         function CreateCQModal({ onClose, onSave, allChapters, defaultChapterId, defaultTopicId }) {
-            const [mode, setMode] = useState('full'); // full, single, written
+            const [mode, setMode] = useState('full'); // full, single, written, mcq
             const [scenario, setScenario] = useState('');
             const [board, setBoard] = useState('');
             const [year, setYear] = useState('');
@@ -808,6 +808,11 @@ export const adminComponents = `
             
             // Written / General
             const [writtenQs, setWrittenQs] = useState([{ id: 'a', text: '', answer: '' }]);
+
+            // MCQ
+            const [mcqQuestion, setMcqQuestion] = useState('');
+            const [mcqOptions, setMcqOptions] = useState(['', '', '', '']);
+            const [mcqAnswer, setMcqAnswer] = useState('');
 
             const [topicsMap, setTopicsMap] = useState({});
 
@@ -841,10 +846,24 @@ export const adminComponents = `
             const updateWritten = (idx, field, val) => { const n = [...writtenQs]; n[idx][field] = val; setWrittenQs(n); };
             const removeWrittenRow = (idx) => setWrittenQs(writtenQs.filter((_, i) => i !== idx));
 
+            const handleMcqOptionChange = (idx, value) => {
+                const updated = [...mcqOptions];
+                const prev = updated[idx];
+                updated[idx] = value;
+                setMcqOptions(updated);
+                if (mcqAnswer === prev) {
+                    setMcqAnswer(value);
+                }
+            };
+            const addMcqOption = () => setMcqOptions([...mcqOptions, '']);
+            const removeMcqOption = (idx) => setMcqOptions(mcqOptions.filter((_, i) => i !== idx));
+
             const handleSave = () => {
                 let payload = {};
                 if (mode === 'single') {
                     payload = { type: 'CQ-Part', question_text: singleText, options: [], answer: singleAnswer, metadata: { board, year, school, part: singlePart } };
+                } else if (mode === 'mcq') {
+                    payload = { type: 'MCQ', question_text: mcqQuestion, options: mcqOptions, answer: mcqAnswer, metadata: { board, year, school } };
                 } else if (mode === 'written') {
                     payload = { type: 'WRITTEN', question_text: scenario, options: writtenQs, answer: '', metadata: { board, year, school } };
                 } else {
@@ -862,6 +881,7 @@ export const adminComponents = `
                             <button onClick={() => setMode('full')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'full' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>CQ (Scenario)</button>
                             <button onClick={() => setMode('single')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'single' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>Single Part</button>
                             <button onClick={() => setMode('written')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'written' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>General / Written</button>
+                            <button onClick={() => setMode('mcq')} className={\`flex-1 py-2 text-sm font-bold border-b-2 \${mode === 'mcq' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:bg-gray-100'}\`}>MCQ</button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6">
@@ -909,6 +929,29 @@ export const adminComponents = `
                                     </div>
                                     <div className="mb-4"><label className="block text-xs font-bold mb-1">Question Text</label><textarea className="w-full border p-3 text-sm h-32" placeholder="Type the question..." value={singleText} onChange={e => setSingleText(e.target.value)}></textarea></div>
                                     <div className="mb-4"><label className="block text-xs font-bold mb-1">Answer / Solution</label><textarea className="w-full border p-3 text-sm h-32" placeholder="Type the solution..." value={singleAnswer} onChange={e => setSingleAnswer(e.target.value)}></textarea></div>
+                                </div>
+                            )}
+
+                            {mode === 'mcq' && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold mb-1">Question</label>
+                                        <textarea className="w-full border p-3 text-sm h-24" placeholder="Type the MCQ question..." value={mcqQuestion} onChange={e => setMcqQuestion(e.target.value)}></textarea>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-bold mb-1">Options</label>
+                                        {mcqOptions.map((opt, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <span className="text-xs font-bold w-4">{String.fromCharCode(65 + idx)}</span>
+                                                <input className="flex-1 border p-1.5 text-sm" value={opt} onChange={e => handleMcqOptionChange(idx, e.target.value)} />
+                                                <input type="radio" name="mcq-create-ans" checked={mcqAnswer === opt && opt !== ''} onChange={() => setMcqAnswer(opt)} />
+                                                {mcqOptions.length > 2 && (
+                                                    <button onClick={() => removeMcqOption(idx)} className="text-red-500 text-xs">Remove</button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button onClick={addMcqOption} className="text-xs font-bold text-blue-600 hover:underline"><i className="fas fa-plus mr-1"></i>Add option</button>
+                                    </div>
                                 </div>
                             )}
 
