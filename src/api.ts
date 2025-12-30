@@ -20,21 +20,44 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // --- GENERIC DELETE HANDLER (New) ---
-  if (request.method === "DELETE") {
-    const { id, type } = await request.json() as any;
-    let table = "";
-    if (type === 'class') table = "classes";
-    else if (type === 'group') table = "groups";
-    else if (type === 'subject') table = "subjects";
-    else if (type === 'chapter') table = "chapters";
-    else if (type === 'topic') table = "topics";
-    else if (type === 'question') table = "questions";
+  // --- GENERIC REQUEST HANDLER (DELETE & UPDATE) ---
+  if (path === "/api/request") {
+      if (request.method === "DELETE") {
+        const { id, type } = await request.json() as any;
+        let table = "";
+        // Map frontend "type" to database "table"
+        if (type === 'class') table = "classes";
+        else if (type === 'group') table = "groups";
+        else if (type === 'subject') table = "subjects";
+        else if (type === 'chapter') table = "chapters";
+        else if (type === 'topic') table = "topics";
+        else if (type === 'question') table = "questions";
 
-    if (table) {
-        await env.DB.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
-        return Response.json({ success: true }, { headers: corsHeaders });
-    }
+        if (table) {
+            await env.DB.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
+            return Response.json({ success: true }, { headers: corsHeaders });
+        }
+        return Response.json({ success: false, error: "Invalid type" }, { status: 400, headers: corsHeaders });
+      }
+      
+      // Generic UPDATE for simple name/title changes
+      if (request.method === "PUT") {
+          const { id, type, value } = await request.json() as any;
+          let table = "";
+          let field = "name"; // Default field to update
+
+          if (type === 'class') { table = "classes"; field = "name"; }
+          else if (type === 'group') { table = "groups"; field = "name"; }
+          else if (type === 'subject') { table = "subjects"; field = "name"; }
+          else if (type === 'chapter') { table = "chapters"; field = "title"; }
+          else if (type === 'topic') { table = "topics"; field = "title"; }
+
+          if (table) {
+              await env.DB.prepare(`UPDATE ${table} SET ${field} = ? WHERE id = ?`).bind(value, id).run();
+              return Response.json({ success: true }, { headers: corsHeaders });
+          }
+          return Response.json({ success: false, error: "Invalid type" }, { status: 400, headers: corsHeaders });
+      }
   }
 
   // 1. SYSTEM INITIALIZATION
@@ -97,9 +120,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       return Response.json({ success: true }, { headers: corsHeaders });
     }
     if (request.method === "PUT") {
-      const { id, name, parent_class_id, program_label } = await request.json() as any;
-      if (name) await env.DB.prepare("UPDATE classes SET name = ? WHERE id = ?").bind(name, id).run(); // Allow name update
-      else await env.DB.prepare("UPDATE classes SET parent_class_id = ?, program_label = ? WHERE id = ?").bind(parent_class_id || null, program_label || null, id).run();
+      // Legacy PUT for linking classes (specific logic)
+      const { id, parent_class_id, program_label } = await request.json() as any;
+      await env.DB.prepare("UPDATE classes SET parent_class_id = ?, program_label = ? WHERE id = ?").bind(parent_class_id || null, program_label || null, id).run();
       return Response.json({ success: true }, { headers: corsHeaders });
     }
   }
@@ -154,8 +177,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       return Response.json(topics.results, { headers: corsHeaders });
     }
     if (request.method === "POST") {
-      const { title, chapter_id, content, order_num } = await request.json() as any;
-      await env.DB.prepare("INSERT INTO topics (title, chapter_id, content, order_num) VALUES (?, ?, ?, ?)").bind(title, chapter_id, content, order_num).run();
+      // Handles both creation AND updating content/order if ID is present (though we use generic PUT for title now)
+      const { id, title, chapter_id, content, order_num } = await request.json() as any;
+      if (id) {
+          // Update existing topic content
+           await env.DB.prepare("UPDATE topics SET title=?, content=?, order_num=? WHERE id=?").bind(title, content, order_num, id).run();
+      } else {
+           await env.DB.prepare("INSERT INTO topics (title, chapter_id, content, order_num) VALUES (?, ?, ?, ?)").bind(title, chapter_id, content, order_num).run();
+      }
       return Response.json({ success: true }, { headers: corsHeaders });
     }
   }
