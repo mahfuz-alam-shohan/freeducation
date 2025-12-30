@@ -1,17 +1,17 @@
 export const landingHeaderComponent = `
         const LandingHeader = ({ searchQuery, onSearchChange, searchResults }) => (
-            <div className="bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-700 text-white py-16 px-4 text-center relative overflow-visible z-30">
+            <div className="bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-700 text-white py-12 px-4 md:px-6 text-center relative overflow-visible z-30">
                 <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
-                <div className="relative z-10 max-w-5xl mx-auto">
+                <div className="relative z-10 max-w-6xl mx-auto">
                     <div className="flex justify-center mb-6">
                         <LogoMark className="scale-110" textClassName="text-white" subtitle="Confidence in every lesson." />
                     </div>
                     <h1 className="font-serif text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">Learning that feels effortless.</h1>
-                    <p className="text-lg md:text-xl text-blue-100 mb-8 font-light max-w-2xl mx-auto">
+                    <p className="text-lg md:text-xl text-blue-100 mb-6 font-light max-w-3xl mx-auto">
                         A focused platform for quick access to notes, question banks, and learning paths tailored to every class.
                     </p>
 
-                    <div className="max-w-2xl mx-auto relative group text-left">
+                    <div className="max-w-3xl mx-auto relative group text-left">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i className="fas fa-search text-gray-300 group-focus-within:text-white transition"></i>
                         </div>
@@ -35,13 +35,13 @@ export const landingHeaderComponent = `
                         )}
                     </div>
 
-                    <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
                         {[
                             { icon: 'fa-graduation-cap', title: 'Structured Learning', desc: 'Keep chapters, topics, and questions organized by class.' },
                             { icon: 'fa-bolt', title: 'Fast Navigation', desc: 'Jump straight into what you need with smart filters.' },
                             { icon: 'fa-users-gear', title: 'Admin Ready', desc: 'Manage content, notes, and banks with clarity.' }
                         ].map((item, idx) => (
-                            <div key={idx} className="bg-white/10 rounded-2xl p-4 border border-white/10">
+                            <div key={idx} className="bg-white/10 rounded-2xl p-3 border border-white/10">
                                 <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center mb-3">
                                     <i className={\`fas \${item.icon}\`}></i>
                                 </div>

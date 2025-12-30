@@ -30,7 +30,7 @@ export function renderAppHtml(initialView: string) {
         }
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
-        input, select, textarea { font-size: 16px; }
+        input, select, textarea { font-size: 16px !important; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
