@@ -659,6 +659,38 @@ export const dashboardComponents = `
                         : 'bangla-hsc-goddo');
 
             const optionList = ['সৃজনশীল', 'বহুনির্বাচনী'];
+            const [notesByItem, setNotesByItem] = useState({});
+            const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+            const [noteInput, setNoteInput] = useState('');
+            const [editingNoteIndex, setEditingNoteIndex] = useState(null);
+            const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
+            const notes = notesByItem[noteKey] || [];
+
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+
+            const openNoteModal = (index = null) => {
+                setEditingNoteIndex(index);
+                setNoteInput(index === null ? '' : notes[index] || '');
+                setIsNoteModalOpen(true);
+            };
+
+            const handleNoteSave = () => {
+                const trimmed = noteInput.trim();
+                if (!trimmed) return;
+                setNotesByItem((prev) => {
+                    const updated = [...notes];
+                    if (editingNoteIndex === null) {
+                        updated.push(trimmed);
+                    } else {
+                        updated[editingNoteIndex] = trimmed;
+                    }
+                    return { ...prev, [noteKey]: updated };
+                });
+                setIsNoteModalOpen(false);
+                setNoteInput('');
+                setEditingNoteIndex(null);
+            };
 
             return (
                 <AdminShell
@@ -684,7 +716,7 @@ export const dashboardComponents = `
 
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 font-bangla">
                         <div className="text-xs uppercase tracking-[0.2em] text-gray-300">নির্বাচিত পাঠ</div>
-                        <div className="text-lg font-semibold text-gray-900 mt-2">
+                        <div className="text-2xl font-semibold text-gray-900 mt-2">
                             {itemName || 'পাঠ নির্বাচন করুন'}
                         </div>
                         {categoryName && (
@@ -692,13 +724,91 @@ export const dashboardComponents = `
                         )}
                     </div>
 
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
-                        {optionList.map((option) => (
-                            <div key={option} className="px-5 py-4 text-sm font-semibold text-gray-700">
-                                {option}
-                            </div>
-                        ))}
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm font-bangla">
+                        <div className="px-5 py-4 border-b border-gray-100 text-xs uppercase tracking-[0.2em] text-gray-300">
+                            সেকশন
+                        </div>
+                        <div className="px-5 py-4 flex flex-wrap gap-2">
+                            {optionList.map((option) => (
+                                <span
+                                    key={option}
+                                    className="px-3 py-1 rounded-full border border-gray-200 text-xs font-semibold text-gray-600"
+                                >
+                                    {option}
+                                </span>
+                            ))}
+                        </div>
                     </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm font-bangla">
+                        <div className="px-5 py-4 flex items-center justify-between border-b border-gray-100">
+                            <div>
+                                <div className="text-xs uppercase tracking-[0.2em] text-gray-300">নোটস</div>
+                                <div className="text-sm font-semibold text-gray-700 mt-1">গুরুত্বপূর্ণ লাইন সংযুক্ত করুন</div>
+                            </div>
+                            <button
+                                onClick={() => openNoteModal()}
+                                className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                            >
+                                নোট যোগ করুন
+                            </button>
+                        </div>
+                        <ul className="divide-y">
+                            {notes.length === 0 && (
+                                <li className="px-5 py-4 text-sm text-gray-400">এখনো কোন নোট যুক্ত হয়নি।</li>
+                            )}
+                            {notes.map((note, index) => (
+                                <li key={\`\${noteKey}-\${index}\`} className="px-5 py-4 flex items-start gap-3">
+                                    <span className="text-sm font-semibold text-gray-500">
+                                        {toBanglaNumber(index + 1)}.
+                                    </span>
+                                    <div className="flex-1 text-sm text-gray-700">{note}</div>
+                                    <button
+                                        onClick={() => openNoteModal(index)}
+                                        className="text-gray-400 hover:text-gray-600 transition"
+                                        title="নোট সম্পাদনা করুন"
+                                    >
+                                        ✎
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {isNoteModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingNoteIndex === null ? 'নোট যোগ করুন' : 'নোট সম্পাদনা করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">গুরুত্বপূর্ণ লাইন লিখুন।</p>
+                                <textarea
+                                    value={noteInput}
+                                    onChange={(event) => setNoteInput(event.target.value)}
+                                    placeholder="উদাহরণ: পাঠের মূল বক্তব্য..."
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[120px]"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsNoteModalOpen(false);
+                                            setNoteInput('');
+                                            setEditingNoteIndex(null);
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleNoteSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </AdminShell>
             );
         };
