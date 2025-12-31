@@ -11,40 +11,23 @@ export const authComponents = `
                 setLoading(false);
             };
 
-            const handleEmergencyReset = async () => {
-                if (confirm("EMERGENCY RESET: This will wipe ALL database data (Admins, Classes, Questions). Use this if you cannot login due to system updates. Are you sure?")) {
-                    try {
-                        const res = await fetch('/api/reset-db', { method: 'POST' });
-                        const data = await res.json();
-                        if (data.success) {
-                            alert("System reset complete. Please reload the page to register a new admin.");
-                            window.location.reload();
-                        } else {
-                            alert("Reset failed: " + data.error);
-                        }
-                    } catch (e) {
-                        alert("Reset failed: " + e.message);
-                    }
-                }
-            };
-
             return (
                 <div className="min-h-[80vh] px-4 md:px-6 py-8 md:py-10 animate-fade-in font-sans">
                     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.25fr_1fr] gap-6 items-center">
                         <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white rounded-3xl p-7 lg:p-9 shadow-2xl">
-                            <LogoMark className="mb-6" textClassName="text-white" subtitle="Admin clarity starts here." />
-                            <h2 className="text-2xl md:text-3xl font-bold mb-4">Run your learning system with confidence.</h2>
+                            <LogoMark className="mb-6" textClassName="text-white" subtitle="Account access starts here." />
+                            <h2 className="text-2xl md:text-3xl font-bold mb-4">Access your account securely.</h2>
                             <p className="text-blue-100 text-sm md:text-base mb-6">
-                                Manage classes, chapters, and question banks in one organized workspace. Create a smooth experience for learners and admins alike.
+                                Create your account or sign in to continue.
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                 <div className="bg-white/10 rounded-2xl p-3">
-                                    <div className="font-semibold mb-1">Structured Content</div>
-                                    <p className="text-blue-100">Keep subjects, topics, and questions grouped for fast access.</p>
+                                    <div className="font-semibold mb-1">Quick Access</div>
+                                    <p className="text-blue-100">Sign in with your credentials anytime.</p>
                                 </div>
                                 <div className="bg-white/10 rounded-2xl p-3">
-                                    <div className="font-semibold mb-1">Admin Friendly</div>
-                                    <p className="text-blue-100">Clean layouts help you focus on what matters.</p>
+                                    <div className="font-semibold mb-1">Secure</div>
+                                    <p className="text-blue-100">Your login stays protected.</p>
                                 </div>
                             </div>
                         </div>
@@ -55,10 +38,10 @@ export const authComponents = `
                                     <i className={mode === 'login' ? 'fas fa-shield-alt' : 'fas fa-user-plus'}></i>
                                 </div>
                                 <h2 className="text-2xl font-bold text-gray-900">
-                                    {mode === 'login' ? 'Admin Access' : 'System Setup'}
+                                    {mode === 'login' ? 'User Login' : 'User Signup'}
                                 </h2>
                                 <p className="text-gray-500 text-sm mt-2">
-                                    {mode === 'login' ? 'Enter your credentials to manage content.' : 'Create the master administrator account.'}
+                                    {mode === 'login' ? 'Enter your credentials to continue.' : 'Create your account.'}
                                 </p>
                             </div>
 
@@ -98,21 +81,9 @@ export const authComponents = `
                                     disabled={loading}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed text-sm mt-2"
                                 >
-                                    {loading ? <i className="fas fa-spinner fa-spin"></i> : (mode === 'login' ? 'Login' : 'Create Admin')}
+                                    {loading ? <i className="fas fa-spinner fa-spin"></i> : (mode === 'login' ? 'Login' : 'Create Account')}
                                 </button>
                             </form>
-
-                            {/* Emergency Reset Button - Only shown on Login screen */}
-                            {mode === 'login' && (
-                                <div className="mt-6 text-center pt-4 border-t border-gray-100">
-                                    <button 
-                                        onClick={handleEmergencyReset}
-                                        className="text-[11px] text-red-400 hover:text-red-600 font-bold flex items-center justify-center mx-auto transition-colors uppercase tracking-wider"
-                                    >
-                                        <i className="fas fa-exclamation-triangle mr-1.5"></i> Emergency Reset
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
