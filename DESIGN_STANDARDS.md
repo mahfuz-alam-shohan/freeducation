@@ -5,10 +5,10 @@ This document captures UI standards for the public-facing experience so future u
 ## Public Subject Cards (Landing + Subject Index)
 
 - **Poster-style layout:** subject cards use a tall, movie-poster aspect ratio thumbnail with the subject name below the thumbnail.
-- **Coded thumbnails only:** thumbnails are generated with gradient backgrounds, overlays, and icon badges. Do **not** replace them with image assets.
-- **Motion cues:** poster thumbnails use gentle floating and sheen animations to keep the page lively without being distracting.
-- **Badging:** the subject group appears as a small upper-right badge on the thumbnail. Subtitles remain below the thumbnail.
-- **Hover behavior:** lift and shadow on hover, while keeping cards readable and accessible.
+- **Uploaded thumbnails:** thumbnails are uploaded from **Admin → Settings → Thumbnails** and rendered inside the poster frame. Avoid gradients or decorative thumbnail backgrounds.
+- **Image fitting:** thumbnails must stay inside the frame with `object-fit: contain`. Use the zoom control (0.8x–1.0x) to fit without cropping.
+- **Motion cues:** cards can use gentle floating motion to keep the page lively without distracting from content.
+- **Badging:** group and subtitles remain below the thumbnail for clarity.
 
 ## Spacing + Density
 
@@ -27,4 +27,4 @@ This document captures UI standards for the public-facing experience so future u
 
 ## Keep Consistency
 
-When adding new subject sections or layouts, follow the same poster-card visual language, spacing rules, and motion guidelines above.
+When adding new subject sections or layouts, follow the same poster-card visual language, spacing rules, and thumbnail upload workflow above.

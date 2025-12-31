@@ -160,14 +160,11 @@ export const landingComponents = `
             'bg-violet-500',
             'bg-teal-500'
         ];
-        const gradientPalette = [
-            'linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #22d3ee 100%)',
-            'linear-gradient(135deg, #0f172a 0%, #7c3aed 55%, #f472b6 100%)',
-            'linear-gradient(135deg, #0f172a 0%, #059669 55%, #84cc16 100%)',
-            'linear-gradient(135deg, #0f172a 0%, #f97316 55%, #facc15 100%)',
-            'linear-gradient(135deg, #0f172a 0%, #e11d48 55%, #fb7185 100%)',
-            'linear-gradient(135deg, #0f172a 0%, #0ea5e9 55%, #38bdf8 100%)'
-        ];
+        const makeSubjectKey = (classLabel, group, subject) =>
+            (classLabel + '-' + group + '-' + subject)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
 
         const buildSubjectList = (classLabel) => {
             const groupMap = subjectGroups[classLabel] || {};
@@ -175,7 +172,6 @@ export const landingComponents = `
             return Object.entries(groupMap).flatMap(([group, subjects]) =>
                 subjects.map((subject) => {
                     const accent = accentPalette[paletteIndex % accentPalette.length];
-                    const gradient = gradientPalette[paletteIndex % gradientPalette.length];
                     paletteIndex += 1;
                     const isBanglaFirst = subject === 'Bangla 1st Paper';
                     return {
@@ -183,8 +179,8 @@ export const landingComponents = `
                         subtitle: isBanglaFirst ? 'বাংলা ১ম পত্র' : '',
                         icon: subjectIconMap[subject] || 'fa-book',
                         accent,
-                        gradient,
                         group,
+                        subjectKey: makeSubjectKey(classLabel, group, subject),
                         route: isBanglaFirst
                             ? (classLabel === 'SSC' ? 'public-bangla-ssc-1st-paper' : 'public-bangla-hsc-1st-paper')
                             : ''
@@ -198,14 +194,41 @@ export const landingComponents = `
         const sscFeaturedSubjects = sscSubjects.slice(0, 5);
         const hscFeaturedSubjects = hscSubjects.slice(0, 5);
 
+        const useSubjectThumbnails = () => {
+            const [thumbnailMap, setThumbnailMap] = useState({});
+
+            useEffect(() => {
+                let isActive = true;
+                const loadThumbnails = async () => {
+                    try {
+                        const response = await fetch('/api/thumbnails');
+                        if (!response.ok) return;
+                        const data = await response.json();
+                        if (!isActive) return;
+                        const map = (data.thumbnails || []).reduce((acc, item) => {
+                            acc[item.subjectKey] = {
+                                url: item.url,
+                                zoom: typeof item.zoom === 'number' ? item.zoom : 1
+                            };
+                            return acc;
+                        }, {});
+                        setThumbnailMap(map);
+                    } catch (error) {
+                        console.warn('Failed to load thumbnails', error);
+                    }
+                };
+                loadThumbnails();
+                return () => {
+                    isActive = false;
+                };
+            }, []);
+
+            return thumbnailMap;
+        };
+
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
-            const initials = subject.title
-                .split(' ')
-                .map((word) => word[0])
-                .join('')
-                .slice(0, 3)
-                .toUpperCase();
+            const zoom = typeof subject.thumbnailZoom === 'number' ? subject.thumbnailZoom : 1;
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
@@ -217,29 +240,28 @@ export const landingComponents = `
                     disabled={!isActive}
                 >
                     <div className="space-y-3">
-                        <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-white/15 shadow-lg shadow-slate-900/10 poster-float group-hover:-translate-y-1 group-hover:shadow-xl transition">
-                            <div className="absolute inset-0" style={{ backgroundImage: subject.gradient }}></div>
-                            <div
-                                className="absolute inset-0 opacity-40 poster-sheen"
-                                style={{ backgroundImage: 'linear-gradient(120deg, rgba(255,255,255,0.45), transparent 60%)' }}
-                            ></div>
-                            <div
-                                className="absolute inset-0 opacity-40"
-                                style={{ backgroundImage: 'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.45), transparent 55%)' }}
-                            ></div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent"></div>
-                            <div className="absolute left-4 top-4 flex items-center gap-2">
-                                <div className="h-10 w-10 rounded-xl bg-white/15 text-white border border-white/30 backdrop-blur-sm flex items-center justify-center">
-                                    <i className={'fa-solid ' + subject.icon + ' text-lg'}></i>
+                        <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm thumbnail-float group-hover:-translate-y-1 group-hover:shadow-md transition">
+                            {subject.thumbnailUrl ? (
+                                <img
+                                    src={subject.thumbnailUrl}
+                                    alt={subject.title + ' thumbnail'}
+                                    loading="lazy"
+                                    className="w-full h-full object-contain transition-transform duration-300"
+                                    style={{ transform: 'scale(' + zoom + ')' }}
+                                />
+                            ) : (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3">
+                                    <div
+                                        className={
+                                            'h-12 w-12 rounded-xl text-white flex items-center justify-center shadow-sm ' +
+                                            subject.accent
+                                        }
+                                    >
+                                        <i className={'fa-solid ' + subject.icon + ' text-lg'}></i>
+                                    </div>
+                                    <div className="text-[10px] uppercase tracking-[0.3em]">Thumbnail</div>
                                 </div>
-                            </div>
-                            <div className="absolute right-4 top-4 text-[11px] uppercase tracking-[0.2em] text-white/70">
-                                {subject.group}
-                            </div>
-                            <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white/70">
-                                <span className="text-[11px] uppercase tracking-[0.3em]">{initials}</span>
-                                {subject.subtitle && <span className="text-xs font-bangla">{subject.subtitle}</span>}
-                            </div>
+                            )}
                         </div>
                         <div className="flex-1">
                             <div className="text-sm font-semibold text-slate-900">{subject.title}</div>
@@ -255,7 +277,7 @@ export const landingComponents = `
             );
         };
 
-        const SubjectRow = ({ title, onAll, subjects, onNavigate }) => (
+        const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap }) => (
             <section className="space-y-3">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
@@ -267,14 +289,21 @@ export const landingComponents = `
                     </button>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory">
-                    {subjects.map((subject) => (
-                        <SubjectCard
-                            key={subject.group + '-' + subject.title}
-                            subject={subject}
-                            onNavigate={onNavigate}
-                            className="flex-shrink-0 w-56 sm:w-64 snap-start"
-                        />
-                    ))}
+                    {subjects.map((subject) => {
+                        const thumbnail = thumbnailMap[subject.subjectKey];
+                        return (
+                            <SubjectCard
+                                key={subject.subjectKey}
+                                subject={{
+                                    ...subject,
+                                    thumbnailUrl: thumbnail?.url,
+                                    thumbnailZoom: thumbnail?.zoom
+                                }}
+                                onNavigate={onNavigate}
+                                className="flex-shrink-0 w-56 sm:w-64 snap-start"
+                            />
+                        );
+                    })}
                 </div>
             </section>
         );
@@ -282,6 +311,7 @@ export const landingComponents = `
         const SubjectIndexPage = ({ classLabel, subjects, onNavigate }) => {
             const [activeGroup, setActiveGroup] = useState('All');
             const [query, setQuery] = useState('');
+            const thumbnailMap = useSubjectThumbnails();
             const normalizedQuery = query.trim().toLowerCase();
             const groups = ['All', ...new Set(subjects.map((subject) => subject.group))];
             const filteredSubjects = subjects.filter((subject) => {
@@ -344,15 +374,22 @@ export const landingComponents = `
                             <span>{filteredSubjects.length} subjects</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-4">
-                            {filteredSubjects.map((subject) => (
-                                <SubjectCard
-                                    key={subject.group + '-' + subject.title}
-                                    subject={subject}
-                                    onNavigate={onNavigate}
-                                    className="w-full"
-                                    showGroup
-                                />
-                            ))}
+                            {filteredSubjects.map((subject) => {
+                                const thumbnail = thumbnailMap[subject.subjectKey];
+                                return (
+                                    <SubjectCard
+                                        key={subject.subjectKey}
+                                        subject={{
+                                            ...subject,
+                                            thumbnailUrl: thumbnail?.url,
+                                            thumbnailZoom: thumbnail?.zoom
+                                        }}
+                                        onNavigate={onNavigate}
+                                        className="w-full"
+                                        showGroup
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -560,6 +597,7 @@ export const landingComponents = `
 
         const StudentLanding = ({ onNavigate }) => {
             const [quoteIndex, setQuoteIndex] = useState(0);
+            const thumbnailMap = useSubjectThumbnails();
 
             useEffect(() => {
                 const timer = setInterval(() => {
@@ -611,12 +649,14 @@ export const landingComponents = `
                             subjects={sscFeaturedSubjects}
                             onNavigate={onNavigate}
                             onAll={() => onNavigate('ssc-subjects')}
+                            thumbnailMap={thumbnailMap}
                         />
                         <SubjectRow
                             title="HSC"
                             subjects={hscFeaturedSubjects}
                             onNavigate={onNavigate}
                             onAll={() => onNavigate('hsc-subjects')}
+                            thumbnailMap={thumbnailMap}
                         />
                     </section>
                 </div>
