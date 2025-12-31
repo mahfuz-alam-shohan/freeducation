@@ -1,8 +1,8 @@
 import { navBarComponent } from "./components/navbar";
 import { uiComponents } from "./components/ui";
 import { authComponents } from "./views/auth";
-import { dashboardComponents } from "./views/dashboard";
-import { landingComponents } from "./views/landing";
+import { dashboardComponents } from "./views/admin/dashboard";
+import { landingComponents } from "./views/student/landing";
 import { mainApp } from "./app";
 
 export function renderAppHtml(initialView: string) {

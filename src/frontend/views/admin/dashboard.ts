@@ -1,10 +1,11 @@
 export const dashboardComponents = `
-        const AdminDashboard = () => {
+        const AdminDashboard = ({ onNavigate }) => {
             const [activeTab, setActiveTab] = useState('classes');
             const [classes, setClasses] = useState([]);
             const [newClassName, setNewClassName] = useState('');
             const [loading, setLoading] = useState(true);
             const [saving, setSaving] = useState(false);
+            const templates = ['SSC', 'HSC'];
 
             const fetchClasses = async () => {
                 const token = localStorage.getItem('auth_token');
@@ -46,9 +47,15 @@ export const dashboardComponents = `
                 setSaving(false);
             };
 
-            const templates = ['SSC', 'HSC'];
             const existing = new Set(classes.map((item) => String(item.name || '').toUpperCase()));
             const quickAdd = templates.filter((name) => !existing.has(name));
+
+            const getClassRoute = (name) => {
+                const upper = String(name || '').toUpperCase();
+                if (upper === 'SSC') return 'admin-groups-ssc';
+                if (upper === 'HSC') return 'admin-groups-hsc';
+                return null;
+            };
 
             const navItems = [
                 { id: 'classes', label: 'Classes', icon: 'fa-layer-group' },
@@ -77,8 +84,8 @@ export const dashboardComponents = `
                             <div className="flex flex-col gap-6">
                                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                                     <div>
-                                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Classes</h2>
-                                        <p className="text-sm text-gray-500 mt-1">SSC and HSC for Bangladeshi standards.</p>
+                                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Admin Dashboard</h2>
+                                        <p className="text-sm text-gray-500 mt-1">Manage class structure and learning content.</p>
                                     </div>
                                     <div className="flex w-full sm:w-auto gap-2">
                                         <input
@@ -103,12 +110,30 @@ export const dashboardComponents = `
                                     {!loading && classes.length === 0 && quickAdd.length === 0 && (
                                         <div className="col-span-full text-sm text-gray-400">No classes yet.</div>
                                     )}
-                                    {classes.map((item) => (
-                                        <div key={item.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                                            <div className="text-sm uppercase tracking-[0.2em] text-gray-400">Class</div>
-                                            <div className="text-lg font-semibold text-gray-900 mt-2">{item.name}</div>
-                                        </div>
-                                    ))}
+                                    {classes.map((item) => {
+                                        const route = getClassRoute(item.name);
+                                        return (
+                                            <div key={item.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+                                                <div>
+                                                    <div className="text-sm uppercase tracking-[0.2em] text-gray-400">Class</div>
+                                                    <div className="text-lg font-semibold text-gray-900 mt-2">{item.name}</div>
+                                                    <p className="text-sm text-gray-500 mt-2">Create subject groups and upload content.</p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => route && onNavigate(route)}
+                                                        className={\`px-3 py-2 rounded-lg text-sm font-semibold border transition \${route ? 'border-blue-200 text-blue-700 hover:bg-blue-50' : 'border-gray-200 text-gray-400 cursor-not-allowed'}\`}
+                                                        disabled={!route}
+                                                    >
+                                                        Open Groups
+                                                    </button>
+                                                    <button className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                                                        Upload Content
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                     {quickAdd.map((name) => (
                                         <button
                                             key={name}
@@ -149,5 +174,51 @@ export const dashboardComponents = `
                     </nav>
                 </div>
             );
+
+        const AdminGroupSelection = ({ classLabel, onNavigate }) => {
+            const groups = [
+                { title: 'Science', description: 'Physics, Chemistry, Biology' },
+                { title: 'Humanities', description: 'Arts, Social Science' },
+                { title: 'Business Studies', description: 'Commerce, Finance' }
+            ];
+
+            return (
+                <div className="flex flex-col gap-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <div className="text-sm uppercase tracking-[0.2em] text-gray-400">Class</div>
+                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mt-2">{classLabel}</h2>
+                            <p className="text-sm text-gray-500 mt-1">Choose a group to upload materials.</p>
+                        </div>
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Back to Dashboard
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {groups.map((group) => (
+                            <div key={group.title} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+                                <div>
+                                    <div className="text-sm uppercase tracking-[0.2em] text-gray-400">Group</div>
+                                    <div className="text-lg font-semibold text-gray-900 mt-2">{group.title}</div>
+                                    <p className="text-sm text-gray-500 mt-2">{group.description}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button className="px-3 py-2 rounded-lg text-sm font-semibold border border-blue-200 text-blue-700 hover:bg-blue-50 transition">
+                                        Upload Content
+                                    </button>
+                                    <button className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+                                        View Topics
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
         };
+`;
 `;
