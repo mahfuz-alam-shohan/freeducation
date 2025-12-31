@@ -80,38 +80,10 @@ export const mainApp = `
             const [selectedBanglaItem, setSelectedBanglaItem] = useState('');
             const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
             const [selectedSrijonshilType, setSelectedSrijonshilType] = useState(null);
-            const [sscGoddoItems, setSscGoddoItems] = useState([
-                'সুভা',
-                'অপরিচিতা',
-                'পহেলা বৈশাখ',
-                'মমতাদি',
-                'মানুষ মুহাম্মদ (সঃ)',
-                'সাহিত্যের রূপ ও রীতি'
-            ]);
-            const [sscPoddoItems, setSscPoddoItems] = useState([
-                'বিদ্রোহী',
-                'সোনার তরী',
-                'মানুষ',
-                'সেই দিন এই মাঠ',
-                'আমি কিংবদন্তির কথা বলছি',
-                'আঠারো বছর বয়স'
-            ]);
-            const [hscGoddoItems, setHscGoddoItems] = useState([
-                'বিলাসী',
-                'রেইনকোট',
-                'মা',
-                'অভিশপ্ত জীবন',
-                'জীবন ও বৃক্ষ',
-                'মেয়েদের কথা'
-            ]);
-            const [hscPoddoItems, setHscPoddoItems] = useState([
-                'বিদ্রোহী',
-                'সোনার তরী',
-                'আবার আসিব ফিরে',
-                'তাহারেই পড়ে মনে',
-                'আমি কিংবদন্তির কথা বলছি',
-                'নিমন্ত্রণ'
-            ]);
+            const [sscGoddoItems, setSscGoddoItems] = useState([]);
+            const [sscPoddoItems, setSscPoddoItems] = useState([]);
+            const [hscGoddoItems, setHscGoddoItems] = useState([]);
+            const [hscPoddoItems, setHscPoddoItems] = useState([]);
             const [sscShohopathItems, setSscShohopathItems] = useState([]);
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
             const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
