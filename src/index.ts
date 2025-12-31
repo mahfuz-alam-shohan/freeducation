@@ -2,11 +2,9 @@
  * FREEDUCATION LMS - Cloudflare Worker
  * Single-file Full Stack Application
  * * FEATURES INCLUDED:
- * 1. Database: Automatic table creation & Reset capability
- * 2. Security: Salted Password Hashing for Admins
- * 3. Student Frontend: Interactive study mode, Search, Class Browsing
- * 4. Admin Dashboard: Full content management (Class -> Subject -> Chapter -> Topic -> Question)
- * 5. Class Linking: Alias system (e.g., Class 10 uses Class 9 content)
+ * 1. Database: Automatic table creation
+ * 2. Security: Salted Password Hashing for Users
+ * 3. Frontend: Minimal landing page with login and signup
  */
 
 import { handleApiRequest } from "./api";

@@ -1,10 +1,6 @@
 import { navBarComponent } from "./components/navbar";
-import { landingHeaderComponent } from "./components/header";
-import { classSidebarComponent } from "./components/sidebar";
 import { uiComponents } from "./components/ui";
 import { authComponents } from "./views/auth";
-import { studentComponents } from "./views/student";
-import { adminComponents } from "./views/admin";
 import { mainApp } from "./app";
 
 export function renderAppHtml(initialView: string) {
@@ -89,13 +85,9 @@ export function renderAppHtml(initialView: string) {
 
         // --- IMPORTED COMPONENTS ---
         ${navBarComponent}
-        ${landingHeaderComponent}
-        ${classSidebarComponent}
 
         // --- VIEW LOGIC ---
         ${authComponents}
-        ${studentComponents}
-        ${adminComponents}
 
         // --- MAIN APP ---
         ${mainApp}
