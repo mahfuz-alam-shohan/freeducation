@@ -29,18 +29,25 @@ export function renderAppHtml(initialView: string) {
             color-scheme: light;
         }
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
         input, select, textarea { font-size: 16px !important; }
         .font-serif { font-family: 'Playfair Display', serif; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+        .glass-panel { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(6px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        .panel-shadow { box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08); }
+        .panel-shadow { box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #e2e8f0; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 999px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        @media (max-width: 640px) {
+            .qa-container { padding: 0 !important; margin: 0 !important; }
+            .qa-card { padding: 0 !important; border-radius: 0 !important; width: 100% !important; }
+            .qa-card .qa-text,
+            .qa-card .qa-text span { display: block; width: 100%; }
+            .qa-indent { padding-left: 0 !important; }
+        }
     </style>
 </head>
 <body>
