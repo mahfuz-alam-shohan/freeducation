@@ -5,6 +5,8 @@ const viewByPath = new Map<string, string>([
   ["/login", "login"],
   ["/register", "register"],
   ["/dashboard", "dashboard"],
+  ["/dashboard/ssc", "admin-groups-ssc"],
+  ["/dashboard/hsc", "admin-groups-hsc"],
 ]);
 
 export function getFrontendHtml(pathname: string) {
@@ -15,6 +17,12 @@ export function getFrontendHtml(pathname: string) {
     return renderAppHtml("register");
   }
   if (pathname.startsWith("/dashboard")) {
+    if (pathname.startsWith("/dashboard/ssc")) {
+      return renderAppHtml("admin-groups-ssc");
+    }
+    if (pathname.startsWith("/dashboard/hsc")) {
+      return renderAppHtml("admin-groups-hsc");
+    }
     return renderAppHtml("dashboard");
   }
   const view = viewByPath.get(pathname) ?? "landing";
