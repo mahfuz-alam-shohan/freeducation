@@ -19,6 +19,10 @@ const apiHeaders = {
   ...corsHeaders,
   ...securityHeaders,
 };
+const clampZoom = (value: number | null) => {
+  if (!value || Number.isNaN(value)) return 1;
+  return Math.min(1, Math.max(0.8, value));
+};
 
 const requireJwtSecret = (env: Env) => {
   const secret = env.JWT_SECRET;
@@ -131,6 +135,92 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         }
       }
 
+      if (path.startsWith("/api/thumbnails")) {
+        if (path === "/api/thumbnails" && request.method === "GET") {
+          const rows = await env.DB.prepare("SELECT subject_key, zoom FROM subject_thumbnails ORDER BY updated_at DESC").all();
+          const thumbnails = (rows.results || []).map((row: any) => ({
+            subjectKey: row.subject_key,
+            zoom: typeof row.zoom === "number" ? row.zoom : 1,
+            url: `/api/thumbnails/${row.subject_key}`,
+          }));
+          return Response.json({ thumbnails }, { headers: apiHeaders });
+        }
+
+        if (path === "/api/thumbnails" && request.method === "POST") {
+          const payload = await getAuthPayload(request, env);
+          if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+          const formData = await request.formData();
+          const subjectKey = String(formData.get("subjectKey") || "").trim().toLowerCase();
+          if (!subjectKey || !/^[a-z0-9-]+$/.test(subjectKey)) {
+            return Response.json({ success: false, error: "Invalid subject key." }, { status: 400, headers: apiHeaders });
+          }
+          const zoomValue = clampZoom(Number(formData.get("zoom")));
+          const file = formData.get("file");
+          const existing = await env.DB.prepare("SELECT file_key, content_type FROM subject_thumbnails WHERE subject_key = ?")
+            .bind(subjectKey)
+            .first();
+
+          if (!(file instanceof File) && !existing) {
+            return Response.json({ success: false, error: "Thumbnail file is required." }, { status: 400, headers: apiHeaders });
+          }
+
+          let fileKey = existing?.file_key as string | undefined;
+          let contentType = existing?.content_type as string | undefined;
+
+          if (file instanceof File) {
+            const arrayBuffer = await file.arrayBuffer();
+            fileKey = `thumbnails/${subjectKey}-${crypto.randomUUID()}-${file.name}`;
+            contentType = file.type || "application/octet-stream";
+            await env.BUCKET.put(fileKey, arrayBuffer, {
+              httpMetadata: {
+                contentType,
+              },
+            });
+            if (existing?.file_key) {
+              await env.BUCKET.delete(existing.file_key as string);
+            }
+          }
+
+          await env.DB.prepare(
+            "INSERT INTO subject_thumbnails (subject_key, file_key, content_type, zoom, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) " +
+              "ON CONFLICT(subject_key) DO UPDATE SET file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP"
+          ).bind(subjectKey, fileKey, contentType, zoomValue).run();
+
+          return Response.json(
+            {
+              success: true,
+              thumbnail: {
+                subjectKey,
+                zoom: zoomValue,
+                url: `/api/thumbnails/${subjectKey}`,
+              },
+            },
+            { headers: apiHeaders }
+          );
+        }
+
+        if (path.startsWith("/api/thumbnails/") && request.method === "GET") {
+          const subjectKey = decodeURIComponent(path.replace("/api/thumbnails/", "")).toLowerCase();
+          if (!subjectKey || !/^[a-z0-9-]+$/.test(subjectKey)) {
+            return Response.json({ success: false, error: "Invalid subject key." }, { status: 400, headers: apiHeaders });
+          }
+          const thumbnail = await env.DB.prepare("SELECT file_key, content_type FROM subject_thumbnails WHERE subject_key = ?")
+            .bind(subjectKey)
+            .first();
+          if (!thumbnail) {
+            return Response.json({ success: false, error: "Thumbnail not found." }, { status: 404, headers: apiHeaders });
+          }
+          const object = await env.BUCKET.get(thumbnail.file_key as string);
+          if (!object) {
+            return Response.json({ success: false, error: "Thumbnail file missing." }, { status: 404, headers: apiHeaders });
+          }
+          const headers = new Headers(apiHeaders);
+          headers.set("Content-Type", (thumbnail.content_type as string) || "application/octet-stream");
+          headers.set("Cache-Control", "public, max-age=86400");
+          return new Response(object.body, { headers });
+        }
+      }
+
       // 1. SYSTEM INITIALIZATION
       if (path === "/api/init" && request.method === "POST") {
         await initDatabase(env.DB);
@@ -225,12 +315,20 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         const keys = (fontRows.results || [])
           .map((row: any) => row.file_key)
           .filter((key: string | null) => typeof key === "string" && key.length > 0);
+        const thumbnailRows = await env.DB.prepare("SELECT file_key FROM subject_thumbnails").all();
+        const thumbnailKeys = (thumbnailRows.results || [])
+          .map((row: any) => row.file_key)
+          .filter((key: string | null) => typeof key === "string" && key.length > 0);
         if (keys.length > 0) {
           await env.BUCKET.delete(keys);
+        }
+        if (thumbnailKeys.length > 0) {
+          await env.BUCKET.delete(thumbnailKeys);
         }
 
         await env.DB.batch([
           env.DB.prepare("DELETE FROM fonts"),
+          env.DB.prepare("DELETE FROM subject_thumbnails"),
           env.DB.prepare("DELETE FROM class_groups"),
           env.DB.prepare("DELETE FROM classes"),
         ]);
