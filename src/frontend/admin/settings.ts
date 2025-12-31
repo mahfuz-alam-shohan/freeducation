@@ -92,31 +92,47 @@ export const settingsComponents = `
             }
         };
 
-        const makeAdminSubjectKey = (classLabel, group, subject) =>
-            (classLabel + '-' + group + '-' + subject)
+        const makeThumbnailKey = (subject) =>
+            subject
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
 
-        const buildAdminSubjectList = (classLabel) => {
-            const groupMap = adminSubjectGroups[classLabel] || {};
-            return Object.entries(groupMap).flatMap(([group, subjects]) =>
-                subjects.map((subject) => ({
-                    title: subject,
-                    group,
-                    classLabel,
-                    subjectKey: makeAdminSubjectKey(classLabel, group, subject)
-                }))
-            );
+        const buildAdminSubjectList = () => {
+            const subjectMap = new Map();
+            Object.entries(adminSubjectGroups).forEach(([classLabel, groupMap]) => {
+                Object.entries(groupMap).forEach(([group, subjects]) => {
+                    subjects.forEach((subject) => {
+                        const subjectKey = makeThumbnailKey(subject);
+                        if (!subjectMap.has(subjectKey)) {
+                            subjectMap.set(subjectKey, {
+                                title: subject,
+                                subjectKey,
+                                classLabels: new Set([classLabel]),
+                                groups: new Set([group])
+                            });
+                        } else {
+                            const entry = subjectMap.get(subjectKey);
+                            entry.classLabels.add(classLabel);
+                            entry.groups.add(group);
+                        }
+                    });
+                });
+            });
+            return Array.from(subjectMap.values()).map((subject) => ({
+                ...subject,
+                classLabels: Array.from(subject.classLabels),
+                groups: Array.from(subject.groups)
+            }));
         };
 
-        const thumbnailSubjects = [...buildAdminSubjectList('SSC'), ...buildAdminSubjectList('HSC')];
+        const thumbnailSubjects = buildAdminSubjectList();
 
-        const ThumbnailPreviewCard = ({ subject, thumbnail }) => {
+        const ThumbnailPreviewCard = ({ subject, thumbnail, className = '', showMeta = true }) => {
             const zoom = typeof thumbnail?.zoom === 'number' ? thumbnail.zoom : 1;
             return (
-                <div className="space-y-3">
-                    <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+                <div className={'space-y-3 ' + className}>
+                    <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
                         {thumbnail?.url ? (
                             <img
                                 src={thumbnail.url}
@@ -130,15 +146,17 @@ export const settingsComponents = `
                             </div>
                         )}
                     </div>
-                    <div>
-                        <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
-                        <div className="text-xs text-gray-500">{subject.classLabel} • {subject.group}</div>
-                    </div>
+                    {showMeta && (
+                        <div>
+                            <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
+                            <div className="text-xs text-gray-500">{subject.classLabels.join(' & ')}</div>
+                        </div>
+                    )}
                 </div>
             );
         };
 
-        const ThumbnailRow = ({ subject, storedThumbnail, onSaved }) => {
+        const ThumbnailModal = ({ subject, storedThumbnail, onSaved, onClose }) => {
             const [file, setFile] = useState(null);
             const [previewUrl, setPreviewUrl] = useState('');
             const [zoom, setZoom] = useState(storedThumbnail?.zoom ?? 1);
@@ -206,44 +224,78 @@ export const settingsComponents = `
                     : { url: '', zoom };
 
             return (
-                <div className="border border-gray-200 rounded-2xl p-4 bg-white flex flex-col lg:flex-row gap-5">
-                    <div className="w-full lg:w-48">
-                        <ThumbnailPreviewCard subject={subject} thumbnail={displayedThumbnail} />
-                    </div>
-                    <div className="flex-1 space-y-4">
-                        <div>
-                            <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Upload image</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(event) => setFile(event.target.files?.[0] || null)}
-                                className="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Zoom to fit (no crop)</label>
-                            <div className="flex items-center gap-3 mt-2">
-                                <input
-                                    type="range"
-                                    min="0.8"
-                                    max="1"
-                                    step="0.02"
-                                    value={zoom}
-                                    onChange={(event) => setZoom(Number(event.target.value))}
-                                    className="w-full"
-                                />
-                                <span className="text-xs text-gray-500 w-12 text-right">{zoom.toFixed(2)}x</span>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+                    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <div>
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Thumbnail</div>
+                                <div className="text-lg font-semibold text-gray-900">{subject.title}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                    {subject.classLabels.join(' & ')}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3">
                             <button
-                                onClick={handleSave}
-                                disabled={isSaving || !canSave}
-                                className="px-4 py-2 rounded-lg bg-gray-900 text-white text-xs font-semibold uppercase tracking-[0.3em] hover:bg-gray-800 transition disabled:bg-gray-400"
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-gray-600 transition"
+                                aria-label="Close"
                             >
-                                {isSaving ? 'Saving...' : 'Save'}
+                                <i className="fa-solid fa-xmark text-lg"></i>
                             </button>
-                            {status && <span className="text-xs text-gray-500">{status}</span>}
+                        </div>
+                        <div className="p-6 grid gap-6 lg:grid-cols-[minmax(0,200px)_minmax(0,1fr)]">
+                            <ThumbnailPreviewCard subject={subject} thumbnail={displayedThumbnail} />
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Upload image</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(event) => setFile(event.target.files?.[0] || null)}
+                                        className="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Zoom</label>
+                                    <div className="flex items-center gap-3 mt-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setZoom((prev) => Math.max(0.7, Number((prev - 0.05).toFixed(2))))}
+                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition"
+                                            aria-label="Zoom out"
+                                        >
+                                            <i className="fa-solid fa-minus"></i>
+                                        </button>
+                                        <input
+                                            type="range"
+                                            min="0.7"
+                                            max="1.2"
+                                            step="0.02"
+                                            value={zoom}
+                                            onChange={(event) => setZoom(Number(event.target.value))}
+                                            className="w-full"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setZoom((prev) => Math.min(1.2, Number((prev + 0.05).toFixed(2))))}
+                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition"
+                                            aria-label="Zoom in"
+                                        >
+                                            <i className="fa-solid fa-plus"></i>
+                                        </button>
+                                        <span className="text-xs text-gray-500 w-12 text-right">{zoom.toFixed(2)}x</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={isSaving || !canSave}
+                                        className="px-4 py-2 rounded-lg bg-gray-900 text-white text-xs font-semibold uppercase tracking-[0.3em] hover:bg-gray-800 transition disabled:bg-gray-400"
+                                    >
+                                        {isSaving ? 'Saving...' : 'Save'}
+                                    </button>
+                                    {status && <span className="text-xs text-gray-500">{status}</span>}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -253,6 +305,7 @@ export const settingsComponents = `
         const ThumbnailSettings = ({ onNavigate, onBack }) => {
             const [thumbnailMap, setThumbnailMap] = useState({});
             const [statusMessage, setStatusMessage] = useState(null);
+            const [activeSubject, setActiveSubject] = useState(null);
 
             useEffect(() => {
                 let isActive = true;
@@ -307,28 +360,51 @@ export const settingsComponents = `
                         </button>
                         {statusMessage && <div className="text-xs text-gray-500">{statusMessage}</div>}
                     </div>
-                    <div className="space-y-8">
-                        {['SSC', 'HSC'].map((classLabel) => (
-                            <div key={classLabel} className="space-y-4">
-                                <div>
-                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">{classLabel}</div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mt-2">{classLabel} Subjects</h3>
-                                </div>
-                                <div className="space-y-4">
-                                    {thumbnailSubjects
-                                        .filter((subject) => subject.classLabel === classLabel)
-                                        .map((subject) => (
-                                            <ThumbnailRow
-                                                key={subject.subjectKey}
+                    <div className="space-y-4">
+                        <div>
+                            <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Subjects</div>
+                            <h3 className="text-lg font-semibold text-gray-900 mt-2">Subject thumbnails</h3>
+                            <p className="text-sm text-gray-500 mt-2">
+                                Select a subject to upload or fine-tune its thumbnail.
+                            </p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {thumbnailSubjects.map((subject) => {
+                                const thumbnail = thumbnailMap[subject.subjectKey];
+                                return (
+                                    <button
+                                        key={subject.subjectKey}
+                                        onClick={() => setActiveSubject(subject)}
+                                        className="border border-gray-200 rounded-xl p-3 text-left hover:border-gray-300 hover:bg-gray-50 transition flex items-center gap-3"
+                                    >
+                                        <div className="w-14">
+                                            <ThumbnailPreviewCard
                                                 subject={subject}
-                                                storedThumbnail={thumbnailMap[subject.subjectKey]}
-                                                onSaved={handleSaved}
+                                                thumbnail={thumbnail}
+                                                className="space-y-2"
+                                                showMeta={false}
                                             />
-                                        ))}
-                                </div>
-                            </div>
-                        ))}
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
+                                            <div className="text-xs text-gray-500 mt-1">{subject.classLabels.join(' & ')}</div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
+                    {activeSubject && (
+                        <ThumbnailModal
+                            subject={activeSubject}
+                            storedThumbnail={thumbnailMap[activeSubject.subjectKey]}
+                            onSaved={(thumbnail) => {
+                                handleSaved(thumbnail);
+                                setActiveSubject(null);
+                            }}
+                            onClose={() => setActiveSubject(null)}
+                        />
+                    )}
                 </AdminShell>
             );
         };
