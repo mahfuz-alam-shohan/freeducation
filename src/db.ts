@@ -6,6 +6,11 @@ export async function initDatabase(db: D1Database) {
       password_hash TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS classes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS fonts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
