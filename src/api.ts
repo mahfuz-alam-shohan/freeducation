@@ -194,6 +194,51 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         }
       }
 
+      if (path === "/api/questions/bulk" && request.method === "POST") {
+        const { questions, type, topic_id, chapter_id, subject_id, metadata } = await request.json() as any;
+
+        if (!Array.isArray(questions) || questions.length === 0) {
+          return Response.json({ success: false, error: "Questions array is required." }, { status: 400, headers: corsHeaders });
+        }
+
+        const finalTopicId = topic_id ?? null;
+        const scope = subject_id ? "subject" : chapter_id ? "chapter" : finalTopicId !== null && finalTopicId !== undefined ? "topic" : "general";
+        const baseMetadata = {
+          ...(metadata || {}),
+          ...(chapter_id ? { chapter_id } : {}),
+          ...(subject_id ? { subject_id } : {}),
+          scope,
+        };
+
+        const inserts = [];
+        for (const [index, question] of questions.entries()) {
+          if (!question?.question_text || !Array.isArray(question.options)) {
+            return Response.json(
+              { success: false, error: `Invalid question at index ${index + 1}. Each question needs question_text and options array.` },
+              { status: 400, headers: corsHeaders }
+            );
+          }
+          const questionType = question.type || type || "MCQ";
+          const mergedMetadata = { ...baseMetadata, ...(question.metadata || {}) };
+          inserts.push(
+            env.DB.prepare(`
+              INSERT INTO questions (type, topic_id, question_text, options, answer, metadata)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              questionType,
+              finalTopicId,
+              question.question_text,
+              JSON.stringify(question.options || []),
+              question.answer || "",
+              JSON.stringify(mergedMetadata)
+            )
+          );
+        }
+
+        await env.DB.batch(inserts);
+        return Response.json({ success: true, inserted: inserts.length }, { headers: corsHeaders });
+      }
+
       if (path === "/api/questions") {
         if (request.method === "GET") {
           const { topic_id, chapter_id, subject_id, level } = Object.fromEntries(url.searchParams);
