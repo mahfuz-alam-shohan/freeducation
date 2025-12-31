@@ -279,9 +279,9 @@ export const dashboardComponents = `
                 },
                 {
                     title: 'সহপাঠ',
-                    description: 'সহপাঠ অধ্যায় সমূহ',
-                    route: null,
-                    active: false
+                    description: 'নাটক ও উপন্যাস ভিত্তিক পাঠ',
+                    route: classLabel === 'SSC' ? 'bangla-ssc-shohopath' : 'bangla-hsc-shohopath',
+                    active: true
                 },
                 {
                     title: 'নাট্যাংশ',
@@ -379,6 +379,123 @@ export const dashboardComponents = `
                             <p className="text-sm text-gray-500 mt-2">পদ্য অধ্যায় সমূহ</p>
                         </button>
                     </div>
+                </AdminShell>
+            );
+        };
+
+        const BanglaShohopath = ({ classLabel, natokName, upannyasName, onUpdateNatok, onUpdateUpannyas, onNavigate }) => {
+            const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [activeType, setActiveType] = useState('');
+            const [draftName, setDraftName] = useState('');
+
+            const openModal = (type) => {
+                setActiveType(type);
+                setDraftName(type === 'নাটক' ? natokName : upannyasName);
+                setIsModalOpen(true);
+            };
+
+            const handleSave = () => {
+                const trimmed = draftName.trim();
+                if (!trimmed) return;
+                if (activeType === 'নাটক') {
+                    onUpdateNatok(trimmed);
+                }
+                if (activeType === 'উপন্যাস') {
+                    onUpdateUpannyas(trimmed);
+                }
+                setIsModalOpen(false);
+                setDraftName('');
+                setActiveType('');
+            };
+
+            return (
+                <AdminShell
+                    title="সহপাঠ"
+                    subtitle="নাটক ও উপন্যাসের নাম যোগ করুন।"
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex justify-between items-center">
+                        <button
+                            onClick={() => onNavigate(baseRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ফিরে যান
+                        </button>
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ড্যাশবোর্ড
+                        </button>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 font-bangla">
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
+                            <div className="text-lg font-semibold text-gray-900">নাটক</div>
+                            <p className="text-sm text-gray-500">একটি নাটকের নাম যোগ করুন।</p>
+                            <div className="text-sm font-semibold text-gray-700">
+                                {natokName ? natokName : 'এখনও যোগ করা হয়নি।'}
+                            </div>
+                            <button
+                                onClick={() => openModal('নাটক')}
+                                className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                {natokName ? 'পরিবর্তন করুন' : 'যোগ করুন'}
+                            </button>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
+                            <div className="text-lg font-semibold text-gray-900">উপন্যাস</div>
+                            <p className="text-sm text-gray-500">একটি উপন্যাসের নাম যোগ করুন।</p>
+                            <div className="text-sm font-semibold text-gray-700">
+                                {upannyasName ? upannyasName : 'এখনও যোগ করা হয়নি।'}
+                            </div>
+                            <button
+                                onClick={() => openModal('উপন্যাস')}
+                                className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                {upannyasName ? 'পরিবর্তন করুন' : 'যোগ করুন'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {activeType} এর নাম যোগ করুন
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">নামের ঘর পূরণ করুন।</p>
+                                <input
+                                    value={draftName}
+                                    onChange={(event) => setDraftName(event.target.value)}
+                                    placeholder="নামের উদাহরণ লিখুন"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            setDraftName('');
+                                            setActiveType('');
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        বাতিল
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        সংরক্ষণ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </AdminShell>
             );
         };

@@ -18,6 +18,8 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/hsc/bangla-1st-paper", "bangla-hsc-1st-paper"],
   ["/dashboard/ssc/bangla-1st-paper/shahitto", "bangla-ssc-shahitto"],
   ["/dashboard/hsc/bangla-1st-paper/shahitto", "bangla-hsc-shahitto"],
+  ["/dashboard/ssc/bangla-1st-paper/shohopath", "bangla-ssc-shohopath"],
+  ["/dashboard/hsc/bangla-1st-paper/shohopath", "bangla-hsc-shohopath"],
   ["/dashboard/ssc/bangla-1st-paper/goddo", "bangla-ssc-goddo"],
   ["/dashboard/ssc/bangla-1st-paper/poddo", "bangla-ssc-poddo"],
   ["/dashboard/hsc/bangla-1st-paper/goddo", "bangla-hsc-goddo"],
@@ -63,6 +65,12 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/shahitto")) {
       return renderAppHtml("bangla-hsc-shahitto");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/shohopath")) {
+      return renderAppHtml("bangla-ssc-shohopath");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/shohopath")) {
+      return renderAppHtml("bangla-hsc-shohopath");
     }
     if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper")) {
       return renderAppHtml("bangla-ssc-1st-paper");

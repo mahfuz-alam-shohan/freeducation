@@ -18,6 +18,8 @@ export const mainApp = `
                 'bangla-hsc-1st-paper': '/dashboard/hsc/bangla-1st-paper',
                 'bangla-ssc-shahitto': '/dashboard/ssc/bangla-1st-paper/shahitto',
                 'bangla-hsc-shahitto': '/dashboard/hsc/bangla-1st-paper/shahitto',
+                'bangla-ssc-shohopath': '/dashboard/ssc/bangla-1st-paper/shohopath',
+                'bangla-hsc-shohopath': '/dashboard/hsc/bangla-1st-paper/shohopath',
                 'bangla-ssc-goddo': '/dashboard/ssc/bangla-1st-paper/goddo',
                 'bangla-ssc-poddo': '/dashboard/ssc/bangla-1st-paper/poddo',
                 'bangla-hsc-goddo': '/dashboard/hsc/bangla-1st-paper/goddo',
@@ -35,6 +37,8 @@ export const mainApp = `
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/poddo')) return 'bangla-ssc-poddo';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/goddo')) return 'bangla-hsc-goddo';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/poddo')) return 'bangla-hsc-poddo';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/shohopath')) return 'bangla-ssc-shohopath';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/shohopath')) return 'bangla-hsc-shohopath';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/shahitto')) return 'bangla-ssc-shahitto';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/shahitto')) return 'bangla-hsc-shahitto';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper')) return 'bangla-ssc-1st-paper';
@@ -59,6 +63,8 @@ export const mainApp = `
             const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
             const [goddoItems, setGoddoItems] = useState(['অপরিচিতা', 'পহেলা বৈশাখ']);
             const [poddoItems, setPoddoItems] = useState(['বিদ্রোহী', 'সোনার তরী']);
+            const [natokName, setNatokName] = useState('');
+            const [upannyasName, setUpannyasName] = useState('');
 
             const syncRoutesFromLocation = () => {
                 const { pathname } = window.location;
@@ -207,6 +213,26 @@ export const mainApp = `
                         )}
                         {view === 'bangla-hsc-shahitto' && (
                             <BanglaShahitto classLabel="HSC" onNavigate={navigate} />
+                        )}
+                        {view === 'bangla-ssc-shohopath' && (
+                            <BanglaShohopath
+                                classLabel="SSC"
+                                natokName={natokName}
+                                upannyasName={upannyasName}
+                                onUpdateNatok={setNatokName}
+                                onUpdateUpannyas={setUpannyasName}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-shohopath' && (
+                            <BanglaShohopath
+                                classLabel="HSC"
+                                natokName={natokName}
+                                upannyasName={upannyasName}
+                                onUpdateNatok={setNatokName}
+                                onUpdateUpannyas={setUpannyasName}
+                                onNavigate={navigate}
+                            />
                         )}
                         {view === 'bangla-ssc-goddo' && (
                             <BanglaTextList
