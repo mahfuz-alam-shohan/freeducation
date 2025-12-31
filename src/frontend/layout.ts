@@ -66,8 +66,8 @@ export function renderAppHtml(initialView: string) {
                 const css = fonts.map((font) => {
                     const name = String(font.name || '').replace(/'/g, "\\'");
                     const url = font.url || '';
-                    const format = font.format ? ` format('${font.format}')` : '';
-                    return `@font-face { font-family: '${name}'; src: url('${url}')${format}; font-display: swap; }`;
+                    const format = font.format ? " format('" + font.format + "')" : '';
+                    return "@font-face { font-family: '" + name + "'; src: url('" + url + "')" + format + "; font-display: swap; }";
                 }).join('\\n');
                 styleEl.textContent = css;
             } catch (err) {
