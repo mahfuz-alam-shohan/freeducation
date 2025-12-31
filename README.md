@@ -7,6 +7,12 @@ Freeducation is a lightweight Learning Management System (LMS) built on a Cloudf
 
 This repository keeps the server logic and UI templates together for a fast, server-rendered experience while keeping the front-end split cleanly between public and admin areas.
 
+## Bangla 1st Paper Admin Flow
+
+- Navigate to SSC/HSC groups, open **বাংলা ১ম পত্র** to access Bangla-first-paper topic lists.
+- Topics include **বাংলা সাহিত্য** (গদ্য/পদ্য lists with add modal), **সহপাঠ** (নাটক/উপন্যাস name entry), and a placeholder for **নাট্যাংশ**.
+- Selecting any গদ্য বা পদ্য item opens the auto-generated **সৃজনশীল** and **বহুনির্বাচনী** views.
+
 ## Project Goals
 
 - Keep the repository clean and easy to navigate.

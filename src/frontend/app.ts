@@ -13,12 +13,36 @@ export const mainApp = `
                 'admin-hsc-science': '/dashboard/hsc/science',
                 'admin-hsc-humanities': '/dashboard/hsc/humanities',
                 'admin-hsc-business-studies': '/dashboard/hsc/business-studies',
-                'admin-settings': '/dashboard/settings'
+                'admin-settings': '/dashboard/settings',
+                'bangla-ssc-1st-paper': '/dashboard/ssc/bangla-1st-paper',
+                'bangla-hsc-1st-paper': '/dashboard/hsc/bangla-1st-paper',
+                'bangla-ssc-shahitto': '/dashboard/ssc/bangla-1st-paper/shahitto',
+                'bangla-hsc-shahitto': '/dashboard/hsc/bangla-1st-paper/shahitto',
+                'bangla-ssc-shohopath': '/dashboard/ssc/bangla-1st-paper/shohopath',
+                'bangla-hsc-shohopath': '/dashboard/hsc/bangla-1st-paper/shohopath',
+                'bangla-ssc-goddo': '/dashboard/ssc/bangla-1st-paper/goddo',
+                'bangla-ssc-poddo': '/dashboard/ssc/bangla-1st-paper/poddo',
+                'bangla-hsc-goddo': '/dashboard/hsc/bangla-1st-paper/goddo',
+                'bangla-hsc-poddo': '/dashboard/hsc/bangla-1st-paper/poddo',
+                'bangla-ssc-item': '/dashboard/ssc/bangla-1st-paper/item',
+                'bangla-hsc-item': '/dashboard/hsc/bangla-1st-paper/item'
             };
             const getViewFromPath = (path) => {
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
                 if (path.startsWith('/dashboard/settings')) return 'admin-settings';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item')) return 'bangla-ssc-item';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item')) return 'bangla-hsc-item';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/goddo')) return 'bangla-ssc-goddo';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/poddo')) return 'bangla-ssc-poddo';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/goddo')) return 'bangla-hsc-goddo';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/poddo')) return 'bangla-hsc-poddo';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/shohopath')) return 'bangla-ssc-shohopath';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/shohopath')) return 'bangla-hsc-shohopath';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/shahitto')) return 'bangla-ssc-shahitto';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/shahitto')) return 'bangla-hsc-shahitto';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper')) return 'bangla-ssc-1st-paper';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper')) return 'bangla-hsc-1st-paper';
                 if (path.startsWith('/dashboard/ssc/science')) return 'admin-ssc-science';
                 if (path.startsWith('/dashboard/ssc/humanities')) return 'admin-ssc-humanities';
                 if (path.startsWith('/dashboard/ssc/business-studies')) return 'admin-ssc-business-studies';
@@ -35,6 +59,12 @@ export const mainApp = `
             const [isLoading, setIsLoading] = useState(true);
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
+            const [selectedBanglaItem, setSelectedBanglaItem] = useState('');
+            const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
+            const [goddoItems, setGoddoItems] = useState(['অপরিচিতা', 'পহেলা বৈশাখ']);
+            const [poddoItems, setPoddoItems] = useState(['বিদ্রোহী', 'সোনার তরী']);
+            const [natokName, setNatokName] = useState('');
+            const [upannyasName, setUpannyasName] = useState('');
 
             const syncRoutesFromLocation = () => {
                 const { pathname } = window.location;
@@ -171,6 +201,112 @@ export const mainApp = `
                         )}
                         {view === 'admin-hsc-business-studies' && (
                             <AdminGroupDetail classLabel="HSC" groupLabel="Business Studies" onNavigate={navigate} />
+                        )}
+                        {view === 'bangla-ssc-1st-paper' && (
+                            <BanglaFirstPaperTopics classLabel="SSC" onNavigate={navigate} />
+                        )}
+                        {view === 'bangla-hsc-1st-paper' && (
+                            <BanglaFirstPaperTopics classLabel="HSC" onNavigate={navigate} />
+                        )}
+                        {view === 'bangla-ssc-shahitto' && (
+                            <BanglaShahitto classLabel="SSC" onNavigate={navigate} />
+                        )}
+                        {view === 'bangla-hsc-shahitto' && (
+                            <BanglaShahitto classLabel="HSC" onNavigate={navigate} />
+                        )}
+                        {view === 'bangla-ssc-shohopath' && (
+                            <BanglaShohopath
+                                classLabel="SSC"
+                                natokName={natokName}
+                                upannyasName={upannyasName}
+                                onUpdateNatok={setNatokName}
+                                onUpdateUpannyas={setUpannyasName}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-shohopath' && (
+                            <BanglaShohopath
+                                classLabel="HSC"
+                                natokName={natokName}
+                                upannyasName={upannyasName}
+                                onUpdateNatok={setNatokName}
+                                onUpdateUpannyas={setUpannyasName}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-ssc-goddo' && (
+                            <BanglaTextList
+                                classLabel="SSC"
+                                typeLabel="গদ্য"
+                                items={goddoItems}
+                                onAddItem={setGoddoItems}
+                                onSelectItem={(item) => {
+                                    setSelectedBanglaItem(item);
+                                    setSelectedBanglaCategory('গদ্য');
+                                    navigate('bangla-ssc-item');
+                                }}
+                                onNavigate={navigate}
+                                showAdd
+                            />
+                        )}
+                        {view === 'bangla-ssc-poddo' && (
+                            <BanglaTextList
+                                classLabel="SSC"
+                                typeLabel="পদ্য"
+                                items={poddoItems}
+                                onAddItem={setPoddoItems}
+                                onSelectItem={(item) => {
+                                    setSelectedBanglaItem(item);
+                                    setSelectedBanglaCategory('পদ্য');
+                                    navigate('bangla-ssc-item');
+                                }}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-goddo' && (
+                            <BanglaTextList
+                                classLabel="HSC"
+                                typeLabel="গদ্য"
+                                items={goddoItems}
+                                onAddItem={setGoddoItems}
+                                onSelectItem={(item) => {
+                                    setSelectedBanglaItem(item);
+                                    setSelectedBanglaCategory('গদ্য');
+                                    navigate('bangla-hsc-item');
+                                }}
+                                onNavigate={navigate}
+                                showAdd
+                            />
+                        )}
+                        {view === 'bangla-hsc-poddo' && (
+                            <BanglaTextList
+                                classLabel="HSC"
+                                typeLabel="পদ্য"
+                                items={poddoItems}
+                                onAddItem={setPoddoItems}
+                                onSelectItem={(item) => {
+                                    setSelectedBanglaItem(item);
+                                    setSelectedBanglaCategory('পদ্য');
+                                    navigate('bangla-hsc-item');
+                                }}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-ssc-item' && (
+                            <BanglaItemDetail
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-item' && (
+                            <BanglaItemDetail
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
+                                onNavigate={navigate}
+                            />
                         )}
                         {view === 'admin-settings' && <AdminSettings onNavigate={navigate} />}
                     </main>

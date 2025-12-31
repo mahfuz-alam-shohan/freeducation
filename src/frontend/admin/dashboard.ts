@@ -214,6 +214,7 @@ export const dashboardComponents = `
 
             const subjects = subjectMap[classLabel]?.[groupLabel] || [];
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
+            const banglaRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
 
             return (
                 <AdminShell
@@ -241,9 +242,396 @@ export const dashboardComponents = `
                         {subjects.length === 0 && (
                             <div className="px-5 py-4 text-sm text-gray-400">No subjects configured.</div>
                         )}
-                        {subjects.map((subject) => (
-                            <div key={subject} className="px-5 py-4 text-sm font-semibold text-gray-700">
-                                {subject}
+                        {subjects.map((subject) => {
+                            const isBanglaFirst = subject === 'Bangla 1st Paper';
+                            const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : subject;
+                            if (!isBanglaFirst) {
+                                return (
+                                    <div key={subject} className="px-5 py-4 text-sm font-semibold text-gray-700">
+                                        {displayLabel}
+                                    </div>
+                                );
+                            }
+                            return (
+                                <button
+                                    key={subject}
+                                    onClick={() => onNavigate(banglaRoute)}
+                                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                    <span className="font-bangla">{displayLabel}</span>
+                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">খুলুন</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </AdminShell>
+            );
+        };
+
+        const BanglaFirstPaperTopics = ({ classLabel, onNavigate }) => {
+            const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
+            const topics = [
+                {
+                    title: 'বাংলা সাহিত্য',
+                    description: 'গদ্য ও পদ্য অধ্যায় সমূহ',
+                    route: classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto',
+                    active: true
+                },
+                {
+                    title: 'সহপাঠ',
+                    description: 'নাটক ও উপন্যাস ভিত্তিক পাঠ',
+                    route: classLabel === 'SSC' ? 'bangla-ssc-shohopath' : 'bangla-hsc-shohopath',
+                    active: true
+                },
+                {
+                    title: 'নাট্যাংশ',
+                    description: 'নাট্যাংশ ভিত্তিক পাঠ',
+                    route: null,
+                    active: false
+                }
+            ];
+
+            return (
+                <AdminShell
+                    title="বাংলা ১ম পত্র"
+                    subtitle={\`\${classLabel} শ্রেণির পাঠ তালিকা নির্বাচন করুন।\`}
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex justify-between items-center">
+                        <button
+                            onClick={() => onNavigate(groupRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ফিরে যান
+                        </button>
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ড্যাশবোর্ড
+                        </button>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {topics.map((topic) => (
+                            <button
+                                key={topic.title}
+                                onClick={() => topic.active && topic.route && onNavigate(topic.route)}
+                                className={\`w-full flex items-center justify-between px-5 py-4 text-sm font-semibold transition \${topic.active ? 'text-gray-700 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed'}\`}
+                                disabled={!topic.active}
+                            >
+                                <div className="text-left">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-gray-300">বিষয়</div>
+                                    <div className="text-base font-semibold text-gray-900 mt-1">{topic.title}</div>
+                                    <p className="text-xs text-gray-500 mt-2">{topic.description}</p>
+                                </div>
+                                <span className={\`text-xs uppercase tracking-[0.2em] \${topic.active ? 'text-blue-600' : 'text-gray-300'}\`}>খুলুন</span>
+                            </button>
+                        ))}
+                    </div>
+                </AdminShell>
+            );
+        };
+
+        const BanglaShahitto = ({ classLabel, onNavigate }) => {
+            const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
+            const goddoRoute = classLabel === 'SSC' ? 'bangla-ssc-goddo' : 'bangla-hsc-goddo';
+            const poddoRoute = classLabel === 'SSC' ? 'bangla-ssc-poddo' : 'bangla-hsc-poddo';
+
+            return (
+                <AdminShell
+                    title="বাংলা সাহিত্য"
+                    subtitle="গদ্য ও পদ্য অধ্যায় নির্বাচন করুন।"
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex justify-between items-center">
+                        <button
+                            onClick={() => onNavigate(baseRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ফিরে যান
+                        </button>
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ড্যাশবোর্ড
+                        </button>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 font-bangla">
+                        <button
+                            onClick={() => onNavigate(goddoRoute)}
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধারা</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">গদ্য</div>
+                            <p className="text-sm text-gray-500 mt-2">গদ্য অধ্যায় সমূহ</p>
+                        </button>
+                        <button
+                            onClick={() => onNavigate(poddoRoute)}
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধারা</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">পদ্য</div>
+                            <p className="text-sm text-gray-500 mt-2">পদ্য অধ্যায় সমূহ</p>
+                        </button>
+                    </div>
+                </AdminShell>
+            );
+        };
+
+        const BanglaShohopath = ({ classLabel, natokName, upannyasName, onUpdateNatok, onUpdateUpannyas, onNavigate }) => {
+            const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [activeType, setActiveType] = useState('');
+            const [draftName, setDraftName] = useState('');
+
+            const openModal = (type) => {
+                setActiveType(type);
+                setDraftName(type === 'নাটক' ? natokName : upannyasName);
+                setIsModalOpen(true);
+            };
+
+            const handleSave = () => {
+                const trimmed = draftName.trim();
+                if (!trimmed) return;
+                if (activeType === 'নাটক') {
+                    onUpdateNatok(trimmed);
+                }
+                if (activeType === 'উপন্যাস') {
+                    onUpdateUpannyas(trimmed);
+                }
+                setIsModalOpen(false);
+                setDraftName('');
+                setActiveType('');
+            };
+
+            return (
+                <AdminShell
+                    title="সহপাঠ"
+                    subtitle="নাটক ও উপন্যাসের নাম যোগ করুন।"
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex justify-between items-center">
+                        <button
+                            onClick={() => onNavigate(baseRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ফিরে যান
+                        </button>
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ড্যাশবোর্ড
+                        </button>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 font-bangla">
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
+                            <div className="text-lg font-semibold text-gray-900">নাটক</div>
+                            <p className="text-sm text-gray-500">একটি নাটকের নাম যোগ করুন।</p>
+                            <div className="text-sm font-semibold text-gray-700">
+                                {natokName ? natokName : 'এখনও যোগ করা হয়নি।'}
+                            </div>
+                            <button
+                                onClick={() => openModal('নাটক')}
+                                className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                {natokName ? 'পরিবর্তন করুন' : 'যোগ করুন'}
+                            </button>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
+                            <div className="text-lg font-semibold text-gray-900">উপন্যাস</div>
+                            <p className="text-sm text-gray-500">একটি উপন্যাসের নাম যোগ করুন।</p>
+                            <div className="text-sm font-semibold text-gray-700">
+                                {upannyasName ? upannyasName : 'এখনও যোগ করা হয়নি।'}
+                            </div>
+                            <button
+                                onClick={() => openModal('উপন্যাস')}
+                                className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                {upannyasName ? 'পরিবর্তন করুন' : 'যোগ করুন'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {activeType} এর নাম যোগ করুন
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">নামের ঘর পূরণ করুন।</p>
+                                <input
+                                    value={draftName}
+                                    onChange={(event) => setDraftName(event.target.value)}
+                                    placeholder="নামের উদাহরণ লিখুন"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            setDraftName('');
+                                            setActiveType('');
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        বাতিল
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        সংরক্ষণ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const BanglaTextList = ({ classLabel, typeLabel, items, onAddItem, onSelectItem, onNavigate, showAdd = false }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [newItem, setNewItem] = useState('');
+            const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto';
+
+            const handleAdd = () => {
+                const trimmed = newItem.trim();
+                if (!trimmed) return;
+                onAddItem((prev) => [...prev, trimmed]);
+                setNewItem('');
+                setIsModalOpen(false);
+            };
+
+            return (
+                <AdminShell
+                    title={\`\${typeLabel} পাঠ তালিকা\`}
+                    subtitle="পাঠের নাম নির্বাচন করুন।"
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center">
+                        <button
+                            onClick={() => onNavigate(baseRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ফিরে যান
+                        </button>
+                        {showAdd && (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                যোগ করুন
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {items.length === 0 && (
+                            <div className="px-5 py-4 text-sm text-gray-400">কোনো পাঠ যোগ করা হয়নি।</div>
+                        )}
+                        {items.map((item) => (
+                            <button
+                                key={item}
+                                onClick={() => onSelectItem(item)}
+                                className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                            >
+                                <span>{item}</span>
+                                <span className="text-xs uppercase tracking-[0.2em] text-blue-600">খুলুন</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">নতুন পাঠ যোগ করুন</h3>
+                                <p className="text-sm text-gray-500 mt-1">পাঠের নাম লিখুন।</p>
+                                <input
+                                    value={newItem}
+                                    onChange={(event) => setNewItem(event.target.value)}
+                                    placeholder="উদাহরণ: অপরিচিতা"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            setNewItem('');
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        বাতিল
+                                    </button>
+                                    <button
+                                        onClick={handleAdd}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        যোগ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const BanglaItemDetail = ({ classLabel, itemName, categoryName, onNavigate }) => {
+            const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
+            const categoryRoute = classLabel === 'SSC'
+                ? (categoryName === 'পদ্য' ? 'bangla-ssc-poddo' : 'bangla-ssc-goddo')
+                : (categoryName === 'পদ্য' ? 'bangla-hsc-poddo' : 'bangla-hsc-goddo');
+
+            const optionList = ['সৃজনশীল', 'বহুনির্বাচনী'];
+
+            return (
+                <AdminShell
+                    title="পাঠ বিশ্লেষণ"
+                    subtitle="সৃজনশীল ও বহুনির্বাচনী প্রশ্ন তালিকা।"
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button
+                            onClick={() => onNavigate(categoryRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ফিরে যান
+                        </button>
+                        <button
+                            onClick={() => onNavigate(baseRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            বিষয় তালিকা
+                        </button>
+                    </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 font-bangla">
+                        <div className="text-xs uppercase tracking-[0.2em] text-gray-300">নির্বাচিত পাঠ</div>
+                        <div className="text-lg font-semibold text-gray-900 mt-2">
+                            {itemName || 'পাঠ নির্বাচন করুন'}
+                        </div>
+                        {categoryName && (
+                            <div className="text-sm text-gray-500 mt-1">{categoryName} অধ্যায়</div>
+                        )}
+                    </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {optionList.map((option) => (
+                            <div key={option} className="px-5 py-4 text-sm font-semibold text-gray-700">
+                                {option}
                             </div>
                         ))}
                     </div>
