@@ -7,12 +7,24 @@ export const mainApp = `
                 dashboard: '/dashboard',
                 'admin-groups-ssc': '/dashboard/ssc',
                 'admin-groups-hsc': '/dashboard/hsc',
+                'admin-ssc-science': '/dashboard/ssc/science',
+                'admin-ssc-humanities': '/dashboard/ssc/humanities',
+                'admin-ssc-business-studies': '/dashboard/ssc/business-studies',
+                'admin-hsc-science': '/dashboard/hsc/science',
+                'admin-hsc-humanities': '/dashboard/hsc/humanities',
+                'admin-hsc-business-studies': '/dashboard/hsc/business-studies',
                 'admin-settings': '/dashboard/settings'
             };
             const getViewFromPath = (path) => {
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
                 if (path.startsWith('/dashboard/settings')) return 'admin-settings';
+                if (path.startsWith('/dashboard/ssc/science')) return 'admin-ssc-science';
+                if (path.startsWith('/dashboard/ssc/humanities')) return 'admin-ssc-humanities';
+                if (path.startsWith('/dashboard/ssc/business-studies')) return 'admin-ssc-business-studies';
+                if (path.startsWith('/dashboard/hsc/science')) return 'admin-hsc-science';
+                if (path.startsWith('/dashboard/hsc/humanities')) return 'admin-hsc-humanities';
+                if (path.startsWith('/dashboard/hsc/business-studies')) return 'admin-hsc-business-studies';
                 if (path.startsWith('/dashboard/ssc')) return 'admin-groups-ssc';
                 if (path.startsWith('/dashboard/hsc')) return 'admin-groups-hsc';
                 if (path.startsWith('/dashboard')) return 'dashboard';
@@ -141,6 +153,24 @@ export const mainApp = `
                         )}
                         {view === 'admin-groups-hsc' && (
                             <AdminGroupSelection classLabel="HSC" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-ssc-science' && (
+                            <AdminGroupDetail classLabel="SSC" groupLabel="Science" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-ssc-humanities' && (
+                            <AdminGroupDetail classLabel="SSC" groupLabel="Humanities" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-ssc-business-studies' && (
+                            <AdminGroupDetail classLabel="SSC" groupLabel="Business Studies" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-hsc-science' && (
+                            <AdminGroupDetail classLabel="HSC" groupLabel="Science" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-hsc-humanities' && (
+                            <AdminGroupDetail classLabel="HSC" groupLabel="Humanities" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-hsc-business-studies' && (
+                            <AdminGroupDetail classLabel="HSC" groupLabel="Business Studies" onNavigate={navigate} />
                         )}
                         {view === 'admin-settings' && <AdminSettings onNavigate={navigate} />}
                     </main>
