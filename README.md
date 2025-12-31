@@ -69,3 +69,4 @@ wrangler dev
 ## Notes
 
 This repo is intentionally minimal. Build on top of the public/admin separation as the product grows.
+The public landing highlights the first 8 subjects for SSC and HSC in the horizontal rows (see `src/frontend/public/landing.ts`).

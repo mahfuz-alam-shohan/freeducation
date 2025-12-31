@@ -161,8 +161,8 @@ export const landingComponents = `
             'bg-violet-500',
             'bg-teal-500'
         ];
-        const makeThumbnailKey = (subject) =>
-            subject
+        const makeThumbnailKey = (subject, classLabel) =>
+            (classLabel + '-' + subject)
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
@@ -186,7 +186,7 @@ export const landingComponents = `
                         icon: subjectIconMap[subject] || 'fa-book',
                         accent,
                         groups: new Set([group]),
-                        subjectKey: makeThumbnailKey(subject),
+                        subjectKey: makeThumbnailKey(subject, classLabel),
                         route: isBanglaFirst
                             ? (classLabel === 'SSC' ? 'public-bangla-ssc-1st-paper' : 'public-bangla-hsc-1st-paper')
                             : ''
@@ -205,8 +205,8 @@ export const landingComponents = `
 
         const sscSubjects = buildSubjectList('SSC');
         const hscSubjects = buildSubjectList('HSC');
-        const sscFeaturedSubjects = sscSubjects.slice(0, 5);
-        const hscFeaturedSubjects = hscSubjects.slice(0, 5);
+        const sscFeaturedSubjects = sscSubjects.slice(0, 8);
+        const hscFeaturedSubjects = hscSubjects.slice(0, 8);
 
         const useSubjectThumbnails = () => {
             const [thumbnailMap, setThumbnailMap] = useState({});
@@ -338,7 +338,7 @@ export const landingComponents = `
             });
 
             return (
-                <div className="flex-1 bg-white">
+                <div className="flex-1 bg-gradient-to-br from-white via-sky-50 to-indigo-50">
                     <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div>
@@ -411,7 +411,7 @@ export const landingComponents = `
         };
 
         const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
-            <div className="flex-1 bg-white">
+            <div className="flex-1 bg-gradient-to-br from-white via-rose-50 to-amber-50">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
@@ -616,7 +616,7 @@ export const landingComponents = `
             useEffect(() => {
                 const timer = setInterval(() => {
                     setQuoteIndex((prev) => (prev + 1) % quoteItems.length);
-                }, 6500);
+                }, 9000);
                 return () => clearInterval(timer);
             }, []);
 
@@ -624,12 +624,14 @@ export const landingComponents = `
 
             return (
                 <div className="flex-1 bg-white">
-                    <section className="bg-gradient-to-br from-slate-50 via-white to-slate-100">
-                        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-10">
+                    <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-fuchsia-500 to-rose-500">
+                        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/15 blur-3xl"></div>
+                        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-300/30 blur-3xl"></div>
+                        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                                        <svg viewBox="0 0 24 24" className="w-8 h-8 text-slate-900" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
+                                        <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" />
                                             <path d="M6.5 11.2V16c0 .7.4 1.4 1.1 1.7C9 18.4 10.4 19 12 19s3-.6 4.4-1.3c.7-.3 1.1-1 1.1-1.7v-4.8" />
                                             <path d="M20.5 9.7V14" />
@@ -637,23 +639,23 @@ export const landingComponents = `
                                         </svg>
                                     </div>
                                     <div>
-                                        <div className="text-3xl sm:text-4xl font-semibold text-slate-900">Freeducation</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-[0.2em] mt-1">
+                                        <div className="text-3xl sm:text-4xl font-semibold text-white">Freeducation</div>
+                                        <div className="text-sm text-white/80 uppercase tracking-[0.2em] mt-1">
                                             Serve education with clarity
                                         </div>
                                     </div>
                                 </div>
-                                <div className="max-w-xl text-slate-700">
+                                <div className="max-w-xl bg-white/15 border border-white/30 rounded-2xl p-6 text-white backdrop-blur">
                                     <p className="text-base sm:text-lg font-serif italic leading-relaxed">
                                         “{activeQuote.text}”
                                     </p>
-                                    <p className="text-sm font-semibold text-slate-600 mt-3">— {activeQuote.author}</p>
+                                    <p className="text-sm font-semibold text-white/90 mt-3">— {activeQuote.author}</p>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-6">
+                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-gradient-to-br from-white via-indigo-50 to-rose-50">
                         <div>
                             <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">Academic</h2>
