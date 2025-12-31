@@ -25,12 +25,24 @@ export const mainApp = `
                 'bangla-hsc-goddo': '/dashboard/hsc/bangla-1st-paper/goddo',
                 'bangla-hsc-poddo': '/dashboard/hsc/bangla-1st-paper/poddo',
                 'bangla-ssc-item': '/dashboard/ssc/bangla-1st-paper/item',
-                'bangla-hsc-item': '/dashboard/hsc/bangla-1st-paper/item'
+                'bangla-hsc-item': '/dashboard/hsc/bangla-1st-paper/item',
+                'bangla-ssc-srijonshil-types': '/dashboard/ssc/bangla-1st-paper/item/srijonshil',
+                'bangla-hsc-srijonshil-types': '/dashboard/hsc/bangla-1st-paper/item/srijonshil',
+                'bangla-ssc-srijonshil-questions': '/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions',
+                'bangla-hsc-srijonshil-questions': '/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions',
+                'bangla-ssc-mcq': '/dashboard/ssc/bangla-1st-paper/item/mcq',
+                'bangla-hsc-mcq': '/dashboard/hsc/bangla-1st-paper/item/mcq'
             };
             const getViewFromPath = (path) => {
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
                 if (path.startsWith('/dashboard/settings')) return 'admin-settings';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions')) return 'bangla-ssc-srijonshil-questions';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions')) return 'bangla-hsc-srijonshil-questions';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/srijonshil')) return 'bangla-ssc-srijonshil-types';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item/srijonshil')) return 'bangla-hsc-srijonshil-types';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/mcq')) return 'bangla-ssc-mcq';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item/mcq')) return 'bangla-hsc-mcq';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item')) return 'bangla-ssc-item';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item')) return 'bangla-hsc-item';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/goddo')) return 'bangla-ssc-goddo';
@@ -67,6 +79,7 @@ export const mainApp = `
             const [hasAdmin, setHasAdmin] = useState(null);
             const [selectedBanglaItem, setSelectedBanglaItem] = useState('');
             const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
+            const [selectedSrijonshilType, setSelectedSrijonshilType] = useState(null);
             const [sscGoddoItems, setSscGoddoItems] = useState([
                 'সুভা',
                 'অপরিচিতা',
@@ -101,6 +114,36 @@ export const mainApp = `
             ]);
             const [sscShohopathItems, setSscShohopathItems] = useState([]);
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
+            const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
+            const [mcqQuestions, setMcqQuestions] = useState({});
+
+            const getQuestionKey = (classLabel, categoryName, itemName, extra = '') => {
+                return [classLabel, categoryName || 'general', itemName || 'general', extra].join('-');
+            };
+
+            const addQuestionEntry = (setter, key) => (entry) => {
+                setter((prev) => {
+                    const updated = prev[key] ? [...prev[key]] : [];
+                    updated.push(entry);
+                    return { ...prev, [key]: updated };
+                });
+            };
+
+            const updateQuestionEntry = (setter, key) => (index, entry) => {
+                setter((prev) => {
+                    const updated = prev[key] ? [...prev[key]] : [];
+                    updated[index] = entry;
+                    return { ...prev, [key]: updated };
+                });
+            };
+
+            const removeQuestionEntry = (setter, key) => (index) => {
+                setter((prev) => {
+                    const updated = prev[key] ? [...prev[key]] : [];
+                    updated.splice(index, 1);
+                    return { ...prev, [key]: updated };
+                });
+            };
 
             const addStringItem = (setItems) => (value) => {
                 setItems((prev) => [...prev, value]);
@@ -385,6 +428,68 @@ export const mainApp = `
                                 classLabel="HSC"
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-ssc-srijonshil-types' && (
+                            <SrijonshilTypeList
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                onSelectType={setSelectedSrijonshilType}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-srijonshil-types' && (
+                            <SrijonshilTypeList
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                onSelectType={setSelectedSrijonshilType}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-ssc-srijonshil-questions' && (
+                            <SrijonshilQuestionList
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
+                                questions={srijonshilQuestions[getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
+                                onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+                                onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+                                onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-srijonshil-questions' && (
+                            <SrijonshilQuestionList
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
+                                questions={srijonshilQuestions[getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
+                                onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+                                onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+                                onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-ssc-mcq' && (
+                            <McqQuestionList
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                questions={mcqQuestions[getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'mcq')] || []}
+                                onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
+                                onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
+                                onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'bangla-hsc-mcq' && (
+                            <McqQuestionList
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                questions={mcqQuestions[getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq')] || []}
+                                onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
+                                onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
+                                onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
                                 onNavigate={navigate}
                             />
                         )}
