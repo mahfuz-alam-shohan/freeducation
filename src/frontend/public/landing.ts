@@ -205,8 +205,8 @@ export const landingComponents = `
 
         const sscSubjects = buildSubjectList('SSC');
         const hscSubjects = buildSubjectList('HSC');
-        const sscFeaturedSubjects = sscSubjects.slice(0, 5);
-        const hscFeaturedSubjects = hscSubjects.slice(0, 5);
+        const sscFeaturedSubjects = sscSubjects.slice(0, 8);
+        const hscFeaturedSubjects = hscSubjects.slice(0, 8);
 
         const useSubjectThumbnails = () => {
             const [thumbnailMap, setThumbnailMap] = useState({});

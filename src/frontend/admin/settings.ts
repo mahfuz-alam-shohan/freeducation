@@ -432,6 +432,441 @@ export const settingsComponents = `
             );
         };
 
+        const UserManagementSettings = ({ onNavigate, onBack }) => {
+            const [activePanel, setActivePanel] = useState('menu');
+            const [teachers, setTeachers] = useState([]);
+            const [admins, setAdmins] = useState([]);
+            const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
+            const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+            const [teacherForm, setTeacherForm] = useState({
+                name: '',
+                email: '',
+                password: '',
+                level: 'SSC',
+                subject: ''
+            });
+            const [adminForm, setAdminForm] = useState({
+                name: '',
+                email: '',
+                password: '',
+                permissions: {
+                    dashboard: true,
+                    classes: true,
+                    settings: true,
+                    thumbnails: false,
+                    userManagement: false
+                }
+            });
+
+            const teacherSubjects = Object.entries(adminSubjectGroups)
+                .flatMap(([level, groups]) =>
+                    Object.values(groups).flatMap((subjects) => subjects.map((subject) => ({ level, subject })))
+                )
+                .filter((entry) => entry.level === teacherForm.level);
+
+            const resetTeacherForm = () => {
+                setTeacherForm({
+                    name: '',
+                    email: '',
+                    password: '',
+                    level: 'SSC',
+                    subject: ''
+                });
+            };
+
+            const resetAdminForm = () => {
+                setAdminForm({
+                    name: '',
+                    email: '',
+                    password: '',
+                    permissions: {
+                        dashboard: true,
+                        classes: true,
+                        settings: true,
+                        thumbnails: false,
+                        userManagement: false
+                    }
+                });
+            };
+
+            const handleAddTeacher = () => {
+                if (!teacherForm.name || !teacherForm.email || !teacherForm.password || !teacherForm.subject) return;
+                setTeachers((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now() + '-' + Math.random().toString(16).slice(2),
+                        ...teacherForm
+                    }
+                ]);
+                resetTeacherForm();
+                setIsTeacherModalOpen(false);
+            };
+
+            const handleAddAdmin = () => {
+                if (!adminForm.name || !adminForm.email || !adminForm.password) return;
+                const permissionList = Object.entries(adminForm.permissions)
+                    .filter(([, enabled]) => enabled)
+                    .map(([key]) => key);
+                setAdmins((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now() + '-' + Math.random().toString(16).slice(2),
+                        name: adminForm.name,
+                        email: adminForm.email,
+                        permissions: permissionList
+                    }
+                ]);
+                resetAdminForm();
+                setIsAdminModalOpen(false);
+            };
+
+            const permissionLabels = {
+                dashboard: 'Dashboard',
+                classes: 'Classes',
+                settings: 'Settings',
+                thumbnails: 'Thumbnails',
+                userManagement: 'User management'
+            };
+
+            return (
+                <AdminShell
+                    title="User management"
+                    subtitle="Assign teachers and admins with access scope."
+                    activeTab="settings"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <button
+                            onClick={onBack}
+                            className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 hover:text-gray-700 transition"
+                        >
+                            Back to Settings
+                        </button>
+                        {activePanel !== 'menu' && (
+                            <button
+                                onClick={() => setActivePanel('menu')}
+                                className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 hover:text-gray-700 transition"
+                            >
+                                User management menu
+                            </button>
+                        )}
+                    </div>
+
+                    {activePanel === 'menu' && (
+                        <div className="grid gap-4 md:grid-cols-2 mt-4">
+                            <button
+                                onClick={() => setActivePanel('teachers')}
+                                className="border border-gray-200 rounded-2xl p-5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
+                            >
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Assign</div>
+                                <div className="text-lg font-semibold text-gray-900 mt-2">Teacher</div>
+                                <div className="text-sm text-gray-500 mt-1">Create teachers with level and subject access.</div>
+                            </button>
+                            <button
+                                onClick={() => setActivePanel('admins')}
+                                className="border border-gray-200 rounded-2xl p-5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
+                            >
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Assign</div>
+                                <div className="text-lg font-semibold text-gray-900 mt-2">Admin</div>
+                                <div className="text-sm text-gray-500 mt-1">Create admins with menu and settings access.</div>
+                            </button>
+                        </div>
+                    )}
+
+                    {activePanel === 'teachers' && (
+                        <div className="space-y-4 mt-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Teachers</div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mt-2">Assigned teachers</h3>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Teachers will see only the class and subject assigned here.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsTeacherModalOpen(true)}
+                                    className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-gray-900 text-white hover:bg-gray-800 transition"
+                                >
+                                    Add teacher
+                                </button>
+                            </div>
+                            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-[0.2em]">
+                                        <tr>
+                                            <th className="text-left px-4 py-3">Name</th>
+                                            <th className="text-left px-4 py-3">Email</th>
+                                            <th className="text-left px-4 py-3">Level</th>
+                                            <th className="text-left px-4 py-3">Subject</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {teachers.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="px-4 py-6 text-center text-gray-400">
+                                                    No teachers assigned yet.
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {teachers.map((teacher) => (
+                                            <tr key={teacher.id} className="border-t border-gray-100">
+                                                <td className="px-4 py-3 font-semibold text-gray-800">{teacher.name}</td>
+                                                <td className="px-4 py-3 text-gray-500">{teacher.email}</td>
+                                                <td className="px-4 py-3 text-gray-500">{teacher.level}</td>
+                                                <td className="px-4 py-3 text-gray-500">{teacher.subject}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {activePanel === 'admins' && (
+                        <div className="space-y-4 mt-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Admins</div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mt-2">Assigned admins</h3>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Control which menus and settings each admin can access.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsAdminModalOpen(true)}
+                                    className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-gray-900 text-white hover:bg-gray-800 transition"
+                                >
+                                    Add admin
+                                </button>
+                            </div>
+                            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-[0.2em]">
+                                        <tr>
+                                            <th className="text-left px-4 py-3">Name</th>
+                                            <th className="text-left px-4 py-3">Email</th>
+                                            <th className="text-left px-4 py-3">Permissions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {admins.length === 0 && (
+                                            <tr>
+                                                <td colSpan="3" className="px-4 py-6 text-center text-gray-400">
+                                                    No admins assigned yet.
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {admins.map((admin) => (
+                                            <tr key={admin.id} className="border-t border-gray-100">
+                                                <td className="px-4 py-3 font-semibold text-gray-800">{admin.name}</td>
+                                                <td className="px-4 py-3 text-gray-500">{admin.email}</td>
+                                                <td className="px-4 py-3 text-gray-500 capitalize">
+                                                    {admin.permissions.length ? admin.permissions.join(', ') : 'None'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {isTeacherModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+                            <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Add teacher</div>
+                                    <div className="text-lg font-semibold text-gray-900 mt-2">Assign teacher access</div>
+                                    <div className="text-sm text-gray-500 mt-1">
+                                        Provide login details and the subject they manage.
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Name</label>
+                                        <input
+                                            value={teacherForm.name}
+                                            onChange={(event) =>
+                                                setTeacherForm((prev) => ({ ...prev, name: event.target.value }))
+                                            }
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            placeholder="Teacher name"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Email</label>
+                                        <input
+                                            value={teacherForm.email}
+                                            onChange={(event) =>
+                                                setTeacherForm((prev) => ({ ...prev, email: event.target.value }))
+                                            }
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            placeholder="teacher@email.com"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Password</label>
+                                        <input
+                                            type="password"
+                                            value={teacherForm.password}
+                                            onChange={(event) =>
+                                                setTeacherForm((prev) => ({ ...prev, password: event.target.value }))
+                                            }
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            placeholder="Temporary password"
+                                        />
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Level</label>
+                                            <select
+                                                value={teacherForm.level}
+                                                onChange={(event) =>
+                                                    setTeacherForm((prev) => ({
+                                                        ...prev,
+                                                        level: event.target.value,
+                                                        subject: ''
+                                                    }))
+                                                }
+                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            >
+                                                <option value="SSC">SSC</option>
+                                                <option value="HSC">HSC</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Subject</label>
+                                            <select
+                                                value={teacherForm.subject}
+                                                onChange={(event) =>
+                                                    setTeacherForm((prev) => ({ ...prev, subject: event.target.value }))
+                                                }
+                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            >
+                                                <option value="">Select subject</option>
+                                                {teacherSubjects.map((entry) => (
+                                                    <option key={entry.level + '-' + entry.subject} value={entry.subject}>
+                                                        {entry.subject}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsTeacherModalOpen(false);
+                                            resetTeacherForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleAddTeacher}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-gray-900 text-white hover:bg-gray-800 transition"
+                                    >
+                                        Save teacher
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isAdminModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+                            <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Add admin</div>
+                                    <div className="text-lg font-semibold text-gray-900 mt-2">Assign admin access</div>
+                                    <div className="text-sm text-gray-500 mt-1">
+                                        Choose which menus and settings this admin can access.
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Name</label>
+                                        <input
+                                            value={adminForm.name}
+                                            onChange={(event) =>
+                                                setAdminForm((prev) => ({ ...prev, name: event.target.value }))
+                                            }
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            placeholder="Admin name"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Email</label>
+                                        <input
+                                            value={adminForm.email}
+                                            onChange={(event) =>
+                                                setAdminForm((prev) => ({ ...prev, email: event.target.value }))
+                                            }
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            placeholder="admin@email.com"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Password</label>
+                                        <input
+                                            type="password"
+                                            value={adminForm.password}
+                                            onChange={(event) =>
+                                                setAdminForm((prev) => ({ ...prev, password: event.target.value }))
+                                            }
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            placeholder="Temporary password"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Permissions</label>
+                                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                            {Object.entries(adminForm.permissions).map(([key, enabled]) => (
+                                                <label key={key} className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={enabled}
+                                                        onChange={(event) =>
+                                                            setAdminForm((prev) => ({
+                                                                ...prev,
+                                                                permissions: {
+                                                                    ...prev.permissions,
+                                                                    [key]: event.target.checked
+                                                                }
+                                                            }))
+                                                        }
+                                                    />
+                                                    {permissionLabels[key]}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsAdminModalOpen(false);
+                                            resetAdminForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleAddAdmin}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-gray-900 text-white hover:bg-gray-800 transition"
+                                    >
+                                        Save admin
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
         const AdminSettings = ({ onNavigate }) => {
             const [statusMessage, setStatusMessage] = useState(null);
             const [isResetting, setIsResetting] = useState(false);
@@ -439,6 +874,9 @@ export const settingsComponents = `
 
             if (activePanel === 'thumbnails') {
                 return <ThumbnailSettings onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
+            }
+            if (activePanel === 'users') {
+                return <UserManagementSettings onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
             }
 
             const handleReset = async () => {
@@ -491,6 +929,13 @@ export const settingsComponents = `
                         >
                             <span>Thumbnails</span>
                             <span className="text-xs text-gray-400">Upload subject poster images</span>
+                        </button>
+                        <button
+                            onClick={() => setActivePanel('users')}
+                            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                        >
+                            <span>User management</span>
+                            <span className="text-xs text-gray-400">Assign teacher and admin access</span>
                         </button>
                         <button
                             onClick={handleReset}
