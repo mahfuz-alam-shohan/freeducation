@@ -53,6 +53,14 @@ export async function initDatabase(db: D1Database) {
       metadata TEXT, 
       FOREIGN KEY(topic_id) REFERENCES topics(id)
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS fonts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      file_key TEXT,
+      content_type TEXT,
+      original_name TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
   ]);
 }
 

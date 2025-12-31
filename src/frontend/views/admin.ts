@@ -1312,7 +1312,97 @@ export const adminComponents = `
             return <Modal isOpen={true} onClose={onClose} title="Link Content"><div className="bg-blue-50 p-2 mb-4 text-blue-800 text-xs">Link <strong>{cls.name}</strong> to use content from another class.</div><div className="mb-4"><label className="block text-xs font-bold mb-1">Source Class</label><select className="w-full border p-2 text-sm bg-white" value={parentId} onChange={e => setParentId(e.target.value)}><option value="">-- Independent --</option>{allClasses.filter(c => c.id !== cls.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>{parentId && <Input label="Label" value={label} onChange={e => setLabel(e.target.value)} />}<div className="flex justify-end mt-4 gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button size="md" onClick={() => onSave(parentId, label)}>Save</Button></div></Modal>;
         }
         function SettingsManager() {
-            const handleReset = async () => { if (confirm("Permanently delete ALL data?")) { await adminApi.post('/api/reset-db', {}); window.location.reload(); } };
-            return <div className="max-w-xl bg-white p-6 border border-gray-300"><h2 className="text-lg font-bold mb-4">Danger Zone</h2><Button variant="danger" size="sm" onClick={handleReset}>Reset Database</Button></div>;
+            const [fonts, setFonts] = useState([]);
+            const [isUploading, setIsUploading] = useState(false);
+            const [error, setError] = useState('');
+
+            const loadFonts = async () => {
+                try {
+                    const response = await fetch('/api/fonts');
+                    if (!response.ok) throw new Error('Failed to load fonts.');
+                    const data = await response.json();
+                    setFonts(Array.isArray(data) ? data : []);
+                } catch (err) {
+                    setError(err.message || 'Unable to load fonts.');
+                }
+            };
+
+            useEffect(() => { loadFonts(); }, []);
+
+            const handleBulkUpload = async (event) => {
+                const files = Array.from(event.target.files || []);
+                if (!files.length) return;
+                setIsUploading(true);
+                setError('');
+                const formData = new FormData();
+                files.forEach(file => formData.append('files', file));
+                try {
+                    const response = await fetch('/api/fonts/bulk', { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        const message = await response.text();
+                        throw new Error(message || 'Upload failed.');
+                    }
+                    await loadFonts();
+                    event.target.value = '';
+                } catch (err) {
+                    setError(err.message || 'Unable to upload fonts.');
+                } finally {
+                    setIsUploading(false);
+                }
+            };
+
+            const handleReset = async () => {
+                if (confirm("Permanently delete ALL data?")) {
+                    await adminApi.post('/api/reset-db', {});
+                    window.location.reload();
+                }
+            };
+
+            return (
+                <div className="space-y-6 max-w-3xl">
+                    <div className="bg-white p-6 border border-gray-300 rounded-xl space-y-4">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Custom Fonts</h2>
+                            <p className="text-sm text-gray-600 mt-1">Upload Bangla font files in bulk so they are available across the site. We use the file name as the font family.</p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <input
+                                type="file"
+                                accept=".ttf,.otf,.woff,.woff2"
+                                multiple
+                                onChange={handleBulkUpload}
+                                className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                                disabled={isUploading}
+                            />
+                            <div className="text-xs text-gray-500">Supported formats: .ttf, .otf, .woff, .woff2</div>
+                            {isUploading && <div className="text-xs text-blue-600 font-semibold">Uploading fonts...</div>}
+                            {error && <div className="text-xs text-red-600 font-semibold">{error}</div>}
+                        </div>
+                        <div className="border-t border-gray-200 pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-bold text-gray-800">Installed Fonts</h3>
+                                <span className="text-xs text-gray-500">{fonts.length} total</span>
+                            </div>
+                            {fonts.length ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {fonts.map(font => (
+                                        <div key={font.id} className="border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 bg-gray-50">
+                                            <div className="font-semibold">{font.name}</div>
+                                            <div className="text-[10px] text-gray-500 truncate">{font.original_name}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-gray-500">No custom fonts uploaded yet.</div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="max-w-xl bg-white p-6 border border-gray-300 rounded-xl">
+                        <h2 className="text-lg font-bold mb-4">Danger Zone</h2>
+                        <Button variant="danger" size="sm" onClick={handleReset}>Reset Database</Button>
+                    </div>
+                </div>
+            );
         }
 `;

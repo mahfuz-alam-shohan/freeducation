@@ -49,9 +49,34 @@ export function renderAppHtml(initialView: string) {
             .qa-indent { padding-left: 0 !important; }
         }
     </style>
+    <style id="custom-fonts"></style>
 </head>
 <body>
     <div id="root"></div>
+
+    <script>
+        const loadCustomFonts = async () => {
+            try {
+                const response = await fetch('/api/fonts');
+                if (!response.ok) return;
+                const fonts = await response.json();
+                if (!Array.isArray(fonts) || fonts.length === 0) return;
+                const styleEl = document.getElementById('custom-fonts');
+                if (!styleEl) return;
+                const css = fonts.map((font) => {
+                    const name = String(font.name || '').replace(/'/g, "\\'");
+                    const url = font.url || '';
+                    const format = font.format ? " format('" + font.format + "')" : '';
+                    return "@font-face { font-family: '" + name + "'; src: url('" + url + "')" + format + "; font-display: swap; }";
+                }).join('\\n');
+                styleEl.textContent = css;
+            } catch (err) {
+                console.warn('Failed to load custom fonts', err);
+            }
+        };
+
+        loadCustomFonts();
+    </script>
 
     <script>
         window.__INITIAL_VIEW = ${JSON.stringify(initialView)};
