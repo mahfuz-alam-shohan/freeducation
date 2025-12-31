@@ -4,9 +4,10 @@ import { adminPageHeaderComponent } from "./components/layout/admin-page-header"
 import { adminShellComponent } from "./components/layout/admin-shell";
 import { adminSidebarComponent } from "./components/layout/admin-sidebar";
 import { uiComponents } from "./components/shared/ui";
+import { landingComponents } from "./public/landing";
 import { authComponents } from "./public/auth";
 import { dashboardComponents } from "./admin/dashboard";
-import { landingComponents } from "./public/landing";
+import { settingsComponents } from "./admin/settings";
 import { mainApp } from "./app";
 
 export function renderAppHtml(initialView: string) {
@@ -100,6 +101,7 @@ export function renderAppHtml(initialView: string) {
         ${authComponents}
         ${landingComponents}
         ${dashboardComponents}
+        ${settingsComponents}
 
         // --- MAIN APP ---
         ${mainApp}

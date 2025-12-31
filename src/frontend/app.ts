@@ -6,11 +6,13 @@ export const mainApp = `
                 register: '/register',
                 dashboard: '/dashboard',
                 'admin-groups-ssc': '/dashboard/ssc',
-                'admin-groups-hsc': '/dashboard/hsc'
+                'admin-groups-hsc': '/dashboard/hsc',
+                'admin-settings': '/dashboard/settings'
             };
             const getViewFromPath = (path) => {
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
+                if (path.startsWith('/dashboard/settings')) return 'admin-settings';
                 if (path.startsWith('/dashboard/ssc')) return 'admin-groups-ssc';
                 if (path.startsWith('/dashboard/hsc')) return 'admin-groups-hsc';
                 if (path.startsWith('/dashboard')) return 'dashboard';
@@ -79,7 +81,7 @@ export const mainApp = `
                     if (!data.hasAdmin && view === 'login') {
                         navigate('register', { replace: true });
                     }
-                    if (!token && (view === 'dashboard' || view.startsWith('admin-groups'))) {
+                    if (!token && (view === 'dashboard' || view.startsWith('admin-groups') || view === 'admin-settings')) {
                         navigate('landing', { replace: true });
                     }
                     setIsLoading(false);
@@ -140,6 +142,7 @@ export const mainApp = `
                         {view === 'admin-groups-hsc' && (
                             <AdminGroupSelection classLabel="HSC" onNavigate={navigate} />
                         )}
+                        {view === 'admin-settings' && <AdminSettings onNavigate={navigate} />}
                     </main>
                 </div>
             );

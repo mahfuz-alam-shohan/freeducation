@@ -7,6 +7,7 @@ const viewByPath = new Map<string, string>([
   ["/dashboard", "dashboard"],
   ["/dashboard/ssc", "admin-groups-ssc"],
   ["/dashboard/hsc", "admin-groups-hsc"],
+  ["/dashboard/settings", "admin-settings"],
 ]);
 
 export function getFrontendHtml(pathname: string) {
@@ -17,6 +18,9 @@ export function getFrontendHtml(pathname: string) {
     return renderAppHtml("register");
   }
   if (pathname.startsWith("/dashboard")) {
+    if (pathname.startsWith("/dashboard/settings")) {
+      return renderAppHtml("admin-settings");
+    }
     if (pathname.startsWith("/dashboard/ssc")) {
       return renderAppHtml("admin-groups-ssc");
     }

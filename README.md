@@ -13,6 +13,7 @@ This repository keeps the server logic and UI templates together for a fast, ser
 - Maintain clear separation between public and admin experiences.
 - Follow security best practices for authentication, headers, and secrets.
 - Provide a minimal, fast LMS scaffold for further feature development.
+- Offer a settings area with maintenance actions like a reset option.
 
 ## Structure
 
@@ -29,6 +30,7 @@ src/
     app.ts               # Client-side routing + app state
     admin/               # Admin-only UI modules
       dashboard.ts
+      settings.ts
     public/              # Student-facing UI modules
       landing.ts
       auth.ts

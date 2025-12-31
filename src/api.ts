@@ -211,6 +211,32 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         const created = await env.DB.prepare("SELECT id, name, created_at FROM classes WHERE name = ?").bind(trimmedName).first();
         return Response.json({ success: true, class: created }, { headers: apiHeaders });
       }
+
+      // 4. SETTINGS
+      if (path === "/api/settings/reset" && request.method === "POST") {
+        const payload = await getAuthPayload(request, env);
+        if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        const body = await request.json().catch(() => ({}));
+        if (!body || body.confirm !== true) {
+          return Response.json({ success: false, error: "Confirmation required." }, { status: 400, headers: apiHeaders });
+        }
+
+        const fontRows = await env.DB.prepare("SELECT file_key FROM fonts").all();
+        const keys = (fontRows.results || [])
+          .map((row: any) => row.file_key)
+          .filter((key: string | null) => typeof key === "string" && key.length > 0);
+        if (keys.length > 0) {
+          await env.BUCKET.delete(keys);
+        }
+
+        await env.DB.batch([
+          env.DB.prepare("DELETE FROM fonts"),
+          env.DB.prepare("DELETE FROM class_groups"),
+          env.DB.prepare("DELETE FROM classes"),
+        ]);
+        await initDatabase(env.DB);
+        return Response.json({ success: true }, { headers: apiHeaders });
+      }
   } catch (e: any) {
       return Response.json({ success: false, error: e.message || "Internal Server Error" }, { status: 500, headers: apiHeaders });
   }
