@@ -1,8 +1,12 @@
-import { navBarComponent } from "./components/navbar";
-import { uiComponents } from "./components/ui";
-import { authComponents } from "./views/auth";
+import { navBarComponent } from "./components/layout/header";
+import { adminMobileNavComponent } from "./components/layout/admin-mobile-nav";
+import { adminPageHeaderComponent } from "./components/layout/admin-page-header";
+import { adminShellComponent } from "./components/layout/admin-shell";
+import { adminSidebarComponent } from "./components/layout/admin-sidebar";
+import { uiComponents } from "./components/shared/ui";
+import { authComponents } from "./views/public/auth";
 import { dashboardComponents } from "./views/admin/dashboard";
-import { landingComponents } from "./views/student/landing";
+import { landingComponents } from "./views/public/landing";
 import { mainApp } from "./app";
 
 export function renderAppHtml(initialView: string) {
@@ -85,8 +89,12 @@ export function renderAppHtml(initialView: string) {
         // --- SHARED UI COMPONENTS ---
         ${uiComponents}
 
-        // --- IMPORTED COMPONENTS ---
+        // --- LAYOUT COMPONENTS ---
         ${navBarComponent}
+        ${adminSidebarComponent}
+        ${adminMobileNavComponent}
+        ${adminPageHeaderComponent}
+        ${adminShellComponent}
 
         // --- VIEW LOGIC ---
         ${authComponents}
