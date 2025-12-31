@@ -4,6 +4,18 @@ export const mainApp = `
                 landing: '/',
                 'ssc-subjects': '/ssc',
                 'hsc-subjects': '/hsc',
+                'public-bangla-ssc-1st-paper': '/ssc/bangla-1st-paper',
+                'public-bangla-hsc-1st-paper': '/hsc/bangla-1st-paper',
+                'public-bangla-ssc-shahitto': '/ssc/bangla-1st-paper/shahitto',
+                'public-bangla-hsc-shahitto': '/hsc/bangla-1st-paper/shahitto',
+                'public-bangla-ssc-shohopath': '/ssc/bangla-1st-paper/shohopath',
+                'public-bangla-hsc-shohopath': '/hsc/bangla-1st-paper/shohopath',
+                'public-bangla-ssc-goddo': '/ssc/bangla-1st-paper/goddo',
+                'public-bangla-ssc-poddo': '/ssc/bangla-1st-paper/poddo',
+                'public-bangla-hsc-goddo': '/hsc/bangla-1st-paper/goddo',
+                'public-bangla-hsc-poddo': '/hsc/bangla-1st-paper/poddo',
+                'public-bangla-ssc-item': '/ssc/bangla-1st-paper/item',
+                'public-bangla-hsc-item': '/hsc/bangla-1st-paper/item',
                 login: '/login',
                 register: '/register',
                 dashboard: '/dashboard',
@@ -36,6 +48,18 @@ export const mainApp = `
                 'bangla-hsc-mcq': '/dashboard/hsc/bangla-1st-paper/item/mcq'
             };
             const getViewFromPath = (path) => {
+                if (path.startsWith('/ssc/bangla-1st-paper/item')) return 'public-bangla-ssc-item';
+                if (path.startsWith('/hsc/bangla-1st-paper/item')) return 'public-bangla-hsc-item';
+                if (path.startsWith('/ssc/bangla-1st-paper/goddo')) return 'public-bangla-ssc-goddo';
+                if (path.startsWith('/ssc/bangla-1st-paper/poddo')) return 'public-bangla-ssc-poddo';
+                if (path.startsWith('/hsc/bangla-1st-paper/goddo')) return 'public-bangla-hsc-goddo';
+                if (path.startsWith('/hsc/bangla-1st-paper/poddo')) return 'public-bangla-hsc-poddo';
+                if (path.startsWith('/ssc/bangla-1st-paper/shohopath')) return 'public-bangla-ssc-shohopath';
+                if (path.startsWith('/hsc/bangla-1st-paper/shohopath')) return 'public-bangla-hsc-shohopath';
+                if (path.startsWith('/ssc/bangla-1st-paper/shahitto')) return 'public-bangla-ssc-shahitto';
+                if (path.startsWith('/hsc/bangla-1st-paper/shahitto')) return 'public-bangla-hsc-shahitto';
+                if (path.startsWith('/ssc/bangla-1st-paper')) return 'public-bangla-ssc-1st-paper';
+                if (path.startsWith('/hsc/bangla-1st-paper')) return 'public-bangla-hsc-1st-paper';
                 if (path.startsWith('/ssc')) return 'ssc-subjects';
                 if (path.startsWith('/hsc')) return 'hsc-subjects';
                 if (path.startsWith('/login')) return 'login';
@@ -96,6 +120,32 @@ export const mainApp = `
             const getQuestionKey = (classLabel, categoryName, itemName, extra = '') => {
                 return [classLabel, categoryName || 'general', itemName || 'general', extra].join('-');
             };
+
+            const getBanglaTopics = (classLabel) => [
+                {
+                    title: 'বাংলা সাহিত্য',
+                    description: 'গদ্য ও পদ্য অধ্যায় সমূহ',
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-shahitto' : 'public-bangla-hsc-shahitto'
+                },
+                {
+                    title: 'সহপাঠ',
+                    description: 'নাটক ও উপন্যাস ভিত্তিক পাঠ',
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-shohopath' : 'public-bangla-hsc-shohopath'
+                }
+            ];
+
+            const getBanglaShahittoTopics = (classLabel) => [
+                {
+                    title: 'গদ্য',
+                    description: 'গদ্য অধ্যায় সমূহ',
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-goddo' : 'public-bangla-hsc-goddo'
+                },
+                {
+                    title: 'পদ্য',
+                    description: 'পদ্য অধ্যায় সমূহ',
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-poddo' : 'public-bangla-hsc-poddo'
+                }
+            ];
 
             const addQuestionEntry = (setter, key) => (entry) => {
                 setter((prev) => {
@@ -259,6 +309,178 @@ export const mainApp = `
                         )}
                         {view === 'hsc-subjects' && (
                             <SubjectIndexPage classLabel="HSC" subjects={hscSubjects} onNavigate={navigate} />
+                        )}
+                        {view === 'public-bangla-ssc-1st-paper' && (
+                            <PublicBanglaShell
+                                title="বাংলা ১ম পত্র"
+                                subtitle="SSC শ্রেণির পাঠ তালিকা নির্বাচন করুন।"
+                                onBack={() => navigate('ssc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTopicGrid topics={getBanglaTopics('SSC')} onNavigate={navigate} />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-hsc-1st-paper' && (
+                            <PublicBanglaShell
+                                title="বাংলা ১ম পত্র"
+                                subtitle="HSC শ্রেণির পাঠ তালিকা নির্বাচন করুন।"
+                                onBack={() => navigate('hsc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTopicGrid topics={getBanglaTopics('HSC')} onNavigate={navigate} />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-ssc-shahitto' && (
+                            <PublicBanglaShell
+                                title="বাংলা সাহিত্য"
+                                subtitle="গদ্য ও পদ্য অধ্যায় নির্বাচন করুন।"
+                                onBack={() => navigate('public-bangla-ssc-1st-paper')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTopicGrid topics={getBanglaShahittoTopics('SSC')} onNavigate={navigate} />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-hsc-shahitto' && (
+                            <PublicBanglaShell
+                                title="বাংলা সাহিত্য"
+                                subtitle="গদ্য ও পদ্য অধ্যায় নির্বাচন করুন।"
+                                onBack={() => navigate('public-bangla-hsc-1st-paper')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTopicGrid topics={getBanglaShahittoTopics('HSC')} onNavigate={navigate} />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-ssc-goddo' && (
+                            <PublicBanglaShell
+                                title="গদ্য"
+                                subtitle="SSC গদ্য পাঠের তালিকা।"
+                                onBack={() => navigate('public-bangla-ssc-shahitto')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTextList
+                                    title="গদ্য পাঠসমূহ"
+                                    subtitle="আপনার পছন্দের পাঠ নির্বাচন করুন।"
+                                    items={sscGoddoItems}
+                                    onSelectItem={(item) => {
+                                        setSelectedBanglaItem(item);
+                                        setSelectedBanglaCategory('গদ্য');
+                                        navigate('public-bangla-ssc-item');
+                                    }}
+                                />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-ssc-poddo' && (
+                            <PublicBanglaShell
+                                title="পদ্য"
+                                subtitle="SSC পদ্য পাঠের তালিকা।"
+                                onBack={() => navigate('public-bangla-ssc-shahitto')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTextList
+                                    title="পদ্য পাঠসমূহ"
+                                    subtitle="আপনার পছন্দের পাঠ নির্বাচন করুন।"
+                                    items={sscPoddoItems}
+                                    onSelectItem={(item) => {
+                                        setSelectedBanglaItem(item);
+                                        setSelectedBanglaCategory('পদ্য');
+                                        navigate('public-bangla-ssc-item');
+                                    }}
+                                />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-hsc-goddo' && (
+                            <PublicBanglaShell
+                                title="গদ্য"
+                                subtitle="HSC গদ্য পাঠের তালিকা।"
+                                onBack={() => navigate('public-bangla-hsc-shahitto')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTextList
+                                    title="গদ্য পাঠসমূহ"
+                                    subtitle="আপনার পছন্দের পাঠ নির্বাচন করুন।"
+                                    items={hscGoddoItems}
+                                    onSelectItem={(item) => {
+                                        setSelectedBanglaItem(item);
+                                        setSelectedBanglaCategory('গদ্য');
+                                        navigate('public-bangla-hsc-item');
+                                    }}
+                                />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-hsc-poddo' && (
+                            <PublicBanglaShell
+                                title="পদ্য"
+                                subtitle="HSC পদ্য পাঠের তালিকা।"
+                                onBack={() => navigate('public-bangla-hsc-shahitto')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaTextList
+                                    title="পদ্য পাঠসমূহ"
+                                    subtitle="আপনার পছন্দের পাঠ নির্বাচন করুন।"
+                                    items={hscPoddoItems}
+                                    onSelectItem={(item) => {
+                                        setSelectedBanglaItem(item);
+                                        setSelectedBanglaCategory('পদ্য');
+                                        navigate('public-bangla-hsc-item');
+                                    }}
+                                />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-ssc-shohopath' && (
+                            <PublicBanglaShell
+                                title="সহপাঠ"
+                                subtitle="SSC সহপাঠ তালিকা নির্বাচন করুন।"
+                                onBack={() => navigate('public-bangla-ssc-1st-paper')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaShohopathList
+                                    items={sscShohopathItems}
+                                    onSelectItem={(item) => {
+                                        setSelectedBanglaItem(item.name);
+                                        setSelectedBanglaCategory(item.type);
+                                        navigate('public-bangla-ssc-item');
+                                    }}
+                                />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-hsc-shohopath' && (
+                            <PublicBanglaShell
+                                title="সহপাঠ"
+                                subtitle="HSC সহপাঠ তালিকা নির্বাচন করুন।"
+                                onBack={() => navigate('public-bangla-hsc-1st-paper')}
+                                onNavigate={navigate}
+                            >
+                                <PublicBanglaShohopathList
+                                    items={hscShohopathItems}
+                                    onSelectItem={(item) => {
+                                        setSelectedBanglaItem(item.name);
+                                        setSelectedBanglaCategory(item.type);
+                                        navigate('public-bangla-hsc-item');
+                                    }}
+                                />
+                            </PublicBanglaShell>
+                        )}
+                        {view === 'public-bangla-ssc-item' && (
+                            <PublicBanglaItemDetail
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
+                                srijonshilQuestions={srijonshilQuestions}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-bangla-hsc-item' && (
+                            <PublicBanglaItemDetail
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
+                                srijonshilQuestions={srijonshilQuestions}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onNavigate={navigate}
+                            />
                         )}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
