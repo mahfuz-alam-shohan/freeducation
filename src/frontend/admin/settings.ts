@@ -438,6 +438,7 @@ export const settingsComponents = `
             const [admins, setAdmins] = useState([]);
             const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
             const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+            const [statusMessage, setStatusMessage] = useState(null);
             const [teacherForm, setTeacherForm] = useState({
                 name: '',
                 email: '',
@@ -489,35 +490,98 @@ export const settingsComponents = `
                 });
             };
 
-            const handleAddTeacher = () => {
-                if (!teacherForm.name || !teacherForm.email || !teacherForm.password || !teacherForm.subject) return;
-                setTeachers((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now() + '-' + Math.random().toString(16).slice(2),
-                        ...teacherForm
+            const fetchUsers = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+                try {
+                    const response = await fetch('/api/users', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setTeachers(data.teachers || []);
+                        setAdmins(data.admins || []);
+                        setStatusMessage(null);
+                    } else {
+                        setStatusMessage(data.error || 'Unable to load users.');
                     }
-                ]);
-                resetTeacherForm();
-                setIsTeacherModalOpen(false);
+                } catch (error) {
+                    setStatusMessage('Unable to load users.');
+                }
             };
 
-            const handleAddAdmin = () => {
+            useEffect(() => {
+                if (activePanel === 'teachers' || activePanel === 'admins') {
+                    fetchUsers();
+                }
+            }, [activePanel]);
+
+            const handleAddTeacher = async () => {
+                if (!teacherForm.name || !teacherForm.email || !teacherForm.password || !teacherForm.subject) return;
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+                try {
+                    const response = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            role: 'teacher',
+                            name: teacherForm.name,
+                            email: teacherForm.email,
+                            password: teacherForm.password,
+                            level: teacherForm.level,
+                            subject: teacherForm.subject
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        await fetchUsers();
+                        resetTeacherForm();
+                        setIsTeacherModalOpen(false);
+                    } else {
+                        setStatusMessage(data.error || 'Unable to add teacher.');
+                    }
+                } catch (error) {
+                    setStatusMessage('Unable to add teacher.');
+                }
+            };
+
+            const handleAddAdmin = async () => {
                 if (!adminForm.name || !adminForm.email || !adminForm.password) return;
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
                 const permissionList = Object.entries(adminForm.permissions)
                     .filter(([, enabled]) => enabled)
                     .map(([key]) => key);
-                setAdmins((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now() + '-' + Math.random().toString(16).slice(2),
-                        name: adminForm.name,
-                        email: adminForm.email,
-                        permissions: permissionList
+                try {
+                    const response = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            role: 'admin',
+                            name: adminForm.name,
+                            email: adminForm.email,
+                            password: adminForm.password,
+                            permissions: permissionList
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        await fetchUsers();
+                        resetAdminForm();
+                        setIsAdminModalOpen(false);
+                    } else {
+                        setStatusMessage(data.error || 'Unable to add admin.');
                     }
-                ]);
-                resetAdminForm();
-                setIsAdminModalOpen(false);
+                } catch (error) {
+                    setStatusMessage('Unable to add admin.');
+                }
             };
 
             const permissionLabels = {
@@ -551,6 +615,10 @@ export const settingsComponents = `
                             </button>
                         )}
                     </div>
+
+                    {statusMessage && (
+                        <div className="mt-3 text-sm text-gray-500">{statusMessage}</div>
+                    )}
 
                     {activePanel === 'menu' && (
                         <div className="grid gap-4 md:grid-cols-2 mt-4">

@@ -646,7 +646,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaItemDetail = ({ classLabel, itemName, categoryName, onNavigate }) => {
+        const BanglaItemDetail = ({ classLabel, itemName, categoryName, notesByItem, onUpdateNotes, onNavigate }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const categoryRoute = classLabel === 'SSC'
                 ? (categoryName === 'পদ্য'
@@ -674,12 +674,11 @@ export const dashboardComponents = `
                     route: mcqRoute
                 }
             ];
-            const [notesByItem, setNotesByItem] = useState({});
             const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
             const [noteInput, setNoteInput] = useState('');
             const [editingNoteIndex, setEditingNoteIndex] = useState(null);
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
-            const notes = notesByItem[noteKey] || [];
+            const notes = (notesByItem || {})[noteKey] || [];
 
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
@@ -693,15 +692,17 @@ export const dashboardComponents = `
             const handleNoteSave = () => {
                 const trimmed = noteInput.trim();
                 if (!trimmed) return;
-                setNotesByItem((prev) => {
-                    const updated = [...notes];
-                    if (editingNoteIndex === null) {
-                        updated.push(trimmed);
-                    } else {
-                        updated[editingNoteIndex] = trimmed;
-                    }
-                    return { ...prev, [noteKey]: updated };
-                });
+                if (onUpdateNotes) {
+                    onUpdateNotes((prev) => {
+                        const current = prev && prev[noteKey] ? [...prev[noteKey]] : [];
+                        if (editingNoteIndex === null) {
+                            current.push(trimmed);
+                        } else {
+                            current[editingNoteIndex] = trimmed;
+                        }
+                        return { ...prev, [noteKey]: current };
+                    });
+                }
                 setIsNoteModalOpen(false);
                 setNoteInput('');
                 setEditingNoteIndex(null);
