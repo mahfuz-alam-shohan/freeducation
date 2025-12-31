@@ -694,12 +694,13 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title="পাঠ বিশ্লেষণ"
-                    subtitle="সৃজনশীল ও বহুনির্বাচনী প্রশ্ন তালিকা।"
+                    title={null}
+                    subtitle={null}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
-                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                    <div className="flex flex-col gap-2 font-bangla">
+                    <div className="flex flex-wrap gap-3 justify-between items-center">
                         <button
                             onClick={() => onNavigate(categoryRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
@@ -714,34 +715,20 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 font-bangla">
-                        <div className="text-xs uppercase tracking-[0.2em] text-gray-300">নির্বাচিত পাঠ</div>
-                        <div className="text-2xl font-semibold text-gray-900 mt-2">
+                    <div className="text-center">
+                        <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900">
                             {itemName || 'পাঠ নির্বাচন করুন'}
-                        </div>
-                        {categoryName && (
-                            <div className="text-sm text-gray-500 mt-1">{categoryName} অধ্যায়</div>
-                        )}
+                        </h2>
                     </div>
 
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm font-bangla">
-                        <div className="px-5 py-4 border-b border-gray-100 text-xs uppercase tracking-[0.2em] text-gray-300">
-                            সেকশন
-                        </div>
-                        <div className="px-5 py-4 flex flex-wrap gap-2">
-                            {optionList.map((option) => (
-                                <span
-                                    key={option}
-                                    className="px-3 py-1 rounded-full border border-gray-200 text-xs font-semibold text-gray-600"
-                                >
-                                    {option}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
+                    <ul className="list-disc list-inside text-base text-gray-700 flex flex-col gap-1">
+                        {optionList.map((option) => (
+                            <li key={option}>{option}</li>
+                        ))}
+                    </ul>
 
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm font-bangla">
-                        <div className="px-5 py-4 flex items-center justify-between border-b border-gray-100">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
                             <div>
                                 <div className="text-xs uppercase tracking-[0.2em] text-gray-300">নোটস</div>
                                 <div className="text-sm font-semibold text-gray-700 mt-1">গুরুত্বপূর্ণ লাইন সংযুক্ত করুন</div>
@@ -755,10 +742,10 @@ export const dashboardComponents = `
                         </div>
                         <ul className="divide-y">
                             {notes.length === 0 && (
-                                <li className="px-5 py-4 text-sm text-gray-400">এখনো কোন নোট যুক্ত হয়নি।</li>
+                                <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যুক্ত হয়নি।</li>
                             )}
                             {notes.map((note, index) => (
-                                <li key={\`\${noteKey}-\${index}\`} className="px-5 py-4 flex items-start gap-3">
+                                <li key={\`\${noteKey}-\${index}\`} className="px-4 py-3 flex items-start gap-3">
                                     <span className="text-sm font-semibold text-gray-500">
                                         {toBanglaNumber(index + 1)}.
                                     </span>
@@ -773,6 +760,7 @@ export const dashboardComponents = `
                                 </li>
                             ))}
                         </ul>
+                    </div>
                     </div>
 
                     {isNoteModalOpen && (
