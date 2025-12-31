@@ -2,6 +2,8 @@ import { renderAppHtml } from "./layout";
 
 const viewByPath = new Map<string, string>([
   ["/", "landing"],
+  ["/ssc", "ssc-subjects"],
+  ["/hsc", "hsc-subjects"],
   ["/login", "login"],
   ["/register", "register"],
   ["/dashboard", "dashboard"],
