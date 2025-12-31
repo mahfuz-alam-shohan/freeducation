@@ -26,13 +26,6 @@ export async function initDatabase(db: D1Database) {
       original_name TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS subject_thumbnails (
-      subject_key TEXT PRIMARY KEY,
-      file_key TEXT,
-      content_type TEXT,
-      zoom REAL DEFAULT 1,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`),
     db.prepare(`INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')`),
     db.prepare(`INSERT OR IGNORE INTO class_groups (class_id, name)
       SELECT classes.id, group_names.name
