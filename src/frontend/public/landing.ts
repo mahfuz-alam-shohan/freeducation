@@ -161,8 +161,8 @@ export const landingComponents = `
             'bg-violet-500',
             'bg-teal-500'
         ];
-        const makeSubjectKey = (classLabel, group, subject) =>
-            (classLabel + '-' + group + '-' + subject)
+        const makeThumbnailKey = (subject) =>
+            subject
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
@@ -170,24 +170,37 @@ export const landingComponents = `
         const buildSubjectList = (classLabel) => {
             const groupMap = subjectGroups[classLabel] || {};
             let paletteIndex = 0;
-            return Object.entries(groupMap).flatMap(([group, subjects]) =>
-                subjects.map((subject) => {
+            const subjectMap = new Map();
+            Object.entries(groupMap).forEach(([group, subjects]) => {
+                subjects.forEach((subject) => {
+                    if (subjectMap.has(subject)) {
+                        subjectMap.get(subject).groups.add(group);
+                        return;
+                    }
                     const accent = accentPalette[paletteIndex % accentPalette.length];
                     paletteIndex += 1;
                     const isBanglaFirst = subject === 'Bangla 1st Paper';
-                    return {
+                    subjectMap.set(subject, {
                         title: subject,
                         subtitle: isBanglaFirst ? 'বাংলা ১ম পত্র' : '',
                         icon: subjectIconMap[subject] || 'fa-book',
                         accent,
-                        group,
-                        subjectKey: makeSubjectKey(classLabel, group, subject),
+                        groups: new Set([group]),
+                        subjectKey: makeThumbnailKey(subject),
                         route: isBanglaFirst
                             ? (classLabel === 'SSC' ? 'public-bangla-ssc-1st-paper' : 'public-bangla-hsc-1st-paper')
                             : ''
-                    };
-                })
-            );
+                    });
+                });
+            });
+            return Array.from(subjectMap.values()).map((subject) => {
+                const groups = Array.from(subject.groups);
+                return {
+                    ...subject,
+                    groups,
+                    groupLabel: groups.length > 1 ? 'Common' : groups[0]
+                };
+            });
         };
 
         const sscSubjects = buildSubjectList('SSC');
@@ -235,13 +248,13 @@ export const landingComponents = `
                     onClick={() => isActive && onNavigate(subject.route)}
                     className={
                         className +
-                        ' text-left transition-all duration-300 group ' +
+                        ' block h-full text-left transition-all duration-300 group ' +
                         (isActive ? 'cursor-pointer' : 'opacity-60 cursor-default')
                     }
                     disabled={!isActive}
                 >
-                    <div className="space-y-3">
-                        <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm thumbnail-float group-hover:-translate-y-1 group-hover:shadow-md transition">
+                    <div className="space-y-2 h-full">
+                        <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm group-hover:-translate-y-1 group-hover:shadow-md transition">
                             {subject.thumbnailUrl ? (
                                 <img
                                     src={subject.thumbnailUrl}
@@ -254,22 +267,22 @@ export const landingComponents = `
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3">
                                     <div
                                         className={
-                                            'h-12 w-12 rounded-xl text-white flex items-center justify-center shadow-sm ' +
+                                            'h-10 w-10 rounded-lg text-white flex items-center justify-center shadow-sm ' +
                                             subject.accent
                                         }
                                     >
-                                        <i className={'fa-solid ' + subject.icon + ' text-lg'}></i>
+                                        <i className={'fa-solid ' + subject.icon + ' text-sm'}></i>
                                     </div>
-                                    <div className="text-[10px] uppercase tracking-[0.3em]">Thumbnail</div>
+                                    <div className="text-[9px] uppercase tracking-[0.3em]">Thumbnail</div>
                                 </div>
                             )}
                         </div>
                         <div className="flex-1">
-                            <div className="text-sm font-semibold text-slate-900">{subject.title}</div>
+                            <div className="text-xs sm:text-sm font-semibold text-slate-900">{subject.title}</div>
                             {subject.subtitle && <div className="text-xs text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
                             {showGroup && (
-                                <div className="mt-2 inline-flex items-center text-[11px] uppercase tracking-[0.2em] text-slate-400">
-                                    {subject.group}
+                                <div className="mt-2 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                                    {subject.groupLabel}
                                 </div>
                             )}
                         </div>
@@ -289,7 +302,7 @@ export const landingComponents = `
                         See all <i className="fa-solid fa-angle-right"></i>
                     </button>
                 </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory">
+                <div className="flex items-stretch gap-3 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory">
                     {subjects.map((subject) => {
                         const thumbnail = thumbnailMap[subject.subjectKey];
                         return (
@@ -301,7 +314,7 @@ export const landingComponents = `
                                     thumbnailZoom: thumbnail?.zoom
                                 }}
                                 onNavigate={onNavigate}
-                                className="flex-shrink-0 w-56 sm:w-64 snap-start"
+                                className="flex-shrink-0 w-40 sm:w-48 md:w-52 snap-start"
                             />
                         );
                     })}
@@ -314,9 +327,9 @@ export const landingComponents = `
             const [query, setQuery] = useState('');
             const thumbnailMap = useSubjectThumbnails();
             const normalizedQuery = query.trim().toLowerCase();
-            const groups = ['All', ...new Set(subjects.map((subject) => subject.group))];
+            const groups = ['All', ...new Set(subjects.flatMap((subject) => subject.groups || []))];
             const filteredSubjects = subjects.filter((subject) => {
-                const matchesGroup = activeGroup === 'All' || subject.group === activeGroup;
+                const matchesGroup = activeGroup === 'All' || (subject.groups || []).includes(activeGroup);
                 const matchesQuery =
                     !normalizedQuery ||
                     subject.title.toLowerCase().includes(normalizedQuery) ||
@@ -374,7 +387,7 @@ export const landingComponents = `
                             <span>Showing</span>
                             <span>{filteredSubjects.length} subjects</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-4">
                             {filteredSubjects.map((subject) => {
                                 const thumbnail = thumbnailMap[subject.subjectKey];
                                 return (
