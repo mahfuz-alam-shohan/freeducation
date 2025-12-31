@@ -435,13 +435,10 @@ export const dashboardComponents = `
                                 key={item.id}
                                 className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
                             >
-                                <button
-                                    onClick={() => onSelectItem(item)}
-                                    className="flex flex-col text-left hover:text-gray-900 transition"
-                                >
+                                <div className="flex flex-col text-left">
                                     <span>{item.name}</span>
                                     <span className="text-xs text-gray-500 mt-1">{item.type}</span>
-                                </button>
+                                </div>
                                 <div className="flex items-center gap-2 text-xs font-semibold">
                                     <button
                                         onClick={() => {
@@ -465,7 +462,12 @@ export const dashboardComponents = `
                                     >
                                         Delete
                                     </button>
-                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
+                                    <button
+                                        onClick={() => onSelectItem(item)}
+                                        className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
+                                    >
+                                        Open
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -572,12 +574,7 @@ export const dashboardComponents = `
                                 key={item}
                                 className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
                             >
-                                <button
-                                    onClick={() => onSelectItem(item)}
-                                    className="hover:text-gray-900 transition"
-                                >
-                                    {item}
-                                </button>
+                                <span>{item}</span>
                                 <div className="flex items-center gap-2 text-xs font-semibold">
                                     <button
                                         onClick={() => {
@@ -600,7 +597,12 @@ export const dashboardComponents = `
                                     >
                                         Delete
                                     </button>
-                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
+                                    <button
+                                        onClick={() => onSelectItem(item)}
+                                        className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
+                                    >
+                                        Open
+                                    </button>
                                 </div>
                             </div>
                         ))}
