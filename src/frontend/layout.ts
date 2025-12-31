@@ -25,7 +25,7 @@ export function renderAppHtml(initialView: string) {
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -35,6 +35,7 @@ export function renderAppHtml(initialView: string) {
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
         input, select, textarea { font-size: 16px !important; }
         .font-serif { font-family: 'Playfair Display', serif; }
+        .font-bangla { font-family: 'Noto Sans Bengali', 'Inter', sans-serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(6px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         .panel-shadow { box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06); }

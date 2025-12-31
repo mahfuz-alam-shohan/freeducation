@@ -14,6 +14,16 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/hsc/humanities", "admin-hsc-humanities"],
   ["/dashboard/hsc/business-studies", "admin-hsc-business-studies"],
   ["/dashboard/settings", "admin-settings"],
+  ["/dashboard/ssc/bangla-1st-paper", "bangla-ssc-1st-paper"],
+  ["/dashboard/hsc/bangla-1st-paper", "bangla-hsc-1st-paper"],
+  ["/dashboard/ssc/bangla-1st-paper/shahitto", "bangla-ssc-shahitto"],
+  ["/dashboard/hsc/bangla-1st-paper/shahitto", "bangla-hsc-shahitto"],
+  ["/dashboard/ssc/bangla-1st-paper/goddo", "bangla-ssc-goddo"],
+  ["/dashboard/ssc/bangla-1st-paper/poddo", "bangla-ssc-poddo"],
+  ["/dashboard/hsc/bangla-1st-paper/goddo", "bangla-hsc-goddo"],
+  ["/dashboard/hsc/bangla-1st-paper/poddo", "bangla-hsc-poddo"],
+  ["/dashboard/ssc/bangla-1st-paper/item", "bangla-ssc-item"],
+  ["/dashboard/hsc/bangla-1st-paper/item", "bangla-hsc-item"],
 ]);
 
 export function getFrontendHtml(pathname: string) {
@@ -29,6 +39,36 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/ssc/science")) {
       return renderAppHtml("admin-ssc-science");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item")) {
+      return renderAppHtml("bangla-ssc-item");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/item")) {
+      return renderAppHtml("bangla-hsc-item");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/goddo")) {
+      return renderAppHtml("bangla-ssc-goddo");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/poddo")) {
+      return renderAppHtml("bangla-ssc-poddo");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/goddo")) {
+      return renderAppHtml("bangla-hsc-goddo");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/poddo")) {
+      return renderAppHtml("bangla-hsc-poddo");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/shahitto")) {
+      return renderAppHtml("bangla-ssc-shahitto");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/shahitto")) {
+      return renderAppHtml("bangla-hsc-shahitto");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper")) {
+      return renderAppHtml("bangla-ssc-1st-paper");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper")) {
+      return renderAppHtml("bangla-hsc-1st-paper");
     }
     if (pathname.startsWith("/dashboard/ssc/humanities")) {
       return renderAppHtml("admin-ssc-humanities");
