@@ -139,7 +139,7 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title={\`Class ${classLabel}\`}
+                    title={"Class " + classLabel}
                     subtitle="Choose a group to manage materials."
                     activeTab="classes"
                     onNavigate={onNavigate}
