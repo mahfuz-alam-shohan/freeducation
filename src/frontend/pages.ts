@@ -26,6 +26,12 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/hsc/bangla-1st-paper/poddo", "bangla-hsc-poddo"],
   ["/dashboard/ssc/bangla-1st-paper/item", "bangla-ssc-item"],
   ["/dashboard/hsc/bangla-1st-paper/item", "bangla-hsc-item"],
+  ["/dashboard/ssc/bangla-1st-paper/item/srijonshil", "bangla-ssc-srijonshil-types"],
+  ["/dashboard/hsc/bangla-1st-paper/item/srijonshil", "bangla-hsc-srijonshil-types"],
+  ["/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions", "bangla-ssc-srijonshil-questions"],
+  ["/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions", "bangla-hsc-srijonshil-questions"],
+  ["/dashboard/ssc/bangla-1st-paper/item/mcq", "bangla-ssc-mcq"],
+  ["/dashboard/hsc/bangla-1st-paper/item/mcq", "bangla-hsc-mcq"],
 ]);
 
 export function getFrontendHtml(pathname: string) {
@@ -41,6 +47,24 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/ssc/science")) {
       return renderAppHtml("admin-ssc-science");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions")) {
+      return renderAppHtml("bangla-ssc-srijonshil-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions")) {
+      return renderAppHtml("bangla-hsc-srijonshil-questions");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item/srijonshil")) {
+      return renderAppHtml("bangla-ssc-srijonshil-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/item/srijonshil")) {
+      return renderAppHtml("bangla-hsc-srijonshil-types");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item/mcq")) {
+      return renderAppHtml("bangla-ssc-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/item/mcq")) {
+      return renderAppHtml("bangla-hsc-mcq");
     }
     if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item")) {
       return renderAppHtml("bangla-ssc-item");
