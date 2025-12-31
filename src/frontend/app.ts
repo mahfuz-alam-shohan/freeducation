@@ -2,6 +2,8 @@ export const mainApp = `
         function App() {
             const viewToPath = {
                 landing: '/',
+                'ssc-subjects': '/ssc',
+                'hsc-subjects': '/hsc',
                 login: '/login',
                 register: '/register',
                 dashboard: '/dashboard',
@@ -34,6 +36,8 @@ export const mainApp = `
                 'bangla-hsc-mcq': '/dashboard/hsc/bangla-1st-paper/item/mcq'
             };
             const getViewFromPath = (path) => {
+                if (path.startsWith('/ssc')) return 'ssc-subjects';
+                if (path.startsWith('/hsc')) return 'hsc-subjects';
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
                 if (path.startsWith('/dashboard/settings')) return 'admin-settings';
@@ -249,7 +253,13 @@ export const mainApp = `
                 <div className="min-h-screen flex flex-col">
                     <NavBar user={user} hasAdmin={hasAdmin} onNavigate={navigate} onLogout={handleLogout} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
-                        {view === 'landing' && <StudentLanding />}
+                        {view === 'landing' && <StudentLanding onNavigate={navigate} />}
+                        {view === 'ssc-subjects' && (
+                            <SubjectIndexPage classLabel="SSC" subjects={sscSubjects} onNavigate={navigate} />
+                        )}
+                        {view === 'hsc-subjects' && (
+                            <SubjectIndexPage classLabel="HSC" subjects={hscSubjects} onNavigate={navigate} />
+                        )}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
                         {view === 'dashboard' && <AdminDashboard onNavigate={navigate} />}
