@@ -24,10 +24,6 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/ssc/bangla-1st-paper/poddo", "bangla-ssc-poddo"],
   ["/dashboard/hsc/bangla-1st-paper/goddo", "bangla-hsc-goddo"],
   ["/dashboard/hsc/bangla-1st-paper/poddo", "bangla-hsc-poddo"],
-  ["/dashboard/ssc/bangla-1st-paper/natok", "bangla-ssc-natok"],
-  ["/dashboard/hsc/bangla-1st-paper/natok", "bangla-hsc-natok"],
-  ["/dashboard/ssc/bangla-1st-paper/upannyas", "bangla-ssc-upannyas"],
-  ["/dashboard/hsc/bangla-1st-paper/upannyas", "bangla-hsc-upannyas"],
   ["/dashboard/ssc/bangla-1st-paper/item", "bangla-ssc-item"],
   ["/dashboard/hsc/bangla-1st-paper/item", "bangla-hsc-item"],
 ]);
@@ -58,11 +54,11 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/poddo")) {
       return renderAppHtml("bangla-ssc-poddo");
     }
-    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/natok")) {
-      return renderAppHtml("bangla-ssc-natok");
-    }
-    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/upannyas")) {
-      return renderAppHtml("bangla-ssc-upannyas");
+    if (
+      pathname.startsWith("/dashboard/ssc/bangla-1st-paper/natok") ||
+      pathname.startsWith("/dashboard/ssc/bangla-1st-paper/upannyas")
+    ) {
+      return renderAppHtml("bangla-ssc-shohopath");
     }
     if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/goddo")) {
       return renderAppHtml("bangla-hsc-goddo");
@@ -70,11 +66,11 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/poddo")) {
       return renderAppHtml("bangla-hsc-poddo");
     }
-    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/natok")) {
-      return renderAppHtml("bangla-hsc-natok");
-    }
-    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/upannyas")) {
-      return renderAppHtml("bangla-hsc-upannyas");
+    if (
+      pathname.startsWith("/dashboard/hsc/bangla-1st-paper/natok") ||
+      pathname.startsWith("/dashboard/hsc/bangla-1st-paper/upannyas")
+    ) {
+      return renderAppHtml("bangla-hsc-shohopath");
     }
     if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/shahitto")) {
       return renderAppHtml("bangla-ssc-shahitto");

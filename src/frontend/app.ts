@@ -24,10 +24,6 @@ export const mainApp = `
                 'bangla-ssc-poddo': '/dashboard/ssc/bangla-1st-paper/poddo',
                 'bangla-hsc-goddo': '/dashboard/hsc/bangla-1st-paper/goddo',
                 'bangla-hsc-poddo': '/dashboard/hsc/bangla-1st-paper/poddo',
-                'bangla-ssc-natok': '/dashboard/ssc/bangla-1st-paper/natok',
-                'bangla-hsc-natok': '/dashboard/hsc/bangla-1st-paper/natok',
-                'bangla-ssc-upannyas': '/dashboard/ssc/bangla-1st-paper/upannyas',
-                'bangla-hsc-upannyas': '/dashboard/hsc/bangla-1st-paper/upannyas',
                 'bangla-ssc-item': '/dashboard/ssc/bangla-1st-paper/item',
                 'bangla-hsc-item': '/dashboard/hsc/bangla-1st-paper/item'
             };
@@ -39,12 +35,14 @@ export const mainApp = `
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item')) return 'bangla-hsc-item';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/goddo')) return 'bangla-ssc-goddo';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/poddo')) return 'bangla-ssc-poddo';
-                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/natok')) return 'bangla-ssc-natok';
-                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/upannyas')) return 'bangla-ssc-upannyas';
+                if (path.startsWith('/dashboard/ssc/bangla-1st-paper/natok') || path.startsWith('/dashboard/ssc/bangla-1st-paper/upannyas')) {
+                    return 'bangla-ssc-shohopath';
+                }
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/goddo')) return 'bangla-hsc-goddo';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/poddo')) return 'bangla-hsc-poddo';
-                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/natok')) return 'bangla-hsc-natok';
-                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/upannyas')) return 'bangla-hsc-upannyas';
+                if (path.startsWith('/dashboard/hsc/bangla-1st-paper/natok') || path.startsWith('/dashboard/hsc/bangla-1st-paper/upannyas')) {
+                    return 'bangla-hsc-shohopath';
+                }
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/shohopath')) return 'bangla-ssc-shohopath';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/shohopath')) return 'bangla-hsc-shohopath';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/shahitto')) return 'bangla-ssc-shahitto';
@@ -101,22 +99,32 @@ export const mainApp = `
                 'আমি কিংবদন্তির কথা বলছি',
                 'নিমন্ত্রণ'
             ]);
-            const [sscNatokItems, setSscNatokItems] = useState([
-                'সিরাজউদ্দৌলা',
-                'রক্তকরবী'
-            ]);
-            const [sscUpannyasItems, setSscUpannyasItems] = useState([
-                'লালসালু',
-                'পদ্মানদীর মাঝি'
-            ]);
-            const [hscNatokItems, setHscNatokItems] = useState([
-                'সিরাজউদ্দৌলা',
-                'নির্বাসিত'
-            ]);
-            const [hscUpannyasItems, setHscUpannyasItems] = useState([
-                'লালসালু',
-                'কাঁদো নদী কাঁদো'
-            ]);
+            const [sscShohopathItems, setSscShohopathItems] = useState([]);
+            const [hscShohopathItems, setHscShohopathItems] = useState([]);
+
+            const addStringItem = (setItems) => (value) => {
+                setItems((prev) => [...prev, value]);
+            };
+
+            const updateStringItem = (setItems) => (prevValue, nextValue) => {
+                setItems((prev) => prev.map((item) => (item === prevValue ? nextValue : item)));
+            };
+
+            const removeStringItem = (setItems) => (value) => {
+                setItems((prev) => prev.filter((item) => item !== value));
+            };
+
+            const addShohopathItem = (setItems) => (nextItem) => {
+                setItems((prev) => [...prev, nextItem]);
+            };
+
+            const updateShohopathItem = (setItems) => (itemId, updates) => {
+                setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, ...updates } : item)));
+            };
+
+            const removeShohopathItem = (setItems) => (itemId) => {
+                setItems((prev) => prev.filter((item) => item.id !== itemId));
+            };
 
             const syncRoutesFromLocation = () => {
                 const { pathname } = window.location;
@@ -269,12 +277,30 @@ export const mainApp = `
                         {view === 'bangla-ssc-shohopath' && (
                             <BanglaShohopath
                                 classLabel="SSC"
+                                items={sscShohopathItems}
+                                onAddItem={addShohopathItem(setSscShohopathItems)}
+                                onUpdateItem={updateShohopathItem(setSscShohopathItems)}
+                                onRemoveItem={removeShohopathItem(setSscShohopathItems)}
+                                onSelectItem={(item) => {
+                                    setSelectedBanglaItem(item.name);
+                                    setSelectedBanglaCategory(item.type);
+                                    navigate('bangla-ssc-item');
+                                }}
                                 onNavigate={navigate}
                             />
                         )}
                         {view === 'bangla-hsc-shohopath' && (
                             <BanglaShohopath
                                 classLabel="HSC"
+                                items={hscShohopathItems}
+                                onAddItem={addShohopathItem(setHscShohopathItems)}
+                                onUpdateItem={updateShohopathItem(setHscShohopathItems)}
+                                onRemoveItem={removeShohopathItem(setHscShohopathItems)}
+                                onSelectItem={(item) => {
+                                    setSelectedBanglaItem(item.name);
+                                    setSelectedBanglaCategory(item.type);
+                                    navigate('bangla-hsc-item');
+                                }}
                                 onNavigate={navigate}
                             />
                         )}
@@ -283,7 +309,9 @@ export const mainApp = `
                                 classLabel="SSC"
                                 typeLabel="গদ্য"
                                 items={sscGoddoItems}
-                                onAddItem={setSscGoddoItems}
+                                onAddItem={addStringItem(setSscGoddoItems)}
+                                onUpdateItem={updateStringItem(setSscGoddoItems)}
+                                onRemoveItem={removeStringItem(setSscGoddoItems)}
                                 onSelectItem={(item) => {
                                     setSelectedBanglaItem(item);
                                     setSelectedBanglaCategory('গদ্য');
@@ -298,13 +326,16 @@ export const mainApp = `
                                 classLabel="SSC"
                                 typeLabel="পদ্য"
                                 items={sscPoddoItems}
-                                onAddItem={setSscPoddoItems}
+                                onAddItem={addStringItem(setSscPoddoItems)}
+                                onUpdateItem={updateStringItem(setSscPoddoItems)}
+                                onRemoveItem={removeStringItem(setSscPoddoItems)}
                                 onSelectItem={(item) => {
                                     setSelectedBanglaItem(item);
                                     setSelectedBanglaCategory('পদ্য');
                                     navigate('bangla-ssc-item');
                                 }}
                                 onNavigate={navigate}
+                                showAdd
                             />
                         )}
                         {view === 'bangla-hsc-goddo' && (
@@ -312,7 +343,9 @@ export const mainApp = `
                                 classLabel="HSC"
                                 typeLabel="গদ্য"
                                 items={hscGoddoItems}
-                                onAddItem={setHscGoddoItems}
+                                onAddItem={addStringItem(setHscGoddoItems)}
+                                onUpdateItem={updateStringItem(setHscGoddoItems)}
+                                onRemoveItem={removeStringItem(setHscGoddoItems)}
                                 onSelectItem={(item) => {
                                     setSelectedBanglaItem(item);
                                     setSelectedBanglaCategory('গদ্য');
@@ -327,73 +360,16 @@ export const mainApp = `
                                 classLabel="HSC"
                                 typeLabel="পদ্য"
                                 items={hscPoddoItems}
-                                onAddItem={setHscPoddoItems}
+                                onAddItem={addStringItem(setHscPoddoItems)}
+                                onUpdateItem={updateStringItem(setHscPoddoItems)}
+                                onRemoveItem={removeStringItem(setHscPoddoItems)}
                                 onSelectItem={(item) => {
                                     setSelectedBanglaItem(item);
                                     setSelectedBanglaCategory('পদ্য');
                                     navigate('bangla-hsc-item');
                                 }}
                                 onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'bangla-ssc-natok' && (
-                            <BanglaTextList
-                                classLabel="SSC"
-                                typeLabel="নাটক"
-                                items={sscNatokItems}
-                                onAddItem={setSscNatokItems}
-                                onSelectItem={(item) => {
-                                    setSelectedBanglaItem(item);
-                                    setSelectedBanglaCategory('নাটক');
-                                    navigate('bangla-ssc-item');
-                                }}
-                                onNavigate={navigate}
-                                baseRouteOverride="bangla-ssc-shohopath"
-                            />
-                        )}
-                        {view === 'bangla-hsc-natok' && (
-                            <BanglaTextList
-                                classLabel="HSC"
-                                typeLabel="নাটক"
-                                items={hscNatokItems}
-                                onAddItem={setHscNatokItems}
-                                onSelectItem={(item) => {
-                                    setSelectedBanglaItem(item);
-                                    setSelectedBanglaCategory('নাটক');
-                                    navigate('bangla-hsc-item');
-                                }}
-                                onNavigate={navigate}
-                                baseRouteOverride="bangla-hsc-shohopath"
-                            />
-                        )}
-                        {view === 'bangla-ssc-upannyas' && (
-                            <BanglaTextList
-                                classLabel="SSC"
-                                typeLabel="উপন্যাস"
-                                items={sscUpannyasItems}
-                                onAddItem={setSscUpannyasItems}
-                                onSelectItem={(item) => {
-                                    setSelectedBanglaItem(item);
-                                    setSelectedBanglaCategory('উপন্যাস');
-                                    navigate('bangla-ssc-item');
-                                }}
-                                onNavigate={navigate}
-                                baseRouteOverride="bangla-ssc-shohopath"
-                            />
-                        )}
-                        {view === 'bangla-hsc-upannyas' && (
-                            <BanglaTextList
-                                classLabel="HSC"
-                                typeLabel="উপন্যাস"
-                                items={hscUpannyasItems}
-                                onAddItem={setHscUpannyasItems}
-                                onSelectItem={(item) => {
-                                    setSelectedBanglaItem(item);
-                                    setSelectedBanglaCategory('উপন্যাস');
-                                    navigate('bangla-hsc-item');
-                                }}
-                                onNavigate={navigate}
-                                baseRouteOverride="bangla-hsc-shohopath"
+                                showAdd
                             />
                         )}
                         {view === 'bangla-ssc-item' && (
