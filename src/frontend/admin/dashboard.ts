@@ -297,13 +297,13 @@ export const dashboardComponents = `
                             onClick={() => onNavigate(groupRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ফিরে যান
+                            Back
                         </button>
                         <button
                             onClick={() => onNavigate('dashboard')}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ড্যাশবোর্ড
+                            Dashboard
                         </button>
                     </div>
 
@@ -320,7 +320,7 @@ export const dashboardComponents = `
                                     <div className="text-base font-semibold text-gray-900 mt-1">{topic.title}</div>
                                     <p className="text-xs text-gray-500 mt-2">{topic.description}</p>
                                 </div>
-                                <span className={\`text-xs uppercase tracking-[0.2em] \${topic.active ? 'text-blue-600' : 'text-gray-300'}\`}>খুলুন</span>
+                                <span className={\`text-xs uppercase tracking-[0.2em] \${topic.active ? 'text-blue-600' : 'text-gray-300'}\`}>Open</span>
                             </button>
                         ))}
                     </div>
@@ -345,13 +345,13 @@ export const dashboardComponents = `
                             onClick={() => onNavigate(baseRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ফিরে যান
+                            Back
                         </button>
                         <button
                             onClick={() => onNavigate('dashboard')}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ড্যাশবোর্ড
+                            Dashboard
                         </button>
                     </div>
 
@@ -416,13 +416,13 @@ export const dashboardComponents = `
                             onClick={() => onNavigate(baseRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ফিরে যান
+                            Back
                         </button>
                         <button
                             onClick={() => setIsModalOpen(true)}
                             className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                         >
-                            যোগ করুন
+                            Add
                         </button>
                     </div>
 
@@ -452,7 +452,7 @@ export const dashboardComponents = `
                                         }}
                                         className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                                     >
-                                        নাম বদলান
+                                        Rename
                                     </button>
                                     <button
                                         onClick={() => {
@@ -463,9 +463,9 @@ export const dashboardComponents = `
                                         }}
                                         className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
                                     >
-                                        মুছুন
+                                        Delete
                                     </button>
-                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">খুলুন</span>
+                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
                                 </div>
                             </div>
                         ))}
@@ -475,7 +475,7 @@ export const dashboardComponents = `
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
-                                    {editingItem ? 'পাঠের নাম সম্পাদনা করুন' : 'নতুন সহপাঠ যোগ করুন'}
+                                    {editingItem ? 'Rename entry' : 'নতুন সহপাঠ যোগ করুন'}
                                 </h3>
                                 <p className="text-sm text-gray-500 mt-1">পাঠের নাম ও ধরণ নির্বাচন করুন।</p>
                                 <input
@@ -504,13 +504,13 @@ export const dashboardComponents = `
                                         }}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                                     >
-                                        বাতিল
+                                        Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                                     >
-                                        {editingItem ? 'হালনাগাদ করুন' : 'যোগ করুন'}
+                                        {editingItem ? 'Update' : 'Add'}
                                     </button>
                                 </div>
                             </div>
@@ -551,14 +551,14 @@ export const dashboardComponents = `
                             onClick={() => onNavigate(baseRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ফিরে যান
+                            Back
                         </button>
                         {showAdd && (
                             <button
                                 onClick={() => setIsModalOpen(true)}
                                 className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                             >
-                                যোগ করুন
+                                Add
                             </button>
                         )}
                     </div>
@@ -587,7 +587,7 @@ export const dashboardComponents = `
                                         }}
                                         className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                                     >
-                                        নাম বদলান
+                                        Rename
                                     </button>
                                     <button
                                         onClick={() => {
@@ -598,9 +598,9 @@ export const dashboardComponents = `
                                         }}
                                         className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
                                     >
-                                        মুছুন
+                                        Delete
                                     </button>
-                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">খুলুন</span>
+                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
                                 </div>
                             </div>
                         ))}
@@ -610,7 +610,7 @@ export const dashboardComponents = `
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
-                                    {editingItem ? 'পাঠের নাম সম্পাদনা করুন' : 'নতুন পাঠ যোগ করুন'}
+                                    {editingItem ? 'Rename entry' : 'নতুন পাঠ যোগ করুন'}
                                 </h3>
                                 <p className="text-sm text-gray-500 mt-1">পাঠের নাম লিখুন।</p>
                                 <input
@@ -628,13 +628,13 @@ export const dashboardComponents = `
                                         }}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                                     >
-                                        বাতিল
+                                        Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                                     >
-                                        {editingItem ? 'হালনাগাদ করুন' : 'যোগ করুন'}
+                                        {editingItem ? 'Update' : 'Add'}
                                     </button>
                                 </div>
                             </div>
@@ -672,13 +672,13 @@ export const dashboardComponents = `
                             onClick={() => onNavigate(categoryRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            ফিরে যান
+                            Back
                         </button>
                         <button
                             onClick={() => onNavigate(baseRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
-                            বিষয়সমূহ
+                            Subjects
                         </button>
                     </div>
 
