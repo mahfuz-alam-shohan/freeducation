@@ -455,7 +455,7 @@ export const studentComponents = `
                                     {activeTopic.content || "No notes available."}
                                 </div>
                             </div>
-                            <div className="border-t border-gray-100 pt-8">
+                            <div className="border-t border-gray-100 pt-8 qa-container">
                                 <InteractiveQuestions topicId={activeTopic.id} chapterId={chapterId} subjectId={subjectId} />
                             </div>
                         </div>
@@ -468,6 +468,7 @@ export const studentComponents = `
             const [questions, setQuestions] = useState([]);
             const [selectedType, setSelectedType] = useState(null);
             const [cqFilter, setCqFilter] = useState('full');
+            const [showAnswers, setShowAnswers] = useState(false);
 
             useEffect(() => {
                 studentApi.get(\`/api/questions?topic_id=\${topicId}&chapter_id=\${chapterId}&subject_id=\${subjectId}&level=all\`).then(setQuestions);
@@ -475,6 +476,7 @@ export const studentComponents = `
             useEffect(() => {
                 setSelectedType(null);
                 setCqFilter('full');
+                setShowAnswers(false);
             }, [topicId, chapterId, subjectId]);
 
             if (questions.length === 0) return null;
@@ -515,14 +517,14 @@ export const studentComponents = `
                 : combinedCqParts.filter(q => q.metadata?.part === cqFilter);
 
             return (
-                <div className="space-y-8">
+                <div className="space-y-8 qa-container">
                     {!selectedType && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {availableTypes.map(type => (
                                 <button
                                     key={type.key}
                                     onClick={() => setSelectedType(type.key)}
-                                    className="border border-gray-200 rounded-md p-5 bg-white transition flex items-center justify-between"
+                                    className="border border-gray-200 rounded-md p-5 bg-white transition flex items-center justify-between qa-card"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className={"inline-flex items-center justify-center w-11 h-11 rounded-full " + type.color + " text-white text-lg font-bold"}>
@@ -545,24 +547,31 @@ export const studentComponents = `
                                     <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white text-lg font-bold">MCQ</span>
                                     <h3 className="text-lg font-bold text-gray-900">Multiple Choice Questions</h3>
                                 </div>
-                                <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
+                                <div className="flex items-center gap-3">
+                                    <button onClick={() => setShowAnswers((prev) => !prev)} className="text-xs font-semibold text-blue-600 hover:underline">
+                                        {showAnswers ? 'Hide answers' : 'Show answers'}
+                                    </button>
+                                    <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
+                                </div>
                             </div>
                             <div className="space-y-4">
                                 {mcqQuestions.map((q, index) => (
-                                    <div key={q.id} className="border border-gray-200 rounded-md p-5 bg-white space-y-2">
-                                        <div className="flex items-start gap-2 text-sm text-gray-900">
+                                    <div key={q.id} className="border border-gray-200 rounded-md p-5 bg-white space-y-2 qa-card">
+                                        <div className="flex items-start gap-2 text-sm text-gray-900 qa-text">
                                             <span className="font-bold text-gray-700">{index + 1}.</span>
                                             <span className="whitespace-pre-line font-medium">{q.question_text}</span>
                                         </div>
-                                        <div className="grid gap-1 pl-6 text-sm text-gray-700">
+                                        <div className="grid gap-1 pl-6 text-sm text-gray-700 qa-indent">
                                             {(q.options || []).map((opt, idx) => (
-                                                <div key={idx} className="flex items-start gap-2">
+                                                <div key={idx} className="flex items-start gap-2 qa-text">
                                                     <span className="font-bold text-gray-500">{String.fromCharCode(65 + idx)}.</span>
                                                     <span className="whitespace-pre-line">{opt}</span>
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="text-sm text-gray-700 whitespace-pre-line pl-6"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                        {showAnswers && (
+                                            <div className="text-sm text-gray-700 whitespace-pre-line pl-6 qa-answer qa-indent"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -575,7 +584,12 @@ export const studentComponents = `
                                     <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white text-lg font-bold">CQ</span>
                                     <h3 className="text-lg font-bold text-gray-900">Creative Questions</h3>
                                 </div>
-                                <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
+                                <div className="flex items-center gap-3">
+                                    <button onClick={() => setShowAnswers((prev) => !prev)} className="text-xs font-semibold text-blue-600 hover:underline">
+                                        {showAnswers ? 'Hide answers' : 'Show answers'}
+                                    </button>
+                                    <button onClick={() => setSelectedType(null)} className="text-xs font-semibold text-blue-600 hover:underline">Back</button>
+                                </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <button
@@ -597,30 +611,32 @@ export const studentComponents = `
                             {cqFilter === 'full' && (
                                 <div className="space-y-4">
                                     {cqScenarioQuestions.map((q, index) => (
-                                        <div key={q.id} className="border border-gray-200 rounded-md p-5 bg-white space-y-3">
-                                            <div className="flex items-start gap-2 text-sm text-gray-900">
+                                        <div key={q.id} className="border border-gray-200 rounded-md p-5 bg-white space-y-3 qa-card">
+                                            <div className="flex items-start gap-2 text-sm text-gray-900 qa-text">
                                                 <span className="font-bold text-gray-700">{index + 1}.</span>
                                                 <div className="whitespace-pre-line">
                                                     <span className="font-semibold text-gray-800">Ques:</span> {q.question_text}
                                                 </div>
                                             </div>
-                                            <div className="space-y-2 pl-6 text-sm text-gray-700">
+                                            <div className="space-y-2 pl-6 text-sm text-gray-700 qa-indent">
                                                 {(q.options || []).map((opt, idx) => (
-                                                    <div key={opt.id || idx} className="flex items-start gap-2">
+                                                    <div key={opt.id || idx} className="flex items-start gap-2 qa-text">
                                                         <span className="font-bold text-gray-500">{opt.id || partOrder[idx] || idx + 1}.</span>
                                                         <span className="whitespace-pre-line">{opt.text}</span>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="space-y-2 pl-6 text-sm text-gray-700">
-                                                <div className="font-semibold text-gray-800">Answers</div>
-                                                {(q.options || []).map((opt, idx) => (
-                                                    <div key={opt.id || idx} className="flex items-start gap-2">
-                                                        <span className="font-bold text-gray-500">{opt.id || partOrder[idx] || idx + 1}.</span>
-                                                        <span className="whitespace-pre-line">{opt.answer || ''}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            {showAnswers && (
+                                                <div className="space-y-2 pl-6 text-sm text-gray-700 qa-answer qa-indent">
+                                                    <div className="font-semibold text-gray-800">Answers</div>
+                                                    {(q.options || []).map((opt, idx) => (
+                                                        <div key={opt.id || idx} className="flex items-start gap-2 qa-text">
+                                                            <span className="font-bold text-gray-500">{opt.id || partOrder[idx] || idx + 1}.</span>
+                                                            <span className="whitespace-pre-line">{opt.answer || ''}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                     {cqScenarioQuestions.length === 0 && (
@@ -634,9 +650,9 @@ export const studentComponents = `
                                         const isLinked = q.metadata?.linked;
                                         const scenarioText = q.metadata?.scenario;
                                         return (
-                                            <div key={q.id} className="border border-gray-200 rounded-md p-4 bg-white space-y-2">
+                                            <div key={q.id} className="border border-gray-200 rounded-md p-4 bg-white space-y-2 qa-card">
                                                 {isLinked && scenarioText ? (
-                                                    <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                    <div className="flex items-start gap-2 text-sm text-gray-900 qa-text">
                                                         <span className="font-bold text-gray-700">{index + 1}.</span>
                                                         <div className="space-y-1">
                                                             <div className="whitespace-pre-line">
@@ -648,14 +664,16 @@ export const studentComponents = `
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-start gap-2 text-sm text-gray-900">
+                                                    <div className="flex items-start gap-2 text-sm text-gray-900 qa-text">
                                                         <span className="font-bold text-gray-700">{index + 1}.</span>
                                                         <span className="whitespace-pre-line">
                                                             <span className="font-semibold text-gray-800">Ques:</span> {q.question_text}
                                                         </span>
                                                     </div>
                                                 )}
-                                                <div className="text-sm text-gray-700 whitespace-pre-line pl-6"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                                {showAnswers && (
+                                                    <div className="text-sm text-gray-700 whitespace-pre-line pl-6 qa-answer qa-indent"><span className="font-semibold">Ans:</span> {q.answer || ''}</div>
+                                                )}
                                             </div>
                                         );
                                     })}
