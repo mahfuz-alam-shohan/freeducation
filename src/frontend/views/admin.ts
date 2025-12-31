@@ -645,6 +645,21 @@ export const adminComponents = `
                 }
             };
 
+            const addBulkQuestions = async (questions, metadata) => {
+                const payload = topic.isSubject
+                    ? { questions, metadata, topic_id: null, subject_id: topic.realId, type: 'MCQ' }
+                    : topic.isChapter
+                        ? { questions, metadata, topic_id: null, chapter_id: topic.realId, type: 'MCQ' }
+                        : { questions, metadata, topic_id: topic.id, type: 'MCQ' };
+                try {
+                    await adminApi.post('/api/questions/bulk', payload);
+                    setIsQModalOpen(false);
+                    await loadQs();
+                } catch (error) {
+                    alert(error?.message || 'Unable to upload questions. Please try again.');
+                }
+            };
+
             const updateQuestion = async (data) => {
                 await adminApi.put('/api/questions', data);
                 setEditingQuestion(null);
@@ -830,7 +845,7 @@ export const adminComponents = `
                             </div>
                         </div>
                     )}
-                    {isQModalOpen && <CreateCQModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} allChapters={chapters} defaultChapterId={defaultChapterId} defaultTopicId={defaultTopicId} />}
+                    {isQModalOpen && <CreateCQModal onClose={() => setIsQModalOpen(false)} onSave={addQuestion} onBulkUpload={addBulkQuestions} allChapters={chapters} defaultChapterId={defaultChapterId} defaultTopicId={defaultTopicId} />}
                     {editingQuestion && <EditQuestionModal question={editingQuestion} onClose={() => setEditingQuestion(null)} onSave={updateQuestion} allChapters={chapters} />}
                 </div>
             );
@@ -996,7 +1011,7 @@ export const adminComponents = `
             );
         }
 
-        function CreateCQModal({ onClose, onSave, allChapters, defaultChapterId, defaultTopicId }) {
+        function CreateCQModal({ onClose, onSave, onBulkUpload, allChapters, defaultChapterId, defaultTopicId }) {
             const [mode, setMode] = useState('full'); // full, single, written, mcq
             const [scenario, setScenario] = useState('');
             const [board, setBoard] = useState('');
@@ -1027,8 +1042,74 @@ export const adminComponents = `
             const [mcqQuestion, setMcqQuestion] = useState('');
             const [mcqOptions, setMcqOptions] = useState(['', '', '', '']);
             const [mcqAnswer, setMcqAnswer] = useState('');
+            const [mcqUploadFile, setMcqUploadFile] = useState(null);
+            const [isBulkUploading, setIsBulkUploading] = useState(false);
 
             const [topicsMap, setTopicsMap] = useState({});
+
+            const mcqBulkExample = [
+                {
+                    question_text: "What is the capital of Bangladesh?",
+                    options: ["Dhaka", "Chittagong", "Khulna", "Rajshahi"],
+                    answer: "Dhaka",
+                    metadata: { board: "Dhaka", year: "2024", school: "Ideal School" }
+                },
+                {
+                    question_text: "Which planet is known as the Red Planet?",
+                    options: ["Earth", "Mars", "Jupiter", "Saturn"],
+                    answer: "Mars",
+                    metadata: { board: "Dhaka", year: "2024", school: "Ideal School" }
+                },
+                {
+                    question_text: "2 + 2 = ?",
+                    options: ["3", "4", "5", "6"],
+                    answer: "4",
+                    metadata: { board: "Dhaka", year: "2024", school: "Ideal School" }
+                }
+            ];
+
+            const downloadMcqExample = () => {
+                const blob = new Blob([JSON.stringify(mcqBulkExample, null, 2)], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'mcq-upload-example.json';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            };
+
+            const handleBulkFileChange = (event) => {
+                const file = event.target.files?.[0];
+                setMcqUploadFile(file || null);
+            };
+
+            const handleBulkUpload = async () => {
+                if (!mcqUploadFile) {
+                    alert('Please choose a JSON file to upload.');
+                    return;
+                }
+                setIsBulkUploading(true);
+                try {
+                    const text = await mcqUploadFile.text();
+                    const parsed = JSON.parse(text);
+                    const questions = Array.isArray(parsed) ? parsed : parsed?.questions;
+                    if (!Array.isArray(questions) || questions.length === 0) {
+                        alert('Invalid JSON. Expected an array of questions.');
+                        return;
+                    }
+                    const invalid = questions.find((q) => !q?.question_text || !Array.isArray(q.options) || q.options.length < 2);
+                    if (invalid) {
+                        alert('Each question must include question_text and at least 2 options.');
+                        return;
+                    }
+                    const baseMetadata = { board, year, school };
+                    await onBulkUpload(questions, baseMetadata);
+                    setMcqUploadFile(null);
+                } catch (error) {
+                    alert(error?.message || 'Unable to read JSON file.');
+                } finally {
+                    setIsBulkUploading(false);
+                }
+            };
 
             useEffect(() => {
                 const loadDefaultTopics = async () => {
@@ -1165,6 +1246,20 @@ export const adminComponents = `
                                             </div>
                                         ))}
                                         <button onClick={addMcqOption} className="text-xs font-bold text-blue-600 hover:underline"><i className="fas fa-plus mr-1"></i>Add option</button>
+                                    </div>
+                                    <div className="border-t border-gray-200 pt-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-bold uppercase text-gray-500">Bulk upload (JSON)</span>
+                                            <button type="button" onClick={downloadMcqExample} className="text-xs text-blue-600 font-bold hover:underline">Download example file</button>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mb-3">Upload a JSON array of MCQ questions with options and answers. The example includes multiple questions.</p>
+                                        <div className="flex items-center gap-3">
+                                            <input type="file" accept="application/json" onChange={handleBulkFileChange} className="text-xs" />
+                                            <button type="button" onClick={handleBulkUpload} disabled={!mcqUploadFile || isBulkUploading} className="px-3 py-1 text-xs bg-emerald-600 text-white font-bold disabled:opacity-50">
+                                                {isBulkUploading ? 'Uploading...' : 'Upload JSON'}
+                                            </button>
+                                        </div>
+                                        {mcqUploadFile && <div className="text-[11px] text-gray-500 mt-2">Selected: {mcqUploadFile.name}</div>}
                                     </div>
                                 </div>
                             )}
