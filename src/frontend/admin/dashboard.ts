@@ -377,19 +377,41 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaShohopath = ({ classLabel, onNavigate }) => {
+        const BanglaShohopath = ({ classLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
-            const natokRoute = classLabel === 'SSC' ? 'bangla-ssc-natok' : 'bangla-hsc-natok';
-            const upannyasRoute = classLabel === 'SSC' ? 'bangla-ssc-upannyas' : 'bangla-hsc-upannyas';
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [newItemName, setNewItemName] = useState('');
+            const [newItemType, setNewItemType] = useState('নাটক');
+            const [editingItem, setEditingItem] = useState(null);
+            const typeOptions = ['নাটক', 'উপন্যাস'];
+
+            const resetForm = () => {
+                setNewItemName('');
+                setNewItemType('নাটক');
+                setEditingItem(null);
+            };
+
+            const handleSave = () => {
+                const trimmed = newItemName.trim();
+                if (!trimmed) return;
+                if (editingItem) {
+                    onUpdateItem(editingItem.id, { name: trimmed, type: newItemType });
+                } else {
+                    const nextId = \`\${Date.now()}-\${Math.random().toString(16).slice(2)}\`;
+                    onAddItem({ id: nextId, name: trimmed, type: newItemType });
+                }
+                resetForm();
+                setIsModalOpen(false);
+            };
 
             return (
                 <AdminShell
                     title="সহপাঠ"
-                    subtitle="নাটক ও উপন্যাসের পাঠ নির্বাচন করুন।"
+                    subtitle="নাটক ও উপন্যাসের পাঠ যোগ করুন।"
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap gap-3 justify-between items-center">
                         <button
                             onClick={() => onNavigate(baseRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
@@ -397,47 +419,123 @@ export const dashboardComponents = `
                             Back
                         </button>
                         <button
-                            onClick={() => onNavigate('dashboard')}
-                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                         >
-                            Dashboard
+                            Add
                         </button>
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2 font-bangla">
-                        <button
-                            onClick={() => onNavigate(natokRoute)}
-                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"
-                        >
-                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
-                            <div className="text-lg font-semibold text-gray-900">নাটক</div>
-                            <p className="text-sm text-gray-500 mt-2">নাটকের পাঠ তালিকা দেখুন।</p>
-                            <div className="mt-3 text-xs uppercase tracking-[0.2em] text-blue-600">Open</div>
-                        </button>
-                        <button
-                            onClick={() => onNavigate(upannyasRoute)}
-                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"
-                        >
-                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
-                            <div className="text-lg font-semibold text-gray-900">উপন্যাস</div>
-                            <p className="text-sm text-gray-500 mt-2">উপন্যাসের পাঠ তালিকা দেখুন।</p>
-                            <div className="mt-3 text-xs uppercase tracking-[0.2em] text-blue-600">Open</div>
-                        </button>
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {items.length === 0 && (
+                            <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো সহপাঠ যোগ করা হয়নি।</div>
+                        )}
+                        {items.map((item) => (
+                            <div
+                                key={item.id}
+                                className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
+                            >
+                                <button
+                                    onClick={() => onSelectItem(item)}
+                                    className="flex flex-col text-left hover:text-gray-900 transition"
+                                >
+                                    <span>{item.name}</span>
+                                    <span className="text-xs text-gray-500 mt-1">{item.type}</span>
+                                </button>
+                                <div className="flex items-center gap-2 text-xs font-semibold">
+                                    <button
+                                        onClick={() => {
+                                            setEditingItem(item);
+                                            setNewItemName(item.name);
+                                            setNewItemType(item.type);
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Rename
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
+                                            if (shouldRemove) {
+                                                onRemoveItem(item.id);
+                                            }
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                    >
+                                        Delete
+                                    </button>
+                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingItem ? 'Rename entry' : 'নতুন সহপাঠ যোগ করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">পাঠের নাম ও ধরণ নির্বাচন করুন।</p>
+                                <input
+                                    value={newItemName}
+                                    onChange={(event) => setNewItemName(event.target.value)}
+                                    placeholder="উদাহরণ: সিরাজউদ্দৌলা"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <div className="mt-4">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">ধরণ</label>
+                                    <select
+                                        value={newItemType}
+                                        onChange={(event) => setNewItemType(event.target.value)}
+                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    >
+                                        {typeOptions.map((option) => (
+                                            <option key={option} value={option}>{option}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        {editingItem ? 'Update' : 'Add'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </AdminShell>
             );
         };
 
-        const BanglaTextList = ({ classLabel, typeLabel, items, onAddItem, onSelectItem, onNavigate, showAdd = false, baseRouteOverride }) => {
+        const BanglaTextList = ({ classLabel, typeLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate, showAdd = false, baseRouteOverride }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [newItem, setNewItem] = useState('');
+            const [editingItem, setEditingItem] = useState(null);
             const baseRoute = baseRouteOverride || (classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto');
 
-            const handleAdd = () => {
+            const handleSave = () => {
                 const trimmed = newItem.trim();
                 if (!trimmed) return;
-                onAddItem((prev) => [...prev, trimmed]);
+                if (editingItem) {
+                    onUpdateItem(editingItem, trimmed);
+                } else {
+                    onAddItem(trimmed);
+                }
                 setNewItem('');
+                setEditingItem(null);
                 setIsModalOpen(false);
             };
 
@@ -467,24 +565,53 @@ export const dashboardComponents = `
 
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
                         {items.length === 0 && (
-                            <div className="px-5 py-4 text-sm text-gray-400">কোনো পাঠ যোগ করা হয়নি।</div>
+                            <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো পাঠ যোগ করা হয়নি।</div>
                         )}
                         {items.map((item) => (
-                            <button
+                            <div
                                 key={item}
-                                onClick={() => onSelectItem(item)}
-                                className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                                className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
                             >
-                                <span>{item}</span>
-                                <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
-                            </button>
+                                <button
+                                    onClick={() => onSelectItem(item)}
+                                    className="hover:text-gray-900 transition"
+                                >
+                                    {item}
+                                </button>
+                                <div className="flex items-center gap-2 text-xs font-semibold">
+                                    <button
+                                        onClick={() => {
+                                            setEditingItem(item);
+                                            setNewItem(item);
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Rename
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
+                                            if (shouldRemove) {
+                                                onRemoveItem(item);
+                                            }
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                    >
+                                        Delete
+                                    </button>
+                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
+                                </div>
+                            </div>
                         ))}
                     </div>
 
                     {isModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
-                                <h3 className="text-lg font-semibold text-gray-900">নতুন পাঠ যোগ করুন</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingItem ? 'Rename entry' : 'নতুন পাঠ যোগ করুন'}
+                                </h3>
                                 <p className="text-sm text-gray-500 mt-1">পাঠের নাম লিখুন।</p>
                                 <input
                                     value={newItem}
@@ -497,16 +624,17 @@ export const dashboardComponents = `
                                         onClick={() => {
                                             setIsModalOpen(false);
                                             setNewItem('');
+                                            setEditingItem(null);
                                         }}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                                     >
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={handleAdd}
+                                        onClick={handleSave}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                                     >
-                                        Add
+                                        {editingItem ? 'Update' : 'Add'}
                                     </button>
                                 </div>
                             </div>
@@ -521,18 +649,14 @@ export const dashboardComponents = `
             const categoryRoute = classLabel === 'SSC'
                 ? (categoryName === 'পদ্য'
                     ? 'bangla-ssc-poddo'
-                    : categoryName === 'নাটক'
-                        ? 'bangla-ssc-natok'
-                        : categoryName === 'উপন্যাস'
-                            ? 'bangla-ssc-upannyas'
-                            : 'bangla-ssc-goddo')
+                    : categoryName === 'নাটক' || categoryName === 'উপন্যাস'
+                        ? 'bangla-ssc-shohopath'
+                        : 'bangla-ssc-goddo')
                 : (categoryName === 'পদ্য'
                     ? 'bangla-hsc-poddo'
-                    : categoryName === 'নাটক'
-                        ? 'bangla-hsc-natok'
-                        : categoryName === 'উপন্যাস'
-                            ? 'bangla-hsc-upannyas'
-                            : 'bangla-hsc-goddo');
+                    : categoryName === 'নাটক' || categoryName === 'উপন্যাস'
+                        ? 'bangla-hsc-shohopath'
+                        : 'bangla-hsc-goddo');
 
             const optionList = ['সৃজনশীল', 'বহুনির্বাচনী'];
 
