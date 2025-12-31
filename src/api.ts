@@ -23,6 +23,12 @@ const inferFontFormat = (contentType: string | null, fileName: string | null) =>
   return "truetype";
 };
 
+const getAuthPayload = async (request: Request, env: Env) => {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  return await verifyToken(authHeader.split(" ")[1], env.JWT_SECRET || "default");
+};
+
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -146,6 +152,27 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (!authHeader || !authHeader.startsWith("Bearer ")) return Response.json({ user: null }, { headers: corsHeaders });
         const payload = await verifyToken(authHeader.split(" ")[1], env.JWT_SECRET || "default");
         return Response.json({ user: payload ? { username: payload.username } : null }, { headers: corsHeaders });
+      }
+
+      // 3. CLASSES
+      if (path === "/api/classes" && request.method === "GET") {
+        const payload = await getAuthPayload(request, env);
+        if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: corsHeaders });
+        const result = await env.DB.prepare("SELECT id, name, created_at FROM classes ORDER BY created_at DESC").all();
+        return Response.json({ success: true, classes: result.results || [] }, { headers: corsHeaders });
+      }
+
+      if (path === "/api/classes" && request.method === "POST") {
+        const payload = await getAuthPayload(request, env);
+        if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: corsHeaders });
+        const { name } = await request.json() as any;
+        const trimmedName = String(name || "").trim();
+        if (!trimmedName) {
+          return Response.json({ success: false, error: "Class name is required" }, { status: 400, headers: corsHeaders });
+        }
+        await env.DB.prepare("INSERT INTO classes (name) VALUES (?)").bind(trimmedName).run();
+        const created = await env.DB.prepare("SELECT id, name, created_at FROM classes WHERE name = ?").bind(trimmedName).first();
+        return Response.json({ success: true, class: created }, { headers: corsHeaders });
       }
   } catch (e: any) {
       return Response.json({ success: false, error: e.message || "Internal Server Error" }, { status: 500, headers: corsHeaders });

@@ -1,17 +1,15 @@
 export const mainApp = `
-        const LandingPage = () => (
-            <div className="flex-1"></div>
-        );
-
         function App() {
             const viewToPath = {
                 landing: '/',
                 login: '/login',
-                register: '/register'
+                register: '/register',
+                dashboard: '/dashboard'
             };
             const getViewFromPath = (path) => {
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
+                if (path.startsWith('/dashboard')) return 'dashboard';
                 return 'landing';
             };
             const initialView = window.__INITIAL_VIEW || getViewFromPath(window.location.pathname);
@@ -77,6 +75,9 @@ export const mainApp = `
                     if (!data.hasAdmin && view === 'login') {
                         navigate('register', { replace: true });
                     }
+                    if (!token && view === 'dashboard') {
+                        navigate('landing', { replace: true });
+                    }
                     setIsLoading(false);
                 };
                 initSystem();
@@ -92,7 +93,7 @@ export const mainApp = `
                     // SAVE TOKEN!
                     localStorage.setItem('auth_token', data.token);
                     setUser({ username: data.username });
-                    navigate('landing');
+                    navigate('dashboard');
                 } else {
                     alert(data.error);
                 }
@@ -125,9 +126,10 @@ export const mainApp = `
                 <div className="min-h-screen flex flex-col">
                     <NavBar user={user} hasAdmin={hasAdmin} onNavigate={navigate} onLogout={handleLogout} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
-                        {view === 'landing' && <LandingPage />}
+                        {view === 'landing' && <StudentLanding />}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
+                        {view === 'dashboard' && <AdminDashboard />}
                     </main>
                 </div>
             );
