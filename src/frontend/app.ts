@@ -4,15 +4,11 @@ export const mainApp = `
                 landing: '/',
                 login: '/login',
                 register: '/register',
-                dashboard: '/dashboard',
-                'admin-groups-ssc': '/dashboard/ssc',
-                'admin-groups-hsc': '/dashboard/hsc'
+                dashboard: '/dashboard'
             };
             const getViewFromPath = (path) => {
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
-                if (path.startsWith('/dashboard/ssc')) return 'admin-groups-ssc';
-                if (path.startsWith('/dashboard/hsc')) return 'admin-groups-hsc';
                 if (path.startsWith('/dashboard')) return 'dashboard';
                 return 'landing';
             };
@@ -79,7 +75,7 @@ export const mainApp = `
                     if (!data.hasAdmin && view === 'login') {
                         navigate('register', { replace: true });
                     }
-                    if (!token && (view === 'dashboard' || view.startsWith('admin-groups'))) {
+                    if (!token && view === 'dashboard') {
                         navigate('landing', { replace: true });
                     }
                     setIsLoading(false);
@@ -133,13 +129,7 @@ export const mainApp = `
                         {view === 'landing' && <StudentLanding />}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
-                        {view === 'dashboard' && <AdminDashboard onNavigate={navigate} />}
-                        {view === 'admin-groups-ssc' && (
-                            <AdminGroupSelection classLabel="SSC" onNavigate={navigate} />
-                        )}
-                        {view === 'admin-groups-hsc' && (
-                            <AdminGroupSelection classLabel="HSC" onNavigate={navigate} />
-                        )}
+                        {view === 'dashboard' && <AdminDashboard />}
                     </main>
                 </div>
             );
