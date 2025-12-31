@@ -39,7 +39,14 @@ export function renderAppHtml(initialView: string) {
         .glass-panel { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(6px); }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         .panel-shadow { box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06); }
+        .thumbnail-float { animation: thumbnailFloat 9s ease-in-out infinite; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes thumbnailFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @media (prefers-reduced-motion: reduce) {
+            .thumbnail-float {
+                animation: none;
+            }
+        }
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #e2e8f0; }
