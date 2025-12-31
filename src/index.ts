@@ -8,7 +8,7 @@
  */
 
 import { handleApiRequest } from "./api";
-import { getHtml } from "./frontend";
+import { getFrontendHtml } from "./frontend/pages";
 import type { Env } from "./types";
 
 // --- WORKER ENTRY POINT ---
@@ -22,8 +22,16 @@ export default {
     const url = new URL(request.url);
 
     // --- FRONTEND SERVING ---
-    return new Response(getHtml(url.pathname), {
-      headers: { "Content-Type": "text/html" },
+    const securityHeaders = {
+      "Content-Type": "text/html",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    };
+
+    return new Response(getFrontendHtml(url.pathname), {
+      headers: securityHeaders,
     });
   },
 };
