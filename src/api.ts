@@ -54,6 +54,13 @@ const getAuthPayload = async (request: Request, env: Env) => {
   return await verifyToken(authHeader.split(" ")[1], secret);
 };
 
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+const ensureAdmin = (payload: any | null) => {
+  if (!payload || payload.role !== "admin") return false;
+  return true;
+};
+
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -228,15 +235,20 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       }
 
       if (path === "/api/setup-status") {
-        const result = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
-        return Response.json({ hasAdmin: (result?.count as number) > 0 }, { headers: apiHeaders });
+        const result = await env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first();
+        const legacy = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
+        const hasAdmin = (result?.count as number) > 0 || (legacy?.count as number) > 0;
+        return Response.json({ hasAdmin }, { headers: apiHeaders });
       }
 
       // 2. AUTHENTICATION
       if (path === "/api/register-admin" && request.method === "POST") {
         const { username, password } = await request.json() as any;
-        const count = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
-        if ((count?.count as number) > 0) return Response.json({ success: false, error: "User already exists" }, { status: 403, headers: apiHeaders });
+        const count = await env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first();
+        const legacyCount = await env.DB.prepare("SELECT count(*) as count FROM admins").first();
+        if ((count?.count as number) > 0 || (legacyCount?.count as number) > 0) {
+          return Response.json({ success: false, error: "User already exists" }, { status: 403, headers: apiHeaders });
+        }
 
         const cleanedUsername = String(username || "").trim();
         const cleanedPassword = String(password || "");
@@ -250,7 +262,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         const salt = crypto.getRandomValues(new Uint8Array(16));
         const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
         const hash = await hashPassword(cleanedPassword, saltHex);
-        await env.DB.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").bind(cleanedUsername, `${saltHex}:${hash}`).run();
+        const passwordHash = `${saltHex}:${hash}`;
+        await env.DB.batch([
+          env.DB.prepare("INSERT INTO users (username, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)")
+            .bind(cleanedUsername, cleanedUsername, null, passwordHash, "admin"),
+          env.DB.prepare("INSERT INTO admin_permissions (user_id, permissions) VALUES ((SELECT id FROM users WHERE username = ?), ?)")
+            .bind(cleanedUsername, JSON.stringify(["dashboard", "classes", "settings", "thumbnails", "userManagement"])),
+          env.DB.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").bind(cleanedUsername, passwordHash),
+        ]);
         return Response.json({ success: true }, { headers: apiHeaders });
       }
 
@@ -261,16 +280,58 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (!cleanedUsername || !cleanedPassword) {
           return Response.json({ success: false, error: "Username and password are required." }, { status: 400, headers: apiHeaders });
         }
-        const user = await env.DB.prepare("SELECT * FROM admins WHERE username = ?").bind(cleanedUsername).first();
-        if (!user) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: apiHeaders });
+        const normalizedEmail = normalizeEmail(cleanedUsername);
+        let user = await env.DB.prepare("SELECT * FROM users WHERE username = ? OR email = ?").bind(cleanedUsername, normalizedEmail).first();
+        let role = user?.role as string | undefined;
+        let permissions: string[] = [];
+        let assignment: { level: string; subject: string } | null = null;
 
-        const [saltHex, originalHash] = (user.password_hash as string).split(':');
-        const hash = await hashPassword(cleanedPassword, saltHex);
-        if (hash !== originalHash) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: apiHeaders });
+        if (user) {
+          const [saltHex, originalHash] = (user.password_hash as string).split(':');
+          const hash = await hashPassword(cleanedPassword, saltHex);
+          if (hash !== originalHash) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: apiHeaders });
+
+          if (role === "admin") {
+            const row = await env.DB.prepare("SELECT permissions FROM admin_permissions WHERE user_id = ?").bind(user.id).first();
+            permissions = row?.permissions ? JSON.parse(row.permissions as string) : [];
+          }
+          if (role === "teacher") {
+            const row = await env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(user.id).first();
+            assignment = row ? { level: row.level as string, subject: row.subject as string } : null;
+          }
+        } else {
+          const legacy = await env.DB.prepare("SELECT * FROM admins WHERE username = ?").bind(cleanedUsername).first();
+          if (!legacy) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: apiHeaders });
+          user = legacy;
+          role = "admin";
+          const [saltHex, originalHash] = (legacy.password_hash as string).split(':');
+          const hash = await hashPassword(cleanedPassword, saltHex);
+          if (hash !== originalHash) return Response.json({ success: false, error: "Invalid credentials" }, { status: 401, headers: apiHeaders });
+          permissions = ["dashboard", "classes", "settings", "thumbnails", "userManagement"];
+        }
 
         const secret = requireJwtSecret(env);
-        const token = await createToken({ username: user.username, id: user.id }, secret);
-        return Response.json({ success: true, username: user.username, token }, { headers: apiHeaders });
+        const token = await createToken(
+          {
+            username: user.username || user.email || user.name,
+            id: user.id,
+            role,
+            permissions,
+            assignment,
+          },
+          secret
+        );
+        return Response.json(
+          {
+            success: true,
+            username: user.username || user.email || user.name,
+            role,
+            permissions,
+            assignment,
+            token,
+          },
+          { headers: apiHeaders }
+        );
       }
 
       if (path === "/api/me" && request.method === "GET") {
@@ -278,7 +339,147 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (!authHeader || !authHeader.startsWith("Bearer ")) return Response.json({ user: null }, { headers: apiHeaders });
         const secret = requireJwtSecret(env);
         const payload = await verifyToken(authHeader.split(" ")[1], secret);
-        return Response.json({ user: payload ? { username: payload.username } : null }, { headers: apiHeaders });
+        return Response.json(
+          {
+            user: payload
+              ? {
+                  username: payload.username,
+                  role: payload.role,
+                  permissions: payload.permissions || [],
+                  assignment: payload.assignment || null,
+                }
+              : null,
+          },
+          { headers: apiHeaders }
+        );
+      }
+
+      if (path === "/api/users" && request.method === "GET") {
+        const payload = await getAuthPayload(request, env);
+        if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        const admins = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'admin' ORDER BY created_at DESC").all();
+        const teachers = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'teacher' ORDER BY created_at DESC").all();
+        const adminPermissions = await env.DB.prepare("SELECT user_id, permissions FROM admin_permissions").all();
+        const teacherAssignments = await env.DB.prepare("SELECT user_id, level, subject FROM teacher_assignments").all();
+
+        const permissionsMap = new Map<number, string[]>();
+        (adminPermissions.results || []).forEach((row: any) => {
+          if (row?.user_id) {
+            permissionsMap.set(row.user_id, row.permissions ? JSON.parse(row.permissions as string) : []);
+          }
+        });
+        const assignmentMap = new Map<number, { level: string; subject: string }>();
+        (teacherAssignments.results || []).forEach((row: any) => {
+          if (row?.user_id) {
+            assignmentMap.set(row.user_id, { level: row.level as string, subject: row.subject as string });
+          }
+        });
+
+        return Response.json(
+          {
+            success: true,
+            admins: (admins.results || []).map((row: any) => ({
+              id: row.id,
+              name: row.name,
+              email: row.email,
+              permissions: permissionsMap.get(row.id) || [],
+            })),
+            teachers: (teachers.results || []).map((row: any) => ({
+              id: row.id,
+              name: row.name,
+              email: row.email,
+              level: assignmentMap.get(row.id)?.level || "",
+              subject: assignmentMap.get(row.id)?.subject || "",
+            })),
+          },
+          { headers: apiHeaders }
+        );
+      }
+
+      if (path === "/api/users" && request.method === "POST") {
+        const payload = await getAuthPayload(request, env);
+        if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        const body = await request.json() as any;
+        const role = String(body.role || "").trim().toLowerCase();
+        const name = String(body.name || "").trim();
+        const email = normalizeEmail(String(body.email || ""));
+        const password = String(body.password || "");
+        if (!name || !email || !password) {
+          return Response.json({ success: false, error: "Name, email, and password are required." }, { status: 400, headers: apiHeaders });
+        }
+        if (password.length < 8) {
+          return Response.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400, headers: apiHeaders });
+        }
+        if (!["admin", "teacher"].includes(role)) {
+          return Response.json({ success: false, error: "Invalid role." }, { status: 400, headers: apiHeaders });
+        }
+
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+        const hash = await hashPassword(password, saltHex);
+        const passwordHash = `${saltHex}:${hash}`;
+        const username = email;
+
+        await env.DB.prepare(
+          "INSERT INTO users (username, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)"
+        ).bind(username, name, email, passwordHash, role).run();
+
+        const inserted = await env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
+        if (!inserted?.id) {
+          return Response.json({ success: false, error: "User creation failed." }, { status: 500, headers: apiHeaders });
+        }
+
+        if (role === "teacher") {
+          const level = String(body.level || "").trim();
+          const subject = String(body.subject || "").trim();
+          if (!level || !subject) {
+            return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
+          }
+          await env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?)")
+            .bind(inserted.id, level, subject)
+            .run();
+        }
+
+        if (role === "admin") {
+          const rawPermissions = body.permissions || [];
+          const permissions = Array.isArray(rawPermissions)
+            ? rawPermissions.map((entry: any) => String(entry))
+            : Object.entries(rawPermissions)
+                .filter(([, enabled]) => Boolean(enabled))
+                .map(([key]) => key);
+          await env.DB.prepare("INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)")
+            .bind(inserted.id, JSON.stringify(permissions))
+            .run();
+        }
+
+        return Response.json({ success: true }, { headers: apiHeaders });
+      }
+
+      if (path === "/api/content" && request.method === "GET") {
+        const row = await env.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind("app-content").first();
+        let content = {};
+        if (row?.data) {
+          try {
+            content = JSON.parse(row.data as string);
+          } catch {
+            content = {};
+          }
+        }
+        return Response.json({ success: true, content }, { headers: apiHeaders });
+      }
+
+      if (path === "/api/content" && request.method === "PUT") {
+        const payload = await getAuthPayload(request, env);
+        if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        const body = await request.json().catch(() => ({}));
+        if (!body || typeof body !== "object") {
+          return Response.json({ success: false, error: "Invalid content payload." }, { status: 400, headers: apiHeaders });
+        }
+        await env.DB.prepare(
+          "INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) " +
+            "ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP"
+        ).bind("app-content", JSON.stringify(body)).run();
+        return Response.json({ success: true }, { headers: apiHeaders });
       }
 
       // 3. CLASSES
@@ -329,6 +530,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         await env.DB.batch([
           env.DB.prepare("DELETE FROM fonts"),
           env.DB.prepare("DELETE FROM subject_thumbnails"),
+          env.DB.prepare("DELETE FROM content_store WHERE key = 'app-content'"),
           env.DB.prepare("DELETE FROM class_groups"),
           env.DB.prepare("DELETE FROM classes"),
         ]);

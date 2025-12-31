@@ -116,9 +116,36 @@ export const mainApp = `
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
             const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
             const [mcqQuestions, setMcqQuestions] = useState({});
+            const [notesByItem, setNotesByItem] = useState({});
+            const [contentLoaded, setContentLoaded] = useState(false);
 
             const getQuestionKey = (classLabel, categoryName, itemName, extra = '') => {
                 return [classLabel, categoryName || 'general', itemName || 'general', extra].join('-');
+            };
+
+            const defaultContent = {
+                sscGoddoItems: [],
+                sscPoddoItems: [],
+                hscGoddoItems: [],
+                hscPoddoItems: [],
+                sscShohopathItems: [],
+                hscShohopathItems: [],
+                srijonshilQuestions: {},
+                mcqQuestions: {},
+                notesByItem: {}
+            };
+
+            const applyContentState = (content) => {
+                const merged = { ...defaultContent, ...(content || {}) };
+                setSscGoddoItems(Array.isArray(merged.sscGoddoItems) ? merged.sscGoddoItems : []);
+                setSscPoddoItems(Array.isArray(merged.sscPoddoItems) ? merged.sscPoddoItems : []);
+                setHscGoddoItems(Array.isArray(merged.hscGoddoItems) ? merged.hscGoddoItems : []);
+                setHscPoddoItems(Array.isArray(merged.hscPoddoItems) ? merged.hscPoddoItems : []);
+                setSscShohopathItems(Array.isArray(merged.sscShohopathItems) ? merged.sscShohopathItems : []);
+                setHscShohopathItems(Array.isArray(merged.hscShohopathItems) ? merged.hscShohopathItems : []);
+                setSrijonshilQuestions(merged.srijonshilQuestions || {});
+                setMcqQuestions(merged.mcqQuestions || {});
+                setNotesByItem(merged.notesByItem || {});
             };
 
             const getBanglaTopics = (classLabel) => [
@@ -260,6 +287,71 @@ export const mainApp = `
                 initSystem();
             }, []);
 
+            useEffect(() => {
+                const loadContent = async () => {
+                    try {
+                        const response = await fetch('/api/content');
+                        const data = await response.json();
+                        if (data.success && data.content) {
+                            applyContentState(data.content);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to load content', e);
+                    } finally {
+                        setContentLoaded(true);
+                    }
+                };
+                loadContent();
+            }, []);
+
+            useEffect(() => {
+                if (!contentLoaded) return;
+                if (!user || user.role !== 'admin') return;
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+
+                const payload = {
+                    sscGoddoItems,
+                    sscPoddoItems,
+                    hscGoddoItems,
+                    hscPoddoItems,
+                    sscShohopathItems,
+                    hscShohopathItems,
+                    srijonshilQuestions,
+                    mcqQuestions,
+                    notesByItem
+                };
+
+                const timeout = setTimeout(async () => {
+                    try {
+                        await fetch('/api/content', {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                    } catch (e) {
+                        console.warn('Failed to save content', e);
+                    }
+                }, 600);
+
+                return () => clearTimeout(timeout);
+            }, [
+                contentLoaded,
+                user,
+                sscGoddoItems,
+                sscPoddoItems,
+                hscGoddoItems,
+                hscPoddoItems,
+                sscShohopathItems,
+                hscShohopathItems,
+                srijonshilQuestions,
+                mcqQuestions,
+                notesByItem
+            ]);
+
             const handleLogin = async (username, password) => {
                 const res = await fetch('/api/login', {
                     method: 'POST',
@@ -269,7 +361,12 @@ export const mainApp = `
                 if (data.success) {
                     // SAVE TOKEN!
                     localStorage.setItem('auth_token', data.token);
-                    setUser({ username: data.username });
+                    setUser({
+                        username: data.username,
+                        role: data.role,
+                        permissions: data.permissions || [],
+                        assignment: data.assignment || null
+                    });
                     navigate('dashboard');
                 } else {
                     alert(data.error);
@@ -624,6 +721,8 @@ export const mainApp = `
                                 classLabel="SSC"
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
+                                notesByItem={notesByItem}
+                                onUpdateNotes={setNotesByItem}
                                 onNavigate={navigate}
                             />
                         )}
@@ -632,6 +731,8 @@ export const mainApp = `
                                 classLabel="HSC"
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
+                                notesByItem={notesByItem}
+                                onUpdateNotes={setNotesByItem}
                                 onNavigate={navigate}
                             />
                         )}
