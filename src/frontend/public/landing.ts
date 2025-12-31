@@ -193,14 +193,16 @@ export const landingComponents = `
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
-                    className={`${className} text-left transition-all duration-200 border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:bg-slate-50 ${
-                        isActive ? 'cursor-pointer' : 'opacity-60 cursor-default'
-                    }`}
+                    className={
+                        className +
+                        ' text-left transition-all duration-200 border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:bg-slate-50 ' +
+                        (isActive ? 'cursor-pointer' : 'opacity-60 cursor-default')
+                    }
                     disabled={!isActive}
                 >
                     <div className="flex items-start gap-4">
-                        <div className={`h-11 w-11 rounded-xl ${subject.accent} text-white flex items-center justify-center`}>
-                            <i className={`fa-solid ${subject.icon} text-lg`}></i>
+                        <div className={'h-11 w-11 rounded-xl ' + subject.accent + ' text-white flex items-center justify-center'}>
+                            <i className={'fa-solid ' + subject.icon + ' text-lg'}></i>
                         </div>
                         <div className="flex-1">
                             <div className="text-sm font-semibold text-slate-900">{subject.title}</div>
@@ -232,7 +234,7 @@ export const landingComponents = `
                 <div className="flex gap-4 overflow-x-auto pb-3">
                     {subjects.map((subject) => (
                         <SubjectCard
-                            key={`${subject.group}-${subject.title}`}
+                            key={subject.group + '-' + subject.title}
                             subject={subject}
                             onNavigate={onNavigate}
                             className="flex-shrink-0 w-56 sm:w-64"
@@ -282,11 +284,12 @@ export const landingComponents = `
                                     <button
                                         key={group}
                                         onClick={() => setActiveGroup(group)}
-                                        className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ${
-                                            activeGroup === group
+                                        className={
+                                            'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
+                                            (activeGroup === group
                                                 ? 'border-slate-900 text-slate-900'
-                                                : 'border-slate-200 text-slate-500 hover:border-slate-300'
-                                        }`}
+                                                : 'border-slate-200 text-slate-500 hover:border-slate-300')
+                                        }
                                     >
                                         {group}
                                     </button>
@@ -309,7 +312,7 @@ export const landingComponents = `
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
                             {filteredSubjects.map((subject) => (
                                 <SubjectCard
-                                    key={`${subject.group}-${subject.title}`}
+                                    key={subject.group + '-' + subject.title}
                                     subject={subject}
                                     onNavigate={onNavigate}
                                     className="w-full"
@@ -446,7 +449,7 @@ export const landingComponents = `
             return (
                 <PublicBanglaShell
                     title={itemName || 'পাঠ নির্বাচন করুন'}
-                    subtitle={categoryName ? `বিভাগ: ${categoryName}` : ''}
+                    subtitle={categoryName ? 'বিভাগ: ' + categoryName : ''}
                     onBack={() => onNavigate(categoryRoute)}
                     onNavigate={onNavigate}
                 >
@@ -466,7 +469,7 @@ export const landingComponents = `
                                     ) : (
                                         <div className="mt-4 space-y-4">
                                             {list.map((entry, index) => (
-                                                <div key={`${entry.question}-${index}`} className="space-y-2">
+                                                <div key={entry.question + '-' + index} className="space-y-2">
                                                     <div className="text-sm font-semibold text-slate-800">
                                                         {toBanglaNumber(index + 1)}. {entry.question}
                                                     </div>
@@ -493,19 +496,20 @@ export const landingComponents = `
                         ) : (
                             <div className="grid gap-4">
                                 {mcqList.map((entry, index) => (
-                                    <div key={`${entry.question}-${index}`} className="border border-slate-200 rounded-xl p-5">
+                                    <div key={entry.question + '-' + index} className="border border-slate-200 rounded-xl p-5">
                                         <div className="text-sm font-semibold text-slate-900">
                                             {toBanglaNumber(index + 1)}. {entry.question}
                                         </div>
                                         <div className="mt-3 grid gap-2">
                                             {(entry.options || []).map((option, optionIndex) => (
                                                 <div
-                                                    key={`${entry.question}-${optionIndex}`}
-                                                    className={`text-sm rounded-lg px-3 py-2 border ${
-                                                        optionIndex === entry.answerIndex
+                                                    key={entry.question + '-' + optionIndex}
+                                                    className={
+                                                        'text-sm rounded-lg px-3 py-2 border ' +
+                                                        (optionIndex === entry.answerIndex
                                                             ? 'border-emerald-200 text-emerald-700 bg-emerald-50'
-                                                            : 'border-slate-200 text-slate-600'
-                                                    }`}
+                                                            : 'border-slate-200 text-slate-600')
+                                                    }
                                                 >
                                                     {option}
                                                 </div>
