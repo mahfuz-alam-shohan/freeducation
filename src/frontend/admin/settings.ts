@@ -92,8 +92,8 @@ export const settingsComponents = `
             }
         };
 
-        const makeThumbnailKey = (subject) =>
-            subject
+        const makeThumbnailKey = (subject, classLabel) =>
+            (classLabel + '-' + subject)
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
@@ -103,17 +103,16 @@ export const settingsComponents = `
             Object.entries(adminSubjectGroups).forEach(([classLabel, groupMap]) => {
                 Object.entries(groupMap).forEach(([group, subjects]) => {
                     subjects.forEach((subject) => {
-                        const subjectKey = makeThumbnailKey(subject);
+                        const subjectKey = makeThumbnailKey(subject, classLabel);
                         if (!subjectMap.has(subjectKey)) {
                             subjectMap.set(subjectKey, {
                                 title: subject,
                                 subjectKey,
-                                classLabels: new Set([classLabel]),
+                                classLabel,
                                 groups: new Set([group])
                             });
                         } else {
                             const entry = subjectMap.get(subjectKey);
-                            entry.classLabels.add(classLabel);
                             entry.groups.add(group);
                         }
                     });
@@ -121,7 +120,6 @@ export const settingsComponents = `
             });
             return Array.from(subjectMap.values()).map((subject) => ({
                 ...subject,
-                classLabels: Array.from(subject.classLabels),
                 groups: Array.from(subject.groups)
             }));
         };
@@ -149,7 +147,7 @@ export const settingsComponents = `
                     {showMeta && (
                         <div>
                             <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
-                            <div className="text-xs text-gray-500">{subject.classLabels.join(' & ')}</div>
+                            <div className="text-xs text-gray-500">{subject.classLabel}</div>
                         </div>
                     )}
                 </div>
@@ -231,7 +229,7 @@ export const settingsComponents = `
                                 <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Thumbnail</div>
                                 <div className="text-lg font-semibold text-gray-900">{subject.title}</div>
                                 <div className="text-xs text-gray-500 mt-1">
-                                    {subject.classLabels.join(' & ')}
+                                    {subject.classLabel}
                                 </div>
                             </div>
                             <button
@@ -306,6 +304,7 @@ export const settingsComponents = `
             const [thumbnailMap, setThumbnailMap] = useState({});
             const [statusMessage, setStatusMessage] = useState(null);
             const [activeSubject, setActiveSubject] = useState(null);
+            const [activeClass, setActiveClass] = useState(null);
 
             useEffect(() => {
                 let isActive = true;
@@ -365,34 +364,58 @@ export const settingsComponents = `
                             <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Subjects</div>
                             <h3 className="text-lg font-semibold text-gray-900 mt-2">Subject thumbnails</h3>
                             <p className="text-sm text-gray-500 mt-2">
-                                Select a subject to upload or fine-tune its thumbnail.
+                                Choose the class first, then select a subject to upload or fine-tune its thumbnail.
                             </p>
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {thumbnailSubjects.map((subject) => {
-                                const thumbnail = thumbnailMap[subject.subjectKey];
-                                return (
+                        {!activeClass ? (
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {['SSC', 'HSC'].map((classLabel) => (
                                     <button
-                                        key={subject.subjectKey}
-                                        onClick={() => setActiveSubject(subject)}
-                                        className="border border-gray-200 rounded-xl p-3 text-left hover:border-gray-300 hover:bg-gray-50 transition flex items-center gap-3"
+                                        key={classLabel}
+                                        onClick={() => setActiveClass(classLabel)}
+                                        className="border border-gray-200 rounded-2xl p-5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
                                     >
-                                        <div className="w-14">
-                                            <ThumbnailPreviewCard
-                                                subject={subject}
-                                                thumbnail={thumbnail}
-                                                className="space-y-2"
-                                                showMeta={false}
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
-                                            <div className="text-xs text-gray-500 mt-1">{subject.classLabels.join(' & ')}</div>
-                                        </div>
+                                        <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Class</div>
+                                        <div className="text-lg font-semibold text-gray-900 mt-2">{classLabel}</div>
+                                        <div className="text-sm text-gray-500 mt-1">Upload thumbnails for {classLabel} subjects.</div>
                                     </button>
-                                );
-                            })}
-                        </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <button
+                                    onClick={() => setActiveClass(null)}
+                                    className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 hover:text-gray-700 transition"
+                                >
+                                    Change class
+                                </button>
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    {thumbnailSubjects.filter((subject) => subject.classLabel === activeClass).map((subject) => {
+                                        const thumbnail = thumbnailMap[subject.subjectKey];
+                                        return (
+                                            <button
+                                                key={subject.subjectKey}
+                                                onClick={() => setActiveSubject(subject)}
+                                                className="border border-gray-200 rounded-xl p-3 text-left hover:border-gray-300 hover:bg-gray-50 transition flex items-center gap-3"
+                                            >
+                                                <div className="w-14">
+                                                    <ThumbnailPreviewCard
+                                                        subject={subject}
+                                                        thumbnail={thumbnail}
+                                                        className="space-y-2"
+                                                        showMeta={false}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
+                                                    <div className="text-xs text-gray-500 mt-1">{subject.classLabel}</div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     {activeSubject && (
                         <ThumbnailModal
