@@ -61,13 +61,34 @@ const ensureAdmin = (payload: any | null) => {
   return true;
 };
 
+let dbInitialized = false;
+let dbInitPromise: Promise<void> | null = null;
+
+const ensureDatabaseReady = async (env: Env) => {
+  if (dbInitialized) return;
+  if (!dbInitPromise) {
+    dbInitPromise = initDatabase(env.DB)
+      .then(() => {
+        dbInitialized = true;
+      })
+      .catch((error) => {
+        dbInitPromise = null;
+        throw error;
+      });
+  }
+  await dbInitPromise;
+};
+
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
 
   if (request.method === "OPTIONS") return new Response(null, { headers: apiHeaders });
+  if (!path.startsWith("/api/")) return null;
 
   try {
+      await ensureDatabaseReady(env);
+
       if (path.startsWith("/api/fonts")) {
         await env.DB.prepare(`CREATE TABLE IF NOT EXISTS fonts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
