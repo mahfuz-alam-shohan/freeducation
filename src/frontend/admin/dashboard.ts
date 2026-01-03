@@ -797,7 +797,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2 font-bangla">
+                    <div className="grid card-grid-gap sm:grid-cols-2 font-bangla">
                         {categoryCards.map((card) => {
                             const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, card.thumbnailKey);
                             const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
@@ -1386,7 +1386,7 @@ export const dashboardComponents = `
                         </h2>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid card-grid-gap sm:grid-cols-2">
                         {optionList.map((option) => (
                             <button
                                 key={option.label}
@@ -1514,7 +1514,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2 font-bangla">
+                    <div className="mt-4 grid card-grid-gap sm:grid-cols-2 font-bangla">
                         {types.map((type) => (
                             <button
                                 key={type.key}
@@ -2482,7 +2482,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2 font-bangla">
+                    <div className="mt-4 grid card-grid-gap sm:grid-cols-2 font-bangla">
                         <button
                             onClick={onNavigateCq}
                             className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
@@ -2601,7 +2601,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid card-grid-gap sm:grid-cols-2">
                         <button
                             onClick={() => onNavigate(readingRoute)}
                             className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"

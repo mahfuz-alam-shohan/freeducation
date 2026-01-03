@@ -518,7 +518,7 @@ export const settingsComponents = `
                             </p>
                         </div>
                         {!activeClass ? (
-                            <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="grid card-grid-gap sm:grid-cols-2">
                                 {['SSC', 'HSC'].map((classLabel) => (
                                     <button
                                         key={classLabel}
@@ -543,7 +543,7 @@ export const settingsComponents = `
                                 >
                                     Change class
                                 </button>
-                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid card-grid-gap sm:grid-cols-2 lg:grid-cols-3">
                                     {(activeMode === 'subject'
                                         ? thumbnailSubjects.filter((subject) => subject.classLabel === activeClass)
                                         : chapterEntries.filter((entry) => entry.classLabel === activeClass)
@@ -803,7 +803,7 @@ export const settingsComponents = `
                     )}
 
                     {activePanel === 'menu' && (
-                        <div className="grid gap-4 md:grid-cols-2 mt-4">
+                        <div className="grid card-grid-gap md:grid-cols-2 mt-4">
                             <button
                                 onClick={() => setActivePanel('teachers')}
                                 className="border border-gray-200 rounded-2xl p-5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
