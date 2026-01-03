@@ -65,4 +65,77 @@ export async function initDatabase(db: D1Database) {
       JOIN (SELECT 'Science' AS name UNION ALL SELECT 'Humanities' UNION ALL SELECT 'Business Studies') AS group_names
       WHERE classes.name IN ('SSC', 'HSC')`),
   ]);
+
+  await ensureTableColumns(db);
 }
+
+type ColumnDefinition = {
+  name: string;
+  sql: string;
+};
+
+const tableColumns: Record<string, ColumnDefinition[]> = {
+  admins: [
+    { name: "username", sql: "TEXT UNIQUE" },
+    { name: "password_hash", sql: "TEXT" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  users: [
+    { name: "username", sql: "TEXT UNIQUE" },
+    { name: "name", sql: "TEXT" },
+    { name: "email", sql: "TEXT UNIQUE" },
+    { name: "password_hash", sql: "TEXT" },
+    { name: "role", sql: "TEXT NOT NULL" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  admin_permissions: [
+    { name: "user_id", sql: "INTEGER PRIMARY KEY" },
+    { name: "permissions", sql: "TEXT NOT NULL" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  teacher_assignments: [
+    { name: "user_id", sql: "INTEGER PRIMARY KEY" },
+    { name: "level", sql: "TEXT NOT NULL" },
+    { name: "subject", sql: "TEXT NOT NULL" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  content_store: [
+    { name: "key", sql: "TEXT PRIMARY KEY" },
+    { name: "data", sql: "TEXT NOT NULL" },
+    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  classes: [
+    { name: "name", sql: "TEXT UNIQUE" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  class_groups: [
+    { name: "class_id", sql: "INTEGER NOT NULL" },
+    { name: "name", sql: "TEXT NOT NULL" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  fonts: [
+    { name: "name", sql: "TEXT" },
+    { name: "file_key", sql: "TEXT" },
+    { name: "content_type", sql: "TEXT" },
+    { name: "original_name", sql: "TEXT" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  subject_thumbnails: [
+    { name: "file_key", sql: "TEXT" },
+    { name: "content_type", sql: "TEXT" },
+    { name: "zoom", sql: "REAL DEFAULT 1" },
+    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+};
+
+const ensureTableColumns = async (db: D1Database) => {
+  for (const [table, columns] of Object.entries(tableColumns)) {
+    const info = await db.prepare(`PRAGMA table_info(${table})`).all();
+    const existing = new Set((info.results || []).map((row: any) => String(row.name)));
+    for (const column of columns) {
+      if (!existing.has(column.name)) {
+        await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column.name} ${column.sql}`).run();
+      }
+    }
+  }
+};
