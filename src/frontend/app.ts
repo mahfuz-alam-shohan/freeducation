@@ -297,7 +297,7 @@ export const mainApp = `
             );
             const englishQuestionEntries = englishQuestions[englishQuestionKey] || [];
             const englishQuestionTitle = selectedEnglishSubtype
-                ? `${selectedEnglishType?.label} • ${selectedEnglishSubtype.label}`
+                ? (selectedEnglishType?.label || '') + ' • ' + selectedEnglishSubtype.label
                 : selectedEnglishType?.label || 'English 1st Paper';
             const englishQuestionSubtitle = selectedEnglishSection
                 ? `${selectedEnglishSection} section questions`
