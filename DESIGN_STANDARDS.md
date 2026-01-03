@@ -13,7 +13,7 @@ This document captures UI standards for the public-facing experience so future u
 ## Spacing + Density
 
 - **Compact spacing:** reduce excessive vertical gaps; sections use tighter padding and smaller inter-section spacing.
-- **Card grids:** keep grid gaps modest (3–4 units) to keep content visually connected.
+- **Card grids & rows:** keep card gaps tight (2 units) so subject and chapter cards sit closer together without changing card sizes.
 
 ## Filters (See All)
 
