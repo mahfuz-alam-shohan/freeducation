@@ -16,6 +16,10 @@ export const mainApp = `
                 'public-bangla-hsc-poddo': '/hsc/bangla-1st-paper/poddo',
                 'public-bangla-ssc-item': '/ssc/bangla-1st-paper/item',
                 'public-bangla-hsc-item': '/hsc/bangla-1st-paper/item',
+                'public-bangla-ssc-srijonshil': '/ssc/bangla-1st-paper/item/srijonshil',
+                'public-bangla-hsc-srijonshil': '/hsc/bangla-1st-paper/item/srijonshil',
+                'public-bangla-ssc-mcq': '/ssc/bangla-1st-paper/item/mcq',
+                'public-bangla-hsc-mcq': '/hsc/bangla-1st-paper/item/mcq',
                 login: '/login',
                 register: '/register',
                 dashboard: '/dashboard',
@@ -48,6 +52,10 @@ export const mainApp = `
                 'bangla-hsc-mcq': '/dashboard/hsc/bangla-1st-paper/item/mcq'
             };
             const getViewFromPath = (path) => {
+                if (path.startsWith('/ssc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-ssc-srijonshil';
+                if (path.startsWith('/hsc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-hsc-srijonshil';
+                if (path.startsWith('/ssc/bangla-1st-paper/item/mcq')) return 'public-bangla-ssc-mcq';
+                if (path.startsWith('/hsc/bangla-1st-paper/item/mcq')) return 'public-bangla-hsc-mcq';
                 if (path.startsWith('/ssc/bangla-1st-paper/item')) return 'public-bangla-ssc-item';
                 if (path.startsWith('/hsc/bangla-1st-paper/item')) return 'public-bangla-hsc-item';
                 if (path.startsWith('/ssc/bangla-1st-paper/goddo')) return 'public-bangla-ssc-goddo';
@@ -562,9 +570,7 @@ export const mainApp = `
                                 classLabel="SSC"
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
-                                srijonshilQuestions={srijonshilQuestions}
-                                mcqQuestions={mcqQuestions}
-                                getQuestionKey={getQuestionKey}
+                                notesByItem={notesByItem}
                                 onNavigate={navigate}
                             />
                         )}
@@ -573,7 +579,45 @@ export const mainApp = `
                                 classLabel="HSC"
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
+                                notesByItem={notesByItem}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-bangla-ssc-srijonshil' && (
+                            <PublicBanglaSrijonshilDetail
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
                                 srijonshilQuestions={srijonshilQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-bangla-hsc-srijonshil' && (
+                            <PublicBanglaSrijonshilDetail
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
+                                srijonshilQuestions={srijonshilQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-bangla-ssc-mcq' && (
+                            <PublicBanglaMcqDetail
+                                classLabel="SSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-bangla-hsc-mcq' && (
+                            <PublicBanglaMcqDetail
+                                classLabel="HSC"
+                                itemName={selectedBanglaItem}
+                                categoryName={selectedBanglaCategory}
                                 mcqQuestions={mcqQuestions}
                                 getQuestionKey={getQuestionKey}
                                 onNavigate={navigate}

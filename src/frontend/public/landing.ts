@@ -503,9 +503,7 @@ export const landingComponents = `
             classLabel,
             itemName,
             categoryName,
-            srijonshilQuestions,
-            mcqQuestions,
-            getQuestionKey,
+            notesByItem,
             onNavigate
         }) => {
             const categoryRoute = classLabel === 'SSC'
@@ -525,29 +523,100 @@ export const landingComponents = `
                 .split('')
                 .map((digit) => banglaDigits[Number(digit)] ?? digit)
                 .join('');
-            const srijonshilTypes = [
-                { key: 'gyan', label: 'জ্ঞান (ক)' },
-                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
-            ];
-            const mcqList = mcqQuestions[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
+            const srijonshilRoute = classLabel === 'SSC' ? 'public-bangla-ssc-srijonshil' : 'public-bangla-hsc-srijonshil';
+            const mcqRoute = classLabel === 'SSC' ? 'public-bangla-ssc-mcq' : 'public-bangla-hsc-mcq';
+            const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
+            const notes = (notesByItem || {})[noteKey] || [];
+            const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
 
             return (
                 <PublicBanglaShell
-                    title={itemName || 'পাঠ নির্বাচন করুন'}
+                    title="পাঠ তথ্য"
                     subtitle={categoryName ? 'বিভাগ: ' + categoryName : ''}
                     onBack={() => onNavigate(categoryRoute)}
                     onNavigate={onNavigate}
                 >
-                    <section className="space-y-4 font-bangla">
-                        <div className="border border-slate-200 rounded-xl p-5">
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">সৃজনশীল প্রশ্ন</div>
-                            <div className="text-lg font-semibold text-slate-900 mt-2">প্রশ্ন ও উত্তর</div>
-                            <p className="text-sm text-slate-500 mt-2">উপস্থাপিত প্রশ্নসমূহ ও উত্তরগুলো পড়ুন।</p>
+                    <div className="space-y-6 font-bangla">
+                        <div className="text-center">
+                            <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-3">
+                            <button
+                                onClick={() => onNavigate(srijonshilRoute)}
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-rose-100 bg-rose-50 text-rose-700 text-sm font-semibold hover:bg-rose-100 transition"
+                            >
+                                সৃজনশীল
+                            </button>
+                            <button
+                                onClick={() => onNavigate(mcqRoute)}
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-amber-100 bg-amber-50 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition"
+                            >
+                                বহুনির্বাচনী
+                            </button>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+                            <div className="px-4 py-3 border-b border-slate-100">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
+                                <div className="text-sm font-semibold text-slate-700 mt-1">অধ্যায়ের গুরুত্বপূর্ণ নোট</div>
+                            </div>
+                            <ul className="divide-y">
+                                {notes.length === 0 && (
+                                    <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                                )}
+                                {notes.map((note, index) => (
+                                    <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
+                                        <span className="text-sm font-semibold text-slate-500">
+                                            {toBanglaNumber(index + 1)}.
+                                        </span>
+                                        <div className="text-sm text-slate-700">{note}</div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </PublicBanglaShell>
+            );
+        };
+
+        const PublicBanglaSrijonshilDetail = ({
+            classLabel,
+            itemName,
+            categoryName,
+            srijonshilQuestions,
+            getQuestionKey,
+            onNavigate
+        }) => {
+            const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value)
+                .split('')
+                .map((digit) => banglaDigits[Number(digit)] ?? digit)
+                .join('');
+            const srijonshilTypes = [
+                { key: 'gyan', label: 'জ্ঞান (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
+            ];
+            const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
+
+            return (
+                <PublicBanglaShell
+                    title="সৃজনশীল প্রশ্ন"
+                    subtitle={categoryName ? 'বিভাগ: ' + categoryName : ''}
+                    onBack={() => onNavigate(itemRoute)}
+                    onNavigate={onNavigate}
+                >
+                    <div className="space-y-6 font-bangla">
+                        <div className="text-center">
+                            <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
                         {srijonshilTypes.map((type) => {
                             const list = srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [];
                             return (
-                                <div key={type.key} className="border border-slate-200 rounded-xl p-5">
+                                <div key={type.key} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
                                     <div className="text-sm font-semibold text-slate-900">{type.label}</div>
                                     {list.length === 0 ? (
                                         <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>
@@ -568,20 +637,46 @@ export const landingComponents = `
                                 </div>
                             );
                         })}
-                    </section>
+                    </div>
+                </PublicBanglaShell>
+            );
+        };
 
-                    <section className="space-y-4 font-bangla">
-                        <div className="border border-slate-200 rounded-xl p-5">
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">বহুনির্বাচনী</div>
-                            <div className="text-lg font-semibold text-slate-900 mt-2">MCQ প্রশ্ন</div>
-                            <p className="text-sm text-slate-500 mt-2">প্রশ্ন, অপশন এবং সঠিক উত্তর দেখুন।</p>
+        const PublicBanglaMcqDetail = ({
+            classLabel,
+            itemName,
+            categoryName,
+            mcqQuestions,
+            getQuestionKey,
+            onNavigate
+        }) => {
+            const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value)
+                .split('')
+                .map((digit) => banglaDigits[Number(digit)] ?? digit)
+                .join('');
+            const mcqList = mcqQuestions[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
+            const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
+
+            return (
+                <PublicBanglaShell
+                    title="বহুনির্বাচনী প্রশ্ন"
+                    subtitle={categoryName ? 'বিভাগ: ' + categoryName : ''}
+                    onBack={() => onNavigate(itemRoute)}
+                    onNavigate={onNavigate}
+                >
+                    <div className="space-y-6 font-bangla">
+                        <div className="text-center">
+                            <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
                         {mcqList.length === 0 ? (
                             <div className="text-sm text-slate-400">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>
                         ) : (
                             <div className="grid gap-4">
                                 {mcqList.map((entry, index) => (
-                                    <div key={entry.question + '-' + index} className="border border-slate-200 rounded-xl p-5">
+                                    <div key={entry.question + '-' + index} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
                                         <div className="text-sm font-semibold text-slate-900">
                                             {toBanglaNumber(index + 1)}. {entry.question}
                                         </div>
@@ -604,7 +699,7 @@ export const landingComponents = `
                                 ))}
                             </div>
                         )}
-                    </section>
+                    </div>
                 </PublicBanglaShell>
             );
         };
@@ -686,6 +781,8 @@ export const landingComponents = `
             PublicBanglaTextList,
             PublicBanglaShohopathList,
             PublicBanglaItemDetail,
+            PublicBanglaSrijonshilDetail,
+            PublicBanglaMcqDetail,
             sscSubjects,
             hscSubjects
         };
@@ -698,6 +795,8 @@ export const landingComponents = `
             PublicBanglaTextList,
             PublicBanglaShohopathList,
             PublicBanglaItemDetail,
+            PublicBanglaSrijonshilDetail,
+            PublicBanglaMcqDetail,
             sscSubjects,
             hscSubjects
         } = LandingModule;
