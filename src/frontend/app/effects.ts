@@ -58,6 +58,65 @@ export const appEffects = `
                 loadContent();
             }, []);
 
+            const getScienceChapterList = (selection) => {
+                if (!selection) return null;
+                const { classLabel, subjectLabel, religionKey } = selection;
+                if (classLabel === 'SSC' && subjectLabel === 'Physics') return sscPhysicsChapters;
+                if (classLabel === 'SSC' && subjectLabel === 'Chemistry') return sscChemistryChapters;
+                if (classLabel === 'SSC' && subjectLabel === 'Biology') return sscBiologyChapters;
+                if (classLabel === 'SSC' && subjectLabel === 'Bangladesh and Global Studies') return sscBangladeshGlobalChapters;
+                if (classLabel === 'SSC' && subjectLabel === 'Religion and Moral Education')
+                    return (sscReligionChapters || {})[religionKey] || [];
+                if (classLabel === 'HSC' && subjectLabel === 'Physics 1st Paper') return hscPhysics1stChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Physics 2nd Paper') return hscPhysics2ndChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Chemistry 1st Paper') return hscChemistry1stChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Chemistry 2nd Paper') return hscChemistry2ndChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Biology 1st Paper') return hscBiology1stChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Biology 2nd Paper') return hscBiology2ndChapters;
+                return null;
+            };
+
+            useEffect(() => {
+                if (!selectedScienceChapter || !selectedScienceSubject) return;
+                const chapters = getScienceChapterList(selectedScienceSubject);
+                if (!chapters) return;
+                const refreshedChapter = chapters.find((chapter) => chapter.id === selectedScienceChapter.id);
+                if (!refreshedChapter) {
+                    setSelectedScienceChapter(null);
+                    setSelectedScienceTopic(null);
+                    return;
+                }
+                if (refreshedChapter !== selectedScienceChapter) {
+                    setSelectedScienceChapter(refreshedChapter);
+                }
+                if (!selectedScienceTopic) return;
+                const refreshedTopic = (refreshedChapter.topics || []).find(
+                    (topic) => topic.id === selectedScienceTopic.id
+                );
+                if (!refreshedTopic) {
+                    setSelectedScienceTopic(null);
+                    return;
+                }
+                if (refreshedTopic !== selectedScienceTopic) {
+                    setSelectedScienceTopic(refreshedTopic);
+                }
+            }, [
+                selectedScienceChapter,
+                selectedScienceTopic,
+                selectedScienceSubject,
+                sscPhysicsChapters,
+                sscChemistryChapters,
+                sscBiologyChapters,
+                sscBangladeshGlobalChapters,
+                sscReligionChapters,
+                hscPhysics1stChapters,
+                hscPhysics2ndChapters,
+                hscChemistry1stChapters,
+                hscChemistry2ndChapters,
+                hscBiology1stChapters,
+                hscBiology2ndChapters
+            ]);
+
             useEffect(() => {
                 if (!contentLoaded) return;
                 if (!user) return;
@@ -74,9 +133,12 @@ export const appEffects = `
                     sscShohopathItems,
                     hscShohopathItems,
                     sscIctChapters,
+                    hscIctChapters,
                     sscPhysicsChapters,
                     sscChemistryChapters,
                     sscBiologyChapters,
+                    sscBangladeshGlobalChapters,
+                    sscReligionChapters,
                     hscPhysics1stChapters,
                     hscPhysics2ndChapters,
                     hscChemistry1stChapters,
@@ -102,7 +164,7 @@ export const appEffects = `
                     } catch (e) {
                         console.warn('Failed to save content', e);
                     }
-                }, 600);
+                }, 300);
 
                 return () => clearTimeout(timeout);
             }, [
@@ -115,9 +177,12 @@ export const appEffects = `
                 sscShohopathItems,
                 hscShohopathItems,
                 sscIctChapters,
+                hscIctChapters,
                 sscPhysicsChapters,
                 sscChemistryChapters,
                 sscBiologyChapters,
+                sscBangladeshGlobalChapters,
+                sscReligionChapters,
                 hscPhysics1stChapters,
                 hscPhysics2ndChapters,
                 hscChemistry1stChapters,

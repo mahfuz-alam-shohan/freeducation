@@ -118,18 +118,6 @@ export const dashboardComponents = `
             );
         };
 
-        const makeThumbnailKey = (subject, classLabel) =>
-            (classLabel + '-' + subject)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-
-        const makeChapterThumbnailKey = (classLabel, subjectLabel, chapterKey) =>
-            (classLabel + '-' + subjectLabel + '-' + chapterKey)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-
         const resizeImageFile = (file, { maxWidth = 520, maxHeight = 650, quality = 0.82 } = {}) =>
             new Promise((resolve) => {
                 if (!file || !(file instanceof File)) {
@@ -481,6 +469,9 @@ export const dashboardComponents = `
             const banglaRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const englishRoute = classLabel === 'HSC' ? 'english-hsc-1st-paper' : null;
             const ictRoute = classLabel === 'SSC' ? 'admin-ssc-ict' : null;
+            const hscIctRoute = classLabel === 'HSC' ? 'admin-hsc-ict' : null;
+            const bangladeshGlobalRoute = classLabel === 'SSC' ? 'admin-ssc-bangladesh-global-studies' : null;
+            const religionRoute = classLabel === 'SSC' ? 'admin-ssc-religion' : null;
             const physicsRoute = classLabel === 'SSC' ? 'admin-ssc-physics' : null;
             const chemistryRoute = classLabel === 'SSC' ? 'admin-ssc-chemistry' : null;
             const biologyRoute = classLabel === 'SSC' ? 'admin-ssc-biology' : null;
@@ -520,10 +511,12 @@ export const dashboardComponents = `
                         {subjects.map((subject) => {
                             const isBanglaFirst = subject === 'Bangla 1st Paper';
                             const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
-                            const isIct = subject === 'Information and Communication Technology' && classLabel === 'SSC';
+                            const isIct = subject === 'Information and Communication Technology';
                             const isPhysics = subject === 'Physics' && classLabel === 'SSC';
                             const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
                             const isBiology = subject === 'Biology' && classLabel === 'SSC';
+                            const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
+                            const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
                             const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
                             const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
                             const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
@@ -538,6 +531,8 @@ export const dashboardComponents = `
                                 !isPhysics &&
                                 !isChemistry &&
                                 !isBiology &&
+                                !isBangladeshGlobal &&
+                                !isReligionMoral &&
                                 !isHscPhysics1 &&
                                 !isHscPhysics2 &&
                                 !isHscChem1 &&
@@ -556,7 +551,11 @@ export const dashboardComponents = `
                                 : isEnglishFirst
                                     ? englishRoute
                                     : isIct
-                                        ? ictRoute
+                                        ? (classLabel === 'SSC' ? ictRoute : hscIctRoute)
+                                        : isBangladeshGlobal
+                                            ? bangladeshGlobalRoute
+                                            : isReligionMoral
+                                                ? religionRoute
                                         : isPhysics
                                             ? physicsRoute
                                             : isChemistry
@@ -1869,14 +1868,13 @@ export const dashboardComponents = `
             );
         };
 
-        const IctChapterList = ({ chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+        const IctChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onBack, onNavigate }) => {
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [chapterName, setChapterName] = useState('');
             const [editingChapter, setEditingChapter] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
-            const subjectLabel = 'Information and Communication Technology';
 
             const resetForm = () => {
                 setChapterName('');
@@ -1910,12 +1908,12 @@ export const dashboardComponents = `
                 };
                 if (editingChapter) {
                     onUpdate(editingChapter.id, trimmed);
-                    const chapterKey = makeChapterThumbnailKey('SSC', subjectLabel, editingChapter.id);
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, editingChapter.id);
                     await uploadThumbnail(chapterKey);
                 } else {
                     const nextId = \`\${Date.now()}-\${Math.random().toString(16).slice(2)}\`;
                     onAdd({ id: nextId, name: trimmed });
-                    const chapterKey = makeChapterThumbnailKey('SSC', subjectLabel, nextId);
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, nextId);
                     await uploadThumbnail(chapterKey);
                 }
                 resetForm();
@@ -1924,14 +1922,14 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title="SSC ICT"
-                    subtitle="আইসিটি অধ্যায় যোগ করুন এবং MCQ তৈরি করুন।"
+                    title={classLabel + ' ICT'}
+                    subtitle={classLabel + ' আইসিটি অধ্যায় যোগ করুন এবং MCQ তৈরি করুন।'}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
                         <button
-                            onClick={() => onNavigate('admin-groups-ssc')}
+                            onClick={onBack}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
                             Back
@@ -1969,7 +1967,7 @@ export const dashboardComponents = `
                                         onClick={() =>
                                             setActiveThumbnail({
                                                 title: chapter.name,
-                                                chapterKey: makeChapterThumbnailKey('SSC', subjectLabel, chapter.id)
+                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id)
                                             })
                                         }
                                         className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
@@ -2073,7 +2071,52 @@ export const dashboardComponents = `
             );
         };
 
-        const ScienceChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+        const ReligionSelectionList = ({ classLabel, options, onSelect, onBack, onNavigate }) => (
+            <AdminShell
+                title="Religion and Moral Education"
+                subtitle="ধর্ম নির্বাচন করুন এবং অধ্যায় পরিচালনা করুন।"
+                activeTab="classes"
+                onNavigate={onNavigate}
+            >
+                <div className="flex justify-between items-center">
+                    <button
+                        onClick={onBack}
+                        className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                    >
+                        Back
+                    </button>
+                    <div className="text-xs uppercase tracking-[0.2em] text-gray-400">{classLabel}</div>
+                </div>
+                <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                    {options.map((option) => (
+                        <button
+                            key={option.key}
+                            onClick={() => onSelect(option)}
+                            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                        >
+                            <div className="text-left">
+                                <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধর্ম</div>
+                                <div className="text-base font-semibold text-gray-900 mt-1">{option.label}</div>
+                                <p className="text-xs text-gray-500 mt-2">{option.subtitle}</p>
+                            </div>
+                            <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
+                        </button>
+                    ))}
+                </div>
+            </AdminShell>
+        );
+
+        const ScienceChapterList = ({
+            classLabel,
+            subjectLabel,
+            chapters,
+            onAdd,
+            onUpdate,
+            onDelete,
+            onSelect,
+            onNavigate,
+            onBack
+        }) => {
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
@@ -2134,7 +2177,7 @@ export const dashboardComponents = `
                 >
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
                         <button
-                            onClick={() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc')}
+                            onClick={onBack || (() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc'))}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
                             Back

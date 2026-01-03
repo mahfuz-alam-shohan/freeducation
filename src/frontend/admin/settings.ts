@@ -92,18 +92,6 @@ export const settingsComponents = `
             }
         };
 
-        const makeThumbnailKey = (subject, classLabel) =>
-            (classLabel + '-' + subject)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-
-        const makeChapterThumbnailKey = (classLabel, subjectLabel, chapterKey) =>
-            (classLabel + '-' + subjectLabel + '-' + chapterKey)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-
         const resizeImageFile = (file, { maxWidth = 520, maxHeight = 650, quality = 0.82 } = {}) =>
             new Promise((resolve) => {
                 if (!file || !(file instanceof File)) {
@@ -420,9 +408,15 @@ export const settingsComponents = `
                         };
 
                         addChapterList('SSC', 'Information and Communication Technology', content.sscIctChapters, 'ICT');
+                        addChapterList('HSC', 'Information and Communication Technology', content.hscIctChapters, 'ICT');
                         addChapterList('SSC', 'Physics', content.sscPhysicsChapters);
                         addChapterList('SSC', 'Chemistry', content.sscChemistryChapters);
                         addChapterList('SSC', 'Biology', content.sscBiologyChapters);
+                        addChapterList('SSC', 'Bangladesh and Global Studies', content.sscBangladeshGlobalChapters);
+
+                        Object.entries(content.sscReligionChapters || {}).forEach(([religionKey, list]) => {
+                            addChapterList('SSC', 'Religion and Moral Education', list, religionKey);
+                        });
 
                         addChapterList('HSC', 'Physics 1st Paper', content.hscPhysics1stChapters);
                         addChapterList('HSC', 'Physics 2nd Paper', content.hscPhysics2ndChapters);

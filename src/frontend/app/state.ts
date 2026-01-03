@@ -8,9 +8,12 @@ export const appState = `
             const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
             const [selectedSrijonshilType, setSelectedSrijonshilType] = useState(null);
             const [selectedIctChapter, setSelectedIctChapter] = useState(null);
+            const [selectedIctClass, setSelectedIctClass] = useState('SSC');
             const [selectedScienceChapter, setSelectedScienceChapter] = useState(null);
             const [selectedScienceTopic, setSelectedScienceTopic] = useState(null);
             const [selectedScienceCqType, setSelectedScienceCqType] = useState(null);
+            const [selectedScienceSubject, setSelectedScienceSubject] = useState(null);
+            const [selectedReligion, setSelectedReligion] = useState(null);
             const [selectedEnglishSection, setSelectedEnglishSection] = useState('');
             const [selectedEnglishType, setSelectedEnglishType] = useState(null);
             const [selectedEnglishSubtype, setSelectedEnglishSubtype] = useState(null);
@@ -21,9 +24,17 @@ export const appState = `
             const [sscShohopathItems, setSscShohopathItems] = useState([]);
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
             const [sscIctChapters, setSscIctChapters] = useState([]);
+            const [hscIctChapters, setHscIctChapters] = useState([]);
             const [sscPhysicsChapters, setSscPhysicsChapters] = useState([]);
             const [sscChemistryChapters, setSscChemistryChapters] = useState([]);
             const [sscBiologyChapters, setSscBiologyChapters] = useState([]);
+            const [sscBangladeshGlobalChapters, setSscBangladeshGlobalChapters] = useState([]);
+            const [sscReligionChapters, setSscReligionChapters] = useState({
+                Islam: [],
+                Hinduism: [],
+                Buddhism: [],
+                Christianity: []
+            });
             const [hscPhysics1stChapters, setHscPhysics1stChapters] = useState([]);
             const [hscPhysics2ndChapters, setHscPhysics2ndChapters] = useState([]);
             const [hscChemistry1stChapters, setHscChemistry1stChapters] = useState([]);

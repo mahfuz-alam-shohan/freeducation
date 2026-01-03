@@ -8,4 +8,8 @@ export const keyHelpers = `
             const getEnglishQuestionKey = (section, typeKey, subtypeKey) => {
                 return ['HSC', section || 'general', typeKey || 'general', subtypeKey || 'general'].join('-');
             };
+            const getReligionSubjectKey = (religion) => {
+                const label = religion?.label || religion?.key || '';
+                return ['Religion and Moral Education', label].filter(Boolean).join(' - ');
+            };
 `;

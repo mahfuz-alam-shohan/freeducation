@@ -69,4 +69,65 @@ export const collectionHelpers = `
                     )
                 );
             };
+
+            const addReligionChapterItem = (setItems) => (religionKey, chapter) => {
+                setItems((prev) => ({
+                    ...prev,
+                    [religionKey]: [...(prev[religionKey] || []), chapter]
+                }));
+            };
+
+            const updateReligionChapterItem = (setItems) => (religionKey, chapterId, name) => {
+                setItems((prev) => ({
+                    ...prev,
+                    [religionKey]: (prev[religionKey] || []).map((chapter) =>
+                        chapter.id === chapterId ? { ...chapter, name } : chapter
+                    )
+                }));
+            };
+
+            const removeReligionChapterItem = (setItems) => (religionKey, chapterId) => {
+                setItems((prev) => ({
+                    ...prev,
+                    [religionKey]: (prev[religionKey] || []).filter((chapter) => chapter.id !== chapterId)
+                }));
+            };
+
+            const addReligionTopicItem = (setItems) => (religionKey, chapterId, topic) => {
+                setItems((prev) => ({
+                    ...prev,
+                    [religionKey]: (prev[religionKey] || []).map((chapter) =>
+                        chapter.id === chapterId
+                            ? { ...chapter, topics: [...(chapter.topics || []), topic] }
+                            : chapter
+                    )
+                }));
+            };
+
+            const updateReligionTopicItem = (setItems) => (religionKey, chapterId, topicId, name) => {
+                setItems((prev) => ({
+                    ...prev,
+                    [religionKey]: (prev[religionKey] || []).map((chapter) =>
+                        chapter.id === chapterId
+                            ? {
+                                ...chapter,
+                                topics: (chapter.topics || []).map((topic) =>
+                                    topic.id === topicId ? { ...topic, name } : topic
+                                )
+                            }
+                            : chapter
+                    )
+                }));
+            };
+
+            const removeReligionTopicItem = (setItems) => (religionKey, chapterId, topicId) => {
+                setItems((prev) => ({
+                    ...prev,
+                    [religionKey]: (prev[religionKey] || []).map((chapter) =>
+                        chapter.id === chapterId
+                            ? { ...chapter, topics: (chapter.topics || []).filter((topic) => topic.id !== topicId) }
+                            : chapter
+                    )
+                }));
+            };
 `;
