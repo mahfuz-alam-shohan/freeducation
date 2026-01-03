@@ -533,21 +533,31 @@ export const landingComponents = `
             </div>
         );
 
-        const PublicBanglaTopicGrid = ({ topics, onNavigate }) => (
-            <div className="grid gap-3 sm:grid-cols-2">
-                {topics.map((topic) => (
-                    <button
-                        key={topic.title}
-                        onClick={() => topic.route && onNavigate(topic.route)}
-                        className="border border-slate-200 rounded-xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
-                    >
-                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">বিষয়</div>
-                        <div className="text-lg font-semibold text-slate-900 mt-2">{topic.title}</div>
-                        <p className="text-sm text-slate-500 mt-2">{topic.description}</p>
-                    </button>
-                ))}
-            </div>
-        );
+        const PublicBanglaTopicGrid = ({ classLabel, subjectLabel, topics, onNavigate }) => {
+            const chapterThumbnails = useChapterThumbnails();
+
+            return (
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
+                    {topics.map((topic) => {
+                        const chapterKey = makeChapterThumbnailKey(
+                            classLabel,
+                            subjectLabel,
+                            topic.thumbnailKey || topic.title
+                        );
+                        return (
+                            <ChapterCard
+                                key={topic.title}
+                                title={topic.title}
+                                subtitle={topic.description}
+                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                onClick={() => topic.route && onNavigate(topic.route)}
+                                className="w-full"
+                            />
+                        );
+                    })}
+                </div>
+            );
+        };
 
         const PublicBanglaTextList = ({ classLabel, subjectLabel, categoryLabel, subtitle, items, onSelectItem }) => {
             const chapterThumbnails = useChapterThumbnails();

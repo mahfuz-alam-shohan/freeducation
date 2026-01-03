@@ -1067,9 +1067,6 @@ export const settingsComponents = `
             const [isResetting, setIsResetting] = useState(false);
             const [activePanel, setActivePanel] = useState('main');
 
-            if (activePanel === 'thumbnails') {
-                return <ThumbnailSettings onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
-            }
             if (activePanel === 'users') {
                 return <UserManagementSettings onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
             }
@@ -1118,13 +1115,6 @@ export const settingsComponents = `
                     onNavigate={onNavigate}
                 >
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y divide-gray-200">
-                        <button
-                            onClick={() => setActivePanel('thumbnails')}
-                            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-                        >
-                            <span>Thumbnails</span>
-                            <span className="text-xs text-gray-400">Upload subject poster images</span>
-                        </button>
                         <button
                             onClick={() => setActivePanel('users')}
                             className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
