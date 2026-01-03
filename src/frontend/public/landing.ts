@@ -409,7 +409,7 @@ export const landingComponents = `
                                     thumbnailUrl: thumbnail?.url
                                 }}
                                 onNavigate={onNavigate}
-                                className={`flex-shrink-0 ${cardWidthClass} snap-start`}
+                                className={'flex-shrink-0 ' + cardWidthClass + ' snap-start'}
                             />
                         );
                     })}
