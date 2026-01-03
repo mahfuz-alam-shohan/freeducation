@@ -20,6 +20,11 @@ const viewByPath = new Map<string, string>([
   ["/hsc/bangla-1st-paper/item/mcq", "public-bangla-hsc-mcq"],
   ["/ssc/bangla-1st-paper/item", "public-bangla-ssc-item"],
   ["/hsc/bangla-1st-paper/item", "public-bangla-hsc-item"],
+  ["/hsc/english-1st-paper", "public-english-hsc-1st-paper"],
+  ["/hsc/english-1st-paper/reading", "public-english-hsc-reading"],
+  ["/hsc/english-1st-paper/writing", "public-english-hsc-writing"],
+  ["/hsc/english-1st-paper/subtypes", "public-english-hsc-subtypes"],
+  ["/hsc/english-1st-paper/questions", "public-english-hsc-questions"],
   ["/login", "login"],
   ["/register", "register"],
   ["/dashboard", "dashboard"],
@@ -50,6 +55,11 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions", "bangla-hsc-srijonshil-questions"],
   ["/dashboard/ssc/bangla-1st-paper/item/mcq", "bangla-ssc-mcq"],
   ["/dashboard/hsc/bangla-1st-paper/item/mcq", "bangla-hsc-mcq"],
+  ["/dashboard/hsc/english-1st-paper", "english-hsc-1st-paper"],
+  ["/dashboard/hsc/english-1st-paper/reading", "english-hsc-reading"],
+  ["/dashboard/hsc/english-1st-paper/writing", "english-hsc-writing"],
+  ["/dashboard/hsc/english-1st-paper/subtypes", "english-hsc-subtypes"],
+  ["/dashboard/hsc/english-1st-paper/questions", "english-hsc-questions"],
 ]);
 
 export function getFrontendHtml(pathname: string) {
@@ -62,6 +72,21 @@ export function getFrontendHtml(pathname: string) {
   if (pathname.startsWith("/dashboard")) {
     if (pathname.startsWith("/dashboard/settings")) {
       return renderAppHtml("admin-settings");
+    }
+    if (pathname.startsWith("/dashboard/hsc/english-1st-paper/questions")) {
+      return renderAppHtml("english-hsc-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/english-1st-paper/subtypes")) {
+      return renderAppHtml("english-hsc-subtypes");
+    }
+    if (pathname.startsWith("/dashboard/hsc/english-1st-paper/reading")) {
+      return renderAppHtml("english-hsc-reading");
+    }
+    if (pathname.startsWith("/dashboard/hsc/english-1st-paper/writing")) {
+      return renderAppHtml("english-hsc-writing");
+    }
+    if (pathname.startsWith("/dashboard/hsc/english-1st-paper")) {
+      return renderAppHtml("english-hsc-1st-paper");
     }
     if (pathname.startsWith("/dashboard/ssc/science")) {
       return renderAppHtml("admin-ssc-science");

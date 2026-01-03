@@ -20,6 +20,11 @@ export const mainApp = `
                 'public-bangla-hsc-srijonshil': '/hsc/bangla-1st-paper/item/srijonshil',
                 'public-bangla-ssc-mcq': '/ssc/bangla-1st-paper/item/mcq',
                 'public-bangla-hsc-mcq': '/hsc/bangla-1st-paper/item/mcq',
+                'public-english-hsc-1st-paper': '/hsc/english-1st-paper',
+                'public-english-hsc-reading': '/hsc/english-1st-paper/reading',
+                'public-english-hsc-writing': '/hsc/english-1st-paper/writing',
+                'public-english-hsc-subtypes': '/hsc/english-1st-paper/subtypes',
+                'public-english-hsc-questions': '/hsc/english-1st-paper/questions',
                 login: '/login',
                 register: '/register',
                 dashboard: '/dashboard',
@@ -49,9 +54,19 @@ export const mainApp = `
                 'bangla-ssc-srijonshil-questions': '/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions',
                 'bangla-hsc-srijonshil-questions': '/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions',
                 'bangla-ssc-mcq': '/dashboard/ssc/bangla-1st-paper/item/mcq',
-                'bangla-hsc-mcq': '/dashboard/hsc/bangla-1st-paper/item/mcq'
+                'bangla-hsc-mcq': '/dashboard/hsc/bangla-1st-paper/item/mcq',
+                'english-hsc-1st-paper': '/dashboard/hsc/english-1st-paper',
+                'english-hsc-reading': '/dashboard/hsc/english-1st-paper/reading',
+                'english-hsc-writing': '/dashboard/hsc/english-1st-paper/writing',
+                'english-hsc-subtypes': '/dashboard/hsc/english-1st-paper/subtypes',
+                'english-hsc-questions': '/dashboard/hsc/english-1st-paper/questions'
             };
             const getViewFromPath = (path) => {
+                if (path.startsWith('/hsc/english-1st-paper/questions')) return 'public-english-hsc-questions';
+                if (path.startsWith('/hsc/english-1st-paper/subtypes')) return 'public-english-hsc-subtypes';
+                if (path.startsWith('/hsc/english-1st-paper/reading')) return 'public-english-hsc-reading';
+                if (path.startsWith('/hsc/english-1st-paper/writing')) return 'public-english-hsc-writing';
+                if (path.startsWith('/hsc/english-1st-paper')) return 'public-english-hsc-1st-paper';
                 if (path.startsWith('/ssc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-ssc-srijonshil';
                 if (path.startsWith('/hsc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-hsc-srijonshil';
                 if (path.startsWith('/ssc/bangla-1st-paper/item/mcq')) return 'public-bangla-ssc-mcq';
@@ -73,6 +88,11 @@ export const mainApp = `
                 if (path.startsWith('/login')) return 'login';
                 if (path.startsWith('/register')) return 'register';
                 if (path.startsWith('/dashboard/settings')) return 'admin-settings';
+                if (path.startsWith('/dashboard/hsc/english-1st-paper/questions')) return 'english-hsc-questions';
+                if (path.startsWith('/dashboard/hsc/english-1st-paper/subtypes')) return 'english-hsc-subtypes';
+                if (path.startsWith('/dashboard/hsc/english-1st-paper/reading')) return 'english-hsc-reading';
+                if (path.startsWith('/dashboard/hsc/english-1st-paper/writing')) return 'english-hsc-writing';
+                if (path.startsWith('/dashboard/hsc/english-1st-paper')) return 'english-hsc-1st-paper';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions')) return 'bangla-ssc-srijonshil-questions';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions')) return 'bangla-hsc-srijonshil-questions';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/srijonshil')) return 'bangla-ssc-srijonshil-types';
@@ -116,6 +136,9 @@ export const mainApp = `
             const [selectedBanglaItem, setSelectedBanglaItem] = useState('');
             const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
             const [selectedSrijonshilType, setSelectedSrijonshilType] = useState(null);
+            const [selectedEnglishSection, setSelectedEnglishSection] = useState('');
+            const [selectedEnglishType, setSelectedEnglishType] = useState(null);
+            const [selectedEnglishSubtype, setSelectedEnglishSubtype] = useState(null);
             const [sscGoddoItems, setSscGoddoItems] = useState([]);
             const [sscPoddoItems, setSscPoddoItems] = useState([]);
             const [hscGoddoItems, setHscGoddoItems] = useState([]);
@@ -124,11 +147,15 @@ export const mainApp = `
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
             const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
             const [mcqQuestions, setMcqQuestions] = useState({});
+            const [englishQuestions, setEnglishQuestions] = useState({});
             const [notesByItem, setNotesByItem] = useState({});
             const [contentLoaded, setContentLoaded] = useState(false);
 
             const getQuestionKey = (classLabel, categoryName, itemName, extra = '') => {
                 return [classLabel, categoryName || 'general', itemName || 'general', extra].join('-');
+            };
+            const getEnglishQuestionKey = (section, typeKey, subtypeKey) => {
+                return ['HSC', section || 'general', typeKey || 'general', subtypeKey || 'general'].join('-');
             };
 
             const defaultContent = {
@@ -140,6 +167,7 @@ export const mainApp = `
                 hscShohopathItems: [],
                 srijonshilQuestions: {},
                 mcqQuestions: {},
+                englishQuestions: {},
                 notesByItem: {}
             };
 
@@ -153,6 +181,7 @@ export const mainApp = `
                 setHscShohopathItems(Array.isArray(merged.hscShohopathItems) ? merged.hscShohopathItems : []);
                 setSrijonshilQuestions(merged.srijonshilQuestions || {});
                 setMcqQuestions(merged.mcqQuestions || {});
+                setEnglishQuestions(merged.englishQuestions || {});
                 setNotesByItem(merged.notesByItem || {});
             };
 
@@ -181,6 +210,98 @@ export const mainApp = `
                     route: classLabel === 'SSC' ? 'public-bangla-ssc-poddo' : 'public-bangla-hsc-poddo'
                 }
             ];
+
+            const englishReadingTypes = [
+                {
+                    key: 'reading-mcq',
+                    label: '1. A. MCQ',
+                    description: 'Multiple choice questions based on passages.'
+                },
+                {
+                    key: 'reading-qa',
+                    label: '1. B. Question and Answer',
+                    description: 'Short answer comprehension questions.'
+                },
+                {
+                    key: 'information-transfer-flow-chart',
+                    label: '2. Information Transfer / Flow Chart',
+                    description: 'Data or passage-based transfer tasks.',
+                    children: [
+                        { key: 'information-transfer', label: 'Information Transfer' },
+                        { key: 'flow-chart', label: 'Flow Chart' }
+                    ]
+                },
+                {
+                    key: 'summarizing',
+                    label: '3. Summarizing of a passage',
+                    description: 'Summarize the given passage.'
+                },
+                {
+                    key: 'cloze-test-with-clues',
+                    label: '4. Cloze test with clues',
+                    description: 'Fill in the blanks with guiding clues.'
+                },
+                {
+                    key: 'cloze-test-without-clues',
+                    label: '5. Cloze test without clues',
+                    description: 'Fill in the blanks without clues.'
+                },
+                {
+                    key: 'rearranging-passage',
+                    label: '6. Rearranging the passage',
+                    description: 'Arrange jumbled sentences into the correct order.'
+                }
+            ];
+
+            const englishWritingTypes = [
+                {
+                    key: 'writing-paragraph',
+                    label: '7. Writing paragraph',
+                    description: 'Write a focused paragraph on a topic.'
+                },
+                {
+                    key: 'completing-story',
+                    label: '8. Completing a story',
+                    description: 'Finish a story with a logical ending.'
+                },
+                {
+                    key: 'informal-letters-emails',
+                    label: '9. Informal letters / Emails',
+                    description: 'Personal letters and email writing.',
+                    children: [
+                        { key: 'informal-letters', label: 'Informal letters' },
+                        { key: 'emails', label: 'Emails' }
+                    ]
+                },
+                {
+                    key: 'analyzing-maps-graphs-charts',
+                    label: '10. Analyzing maps / Graphs / Charts',
+                    description: 'Describe and analyze visual data.',
+                    children: [
+                        { key: 'maps', label: 'Analyzing maps' },
+                        { key: 'graphs', label: 'Analyzing graphs' },
+                        { key: 'charts', label: 'Analyzing charts' }
+                    ]
+                },
+                {
+                    key: 'theme-writing',
+                    label: '11. Theme writing',
+                    description: 'Write on a theme or idea.'
+                }
+            ];
+
+            const englishQuestionKey = getEnglishQuestionKey(
+                selectedEnglishSection,
+                selectedEnglishType?.key,
+                selectedEnglishSubtype?.key
+            );
+            const englishQuestionEntries = englishQuestions[englishQuestionKey] || [];
+            const englishQuestionTitle = selectedEnglishSubtype
+                ? `${selectedEnglishType?.label} • ${selectedEnglishSubtype.label}`
+                : selectedEnglishType?.label || 'English 1st Paper';
+            const englishQuestionSubtitle = selectedEnglishSection
+                ? `${selectedEnglishSection} section questions`
+                : 'English 1st Paper questions';
 
             const addQuestionEntry = (setter, key) => (entry) => {
                 setter((prev) => {
@@ -327,6 +448,7 @@ export const mainApp = `
                     hscShohopathItems,
                     srijonshilQuestions,
                     mcqQuestions,
+                    englishQuestions,
                     notesByItem
                 };
 
@@ -357,6 +479,7 @@ export const mainApp = `
                 hscShohopathItems,
                 srijonshilQuestions,
                 mcqQuestions,
+                englishQuestions,
                 notesByItem
             ]);
 
@@ -623,6 +746,116 @@ export const mainApp = `
                                 onNavigate={navigate}
                             />
                         )}
+                        {view === 'public-english-hsc-1st-paper' && (
+                            <PublicEnglishShell
+                                title="English 1st Paper"
+                                subtitle="Select Reading or Writing to explore HSC English 1st Paper."
+                                onBack={() => navigate('hsc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicEnglishCardGrid
+                                    items={[
+                                        {
+                                            key: 'reading',
+                                            title: 'Reading',
+                                            description: 'MCQ, comprehension, and passage-based tasks.',
+                                            route: 'public-english-hsc-reading'
+                                        },
+                                        {
+                                            key: 'writing',
+                                            title: 'Writing',
+                                            description: 'Paragraphs, stories, letters, and analysis tasks.',
+                                            route: 'public-english-hsc-writing'
+                                        }
+                                    ]}
+                                    onNavigate={navigate}
+                                />
+                            </PublicEnglishShell>
+                        )}
+                        {view === 'public-english-hsc-reading' && (
+                            <PublicEnglishShell
+                                title="Reading"
+                                subtitle="Choose a question type from the reading section."
+                                onBack={() => navigate('public-english-hsc-1st-paper')}
+                                onNavigate={navigate}
+                            >
+                                <PublicEnglishTypeList
+                                    items={englishReadingTypes}
+                                    onSelect={(item) => {
+                                        setSelectedEnglishSection('Reading');
+                                        setSelectedEnglishType(item);
+                                        setSelectedEnglishSubtype(null);
+                                        if (item.children?.length) {
+                                            navigate('public-english-hsc-subtypes');
+                                        } else {
+                                            navigate('public-english-hsc-questions');
+                                        }
+                                    }}
+                                />
+                            </PublicEnglishShell>
+                        )}
+                        {view === 'public-english-hsc-writing' && (
+                            <PublicEnglishShell
+                                title="Writing"
+                                subtitle="Choose a question type from the writing section."
+                                onBack={() => navigate('public-english-hsc-1st-paper')}
+                                onNavigate={navigate}
+                            >
+                                <PublicEnglishTypeList
+                                    items={englishWritingTypes}
+                                    onSelect={(item) => {
+                                        setSelectedEnglishSection('Writing');
+                                        setSelectedEnglishType(item);
+                                        setSelectedEnglishSubtype(null);
+                                        if (item.children?.length) {
+                                            navigate('public-english-hsc-subtypes');
+                                        } else {
+                                            navigate('public-english-hsc-questions');
+                                        }
+                                    }}
+                                />
+                            </PublicEnglishShell>
+                        )}
+                        {view === 'public-english-hsc-subtypes' && (
+                            <PublicEnglishShell
+                                title={selectedEnglishType?.label || 'Question type'}
+                                subtitle="Select a specific option to view questions."
+                                onBack={() =>
+                                    navigate(
+                                        selectedEnglishSection === 'Writing'
+                                            ? 'public-english-hsc-writing'
+                                            : 'public-english-hsc-reading'
+                                    )
+                                }
+                                onNavigate={navigate}
+                            >
+                                <PublicEnglishTypeList
+                                    items={selectedEnglishType?.children || []}
+                                    onSelect={(child) => {
+                                        setSelectedEnglishSubtype(child);
+                                        navigate('public-english-hsc-questions');
+                                    }}
+                                />
+                            </PublicEnglishShell>
+                        )}
+                        {view === 'public-english-hsc-questions' && (
+                            <PublicEnglishShell
+                                title={englishQuestionTitle}
+                                subtitle={englishQuestionSubtitle}
+                                onBack={() =>
+                                    navigate(
+                                        selectedEnglishType?.children?.length
+                                            ? 'public-english-hsc-subtypes'
+                                            : selectedEnglishSection === 'Writing'
+                                                ? 'public-english-hsc-writing'
+                                                : 'public-english-hsc-reading'
+                                    )
+                                }
+                                onNavigate={navigate}
+                            >
+                                <PublicEnglishQuestionList questions={englishQuestionEntries} />
+                            </PublicEnglishShell>
+                        )}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
                         {view === 'dashboard' && <AdminDashboard onNavigate={navigate} />}
@@ -649,6 +882,82 @@ export const mainApp = `
                         )}
                         {view === 'admin-hsc-business-studies' && (
                             <AdminGroupDetail classLabel="HSC" groupLabel="Business Studies" onNavigate={navigate} />
+                        )}
+                        {view === 'english-hsc-1st-paper' && (
+                            <EnglishFirstPaperHome classLabel="HSC" onNavigate={navigate} />
+                        )}
+                        {view === 'english-hsc-reading' && (
+                            <EnglishSectionList
+                                title="Reading"
+                                subtitle="Select a reading question type."
+                                items={englishReadingTypes}
+                                onBack={() => navigate('english-hsc-1st-paper')}
+                                onSelect={(item) => {
+                                    setSelectedEnglishSection('Reading');
+                                    setSelectedEnglishType(item);
+                                    setSelectedEnglishSubtype(null);
+                                    if (item.children?.length) {
+                                        navigate('english-hsc-subtypes');
+                                    } else {
+                                        navigate('english-hsc-questions');
+                                    }
+                                }}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'english-hsc-writing' && (
+                            <EnglishSectionList
+                                title="Writing"
+                                subtitle="Select a writing question type."
+                                items={englishWritingTypes}
+                                onBack={() => navigate('english-hsc-1st-paper')}
+                                onSelect={(item) => {
+                                    setSelectedEnglishSection('Writing');
+                                    setSelectedEnglishType(item);
+                                    setSelectedEnglishSubtype(null);
+                                    if (item.children?.length) {
+                                        navigate('english-hsc-subtypes');
+                                    } else {
+                                        navigate('english-hsc-questions');
+                                    }
+                                }}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'english-hsc-subtypes' && (
+                            <EnglishSectionList
+                                title={selectedEnglishType?.label || 'Question type'}
+                                subtitle="Choose a specific question variation."
+                                items={selectedEnglishType?.children || []}
+                                onBack={() =>
+                                    navigate(selectedEnglishSection === 'Writing' ? 'english-hsc-writing' : 'english-hsc-reading')
+                                }
+                                onSelect={(child) => {
+                                    setSelectedEnglishSubtype(child);
+                                    navigate('english-hsc-questions');
+                                }}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'english-hsc-questions' && (
+                            <EnglishQuestionList
+                                title={englishQuestionTitle}
+                                subtitle={englishQuestionSubtitle}
+                                questions={englishQuestionEntries}
+                                onAdd={addQuestionEntry(setEnglishQuestions, englishQuestionKey)}
+                                onUpdate={updateQuestionEntry(setEnglishQuestions, englishQuestionKey)}
+                                onDelete={removeQuestionEntry(setEnglishQuestions, englishQuestionKey)}
+                                onBack={() =>
+                                    navigate(
+                                        selectedEnglishType?.children?.length
+                                            ? 'english-hsc-subtypes'
+                                            : selectedEnglishSection === 'Writing'
+                                                ? 'english-hsc-writing'
+                                                : 'english-hsc-reading'
+                                    )
+                                }
+                                onNavigate={navigate}
+                            />
                         )}
                         {view === 'bangla-ssc-1st-paper' && (
                             <BanglaFirstPaperTopics classLabel="SSC" onNavigate={navigate} />
