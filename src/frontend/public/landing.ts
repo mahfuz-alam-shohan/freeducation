@@ -308,6 +308,8 @@ export const landingComponents = `
             return thumbnailMap;
         };
 
+        const cardWidthClass = 'w-40 sm:w-48 md:w-52';
+
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
             return (
@@ -407,7 +409,7 @@ export const landingComponents = `
                                     thumbnailUrl: thumbnail?.url
                                 }}
                                 onNavigate={onNavigate}
-                                className="flex-shrink-0 w-40 sm:w-48 md:w-52 snap-start"
+                                className={'flex-shrink-0 ' + cardWidthClass + ' snap-start'}
                             />
                         );
                     })}
@@ -480,7 +482,7 @@ export const landingComponents = `
                             <span>Showing</span>
                             <span>{filteredSubjects.length} subjects</span>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-4 justify-items-start">
                             {filteredSubjects.map((subject) => {
                                 const thumbnail = thumbnailMap[subject.subjectKey];
                                 return (
@@ -491,7 +493,7 @@ export const landingComponents = `
                                             thumbnailUrl: thumbnail?.url
                                         }}
                                         onNavigate={onNavigate}
-                                        className="w-full"
+                                        className={cardWidthClass}
                                         showGroup
                                     />
                                 );
@@ -537,7 +539,7 @@ export const landingComponents = `
             const chapterThumbnails = useChapterThumbnails();
 
             return (
-                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla justify-items-start">
                     {topics.map((topic) => {
                         const chapterKey = makeChapterThumbnailKey(
                             classLabel,
@@ -551,7 +553,7 @@ export const landingComponents = `
                                 subtitle={topic.description}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
                                 onClick={() => topic.route && onNavigate(topic.route)}
-                                className="w-full"
+                                className={cardWidthClass}
                             />
                         );
                     })}
@@ -565,7 +567,7 @@ export const landingComponents = `
             return (
                 <div className="space-y-4 font-bangla">
                     {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
-                    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-start">
                         {items.length === 0 && (
                             <div className="text-sm text-slate-400">এই অংশে এখনও কোন পাঠ যোগ করা হয়নি।</div>
                         )}
@@ -578,7 +580,7 @@ export const landingComponents = `
                                     subtitle={categoryLabel}
                                     thumbnailUrl={chapterThumbnails[chapterKey]?.url}
                                     onClick={() => onSelectItem(item)}
-                                    className="w-full"
+                                    className={cardWidthClass}
                                 />
                             );
                         })}
@@ -591,7 +593,7 @@ export const landingComponents = `
             const chapterThumbnails = useChapterThumbnails();
 
             return (
-                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla justify-items-start">
                     {items.length === 0 && (
                         <div className="text-sm text-slate-400">এই অংশে এখনও কোন সহপাঠ যোগ করা হয়নি।</div>
                     )}
@@ -604,7 +606,7 @@ export const landingComponents = `
                                 subtitle={item.type}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
                                 onClick={() => onSelectItem(item)}
-                                className="w-full"
+                                className={cardWidthClass}
                             />
                         );
                     })}
