@@ -358,7 +358,7 @@ export const settingsComponents = `
                         const addChapterList = (classLabel, subjectLabel, list, suffix = '') => {
                             (list || []).forEach((chapter) => {
                                 const key = chapter.id || chapter.key || chapter.name || chapter;
-                                const chapterKey = suffix ? `${key}-${suffix}` : key;
+                                const chapterKey = suffix ? key + '-' + suffix : key;
                                 const title = chapter.name || chapter.title || chapter;
                                 pushEntry(classLabel, subjectLabel, { key: chapterKey, title }, suffix);
                             });
@@ -474,8 +474,8 @@ export const settingsComponents = `
                                         <div className="text-lg font-semibold text-gray-900 mt-2">{classLabel}</div>
                                         <div className="text-sm text-gray-500 mt-1">
                                             {activeMode === 'subject'
-                                                ? `Upload thumbnails for ${classLabel} subjects.`
-                                                : `Upload thumbnails for ${classLabel} chapters.`}
+                                                ? 'Upload thumbnails for ' + classLabel + ' subjects.'
+                                                : 'Upload thumbnails for ' + classLabel + ' chapters.'}
                                         </div>
                                     </button>
                                 ))}

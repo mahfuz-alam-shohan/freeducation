@@ -2251,7 +2251,7 @@ export const mainApp = `
                                 itemRoute="admin-ssc-physics-topic"
                                 questionRoute="admin-ssc-physics-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2348,7 +2348,7 @@ export const mainApp = `
                                 itemRoute="admin-ssc-chemistry-topic"
                                 questionRoute="admin-ssc-chemistry-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2454,7 +2454,7 @@ export const mainApp = `
                                 itemRoute="admin-ssc-biology-topic"
                                 questionRoute="admin-ssc-biology-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2560,7 +2560,7 @@ export const mainApp = `
                                 itemRoute="admin-hsc-physics-1st-topic"
                                 questionRoute="admin-hsc-physics-1st-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2668,7 +2668,7 @@ export const mainApp = `
                                 itemRoute="admin-hsc-physics-2nd-topic"
                                 questionRoute="admin-hsc-physics-2nd-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2776,7 +2776,7 @@ export const mainApp = `
                                 itemRoute="admin-hsc-chemistry-1st-topic"
                                 questionRoute="admin-hsc-chemistry-1st-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2884,7 +2884,7 @@ export const mainApp = `
                                 itemRoute="admin-hsc-chemistry-2nd-topic"
                                 questionRoute="admin-hsc-chemistry-2nd-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -2992,7 +2992,7 @@ export const mainApp = `
                                 itemRoute="admin-hsc-biology-1st-topic"
                                 questionRoute="admin-hsc-biology-1st-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />
@@ -3100,7 +3100,7 @@ export const mainApp = `
                                 itemRoute="admin-hsc-biology-2nd-topic"
                                 questionRoute="admin-hsc-biology-2nd-cq-questions"
                                 title="CQ প্রশ্ন"
-                                subtitle={`${selectedScienceTopic?.name || 'নির্বাচিত টপিক'} এর প্রশ্নের ধরন নির্বাচন করুন।`}
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
                                 onSelectType={(type) => setSelectedScienceCqType(type)}
                                 onNavigate={navigate}
                             />

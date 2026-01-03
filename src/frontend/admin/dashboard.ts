@@ -1466,7 +1466,7 @@ export const dashboardComponents = `
                 if (editingChapter) {
                     onUpdate(editingChapter.id, trimmed);
                 } else {
-                    const nextId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                    const nextId = Date.now() + '-' + Math.random().toString(16).slice(2);
                     onAdd({ id: nextId, name: trimmed, topics: [] });
                 }
                 resetForm();
@@ -1475,8 +1475,8 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title={`${classLabel} ${subjectLabel}`}
-                    subtitle={`${subjectLabel} অধ্যায় যোগ করুন এবং টপিক সেট করুন।`}
+                    title={classLabel + ' ' + subjectLabel}
+                    subtitle={subjectLabel + ' অধ্যায় যোগ করুন এবং টপিক সেট করুন।'}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
