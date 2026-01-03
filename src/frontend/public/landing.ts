@@ -309,8 +309,8 @@ export const landingComponents = `
         };
 
         const cardWidthClass = 'w-40 sm:w-48 md:w-52';
-        // Standard card grid gap: gap-3 (0.75rem), slightly larger than the previous gap-2.
-        const cardGridGapClass = 'gap-3';
+        // Standard card grid gap: 0.8cm (roughly 30px) to keep spacing consistent.
+        const cardGridGapClass = 'gap-[0.8cm]';
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
