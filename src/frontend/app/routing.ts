@@ -22,6 +22,9 @@ export const appRouting = `
                 'public-ssc-ict': '/ssc/ict',
                 'public-ssc-ict-mcq': '/ssc/ict/mcq',
                 'public-hsc-ict': '/hsc/ict',
+                'public-hsc-ict-topics': '/hsc/ict/topics',
+                'public-hsc-ict-topic': '/hsc/ict/topic',
+                'public-hsc-ict-cq': '/hsc/ict/cq',
                 'public-hsc-ict-mcq': '/hsc/ict/mcq',
                 'public-ssc-physics': '/ssc/physics',
                 'public-ssc-physics-topics': '/ssc/physics/topics',
@@ -95,6 +98,10 @@ export const appRouting = `
                 'admin-ssc-ict': '/dashboard/ssc/ict',
                 'admin-ssc-ict-mcq': '/dashboard/ssc/ict/mcq',
                 'admin-hsc-ict': '/dashboard/hsc/ict',
+                'admin-hsc-ict-topics': '/dashboard/hsc/ict/topics',
+                'admin-hsc-ict-topic': '/dashboard/hsc/ict/topic',
+                'admin-hsc-ict-cq-types': '/dashboard/hsc/ict/cq',
+                'admin-hsc-ict-cq-questions': '/dashboard/hsc/ict/cq/questions',
                 'admin-hsc-ict-mcq': '/dashboard/hsc/ict/mcq',
                 'admin-ssc-physics': '/dashboard/ssc/physics',
                 'admin-ssc-physics-topics': '/dashboard/ssc/physics/topics',
@@ -228,6 +235,9 @@ export const appRouting = `
                 if (path.startsWith('/hsc/biology-2nd-paper/topics')) return 'public-hsc-biology-2nd-topics';
                 if (path.startsWith('/hsc/biology-2nd-paper')) return 'public-hsc-biology-2nd';
                 if (path.startsWith('/hsc/ict/mcq')) return 'public-hsc-ict-mcq';
+                if (path.startsWith('/hsc/ict/cq')) return 'public-hsc-ict-cq';
+                if (path.startsWith('/hsc/ict/topics')) return 'public-hsc-ict-topics';
+                if (path.startsWith('/hsc/ict/topic')) return 'public-hsc-ict-topic';
                 if (path.startsWith('/hsc/ict')) return 'public-hsc-ict';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies/mcq')) return 'public-ssc-bangladesh-global-studies-mcq';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies/cq')) return 'public-ssc-bangladesh-global-studies-cq';
@@ -285,7 +295,11 @@ export const appRouting = `
                 if (path.startsWith('/dashboard/hsc/english-1st-paper')) return 'english-hsc-1st-paper';
                 if (path.startsWith('/dashboard/ssc/ict/mcq')) return 'admin-ssc-ict-mcq';
                 if (path.startsWith('/dashboard/ssc/ict')) return 'admin-ssc-ict';
+                if (path.startsWith('/dashboard/hsc/ict/cq/questions')) return 'admin-hsc-ict-cq-questions';
+                if (path.startsWith('/dashboard/hsc/ict/cq')) return 'admin-hsc-ict-cq-types';
                 if (path.startsWith('/dashboard/hsc/ict/mcq')) return 'admin-hsc-ict-mcq';
+                if (path.startsWith('/dashboard/hsc/ict/topics')) return 'admin-hsc-ict-topics';
+                if (path.startsWith('/dashboard/hsc/ict/topic')) return 'admin-hsc-ict-topic';
                 if (path.startsWith('/dashboard/hsc/ict')) return 'admin-hsc-ict';
                 if (path.startsWith('/dashboard/hsc/physics-1st-paper/cq/questions')) return 'admin-hsc-physics-1st-cq-questions';
                 if (path.startsWith('/dashboard/hsc/physics-1st-paper/cq')) return 'admin-hsc-physics-1st-cq-types';

@@ -52,7 +52,7 @@ export const renderAdmin = `
                             />
                         )}
                         {view === 'admin-hsc-ict' && (
-                            <IctChapterList
+                            <ScienceChapterList
                                 classLabel="HSC"
                                 subjectLabel="Information and Communication Technology"
                                 chapters={hscIctChapters}
@@ -60,23 +60,97 @@ export const renderAdmin = `
                                 onUpdate={updateChapterItem(setHscIctChapters)}
                                 onDelete={removeChapterItem(setHscIctChapters)}
                                 onSelect={(chapter) => {
-                                    setSelectedIctChapter(chapter);
-                                    setSelectedIctClass('HSC');
-                                    navigate('admin-hsc-ict-mcq');
+                                    setSelectedScienceChapter(chapter);
+                                    setSelectedScienceSubject({
+                                        classLabel: 'HSC',
+                                        subjectLabel: 'Information and Communication Technology',
+                                        questionKey: 'ICT'
+                                    });
+                                    setSelectedScienceTopic(null);
+                                    navigate('admin-hsc-ict-topics');
                                 }}
                                 onBack={() => navigate('admin-groups-hsc')}
                                 onNavigate={navigate}
                             />
                         )}
+                        {view === 'admin-hsc-ict-topics' && (
+                            <ScienceTopicList
+                                classLabel="HSC"
+                                subjectLabel="Information and Communication Technology"
+                                chapter={selectedScienceChapter}
+                                onAddTopic={addTopicItem(setHscIctChapters)}
+                                onUpdateTopic={updateTopicItem(setHscIctChapters)}
+                                onDeleteTopic={removeTopicItem(setHscIctChapters)}
+                                onSelectTopic={(topic) => {
+                                    setSelectedScienceTopic(topic);
+                                    navigate('admin-hsc-ict-topic');
+                                }}
+                                onBack={() => navigate('admin-hsc-ict')}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'admin-hsc-ict-topic' && (
+                            <ScienceTopicDetail
+                                classLabel="HSC"
+                                subjectLabel="Information and Communication Technology"
+                                chapter={selectedScienceChapter}
+                                topic={selectedScienceTopic}
+                                noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
+                                notesByItem={notesByItem}
+                                onUpdateNotes={setNotesByItem}
+                                onBack={() => navigate('admin-hsc-ict-topics')}
+                                onNavigateCq={() => navigate('admin-hsc-ict-cq-types')}
+                                onNavigateMcq={() => navigate('admin-hsc-ict-mcq')}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'admin-hsc-ict-cq-types' && (
+                            <SrijonshilTypeList
+                                classLabel="HSC"
+                                itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+                                itemRoute="admin-hsc-ict-topic"
+                                questionRoute="admin-hsc-ict-cq-questions"
+                                title="CQ প্রশ্ন"
+                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর প্রশ্নের ধরন নির্বাচন করুন।'}
+                                onSelectType={(type) => setSelectedScienceCqType(type)}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'admin-hsc-ict-cq-questions' && (
+                            <SrijonshilQuestionList
+                                classLabel="HSC"
+                                itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+                                typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+                                questions={
+                                    srijonshilQuestions[
+                                        getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+                                    ] || []
+                                }
+                                onAdd={addQuestionEntry(
+                                    setSrijonshilQuestions,
+                                    getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+                                )}
+                                onUpdate={updateQuestionEntry(
+                                    setSrijonshilQuestions,
+                                    getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+                                )}
+                                onDelete={removeQuestionEntry(
+                                    setSrijonshilQuestions,
+                                    getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+                                )}
+                                itemRoute="admin-hsc-ict-cq-types"
+                                onNavigate={navigate}
+                            />
+                        )}
                         {view === 'admin-hsc-ict-mcq' && (
                             <McqQuestionList
-                                classLabel={selectedIctClass}
-                                itemName={selectedIctChapter?.name || 'নির্বাচিত অধ্যায়'}
-                                questions={mcqQuestions[getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'mcq')] || []}
-                                onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'mcq'))}
-                                onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'mcq'))}
-                                onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'mcq'))}
-                                itemRoute="admin-hsc-ict"
+                                classLabel="HSC"
+                                itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+                                questions={mcqQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq')] || []}
+                                onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq'))}
+                                onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq'))}
+                                onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq'))}
+                                itemRoute="admin-hsc-ict-topic"
                                 onNavigate={navigate}
                             />
                         )}
