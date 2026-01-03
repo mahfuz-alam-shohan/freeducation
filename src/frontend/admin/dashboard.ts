@@ -1606,7 +1606,7 @@ export const dashboardComponents = `
                 if (editingTopic) {
                     onUpdateTopic(chapter.id, editingTopic.id, trimmed);
                 } else {
-                    const nextId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                    const nextId = Date.now() + '-' + Math.random().toString(16).slice(2);
                     onAddTopic(chapter.id, { id: nextId, name: trimmed });
                 }
                 resetForm();
@@ -1615,8 +1615,8 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title={`${subjectLabel} টপিকসমূহ`}
-                    subtitle={`${chapter?.name || 'অধ্যায়'} এর টপিক নির্বাচন করুন।`}
+                    title={subjectLabel + ' টপিকসমূহ'}
+                    subtitle={(chapter?.name || 'অধ্যায়') + ' এর টপিক নির্বাচন করুন।'}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
@@ -1761,8 +1761,8 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title={`${subjectLabel} • ${topic?.name || 'টপিক'}`}
-                    subtitle={chapter?.name ? `অধ্যায়: ${chapter.name}` : 'টপিকের তথ্য যোগ করুন।'}
+                    title={subjectLabel + ' • ' + (topic?.name || 'টপিক')}
+                    subtitle={chapter?.name ? 'অধ্যায়: ' + chapter.name : 'টপিকের তথ্য যোগ করুন।'}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
@@ -1818,7 +1818,7 @@ export const dashboardComponents = `
                                 <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যোগ করা হয়নি।</li>
                             )}
                             {notes.map((note, index) => (
-                                <li key={`${noteKey}-${index}`} className="px-4 py-3 flex items-start gap-3">
+                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
                                     <span className="text-sm font-semibold text-gray-500">
                                         {toBanglaNumber(index + 1)}.
                                     </span>
