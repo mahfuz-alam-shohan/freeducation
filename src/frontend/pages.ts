@@ -37,6 +37,36 @@ const viewByPath = new Map<string, string>([
   ["/ssc/biology/topic", "public-ssc-biology-topic"],
   ["/ssc/biology/cq", "public-ssc-biology-cq"],
   ["/ssc/biology/mcq", "public-ssc-biology-mcq"],
+  ["/hsc/physics-1st-paper", "public-hsc-physics-1st"],
+  ["/hsc/physics-1st-paper/topics", "public-hsc-physics-1st-topics"],
+  ["/hsc/physics-1st-paper/topic", "public-hsc-physics-1st-topic"],
+  ["/hsc/physics-1st-paper/cq", "public-hsc-physics-1st-cq"],
+  ["/hsc/physics-1st-paper/mcq", "public-hsc-physics-1st-mcq"],
+  ["/hsc/physics-2nd-paper", "public-hsc-physics-2nd"],
+  ["/hsc/physics-2nd-paper/topics", "public-hsc-physics-2nd-topics"],
+  ["/hsc/physics-2nd-paper/topic", "public-hsc-physics-2nd-topic"],
+  ["/hsc/physics-2nd-paper/cq", "public-hsc-physics-2nd-cq"],
+  ["/hsc/physics-2nd-paper/mcq", "public-hsc-physics-2nd-mcq"],
+  ["/hsc/chemistry-1st-paper", "public-hsc-chemistry-1st"],
+  ["/hsc/chemistry-1st-paper/topics", "public-hsc-chemistry-1st-topics"],
+  ["/hsc/chemistry-1st-paper/topic", "public-hsc-chemistry-1st-topic"],
+  ["/hsc/chemistry-1st-paper/cq", "public-hsc-chemistry-1st-cq"],
+  ["/hsc/chemistry-1st-paper/mcq", "public-hsc-chemistry-1st-mcq"],
+  ["/hsc/chemistry-2nd-paper", "public-hsc-chemistry-2nd"],
+  ["/hsc/chemistry-2nd-paper/topics", "public-hsc-chemistry-2nd-topics"],
+  ["/hsc/chemistry-2nd-paper/topic", "public-hsc-chemistry-2nd-topic"],
+  ["/hsc/chemistry-2nd-paper/cq", "public-hsc-chemistry-2nd-cq"],
+  ["/hsc/chemistry-2nd-paper/mcq", "public-hsc-chemistry-2nd-mcq"],
+  ["/hsc/biology-1st-paper", "public-hsc-biology-1st"],
+  ["/hsc/biology-1st-paper/topics", "public-hsc-biology-1st-topics"],
+  ["/hsc/biology-1st-paper/topic", "public-hsc-biology-1st-topic"],
+  ["/hsc/biology-1st-paper/cq", "public-hsc-biology-1st-cq"],
+  ["/hsc/biology-1st-paper/mcq", "public-hsc-biology-1st-mcq"],
+  ["/hsc/biology-2nd-paper", "public-hsc-biology-2nd"],
+  ["/hsc/biology-2nd-paper/topics", "public-hsc-biology-2nd-topics"],
+  ["/hsc/biology-2nd-paper/topic", "public-hsc-biology-2nd-topic"],
+  ["/hsc/biology-2nd-paper/cq", "public-hsc-biology-2nd-cq"],
+  ["/hsc/biology-2nd-paper/mcq", "public-hsc-biology-2nd-mcq"],
   ["/hsc/english-1st-paper", "public-english-hsc-1st-paper"],
   ["/hsc/english-1st-paper/reading", "public-english-hsc-reading"],
   ["/hsc/english-1st-paper/writing", "public-english-hsc-writing"],
@@ -70,6 +100,42 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/ssc/biology/cq", "admin-ssc-biology-cq-types"],
   ["/dashboard/ssc/biology/cq/questions", "admin-ssc-biology-cq-questions"],
   ["/dashboard/ssc/biology/mcq", "admin-ssc-biology-mcq"],
+  ["/dashboard/hsc/physics-1st-paper", "admin-hsc-physics-1st"],
+  ["/dashboard/hsc/physics-1st-paper/topics", "admin-hsc-physics-1st-topics"],
+  ["/dashboard/hsc/physics-1st-paper/topic", "admin-hsc-physics-1st-topic"],
+  ["/dashboard/hsc/physics-1st-paper/cq", "admin-hsc-physics-1st-cq-types"],
+  ["/dashboard/hsc/physics-1st-paper/cq/questions", "admin-hsc-physics-1st-cq-questions"],
+  ["/dashboard/hsc/physics-1st-paper/mcq", "admin-hsc-physics-1st-mcq"],
+  ["/dashboard/hsc/physics-2nd-paper", "admin-hsc-physics-2nd"],
+  ["/dashboard/hsc/physics-2nd-paper/topics", "admin-hsc-physics-2nd-topics"],
+  ["/dashboard/hsc/physics-2nd-paper/topic", "admin-hsc-physics-2nd-topic"],
+  ["/dashboard/hsc/physics-2nd-paper/cq", "admin-hsc-physics-2nd-cq-types"],
+  ["/dashboard/hsc/physics-2nd-paper/cq/questions", "admin-hsc-physics-2nd-cq-questions"],
+  ["/dashboard/hsc/physics-2nd-paper/mcq", "admin-hsc-physics-2nd-mcq"],
+  ["/dashboard/hsc/chemistry-1st-paper", "admin-hsc-chemistry-1st"],
+  ["/dashboard/hsc/chemistry-1st-paper/topics", "admin-hsc-chemistry-1st-topics"],
+  ["/dashboard/hsc/chemistry-1st-paper/topic", "admin-hsc-chemistry-1st-topic"],
+  ["/dashboard/hsc/chemistry-1st-paper/cq", "admin-hsc-chemistry-1st-cq-types"],
+  ["/dashboard/hsc/chemistry-1st-paper/cq/questions", "admin-hsc-chemistry-1st-cq-questions"],
+  ["/dashboard/hsc/chemistry-1st-paper/mcq", "admin-hsc-chemistry-1st-mcq"],
+  ["/dashboard/hsc/chemistry-2nd-paper", "admin-hsc-chemistry-2nd"],
+  ["/dashboard/hsc/chemistry-2nd-paper/topics", "admin-hsc-chemistry-2nd-topics"],
+  ["/dashboard/hsc/chemistry-2nd-paper/topic", "admin-hsc-chemistry-2nd-topic"],
+  ["/dashboard/hsc/chemistry-2nd-paper/cq", "admin-hsc-chemistry-2nd-cq-types"],
+  ["/dashboard/hsc/chemistry-2nd-paper/cq/questions", "admin-hsc-chemistry-2nd-cq-questions"],
+  ["/dashboard/hsc/chemistry-2nd-paper/mcq", "admin-hsc-chemistry-2nd-mcq"],
+  ["/dashboard/hsc/biology-1st-paper", "admin-hsc-biology-1st"],
+  ["/dashboard/hsc/biology-1st-paper/topics", "admin-hsc-biology-1st-topics"],
+  ["/dashboard/hsc/biology-1st-paper/topic", "admin-hsc-biology-1st-topic"],
+  ["/dashboard/hsc/biology-1st-paper/cq", "admin-hsc-biology-1st-cq-types"],
+  ["/dashboard/hsc/biology-1st-paper/cq/questions", "admin-hsc-biology-1st-cq-questions"],
+  ["/dashboard/hsc/biology-1st-paper/mcq", "admin-hsc-biology-1st-mcq"],
+  ["/dashboard/hsc/biology-2nd-paper", "admin-hsc-biology-2nd"],
+  ["/dashboard/hsc/biology-2nd-paper/topics", "admin-hsc-biology-2nd-topics"],
+  ["/dashboard/hsc/biology-2nd-paper/topic", "admin-hsc-biology-2nd-topic"],
+  ["/dashboard/hsc/biology-2nd-paper/cq", "admin-hsc-biology-2nd-cq-types"],
+  ["/dashboard/hsc/biology-2nd-paper/cq/questions", "admin-hsc-biology-2nd-cq-questions"],
+  ["/dashboard/hsc/biology-2nd-paper/mcq", "admin-hsc-biology-2nd-mcq"],
   ["/dashboard/hsc/science", "admin-hsc-science"],
   ["/dashboard/hsc/humanities", "admin-hsc-humanities"],
   ["/dashboard/hsc/business-studies", "admin-hsc-business-studies"],
@@ -130,6 +196,114 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/ssc/ict")) {
       return renderAppHtml("admin-ssc-ict");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/cq/questions")) {
+      return renderAppHtml("admin-hsc-physics-1st-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/cq")) {
+      return renderAppHtml("admin-hsc-physics-1st-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/mcq")) {
+      return renderAppHtml("admin-hsc-physics-1st-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/topic")) {
+      return renderAppHtml("admin-hsc-physics-1st-topic");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/topics")) {
+      return renderAppHtml("admin-hsc-physics-1st-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper")) {
+      return renderAppHtml("admin-hsc-physics-1st");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/cq/questions")) {
+      return renderAppHtml("admin-hsc-physics-2nd-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/cq")) {
+      return renderAppHtml("admin-hsc-physics-2nd-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/mcq")) {
+      return renderAppHtml("admin-hsc-physics-2nd-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/topic")) {
+      return renderAppHtml("admin-hsc-physics-2nd-topic");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/topics")) {
+      return renderAppHtml("admin-hsc-physics-2nd-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper")) {
+      return renderAppHtml("admin-hsc-physics-2nd");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/cq/questions")) {
+      return renderAppHtml("admin-hsc-chemistry-1st-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/cq")) {
+      return renderAppHtml("admin-hsc-chemistry-1st-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/mcq")) {
+      return renderAppHtml("admin-hsc-chemistry-1st-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/topic")) {
+      return renderAppHtml("admin-hsc-chemistry-1st-topic");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/topics")) {
+      return renderAppHtml("admin-hsc-chemistry-1st-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper")) {
+      return renderAppHtml("admin-hsc-chemistry-1st");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/cq/questions")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/cq")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/mcq")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/topic")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd-topic");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/topics")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/cq/questions")) {
+      return renderAppHtml("admin-hsc-biology-1st-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/cq")) {
+      return renderAppHtml("admin-hsc-biology-1st-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/mcq")) {
+      return renderAppHtml("admin-hsc-biology-1st-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/topic")) {
+      return renderAppHtml("admin-hsc-biology-1st-topic");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/topics")) {
+      return renderAppHtml("admin-hsc-biology-1st-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper")) {
+      return renderAppHtml("admin-hsc-biology-1st");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/cq/questions")) {
+      return renderAppHtml("admin-hsc-biology-2nd-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/cq")) {
+      return renderAppHtml("admin-hsc-biology-2nd-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/mcq")) {
+      return renderAppHtml("admin-hsc-biology-2nd-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/topic")) {
+      return renderAppHtml("admin-hsc-biology-2nd-topic");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/topics")) {
+      return renderAppHtml("admin-hsc-biology-2nd-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper")) {
+      return renderAppHtml("admin-hsc-biology-2nd");
     }
     if (pathname.startsWith("/dashboard/ssc/physics/cq/questions")) {
       return renderAppHtml("admin-ssc-physics-cq-questions");

@@ -267,6 +267,12 @@ export const dashboardComponents = `
             const physicsRoute = classLabel === 'SSC' ? 'admin-ssc-physics' : null;
             const chemistryRoute = classLabel === 'SSC' ? 'admin-ssc-chemistry' : null;
             const biologyRoute = classLabel === 'SSC' ? 'admin-ssc-biology' : null;
+            const hscPhysics1Route = classLabel === 'HSC' ? 'admin-hsc-physics-1st' : null;
+            const hscPhysics2Route = classLabel === 'HSC' ? 'admin-hsc-physics-2nd' : null;
+            const hscChem1Route = classLabel === 'HSC' ? 'admin-hsc-chemistry-1st' : null;
+            const hscChem2Route = classLabel === 'HSC' ? 'admin-hsc-chemistry-2nd' : null;
+            const hscBio1Route = classLabel === 'HSC' ? 'admin-hsc-biology-1st' : null;
+            const hscBio2Route = classLabel === 'HSC' ? 'admin-hsc-biology-2nd' : null;
 
             return (
                 <AdminShell
@@ -301,8 +307,27 @@ export const dashboardComponents = `
                             const isPhysics = subject === 'Physics' && classLabel === 'SSC';
                             const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
                             const isBiology = subject === 'Biology' && classLabel === 'SSC';
+                            const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
+                            const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
+                            const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
+                            const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
+                            const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
+                            const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
                             const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
-                            if (!isBanglaFirst && !isEnglishFirst && !isIct && !isPhysics && !isChemistry && !isBiology) {
+                            if (
+                                !isBanglaFirst &&
+                                !isEnglishFirst &&
+                                !isIct &&
+                                !isPhysics &&
+                                !isChemistry &&
+                                !isBiology &&
+                                !isHscPhysics1 &&
+                                !isHscPhysics2 &&
+                                !isHscChem1 &&
+                                !isHscChem2 &&
+                                !isHscBio1 &&
+                                !isHscBio2
+                            ) {
                                 return (
                                     <div key={subject} className="px-5 py-4 text-sm font-semibold text-gray-700">
                                         {displayLabel}
@@ -319,7 +344,19 @@ export const dashboardComponents = `
                                             ? physicsRoute
                                             : isChemistry
                                                 ? chemistryRoute
-                                                : biologyRoute;
+                                                : isBiology
+                                                    ? biologyRoute
+                                                    : isHscPhysics1
+                                                        ? hscPhysics1Route
+                                                        : isHscPhysics2
+                                                            ? hscPhysics2Route
+                                                            : isHscChem1
+                                                                ? hscChem1Route
+                                                                : isHscChem2
+                                                                    ? hscChem2Route
+                                                                    : isHscBio1
+                                                                        ? hscBio1Route
+                                                                        : hscBio2Route;
                             return (
                                 <button
                                     key={subject}
@@ -1413,7 +1450,7 @@ export const dashboardComponents = `
             );
         };
 
-        const ScienceChapterList = ({ subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+        const ScienceChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [chapterName, setChapterName] = useState('');
             const [editingChapter, setEditingChapter] = useState(null);
@@ -1438,14 +1475,14 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title={`SSC ${subjectLabel}`}
+                    title={`${classLabel} ${subjectLabel}`}
                     subtitle={`${subjectLabel} অধ্যায় যোগ করুন এবং টপিক সেট করুন।`}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
                         <button
-                            onClick={() => onNavigate('admin-groups-ssc')}
+                            onClick={() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc')}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
                             Back
@@ -1543,6 +1580,7 @@ export const dashboardComponents = `
         };
 
         const ScienceTopicList = ({
+            classLabel,
             subjectLabel,
             chapter,
             onAddTopic,
@@ -1677,6 +1715,7 @@ export const dashboardComponents = `
         };
 
         const ScienceTopicDetail = ({
+            classLabel,
             subjectLabel,
             chapter,
             topic,
