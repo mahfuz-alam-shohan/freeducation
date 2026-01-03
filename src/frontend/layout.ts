@@ -33,6 +33,7 @@ export function renderAppHtml(initialView: string) {
     <style>
         :root {
             color-scheme: light;
+            --card-grid-gap: 0.5rem;
         }
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
@@ -43,6 +44,7 @@ export function renderAppHtml(initialView: string) {
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         .panel-shadow { box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06); }
         .thumbnail-float { animation: thumbnailFloat 9s ease-in-out infinite; }
+        .card-grid-gap { gap: var(--card-grid-gap); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes thumbnailFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
         @media (prefers-reduced-motion: reduce) {
