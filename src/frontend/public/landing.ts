@@ -180,6 +180,7 @@ export const landingComponents = `
                     const accent = accentPalette[paletteIndex % accentPalette.length];
                     paletteIndex += 1;
                     const isBanglaFirst = subject === 'Bangla 1st Paper';
+                    const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
                     subjectMap.set(subject, {
                         title: subject,
                         subtitle: isBanglaFirst ? 'বাংলা ১ম পত্র' : '',
@@ -189,7 +190,9 @@ export const landingComponents = `
                         subjectKey: makeThumbnailKey(subject, classLabel),
                         route: isBanglaFirst
                             ? (classLabel === 'SSC' ? 'public-bangla-ssc-1st-paper' : 'public-bangla-hsc-1st-paper')
-                            : ''
+                            : isEnglishFirst
+                                ? 'public-english-hsc-1st-paper'
+                                : ''
                     });
                 });
             });
@@ -704,6 +707,98 @@ export const landingComponents = `
             );
         };
 
+        const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
+            <div className="flex-1 bg-gradient-to-br from-white via-sky-50 to-indigo-50">
+                <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">English 1st Paper</div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{title}</h2>
+                            {subtitle && <p className="text-sm text-slate-500 mt-2">{subtitle}</p>}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {onBack && (
+                                <button
+                                    onClick={onBack}
+                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                                >
+                                    Back
+                                </button>
+                            )}
+                            <button
+                                onClick={() => onNavigate('landing')}
+                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                            >
+                                Home
+                            </button>
+                        </div>
+                    </div>
+                    {children}
+                </div>
+            </div>
+        );
+
+        const PublicEnglishCardGrid = ({ items, onNavigate }) => (
+            <div className="grid gap-4 sm:grid-cols-2">
+                {items.map((item) => (
+                    <button
+                        key={item.key}
+                        onClick={() => item.route && onNavigate(item.route)}
+                        className="border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition"
+                    >
+                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Section</div>
+                        <div className="text-lg font-semibold text-slate-900 mt-2">{item.title}</div>
+                        <p className="text-sm text-slate-500 mt-2">{item.description}</p>
+                    </button>
+                ))}
+            </div>
+        );
+
+        const PublicEnglishTypeList = ({ items, onSelect }) => (
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm divide-y">
+                {items.map((item) => (
+                    <button
+                        key={item.key}
+                        onClick={() => onSelect(item)}
+                        className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                        <div className="text-left space-y-1">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Question type</div>
+                            <div className="text-base font-semibold text-slate-900">{item.label}</div>
+                            {item.description && <p className="text-xs text-slate-500">{item.description}</p>}
+                            {item.children?.length > 0 && (
+                                <p className="text-xs text-indigo-500">
+                                    Includes {item.children.map((child) => child.label).join(', ')}
+                                </p>
+                            )}
+                        </div>
+                        <span className="text-xs uppercase tracking-[0.2em] text-indigo-600">Open</span>
+                    </button>
+                ))}
+                {items.length === 0 && (
+                    <div className="px-5 py-4 text-sm text-slate-400">No question types available yet.</div>
+                )}
+            </div>
+        );
+
+        const PublicEnglishQuestionList = ({ questions }) => (
+            <div className="space-y-4">
+                {questions.length === 0 && (
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5 text-sm text-slate-400">
+                        No questions have been added yet.
+                    </div>
+                )}
+                {questions.map((entry, index) => (
+                    <div key={index} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2">
+                        <div className="text-sm font-semibold text-slate-900">Q{index + 1}. {entry.question}</div>
+                        <div className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3">
+                            Answer: {entry.answer}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+
         const StudentLanding = ({ onNavigate }) => {
             const [quoteIndex, setQuoteIndex] = useState(0);
             const thumbnailMap = useSubjectThumbnails();
@@ -783,6 +878,10 @@ export const landingComponents = `
             PublicBanglaItemDetail,
             PublicBanglaSrijonshilDetail,
             PublicBanglaMcqDetail,
+            PublicEnglishShell,
+            PublicEnglishCardGrid,
+            PublicEnglishTypeList,
+            PublicEnglishQuestionList,
             sscSubjects,
             hscSubjects
         };
@@ -797,6 +896,10 @@ export const landingComponents = `
             PublicBanglaItemDetail,
             PublicBanglaSrijonshilDetail,
             PublicBanglaMcqDetail,
+            PublicEnglishShell,
+            PublicEnglishCardGrid,
+            PublicEnglishTypeList,
+            PublicEnglishQuestionList,
             sscSubjects,
             hscSubjects
         } = LandingModule;
