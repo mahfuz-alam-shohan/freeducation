@@ -167,6 +167,76 @@ export const mainApp = `
             const getEnglishQuestionKey = (section, typeKey, subtypeKey) => {
                 return ['HSC', section || 'general', typeKey || 'general', subtypeKey || 'general'].join('-');
             };
+            const teacherSubjectRoutes = {
+                SSC: {
+                    'bangla 1st paper': {
+                        route: 'bangla-ssc-1st-paper',
+                        views: [
+                            'bangla-ssc-1st-paper',
+                            'bangla-ssc-shahitto',
+                            'bangla-ssc-shohopath',
+                            'bangla-ssc-goddo',
+                            'bangla-ssc-poddo',
+                            'bangla-ssc-item',
+                            'bangla-ssc-srijonshil-types',
+                            'bangla-ssc-srijonshil-questions',
+                            'bangla-ssc-mcq'
+                        ],
+                        description: 'Manage Bangla lessons, notes, and question banks.'
+                    },
+                    'information and communication technology': {
+                        route: 'admin-ssc-ict',
+                        views: ['admin-ssc-ict', 'admin-ssc-ict-mcq'],
+                        description: 'Manage ICT chapters and MCQ uploads.'
+                    }
+                },
+                HSC: {
+                    'bangla 1st paper': {
+                        route: 'bangla-hsc-1st-paper',
+                        views: [
+                            'bangla-hsc-1st-paper',
+                            'bangla-hsc-shahitto',
+                            'bangla-hsc-shohopath',
+                            'bangla-hsc-goddo',
+                            'bangla-hsc-poddo',
+                            'bangla-hsc-item',
+                            'bangla-hsc-srijonshil-types',
+                            'bangla-hsc-srijonshil-questions',
+                            'bangla-hsc-mcq'
+                        ],
+                        description: 'Manage Bangla lessons, notes, and question banks.'
+                    },
+                    'english 1st paper': {
+                        route: 'english-hsc-1st-paper',
+                        views: [
+                            'english-hsc-1st-paper',
+                            'english-hsc-reading',
+                            'english-hsc-writing',
+                            'english-hsc-subtypes',
+                            'english-hsc-questions'
+                        ],
+                        description: 'Manage English reading and writing question content.'
+                    }
+                }
+            };
+            const getTeacherSubjectConfig = (assignment) => {
+                if (!assignment) return null;
+                const level = String(assignment.level || '').toUpperCase();
+                const subjectKey = String(assignment.subject || '').trim().toLowerCase();
+                const config = teacherSubjectRoutes[level]?.[subjectKey];
+                if (!config) return null;
+                return { ...config, level, subject: assignment.subject };
+            };
+            const getTeacherAllowedViews = (assignment) => {
+                const config = getTeacherSubjectConfig(assignment);
+                return new Set(['dashboard', 'admin-settings', ...(config?.views || [])]);
+            };
+            const isDashboardView = (targetView) =>
+                targetView === 'dashboard' ||
+                targetView === 'admin-settings' ||
+                targetView.startsWith('admin-') ||
+                targetView.startsWith('bangla-') ||
+                targetView.startsWith('english-');
 
             const defaultContent = {
                 sscGoddoItems: [],
@@ -432,7 +502,7 @@ export const mainApp = `
                     if (!data.hasAdmin && view === 'login') {
                         navigate('register', { replace: true });
                     }
-                    if (!token && (view === 'dashboard' || view.startsWith('admin-groups') || view === 'admin-settings')) {
+                    if (!token && isDashboardView(view)) {
                         navigate('landing', { replace: true });
                     }
                     setIsLoading(false);
@@ -459,7 +529,9 @@ export const mainApp = `
 
             useEffect(() => {
                 if (!contentLoaded) return;
-                if (!user || user.role !== 'admin') return;
+                if (!user) return;
+                const canEditContent = user.role === 'admin' || (user.role === 'teacher' && user.assignment);
+                if (!canEditContent) return;
                 const token = localStorage.getItem('auth_token');
                 if (!token) return;
 
@@ -551,7 +623,16 @@ export const mainApp = `
                 }
             };
 
+            useEffect(() => {
+                if (!user || user.role !== 'teacher') return;
+                const allowedViews = getTeacherAllowedViews(user.assignment);
+                if (isDashboardView(view) && !allowedViews.has(view)) {
+                    navigate('dashboard', { replace: true });
+                }
+            }, [user, view]);
+
             if (isLoading || hasAdmin === null) return <Loading />;
+            const teacherSubjectConfig = getTeacherSubjectConfig(user?.assignment);
 
             return (
                 <div className="min-h-screen flex flex-col">
@@ -909,7 +990,12 @@ export const mainApp = `
                         )}
                         {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
                         {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
-                        {view === 'dashboard' && <AdminDashboard onNavigate={navigate} />}
+                        {view === 'dashboard' && user?.role === 'teacher' && (
+                            <TeacherDashboard assignment={user.assignment} subjectConfig={teacherSubjectConfig} onNavigate={navigate} />
+                        )}
+                        {view === 'dashboard' && (!user || user.role !== 'teacher') && (
+                            <AdminDashboard onNavigate={navigate} />
+                        )}
                         {view === 'admin-groups-ssc' && (
                             <AdminGroupSelection classLabel="SSC" onNavigate={navigate} />
                         )}
@@ -1226,7 +1312,8 @@ export const mainApp = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-settings' && <AdminSettings onNavigate={navigate} />}
+                        {view === 'admin-settings' && user?.role === 'teacher' && <TeacherSettings onNavigate={navigate} />}
+                        {view === 'admin-settings' && (!user || user.role !== 'teacher') && <AdminSettings onNavigate={navigate} />}
                     </main>
                 </div>
             );
