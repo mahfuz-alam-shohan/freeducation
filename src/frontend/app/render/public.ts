@@ -10,13 +10,17 @@ export const renderPublic = `
                             <PublicIctShell
                                 title="আইসিটি অধ্যায়সমূহ"
                                 subtitle="SSC আইসিটির অধ্যায় বেছে নিন।"
+                                classLabel="SSC"
                                 onBack={() => navigate('ssc-subjects')}
                                 onNavigate={navigate}
                             >
                                 <PublicIctChapterList
+                                    classLabel="SSC"
+                                    subjectLabel="Information and Communication Technology"
                                     chapters={sscIctChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedIctChapter(chapter);
+                                        setSelectedIctClass('SSC');
                                         navigate('public-ssc-ict-mcq');
                                     }}
                                 />
@@ -24,10 +28,41 @@ export const renderPublic = `
                         )}
                         {view === 'public-ssc-ict-mcq' && (
                             <PublicIctMcqDetail
+                                classLabel={selectedIctClass}
                                 chapter={selectedIctChapter}
                                 mcqQuestions={mcqQuestions}
                                 getQuestionKey={getQuestionKey}
                                 onBack={() => navigate('public-ssc-ict')}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-hsc-ict' && (
+                            <PublicIctShell
+                                title="আইসিটি অধ্যায়সমূহ"
+                                subtitle="HSC আইসিটির অধ্যায় বেছে নিন।"
+                                classLabel="HSC"
+                                onBack={() => navigate('hsc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicIctChapterList
+                                    classLabel="HSC"
+                                    subjectLabel="Information and Communication Technology"
+                                    chapters={hscIctChapters}
+                                    onSelectChapter={(chapter) => {
+                                        setSelectedIctChapter(chapter);
+                                        setSelectedIctClass('HSC');
+                                        navigate('public-hsc-ict-mcq');
+                                    }}
+                                />
+                            </PublicIctShell>
+                        )}
+                        {view === 'public-hsc-ict-mcq' && (
+                            <PublicIctMcqDetail
+                                classLabel={selectedIctClass}
+                                chapter={selectedIctChapter}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onBack={() => navigate('public-hsc-ict')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -46,6 +81,10 @@ export const renderPublic = `
                                     chapters={sscPhysicsChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'SSC',
+                                            subjectLabel: 'Physics'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-ssc-physics-topics');
                                     }}
@@ -126,6 +165,10 @@ export const renderPublic = `
                                     chapters={sscChemistryChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'SSC',
+                                            subjectLabel: 'Chemistry'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-ssc-chemistry-topics');
                                     }}
@@ -206,6 +249,10 @@ export const renderPublic = `
                                     chapters={sscBiologyChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'SSC',
+                                            subjectLabel: 'Biology'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-ssc-biology-topics');
                                     }}
@@ -271,6 +318,209 @@ export const renderPublic = `
                                 onNavigate={navigate}
                             />
                         )}
+                        {view === 'public-ssc-bangladesh-global-studies' && (
+                            <PublicScienceShell
+                                subjectLabel="Bangladesh and Global Studies"
+                                classLabel="SSC"
+                                title="Bangladesh & Global Studies অধ্যায়সমূহ"
+                                subtitle="বাংলাদেশ ও বিশ্বপরিচয় বিষয়টির অধ্যায় বেছে নিন।"
+                                onBack={() => navigate('ssc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicScienceChapterList
+                                    classLabel="SSC"
+                                    subjectLabel="Bangladesh and Global Studies"
+                                    chapters={sscBangladeshGlobalChapters}
+                                    onSelectChapter={(chapter) => {
+                                        setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'SSC',
+                                            subjectLabel: 'Bangladesh and Global Studies'
+                                        });
+                                        setSelectedScienceTopic(null);
+                                        navigate('public-ssc-bangladesh-global-studies-topics');
+                                    }}
+                                />
+                            </PublicScienceShell>
+                        )}
+                        {view === 'public-ssc-bangladesh-global-studies-topics' && (
+                            <PublicScienceShell
+                                subjectLabel="Bangladesh and Global Studies"
+                                classLabel="SSC"
+                                title={selectedScienceChapter?.name || 'অধ্যায় নির্বাচন করুন'}
+                                subtitle="টপিক নির্বাচন করুন"
+                                onBack={() => navigate('public-ssc-bangladesh-global-studies')}
+                                onNavigate={navigate}
+                            >
+                                <PublicScienceTopicList
+                                    topics={selectedScienceChapter?.topics || []}
+                                    onSelectTopic={(topic) => {
+                                        setSelectedScienceTopic(topic);
+                                        navigate('public-ssc-bangladesh-global-studies-topic');
+                                    }}
+                                />
+                            </PublicScienceShell>
+                        )}
+                        {view === 'public-ssc-bangladesh-global-studies-topic' && (
+                            <PublicScienceTopicDetail
+                                subjectLabel="Bangladesh and Global Studies"
+                                classLabel="SSC"
+                                chapterName={selectedScienceChapter?.name}
+                                topicName={selectedScienceTopic?.name}
+                                noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
+                                notesByItem={notesByItem}
+                                onBack={() => navigate('public-ssc-bangladesh-global-studies-topics')}
+                                onNavigate={navigate}
+                                onNavigateCq={() => navigate('public-ssc-bangladesh-global-studies-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-bangladesh-global-studies-mcq')}
+                            />
+                        )}
+                        {view === 'public-ssc-bangladesh-global-studies-cq' && (
+                            <PublicScienceCqDetail
+                                subjectLabel="Bangladesh and Global Studies"
+                                classLabel="SSC"
+                                chapterName={selectedScienceChapter?.name}
+                                topicName={selectedScienceTopic?.name}
+                                questions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                onBack={() => navigate('public-ssc-bangladesh-global-studies-topic')}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-ssc-bangladesh-global-studies-mcq' && (
+                            <PublicScienceMcqDetail
+                                subjectLabel="Bangladesh and Global Studies"
+                                classLabel="SSC"
+                                chapterName={selectedScienceChapter?.name}
+                                topicName={selectedScienceTopic?.name}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'mcq')] || []
+                                }
+                                onBack={() => navigate('public-ssc-bangladesh-global-studies-topic')}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-ssc-religion' && (
+                            <PublicScienceShell
+                                subjectLabel="Religion and Moral Education"
+                                classLabel="SSC"
+                                title="Religion and Moral Education"
+                                subtitle="ধর্ম নির্বাচন করুন।"
+                                onBack={() => navigate('ssc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicReligionOptionList
+                                    options={religionOptions}
+                                    onSelect={(option) => {
+                                        setSelectedReligion(option);
+                                        setSelectedScienceChapter(null);
+                                        setSelectedScienceTopic(null);
+                                        navigate('public-ssc-religion-chapters');
+                                    }}
+                                />
+                            </PublicScienceShell>
+                        )}
+                        {view === 'public-ssc-religion-chapters' && (
+                            <PublicScienceShell
+                                subjectLabel="Religion and Moral Education"
+                                classLabel="SSC"
+                                title="Religion & Moral Education অধ্যায়সমূহ"
+                                subtitle={selectedReligion?.subtitle || 'ধর্ম নির্বাচন করুন'}
+                                onBack={() => navigate('public-ssc-religion')}
+                                onNavigate={navigate}
+                            >
+                                <PublicScienceChapterList
+                                    classLabel="SSC"
+                                    subjectLabel="Religion and Moral Education"
+                                    chapters={sscReligionChapters[selectedReligion?.key] || []}
+                                    onSelectChapter={(chapter) => {
+                                        setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'SSC',
+                                            subjectLabel: 'Religion and Moral Education',
+                                            religionKey: selectedReligion?.key
+                                        });
+                                        setSelectedScienceTopic(null);
+                                        navigate('public-ssc-religion-topics');
+                                    }}
+                                />
+                            </PublicScienceShell>
+                        )}
+                        {view === 'public-ssc-religion-topics' && (
+                            <PublicScienceShell
+                                subjectLabel="Religion and Moral Education"
+                                classLabel="SSC"
+                                title={selectedScienceChapter?.name || 'অধ্যায় নির্বাচন করুন'}
+                                subtitle="টপিক নির্বাচন করুন"
+                                onBack={() => navigate('public-ssc-religion-chapters')}
+                                onNavigate={navigate}
+                            >
+                                <PublicScienceTopicList
+                                    topics={selectedScienceChapter?.topics || []}
+                                    onSelectTopic={(topic) => {
+                                        setSelectedScienceTopic(topic);
+                                        navigate('public-ssc-religion-topic');
+                                    }}
+                                />
+                            </PublicScienceShell>
+                        )}
+                        {view === 'public-ssc-religion-topic' && (
+                            <PublicScienceTopicDetail
+                                subjectLabel="Religion and Moral Education"
+                                classLabel="SSC"
+                                chapterName={selectedScienceChapter?.name}
+                                topicName={selectedScienceTopic?.name}
+                                noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
+                                notesByItem={notesByItem}
+                                onBack={() => navigate('public-ssc-religion-topics')}
+                                onNavigate={navigate}
+                                onNavigateCq={() => navigate('public-ssc-religion-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-religion-mcq')}
+                            />
+                        )}
+                        {view === 'public-ssc-religion-cq' && (
+                            <PublicScienceCqDetail
+                                subjectLabel="Religion and Moral Education"
+                                classLabel="SSC"
+                                chapterName={selectedScienceChapter?.name}
+                                topicName={selectedScienceTopic?.name}
+                                questions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                onBack={() => navigate('public-ssc-religion-topic')}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'public-ssc-religion-mcq' && (
+                            <PublicScienceMcqDetail
+                                subjectLabel="Religion and Moral Education"
+                                classLabel="SSC"
+                                chapterName={selectedScienceChapter?.name}
+                                topicName={selectedScienceTopic?.name}
+                                mcqList={
+                                    mcqQuestions[
+                                        getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'mcq')
+                                    ] || []
+                                }
+                                onBack={() => navigate('public-ssc-religion-topic')}
+                                onNavigate={navigate}
+                            />
+                        )}
                         {view === 'public-hsc-physics-1st' && (
                             <PublicScienceShell
                                 subjectLabel="Physics 1st Paper"
@@ -286,6 +536,10 @@ export const renderPublic = `
                                     chapters={hscPhysics1stChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'HSC',
+                                            subjectLabel: 'Physics 1st Paper'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-hsc-physics-1st-topics');
                                     }}
@@ -371,6 +625,10 @@ export const renderPublic = `
                                     chapters={hscPhysics2ndChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'HSC',
+                                            subjectLabel: 'Physics 2nd Paper'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-hsc-physics-2nd-topics');
                                     }}
@@ -456,6 +714,10 @@ export const renderPublic = `
                                     chapters={hscChemistry1stChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'HSC',
+                                            subjectLabel: 'Chemistry 1st Paper'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-hsc-chemistry-1st-topics');
                                     }}
@@ -542,6 +804,10 @@ export const renderPublic = `
                                     chapters={hscChemistry2ndChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'HSC',
+                                            subjectLabel: 'Chemistry 2nd Paper'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-hsc-chemistry-2nd-topics');
                                     }}
@@ -628,6 +894,10 @@ export const renderPublic = `
                                     chapters={hscBiology1stChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'HSC',
+                                            subjectLabel: 'Biology 1st Paper'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-hsc-biology-1st-topics');
                                     }}
@@ -714,6 +984,10 @@ export const renderPublic = `
                                     chapters={hscBiology2ndChapters}
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
+                                        setSelectedScienceSubject({
+                                            classLabel: 'HSC',
+                                            subjectLabel: 'Biology 2nd Paper'
+                                        });
                                         setSelectedScienceTopic(null);
                                         navigate('public-hsc-biology-2nd-topics');
                                     }}

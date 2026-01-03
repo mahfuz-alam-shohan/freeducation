@@ -23,4 +23,16 @@ export const uiComponents = `
                 <i className="fas fa-circle-notch fa-spin text-3xl"></i>
             </div>
         );
+
+        const makeThumbnailKey = (subject, classLabel) =>
+            (classLabel + '-' + subject)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+
+        const makeChapterThumbnailKey = (classLabel, subjectLabel, chapterKey) =>
+            (classLabel + '-' + subjectLabel + '-' + chapterKey)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
 `;

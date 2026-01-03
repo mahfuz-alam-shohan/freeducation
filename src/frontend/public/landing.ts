@@ -161,17 +161,6 @@ export const landingComponents = `
             'bg-violet-500',
             'bg-teal-500'
         ];
-        const makeThumbnailKey = (subject, classLabel) =>
-            (classLabel + '-' + subject)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-        const makeChapterThumbnailKey = (classLabel, subjectLabel, chapterKey) =>
-            (classLabel + '-' + subjectLabel + '-' + chapterKey)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-
         const buildSubjectList = (classLabel) => {
             const groupMap = subjectGroups[classLabel] || {};
             let paletteIndex = 0;
@@ -187,9 +176,12 @@ export const landingComponents = `
                     const isBanglaFirst = subject === 'Bangla 1st Paper';
                     const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
                     const isIct = subject === 'Information and Communication Technology' && classLabel === 'SSC';
+                    const isHscIct = subject === 'Information and Communication Technology' && classLabel === 'HSC';
                     const isSscPhysics = subject === 'Physics' && classLabel === 'SSC';
                     const isSscChemistry = subject === 'Chemistry' && classLabel === 'SSC';
                     const isSscBiology = subject === 'Biology' && classLabel === 'SSC';
+                    const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
+                    const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
                     const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
                     const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
                     const isHscChemistry1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
@@ -209,15 +201,21 @@ export const landingComponents = `
                                 ? 'public-english-hsc-1st-paper'
                                 : isIct
                                     ? 'public-ssc-ict'
-                                    : isSscPhysics
-                                        ? 'public-ssc-physics'
-                                        : isSscChemistry
-                                            ? 'public-ssc-chemistry'
-                                            : isSscBiology
-                                                ? 'public-ssc-biology'
-                                                : isHscPhysics1
-                                                    ? 'public-hsc-physics-1st'
-                                                    : isHscPhysics2
+                                    : isHscIct
+                                        ? 'public-hsc-ict'
+                                        : isSscPhysics
+                                            ? 'public-ssc-physics'
+                                            : isSscChemistry
+                                                ? 'public-ssc-chemistry'
+                                                : isSscBiology
+                                                    ? 'public-ssc-biology'
+                                                    : isBangladeshGlobal
+                                                        ? 'public-ssc-bangladesh-global-studies'
+                                                        : isReligionMoral
+                                                            ? 'public-ssc-religion'
+                                                    : isHscPhysics1
+                                                        ? 'public-hsc-physics-1st'
+                                                        : isHscPhysics2
                                                         ? 'public-hsc-physics-2nd'
                                                         : isHscChemistry1
                                                             ? 'public-hsc-chemistry-1st'
@@ -245,6 +243,12 @@ export const landingComponents = `
         const hscSubjects = buildSubjectList('HSC');
         const sscFeaturedSubjects = sscSubjects.slice(0, 8);
         const hscFeaturedSubjects = hscSubjects.slice(0, 8);
+        const religionOptions = [
+            { key: 'Islam', label: 'Islam', subtitle: 'ইসলাম' },
+            { key: 'Hinduism', label: 'Hinduism', subtitle: 'হিন্দু ধর্ম' },
+            { key: 'Buddhism', label: 'Buddhism', subtitle: 'বৌদ্ধ ধর্ম' },
+            { key: 'Christianity', label: 'Christianity', subtitle: 'খ্রিষ্টান ধর্ম' }
+        ];
 
         const useSubjectThumbnails = () => {
             const [thumbnailMap, setThumbnailMap] = useState({});
@@ -878,12 +882,12 @@ export const landingComponents = `
             );
         };
 
-        const PublicIctShell = ({ title, subtitle, onBack, onNavigate, children }) => (
+        const PublicIctShell = ({ title, subtitle, classLabel, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-gradient-to-br from-white via-blue-50 to-amber-50">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">SSC ICT</div>
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{classLabel} ICT</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">{title}</h2>
                             {subtitle && <p className="text-sm text-slate-500 mt-2 font-bangla">{subtitle}</p>}
                         </div>
@@ -909,17 +913,17 @@ export const landingComponents = `
             </div>
         );
 
-        const PublicIctChapterList = ({ chapters, onSelectChapter }) => {
+        const PublicIctChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
             const chapterThumbnails = useChapterThumbnails();
             return (
                 <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
                     {chapters.map((chapter) => {
-                        const chapterKey = makeChapterThumbnailKey('SSC', 'Information and Communication Technology', chapter.id);
+                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
                         return (
                             <ChapterCard
                                 key={chapter.id}
                                 title={chapter.name}
-                                subtitle="ICT"
+                                subtitle={subjectLabel}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
                                 onClick={() => onSelectChapter(chapter)}
                                 className={cardWidthClass + ' font-bangla'}
@@ -935,15 +939,16 @@ export const landingComponents = `
             );
         };
 
-        const PublicIctMcqDetail = ({ chapter, mcqQuestions, getQuestionKey, onBack, onNavigate }) => {
+        const PublicIctMcqDetail = ({ classLabel, chapter, mcqQuestions, getQuestionKey, onBack, onNavigate }) => {
             const chapterKey = chapter?.id || '';
-            const mcqList = mcqQuestions[getQuestionKey('SSC', 'ICT', chapterKey, 'mcq')] || [];
+            const mcqList = mcqQuestions[getQuestionKey(classLabel, 'ICT', chapterKey, 'mcq')] || [];
             const chapterTitle = chapter?.name || 'অধ্যায় নির্বাচন করুন';
 
             return (
                 <PublicIctShell
                     title="আইসিটি বহুনির্বাচনী"
                     subtitle="অধ্যায় অনুযায়ী প্রশ্ন সমূহ"
+                    classLabel={classLabel}
                     onBack={onBack}
                     onNavigate={onNavigate}
                 >
@@ -1014,6 +1019,27 @@ export const landingComponents = `
                 </div>
             );
         };
+
+        const PublicReligionOptionList = ({ options, onSelect }) => (
+            <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+                {options.map((option) => (
+                    <button
+                        key={option.key}
+                        onClick={() => onSelect(option)}
+                        className="text-left transition-all duration-300 group"
+                    >
+                        <div className="space-y-2 h-full">
+                            <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm group-hover:-translate-y-1 group-hover:shadow-md transition flex items-center justify-center">
+                                <div className="text-center px-3">
+                                    <div className="text-lg font-semibold text-slate-900">{option.label}</div>
+                                    <div className="text-xs text-slate-500 mt-2 font-bangla">{option.subtitle}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                ))}
+            </div>
+        );
 
         const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
             <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3'}>
@@ -1349,12 +1375,14 @@ export const landingComponents = `
             PublicScienceTopicDetail,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
+            PublicReligionOptionList,
             PublicEnglishShell,
             PublicEnglishCardGrid,
             PublicEnglishTypeList,
             PublicEnglishQuestionList,
             sscSubjects,
-            hscSubjects
+            hscSubjects,
+            religionOptions
         };
         })();
         const {
@@ -1376,11 +1404,13 @@ export const landingComponents = `
             PublicScienceTopicDetail,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
+            PublicReligionOptionList,
             PublicEnglishShell,
             PublicEnglishCardGrid,
             PublicEnglishTypeList,
             PublicEnglishQuestionList,
             sscSubjects,
-            hscSubjects
+            hscSubjects,
+            religionOptions
         } = LandingModule;
 `;

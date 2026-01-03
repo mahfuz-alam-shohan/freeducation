@@ -33,6 +33,81 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/ssc/ict")) {
       return renderAppHtml("admin-ssc-ict");
     }
+    if (pathname.startsWith("/dashboard/hsc/ict/mcq")) {
+      return renderAppHtml("admin-hsc-ict-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/ict")) {
+      return renderAppHtml("admin-hsc-ict");
+    }
+    if (
+      pathname.startsWith(
+        "/dashboard/ssc/bangladesh-and-global-studies/cq/questions"
+      )
+    ) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/cq")) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies-cq-types");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/mcq")
+    ) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies-mcq");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/topic")
+    ) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies-topic");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/topics")
+    ) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies-topics");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies")
+    ) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies");
+    }
+    if (
+      pathname.startsWith(
+        "/dashboard/ssc/religion-and-moral-education/cq/questions"
+      )
+    ) {
+      return renderAppHtml("admin-ssc-religion-cq-questions");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/religion-and-moral-education/cq")
+    ) {
+      return renderAppHtml("admin-ssc-religion-cq-types");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/religion-and-moral-education/mcq")
+    ) {
+      return renderAppHtml("admin-ssc-religion-mcq");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/religion-and-moral-education/topic")
+    ) {
+      return renderAppHtml("admin-ssc-religion-topic");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/religion-and-moral-education/topics")
+    ) {
+      return renderAppHtml("admin-ssc-religion-topics");
+    }
+    if (
+      pathname.startsWith(
+        "/dashboard/ssc/religion-and-moral-education/chapters"
+      )
+    ) {
+      return renderAppHtml("admin-ssc-religion-chapters");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/religion-and-moral-education")
+    ) {
+      return renderAppHtml("admin-ssc-religion");
+    }
     if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/cq/questions")) {
       return renderAppHtml("admin-hsc-physics-1st-cq-questions");
     }

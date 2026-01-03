@@ -21,6 +21,8 @@ export const appRouting = `
                 'public-bangla-hsc-mcq': '/hsc/bangla-1st-paper/item/mcq',
                 'public-ssc-ict': '/ssc/ict',
                 'public-ssc-ict-mcq': '/ssc/ict/mcq',
+                'public-hsc-ict': '/hsc/ict',
+                'public-hsc-ict-mcq': '/hsc/ict/mcq',
                 'public-ssc-physics': '/ssc/physics',
                 'public-ssc-physics-topics': '/ssc/physics/topics',
                 'public-ssc-physics-topic': '/ssc/physics/topic',
@@ -36,6 +38,17 @@ export const appRouting = `
                 'public-ssc-biology-topic': '/ssc/biology/topic',
                 'public-ssc-biology-cq': '/ssc/biology/cq',
                 'public-ssc-biology-mcq': '/ssc/biology/mcq',
+                'public-ssc-bangladesh-global-studies': '/ssc/bangladesh-and-global-studies',
+                'public-ssc-bangladesh-global-studies-topics': '/ssc/bangladesh-and-global-studies/topics',
+                'public-ssc-bangladesh-global-studies-topic': '/ssc/bangladesh-and-global-studies/topic',
+                'public-ssc-bangladesh-global-studies-cq': '/ssc/bangladesh-and-global-studies/cq',
+                'public-ssc-bangladesh-global-studies-mcq': '/ssc/bangladesh-and-global-studies/mcq',
+                'public-ssc-religion': '/ssc/religion-and-moral-education',
+                'public-ssc-religion-chapters': '/ssc/religion-and-moral-education/chapters',
+                'public-ssc-religion-topics': '/ssc/religion-and-moral-education/topics',
+                'public-ssc-religion-topic': '/ssc/religion-and-moral-education/topic',
+                'public-ssc-religion-cq': '/ssc/religion-and-moral-education/cq',
+                'public-ssc-religion-mcq': '/ssc/religion-and-moral-education/mcq',
                 'public-hsc-physics-1st': '/hsc/physics-1st-paper',
                 'public-hsc-physics-1st-topics': '/hsc/physics-1st-paper/topics',
                 'public-hsc-physics-1st-topic': '/hsc/physics-1st-paper/topic',
@@ -81,6 +94,8 @@ export const appRouting = `
                 'admin-ssc-business-studies': '/dashboard/ssc/business-studies',
                 'admin-ssc-ict': '/dashboard/ssc/ict',
                 'admin-ssc-ict-mcq': '/dashboard/ssc/ict/mcq',
+                'admin-hsc-ict': '/dashboard/hsc/ict',
+                'admin-hsc-ict-mcq': '/dashboard/hsc/ict/mcq',
                 'admin-ssc-physics': '/dashboard/ssc/physics',
                 'admin-ssc-physics-topics': '/dashboard/ssc/physics/topics',
                 'admin-ssc-physics-topic': '/dashboard/ssc/physics/topic',
@@ -99,6 +114,19 @@ export const appRouting = `
                 'admin-ssc-biology-cq-types': '/dashboard/ssc/biology/cq',
                 'admin-ssc-biology-cq-questions': '/dashboard/ssc/biology/cq/questions',
                 'admin-ssc-biology-mcq': '/dashboard/ssc/biology/mcq',
+                'admin-ssc-bangladesh-global-studies': '/dashboard/ssc/bangladesh-and-global-studies',
+                'admin-ssc-bangladesh-global-studies-topics': '/dashboard/ssc/bangladesh-and-global-studies/topics',
+                'admin-ssc-bangladesh-global-studies-topic': '/dashboard/ssc/bangladesh-and-global-studies/topic',
+                'admin-ssc-bangladesh-global-studies-cq-types': '/dashboard/ssc/bangladesh-and-global-studies/cq',
+                'admin-ssc-bangladesh-global-studies-cq-questions': '/dashboard/ssc/bangladesh-and-global-studies/cq/questions',
+                'admin-ssc-bangladesh-global-studies-mcq': '/dashboard/ssc/bangladesh-and-global-studies/mcq',
+                'admin-ssc-religion': '/dashboard/ssc/religion-and-moral-education',
+                'admin-ssc-religion-chapters': '/dashboard/ssc/religion-and-moral-education/chapters',
+                'admin-ssc-religion-topics': '/dashboard/ssc/religion-and-moral-education/topics',
+                'admin-ssc-religion-topic': '/dashboard/ssc/religion-and-moral-education/topic',
+                'admin-ssc-religion-cq-types': '/dashboard/ssc/religion-and-moral-education/cq',
+                'admin-ssc-religion-cq-questions': '/dashboard/ssc/religion-and-moral-education/cq/questions',
+                'admin-ssc-religion-mcq': '/dashboard/ssc/religion-and-moral-education/mcq',
                 'admin-hsc-physics-1st': '/dashboard/hsc/physics-1st-paper',
                 'admin-hsc-physics-1st-topics': '/dashboard/hsc/physics-1st-paper/topics',
                 'admin-hsc-physics-1st-topic': '/dashboard/hsc/physics-1st-paper/topic',
@@ -199,6 +227,19 @@ export const appRouting = `
                 if (path.startsWith('/hsc/biology-2nd-paper/topic')) return 'public-hsc-biology-2nd-topic';
                 if (path.startsWith('/hsc/biology-2nd-paper/topics')) return 'public-hsc-biology-2nd-topics';
                 if (path.startsWith('/hsc/biology-2nd-paper')) return 'public-hsc-biology-2nd';
+                if (path.startsWith('/hsc/ict/mcq')) return 'public-hsc-ict-mcq';
+                if (path.startsWith('/hsc/ict')) return 'public-hsc-ict';
+                if (path.startsWith('/ssc/bangladesh-and-global-studies/mcq')) return 'public-ssc-bangladesh-global-studies-mcq';
+                if (path.startsWith('/ssc/bangladesh-and-global-studies/cq')) return 'public-ssc-bangladesh-global-studies-cq';
+                if (path.startsWith('/ssc/bangladesh-and-global-studies/topic')) return 'public-ssc-bangladesh-global-studies-topic';
+                if (path.startsWith('/ssc/bangladesh-and-global-studies/topics')) return 'public-ssc-bangladesh-global-studies-topics';
+                if (path.startsWith('/ssc/bangladesh-and-global-studies')) return 'public-ssc-bangladesh-global-studies';
+                if (path.startsWith('/ssc/religion-and-moral-education/mcq')) return 'public-ssc-religion-mcq';
+                if (path.startsWith('/ssc/religion-and-moral-education/cq')) return 'public-ssc-religion-cq';
+                if (path.startsWith('/ssc/religion-and-moral-education/topic')) return 'public-ssc-religion-topic';
+                if (path.startsWith('/ssc/religion-and-moral-education/topics')) return 'public-ssc-religion-topics';
+                if (path.startsWith('/ssc/religion-and-moral-education/chapters')) return 'public-ssc-religion-chapters';
+                if (path.startsWith('/ssc/religion-and-moral-education')) return 'public-ssc-religion';
                 if (path.startsWith('/ssc/physics/mcq')) return 'public-ssc-physics-mcq';
                 if (path.startsWith('/ssc/physics/cq')) return 'public-ssc-physics-cq';
                 if (path.startsWith('/ssc/physics/topic')) return 'public-ssc-physics-topic';
@@ -244,6 +285,8 @@ export const appRouting = `
                 if (path.startsWith('/dashboard/hsc/english-1st-paper')) return 'english-hsc-1st-paper';
                 if (path.startsWith('/dashboard/ssc/ict/mcq')) return 'admin-ssc-ict-mcq';
                 if (path.startsWith('/dashboard/ssc/ict')) return 'admin-ssc-ict';
+                if (path.startsWith('/dashboard/hsc/ict/mcq')) return 'admin-hsc-ict-mcq';
+                if (path.startsWith('/dashboard/hsc/ict')) return 'admin-hsc-ict';
                 if (path.startsWith('/dashboard/hsc/physics-1st-paper/cq/questions')) return 'admin-hsc-physics-1st-cq-questions';
                 if (path.startsWith('/dashboard/hsc/physics-1st-paper/cq')) return 'admin-hsc-physics-1st-cq-types';
                 if (path.startsWith('/dashboard/hsc/physics-1st-paper/mcq')) return 'admin-hsc-physics-1st-mcq';
@@ -280,6 +323,21 @@ export const appRouting = `
                 if (path.startsWith('/dashboard/hsc/biology-2nd-paper/topic')) return 'admin-hsc-biology-2nd-topic';
                 if (path.startsWith('/dashboard/hsc/biology-2nd-paper/topics')) return 'admin-hsc-biology-2nd-topics';
                 if (path.startsWith('/dashboard/hsc/biology-2nd-paper')) return 'admin-hsc-biology-2nd';
+                if (path.startsWith('/dashboard/ssc/bangladesh-and-global-studies/cq/questions'))
+                    return 'admin-ssc-bangladesh-global-studies-cq-questions';
+                if (path.startsWith('/dashboard/ssc/bangladesh-and-global-studies/cq')) return 'admin-ssc-bangladesh-global-studies-cq-types';
+                if (path.startsWith('/dashboard/ssc/bangladesh-and-global-studies/mcq')) return 'admin-ssc-bangladesh-global-studies-mcq';
+                if (path.startsWith('/dashboard/ssc/bangladesh-and-global-studies/topic')) return 'admin-ssc-bangladesh-global-studies-topic';
+                if (path.startsWith('/dashboard/ssc/bangladesh-and-global-studies/topics')) return 'admin-ssc-bangladesh-global-studies-topics';
+                if (path.startsWith('/dashboard/ssc/bangladesh-and-global-studies')) return 'admin-ssc-bangladesh-global-studies';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education/cq/questions'))
+                    return 'admin-ssc-religion-cq-questions';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education/cq')) return 'admin-ssc-religion-cq-types';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education/mcq')) return 'admin-ssc-religion-mcq';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education/topic')) return 'admin-ssc-religion-topic';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education/topics')) return 'admin-ssc-religion-topics';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education/chapters')) return 'admin-ssc-religion-chapters';
+                if (path.startsWith('/dashboard/ssc/religion-and-moral-education')) return 'admin-ssc-religion';
                 if (path.startsWith('/dashboard/ssc/physics/cq/questions')) return 'admin-ssc-physics-cq-questions';
                 if (path.startsWith('/dashboard/ssc/physics/cq')) return 'admin-ssc-physics-cq-types';
                 if (path.startsWith('/dashboard/ssc/physics/mcq')) return 'admin-ssc-physics-mcq';

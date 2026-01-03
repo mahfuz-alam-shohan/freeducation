@@ -56,6 +56,31 @@ export const teacherConfig = `
                             'admin-ssc-biology-mcq'
                         ],
                         description: 'Manage SSC Biology chapters, topics, and questions.'
+                    },
+                    'bangladesh and global studies': {
+                        route: 'admin-ssc-bangladesh-global-studies',
+                        views: [
+                            'admin-ssc-bangladesh-global-studies',
+                            'admin-ssc-bangladesh-global-studies-topics',
+                            'admin-ssc-bangladesh-global-studies-topic',
+                            'admin-ssc-bangladesh-global-studies-cq-types',
+                            'admin-ssc-bangladesh-global-studies-cq-questions',
+                            'admin-ssc-bangladesh-global-studies-mcq'
+                        ],
+                        description: 'Manage Bangladesh and Global Studies chapters, topics, and questions.'
+                    },
+                    'religion and moral education': {
+                        route: 'admin-ssc-religion',
+                        views: [
+                            'admin-ssc-religion',
+                            'admin-ssc-religion-chapters',
+                            'admin-ssc-religion-topics',
+                            'admin-ssc-religion-topic',
+                            'admin-ssc-religion-cq-types',
+                            'admin-ssc-religion-cq-questions',
+                            'admin-ssc-religion-mcq'
+                        ],
+                        description: 'Manage Religion and Moral Education chapters, topics, and questions.'
                     }
                 },
                 HSC: {
@@ -156,6 +181,11 @@ export const teacherConfig = `
                             'admin-hsc-biology-2nd-mcq'
                         ],
                         description: 'Manage HSC Biology 2nd Paper chapters, topics, and questions.'
+                    },
+                    'information and communication technology': {
+                        route: 'admin-hsc-ict',
+                        views: ['admin-hsc-ict', 'admin-hsc-ict-mcq'],
+                        description: 'Manage HSC ICT chapters and MCQ uploads.'
                     }
                 }
             };
