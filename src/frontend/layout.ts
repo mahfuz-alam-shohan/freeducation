@@ -44,11 +44,31 @@ export function renderAppHtml(initialView: string) {
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         .panel-shadow { box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06); }
         .thumbnail-float { animation: thumbnailFloat 9s ease-in-out infinite; }
+        .float-slow { animation: floatSlow 8s ease-in-out infinite; }
+        .float-slower { animation: floatSlow 12s ease-in-out infinite; }
+        .pulse-soft { animation: pulseSoft 10s ease-in-out infinite; }
+        .bg-pan-slow { background-size: 200% 200%; animation: bgPan 16s ease infinite; }
+        .marquee-wrapper { position: relative; overflow: hidden; }
+        .marquee-track { display: flex; width: max-content; animation: marquee 36s linear infinite; }
+        .marquee-wrapper:hover .marquee-track { animation-play-state: paused; }
+        .soft-glow { background-image: linear-gradient(120deg, rgba(59, 130, 246, 0.08), rgba(14, 165, 233, 0.05), rgba(59, 130, 246, 0.08)); background-size: 200% 200%; animation: bgPan 18s ease infinite; }
         .card-grid-gap { gap: var(--card-grid-gap); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes thumbnailFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes floatSlow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes pulseSoft { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
+        @keyframes bgPan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         @media (prefers-reduced-motion: reduce) {
             .thumbnail-float {
+                animation: none;
+            }
+            .float-slow,
+            .float-slower,
+            .pulse-soft,
+            .bg-pan-slow,
+            .marquee-track,
+            .soft-glow {
                 animation: none;
             }
         }

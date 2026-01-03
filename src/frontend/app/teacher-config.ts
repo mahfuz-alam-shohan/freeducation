@@ -184,8 +184,15 @@ export const teacherConfig = `
                     },
                     'information and communication technology': {
                         route: 'admin-hsc-ict',
-                        views: ['admin-hsc-ict', 'admin-hsc-ict-mcq'],
-                        description: 'Manage HSC ICT chapters and MCQ uploads.'
+                        views: [
+                            'admin-hsc-ict',
+                            'admin-hsc-ict-topics',
+                            'admin-hsc-ict-topic',
+                            'admin-hsc-ict-cq-types',
+                            'admin-hsc-ict-cq-questions',
+                            'admin-hsc-ict-mcq'
+                        ],
+                        description: 'Manage HSC ICT chapters, topics, and both CQ/MCQ question sets.'
                     }
                 }
             };

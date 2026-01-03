@@ -36,6 +36,18 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/hsc/ict/mcq")) {
       return renderAppHtml("admin-hsc-ict-mcq");
     }
+    if (pathname.startsWith("/dashboard/hsc/ict/cq/questions")) {
+      return renderAppHtml("admin-hsc-ict-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/hsc/ict/cq")) {
+      return renderAppHtml("admin-hsc-ict-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/hsc/ict/topics")) {
+      return renderAppHtml("admin-hsc-ict-topics");
+    }
+    if (pathname.startsWith("/dashboard/hsc/ict/topic")) {
+      return renderAppHtml("admin-hsc-ict-topic");
+    }
     if (pathname.startsWith("/dashboard/hsc/ict")) {
       return renderAppHtml("admin-hsc-ict");
     }

@@ -73,6 +73,7 @@ export const appEffects = `
                 if (classLabel === 'HSC' && subjectLabel === 'Chemistry 2nd Paper') return hscChemistry2ndChapters;
                 if (classLabel === 'HSC' && subjectLabel === 'Biology 1st Paper') return hscBiology1stChapters;
                 if (classLabel === 'HSC' && subjectLabel === 'Biology 2nd Paper') return hscBiology2ndChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Information and Communication Technology') return hscIctChapters;
                 return null;
             };
 
@@ -114,7 +115,8 @@ export const appEffects = `
                 hscChemistry1stChapters,
                 hscChemistry2ndChapters,
                 hscBiology1stChapters,
-                hscBiology2ndChapters
+                hscBiology2ndChapters,
+                hscIctChapters
             ]);
 
             useEffect(() => {

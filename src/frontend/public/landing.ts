@@ -367,7 +367,7 @@ export const landingComponents = `
         const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '' }) => (
             <button
                 onClick={onClick}
-                className={className + ' block text-left transition-all duration-300 group'}
+                className={className + ' block text-left transition-all duration-300 group float-slow'}
             >
                 <div className="space-y-2 h-full">
                     <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm group-hover:-translate-y-1 group-hover:shadow-md transition">
@@ -392,32 +392,65 @@ export const landingComponents = `
             </button>
         );
 
+        const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
+            const chapterThumbnails = useChapterThumbnails();
+            return (
+                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+                    {chapters.map((chapter) => {
+                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+                        return (
+                            <ChapterCard
+                                key={chapter.id}
+                                title={chapter.name}
+                                subtitle={subjectLabel}
+                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                onClick={() => onSelectChapter(chapter)}
+                                className={cardWidthClass + ' font-bangla'}
+                            />
+                        );
+                    })}
+                    {chapters.length === 0 && (
+                        <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
+                            এখনো কোনো অধ্যায় যোগ করা হয়নি।
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap }) => (
             <section className="space-y-3">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
                     <button
                         onClick={onAll}
-                        className="text-xs font-semibold uppercase tracking-[0.2em] text-white bg-slate-900 px-3 py-1.5 rounded-full transition hover:bg-slate-800 flex items-center gap-2"
+                        className="text-xs font-semibold uppercase tracking-[0.2em] text-white bg-slate-900 px-3 py-1.5 rounded-full transition hover:bg-slate-800 flex items-center gap-2 pulse-soft"
                     >
                         See all <i className="fa-solid fa-angle-right"></i>
                     </button>
                 </div>
-                <div className={'flex items-stretch ' + cardGridGapClass + ' overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory'}>
-                    {subjects.map((subject) => {
+                <div className="marquee-wrapper">
+                    <div className={'marquee-track items-stretch ' + cardGridGapClass + ' pb-4'}>
+                        {[...subjects, ...subjects].map((subject, index) => {
                         const thumbnail = thumbnailMap[subject.subjectKey];
                         return (
                             <SubjectCard
-                                key={subject.subjectKey}
+                                key={subject.subjectKey + '-' + index}
                                 subject={{
                                     ...subject,
                                     thumbnailUrl: thumbnail?.url
                                 }}
                                 onNavigate={onNavigate}
-                                className={'flex-shrink-0 ' + cardWidthClass + ' snap-start'}
+                                className={
+                                    'flex-shrink-0 ' +
+                                    cardWidthClass +
+                                    ' ' +
+                                    (index % 2 === 0 ? 'float-slow' : 'float-slower')
+                                }
                             />
                         );
                     })}
+                    </div>
                 </div>
             </section>
         );
@@ -913,31 +946,7 @@ export const landingComponents = `
             </div>
         );
 
-        const PublicIctChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
-            const chapterThumbnails = useChapterThumbnails();
-            return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
-                    {chapters.map((chapter) => {
-                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
-                        return (
-                            <ChapterCard
-                                key={chapter.id}
-                                title={chapter.name}
-                                subtitle={subjectLabel}
-                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                onClick={() => onSelectChapter(chapter)}
-                                className={cardWidthClass + ' font-bangla'}
-                            />
-                        );
-                    })}
-                    {chapters.length === 0 && (
-                        <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
-                            এখনো কোনো অধ্যায় যোগ করা হয়নি।
-                        </div>
-                    )}
-                </div>
-            );
-        };
+        const PublicIctChapterList = (props) => <PublicChapterList {...props} />;
 
         const PublicIctMcqDetail = ({ classLabel, chapter, mcqQuestions, getQuestionKey, onBack, onNavigate }) => {
             const chapterKey = chapter?.id || '';
@@ -994,31 +1003,7 @@ export const landingComponents = `
             </div>
         );
 
-        const PublicScienceChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
-            const chapterThumbnails = useChapterThumbnails();
-            return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
-                    {chapters.map((chapter) => {
-                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
-                        return (
-                            <ChapterCard
-                                key={chapter.id}
-                                title={chapter.name}
-                                subtitle={subjectLabel}
-                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                onClick={() => onSelectChapter(chapter)}
-                                className={cardWidthClass + ' font-bangla'}
-                            />
-                        );
-                    })}
-                    {chapters.length === 0 && (
-                        <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
-                            এখনো কোনো অধ্যায় যোগ করা হয়নি।
-                        </div>
-                    )}
-                </div>
-            );
-        };
+        const PublicScienceChapterList = (props) => <PublicChapterList {...props} />;
 
         const PublicReligionOptionList = ({ options, onSelect }) => (
             <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
@@ -1094,13 +1079,13 @@ export const landingComponents = `
                         <div className="flex flex-wrap justify-center gap-3">
                             <button
                                 onClick={onNavigateCq}
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition"
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition pulse-soft"
                             >
                                 সৃজনশীল (CQ)
                             </button>
                             <button
                                 onClick={onNavigateMcq}
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-sky-100 bg-sky-50 text-sky-700 text-sm font-semibold hover:bg-sky-100 transition"
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-sky-100 bg-sky-50 text-sky-700 text-sm font-semibold hover:bg-sky-100 transition pulse-soft"
                             >
                                 বহুনির্বাচনী (MCQ)
                             </button>
@@ -1302,12 +1287,12 @@ export const landingComponents = `
 
             return (
                 <div className="flex-1 bg-white">
-                    <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-fuchsia-500 to-rose-500">
+                    <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-fuchsia-500 to-rose-500 bg-pan-slow">
                         <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/15 blur-3xl"></div>
                         <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-300/30 blur-3xl"></div>
                         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 float-slow">
                                     <div className="w-14 h-14 rounded-2xl bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
                                         <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" />
@@ -1323,7 +1308,7 @@ export const landingComponents = `
                                         </div>
                                     </div>
                                 </div>
-                                <div className="max-w-xl bg-white/15 border border-white/30 rounded-2xl p-6 text-white backdrop-blur">
+                                <div className="max-w-xl bg-white/15 border border-white/30 rounded-2xl p-6 text-white backdrop-blur float-slower">
                                     <p className="text-base sm:text-lg font-serif italic leading-relaxed">
                                         “{activeQuote.text}”
                                     </p>
@@ -1333,7 +1318,7 @@ export const landingComponents = `
                         </div>
                     </section>
 
-                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-gradient-to-br from-white via-indigo-50 to-rose-50">
+                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-gradient-to-br from-white via-indigo-50 to-rose-50 bg-pan-slow">
                         <div>
                             <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">Academic</h2>

@@ -8,7 +8,7 @@ export const dashboardComponents = `
                     activeTab="subject"
                     onNavigate={onNavigate}
                 >
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
                         {!hasAssignment && (
                             <div className="px-5 py-6 text-sm text-gray-400">
                                 No subject assignment found yet. Please contact an admin to assign your subject.
@@ -88,7 +88,7 @@ export const dashboardComponents = `
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
                         {loading && (
                             <div className="px-5 py-4 text-sm text-gray-400">Loading...</div>
                         )}
@@ -349,7 +349,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
                         {groups.map((group) => (
                             <button
                                 key={group.title}
@@ -504,7 +504,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
                         {subjects.length === 0 && (
                             <div className="px-5 py-4 text-sm text-gray-400">No subjects configured.</div>
                         )}
