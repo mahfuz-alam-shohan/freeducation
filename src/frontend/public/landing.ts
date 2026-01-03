@@ -912,7 +912,7 @@ export const landingComponents = `
         const PublicIctChapterList = ({ chapters, onSelectChapter }) => {
             const chapterThumbnails = useChapterThumbnails();
             return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-start'}>
                     {chapters.map((chapter) => {
                         const chapterKey = makeChapterThumbnailKey('SSC', 'Information and Communication Technology', chapter.id);
                         return (
@@ -922,7 +922,7 @@ export const landingComponents = `
                                 subtitle="ICT"
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
                                 onClick={() => onSelectChapter(chapter)}
-                                className="w-full font-bangla"
+                                className={cardWidthClass + ' font-bangla'}
                             />
                         );
                     })}
@@ -992,7 +992,7 @@ export const landingComponents = `
         const PublicScienceChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
             const chapterThumbnails = useChapterThumbnails();
             return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-start'}>
                     {chapters.map((chapter) => {
                         const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
                         return (
@@ -1002,7 +1002,7 @@ export const landingComponents = `
                                 subtitle={subjectLabel}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
                                 onClick={() => onSelectChapter(chapter)}
-                                className="w-full font-bangla"
+                                className={cardWidthClass + ' font-bangla'}
                             />
                         );
                     })}
@@ -1016,12 +1016,12 @@ export const landingComponents = `
         };
 
         const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
-            <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3'}>
+            <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3 justify-items-start'}>
                 {topics.map((topic) => (
                     <button
                         key={topic.id}
                         onClick={() => onSelectTopic(topic)}
-                        className="border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
+                        className="w-full border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
                     >
                         <div className="text-xs uppercase tracking-[0.2em] text-slate-400">টপিক</div>
                         <div className="text-lg font-semibold text-slate-900 mt-2">{topic.name}</div>
@@ -1201,12 +1201,12 @@ export const landingComponents = `
         );
 
         const PublicEnglishCardGrid = ({ items, onNavigate }) => (
-            <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2'}>
+            <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2 justify-items-start'}>
                 {items.map((item) => (
                     <button
                         key={item.key}
                         onClick={() => item.route && onNavigate(item.route)}
-                        className="border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition"
+                        className="w-full border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition"
                     >
                         <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Section</div>
                         <div className="text-lg font-semibold text-slate-900 mt-2">{item.title}</div>
