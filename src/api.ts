@@ -273,12 +273,17 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
       if (path.startsWith("/api/thumbnails")) {
         if (path === "/api/thumbnails" && request.method === "GET") {
-          const rows = await env.DB.prepare("SELECT subject_key, zoom FROM subject_thumbnails ORDER BY updated_at DESC").all();
-          const thumbnails = (rows.results || []).map((row: any) => ({
-            subjectKey: row.subject_key,
-            zoom: typeof row.zoom === "number" ? row.zoom : 1,
-            url: `/api/thumbnails/${row.subject_key}`,
-          }));
+          const rows = await env.DB.prepare(
+            "SELECT subject_key, zoom, updated_at FROM subject_thumbnails ORDER BY updated_at DESC"
+          ).all();
+          const thumbnails = (rows.results || []).map((row: any) => {
+            const version = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
+            return {
+              subjectKey: row.subject_key,
+              zoom: typeof row.zoom === "number" ? row.zoom : 1,
+              url: `/api/thumbnails/${row.subject_key}?v=${version}`,
+            };
+          });
           return Response.json({ thumbnails }, { headers: apiHeaders });
         }
 
@@ -322,13 +327,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
               "ON CONFLICT(subject_key) DO UPDATE SET file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP"
           ).bind(subjectKey, fileKey, contentType, zoomValue).run();
 
+          const cacheBuster = Date.now();
           return Response.json(
             {
               success: true,
               thumbnail: {
                 subjectKey,
                 zoom: zoomValue,
-                url: `/api/thumbnails/${subjectKey}`,
+                url: `/api/thumbnails/${subjectKey}?v=${cacheBuster}`,
               },
             },
             { headers: apiHeaders }
@@ -359,11 +365,16 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
       if (path.startsWith("/api/chapter-thumbnails")) {
         if (path === "/api/chapter-thumbnails" && request.method === "GET") {
-          const rows = await env.DB.prepare("SELECT chapter_key FROM chapter_thumbnails ORDER BY updated_at DESC").all();
-          const thumbnails = (rows.results || []).map((row: any) => ({
-            chapterKey: row.chapter_key,
-            url: `/api/chapter-thumbnails/${row.chapter_key}`,
-          }));
+          const rows = await env.DB.prepare(
+            "SELECT chapter_key, updated_at FROM chapter_thumbnails ORDER BY updated_at DESC"
+          ).all();
+          const thumbnails = (rows.results || []).map((row: any) => {
+            const version = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
+            return {
+              chapterKey: row.chapter_key,
+              url: `/api/chapter-thumbnails/${row.chapter_key}?v=${version}`,
+            };
+          });
           return Response.json({ thumbnails }, { headers: apiHeaders });
         }
 
@@ -406,12 +417,13 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
               "ON CONFLICT(chapter_key) DO UPDATE SET file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP"
           ).bind(chapterKey, fileKey, contentType).run();
 
+          const cacheBuster = Date.now();
           return Response.json(
             {
               success: true,
               thumbnail: {
                 chapterKey,
-                url: `/api/chapter-thumbnails/${chapterKey}`,
+                url: `/api/chapter-thumbnails/${chapterKey}?v=${cacheBuster}`,
               },
             },
             { headers: apiHeaders }

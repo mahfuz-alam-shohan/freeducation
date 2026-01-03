@@ -130,6 +130,53 @@ export const dashboardComponents = `
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
 
+        const resizeImageFile = (file, { maxWidth = 520, maxHeight = 650, quality = 0.82 } = {}) =>
+            new Promise((resolve) => {
+                if (!file || !(file instanceof File)) {
+                    resolve(file);
+                    return;
+                }
+                const image = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                image.onload = () => {
+                    const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+                    const targetWidth = Math.max(1, Math.round(image.width * ratio));
+                    const targetHeight = Math.max(1, Math.round(image.height * ratio));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        URL.revokeObjectURL(objectUrl);
+                        resolve(file);
+                        return;
+                    }
+                    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+                    canvas.toBlob(
+                        (blob) => {
+                            URL.revokeObjectURL(objectUrl);
+                            if (!blob) {
+                                resolve(file);
+                                return;
+                            }
+                            const baseName = file.name.replace(/\\.[^/.]+$/, '') || 'thumbnail';
+                            resolve(
+                                new File([blob], \`\${baseName}.jpg\`, {
+                                    type: 'image/jpeg'
+                                })
+                            );
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                };
+                image.onerror = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    resolve(file);
+                };
+                image.src = objectUrl;
+            });
+
         const useThumbnailMap = (url, keyField) => {
             const [thumbnailMap, setThumbnailMap] = useState({});
 
@@ -227,14 +274,14 @@ export const dashboardComponents = `
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
-                    <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200">
                             <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Thumbnail</div>
                             <div className="text-lg font-semibold text-gray-900 mt-2">{title}</div>
                             {description && <div className="text-sm text-gray-500 mt-1">{description}</div>}
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+                        <div className="p-4 space-y-4">
+                            <div className="relative w-32 sm:w-40 aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm mx-auto">
                                 {previewUrl || existingUrl ? (
                                     <img
                                         src={previewUrl || existingUrl}
@@ -252,8 +299,16 @@ export const dashboardComponents = `
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(event) => setFile(event.target.files?.[0] || null)}
-                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    onChange={async (event) => {
+                                        const selected = event.target.files?.[0];
+                                        if (!selected) {
+                                            setFile(null);
+                                            return;
+                                        }
+                                        const resized = await resizeImageFile(selected);
+                                        setFile(resized || null);
+                                    }}
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-xs"
                                 />
                             </div>
                             {status && <div className="text-sm text-gray-500">{status}</div>}
@@ -979,7 +1034,15 @@ export const dashboardComponents = `
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        onChange={async (event) => {
+                                            const selected = event.target.files?.[0];
+                                            if (!selected) {
+                                                setThumbnailFile(null);
+                                                return;
+                                            }
+                                            const resized = await resizeImageFile(selected);
+                                            setThumbnailFile(resized || null);
+                                        }}
                                         className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                                     />
                                     <p className="text-xs text-gray-400 mt-2">
@@ -1173,7 +1236,15 @@ export const dashboardComponents = `
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        onChange={async (event) => {
+                                            const selected = event.target.files?.[0];
+                                            if (!selected) {
+                                                setThumbnailFile(null);
+                                                return;
+                                            }
+                                            const resized = await resizeImageFile(selected);
+                                            setThumbnailFile(resized || null);
+                                        }}
                                         className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                                     />
                                     <p className="text-xs text-gray-400 mt-2">
@@ -1945,7 +2016,15 @@ export const dashboardComponents = `
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        onChange={async (event) => {
+                                            const selected = event.target.files?.[0];
+                                            if (!selected) {
+                                                setThumbnailFile(null);
+                                                return;
+                                            }
+                                            const resized = await resizeImageFile(selected);
+                                            setThumbnailFile(resized || null);
+                                        }}
                                         className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                                     />
                                     <p className="text-xs text-gray-400 mt-2">
@@ -2144,7 +2223,15 @@ export const dashboardComponents = `
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        onChange={async (event) => {
+                                            const selected = event.target.files?.[0];
+                                            if (!selected) {
+                                                setThumbnailFile(null);
+                                                return;
+                                            }
+                                            const resized = await resizeImageFile(selected);
+                                            setThumbnailFile(resized || null);
+                                        }}
                                         className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                                     />
                                     <p className="text-xs text-gray-400 mt-2">

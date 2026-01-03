@@ -104,6 +104,53 @@ export const settingsComponents = `
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
 
+        const resizeImageFile = (file, { maxWidth = 520, maxHeight = 650, quality = 0.82 } = {}) =>
+            new Promise((resolve) => {
+                if (!file || !(file instanceof File)) {
+                    resolve(file);
+                    return;
+                }
+                const image = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                image.onload = () => {
+                    const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+                    const targetWidth = Math.max(1, Math.round(image.width * ratio));
+                    const targetHeight = Math.max(1, Math.round(image.height * ratio));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        URL.revokeObjectURL(objectUrl);
+                        resolve(file);
+                        return;
+                    }
+                    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+                    canvas.toBlob(
+                        (blob) => {
+                            URL.revokeObjectURL(objectUrl);
+                            if (!blob) {
+                                resolve(file);
+                                return;
+                            }
+                            const baseName = file.name.replace(/\\.[^/.]+$/, '') || 'thumbnail';
+                            resolve(
+                                new File([blob], \`\${baseName}.jpg\`, {
+                                    type: 'image/jpeg'
+                                })
+                            );
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                };
+                image.onerror = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    resolve(file);
+                };
+                image.src = objectUrl;
+            });
+
         const buildAdminSubjectList = () => {
             const subjectMap = new Map();
             Object.entries(adminSubjectGroups).forEach(([classLabel, groupMap]) => {
@@ -229,7 +276,7 @@ export const settingsComponents = `
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
-                    <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                             <div>
                                 <div className="text-xs uppercase tracking-[0.3em] text-gray-400">{modeLabel}</div>
@@ -246,16 +293,24 @@ export const settingsComponents = `
                                 <i className="fa-solid fa-xmark text-lg"></i>
                             </button>
                         </div>
-                        <div className="p-6 grid gap-5 sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)]">
-                            <ThumbnailPreviewCard subject={subject} thumbnail={displayedThumbnail} />
-                            <div className="space-y-4">
+                        <div className="p-4 grid gap-4 sm:grid-cols-[minmax(0,120px)_minmax(0,1fr)]">
+                            <ThumbnailPreviewCard subject={subject} thumbnail={displayedThumbnail} className="space-y-2" />
+                            <div className="space-y-3">
                                 <div>
                                     <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Upload image</label>
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(event) => setFile(event.target.files?.[0] || null)}
-                                        className="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200"
+                                        onChange={async (event) => {
+                                            const selected = event.target.files?.[0];
+                                            if (!selected) {
+                                                setFile(null);
+                                                return;
+                                            }
+                                            const resized = await resizeImageFile(selected);
+                                            setFile(resized || null);
+                                        }}
+                                        className="mt-2 block w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200"
                                     />
                                 </div>
                                 <div className="flex flex-wrap items-center gap-3">
