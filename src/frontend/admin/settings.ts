@@ -459,11 +459,20 @@ export const settingsComponents = `
                 }
             });
 
-            const teacherSubjects = Object.entries(adminSubjectGroups)
-                .flatMap(([level, groups]) =>
-                    Object.values(groups).flatMap((subjects) => subjects.map((subject) => ({ level, subject })))
-                )
-                .filter((entry) => entry.level === teacherForm.level);
+            const teacherSubjects = Array.from(
+                Object.entries(adminSubjectGroups)
+                    .flatMap(([level, groups]) =>
+                        Object.values(groups).flatMap((subjects) => subjects.map((subject) => ({ level, subject })))
+                    )
+                    .filter((entry) => entry.level === teacherForm.level)
+                    .reduce((map, entry) => {
+                        if (!map.has(entry.subject)) {
+                            map.set(entry.subject, entry);
+                        }
+                        return map;
+                    }, new Map())
+                    .values()
+            );
 
             const resetTeacherForm = () => {
                 setTeacherForm({
@@ -1020,7 +1029,122 @@ export const settingsComponents = `
                 </AdminShell>
             );
         };
-        return { AdminSettings };
+        const TeacherSettings = ({ onNavigate }) => {
+            const [statusMessage, setStatusMessage] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+            const [formState, setFormState] = useState({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+
+            const handleChangePassword = async () => {
+                if (!formState.currentPassword || !formState.newPassword || !formState.confirmPassword) {
+                    setStatusMessage('Please fill in all password fields.');
+                    return;
+                }
+                if (formState.newPassword !== formState.confirmPassword) {
+                    setStatusMessage('New passwords do not match.');
+                    return;
+                }
+                setIsSaving(true);
+                setStatusMessage(null);
+
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setStatusMessage('You must be logged in to update your password.');
+                    setIsSaving(false);
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/change-password', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            currentPassword: formState.currentPassword,
+                            newPassword: formState.newPassword,
+                            confirmPassword: formState.confirmPassword
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setStatusMessage('Password updated successfully.');
+                        setFormState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                    } else {
+                        setStatusMessage(data.error || 'Unable to update password.');
+                    }
+                } catch (error) {
+                    setStatusMessage('Unable to update password.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            return (
+                <TeacherShell
+                    title="Settings"
+                    subtitle="Update your login password securely."
+                    activeTab="settings"
+                    onNavigate={onNavigate}
+                >
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4 max-w-xl">
+                        <div>
+                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Current password</label>
+                            <input
+                                type="password"
+                                value={formState.currentPassword}
+                                onChange={(event) =>
+                                    setFormState((prev) => ({ ...prev, currentPassword: event.target.value }))
+                                }
+                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                placeholder="Enter current password"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">New password</label>
+                            <input
+                                type="password"
+                                value={formState.newPassword}
+                                onChange={(event) =>
+                                    setFormState((prev) => ({ ...prev, newPassword: event.target.value }))
+                                }
+                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                placeholder="Create a new password"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Confirm password</label>
+                            <input
+                                type="password"
+                                value={formState.confirmPassword}
+                                onChange={(event) =>
+                                    setFormState((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                                }
+                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                placeholder="Re-enter the new password"
+                            />
+                        </div>
+                        {statusMessage && (
+                            <div className="text-sm text-gray-500">{statusMessage}</div>
+                        )}
+                        <div className="flex justify-end">
+                            <button
+                                onClick={handleChangePassword}
+                                disabled={isSaving}
+                                className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-blue-600 text-white hover:bg-blue-500 transition disabled:opacity-60"
+                            >
+                                {isSaving ? 'Saving...' : 'Update password'}
+                            </button>
+                        </div>
+                    </div>
+                </TeacherShell>
+            );
+        };
+        return { AdminSettings, TeacherSettings };
         })();
-        const { AdminSettings } = AdminSettingsModule;
+        const { AdminSettings, TeacherSettings } = AdminSettingsModule;
 `;

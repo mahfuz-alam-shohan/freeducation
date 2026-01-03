@@ -61,6 +61,77 @@ const ensureAdmin = (payload: any | null) => {
   return true;
 };
 
+const normalizeSubject = (value: string) => value.trim().toLowerCase();
+
+const safeParseContent = (data: unknown) => {
+  if (typeof data !== "string") return {};
+  try {
+    return JSON.parse(data);
+  } catch {
+    return {};
+  }
+};
+
+const filterMap = (value: any, predicate: (key: string) => boolean) => {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(Object.entries(value).filter(([key]) => predicate(key)));
+};
+
+const mergeMaps = (existing: any, updates: any) => {
+  if (!existing || typeof existing !== "object") return { ...(updates || {}) };
+  return { ...existing, ...(updates || {}) };
+};
+
+const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, assignment: { level: string; subject: string }) => {
+  const level = String(assignment.level || "").toUpperCase();
+  const subject = normalizeSubject(String(assignment.subject || ""));
+  const updated = { ...existingContent };
+  const prefix = `${level}-`;
+
+  const applyArray = (key: string) => {
+    if (Array.isArray(incomingContent?.[key])) {
+      updated[key] = incomingContent[key];
+    }
+  };
+
+  const applyMapWithFilter = (key: string, predicate: (mapKey: string) => boolean) => {
+    if (incomingContent?.[key] && typeof incomingContent[key] === "object") {
+      const filtered = filterMap(incomingContent[key], predicate);
+      updated[key] = mergeMaps(existingContent?.[key], filtered);
+    }
+  };
+
+  if (subject === "bangla 1st paper") {
+    if (level === "SSC") {
+      applyArray("sscGoddoItems");
+      applyArray("sscPoddoItems");
+      applyArray("sscShohopathItems");
+    }
+    if (level === "HSC") {
+      applyArray("hscGoddoItems");
+      applyArray("hscPoddoItems");
+      applyArray("hscShohopathItems");
+    }
+    applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(prefix));
+    applyMapWithFilter("mcqQuestions", (key) => key.startsWith(prefix) && !key.startsWith(`${prefix}ICT-`));
+    applyMapWithFilter("notesByItem", (key) => key.startsWith(prefix));
+    return updated;
+  }
+
+  if (subject === "information and communication technology" && level === "SSC") {
+    applyArray("sscIctChapters");
+    applyMapWithFilter("mcqQuestions", (key) => key.startsWith(`${prefix}ICT-`));
+    return updated;
+  }
+
+  if (subject === "english 1st paper" && level === "HSC") {
+    applyMapWithFilter("englishQuestions", (key) => key.startsWith(prefix));
+    return updated;
+  }
+
+  return null;
+};
+
 let dbInitialized = false;
 let dbInitPromise: Promise<void> | null = null;
 
@@ -375,6 +446,67 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         );
       }
 
+      if (path === "/api/change-password" && request.method === "POST") {
+        const payload = await getAuthPayload(request, env);
+        if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        const body = await request.json().catch(() => ({}));
+        const currentPassword = String(body.currentPassword || "");
+        const newPassword = String(body.newPassword || "");
+        const confirmPassword = String(body.confirmPassword || "");
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          return Response.json({ success: false, error: "All password fields are required." }, { status: 400, headers: apiHeaders });
+        }
+        if (newPassword.length < 8) {
+          return Response.json({ success: false, error: "New password must be at least 8 characters." }, { status: 400, headers: apiHeaders });
+        }
+        if (newPassword !== confirmPassword) {
+          return Response.json({ success: false, error: "New passwords do not match." }, { status: 400, headers: apiHeaders });
+        }
+
+        const userRow = await env.DB.prepare("SELECT id, username, password_hash FROM users WHERE id = ?").bind(payload.id).first();
+        let passwordHashSource = userRow?.password_hash as string | undefined;
+        let adminRow: { id: number; username: string; password_hash: string } | null = null;
+
+        if (!passwordHashSource && payload.role === "admin") {
+          const legacyRow = await env.DB.prepare("SELECT id, username, password_hash FROM admins WHERE id = ?").bind(payload.id).first();
+          if (legacyRow?.password_hash) {
+            adminRow = legacyRow as any;
+            passwordHashSource = legacyRow.password_hash as string;
+          }
+        }
+
+        if (!passwordHashSource) {
+          return Response.json({ success: false, error: "User not found." }, { status: 404, headers: apiHeaders });
+        }
+
+        const [saltHex, originalHash] = passwordHashSource.split(":");
+        const currentHash = await hashPassword(currentPassword, saltHex);
+        if (currentHash !== originalHash) {
+          return Response.json({ success: false, error: "Current password is incorrect." }, { status: 401, headers: apiHeaders });
+        }
+
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const newSaltHex = Array.from(salt).map(b => b.toString(16).padStart(2, "0")).join("");
+        const nextHash = await hashPassword(newPassword, newSaltHex);
+        const nextPasswordHash = `${newSaltHex}:${nextHash}`;
+
+        const updates = [];
+        if (userRow?.id) {
+          updates.push(env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(nextPasswordHash, userRow.id));
+          updates.push(env.DB.prepare("UPDATE admins SET password_hash = ? WHERE username = ?").bind(nextPasswordHash, userRow.username));
+        }
+        if (adminRow?.id) {
+          updates.push(env.DB.prepare("UPDATE admins SET password_hash = ? WHERE id = ?").bind(nextPasswordHash, adminRow.id));
+        }
+
+        if (updates.length) {
+          await env.DB.batch(updates);
+        }
+
+        return Response.json({ success: true }, { headers: apiHeaders });
+      }
+
       if (path === "/api/users" && request.method === "GET") {
         const payload = await getAuthPayload(request, env);
         if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
@@ -491,16 +623,38 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
       if (path === "/api/content" && request.method === "PUT") {
         const payload = await getAuthPayload(request, env);
-        if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
         const body = await request.json().catch(() => ({}));
         if (!body || typeof body !== "object") {
           return Response.json({ success: false, error: "Invalid content payload." }, { status: 400, headers: apiHeaders });
         }
-        await env.DB.prepare(
-          "INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) " +
-            "ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP"
-        ).bind("app-content", JSON.stringify(body)).run();
-        return Response.json({ success: true }, { headers: apiHeaders });
+
+        if (ensureAdmin(payload)) {
+          await env.DB.prepare(
+            "INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) " +
+              "ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP"
+          ).bind("app-content", JSON.stringify(body)).run();
+          return Response.json({ success: true }, { headers: apiHeaders });
+        }
+
+        if (payload.role === "teacher") {
+          if (!payload.assignment) {
+            return Response.json({ success: false, error: "Assignment missing." }, { status: 400, headers: apiHeaders });
+          }
+          const row = await env.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind("app-content").first();
+          const existingContent = row?.data ? safeParseContent(row.data) : {};
+          const updatedContent = applyTeacherContentUpdate(existingContent, body, payload.assignment);
+          if (!updatedContent) {
+            return Response.json({ success: false, error: "Subject is not configured for updates." }, { status: 400, headers: apiHeaders });
+          }
+          await env.DB.prepare(
+            "INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) " +
+              "ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP"
+          ).bind("app-content", JSON.stringify(updatedContent)).run();
+          return Response.json({ success: true }, { headers: apiHeaders });
+        }
+
+        return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
       }
 
       // 3. CLASSES

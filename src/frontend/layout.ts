@@ -3,6 +3,9 @@ import { adminMobileNavComponent } from "./components/layout/admin-mobile-nav";
 import { adminPageHeaderComponent } from "./components/layout/admin-page-header";
 import { adminShellComponent } from "./components/layout/admin-shell";
 import { adminSidebarComponent } from "./components/layout/admin-sidebar";
+import { teacherMobileNavComponent } from "./components/layout/teacher-mobile-nav";
+import { teacherShellComponent } from "./components/layout/teacher-shell";
+import { teacherSidebarComponent } from "./components/layout/teacher-sidebar";
 import { uiComponents } from "./components/shared/ui";
 import { landingComponents } from "./public/landing";
 import { authComponents } from "./public/auth";
@@ -104,6 +107,9 @@ export function renderAppHtml(initialView: string) {
         ${adminMobileNavComponent}
         ${adminPageHeaderComponent}
         ${adminShellComponent}
+        ${teacherSidebarComponent}
+        ${teacherMobileNavComponent}
+        ${teacherShellComponent}
 
         // --- VIEW LOGIC ---
         ${authComponents}

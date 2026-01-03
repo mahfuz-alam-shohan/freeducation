@@ -1,4 +1,51 @@
 export const dashboardComponents = `
+        const TeacherDashboard = ({ assignment, subjectConfig, onNavigate }) => {
+            const hasAssignment = assignment && assignment.level && assignment.subject;
+            return (
+                <TeacherShell
+                    title="Teacher Dashboard"
+                    subtitle="Access the subject you are assigned to manage."
+                    activeTab="subject"
+                    onNavigate={onNavigate}
+                >
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y">
+                        {!hasAssignment && (
+                            <div className="px-5 py-6 text-sm text-gray-400">
+                                No subject assignment found yet. Please contact an admin to assign your subject.
+                            </div>
+                        )}
+                        {hasAssignment && (
+                            <div className="px-5 py-6 flex flex-col gap-4">
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Assigned subject</div>
+                                <div className="text-lg font-semibold text-gray-900">{assignment.subject}</div>
+                                <div className="text-sm text-gray-500">Class: {assignment.level}</div>
+                                <p className="text-sm text-gray-500">
+                                    {subjectConfig?.description || 'Content tools for this subject will appear here.'}
+                                </p>
+                                {subjectConfig?.route ? (
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <button
+                                            onClick={() => onNavigate(subjectConfig.route)}
+                                            className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-blue-600 text-white hover:bg-blue-500 transition"
+                                        >
+                                            Manage content
+                                        </button>
+                                        <span className="text-xs text-gray-400">
+                                            You only see the subject assigned to you.
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-gray-400">
+                                        Content tools for this subject are not available yet.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </TeacherShell>
+            );
+        };
+
         const AdminDashboard = ({ onNavigate }) => {
             const [classes, setClasses] = useState([]);
             const [loading, setLoading] = useState(true);
