@@ -610,12 +610,14 @@ export const mainApp = `
                 {
                     title: 'বাংলা সাহিত্য',
                     description: 'গদ্য ও পদ্য অধ্যায় সমূহ',
-                    route: classLabel === 'SSC' ? 'public-bangla-ssc-shahitto' : 'public-bangla-hsc-shahitto'
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-shahitto' : 'public-bangla-hsc-shahitto',
+                    thumbnailKey: 'shahitto'
                 },
                 {
                     title: 'সহপাঠ',
                     description: 'নাটক ও উপন্যাস ভিত্তিক পাঠ',
-                    route: classLabel === 'SSC' ? 'public-bangla-ssc-shohopath' : 'public-bangla-hsc-shohopath'
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-shohopath' : 'public-bangla-hsc-shohopath',
+                    thumbnailKey: 'shohopath'
                 }
             ];
 
@@ -623,12 +625,14 @@ export const mainApp = `
                 {
                     title: 'গদ্য',
                     description: 'গদ্য অধ্যায় সমূহ',
-                    route: classLabel === 'SSC' ? 'public-bangla-ssc-goddo' : 'public-bangla-hsc-goddo'
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-goddo' : 'public-bangla-hsc-goddo',
+                    thumbnailKey: 'goddo'
                 },
                 {
                     title: 'পদ্য',
                     description: 'পদ্য অধ্যায় সমূহ',
-                    route: classLabel === 'SSC' ? 'public-bangla-ssc-poddo' : 'public-bangla-hsc-poddo'
+                    route: classLabel === 'SSC' ? 'public-bangla-ssc-poddo' : 'public-bangla-hsc-poddo',
+                    thumbnailKey: 'poddo'
                 }
             ];
 
@@ -1826,7 +1830,12 @@ export const mainApp = `
                                 onBack={() => navigate('ssc-subjects')}
                                 onNavigate={navigate}
                             >
-                                <PublicBanglaTopicGrid topics={getBanglaTopics('SSC')} onNavigate={navigate} />
+                                <PublicBanglaTopicGrid
+                                    classLabel="SSC"
+                                    subjectLabel="Bangla 1st Paper"
+                                    topics={getBanglaTopics('SSC')}
+                                    onNavigate={navigate}
+                                />
                             </PublicBanglaShell>
                         )}
                         {view === 'public-bangla-hsc-1st-paper' && (
@@ -1836,7 +1845,12 @@ export const mainApp = `
                                 onBack={() => navigate('hsc-subjects')}
                                 onNavigate={navigate}
                             >
-                                <PublicBanglaTopicGrid topics={getBanglaTopics('HSC')} onNavigate={navigate} />
+                                <PublicBanglaTopicGrid
+                                    classLabel="HSC"
+                                    subjectLabel="Bangla 1st Paper"
+                                    topics={getBanglaTopics('HSC')}
+                                    onNavigate={navigate}
+                                />
                             </PublicBanglaShell>
                         )}
                         {view === 'public-bangla-ssc-shahitto' && (
@@ -1846,7 +1860,12 @@ export const mainApp = `
                                 onBack={() => navigate('public-bangla-ssc-1st-paper')}
                                 onNavigate={navigate}
                             >
-                                <PublicBanglaTopicGrid topics={getBanglaShahittoTopics('SSC')} onNavigate={navigate} />
+                                <PublicBanglaTopicGrid
+                                    classLabel="SSC"
+                                    subjectLabel="Bangla 1st Paper"
+                                    topics={getBanglaShahittoTopics('SSC')}
+                                    onNavigate={navigate}
+                                />
                             </PublicBanglaShell>
                         )}
                         {view === 'public-bangla-hsc-shahitto' && (
@@ -1856,7 +1875,12 @@ export const mainApp = `
                                 onBack={() => navigate('public-bangla-hsc-1st-paper')}
                                 onNavigate={navigate}
                             >
-                                <PublicBanglaTopicGrid topics={getBanglaShahittoTopics('HSC')} onNavigate={navigate} />
+                                <PublicBanglaTopicGrid
+                                    classLabel="HSC"
+                                    subjectLabel="Bangla 1st Paper"
+                                    topics={getBanglaShahittoTopics('HSC')}
+                                    onNavigate={navigate}
+                                />
                             </PublicBanglaShell>
                         )}
                         {view === 'public-bangla-ssc-goddo' && (

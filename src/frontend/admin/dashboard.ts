@@ -118,6 +118,166 @@ export const dashboardComponents = `
             );
         };
 
+        const makeThumbnailKey = (subject, classLabel) =>
+            (classLabel + '-' + subject)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+
+        const makeChapterThumbnailKey = (classLabel, subjectLabel, chapterKey) =>
+            (classLabel + '-' + subjectLabel + '-' + chapterKey)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+
+        const useThumbnailMap = (url, keyField) => {
+            const [thumbnailMap, setThumbnailMap] = useState({});
+
+            useEffect(() => {
+                let isActive = true;
+                const loadThumbnails = async () => {
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) return;
+                        const data = await response.json();
+                        if (!isActive) return;
+                        const map = (data.thumbnails || []).reduce((acc, item) => {
+                            acc[item[keyField]] = {
+                                url: item.url
+                            };
+                            return acc;
+                        }, {});
+                        setThumbnailMap(map);
+                    } catch (error) {
+                        console.warn('Failed to load thumbnails', error);
+                    }
+                };
+                loadThumbnails();
+                return () => {
+                    isActive = false;
+                };
+            }, [url, keyField]);
+
+            return [thumbnailMap, setThumbnailMap];
+        };
+
+        const ThumbnailUploadModal = ({
+            title,
+            description,
+            uploadUrl,
+            keyField,
+            itemKey,
+            existingUrl,
+            onSaved,
+            onClose
+        }) => {
+            const [file, setFile] = useState(null);
+            const [previewUrl, setPreviewUrl] = useState('');
+            const [status, setStatus] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+            const canSave = Boolean(file || existingUrl);
+
+            useEffect(() => {
+                if (!file) return undefined;
+                const nextUrl = URL.createObjectURL(file);
+                setPreviewUrl(nextUrl);
+                return () => {
+                    URL.revokeObjectURL(nextUrl);
+                };
+            }, [file]);
+
+            const handleSave = async () => {
+                setStatus(null);
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setStatus('You must be logged in to upload thumbnails.');
+                    return;
+                }
+
+                setIsSaving(true);
+                try {
+                    const formData = new FormData();
+                    formData.append(keyField, itemKey);
+                    if (file) {
+                        formData.append('file', file);
+                    }
+
+                    const response = await fetch(uploadUrl, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        setStatus(data.error || 'Upload failed.');
+                    } else {
+                        onSaved(data.thumbnail);
+                        setStatus('Thumbnail saved.');
+                        setFile(null);
+                        setPreviewUrl('');
+                    }
+                } catch (error) {
+                    setStatus('Upload failed. Please try again.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+                    <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Thumbnail</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">{title}</div>
+                            {description && <div className="text-sm text-gray-500 mt-1">{description}</div>}
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
+                                {previewUrl || existingUrl ? (
+                                    <img
+                                        src={previewUrl || existingUrl}
+                                        alt={title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 text-xs uppercase tracking-[0.3em]">
+                                        <span>No thumbnail</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Upload image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(event) => setFile(event.target.files?.[0] || null)}
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                />
+                            </div>
+                            {status && <div className="text-sm text-gray-500">{status}</div>}
+                        </div>
+                        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={!canSave || isSaving}
+                                className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-blue-600 text-white hover:bg-blue-500 transition disabled:opacity-60"
+                            >
+                                {isSaving ? 'Saving...' : 'Save thumbnail'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const AdminGroupSelection = ({ classLabel, onNavigate }) => {
             const groups = [
                 { title: 'Science', description: 'Physics, Chemistry, Biology' },
@@ -259,6 +419,8 @@ export const dashboardComponents = `
                 }
             };
 
+            const [subjectThumbnails, setSubjectThumbnails] = useThumbnailMap('/api/thumbnails', 'subjectKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
             const subjects = subjectMap[classLabel]?.[groupLabel] || [];
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
             const banglaRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
@@ -357,36 +519,89 @@ export const dashboardComponents = `
                                                                     : isHscBio1
                                                                         ? hscBio1Route
                                                                         : hscBio2Route;
+                            const subjectKey = makeThumbnailKey(subject, classLabel);
+                            const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
                             return (
-                                <button
+                                <div
                                     key={subject}
-                                    onClick={() => route && onNavigate(route)}
-                                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                                    className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
                                 >
-                                    <span className={isBanglaFirst ? 'font-bangla' : ''}>{displayLabel}</span>
-                                    <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
-                                </button>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                                            {thumbnailUrl ? (
+                                                <img src={thumbnailUrl} alt={subject} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">
+                                                    No image
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className={isBanglaFirst ? 'font-bangla' : ''}>{displayLabel}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-semibold">
+                                        <button
+                                            onClick={() => route && onNavigate(route)}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Open
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: subject,
+                                                    subjectKey
+                                                })
+                                            }
+                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a subject thumbnail for public cards."
+                            uploadUrl="/api/thumbnails"
+                            keyField="subjectKey"
+                            itemKey={activeThumbnail.subjectKey}
+                            existingUrl={subjectThumbnails[activeThumbnail.subjectKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setSubjectThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.subjectKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
+                    )}
                 </AdminShell>
             );
         };
 
         const BanglaFirstPaperTopics = ({ classLabel, onNavigate }) => {
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
+            const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
+            const subjectLabel = 'Bangla 1st Paper';
             const topics = [
                 {
                     title: 'বাংলা সাহিত্য',
                     description: 'গদ্য ও পদ্য অধ্যায় সমূহ',
                     route: classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto',
-                    active: true
+                    active: true,
+                    thumbnailKey: 'shahitto'
                 },
                 {
                     title: 'সহপাঠ',
                     description: 'নাটক ও উপন্যাস ভিত্তিক পাঠ',
                     route: classLabel === 'SSC' ? 'bangla-ssc-shohopath' : 'bangla-hsc-shohopath',
-                    active: true
+                    active: true,
+                    thumbnailKey: 'shohopath'
                 }
             ];
 
@@ -413,22 +628,72 @@ export const dashboardComponents = `
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
-                        {topics.map((topic) => (
-                            <button
-                                key={topic.title}
-                                onClick={() => topic.active && topic.route && onNavigate(topic.route)}
-                                className={\`w-full flex items-center justify-between px-5 py-4 text-sm font-semibold transition \${topic.active ? 'text-gray-700 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed'}\`}
-                                disabled={!topic.active}
-                            >
-                                <div className="text-left">
-                                    <div className="text-xs uppercase tracking-[0.2em] text-gray-300">বিষয়</div>
-                                    <div className="text-base font-semibold text-gray-900 mt-1">{topic.title}</div>
-                                    <p className="text-xs text-gray-500 mt-2">{topic.description}</p>
+                        {topics.map((topic) => {
+                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, topic.thumbnailKey);
+                            const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                            return (
+                                <div
+                                    key={topic.title}
+                                    className={\`w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold transition \${topic.active ? 'text-gray-700' : 'text-gray-300'}\`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                                            {thumbnailUrl ? (
+                                                <img src={thumbnailUrl} alt={topic.title} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">
+                                                    No image
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">বিষয়</div>
+                                            <div className="text-base font-semibold text-gray-900 mt-1">{topic.title}</div>
+                                            <p className="text-xs text-gray-500 mt-2">{topic.description}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-semibold">
+                                        <button
+                                            onClick={() => topic.active && topic.route && onNavigate(topic.route)}
+                                            className={\`px-2 py-1 rounded-md border border-gray-200 transition \${topic.active ? 'text-gray-600 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed'}\`}
+                                            disabled={!topic.active}
+                                        >
+                                            Open
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: topic.title,
+                                                    chapterKey
+                                                })
+                                            }
+                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    </div>
                                 </div>
-                                <span className={\`text-xs uppercase tracking-[0.2em] \${topic.active ? 'text-blue-600' : 'text-gray-300'}\`}>Open</span>
-                            </button>
-                        ))}
+                            );
+                        })}
                     </div>
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a category thumbnail for Bangla 1st Paper."
+                            uploadUrl="/api/chapter-thumbnails"
+                            keyField="chapterKey"
+                            itemKey={activeThumbnail.chapterKey}
+                            existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setChapterThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.chapterKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
+                    )}
                 </AdminShell>
             );
         };
@@ -437,6 +702,23 @@ export const dashboardComponents = `
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const goddoRoute = classLabel === 'SSC' ? 'bangla-ssc-goddo' : 'bangla-hsc-goddo';
             const poddoRoute = classLabel === 'SSC' ? 'bangla-ssc-poddo' : 'bangla-hsc-poddo';
+            const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
+            const subjectLabel = 'Bangla 1st Paper';
+            const categoryCards = [
+                {
+                    title: 'গদ্য',
+                    description: 'গদ্য অধ্যায় সমূহ',
+                    route: goddoRoute,
+                    thumbnailKey: 'goddo'
+                },
+                {
+                    title: 'পদ্য',
+                    description: 'পদ্য অধ্যায় সমূহ',
+                    route: poddoRoute,
+                    thumbnailKey: 'poddo'
+                }
+            ];
 
             return (
                 <AdminShell
@@ -461,49 +743,127 @@ export const dashboardComponents = `
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2 font-bangla">
-                        <button
-                            onClick={() => onNavigate(goddoRoute)}
-                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"
-                        >
-                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধারা</div>
-                            <div className="text-lg font-semibold text-gray-900 mt-2">গদ্য</div>
-                            <p className="text-sm text-gray-500 mt-2">গদ্য অধ্যায় সমূহ</p>
-                        </button>
-                        <button
-                            onClick={() => onNavigate(poddoRoute)}
-                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left hover:bg-gray-50 transition"
-                        >
-                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধারা</div>
-                            <div className="text-lg font-semibold text-gray-900 mt-2">পদ্য</div>
-                            <p className="text-sm text-gray-500 mt-2">পদ্য অধ্যায় সমূহ</p>
-                        </button>
+                        {categoryCards.map((card) => {
+                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, card.thumbnailKey);
+                            const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                            return (
+                                <div
+                                    key={card.title}
+                                    className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 text-left flex flex-col gap-4"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                                            {thumbnailUrl ? (
+                                                <img src={thumbnailUrl} alt={card.title} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">
+                                                    No image
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধারা</div>
+                                            <div className="text-lg font-semibold text-gray-900 mt-2">{card.title}</div>
+                                            <p className="text-sm text-gray-500 mt-2">{card.description}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-semibold">
+                                        <button
+                                            onClick={() => onNavigate(card.route)}
+                                            className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Open
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: card.title,
+                                                    chapterKey
+                                                })
+                                            }
+                                            className="px-3 py-1.5 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a category thumbnail for Bangla literature."
+                            uploadUrl="/api/chapter-thumbnails"
+                            keyField="chapterKey"
+                            itemKey={activeThumbnail.chapterKey}
+                            existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setChapterThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.chapterKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
+                    )}
                 </AdminShell>
             );
         };
 
         const BanglaShohopath = ({ classLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
+            const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [newItemName, setNewItemName] = useState('');
             const [newItemType, setNewItemType] = useState('নাটক');
             const [editingItem, setEditingItem] = useState(null);
+            const [thumbnailFile, setThumbnailFile] = useState(null);
             const typeOptions = ['নাটক', 'উপন্যাস'];
+            const subjectLabel = 'Bangla 1st Paper';
 
             const resetForm = () => {
                 setNewItemName('');
                 setNewItemType('নাটক');
                 setEditingItem(null);
+                setThumbnailFile(null);
             };
 
-            const handleSave = () => {
+            const handleSave = async () => {
                 const trimmed = newItemName.trim();
                 if (!trimmed) return;
+                const token = localStorage.getItem('auth_token');
+                const uploadThumbnail = async (chapterKey) => {
+                    if (!thumbnailFile || !token) return;
+                    const formData = new FormData();
+                    formData.append('chapterKey', chapterKey);
+                    formData.append('file', thumbnailFile);
+                    const response = await fetch('/api/chapter-thumbnails', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        setChapterThumbnails((prev) => ({
+                            ...prev,
+                            [data.thumbnail.chapterKey]: { url: data.thumbnail.url }
+                        }));
+                    }
+                };
                 if (editingItem) {
                     onUpdateItem(editingItem.id, { name: trimmed, type: newItemType });
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, editingItem.id + '-সহপাঠ');
+                    await uploadThumbnail(chapterKey);
                 } else {
                     const nextId = \`\${Date.now()}-\${Math.random().toString(16).slice(2)}\`;
                     onAddItem({ id: nextId, name: trimmed, type: newItemType });
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, nextId + '-সহপাঠ');
+                    await uploadThumbnail(chapterKey);
                 }
                 resetForm();
                 setIsModalOpen(false);
@@ -557,6 +917,17 @@ export const dashboardComponents = `
                                         Rename
                                     </button>
                                     <button
+                                        onClick={() =>
+                                            setActiveThumbnail({
+                                                title: item.name,
+                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ')
+                                            })
+                                        }
+                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                    >
+                                        Thumbnail
+                                    </button>
+                                    <button
                                         onClick={() => {
                                             const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
                                             if (shouldRemove) {
@@ -603,6 +974,18 @@ export const dashboardComponents = `
                                         ))}
                                     </select>
                                 </div>
+                                <div className="mt-4">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        Upload now or edit later with the thumbnail button.
+                                    </p>
+                                </div>
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -623,26 +1006,74 @@ export const dashboardComponents = `
                             </div>
                         </div>
                     )}
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a thumbnail for this সহপাঠ chapter."
+                            uploadUrl="/api/chapter-thumbnails"
+                            keyField="chapterKey"
+                            itemKey={activeThumbnail.chapterKey}
+                            existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setChapterThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.chapterKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
+                    )}
                 </AdminShell>
             );
         };
 
         const BanglaTextList = ({ classLabel, typeLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate, showAdd = false, baseRouteOverride }) => {
+            const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [newItem, setNewItem] = useState('');
             const [editingItem, setEditingItem] = useState(null);
+            const [thumbnailFile, setThumbnailFile] = useState(null);
             const baseRoute = baseRouteOverride || (classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto');
+            const subjectLabel = 'Bangla 1st Paper';
 
-            const handleSave = () => {
+            const handleSave = async () => {
                 const trimmed = newItem.trim();
                 if (!trimmed) return;
+                const token = localStorage.getItem('auth_token');
+                const uploadThumbnail = async (chapterKey) => {
+                    if (!thumbnailFile || !token) return;
+                    const formData = new FormData();
+                    formData.append('chapterKey', chapterKey);
+                    formData.append('file', thumbnailFile);
+                    const response = await fetch('/api/chapter-thumbnails', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        setChapterThumbnails((prev) => ({
+                            ...prev,
+                            [data.thumbnail.chapterKey]: { url: data.thumbnail.url }
+                        }));
+                    }
+                };
                 if (editingItem) {
                     onUpdateItem(editingItem, trimmed);
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, trimmed + '-' + typeLabel);
+                    await uploadThumbnail(chapterKey);
                 } else {
                     onAddItem(trimmed);
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, trimmed + '-' + typeLabel);
+                    await uploadThumbnail(chapterKey);
                 }
                 setNewItem('');
                 setEditingItem(null);
+                setThumbnailFile(null);
                 setIsModalOpen(false);
             };
 
@@ -692,6 +1123,17 @@ export const dashboardComponents = `
                                         Rename
                                     </button>
                                     <button
+                                        onClick={() =>
+                                            setActiveThumbnail({
+                                                title: item,
+                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel)
+                                            })
+                                        }
+                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                    >
+                                        Thumbnail
+                                    </button>
+                                    <button
                                         onClick={() => {
                                             const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
                                             if (shouldRemove) {
@@ -726,12 +1168,25 @@ export const dashboardComponents = `
                                     placeholder="উদাহরণ: অপরিচিতা"
                                     className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 />
+                                <div className="mt-4">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        Upload now or edit later from the chapter list.
+                                    </p>
+                                </div>
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
                                             setIsModalOpen(false);
                                             setNewItem('');
                                             setEditingItem(null);
+                                            setThumbnailFile(null);
                                         }}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                                     >
@@ -746,6 +1201,24 @@ export const dashboardComponents = `
                                 </div>
                             </div>
                         </div>
+                    )}
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a thumbnail for this chapter."
+                            uploadUrl="/api/chapter-thumbnails"
+                            keyField="chapterKey"
+                            itemKey={activeThumbnail.chapterKey}
+                            existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setChapterThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.chapterKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
                     )}
                 </AdminShell>
             );
@@ -1326,23 +1799,53 @@ export const dashboardComponents = `
         };
 
         const IctChapterList = ({ chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+            const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [chapterName, setChapterName] = useState('');
             const [editingChapter, setEditingChapter] = useState(null);
+            const [thumbnailFile, setThumbnailFile] = useState(null);
+            const subjectLabel = 'Information and Communication Technology';
 
             const resetForm = () => {
                 setChapterName('');
                 setEditingChapter(null);
+                setThumbnailFile(null);
             };
 
-            const handleSave = () => {
+            const handleSave = async () => {
                 const trimmed = chapterName.trim();
                 if (!trimmed) return;
+                const token = localStorage.getItem('auth_token');
+                const uploadThumbnail = async (chapterKey) => {
+                    if (!thumbnailFile || !token) return;
+                    const formData = new FormData();
+                    formData.append('chapterKey', chapterKey);
+                    formData.append('file', thumbnailFile);
+                    const response = await fetch('/api/chapter-thumbnails', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        setChapterThumbnails((prev) => ({
+                            ...prev,
+                            [data.thumbnail.chapterKey]: { url: data.thumbnail.url }
+                        }));
+                    }
+                };
                 if (editingChapter) {
                     onUpdate(editingChapter.id, trimmed);
+                    const chapterKey = makeChapterThumbnailKey('SSC', subjectLabel, editingChapter.id);
+                    await uploadThumbnail(chapterKey);
                 } else {
                     const nextId = \`\${Date.now()}-\${Math.random().toString(16).slice(2)}\`;
                     onAdd({ id: nextId, name: trimmed });
+                    const chapterKey = makeChapterThumbnailKey('SSC', subjectLabel, nextId);
+                    await uploadThumbnail(chapterKey);
                 }
                 resetForm();
                 setIsModalOpen(false);
@@ -1392,6 +1895,17 @@ export const dashboardComponents = `
                                         Rename
                                     </button>
                                     <button
+                                        onClick={() =>
+                                            setActiveThumbnail({
+                                                title: chapter.name,
+                                                chapterKey: makeChapterThumbnailKey('SSC', subjectLabel, chapter.id)
+                                            })
+                                        }
+                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                    >
+                                        Thumbnail
+                                    </button>
+                                    <button
                                         onClick={() => {
                                             const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
                                             if (shouldRemove) {
@@ -1426,6 +1940,18 @@ export const dashboardComponents = `
                                     placeholder="উদাহরণ: তথ্য ও যোগাযোগ প্রযুক্তি"
                                     className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 />
+                                <div className="mt-4">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        Upload now or edit later from the chapter list.
+                                    </p>
+                                </div>
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -1446,28 +1972,75 @@ export const dashboardComponents = `
                             </div>
                         </div>
                     )}
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a thumbnail for this ICT chapter."
+                            uploadUrl="/api/chapter-thumbnails"
+                            keyField="chapterKey"
+                            itemKey={activeThumbnail.chapterKey}
+                            existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setChapterThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.chapterKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
+                    )}
                 </AdminShell>
             );
         };
 
         const ScienceChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+            const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+            const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [chapterName, setChapterName] = useState('');
             const [editingChapter, setEditingChapter] = useState(null);
+            const [thumbnailFile, setThumbnailFile] = useState(null);
 
             const resetForm = () => {
                 setChapterName('');
                 setEditingChapter(null);
+                setThumbnailFile(null);
             };
 
-            const handleSave = () => {
+            const handleSave = async () => {
                 const trimmed = chapterName.trim();
                 if (!trimmed) return;
+                const token = localStorage.getItem('auth_token');
+                const uploadThumbnail = async (chapterKey) => {
+                    if (!thumbnailFile || !token) return;
+                    const formData = new FormData();
+                    formData.append('chapterKey', chapterKey);
+                    formData.append('file', thumbnailFile);
+                    const response = await fetch('/api/chapter-thumbnails', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        setChapterThumbnails((prev) => ({
+                            ...prev,
+                            [data.thumbnail.chapterKey]: { url: data.thumbnail.url }
+                        }));
+                    }
+                };
                 if (editingChapter) {
                     onUpdate(editingChapter.id, trimmed);
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, editingChapter.id);
+                    await uploadThumbnail(chapterKey);
                 } else {
                     const nextId = Date.now() + '-' + Math.random().toString(16).slice(2);
                     onAdd({ id: nextId, name: trimmed, topics: [] });
+                    const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, nextId);
+                    await uploadThumbnail(chapterKey);
                 }
                 resetForm();
                 setIsModalOpen(false);
@@ -1509,27 +2082,38 @@ export const dashboardComponents = `
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-semibold">
-                                        <button
-                                            onClick={() => {
-                                                setEditingChapter(chapter);
-                                                setChapterName(chapter.name);
-                                                setIsModalOpen(true);
-                                            }}
-                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
-                                                if (shouldRemove) {
-                                                    onDelete(chapter.id);
-                                                }
-                                            }}
-                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                        >
-                                            Delete
-                                        </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditingChapter(chapter);
+                                            setChapterName(chapter.name);
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setActiveThumbnail({
+                                                title: chapter.name,
+                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id)
+                                            })
+                                        }
+                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                    >
+                                        Thumbnail
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
+                                            if (shouldRemove) {
+                                                onDelete(chapter.id);
+                                            }
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                    >
+                                        Delete
+                                    </button>
                                         <button
                                             onClick={() => onSelect(chapter)}
                                             className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
@@ -1555,6 +2139,18 @@ export const dashboardComponents = `
                                     placeholder="উদাহরণ: অধ্যায় ১"
                                     className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 />
+                                <div className="mt-4">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        Upload now or edit later from the chapter list.
+                                    </p>
+                                </div>
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -1574,6 +2170,24 @@ export const dashboardComponents = `
                                 </div>
                             </div>
                         </div>
+                    )}
+                    {activeThumbnail && (
+                        <ThumbnailUploadModal
+                            title={activeThumbnail.title}
+                            description="Upload a thumbnail for this chapter."
+                            uploadUrl="/api/chapter-thumbnails"
+                            keyField="chapterKey"
+                            itemKey={activeThumbnail.chapterKey}
+                            existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url}
+                            onSaved={(thumbnail) => {
+                                setChapterThumbnails((prev) => ({
+                                    ...prev,
+                                    [thumbnail.chapterKey]: { url: thumbnail.url }
+                                }));
+                                setActiveThumbnail(null);
+                            }}
+                            onClose={() => setActiveThumbnail(null)}
+                        />
                     )}
                 </AdminShell>
             );
