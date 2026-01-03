@@ -124,6 +124,43 @@ const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, a
     return updated;
   }
 
+  const sscScienceSubjects: Record<string, string> = {
+    physics: "Physics",
+    chemistry: "Chemistry",
+    biology: "Biology",
+  };
+
+  if (level === "SSC" && sscScienceSubjects[subject]) {
+    const subjectLabel = sscScienceSubjects[subject];
+    const keyPrefix = `${prefix}${subjectLabel}-`;
+    if (subject === "physics") applyArray("sscPhysicsChapters");
+    if (subject === "chemistry") applyArray("sscChemistryChapters");
+    if (subject === "biology") applyArray("sscBiologyChapters");
+    applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
+    return updated;
+  }
+
+  const hscScienceSubjects: Record<string, { label: string; key: string }> = {
+    "physics 1st paper": { label: "Physics 1st Paper", key: "hscPhysics1stChapters" },
+    "physics 2nd paper": { label: "Physics 2nd Paper", key: "hscPhysics2ndChapters" },
+    "chemistry 1st paper": { label: "Chemistry 1st Paper", key: "hscChemistry1stChapters" },
+    "chemistry 2nd paper": { label: "Chemistry 2nd Paper", key: "hscChemistry2ndChapters" },
+    "biology 1st paper": { label: "Biology 1st Paper", key: "hscBiology1stChapters" },
+    "biology 2nd paper": { label: "Biology 2nd Paper", key: "hscBiology2ndChapters" },
+  };
+
+  if (level === "HSC" && hscScienceSubjects[subject]) {
+    const subjectConfig = hscScienceSubjects[subject];
+    const keyPrefix = `${prefix}${subjectConfig.label}-`;
+    applyArray(subjectConfig.key);
+    applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
+    return updated;
+  }
+
   if (subject === "english 1st paper" && level === "HSC") {
     applyMapWithFilter("englishQuestions", (key) => key.startsWith(prefix));
     return updated;
@@ -305,6 +342,89 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           }
           const thumbnail = await env.DB.prepare("SELECT file_key, content_type FROM subject_thumbnails WHERE subject_key = ?")
             .bind(subjectKey)
+            .first();
+          if (!thumbnail) {
+            return Response.json({ success: false, error: "Thumbnail not found." }, { status: 404, headers: apiHeaders });
+          }
+          const object = await env.BUCKET.get(thumbnail.file_key as string);
+          if (!object) {
+            return Response.json({ success: false, error: "Thumbnail file missing." }, { status: 404, headers: apiHeaders });
+          }
+          const headers = new Headers(apiHeaders);
+          headers.set("Content-Type", (thumbnail.content_type as string) || "application/octet-stream");
+          headers.set("Cache-Control", "public, max-age=86400");
+          return new Response(object.body, { headers });
+        }
+      }
+
+      if (path.startsWith("/api/chapter-thumbnails")) {
+        if (path === "/api/chapter-thumbnails" && request.method === "GET") {
+          const rows = await env.DB.prepare("SELECT chapter_key FROM chapter_thumbnails ORDER BY updated_at DESC").all();
+          const thumbnails = (rows.results || []).map((row: any) => ({
+            chapterKey: row.chapter_key,
+            url: `/api/chapter-thumbnails/${row.chapter_key}`,
+          }));
+          return Response.json({ thumbnails }, { headers: apiHeaders });
+        }
+
+        if (path === "/api/chapter-thumbnails" && request.method === "POST") {
+          const payload = await getAuthPayload(request, env);
+          if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+          const formData = await request.formData();
+          const chapterKey = String(formData.get("chapterKey") || "").trim().toLowerCase();
+          if (!chapterKey || !/^[a-z0-9-]+$/.test(chapterKey)) {
+            return Response.json({ success: false, error: "Invalid chapter key." }, { status: 400, headers: apiHeaders });
+          }
+          const file = formData.get("file");
+          const existing = await env.DB.prepare("SELECT file_key, content_type FROM chapter_thumbnails WHERE chapter_key = ?")
+            .bind(chapterKey)
+            .first();
+
+          if (!(file instanceof File) && !existing) {
+            return Response.json({ success: false, error: "Thumbnail file is required." }, { status: 400, headers: apiHeaders });
+          }
+
+          let fileKey = existing?.file_key as string | undefined;
+          let contentType = existing?.content_type as string | undefined;
+
+          if (file instanceof File) {
+            const arrayBuffer = await file.arrayBuffer();
+            fileKey = `chapter-thumbnails/${chapterKey}-${crypto.randomUUID()}-${file.name}`;
+            contentType = file.type || "application/octet-stream";
+            await env.BUCKET.put(fileKey, arrayBuffer, {
+              httpMetadata: {
+                contentType,
+              },
+            });
+            if (existing?.file_key) {
+              await env.BUCKET.delete(existing.file_key as string);
+            }
+          }
+
+          await env.DB.prepare(
+            "INSERT INTO chapter_thumbnails (chapter_key, file_key, content_type, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) " +
+              "ON CONFLICT(chapter_key) DO UPDATE SET file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP"
+          ).bind(chapterKey, fileKey, contentType).run();
+
+          return Response.json(
+            {
+              success: true,
+              thumbnail: {
+                chapterKey,
+                url: `/api/chapter-thumbnails/${chapterKey}`,
+              },
+            },
+            { headers: apiHeaders }
+          );
+        }
+
+        if (path.startsWith("/api/chapter-thumbnails/") && request.method === "GET") {
+          const chapterKey = decodeURIComponent(path.replace("/api/chapter-thumbnails/", "")).toLowerCase();
+          if (!chapterKey || !/^[a-z0-9-]+$/.test(chapterKey)) {
+            return Response.json({ success: false, error: "Invalid chapter key." }, { status: 400, headers: apiHeaders });
+          }
+          const thumbnail = await env.DB.prepare("SELECT file_key, content_type FROM chapter_thumbnails WHERE chapter_key = ?")
+            .bind(chapterKey)
             .first();
           if (!thumbnail) {
             return Response.json({ success: false, error: "Thumbnail not found." }, { status: 404, headers: apiHeaders });
@@ -695,16 +815,24 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         const thumbnailKeys = (thumbnailRows.results || [])
           .map((row: any) => row.file_key)
           .filter((key: string | null) => typeof key === "string" && key.length > 0);
+        const chapterThumbnailRows = await env.DB.prepare("SELECT file_key FROM chapter_thumbnails").all();
+        const chapterThumbnailKeys = (chapterThumbnailRows.results || [])
+          .map((row: any) => row.file_key)
+          .filter((key: string | null) => typeof key === "string" && key.length > 0);
         if (keys.length > 0) {
           await env.BUCKET.delete(keys);
         }
         if (thumbnailKeys.length > 0) {
           await env.BUCKET.delete(thumbnailKeys);
         }
+        if (chapterThumbnailKeys.length > 0) {
+          await env.BUCKET.delete(chapterThumbnailKeys);
+        }
 
         await env.DB.batch([
           env.DB.prepare("DELETE FROM fonts"),
           env.DB.prepare("DELETE FROM subject_thumbnails"),
+          env.DB.prepare("DELETE FROM chapter_thumbnails"),
           env.DB.prepare("DELETE FROM content_store WHERE key = 'app-content'"),
           env.DB.prepare("DELETE FROM class_groups"),
           env.DB.prepare("DELETE FROM classes"),

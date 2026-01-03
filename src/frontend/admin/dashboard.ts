@@ -264,6 +264,15 @@ export const dashboardComponents = `
             const banglaRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const englishRoute = classLabel === 'HSC' ? 'english-hsc-1st-paper' : null;
             const ictRoute = classLabel === 'SSC' ? 'admin-ssc-ict' : null;
+            const physicsRoute = classLabel === 'SSC' ? 'admin-ssc-physics' : null;
+            const chemistryRoute = classLabel === 'SSC' ? 'admin-ssc-chemistry' : null;
+            const biologyRoute = classLabel === 'SSC' ? 'admin-ssc-biology' : null;
+            const hscPhysics1Route = classLabel === 'HSC' ? 'admin-hsc-physics-1st' : null;
+            const hscPhysics2Route = classLabel === 'HSC' ? 'admin-hsc-physics-2nd' : null;
+            const hscChem1Route = classLabel === 'HSC' ? 'admin-hsc-chemistry-1st' : null;
+            const hscChem2Route = classLabel === 'HSC' ? 'admin-hsc-chemistry-2nd' : null;
+            const hscBio1Route = classLabel === 'HSC' ? 'admin-hsc-biology-1st' : null;
+            const hscBio2Route = classLabel === 'HSC' ? 'admin-hsc-biology-2nd' : null;
 
             return (
                 <AdminShell
@@ -295,15 +304,59 @@ export const dashboardComponents = `
                             const isBanglaFirst = subject === 'Bangla 1st Paper';
                             const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
                             const isIct = subject === 'Information and Communication Technology' && classLabel === 'SSC';
+                            const isPhysics = subject === 'Physics' && classLabel === 'SSC';
+                            const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
+                            const isBiology = subject === 'Biology' && classLabel === 'SSC';
+                            const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
+                            const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
+                            const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
+                            const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
+                            const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
+                            const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
                             const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
-                            if (!isBanglaFirst && !isEnglishFirst && !isIct) {
+                            if (
+                                !isBanglaFirst &&
+                                !isEnglishFirst &&
+                                !isIct &&
+                                !isPhysics &&
+                                !isChemistry &&
+                                !isBiology &&
+                                !isHscPhysics1 &&
+                                !isHscPhysics2 &&
+                                !isHscChem1 &&
+                                !isHscChem2 &&
+                                !isHscBio1 &&
+                                !isHscBio2
+                            ) {
                                 return (
                                     <div key={subject} className="px-5 py-4 text-sm font-semibold text-gray-700">
                                         {displayLabel}
                                     </div>
                                 );
                             }
-                            const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : ictRoute;
+                            const route = isBanglaFirst
+                                ? banglaRoute
+                                : isEnglishFirst
+                                    ? englishRoute
+                                    : isIct
+                                        ? ictRoute
+                                        : isPhysics
+                                            ? physicsRoute
+                                            : isChemistry
+                                                ? chemistryRoute
+                                                : isBiology
+                                                    ? biologyRoute
+                                                    : isHscPhysics1
+                                                        ? hscPhysics1Route
+                                                        : isHscPhysics2
+                                                            ? hscPhysics2Route
+                                                            : isHscChem1
+                                                                ? hscChem1Route
+                                                                : isHscChem2
+                                                                    ? hscChem2Route
+                                                                    : isHscBio1
+                                                                        ? hscBio1Route
+                                                                        : hscBio2Route;
                             return (
                                 <button
                                     key={subject}
@@ -877,9 +930,19 @@ export const dashboardComponents = `
             );
         };
 
-        const SrijonshilTypeList = ({ classLabel, itemName, onSelectType, onNavigate }) => {
-            const itemRoute = classLabel === 'SSC' ? 'bangla-ssc-item' : 'bangla-hsc-item';
-            const questionRoute = classLabel === 'SSC' ? 'bangla-ssc-srijonshil-questions' : 'bangla-hsc-srijonshil-questions';
+        const SrijonshilTypeList = ({
+            classLabel,
+            itemName,
+            onSelectType,
+            onNavigate,
+            itemRoute,
+            questionRoute,
+            title,
+            subtitle
+        }) => {
+            const resolvedItemRoute = itemRoute || (classLabel === 'SSC' ? 'bangla-ssc-item' : 'bangla-hsc-item');
+            const resolvedQuestionRoute =
+                questionRoute || (classLabel === 'SSC' ? 'bangla-ssc-srijonshil-questions' : 'bangla-hsc-srijonshil-questions');
             const types = [
                 { key: 'gyan', label: 'জ্ঞান (ক)', description: 'জ্ঞানমূলক প্রশ্ন যোগ করুন' },
                 { key: 'onudhabon', label: 'অনুধাবন (খ)', description: 'অনুধাবনমূলক প্রশ্ন যোগ করুন' }
@@ -887,14 +950,14 @@ export const dashboardComponents = `
 
             return (
                 <AdminShell
-                    title="সৃজনশীল প্রশ্ন"
-                    subtitle={\`\${itemName} অধ্যায়ের প্রশ্নের ধরন নির্বাচন করুন।\`}
+                    title={title || 'সৃজনশীল প্রশ্ন'}
+                    subtitle={subtitle || \`\${itemName} অধ্যায়ের প্রশ্নের ধরন নির্বাচন করুন।\`}
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
                     <div className="flex justify-between items-center font-bangla">
                         <button
-                            onClick={() => onNavigate(itemRoute)}
+                            onClick={() => onNavigate(resolvedItemRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
                             Back
@@ -913,7 +976,7 @@ export const dashboardComponents = `
                                 key={type.key}
                                 onClick={() => {
                                     onSelectType(type);
-                                    onNavigate(questionRoute);
+                                    onNavigate(resolvedQuestionRoute);
                                 }}
                                 className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
                             >
@@ -927,8 +990,18 @@ export const dashboardComponents = `
             );
         };
 
-        const SrijonshilQuestionList = ({ classLabel, itemName, typeLabel, questions, onAdd, onUpdate, onDelete, onNavigate }) => {
-            const typeRoute = classLabel === 'SSC' ? 'bangla-ssc-srijonshil-types' : 'bangla-hsc-srijonshil-types';
+        const SrijonshilQuestionList = ({
+            classLabel,
+            itemName,
+            typeLabel,
+            questions,
+            onAdd,
+            onUpdate,
+            onDelete,
+            onNavigate,
+            typeRoute
+        }) => {
+            const resolvedTypeRoute = typeRoute || (classLabel === 'SSC' ? 'bangla-ssc-srijonshil-types' : 'bangla-hsc-srijonshil-types');
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [questionInput, setQuestionInput] = useState('');
             const [answerInput, setAnswerInput] = useState('');
@@ -964,7 +1037,7 @@ export const dashboardComponents = `
                 >
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
                         <button
-                            onClick={() => onNavigate(typeRoute)}
+                            onClick={() => onNavigate(resolvedTypeRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
                             Back
@@ -1072,8 +1145,8 @@ export const dashboardComponents = `
             );
         };
 
-        const McqQuestionList = ({ classLabel, itemName, questions, onAdd, onUpdate, onDelete, onNavigate }) => {
-            const itemRoute = classLabel === 'SSC' ? 'bangla-ssc-item' : 'bangla-hsc-item';
+        const McqQuestionList = ({ classLabel, itemName, questions, onAdd, onUpdate, onDelete, onNavigate, itemRoute }) => {
+            const backRoute = itemRoute || (classLabel === 'SSC' ? 'bangla-ssc-item' : 'bangla-hsc-item');
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [questionInput, setQuestionInput] = useState('');
             const [optionsInput, setOptionsInput] = useState(['', '', '', '']);
@@ -1113,7 +1186,7 @@ export const dashboardComponents = `
                 >
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
                         <button
-                            onClick={() => onNavigate(itemRoute)}
+                            onClick={() => onNavigate(backRoute)}
                             className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                         >
                             Back
@@ -1365,6 +1438,429 @@ export const dashboardComponents = `
                                     </button>
                                     <button
                                         onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const ScienceChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [chapterName, setChapterName] = useState('');
+            const [editingChapter, setEditingChapter] = useState(null);
+
+            const resetForm = () => {
+                setChapterName('');
+                setEditingChapter(null);
+            };
+
+            const handleSave = () => {
+                const trimmed = chapterName.trim();
+                if (!trimmed) return;
+                if (editingChapter) {
+                    onUpdate(editingChapter.id, trimmed);
+                } else {
+                    const nextId = Date.now() + '-' + Math.random().toString(16).slice(2);
+                    onAdd({ id: nextId, name: trimmed, topics: [] });
+                }
+                resetForm();
+                setIsModalOpen(false);
+            };
+
+            return (
+                <AdminShell
+                    title={classLabel + ' ' + subjectLabel}
+                    subtitle={subjectLabel + ' অধ্যায় যোগ করুন এবং টপিক সেট করুন।'}
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button
+                            onClick={() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                        >
+                            অধ্যায় যোগ করুন
+                        </button>
+                    </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {chapters.length === 0 && (
+                            <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>
+                        )}
+                        {chapters.map((chapter) => (
+                            <div key={chapter.id} className="px-5 py-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-sm font-semibold text-gray-900">{chapter.name}</div>
+                                        <div className="text-xs text-gray-400 mt-1">
+                                            টপিক: {(chapter.topics || []).length}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-semibold">
+                                        <button
+                                            onClick={() => {
+                                                setEditingChapter(chapter);
+                                                setChapterName(chapter.name);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
+                                                if (shouldRemove) {
+                                                    onDelete(chapter.id);
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                        >
+                                            Delete
+                                        </button>
+                                        <button
+                                            onClick={() => onSelect(chapter)}
+                                            className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
+                                        >
+                                            Open
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingChapter ? 'অধ্যায় সম্পাদনা করুন' : 'নতুন অধ্যায় যোগ করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">অধ্যায়ের নাম লিখুন।</p>
+                                <input
+                                    value={chapterName}
+                                    onChange={(event) => setChapterName(event.target.value)}
+                                    placeholder="উদাহরণ: অধ্যায় ১"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const ScienceTopicList = ({
+            classLabel,
+            subjectLabel,
+            chapter,
+            onAddTopic,
+            onUpdateTopic,
+            onDeleteTopic,
+            onSelectTopic,
+            onBack,
+            onNavigate
+        }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [topicName, setTopicName] = useState('');
+            const [editingTopic, setEditingTopic] = useState(null);
+            const topics = chapter?.topics || [];
+
+            const resetForm = () => {
+                setTopicName('');
+                setEditingTopic(null);
+            };
+
+            const handleSave = () => {
+                const trimmed = topicName.trim();
+                if (!trimmed || !chapter) return;
+                if (editingTopic) {
+                    onUpdateTopic(chapter.id, editingTopic.id, trimmed);
+                } else {
+                    const nextId = Date.now() + '-' + Math.random().toString(16).slice(2);
+                    onAddTopic(chapter.id, { id: nextId, name: trimmed });
+                }
+                resetForm();
+                setIsModalOpen(false);
+            };
+
+            return (
+                <AdminShell
+                    title={subjectLabel + ' টপিকসমূহ'}
+                    subtitle={(chapter?.name || 'অধ্যায়') + ' এর টপিক নির্বাচন করুন।'}
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button
+                            onClick={onBack}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                        >
+                            টপিক যোগ করুন
+                        </button>
+                    </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {topics.length === 0 && (
+                            <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন টপিক যোগ করা হয়নি।</div>
+                        )}
+                        {topics.map((topic) => (
+                            <div key={topic.id} className="px-5 py-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="text-sm font-semibold text-gray-900">{topic.name}</div>
+                                    <div className="flex items-center gap-2 text-xs font-semibold">
+                                        <button
+                                            onClick={() => {
+                                                setEditingTopic(topic);
+                                                setTopicName(topic.name);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const shouldRemove = window.confirm('আপনি কি এই টপিকটি মুছে ফেলতে চান?');
+                                                if (shouldRemove && chapter) {
+                                                    onDeleteTopic(chapter.id, topic.id);
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                        >
+                                            Delete
+                                        </button>
+                                        <button
+                                            onClick={() => onSelectTopic(topic)}
+                                            className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
+                                        >
+                                            Open
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingTopic ? 'টপিক সম্পাদনা করুন' : 'নতুন টপিক যোগ করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">টপিকের নাম লিখুন।</p>
+                                <input
+                                    value={topicName}
+                                    onChange={(event) => setTopicName(event.target.value)}
+                                    placeholder="উদাহরণ: বল এবং গতি"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const ScienceTopicDetail = ({
+            classLabel,
+            subjectLabel,
+            chapter,
+            topic,
+            noteKey,
+            notesByItem,
+            onUpdateNotes,
+            onBack,
+            onNavigateCq,
+            onNavigateMcq,
+            onNavigate
+        }) => {
+            const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+            const [noteInput, setNoteInput] = useState('');
+            const [editingNoteIndex, setEditingNoteIndex] = useState(null);
+            const notes = (notesByItem || {})[noteKey] || [];
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+
+            const openNoteModal = (index = null) => {
+                setEditingNoteIndex(index);
+                setNoteInput(index === null ? '' : notes[index] || '');
+                setIsNoteModalOpen(true);
+            };
+
+            const handleNoteSave = () => {
+                const trimmed = noteInput.trim();
+                if (!trimmed) return;
+                if (onUpdateNotes) {
+                    onUpdateNotes((prev) => {
+                        const current = prev && prev[noteKey] ? [...prev[noteKey]] : [];
+                        if (editingNoteIndex === null) {
+                            current.push(trimmed);
+                        } else {
+                            current[editingNoteIndex] = trimmed;
+                        }
+                        return { ...prev, [noteKey]: current };
+                    });
+                }
+                setIsNoteModalOpen(false);
+                setNoteInput('');
+                setEditingNoteIndex(null);
+            };
+
+            return (
+                <AdminShell
+                    title={subjectLabel + ' • ' + (topic?.name || 'টপিক')}
+                    subtitle={chapter?.name ? 'অধ্যায়: ' + chapter.name : 'টপিকের তথ্য যোগ করুন।'}
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button
+                            onClick={onBack}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Dashboard
+                        </button>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 font-bangla">
+                        <button
+                            onClick={onNavigateCq}
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">সৃজনশীল (CQ)</div>
+                            <p className="text-sm text-gray-500 mt-2">জ্ঞান ও অনুধাবন প্রশ্ন যোগ করুন</p>
+                        </button>
+                        <button
+                            onClick={onNavigateMcq}
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">বহুনির্বাচনী (MCQ)</div>
+                            <p className="text-sm text-gray-500 mt-2">MCQ প্রশ্ন তৈরি করুন</p>
+                        </button>
+                    </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                            <div>
+                                <div className="text-xs uppercase tracking-[0.2em] text-gray-300">নোটস</div>
+                                <div className="text-sm font-semibold text-gray-700 mt-1">টপিকের মূল তথ্য যোগ করুন</div>
+                            </div>
+                            <button
+                                onClick={() => openNoteModal()}
+                                className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                            >
+                                নোট যোগ করুন
+                            </button>
+                        </div>
+                        <ul className="divide-y">
+                            {notes.length === 0 && (
+                                <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                            )}
+                            {notes.map((note, index) => (
+                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
+                                    <span className="text-sm font-semibold text-gray-500">
+                                        {toBanglaNumber(index + 1)}.
+                                    </span>
+                                    <div className="flex-1 text-sm text-gray-700">{note}</div>
+                                    <button
+                                        onClick={() => openNoteModal(index)}
+                                        className="text-gray-400 hover:text-gray-600 transition"
+                                        title="নোট সম্পাদনা করুন"
+                                    >
+                                        ✎
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {isNoteModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingNoteIndex === null ? 'নোট যোগ করুন' : 'নোট সম্পাদনা করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">গুরুত্বপূর্ণ তথ্য লিখুন।</p>
+                                <textarea
+                                    value={noteInput}
+                                    onChange={(event) => setNoteInput(event.target.value)}
+                                    placeholder="উদাহরণ: অধ্যায়ের মূল সূত্র..."
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[120px]"
+                                />
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsNoteModalOpen(false);
+                                            setNoteInput('');
+                                            setEditingNoteIndex(null);
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleNoteSave}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
                                     >
                                         Save

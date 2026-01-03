@@ -98,6 +98,12 @@ export const settingsComponents = `
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
 
+        const makeChapterThumbnailKey = (classLabel, subjectLabel, chapterKey) =>
+            (classLabel + '-' + subjectLabel + '-' + chapterKey)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+
         const buildAdminSubjectList = () => {
             const subjectMap = new Map();
             Object.entries(adminSubjectGroups).forEach(([classLabel, groupMap]) => {
@@ -127,7 +133,6 @@ export const settingsComponents = `
         const thumbnailSubjects = buildAdminSubjectList();
 
         const ThumbnailPreviewCard = ({ subject, thumbnail, className = '', showMeta = true }) => {
-            const zoom = typeof thumbnail?.zoom === 'number' ? thumbnail.zoom : 1;
             return (
                 <div className={'space-y-3 ' + className}>
                     <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-sm">
@@ -135,8 +140,7 @@ export const settingsComponents = `
                             <img
                                 src={thumbnail.url}
                                 alt={subject.title}
-                                className="w-full h-full object-contain"
-                                style={{ transform: 'scale(' + zoom + ')' }}
+                                className="w-full h-full object-cover"
                             />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 text-xs uppercase tracking-[0.3em]">
@@ -154,17 +158,20 @@ export const settingsComponents = `
             );
         };
 
-        const ThumbnailModal = ({ subject, storedThumbnail, onSaved, onClose }) => {
+        const ThumbnailModal = ({
+            subject,
+            storedThumbnail,
+            onSaved,
+            onClose,
+            modeLabel = 'Thumbnail',
+            uploadUrl = '/api/thumbnails',
+            keyField = 'subjectKey'
+        }) => {
             const [file, setFile] = useState(null);
             const [previewUrl, setPreviewUrl] = useState('');
-            const [zoom, setZoom] = useState(storedThumbnail?.zoom ?? 1);
             const [status, setStatus] = useState(null);
             const [isSaving, setIsSaving] = useState(false);
             const canSave = Boolean(file || storedThumbnail?.url);
-
-            useEffect(() => {
-                setZoom(storedThumbnail?.zoom ?? 1);
-            }, [storedThumbnail?.zoom]);
 
             useEffect(() => {
                 if (!file) return undefined;
@@ -186,13 +193,12 @@ export const settingsComponents = `
                 setIsSaving(true);
                 try {
                     const formData = new FormData();
-                    formData.append('subjectKey', subject.subjectKey);
-                    formData.append('zoom', String(zoom));
+                    formData.append(keyField, subject.subjectKey);
                     if (file) {
                         formData.append('file', file);
                     }
 
-                    const response = await fetch('/api/thumbnails', {
+                    const response = await fetch(uploadUrl, {
                         method: 'POST',
                         headers: {
                             Authorization: 'Bearer ' + token
@@ -216,17 +222,17 @@ export const settingsComponents = `
             };
 
             const displayedThumbnail = previewUrl
-                ? { url: previewUrl, zoom }
+                ? { url: previewUrl }
                 : storedThumbnail
-                    ? { ...storedThumbnail, zoom }
-                    : { url: '', zoom };
+                    ? { ...storedThumbnail }
+                    : { url: '' };
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
-                    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                             <div>
-                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Thumbnail</div>
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">{modeLabel}</div>
                                 <div className="text-lg font-semibold text-gray-900">{subject.title}</div>
                                 <div className="text-xs text-gray-500 mt-1">
                                     {subject.classLabel}
@@ -240,9 +246,9 @@ export const settingsComponents = `
                                 <i className="fa-solid fa-xmark text-lg"></i>
                             </button>
                         </div>
-                        <div className="p-6 grid gap-6 lg:grid-cols-[minmax(0,200px)_minmax(0,1fr)]">
+                        <div className="p-6 grid gap-5 sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)]">
                             <ThumbnailPreviewCard subject={subject} thumbnail={displayedThumbnail} />
-                            <div className="space-y-5">
+                            <div className="space-y-4">
                                 <div>
                                     <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Upload image</label>
                                     <input
@@ -251,37 +257,6 @@ export const settingsComponents = `
                                         onChange={(event) => setFile(event.target.files?.[0] || null)}
                                         className="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200"
                                     />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Zoom</label>
-                                    <div className="flex items-center gap-3 mt-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setZoom((prev) => Math.max(0.7, Number((prev - 0.05).toFixed(2))))}
-                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition"
-                                            aria-label="Zoom out"
-                                        >
-                                            <i className="fa-solid fa-minus"></i>
-                                        </button>
-                                        <input
-                                            type="range"
-                                            min="0.7"
-                                            max="1.2"
-                                            step="0.02"
-                                            value={zoom}
-                                            onChange={(event) => setZoom(Number(event.target.value))}
-                                            className="w-full"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setZoom((prev) => Math.min(1.2, Number((prev + 0.05).toFixed(2))))}
-                                            className="h-9 w-9 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition"
-                                            aria-label="Zoom in"
-                                        >
-                                            <i className="fa-solid fa-plus"></i>
-                                        </button>
-                                        <span className="text-xs text-gray-500 w-12 text-right">{zoom.toFixed(2)}x</span>
-                                    </div>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-3">
                                     <button
@@ -302,9 +277,12 @@ export const settingsComponents = `
 
         const ThumbnailSettings = ({ onNavigate, onBack }) => {
             const [thumbnailMap, setThumbnailMap] = useState({});
+            const [chapterThumbnailMap, setChapterThumbnailMap] = useState({});
             const [statusMessage, setStatusMessage] = useState(null);
             const [activeSubject, setActiveSubject] = useState(null);
             const [activeClass, setActiveClass] = useState(null);
+            const [activeMode, setActiveMode] = useState('subject');
+            const [chapterEntries, setChapterEntries] = useState([]);
 
             useEffect(() => {
                 let isActive = true;
@@ -316,8 +294,7 @@ export const settingsComponents = `
                         if (!isActive) return;
                         const map = (data.thumbnails || []).reduce((acc, item) => {
                             acc[item.subjectKey] = {
-                                url: item.url,
-                                zoom: typeof item.zoom === 'number' ? item.zoom : 1
+                                url: item.url
                             };
                             return acc;
                         }, {});
@@ -332,12 +309,106 @@ export const settingsComponents = `
                 };
             }, []);
 
+            useEffect(() => {
+                let isActive = true;
+                const loadChapterThumbnails = async () => {
+                    try {
+                        const response = await fetch('/api/chapter-thumbnails');
+                        if (!response.ok) return;
+                        const data = await response.json();
+                        if (!isActive) return;
+                        const map = (data.thumbnails || []).reduce((acc, item) => {
+                            acc[item.chapterKey] = {
+                                url: item.url
+                            };
+                            return acc;
+                        }, {});
+                        setChapterThumbnailMap(map);
+                    } catch (error) {
+                        console.warn('Failed to load chapter thumbnails', error);
+                    }
+                };
+                loadChapterThumbnails();
+                return () => {
+                    isActive = false;
+                };
+            }, []);
+
+            useEffect(() => {
+                let isActive = true;
+                const loadChapters = async () => {
+                    try {
+                        const response = await fetch('/api/content');
+                        if (!response.ok) return;
+                        const data = await response.json();
+                        if (!isActive) return;
+                        const content = data.content || {};
+                        const entries = [];
+                        const pushEntry = (classLabel, subjectLabel, chapter, suffix = '') => {
+                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.key);
+                            entries.push({
+                                subjectKey: chapterKey,
+                                title: chapter.title,
+                                subjectLabel,
+                                classLabel,
+                                description: suffix
+                            });
+                        };
+
+                        const addChapterList = (classLabel, subjectLabel, list, suffix = '') => {
+                            (list || []).forEach((chapter) => {
+                                const key = chapter.id || chapter.key || chapter.name || chapter;
+                                const chapterKey = suffix ? key + '-' + suffix : key;
+                                const title = chapter.name || chapter.title || chapter;
+                                pushEntry(classLabel, subjectLabel, { key: chapterKey, title }, suffix);
+                            });
+                        };
+
+                        addChapterList('SSC', 'Information and Communication Technology', content.sscIctChapters, 'ICT');
+                        addChapterList('SSC', 'Physics', content.sscPhysicsChapters);
+                        addChapterList('SSC', 'Chemistry', content.sscChemistryChapters);
+                        addChapterList('SSC', 'Biology', content.sscBiologyChapters);
+
+                        addChapterList('HSC', 'Physics 1st Paper', content.hscPhysics1stChapters);
+                        addChapterList('HSC', 'Physics 2nd Paper', content.hscPhysics2ndChapters);
+                        addChapterList('HSC', 'Chemistry 1st Paper', content.hscChemistry1stChapters);
+                        addChapterList('HSC', 'Chemistry 2nd Paper', content.hscChemistry2ndChapters);
+                        addChapterList('HSC', 'Biology 1st Paper', content.hscBiology1stChapters);
+                        addChapterList('HSC', 'Biology 2nd Paper', content.hscBiology2ndChapters);
+
+                        addChapterList('SSC', 'Bangla 1st Paper', content.sscGoddoItems, 'গদ্য');
+                        addChapterList('SSC', 'Bangla 1st Paper', content.sscPoddoItems, 'পদ্য');
+                        addChapterList('SSC', 'Bangla 1st Paper', content.sscShohopathItems, 'সহপাঠ');
+                        addChapterList('HSC', 'Bangla 1st Paper', content.hscGoddoItems, 'গদ্য');
+                        addChapterList('HSC', 'Bangla 1st Paper', content.hscPoddoItems, 'পদ্য');
+                        addChapterList('HSC', 'Bangla 1st Paper', content.hscShohopathItems, 'সহপাঠ');
+
+                        setChapterEntries(entries);
+                    } catch (error) {
+                        console.warn('Failed to load chapters', error);
+                    }
+                };
+                loadChapters();
+                return () => {
+                    isActive = false;
+                };
+            }, []);
+
             const handleSaved = (thumbnail) => {
                 setThumbnailMap((prev) => ({
                     ...prev,
                     [thumbnail.subjectKey]: {
-                        url: thumbnail.url,
-                        zoom: thumbnail.zoom
+                        url: thumbnail.url
+                    }
+                }));
+                setStatusMessage('Thumbnail updated successfully.');
+            };
+
+            const handleChapterSaved = (thumbnail) => {
+                setChapterThumbnailMap((prev) => ({
+                    ...prev,
+                    [thumbnail.chapterKey]: {
+                        url: thumbnail.url
                     }
                 }));
                 setStatusMessage('Thumbnail updated successfully.');
@@ -360,11 +431,35 @@ export const settingsComponents = `
                         {statusMessage && <div className="text-xs text-gray-500">{statusMessage}</div>}
                     </div>
                     <div className="space-y-4">
+                        <div className="flex flex-wrap gap-2">
+                            {['subject', 'chapter'].map((mode) => (
+                                <button
+                                    key={mode}
+                                    onClick={() => {
+                                        setActiveMode(mode);
+                                        setActiveClass(null);
+                                        setActiveSubject(null);
+                                    }}
+                                    className={
+                                        'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.3em] border transition ' +
+                                        (activeMode === mode
+                                            ? 'border-gray-900 text-gray-900'
+                                            : 'border-gray-200 text-gray-500 hover:border-gray-300')
+                                    }
+                                >
+                                    {mode === 'subject' ? 'Subject thumbnails' : 'Chapter thumbnails'}
+                                </button>
+                            ))}
+                        </div>
                         <div>
-                            <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Subjects</div>
-                            <h3 className="text-lg font-semibold text-gray-900 mt-2">Subject thumbnails</h3>
+                            <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Library</div>
+                            <h3 className="text-lg font-semibold text-gray-900 mt-2">
+                                {activeMode === 'subject' ? 'Subject thumbnails' : 'Chapter thumbnails'}
+                            </h3>
                             <p className="text-sm text-gray-500 mt-2">
-                                Choose the class first, then select a subject to upload or fine-tune its thumbnail.
+                                {activeMode === 'subject'
+                                    ? 'Choose the class first, then select a subject to upload a thumbnail.'
+                                    : 'Choose the class first, then select a chapter to upload a thumbnail.'}
                             </p>
                         </div>
                         {!activeClass ? (
@@ -377,7 +472,11 @@ export const settingsComponents = `
                                     >
                                         <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Class</div>
                                         <div className="text-lg font-semibold text-gray-900 mt-2">{classLabel}</div>
-                                        <div className="text-sm text-gray-500 mt-1">Upload thumbnails for {classLabel} subjects.</div>
+                                        <div className="text-sm text-gray-500 mt-1">
+                                            {activeMode === 'subject'
+                                                ? 'Upload thumbnails for ' + classLabel + ' subjects.'
+                                                : 'Upload thumbnails for ' + classLabel + ' chapters.'}
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -390,8 +489,14 @@ export const settingsComponents = `
                                     Change class
                                 </button>
                                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                    {thumbnailSubjects.filter((subject) => subject.classLabel === activeClass).map((subject) => {
-                                        const thumbnail = thumbnailMap[subject.subjectKey];
+                                    {(activeMode === 'subject'
+                                        ? thumbnailSubjects.filter((subject) => subject.classLabel === activeClass)
+                                        : chapterEntries.filter((entry) => entry.classLabel === activeClass)
+                                    ).map((subject) => {
+                                        const thumbnail =
+                                            activeMode === 'subject'
+                                                ? thumbnailMap[subject.subjectKey]
+                                                : chapterThumbnailMap[subject.subjectKey];
                                         return (
                                             <button
                                                 key={subject.subjectKey}
@@ -408,7 +513,9 @@ export const settingsComponents = `
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-semibold text-gray-900">{subject.title}</div>
-                                                    <div className="text-xs text-gray-500 mt-1">{subject.classLabel}</div>
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {subject.subjectLabel || subject.classLabel}
+                                                    </div>
                                                 </div>
                                             </button>
                                         );
@@ -420,9 +527,20 @@ export const settingsComponents = `
                     {activeSubject && (
                         <ThumbnailModal
                             subject={activeSubject}
-                            storedThumbnail={thumbnailMap[activeSubject.subjectKey]}
+                            storedThumbnail={
+                                activeMode === 'subject'
+                                    ? thumbnailMap[activeSubject.subjectKey]
+                                    : chapterThumbnailMap[activeSubject.subjectKey]
+                            }
+                            uploadUrl={activeMode === 'subject' ? '/api/thumbnails' : '/api/chapter-thumbnails'}
+                            keyField={activeMode === 'subject' ? 'subjectKey' : 'chapterKey'}
+                            modeLabel={activeMode === 'subject' ? 'Subject thumbnail' : 'Chapter thumbnail'}
                             onSaved={(thumbnail) => {
-                                handleSaved(thumbnail);
+                                if (activeMode === 'subject') {
+                                    handleSaved(thumbnail);
+                                } else {
+                                    handleChapterSaved(thumbnail);
+                                }
                                 setActiveSubject(null);
                             }}
                             onClose={() => setActiveSubject(null)}

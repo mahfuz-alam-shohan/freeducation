@@ -58,6 +58,12 @@ export async function initDatabase(db: D1Database) {
       zoom REAL DEFAULT 1,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS chapter_thumbnails (
+      chapter_key TEXT PRIMARY KEY,
+      file_key TEXT,
+      content_type TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare(`INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')`),
     db.prepare(`INSERT OR IGNORE INTO class_groups (class_id, name)
       SELECT classes.id, group_names.name
@@ -124,6 +130,11 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "file_key", sql: "TEXT" },
     { name: "content_type", sql: "TEXT" },
     { name: "zoom", sql: "REAL DEFAULT 1" },
+    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  chapter_thumbnails: [
+    { name: "file_key", sql: "TEXT" },
+    { name: "content_type", sql: "TEXT" },
     { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
 };
