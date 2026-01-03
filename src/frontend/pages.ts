@@ -20,6 +20,8 @@ const viewByPath = new Map<string, string>([
   ["/hsc/bangla-1st-paper/item/mcq", "public-bangla-hsc-mcq"],
   ["/ssc/bangla-1st-paper/item", "public-bangla-ssc-item"],
   ["/hsc/bangla-1st-paper/item", "public-bangla-hsc-item"],
+  ["/ssc/ict", "public-ssc-ict"],
+  ["/ssc/ict/mcq", "public-ssc-ict-mcq"],
   ["/hsc/english-1st-paper", "public-english-hsc-1st-paper"],
   ["/hsc/english-1st-paper/reading", "public-english-hsc-reading"],
   ["/hsc/english-1st-paper/writing", "public-english-hsc-writing"],
@@ -33,6 +35,8 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/ssc/science", "admin-ssc-science"],
   ["/dashboard/ssc/humanities", "admin-ssc-humanities"],
   ["/dashboard/ssc/business-studies", "admin-ssc-business-studies"],
+  ["/dashboard/ssc/ict", "admin-ssc-ict"],
+  ["/dashboard/ssc/ict/mcq", "admin-ssc-ict-mcq"],
   ["/dashboard/hsc/science", "admin-hsc-science"],
   ["/dashboard/hsc/humanities", "admin-hsc-humanities"],
   ["/dashboard/hsc/business-studies", "admin-hsc-business-studies"],
@@ -87,6 +91,12 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/hsc/english-1st-paper")) {
       return renderAppHtml("english-hsc-1st-paper");
+    }
+    if (pathname.startsWith("/dashboard/ssc/ict/mcq")) {
+      return renderAppHtml("admin-ssc-ict-mcq");
+    }
+    if (pathname.startsWith("/dashboard/ssc/ict")) {
+      return renderAppHtml("admin-ssc-ict");
     }
     if (pathname.startsWith("/dashboard/ssc/science")) {
       return renderAppHtml("admin-ssc-science");

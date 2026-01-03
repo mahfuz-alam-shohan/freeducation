@@ -20,6 +20,8 @@ export const mainApp = `
                 'public-bangla-hsc-srijonshil': '/hsc/bangla-1st-paper/item/srijonshil',
                 'public-bangla-ssc-mcq': '/ssc/bangla-1st-paper/item/mcq',
                 'public-bangla-hsc-mcq': '/hsc/bangla-1st-paper/item/mcq',
+                'public-ssc-ict': '/ssc/ict',
+                'public-ssc-ict-mcq': '/ssc/ict/mcq',
                 'public-english-hsc-1st-paper': '/hsc/english-1st-paper',
                 'public-english-hsc-reading': '/hsc/english-1st-paper/reading',
                 'public-english-hsc-writing': '/hsc/english-1st-paper/writing',
@@ -33,6 +35,8 @@ export const mainApp = `
                 'admin-ssc-science': '/dashboard/ssc/science',
                 'admin-ssc-humanities': '/dashboard/ssc/humanities',
                 'admin-ssc-business-studies': '/dashboard/ssc/business-studies',
+                'admin-ssc-ict': '/dashboard/ssc/ict',
+                'admin-ssc-ict-mcq': '/dashboard/ssc/ict/mcq',
                 'admin-hsc-science': '/dashboard/hsc/science',
                 'admin-hsc-humanities': '/dashboard/hsc/humanities',
                 'admin-hsc-business-studies': '/dashboard/hsc/business-studies',
@@ -67,6 +71,8 @@ export const mainApp = `
                 if (path.startsWith('/hsc/english-1st-paper/reading')) return 'public-english-hsc-reading';
                 if (path.startsWith('/hsc/english-1st-paper/writing')) return 'public-english-hsc-writing';
                 if (path.startsWith('/hsc/english-1st-paper')) return 'public-english-hsc-1st-paper';
+                if (path.startsWith('/ssc/ict/mcq')) return 'public-ssc-ict-mcq';
+                if (path.startsWith('/ssc/ict')) return 'public-ssc-ict';
                 if (path.startsWith('/ssc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-ssc-srijonshil';
                 if (path.startsWith('/hsc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-hsc-srijonshil';
                 if (path.startsWith('/ssc/bangla-1st-paper/item/mcq')) return 'public-bangla-ssc-mcq';
@@ -93,6 +99,8 @@ export const mainApp = `
                 if (path.startsWith('/dashboard/hsc/english-1st-paper/reading')) return 'english-hsc-reading';
                 if (path.startsWith('/dashboard/hsc/english-1st-paper/writing')) return 'english-hsc-writing';
                 if (path.startsWith('/dashboard/hsc/english-1st-paper')) return 'english-hsc-1st-paper';
+                if (path.startsWith('/dashboard/ssc/ict/mcq')) return 'admin-ssc-ict-mcq';
+                if (path.startsWith('/dashboard/ssc/ict')) return 'admin-ssc-ict';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions')) return 'bangla-ssc-srijonshil-questions';
                 if (path.startsWith('/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions')) return 'bangla-hsc-srijonshil-questions';
                 if (path.startsWith('/dashboard/ssc/bangla-1st-paper/item/srijonshil')) return 'bangla-ssc-srijonshil-types';
@@ -136,6 +144,7 @@ export const mainApp = `
             const [selectedBanglaItem, setSelectedBanglaItem] = useState('');
             const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
             const [selectedSrijonshilType, setSelectedSrijonshilType] = useState(null);
+            const [selectedIctChapter, setSelectedIctChapter] = useState(null);
             const [selectedEnglishSection, setSelectedEnglishSection] = useState('');
             const [selectedEnglishType, setSelectedEnglishType] = useState(null);
             const [selectedEnglishSubtype, setSelectedEnglishSubtype] = useState(null);
@@ -145,6 +154,7 @@ export const mainApp = `
             const [hscPoddoItems, setHscPoddoItems] = useState([]);
             const [sscShohopathItems, setSscShohopathItems] = useState([]);
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
+            const [sscIctChapters, setSscIctChapters] = useState([]);
             const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
             const [mcqQuestions, setMcqQuestions] = useState({});
             const [englishQuestions, setEnglishQuestions] = useState({});
@@ -165,6 +175,7 @@ export const mainApp = `
                 hscPoddoItems: [],
                 sscShohopathItems: [],
                 hscShohopathItems: [],
+                sscIctChapters: [],
                 srijonshilQuestions: {},
                 mcqQuestions: {},
                 englishQuestions: {},
@@ -179,6 +190,7 @@ export const mainApp = `
                 setHscPoddoItems(Array.isArray(merged.hscPoddoItems) ? merged.hscPoddoItems : []);
                 setSscShohopathItems(Array.isArray(merged.sscShohopathItems) ? merged.sscShohopathItems : []);
                 setHscShohopathItems(Array.isArray(merged.hscShohopathItems) ? merged.hscShohopathItems : []);
+                setSscIctChapters(Array.isArray(merged.sscIctChapters) ? merged.sscIctChapters : []);
                 setSrijonshilQuestions(merged.srijonshilQuestions || {});
                 setMcqQuestions(merged.mcqQuestions || {});
                 setEnglishQuestions(merged.englishQuestions || {});
@@ -351,6 +363,18 @@ export const mainApp = `
                 setItems((prev) => prev.filter((item) => item.id !== itemId));
             };
 
+            const addChapterItem = (setItems) => (entry) => {
+                setItems((prev) => [...prev, entry]);
+            };
+
+            const updateChapterItem = (setItems) => (chapterId, name) => {
+                setItems((prev) => prev.map((item) => (item.id === chapterId ? { ...item, name } : item)));
+            };
+
+            const removeChapterItem = (setItems) => (chapterId) => {
+                setItems((prev) => prev.filter((item) => item.id !== chapterId));
+            };
+
             const syncRoutesFromLocation = () => {
                 const { pathname } = window.location;
                 setView(getViewFromPath(pathname));
@@ -446,6 +470,7 @@ export const mainApp = `
                     hscPoddoItems,
                     sscShohopathItems,
                     hscShohopathItems,
+                    sscIctChapters,
                     srijonshilQuestions,
                     mcqQuestions,
                     englishQuestions,
@@ -477,6 +502,7 @@ export const mainApp = `
                 hscPoddoItems,
                 sscShohopathItems,
                 hscShohopathItems,
+                sscIctChapters,
                 srijonshilQuestions,
                 mcqQuestions,
                 englishQuestions,
@@ -537,6 +563,31 @@ export const mainApp = `
                         )}
                         {view === 'hsc-subjects' && (
                             <SubjectIndexPage classLabel="HSC" subjects={hscSubjects} onNavigate={navigate} />
+                        )}
+                        {view === 'public-ssc-ict' && (
+                            <PublicIctShell
+                                title="আইসিটি অধ্যায়সমূহ"
+                                subtitle="SSC আইসিটির অধ্যায় বেছে নিন।"
+                                onBack={() => navigate('ssc-subjects')}
+                                onNavigate={navigate}
+                            >
+                                <PublicIctChapterList
+                                    chapters={sscIctChapters}
+                                    onSelectChapter={(chapter) => {
+                                        setSelectedIctChapter(chapter);
+                                        navigate('public-ssc-ict-mcq');
+                                    }}
+                                />
+                            </PublicIctShell>
+                        )}
+                        {view === 'public-ssc-ict-mcq' && (
+                            <PublicIctMcqDetail
+                                chapter={selectedIctChapter}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
+                                onBack={() => navigate('public-ssc-ict')}
+                                onNavigate={navigate}
+                            />
                         )}
                         {view === 'public-bangla-ssc-1st-paper' && (
                             <PublicBanglaShell
@@ -873,6 +924,30 @@ export const mainApp = `
                         )}
                         {view === 'admin-ssc-business-studies' && (
                             <AdminGroupDetail classLabel="SSC" groupLabel="Business Studies" onNavigate={navigate} />
+                        )}
+                        {view === 'admin-ssc-ict' && (
+                            <IctChapterList
+                                chapters={sscIctChapters}
+                                onAdd={addChapterItem(setSscIctChapters)}
+                                onUpdate={updateChapterItem(setSscIctChapters)}
+                                onDelete={removeChapterItem(setSscIctChapters)}
+                                onSelect={(chapter) => {
+                                    setSelectedIctChapter(chapter);
+                                    navigate('admin-ssc-ict-mcq');
+                                }}
+                                onNavigate={navigate}
+                            />
+                        )}
+                        {view === 'admin-ssc-ict-mcq' && (
+                            <McqQuestionList
+                                classLabel="SSC"
+                                itemName={selectedIctChapter?.name || 'নির্বাচিত অধ্যায়'}
+                                questions={mcqQuestions[getQuestionKey('SSC', 'ICT', selectedIctChapter?.id, 'mcq')] || []}
+                                onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'ICT', selectedIctChapter?.id, 'mcq'))}
+                                onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'ICT', selectedIctChapter?.id, 'mcq'))}
+                                onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'ICT', selectedIctChapter?.id, 'mcq'))}
+                                onNavigate={navigate}
+                            />
                         )}
                         {view === 'admin-hsc-science' && (
                             <AdminGroupDetail classLabel="HSC" groupLabel="Science" onNavigate={navigate} />

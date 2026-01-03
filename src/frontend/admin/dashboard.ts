@@ -216,6 +216,7 @@ export const dashboardComponents = `
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
             const banglaRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const englishRoute = classLabel === 'HSC' ? 'english-hsc-1st-paper' : null;
+            const ictRoute = classLabel === 'SSC' ? 'admin-ssc-ict' : null;
 
             return (
                 <AdminShell
@@ -246,15 +247,16 @@ export const dashboardComponents = `
                         {subjects.map((subject) => {
                             const isBanglaFirst = subject === 'Bangla 1st Paper';
                             const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
-                            const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : subject;
-                            if (!isBanglaFirst && !isEnglishFirst) {
+                            const isIct = subject === 'Information and Communication Technology' && classLabel === 'SSC';
+                            const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
+                            if (!isBanglaFirst && !isEnglishFirst && !isIct) {
                                 return (
                                     <div key={subject} className="px-5 py-4 text-sm font-semibold text-gray-700">
                                         {displayLabel}
                                     </div>
                                 );
                             }
-                            const route = isBanglaFirst ? banglaRoute : englishRoute;
+                            const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : ictRoute;
                             return (
                                 <button
                                     key={subject}
@@ -1095,12 +1097,9 @@ export const dashboardComponents = `
                                                 </div>
                                             ))}
                                         </div>
-                                        <details className="mt-2 text-sm text-gray-600">
-                                            <summary className="cursor-pointer text-blue-600">উত্তর দেখুন</summary>
-                                            <div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700">
-                                                {optionLabels[entry.answerIndex]}। {entry.options[entry.answerIndex]}
-                                            </div>
-                                        </details>
+                                        <div className="mt-2 text-sm text-gray-700">
+                                            উত্তর: {optionLabels[entry.answerIndex]}। {entry.options[entry.answerIndex]}
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-semibold">
                                         <button
@@ -1182,6 +1181,131 @@ export const dashboardComponents = `
                                         ))}
                                     </div>
                                 </div>
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const IctChapterList = ({ chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [chapterName, setChapterName] = useState('');
+            const [editingChapter, setEditingChapter] = useState(null);
+
+            const resetForm = () => {
+                setChapterName('');
+                setEditingChapter(null);
+            };
+
+            const handleSave = () => {
+                const trimmed = chapterName.trim();
+                if (!trimmed) return;
+                if (editingChapter) {
+                    onUpdate(editingChapter.id, trimmed);
+                } else {
+                    const nextId = \`\${Date.now()}-\${Math.random().toString(16).slice(2)}\`;
+                    onAdd({ id: nextId, name: trimmed });
+                }
+                resetForm();
+                setIsModalOpen(false);
+            };
+
+            return (
+                <AdminShell
+                    title="SSC ICT"
+                    subtitle="আইসিটি অধ্যায় যোগ করুন এবং MCQ তৈরি করুন।"
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button
+                            onClick={() => onNavigate('admin-groups-ssc')}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                        >
+                            অধ্যায় যোগ করুন
+                        </button>
+                    </div>
+
+                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                        {chapters.length === 0 && (
+                            <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>
+                        )}
+                        {chapters.map((chapter) => (
+                            <div
+                                key={chapter.id}
+                                className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
+                            >
+                                <span>{chapter.name}</span>
+                                <div className="flex items-center gap-2 text-xs font-semibold">
+                                    <button
+                                        onClick={() => {
+                                            setEditingChapter(chapter);
+                                            setChapterName(chapter.name);
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Rename
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
+                                            if (shouldRemove) {
+                                                onDelete(chapter.id);
+                                            }
+                                        }}
+                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                    >
+                                        Delete
+                                    </button>
+                                    <button
+                                        onClick={() => onSelect(chapter)}
+                                        className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
+                                    >
+                                        MCQ যোগ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingChapter ? 'অধ্যায় সম্পাদনা করুন' : 'নতুন অধ্যায় যোগ করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">আইসিটি অধ্যায়ের নাম লিখুন।</p>
+                                <input
+                                    value={chapterName}
+                                    onChange={(event) => setChapterName(event.target.value)}
+                                    placeholder="উদাহরণ: তথ্য ও যোগাযোগ প্রযুক্তি"
+                                    className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
