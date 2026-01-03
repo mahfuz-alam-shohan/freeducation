@@ -22,6 +22,21 @@ const viewByPath = new Map<string, string>([
   ["/hsc/bangla-1st-paper/item", "public-bangla-hsc-item"],
   ["/ssc/ict", "public-ssc-ict"],
   ["/ssc/ict/mcq", "public-ssc-ict-mcq"],
+  ["/ssc/physics", "public-ssc-physics"],
+  ["/ssc/physics/topics", "public-ssc-physics-topics"],
+  ["/ssc/physics/topic", "public-ssc-physics-topic"],
+  ["/ssc/physics/cq", "public-ssc-physics-cq"],
+  ["/ssc/physics/mcq", "public-ssc-physics-mcq"],
+  ["/ssc/chemistry", "public-ssc-chemistry"],
+  ["/ssc/chemistry/topics", "public-ssc-chemistry-topics"],
+  ["/ssc/chemistry/topic", "public-ssc-chemistry-topic"],
+  ["/ssc/chemistry/cq", "public-ssc-chemistry-cq"],
+  ["/ssc/chemistry/mcq", "public-ssc-chemistry-mcq"],
+  ["/ssc/biology", "public-ssc-biology"],
+  ["/ssc/biology/topics", "public-ssc-biology-topics"],
+  ["/ssc/biology/topic", "public-ssc-biology-topic"],
+  ["/ssc/biology/cq", "public-ssc-biology-cq"],
+  ["/ssc/biology/mcq", "public-ssc-biology-mcq"],
   ["/hsc/english-1st-paper", "public-english-hsc-1st-paper"],
   ["/hsc/english-1st-paper/reading", "public-english-hsc-reading"],
   ["/hsc/english-1st-paper/writing", "public-english-hsc-writing"],
@@ -37,6 +52,24 @@ const viewByPath = new Map<string, string>([
   ["/dashboard/ssc/business-studies", "admin-ssc-business-studies"],
   ["/dashboard/ssc/ict", "admin-ssc-ict"],
   ["/dashboard/ssc/ict/mcq", "admin-ssc-ict-mcq"],
+  ["/dashboard/ssc/physics", "admin-ssc-physics"],
+  ["/dashboard/ssc/physics/topics", "admin-ssc-physics-topics"],
+  ["/dashboard/ssc/physics/topic", "admin-ssc-physics-topic"],
+  ["/dashboard/ssc/physics/cq", "admin-ssc-physics-cq-types"],
+  ["/dashboard/ssc/physics/cq/questions", "admin-ssc-physics-cq-questions"],
+  ["/dashboard/ssc/physics/mcq", "admin-ssc-physics-mcq"],
+  ["/dashboard/ssc/chemistry", "admin-ssc-chemistry"],
+  ["/dashboard/ssc/chemistry/topics", "admin-ssc-chemistry-topics"],
+  ["/dashboard/ssc/chemistry/topic", "admin-ssc-chemistry-topic"],
+  ["/dashboard/ssc/chemistry/cq", "admin-ssc-chemistry-cq-types"],
+  ["/dashboard/ssc/chemistry/cq/questions", "admin-ssc-chemistry-cq-questions"],
+  ["/dashboard/ssc/chemistry/mcq", "admin-ssc-chemistry-mcq"],
+  ["/dashboard/ssc/biology", "admin-ssc-biology"],
+  ["/dashboard/ssc/biology/topics", "admin-ssc-biology-topics"],
+  ["/dashboard/ssc/biology/topic", "admin-ssc-biology-topic"],
+  ["/dashboard/ssc/biology/cq", "admin-ssc-biology-cq-types"],
+  ["/dashboard/ssc/biology/cq/questions", "admin-ssc-biology-cq-questions"],
+  ["/dashboard/ssc/biology/mcq", "admin-ssc-biology-mcq"],
   ["/dashboard/hsc/science", "admin-hsc-science"],
   ["/dashboard/hsc/humanities", "admin-hsc-humanities"],
   ["/dashboard/hsc/business-studies", "admin-hsc-business-studies"],
@@ -97,6 +130,60 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/ssc/ict")) {
       return renderAppHtml("admin-ssc-ict");
+    }
+    if (pathname.startsWith("/dashboard/ssc/physics/cq/questions")) {
+      return renderAppHtml("admin-ssc-physics-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/ssc/physics/cq")) {
+      return renderAppHtml("admin-ssc-physics-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/ssc/physics/mcq")) {
+      return renderAppHtml("admin-ssc-physics-mcq");
+    }
+    if (pathname.startsWith("/dashboard/ssc/physics/topic")) {
+      return renderAppHtml("admin-ssc-physics-topic");
+    }
+    if (pathname.startsWith("/dashboard/ssc/physics/topics")) {
+      return renderAppHtml("admin-ssc-physics-topics");
+    }
+    if (pathname.startsWith("/dashboard/ssc/physics")) {
+      return renderAppHtml("admin-ssc-physics");
+    }
+    if (pathname.startsWith("/dashboard/ssc/chemistry/cq/questions")) {
+      return renderAppHtml("admin-ssc-chemistry-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/ssc/chemistry/cq")) {
+      return renderAppHtml("admin-ssc-chemistry-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/ssc/chemistry/mcq")) {
+      return renderAppHtml("admin-ssc-chemistry-mcq");
+    }
+    if (pathname.startsWith("/dashboard/ssc/chemistry/topic")) {
+      return renderAppHtml("admin-ssc-chemistry-topic");
+    }
+    if (pathname.startsWith("/dashboard/ssc/chemistry/topics")) {
+      return renderAppHtml("admin-ssc-chemistry-topics");
+    }
+    if (pathname.startsWith("/dashboard/ssc/chemistry")) {
+      return renderAppHtml("admin-ssc-chemistry");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology/cq/questions")) {
+      return renderAppHtml("admin-ssc-biology-cq-questions");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology/cq")) {
+      return renderAppHtml("admin-ssc-biology-cq-types");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology/mcq")) {
+      return renderAppHtml("admin-ssc-biology-mcq");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology/topic")) {
+      return renderAppHtml("admin-ssc-biology-topic");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology/topics")) {
+      return renderAppHtml("admin-ssc-biology-topics");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology")) {
+      return renderAppHtml("admin-ssc-biology");
     }
     if (pathname.startsWith("/dashboard/ssc/science")) {
       return renderAppHtml("admin-ssc-science");

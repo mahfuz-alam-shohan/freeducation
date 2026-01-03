@@ -182,6 +182,9 @@ export const landingComponents = `
                     const isBanglaFirst = subject === 'Bangla 1st Paper';
                     const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
                     const isIct = subject === 'Information and Communication Technology' && classLabel === 'SSC';
+                    const isSscPhysics = subject === 'Physics' && classLabel === 'SSC';
+                    const isSscChemistry = subject === 'Chemistry' && classLabel === 'SSC';
+                    const isSscBiology = subject === 'Biology' && classLabel === 'SSC';
                     subjectMap.set(subject, {
                         title: subject,
                         subtitle: isBanglaFirst ? 'বাংলা ১ম পত্র' : '',
@@ -195,7 +198,13 @@ export const landingComponents = `
                                 ? 'public-english-hsc-1st-paper'
                                 : isIct
                                     ? 'public-ssc-ict'
-                                    : ''
+                                    : isSscPhysics
+                                        ? 'public-ssc-physics'
+                                        : isSscChemistry
+                                            ? 'public-ssc-chemistry'
+                                            : isSscBiology
+                                                ? 'public-ssc-biology'
+                                                : ''
                     });
                 });
             });
@@ -463,13 +472,9 @@ export const landingComponents = `
             </div>
         );
 
-        const PublicBanglaTextList = ({ title, subtitle, items, onSelectItem }) => (
+        const PublicBanglaTextList = ({ subtitle, items, onSelectItem }) => (
             <div className="space-y-4 font-bangla">
-                <div className="border border-slate-200 rounded-xl p-5">
-                    <div className="text-xs uppercase tracking-[0.2em] text-slate-400">পাঠ তালিকা</div>
-                    <div className="text-lg font-semibold text-slate-900 mt-2">{title}</div>
-                    {subtitle && <p className="text-sm text-slate-500 mt-2">{subtitle}</p>}
-                </div>
+                {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {items.length === 0 && (
                         <div className="text-sm text-slate-400">এই অংশে এখনও কোন পাঠ যোগ করা হয়নি।</div>
@@ -648,6 +653,96 @@ export const landingComponents = `
             );
         };
 
+        const PublicMcqList = ({ mcqList }) => {
+            const optionLabels = ['ক', 'খ', 'গ', 'ঘ'];
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value)
+                .split('')
+                .map((digit) => banglaDigits[Number(digit)] ?? digit)
+                .join('');
+            const [globalOpen, setGlobalOpen] = useState(false);
+            const [openOverrides, setOpenOverrides] = useState({});
+
+            const isOpen = (index) => {
+                if (openOverrides[index] !== undefined) {
+                    return openOverrides[index];
+                }
+                return globalOpen;
+            };
+
+            const toggleAnswer = (index) => {
+                setOpenOverrides((prev) => ({
+                    ...prev,
+                    [index]: !isOpen(index)
+                }));
+            };
+
+            const showAll = () => {
+                setGlobalOpen(true);
+                setOpenOverrides({});
+            };
+
+            const hideAll = () => {
+                setGlobalOpen(false);
+                setOpenOverrides({});
+            };
+
+            if (mcqList.length === 0) {
+                return <div className="text-sm text-slate-400">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>;
+            }
+
+            return (
+                <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
+                        <span>মোট প্রশ্ন: {toBanglaNumber(mcqList.length)}</span>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={showAll}
+                                className="px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                            >
+                                সকল উত্তর দেখুন
+                            </button>
+                            <button
+                                onClick={hideAll}
+                                className="px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                            >
+                                সকল উত্তর লুকান
+                            </button>
+                        </div>
+                    </div>
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm divide-y">
+                        {mcqList.map((entry, index) => (
+                            <div key={entry.question + '-' + index} className="px-4 py-4">
+                                <div className="text-sm font-semibold text-slate-900">
+                                    {toBanglaNumber(index + 1)}. {entry.question}
+                                </div>
+                                <div className="mt-2 grid gap-1 text-sm text-slate-700">
+                                    {(entry.options || []).map((option, optionIndex) => (
+                                        <div key={entry.question + '-' + optionIndex}>
+                                            {optionLabels[optionIndex]}. {option}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <button
+                                        onClick={() => toggleAnswer(index)}
+                                        className="px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                                    >
+                                        {isOpen(index) ? 'উত্তর লুকান' : 'উত্তর দেখুন'}
+                                    </button>
+                                    {isOpen(index) && (
+                                        <div className="text-emerald-700 font-semibold">
+                                            উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         const PublicBanglaMcqDetail = ({
             classLabel,
             itemName,
@@ -657,22 +752,8 @@ export const landingComponents = `
             onNavigate
         }) => {
             const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const toBanglaNumber = (value) => String(value)
-                .split('')
-                .map((digit) => banglaDigits[Number(digit)] ?? digit)
-                .join('');
-            const optionLabels = ['ক', 'খ', 'গ', 'ঘ'];
             const mcqList = mcqQuestions[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
             const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
-            const [openAnswers, setOpenAnswers] = useState({});
-
-            const toggleAnswer = (index) => {
-                setOpenAnswers((prev) => ({
-                    ...prev,
-                    [index]: !prev[index]
-                }));
-            };
 
             return (
                 <PublicBanglaShell
@@ -686,47 +767,7 @@ export const landingComponents = `
                             <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
-                        {mcqList.length === 0 ? (
-                            <div className="text-sm text-slate-400">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>
-                        ) : (
-                            <div className="grid gap-4 lg:grid-cols-2">
-                                {mcqList.map((entry, index) => (
-                                    <div key={entry.question + '-' + index} className="border border-amber-200 rounded-2xl bg-amber-50/70 p-5 shadow-sm">
-                                        <div className="text-sm font-semibold text-slate-900">
-                                            {toBanglaNumber(index + 1)}. {entry.question}
-                                        </div>
-                                        <div className="mt-3 grid gap-2 text-sm text-slate-700">
-                                            {(entry.options || []).map((option, optionIndex) => (
-                                                <div
-                                                    key={entry.question + '-' + optionIndex}
-                                                    className={
-                                                        'rounded-lg px-3 py-2 border ' +
-                                                        (openAnswers[index] && optionIndex === entry.answerIndex
-                                                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                                            : 'border-amber-200 bg-white text-slate-700')
-                                                    }
-                                                >
-                                                    {optionLabels[optionIndex]}. {option}
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                                            <button
-                                                onClick={() => toggleAnswer(index)}
-                                                className="px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-200 text-amber-700 hover:border-amber-300 hover:bg-amber-100/70 transition"
-                                            >
-                                                {openAnswers[index] ? 'উত্তর লুকান' : 'উত্তর দেখুন'}
-                                            </button>
-                                            {openAnswers[index] && (
-                                                <div className="text-xs font-semibold text-emerald-700">
-                                                    উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <PublicMcqList mcqList={mcqList} />
                     </div>
                 </PublicBanglaShell>
             );
@@ -785,23 +826,9 @@ export const landingComponents = `
         );
 
         const PublicIctMcqDetail = ({ chapter, mcqQuestions, getQuestionKey, onBack, onNavigate }) => {
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const toBanglaNumber = (value) => String(value)
-                .split('')
-                .map((digit) => banglaDigits[Number(digit)] ?? digit)
-                .join('');
-            const optionLabels = ['ক', 'খ', 'গ', 'ঘ'];
             const chapterKey = chapter?.id || '';
             const mcqList = mcqQuestions[getQuestionKey('SSC', 'ICT', chapterKey, 'mcq')] || [];
             const chapterTitle = chapter?.name || 'অধ্যায় নির্বাচন করুন';
-            const [openAnswers, setOpenAnswers] = useState({});
-
-            const toggleAnswer = (index) => {
-                setOpenAnswers((prev) => ({
-                    ...prev,
-                    [index]: !prev[index]
-                }));
-            };
 
             return (
                 <PublicIctShell
@@ -815,51 +842,213 @@ export const landingComponents = `
                             <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
-                        {mcqList.length === 0 ? (
-                            <div className="text-sm text-slate-400">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>
-                        ) : (
-                            <div className="grid gap-4 lg:grid-cols-2">
-                                {mcqList.map((entry, index) => (
-                                    <div key={entry.question + '-' + index} className="border border-amber-200 rounded-2xl bg-amber-50/70 p-5 shadow-sm">
-                                        <div className="text-sm font-semibold text-slate-900">
-                                            {toBanglaNumber(index + 1)}. {entry.question}
-                                        </div>
-                                        <div className="mt-3 grid gap-2 text-sm text-slate-700">
-                                            {(entry.options || []).map((option, optionIndex) => (
-                                                <div
-                                                    key={entry.question + '-' + optionIndex}
-                                                    className={
-                                                        'rounded-lg px-3 py-2 border ' +
-                                                        (openAnswers[index] && optionIndex === entry.answerIndex
-                                                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                                            : 'border-amber-200 bg-white text-slate-700')
-                                                    }
-                                                >
-                                                    {optionLabels[optionIndex]}. {option}
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                                            <button
-                                                onClick={() => toggleAnswer(index)}
-                                                className="px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-200 text-amber-700 hover:border-amber-300 hover:bg-amber-100/70 transition"
-                                            >
-                                                {openAnswers[index] ? 'উত্তর লুকান' : 'উত্তর দেখুন'}
-                                            </button>
-                                            {openAnswers[index] && (
-                                                <div className="text-xs font-semibold text-emerald-700">
-                                                    উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <PublicMcqList mcqList={mcqList} />
                     </div>
                 </PublicIctShell>
             );
         };
+
+        const PublicScienceShell = ({ title, subtitle, subjectLabel, onBack, onNavigate, children }) => (
+            <div className="flex-1 bg-gradient-to-br from-white via-emerald-50 to-sky-50">
+                <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">SSC {subjectLabel}</div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">{title}</h2>
+                            {subtitle && <p className="text-sm text-slate-500 mt-2 font-bangla">{subtitle}</p>}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {onBack && (
+                                <button
+                                    onClick={onBack}
+                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                                >
+                                    Back
+                                </button>
+                            )}
+                            <button
+                                onClick={() => onNavigate('landing')}
+                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                            >
+                                Home
+                            </button>
+                        </div>
+                    </div>
+                    {children}
+                </div>
+            </div>
+        );
+
+        const PublicScienceChapterList = ({ chapters, onSelectChapter }) => (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {chapters.map((chapter) => (
+                    <button
+                        key={chapter.id}
+                        onClick={() => onSelectChapter(chapter)}
+                        className="border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
+                    >
+                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">অধ্যায়</div>
+                        <div className="text-lg font-semibold text-slate-900 mt-2">{chapter.name}</div>
+                        <p className="text-sm text-slate-500 mt-2">টপিকসমূহ দেখুন</p>
+                    </button>
+                ))}
+                {chapters.length === 0 && (
+                    <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
+                        এখনো কোনো অধ্যায় যোগ করা হয়নি।
+                    </div>
+                )}
+            </div>
+        );
+
+        const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {topics.map((topic) => (
+                    <button
+                        key={topic.id}
+                        onClick={() => onSelectTopic(topic)}
+                        className="border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
+                    >
+                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">টপিক</div>
+                        <div className="text-lg font-semibold text-slate-900 mt-2">{topic.name}</div>
+                        <p className="text-sm text-slate-500 mt-2">নোট, CQ এবং MCQ দেখুন</p>
+                    </button>
+                ))}
+                {topics.length === 0 && (
+                    <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
+                        এখনো কোনো টপিক যোগ করা হয়নি।
+                    </div>
+                )}
+            </div>
+        );
+
+        const PublicScienceTopicDetail = ({
+            subjectLabel,
+            chapterName,
+            topicName,
+            noteKey,
+            notesByItem,
+            onBack,
+            onNavigate,
+            onNavigateCq,
+            onNavigateMcq
+        }) => {
+            const notes = (notesByItem || {})[noteKey] || [];
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value)
+                .split('')
+                .map((digit) => banglaDigits[Number(digit)] ?? digit)
+                .join('');
+
+            return (
+                <PublicScienceShell
+                    subjectLabel={subjectLabel}
+                    title={topicName || 'টপিক নির্বাচন করুন'}
+                    subtitle={chapterName ? 'অধ্যায়: ' + chapterName : ''}
+                    onBack={onBack}
+                    onNavigate={onNavigate}
+                >
+                    <div className="space-y-6 font-bangla">
+                        <div className="flex flex-wrap justify-center gap-3">
+                            <button
+                                onClick={onNavigateCq}
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition"
+                            >
+                                সৃজনশীল (CQ)
+                            </button>
+                            <button
+                                onClick={onNavigateMcq}
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-sky-100 bg-sky-50 text-sky-700 text-sm font-semibold hover:bg-sky-100 transition"
+                            >
+                                বহুনির্বাচনী (MCQ)
+                            </button>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+                            <div className="px-4 py-3 border-b border-slate-100">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
+                                <div className="text-sm font-semibold text-slate-700 mt-1">টপিকের মূল ধারণা</div>
+                            </div>
+                            <ul className="divide-y">
+                                {notes.length === 0 && (
+                                    <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                                )}
+                                {notes.map((note, index) => (
+                                    <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
+                                        <span className="text-sm font-semibold text-slate-500">
+                                            {toBanglaNumber(index + 1)}.
+                                        </span>
+                                        <div className="text-sm text-slate-700">{note}</div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </PublicScienceShell>
+            );
+        };
+
+        const PublicScienceCqDetail = ({ subjectLabel, chapterName, topicName, questions, onBack, onNavigate }) => {
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const toBanglaNumber = (value) => String(value)
+                .split('')
+                .map((digit) => banglaDigits[Number(digit)] ?? digit)
+                .join('');
+            const cqTypes = [
+                { key: 'gyan', label: 'জ্ঞান (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
+            ];
+
+            return (
+                <PublicScienceShell
+                    subjectLabel={subjectLabel}
+                    title="সৃজনশীল প্রশ্ন"
+                    subtitle={chapterName ? chapterName + ' • ' + (topicName || '') : topicName || ''}
+                    onBack={onBack}
+                    onNavigate={onNavigate}
+                >
+                    <div className="space-y-6 font-bangla">
+                        {cqTypes.map((type) => {
+                            const list = questions[type.key] || [];
+                            return (
+                                <div key={type.key} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
+                                    <div className="text-sm font-semibold text-slate-900">{type.label}</div>
+                                    {list.length === 0 ? (
+                                        <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>
+                                    ) : (
+                                        <div className="mt-4 space-y-4">
+                                            {list.map((entry, index) => (
+                                                <div key={entry.question + '-' + index} className="space-y-2">
+                                                    <div className="text-sm font-semibold text-slate-800">
+                                                        {toBanglaNumber(index + 1)}. {entry.question}
+                                                    </div>
+                                                    <div className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3">
+                                                        {entry.answer}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </PublicScienceShell>
+            );
+        };
+
+        const PublicScienceMcqDetail = ({ subjectLabel, chapterName, topicName, mcqList, onBack, onNavigate }) => (
+            <PublicScienceShell
+                subjectLabel={subjectLabel}
+                title="বহুনির্বাচনী প্রশ্ন"
+                subtitle={chapterName ? chapterName + ' • ' + (topicName || '') : topicName || ''}
+                onBack={onBack}
+                onNavigate={onNavigate}
+            >
+                <div className="space-y-6 font-bangla">
+                    <PublicMcqList mcqList={mcqList} />
+                </div>
+            </PublicScienceShell>
+        );
 
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-gradient-to-br from-white via-sky-50 to-indigo-50">
@@ -1035,6 +1224,12 @@ export const landingComponents = `
             PublicIctShell,
             PublicIctChapterList,
             PublicIctMcqDetail,
+            PublicScienceShell,
+            PublicScienceChapterList,
+            PublicScienceTopicList,
+            PublicScienceTopicDetail,
+            PublicScienceCqDetail,
+            PublicScienceMcqDetail,
             PublicEnglishShell,
             PublicEnglishCardGrid,
             PublicEnglishTypeList,
@@ -1056,6 +1251,12 @@ export const landingComponents = `
             PublicIctShell,
             PublicIctChapterList,
             PublicIctMcqDetail,
+            PublicScienceShell,
+            PublicScienceChapterList,
+            PublicScienceTopicList,
+            PublicScienceTopicDetail,
+            PublicScienceCqDetail,
+            PublicScienceMcqDetail,
             PublicEnglishShell,
             PublicEnglishCardGrid,
             PublicEnglishTypeList,

@@ -124,6 +124,24 @@ const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, a
     return updated;
   }
 
+  const sscScienceSubjects: Record<string, string> = {
+    physics: "Physics",
+    chemistry: "Chemistry",
+    biology: "Biology",
+  };
+
+  if (level === "SSC" && sscScienceSubjects[subject]) {
+    const subjectLabel = sscScienceSubjects[subject];
+    const keyPrefix = `${prefix}${subjectLabel}-`;
+    if (subject === "physics") applyArray("sscPhysicsChapters");
+    if (subject === "chemistry") applyArray("sscChemistryChapters");
+    if (subject === "biology") applyArray("sscBiologyChapters");
+    applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
+    return updated;
+  }
+
   if (subject === "english 1st paper" && level === "HSC") {
     applyMapWithFilter("englishQuestions", (key) => key.startsWith(prefix));
     return updated;
