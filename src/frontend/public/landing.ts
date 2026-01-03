@@ -503,7 +503,9 @@ export const landingComponents = `
             classLabel,
             itemName,
             categoryName,
-            notesByItem,
+            srijonshilQuestions,
+            mcqQuestions,
+            getQuestionKey,
             onNavigate
         }) => {
             const categoryRoute = classLabel === 'SSC'
@@ -518,19 +520,16 @@ export const landingComponents = `
                         ? 'public-bangla-hsc-shohopath'
                         : 'public-bangla-hsc-goddo');
 
-            const srijonshilRoute = classLabel === 'SSC'
-                ? 'public-bangla-ssc-item-srijonshil'
-                : 'public-bangla-hsc-item-srijonshil';
-            const mcqRoute = classLabel === 'SSC'
-                ? 'public-bangla-ssc-item-mcq'
-                : 'public-bangla-hsc-item-mcq';
-            const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
-            const notes = (notesByItem || {})[noteKey] || [];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value)
                 .split('')
                 .map((digit) => banglaDigits[Number(digit)] ?? digit)
                 .join('');
+            const srijonshilTypes = [
+                { key: 'gyan', label: 'জ্ঞান (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
+            ];
+            const mcqList = mcqQuestions[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
 
             return (
                 <PublicBanglaShell
@@ -539,77 +538,12 @@ export const landingComponents = `
                     onBack={() => onNavigate(categoryRoute)}
                     onNavigate={onNavigate}
                 >
-                    <section className="space-y-6 font-bangla">
-                        <div className="text-center">
-                            <h3 className="text-2xl sm:text-3xl font-semibold text-slate-900">{itemName || 'পাঠ নির্বাচন করুন'}</h3>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
-                            <button
-                                onClick={() => onNavigate(srijonshilRoute)}
-                                className="aspect-square rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition"
-                            >
-                                সৃজনশীল
-                            </button>
-                            <button
-                                onClick={() => onNavigate(mcqRoute)}
-                                className="aspect-square rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition"
-                            >
-                                বহুনির্বাচনী
-                            </button>
-                        </div>
-
-                        <div className="border border-slate-200 rounded-xl overflow-hidden">
-                            <div className="px-4 py-3 border-b border-slate-100">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                <div className="text-sm font-semibold text-slate-700 mt-1">গুরুত্বপূর্ণ লাইন</div>
-                            </div>
-                            <ul className="divide-y">
-                                {notes.length === 0 && (
-                                    <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যুক্ত হয়নি।</li>
-                                )}
-                                {notes.map((note, index) => (
-                                    <li key={`${noteKey}-${index}`} className="px-4 py-3 flex gap-3">
-                                        <span className="text-sm font-semibold text-slate-500">
-                                            {toBanglaNumber(index + 1)}.
-                                        </span>
-                                        <span className="text-sm text-slate-700">{note}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </section>
-                </PublicBanglaShell>
-            );
-        };
-
-        const PublicBanglaSrijonshilQuestions = ({
-            classLabel,
-            itemName,
-            categoryName,
-            srijonshilQuestions,
-            getQuestionKey,
-            onNavigate
-        }) => {
-            const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
-            const srijonshilTypes = [
-                { key: 'gyan', label: 'জ্ঞান (ক)' },
-                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
-            ];
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const toBanglaNumber = (value) => String(value)
-                .split('')
-                .map((digit) => banglaDigits[Number(digit)] ?? digit)
-                .join('');
-
-            return (
-                <PublicBanglaShell
-                    title={itemName || 'সৃজনশীল প্রশ্ন'}
-                    subtitle={categoryName ? `বিভাগ: ${categoryName}` : 'সৃজনশীল প্রশ্নসমূহ দেখুন'}
-                    onBack={() => onNavigate(itemRoute)}
-                    onNavigate={onNavigate}
-                >
                     <section className="space-y-4 font-bangla">
+                        <div className="border border-slate-200 rounded-xl p-5">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">সৃজনশীল প্রশ্ন</div>
+                            <div className="text-lg font-semibold text-slate-900 mt-2">প্রশ্ন ও উত্তর</div>
+                            <p className="text-sm text-slate-500 mt-2">উপস্থাপিত প্রশ্নসমূহ ও উত্তরগুলো পড়ুন।</p>
+                        </div>
                         {srijonshilTypes.map((type) => {
                             const list = srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [];
                             return (
@@ -635,34 +569,13 @@ export const landingComponents = `
                             );
                         })}
                     </section>
-                </PublicBanglaShell>
-            );
-        };
 
-        const PublicBanglaMcqQuestions = ({
-            classLabel,
-            itemName,
-            categoryName,
-            mcqQuestions,
-            getQuestionKey,
-            onNavigate
-        }) => {
-            const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const toBanglaNumber = (value) => String(value)
-                .split('')
-                .map((digit) => banglaDigits[Number(digit)] ?? digit)
-                .join('');
-            const mcqList = mcqQuestions[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
-
-            return (
-                <PublicBanglaShell
-                    title={itemName || 'বহুনির্বাচনী প্রশ্ন'}
-                    subtitle={categoryName ? `বিভাগ: ${categoryName}` : 'MCQ প্রশ্নসমূহ দেখুন'}
-                    onBack={() => onNavigate(itemRoute)}
-                    onNavigate={onNavigate}
-                >
                     <section className="space-y-4 font-bangla">
+                        <div className="border border-slate-200 rounded-xl p-5">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">বহুনির্বাচনী</div>
+                            <div className="text-lg font-semibold text-slate-900 mt-2">MCQ প্রশ্ন</div>
+                            <p className="text-sm text-slate-500 mt-2">প্রশ্ন, অপশন এবং সঠিক উত্তর দেখুন।</p>
+                        </div>
                         {mcqList.length === 0 ? (
                             <div className="text-sm text-slate-400">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>
                         ) : (
