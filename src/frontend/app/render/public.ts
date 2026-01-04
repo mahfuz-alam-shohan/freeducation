@@ -88,6 +88,7 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -176,6 +177,8 @@ export const renderPublic = `
                                 classLabel="SSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -266,6 +269,8 @@ export const renderPublic = `
                                 classLabel="SSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -356,6 +361,8 @@ export const renderPublic = `
                                 classLabel="SSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -446,6 +453,8 @@ export const renderPublic = `
                                 classLabel="SSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -571,6 +580,8 @@ export const renderPublic = `
                                 classLabel="SSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -677,6 +688,8 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -777,6 +790,8 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -877,6 +892,8 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -979,6 +996,8 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -1081,6 +1100,8 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{
@@ -1183,6 +1204,8 @@ export const renderPublic = `
                                 classLabel="HSC"
                                 chapterName={selectedScienceChapter?.name}
                                 topicName={selectedScienceTopic?.name}
+
+                                topicKey={activeScienceTopicKey}
                                 noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 cqQuestions={{

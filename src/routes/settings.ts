@@ -38,6 +38,7 @@ export const handleSettings = async (request: Request, env: Env, path: string): 
     env.DB.prepare("DELETE FROM fonts"),
     env.DB.prepare("DELETE FROM subject_thumbnails"),
     env.DB.prepare("DELETE FROM chapter_thumbnails"),
+    env.DB.prepare("DELETE FROM video_resources"),
     env.DB.prepare("DELETE FROM content_store WHERE key = 'app-content'"),
     env.DB.prepare("DELETE FROM class_groups"),
     env.DB.prepare("DELETE FROM classes"),

@@ -2,6 +2,9 @@ export const keyHelpers = `
             const getQuestionKey = (classLabel, categoryName, itemName, extra = '') => {
                 return [classLabel, categoryName || 'general', itemName || 'general', extra].join('-');
             };
+            const getVideoKey = (classLabel, categoryName, itemName) => {
+                return getQuestionKey(classLabel, categoryName, itemName, 'video');
+            };
             const getScienceTopicKey = (chapterId, topicId) => {
                 return [chapterId || 'chapter', topicId || 'topic'].join(':');
             };
