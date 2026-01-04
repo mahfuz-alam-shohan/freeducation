@@ -317,6 +317,13 @@ export const landingComponents = `
         const cardSurfaceClass =
             'relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg card-art-surface';
         const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white/90 p-4 sm:p-6 shadow-sm art-panel';
+        const ArtPanelGrid = ({ children, className = '' }) => (
+            <div className={cardPanelClass}>
+                <div className={'relative grid ' + cardGridGapClass + ' ' + className}>
+                    {children}
+                </div>
+            </div>
+        );
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
@@ -400,28 +407,26 @@ export const landingComponents = `
         const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
             const chapterThumbnails = useChapterThumbnails();
             return (
-                <div className={cardPanelClass}>
-                    <div className={'relative grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
-                        {chapters.map((chapter) => {
-                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
-                            return (
-                                <ChapterCard
-                                    key={chapter.id}
-                                    title={chapter.name}
-                                    subtitle={subjectLabel}
-                                    thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                    onClick={() => onSelectChapter(chapter)}
-                                    className={cardWidthClass + ' font-bangla'}
-                                />
-                            );
-                        })}
-                        {chapters.length === 0 && (
-                            <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
-                                এখনো কোনো অধ্যায় যোগ করা হয়নি।
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                    {chapters.map((chapter) => {
+                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+                        return (
+                            <ChapterCard
+                                key={chapter.id}
+                                title={chapter.name}
+                                subtitle={subjectLabel}
+                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                onClick={() => onSelectChapter(chapter)}
+                                className={cardWidthClass + ' font-bangla'}
+                            />
+                        );
+                    })}
+                    {chapters.length === 0 && (
+                        <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
+                            এখনো কোনো অধ্যায় যোগ করা হয়নি।
+                        </div>
+                    )}
+                </ArtPanelGrid>
             );
         };
 
@@ -590,27 +595,25 @@ export const landingComponents = `
             const chapterThumbnails = useChapterThumbnails();
 
             return (
-                <div className={cardPanelClass}>
-                    <div className={'relative grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla'}>
-                        {topics.map((topic) => {
-                            const chapterKey = makeChapterThumbnailKey(
-                                classLabel,
-                                subjectLabel,
-                                topic.thumbnailKey || topic.title
-                            );
-                            return (
-                                <ChapterCard
-                                    key={topic.title}
-                                    title={topic.title}
-                                    subtitle={topic.description}
-                                    thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                    onClick={() => topic.route && onNavigate(topic.route)}
-                                    className={cardWidthClass}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
+                <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
+                    {topics.map((topic) => {
+                        const chapterKey = makeChapterThumbnailKey(
+                            classLabel,
+                            subjectLabel,
+                            topic.thumbnailKey || topic.title
+                        );
+                        return (
+                            <ChapterCard
+                                key={topic.title}
+                                title={topic.title}
+                                subtitle={topic.description}
+                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                onClick={() => topic.route && onNavigate(topic.route)}
+                                className={cardWidthClass}
+                            />
+                        );
+                    })}
+                </ArtPanelGrid>
             );
         };
 
@@ -620,30 +623,28 @@ export const landingComponents = `
             return (
                 <div className="space-y-4 font-bangla">
                     {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
-                    <div className={cardPanelClass}>
-                        <div className={'relative grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
-                            {items.length === 0 && (
-                                <div className="text-sm text-slate-400">এই অংশে এখনও কোন পাঠ যোগ করা হয়নি।</div>
-                            )}
-                            {items.map((item) => {
-                                const chapterKey = makeChapterThumbnailKey(
-                                    classLabel,
-                                    subjectLabel,
-                                    item + '-' + categoryLabel
-                                );
-                                return (
-                                    <ChapterCard
-                                        key={item}
-                                        title={item}
-                                        subtitle={categoryLabel}
-                                        thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                        onClick={() => onSelectItem(item)}
-                                        className={cardWidthClass}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
+                    <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                        {items.length === 0 && (
+                            <div className="text-sm text-slate-400">এই অংশে এখনও কোন পাঠ যোগ করা হয়নি।</div>
+                        )}
+                        {items.map((item) => {
+                            const chapterKey = makeChapterThumbnailKey(
+                                classLabel,
+                                subjectLabel,
+                                item + '-' + categoryLabel
+                            );
+                            return (
+                                <ChapterCard
+                                    key={item}
+                                    title={item}
+                                    subtitle={categoryLabel}
+                                    thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                    onClick={() => onSelectItem(item)}
+                                    className={cardWidthClass}
+                                />
+                            );
+                        })}
+                    </ArtPanelGrid>
                 </div>
             );
         };
@@ -652,30 +653,28 @@ export const landingComponents = `
             const chapterThumbnails = useChapterThumbnails();
 
             return (
-                <div className={cardPanelClass}>
-                    <div className={'relative grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla'}>
-                        {items.length === 0 && (
-                            <div className="text-sm text-slate-400">এই অংশে এখনও কোন সহপাঠ যোগ করা হয়নি।</div>
-                        )}
-                        {items.map((item) => {
-                            const chapterKey = makeChapterThumbnailKey(
-                                classLabel,
-                                subjectLabel,
-                                (item.id || item.name) + '-সহপাঠ'
-                            );
-                            return (
-                                <ChapterCard
-                                    key={item.id}
-                                    title={item.name}
-                                    subtitle={item.type}
-                                    thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                    onClick={() => onSelectItem(item)}
-                                    className={cardWidthClass}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
+                <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
+                    {items.length === 0 && (
+                        <div className="text-sm text-slate-400">এই অংশে এখনও কোন সহপাঠ যোগ করা হয়নি।</div>
+                    )}
+                    {items.map((item) => {
+                        const chapterKey = makeChapterThumbnailKey(
+                            classLabel,
+                            subjectLabel,
+                            (item.id || item.name) + '-সহপাঠ'
+                        );
+                        return (
+                            <ChapterCard
+                                key={item.id}
+                                title={item.name}
+                                subtitle={item.type}
+                                thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                onClick={() => onSelectItem(item)}
+                                className={cardWidthClass}
+                            />
+                        );
+                    })}
+                </ArtPanelGrid>
             );
         };
 
@@ -1033,27 +1032,25 @@ export const landingComponents = `
         const PublicScienceChapterList = (props) => <PublicChapterList {...props} />;
 
         const PublicReligionOptionList = ({ options, onSelect }) => (
-            <div className={cardPanelClass}>
-                <div className={'relative grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
-                    {options.map((option) => (
-                        <button
-                            key={option.key}
-                            onClick={() => onSelect(option)}
-                            className="text-left transition-all duration-300 group"
-                        >
-                            <div className="space-y-2 h-full">
-                                <div className={cardSurfaceClass + ' flex items-center justify-center'}>
-                                    <div className="card-art-detail" aria-hidden="true"></div>
-                                    <div className="text-center px-3 card-art-media">
-                                        <div className="text-lg font-semibold text-slate-900">{option.label}</div>
-                                        <div className="text-xs text-slate-500 mt-2 font-bangla">{option.subtitle}</div>
-                                    </div>
+            <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                {options.map((option) => (
+                    <button
+                        key={option.key}
+                        onClick={() => onSelect(option)}
+                        className="text-left transition-all duration-300 group"
+                    >
+                        <div className="space-y-2 h-full">
+                            <div className={cardSurfaceClass + ' flex items-center justify-center'}>
+                                <div className="card-art-detail" aria-hidden="true"></div>
+                                <div className="text-center px-3 card-art-media">
+                                    <div className="text-lg font-semibold text-slate-900">{option.label}</div>
+                                    <div className="text-xs text-slate-500 mt-2 font-bangla">{option.subtitle}</div>
                                 </div>
                             </div>
-                        </button>
-                    ))}
-                </div>
-            </div>
+                        </div>
+                    </button>
+                ))}
+            </ArtPanelGrid>
         );
 
         const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
