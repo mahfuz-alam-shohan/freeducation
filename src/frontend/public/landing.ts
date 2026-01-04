@@ -314,6 +314,16 @@ export const landingComponents = `
 
         const cardWidthClass = 'w-40 sm:w-48 md:w-52';
         const cardGridGapClass = 'card-grid-gap justify-items-start';
+        const cardSurfaceClass =
+            'relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg card-art-surface';
+        const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white/90 p-4 sm:p-6 shadow-sm art-panel';
+        const ArtPanelGrid = ({ children, className = '' }) => (
+            <div className={cardPanelClass}>
+                <div className={'relative grid ' + cardGridGapClass + ' ' + className}>
+                    {children}
+                </div>
+            </div>
+        );
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
@@ -328,16 +338,17 @@ export const landingComponents = `
                     disabled={!isActive}
                 >
                     <div className="space-y-2 h-full">
-                        <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm group-hover:-translate-y-1 group-hover:shadow-md transition">
+                        <div className={cardSurfaceClass}>
+                            <div className="card-art-detail" aria-hidden="true"></div>
                             {subject.thumbnailUrl ? (
                                 <img
                                     src={subject.thumbnailUrl}
                                     alt={subject.title + ' thumbnail'}
                                     loading="lazy"
-                                    className="w-full h-full object-cover transition-transform duration-300"
+                                    className="w-full h-full object-cover transition-transform duration-300 card-art-media"
                                 />
                             ) : (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3 card-art-media">
                                     <div
                                         className={
                                             'h-10 w-10 rounded-lg text-white flex items-center justify-center shadow-sm ' +
@@ -370,16 +381,17 @@ export const landingComponents = `
                 className={className + ' block text-left transition-all duration-300 group float-slow'}
             >
                 <div className="space-y-2 h-full">
-                    <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm group-hover:-translate-y-1 group-hover:shadow-md transition">
+                    <div className={cardSurfaceClass}>
+                        <div className="card-art-detail" aria-hidden="true"></div>
                         {thumbnailUrl ? (
                             <img
                                 src={thumbnailUrl}
                                 alt={title + ' thumbnail'}
                                 loading="lazy"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover card-art-media"
                             />
                         ) : (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em]">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em] card-art-media">
                                 <span>No thumbnail</span>
                             </div>
                         )}
@@ -395,7 +407,7 @@ export const landingComponents = `
         const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
             const chapterThumbnails = useChapterThumbnails();
             return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+                <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                     {chapters.map((chapter) => {
                         const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
                         return (
@@ -414,7 +426,7 @@ export const landingComponents = `
                             এখনো কোনো অধ্যায় যোগ করা হয়নি।
                         </div>
                     )}
-                </div>
+                </ArtPanelGrid>
             );
         };
 
@@ -545,30 +557,36 @@ export const landingComponents = `
         const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-gradient-to-br from-white via-rose-50 to-amber-50">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Bangla 1st Paper</div>
-                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">{title}</h2>
-                            {subtitle && <p className="text-sm text-slate-500 mt-2 font-bangla">{subtitle}</p>}
+                    <div className="space-y-6">
+                        <div className="rounded-3xl border border-rose-100 bg-white/90 p-5 sm:p-7 shadow-sm art-panel">
+                            <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Bangla 1st Paper</div>
+                                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">
+                                        {title}
+                                    </h2>
+                                    {subtitle && <p className="text-sm text-slate-600 mt-2 font-bangla">{subtitle}</p>}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {onBack && (
+                                        <button
+                                            onClick={onBack}
+                                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                                        >
+                                            Back
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => onNavigate('landing')}
+                                        className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                                    >
+                                        Home
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            <button
-                                onClick={() => onNavigate('landing')}
-                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                            >
-                                Home
-                            </button>
-                        </div>
+                        {children}
                     </div>
-                    {children}
                 </div>
             </div>
         );
@@ -577,7 +595,7 @@ export const landingComponents = `
             const chapterThumbnails = useChapterThumbnails();
 
             return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla'}>
+                <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
                     {topics.map((topic) => {
                         const chapterKey = makeChapterThumbnailKey(
                             classLabel,
@@ -595,7 +613,7 @@ export const landingComponents = `
                             />
                         );
                     })}
-                </div>
+                </ArtPanelGrid>
             );
         };
 
@@ -605,12 +623,16 @@ export const landingComponents = `
             return (
                 <div className="space-y-4 font-bangla">
                     {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
-                    <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+                    <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                         {items.length === 0 && (
                             <div className="text-sm text-slate-400">এই অংশে এখনও কোন পাঠ যোগ করা হয়নি।</div>
                         )}
                         {items.map((item) => {
-                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + categoryLabel);
+                            const chapterKey = makeChapterThumbnailKey(
+                                classLabel,
+                                subjectLabel,
+                                item + '-' + categoryLabel
+                            );
                             return (
                                 <ChapterCard
                                     key={item}
@@ -622,7 +644,7 @@ export const landingComponents = `
                                 />
                             );
                         })}
-                    </div>
+                    </ArtPanelGrid>
                 </div>
             );
         };
@@ -631,12 +653,16 @@ export const landingComponents = `
             const chapterThumbnails = useChapterThumbnails();
 
             return (
-                <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla'}>
+                <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
                     {items.length === 0 && (
                         <div className="text-sm text-slate-400">এই অংশে এখনও কোন সহপাঠ যোগ করা হয়নি।</div>
                     )}
                     {items.map((item) => {
-                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, (item.id || item.name) + '-সহপাঠ');
+                        const chapterKey = makeChapterThumbnailKey(
+                            classLabel,
+                            subjectLabel,
+                            (item.id || item.name) + '-সহপাঠ'
+                        );
                         return (
                             <ChapterCard
                                 key={item.id}
@@ -648,7 +674,7 @@ export const landingComponents = `
                             />
                         );
                     })}
-                </div>
+                </ArtPanelGrid>
             );
         };
 
@@ -1006,7 +1032,7 @@ export const landingComponents = `
         const PublicScienceChapterList = (props) => <PublicChapterList {...props} />;
 
         const PublicReligionOptionList = ({ options, onSelect }) => (
-            <div className={'grid ' + cardGridGapClass + ' grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}>
+            <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                 {options.map((option) => (
                     <button
                         key={option.key}
@@ -1014,8 +1040,9 @@ export const landingComponents = `
                         className="text-left transition-all duration-300 group"
                     >
                         <div className="space-y-2 h-full">
-                            <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm group-hover:-translate-y-1 group-hover:shadow-md transition flex items-center justify-center">
-                                <div className="text-center px-3">
+                            <div className={cardSurfaceClass + ' flex items-center justify-center'}>
+                                <div className="card-art-detail" aria-hidden="true"></div>
+                                <div className="text-center px-3 card-art-media">
                                     <div className="text-lg font-semibold text-slate-900">{option.label}</div>
                                     <div className="text-xs text-slate-500 mt-2 font-bangla">{option.subtitle}</div>
                                 </div>
@@ -1023,7 +1050,7 @@ export const landingComponents = `
                         </div>
                     </button>
                 ))}
-            </div>
+            </ArtPanelGrid>
         );
 
         const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
