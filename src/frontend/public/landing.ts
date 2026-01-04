@@ -285,6 +285,84 @@ export const landingComponents = `
 
         const READ_PROGRESS_KEY = 'freeducation.read-progress';
         const RECENT_READ_KEY = 'freeducation.recent-read';
+        const VIDEO_PROGRESS_KEY = 'freeducation.video-progress';
+        const RECENT_VIDEO_KEY = 'freeducation.recent-video';
+
+        const loadVideoProgress = () => {
+            try {
+                const raw = localStorage.getItem(VIDEO_PROGRESS_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (error) {
+                console.warn('Failed to read video progress', error);
+                return {};
+            }
+        };
+
+        const loadRecentVideo = () => {
+            try {
+                const raw = localStorage.getItem(RECENT_VIDEO_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                console.warn('Failed to read recent video', error);
+                return null;
+            }
+        };
+
+        const storeVideoProgress = (entry) => {
+            const current = loadVideoProgress();
+            const updated = {
+                ...current,
+                [entry.id]: {
+                    title: entry.title,
+                    context: entry.context,
+                    route: entry.route,
+                    currentTime: entry.currentTime,
+                    duration: entry.duration,
+                    updatedAt: entry.updatedAt
+                }
+            };
+            try {
+                localStorage.setItem(VIDEO_PROGRESS_KEY, JSON.stringify(updated));
+                localStorage.setItem(RECENT_VIDEO_KEY, JSON.stringify({
+                    id: entry.id,
+                    title: entry.title,
+                    context: entry.context,
+                    route: entry.route,
+                    currentTime: entry.currentTime,
+                    duration: entry.duration,
+                    updatedAt: entry.updatedAt
+                }));
+            } catch (error) {
+                console.warn('Failed to store video progress', error);
+            }
+            return updated;
+        };
+
+        const useVideoProgress = () => {
+            const [videoProgress, setVideoProgress] = useState(() => loadVideoProgress());
+            const [recentVideo, setRecentVideo] = useState(() => loadRecentVideo());
+
+            const updateVideoProgress = (entry) => {
+                const timestamped = {
+                    ...entry,
+                    updatedAt: Date.now()
+                };
+                const updated = storeVideoProgress(timestamped);
+                setVideoProgress(updated);
+                setRecentVideo({
+                    id: entry.id,
+                    title: entry.title,
+                    context: entry.context,
+                    route: entry.route,
+                    currentTime: entry.currentTime,
+                    duration: entry.duration,
+                    updatedAt: timestamped.updatedAt
+                });
+            };
+
+            return { videoProgress, recentVideo, updateVideoProgress };
+        };
+
 
         const loadReadProgress = () => {
             try {
@@ -679,6 +757,36 @@ export const landingComponents = `
             </div>
         );
 
+        const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-white', onBack, onNavigate, children }) => (
+            <div className={'flex-1 ' + backgroundClass}>
+                <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="space-y-2">
+                            <h2 className="text-3xl sm:text-4xl font-semibold text-slate-900 font-bangla">{title}</h2>
+                            {subtitle && <p className="text-base text-slate-500 font-bangla">{subtitle}</p>}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {onBack && (
+                                <button
+                                    onClick={onBack}
+                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                                >
+                                    Back
+                                </button>
+                            )}
+                            <button
+                                onClick={() => onNavigate('landing')}
+                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
+                            >
+                                Home
+                            </button>
+                        </div>
+                    </div>
+                    <div className="mt-6">{children}</div>
+                </div>
+            </div>
+        );
+
         const PublicBanglaTopicGrid = ({ classLabel, subjectLabel, topics, onNavigate }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
             const { readMap, markRead } = useReadingProgress();
@@ -861,10 +969,8 @@ export const landingComponents = `
             itemName,
             categoryName,
             notesByItem,
-            srijonshilQuestions,
-            mcqQuestions,
-            getQuestionKey,
-            onNavigate
+            onNavigate,
+            onOpenVideos
         }) => {
             const categoryRoute = classLabel === 'SSC'
                 ? (categoryName === 'পদ্য'
@@ -878,6 +984,8 @@ export const landingComponents = `
                         ? 'public-bangla-hsc-shohopath'
                         : 'public-bangla-hsc-goddo');
 
+            const srijonshilRoute = classLabel === 'SSC' ? 'public-bangla-ssc-srijonshil' : 'public-bangla-hsc-srijonshil';
+            const mcqRoute = classLabel === 'SSC' ? 'public-bangla-ssc-mcq' : 'public-bangla-hsc-mcq';
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value)
                 .split('')
@@ -886,88 +994,61 @@ export const landingComponents = `
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
             const notes = (notesByItem || {})[noteKey] || [];
             const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
-            const [activeTab, setActiveTab] = useState('notes');
-            const srijonshilTypes = [
-                { key: 'gyan', label: 'জ্ঞান (ক)' },
-                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
+            const actionCards = [
+                { key: 'cq', label: 'CQ', onClick: () => onNavigate(srijonshilRoute) },
+                { key: 'mcq', label: 'MCQ', onClick: () => onNavigate(mcqRoute) },
+                {
+                    key: 'videos',
+                    label: 'Videos',
+                    onClick: () =>
+                        onOpenVideos &&
+                        onOpenVideos({
+                            noteKey,
+                            title: chapterTitle,
+                            subtitle: '',
+                            backRoute: categoryRoute
+                        })
+                },
+                { key: 'practice', label: 'Practice', disabled: true }
             ];
-            const cqSections = srijonshilTypes.map((type) => ({
-                key: type.key,
-                label: type.label,
-                items: srijonshilQuestions?.[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [],
-                prefix: (index) => toBanglaNumber(index + 1)
-            }));
-            const mcqList = mcqQuestions?.[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
 
             return (
-                <PublicBanglaShell
-                    title="পাঠ তথ্য"
-                    subtitle={categoryName ? 'বিভাগ: ' + categoryName : ''}
+                <PublicSimpleShell
+                    backgroundClass="bg-[#fff7ed]"
+                    title={chapterTitle}
                     onBack={() => onNavigate(categoryRoute)}
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="text-center">
-                            <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
-                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {actionCards.map((card) => (
+                                <button
+                                    key={card.key}
+                                    onClick={card.disabled ? undefined : card.onClick}
+                                    disabled={card.disabled}
+                                    className={
+                                        'aspect-square rounded-xl border text-sm font-semibold transition flex items-center justify-center ' +
+                                        (card.disabled
+                                            ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
+                                            : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50')
+                                    }
+                                >
+                                    {card.label}
+                                </button>
+                            ))}
                         </div>
-
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="border-b border-slate-100 px-4 pt-4">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {[
-                                        { key: 'notes', label: 'Read (Notes)' },
-                                        { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' }
-                                    ].map((tab) => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            className={
-                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
-                                                (activeTab === tab.key
-                                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
-                                            }
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
+                        <div className="space-y-2 text-sm text-slate-700">
+                            {notes.length === 0 && (
+                                <div className="text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</div>
+                            )}
+                            {notes.map((note, index) => (
+                                <div key={noteKey + '-' + index}>
+                                    {toBanglaNumber(index + 1)}. {note}
                                 </div>
-                            </div>
-                            <div className="px-4 py-5">
-                                {activeTab === 'notes' && (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                            <div className="text-sm font-semibold text-slate-700 mt-1">অধ্যায়ের গুরুত্বপূর্ণ নোট</div>
-                                        </div>
-                                        <ul className="divide-y border border-slate-100 rounded-xl">
-                                            {notes.length === 0 && (
-                                                <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
-                                            )}
-                                            {notes.map((note, index) => (
-                                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
-                                                    <span className="text-sm font-semibold text-slate-500">
-                                                        {toBanglaNumber(index + 1)}.
-                                                    </span>
-                                                    <div className="text-sm text-slate-700">{note}</div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {activeTab === 'cq' && (
-                                    <CqQuestionList sections={cqSections} />
-                                )}
-                                {activeTab === 'mcq' && (
-                                    <PublicMcqList mcqList={mcqList} />
-                                )}
-                            </div>
+                            ))}
                         </div>
                     </div>
-                </PublicBanglaShell>
+                </PublicSimpleShell>
             );
         };
 
@@ -1294,6 +1375,10 @@ export const landingComponents = `
             cqQuestions,
             mcqList,
             onBack,
+            backRoute,
+            onNavigateCq,
+            onNavigateMcq,
+            onOpenVideos,
             onNavigate
         }) => {
             const notes = (notesByItem || {})[noteKey] || [];
@@ -1302,88 +1387,62 @@ export const landingComponents = `
                 .split('')
                 .map((digit) => banglaDigits[Number(digit)] ?? digit)
                 .join('');
-            const [activeTab, setActiveTab] = useState('notes');
-            const cqSections = [
+            const actionCards = [
+                { key: 'cq', label: 'CQ', onClick: onNavigateCq },
+                { key: 'mcq', label: 'MCQ', onClick: onNavigateMcq },
                 {
-                    key: 'gyan',
-                    label: 'জ্ঞান (ক)',
-                    items: cqQuestions?.gyan || [],
-                    prefix: (index) => toBanglaNumber(index + 1)
+                    key: 'videos',
+                    label: 'Videos',
+                    onClick: () =>
+                        onOpenVideos &&
+                        onOpenVideos({
+                            noteKey,
+                            title: topicName || 'টপিক নির্বাচন করুন',
+                            subtitle: chapterName || '',
+                            backRoute
+                        })
                 },
-                {
-                    key: 'onudhabon',
-                    label: 'অনুধাবন (খ)',
-                    items: cqQuestions?.onudhabon || [],
-                    prefix: (index) => toBanglaNumber(index + 1)
-                }
+                { key: 'practice', label: 'Practice', disabled: true }
             ];
 
             return (
-                <PublicScienceShell
-                    subjectLabel={subjectLabel}
-                    classLabel={classLabel}
+                <PublicSimpleShell
+                    backgroundClass="bg-[#ecfdf3]"
                     title={topicName || 'টপিক নির্বাচন করুন'}
-                    subtitle={chapterName ? 'অধ্যায়: ' + chapterName : ''}
+                    subtitle={chapterName || ''}
                     onBack={onBack}
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="border-b border-slate-100 px-4 pt-4">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {[
-                                        { key: 'notes', label: 'Read (Notes)' },
-                                        { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' }
-                                    ].map((tab) => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            className={
-                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
-                                                (activeTab === tab.key
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
-                                            }
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {actionCards.map((card) => (
+                                <button
+                                    key={card.key}
+                                    onClick={card.disabled ? undefined : card.onClick}
+                                    disabled={card.disabled}
+                                    className={
+                                        'aspect-square rounded-xl border text-sm font-semibold transition flex items-center justify-center ' +
+                                        (card.disabled
+                                            ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
+                                            : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50')
+                                    }
+                                >
+                                    {card.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="space-y-2 text-sm text-slate-700">
+                            {notes.length === 0 && (
+                                <div className="text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</div>
+                            )}
+                            {notes.map((note, index) => (
+                                <div key={noteKey + '-' + index}>
+                                    {toBanglaNumber(index + 1)}. {note}
                                 </div>
-                            </div>
-                            <div className="px-4 py-5">
-                                {activeTab === 'notes' && (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                            <div className="text-sm font-semibold text-slate-700 mt-1">টপিকের মূল ধারণা</div>
-                                        </div>
-                                        <ul className="divide-y border border-slate-100 rounded-xl">
-                                            {notes.length === 0 && (
-                                                <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
-                                            )}
-                                            {notes.map((note, index) => (
-                                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
-                                                    <span className="text-sm font-semibold text-slate-500">
-                                                        {toBanglaNumber(index + 1)}.
-                                                    </span>
-                                                    <div className="text-sm text-slate-700">{note}</div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {activeTab === 'cq' && (
-                                    <CqQuestionList sections={cqSections} />
-                                )}
-                                {activeTab === 'mcq' && (
-                                    <PublicMcqList mcqList={mcqList} />
-                                )}
-                            </div>
+                            ))}
                         </div>
                     </div>
-                </PublicScienceShell>
+                </PublicSimpleShell>
             );
         };
 
@@ -1451,6 +1510,216 @@ export const landingComponents = `
                 </div>
             </PublicScienceShell>
         );
+
+        const formatDuration = (value) => {
+            if (value === null || value === undefined) return '';
+            const total = Math.floor(Number(value));
+            if (Number.isNaN(total)) return '';
+            const minutes = Math.floor(total / 60);
+            const seconds = total % 60;
+            return String(minutes) + ':' + String(seconds).padStart(2, '0');
+        };
+
+        const getYoutubeEmbedUrl = (url) => {
+            if (!url) return '';
+            const match = url.match(/(?:youtube\\.com\\/(?:watch\\?v=|embed\\/)|youtu\\.be\\/)([\\w-]+)/);
+            return match ? 'https://www.youtube.com/embed/' + match[1] : '';
+        };
+
+        const getVideoSource = (video) => {
+            if (!video) return '';
+            if (video.sourceType === 'upload') {
+                return video.url || (video.fileKey ? '/api/videos/' + encodeURIComponent(video.fileKey) : '');
+            }
+            return video.url || '';
+        };
+
+        const PublicVideoPlayer = ({ video, progress, onProgress }) => {
+            const videoRef = useRef(null);
+            const embedUrl = video?.sourceType === 'link' ? getYoutubeEmbedUrl(video.url) : '';
+            const source = getVideoSource(video);
+
+            useEffect(() => {
+                if (!videoRef.current) return;
+                const node = videoRef.current;
+                const handleLoaded = () => {
+                    if (progress?.currentTime && progress.currentTime < node.duration) {
+                        node.currentTime = progress.currentTime;
+                    }
+                };
+                node.addEventListener('loadedmetadata', handleLoaded);
+                return () => node.removeEventListener('loadedmetadata', handleLoaded);
+            }, [video?.id]);
+
+            if (embedUrl) {
+                return (
+                    <iframe
+                        title={video.title}
+                        src={embedUrl}
+                        className="w-full aspect-video rounded-xl border border-slate-200"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                    ></iframe>
+                );
+            }
+
+            return (
+                <video
+                    ref={videoRef}
+                    src={source}
+                    controls
+                    playsInline
+                    className="w-full aspect-video rounded-xl border border-slate-200 bg-black"
+                    onTimeUpdate={(event) => {
+                        if (!onProgress) return;
+                        onProgress(event.currentTarget.currentTime, event.currentTarget.duration || 0);
+                    }}
+                />
+            );
+        };
+
+        const PublicVideoList = ({ context, videosByItem, onBack, onNavigate }) => {
+            const { videoProgress, recentVideo, updateVideoProgress } = useVideoProgress();
+            const resolvedContext = context || recentVideo?.context;
+            const videos = resolvedContext ? (videosByItem?.[resolvedContext.noteKey] || []) : [];
+            const [activeVideoId, setActiveVideoId] = useState(() => recentVideo?.id || '');
+            const activeVideo = videos.find((video) => video.id === activeVideoId) || videos[0];
+            const activeProgress = activeVideo ? videoProgress?.[activeVideo.id] : null;
+            const resolvedBack =
+                onBack || (resolvedContext?.backRoute ? () => onNavigate(resolvedContext.backRoute) : null);
+
+            useEffect(() => {
+                if (!activeVideoId && videos.length > 0) {
+                    setActiveVideoId(videos[0].id);
+                }
+            }, [activeVideoId, videos]);
+
+            const handleSelect = (video) => {
+                setActiveVideoId(video.id);
+                updateVideoProgress({
+                    id: video.id,
+                    title: video.title,
+                    context: resolvedContext,
+                    route: 'public-videos',
+                    currentTime: videoProgress?.[video.id]?.currentTime || 0,
+                    duration: videoProgress?.[video.id]?.duration || 0
+                });
+            };
+
+            const backgroundClass = resolvedContext?.backgroundClass || 'bg-white';
+            const title = resolvedContext?.title || 'ভিডিও';
+            const subtitle = resolvedContext?.subtitle || '';
+
+            return (
+                <PublicSimpleShell
+                    backgroundClass={backgroundClass}
+                    title={title}
+                    subtitle={subtitle}
+                    onBack={resolvedBack}
+                    onNavigate={onNavigate}
+                >
+                    <div className="space-y-6 font-bangla">
+                        {activeVideo && (
+                            <div className="space-y-3">
+                                <div className="text-lg font-semibold text-slate-900">{activeVideo.title}</div>
+                                {activeVideo.channelName && (
+                                    <div className="text-sm text-slate-500">
+                                        {activeVideo.channelUrl ? (
+                                            <a href={activeVideo.channelUrl} target="_blank" rel="noreferrer" className="text-indigo-500">
+                                                {activeVideo.channelName}
+                                            </a>
+                                        ) : (
+                                            activeVideo.channelName
+                                        )}
+                                    </div>
+                                )}
+                                <PublicVideoPlayer
+                                    video={activeVideo}
+                                    progress={activeProgress}
+                                    onProgress={(currentTime, duration) => {
+                                        updateVideoProgress({
+                                            id: activeVideo.id,
+                                            title: activeVideo.title,
+                                            context: resolvedContext,
+                                            route: 'public-videos',
+                                            currentTime,
+                                            duration
+                                        });
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            {videos.length === 0 && (
+                                <div className="text-sm text-slate-400">এখনো কোনো ভিডিও যোগ করা হয়নি।</div>
+                            )}
+                            {videos.map((video) => {
+                                const progress = videoProgress?.[video.id];
+                                const previewUrl = getVideoSource(video);
+                                const embedUrl = video.sourceType === 'link' ? getYoutubeEmbedUrl(video.url) : '';
+                                const resumeText = progress?.currentTime
+                                    ? 'Resume at ' + formatDuration(progress.currentTime)
+                                    : '';
+                                return (
+                                    <button
+                                        key={video.id}
+                                        onClick={() => handleSelect(video)}
+                                        className="w-full text-left border border-slate-200 rounded-2xl p-4 hover:border-slate-300 hover:bg-slate-50 transition"
+                                    >
+                                        <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] items-start">
+                                            <div className="w-full">
+                                                {embedUrl ? (
+                                                    <iframe
+                                                        title={video.title}
+                                                        src={embedUrl}
+                                                        className="w-full aspect-video rounded-xl border border-slate-200"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                    ></iframe>
+                                                ) : previewUrl ? (
+                                                    <video
+                                                        src={previewUrl}
+                                                        muted
+                                                        playsInline
+                                                        className="w-full aspect-video rounded-xl border border-slate-200 bg-black"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full aspect-video rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-xs text-slate-400">
+                                                        Preview unavailable
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="text-base font-semibold text-slate-900">{video.title}</div>
+                                                {video.channelName && (
+                                                    <div className="text-xs text-slate-500">
+                                                        {video.channelUrl ? (
+                                                            <a href={video.channelUrl} target="_blank" rel="noreferrer" className="text-indigo-500">
+                                                                {video.channelName}
+                                                            </a>
+                                                        ) : (
+                                                            video.channelName
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div className="text-xs text-slate-400 space-x-2">
+                                                    {video.duration && <span>Duration: {video.duration}</span>}
+                                                    {progress?.duration && !video.duration && (
+                                                        <span>Duration: {formatDuration(progress.duration)}</span>
+                                                    )}
+                                                    {resumeText && <span>{resumeText}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </PublicSimpleShell>
+            );
+        };
 
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#eef2ff]">
@@ -1549,6 +1818,7 @@ export const landingComponents = `
             const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
             const { readMap, recentRead } = useReadingProgress();
+            const { recentVideo } = useVideoProgress();
 
             useEffect(() => {
                 const timer = setInterval(() => {
@@ -1560,6 +1830,8 @@ export const landingComponents = `
             const activeQuote = quoteItems[quoteIndex];
             const continueLabel = recentRead?.label;
             const continueRoute = recentRead?.route;
+            const continueVideoTitle = recentVideo?.title;
+            const continueVideoRoute = recentVideo?.route || 'public-videos';
 
             const handleQuickSearch = () => {
                 const normalized = quickQuery.trim().toLowerCase();
@@ -1638,6 +1910,17 @@ export const landingComponents = `
                                     </button>
                                 </div>
                             )}
+                            {continueVideoTitle && (
+                                <div className="mt-3">
+                                    <button
+                                        onClick={() => onNavigate(continueVideoRoute)}
+                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-2xl bg-indigo-500/90 text-white px-5 py-3 text-sm font-semibold shadow-sm hover:bg-indigo-400 transition"
+                                    >
+                                        <i className="fa-solid fa-circle-play"></i>
+                                        Continue Watching: {continueVideoTitle}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -1685,6 +1968,7 @@ export const landingComponents = `
             PublicScienceTopicDetail,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
+            PublicVideoList,
             PublicReligionOptionList,
             PublicEnglishShell,
             PublicEnglishCardGrid,
@@ -1714,6 +1998,7 @@ export const landingComponents = `
             PublicScienceTopicDetail,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
+            PublicVideoList,
             PublicReligionOptionList,
             PublicEnglishShell,
             PublicEnglishCardGrid,

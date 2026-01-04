@@ -1,5 +1,17 @@
 export const renderPublic = `
 {view === 'landing' && <StudentLanding onNavigate={navigate} />}
+                        {view === 'public-videos' && (
+                            <PublicVideoList
+                                context={selectedVideoContext}
+                                videosByItem={videosByItem}
+                                onBack={
+                                    selectedVideoContext?.backRoute
+                                        ? () => navigate(selectedVideoContext.backRoute)
+                                        : null
+                                }
+                                onNavigate={navigate}
+                            />
+                        )}
                         {view === 'ssc-subjects' && (
                             <SubjectIndexPage classLabel="SSC" subjects={sscSubjects} onNavigate={navigate} />
                         )}
@@ -90,6 +102,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-ict-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-ict-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-ict-topic"
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -178,6 +200,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-ssc-physics-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-physics-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-ssc-physics-topic"
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -268,6 +300,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-ssc-chemistry-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-chemistry-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-ssc-chemistry-topic"
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -358,6 +400,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-ssc-biology-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-biology-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-ssc-biology-topic"
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -448,6 +500,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-ssc-bangladesh-global-studies-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-bangladesh-global-studies-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-ssc-bangladesh-global-studies-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -573,6 +635,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-ssc-religion-cq')}
+                                onNavigateMcq={() => navigate('public-ssc-religion-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-ssc-religion-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -679,6 +751,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-physics-1st-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-physics-1st-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-physics-1st-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'gyan')] ||
@@ -779,6 +861,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-physics-2nd-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-physics-2nd-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-physics-2nd-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'gyan')] ||
@@ -879,6 +971,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-chemistry-1st-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-chemistry-1st-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-chemistry-1st-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -981,6 +1083,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-chemistry-2nd-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-chemistry-2nd-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-chemistry-2nd-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -1083,6 +1195,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-biology-1st-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-biology-1st-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-biology-1st-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -1185,6 +1307,16 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                onNavigateCq={() => navigate('public-hsc-biology-2nd-cq')}
+                                onNavigateMcq={() => navigate('public-hsc-biology-2nd-mcq')}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#ecfdf3]'
+                                    });
+                                    navigate('public-videos');
+                                }}
+                                backRoute="public-hsc-biology-2nd-topic"
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -1423,9 +1555,13 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
-                                srijonshilQuestions={srijonshilQuestions}
-                                mcqQuestions={mcqQuestions}
-                                getQuestionKey={getQuestionKey}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#fff7ed]'
+                                    });
+                                    navigate('public-videos');
+                                }}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1435,9 +1571,13 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
-                                srijonshilQuestions={srijonshilQuestions}
-                                mcqQuestions={mcqQuestions}
-                                getQuestionKey={getQuestionKey}
+                                onOpenVideos={(context) => {
+                                    setSelectedVideoContext({
+                                        ...context,
+                                        backgroundClass: 'bg-[#fff7ed]'
+                                    });
+                                    navigate('public-videos');
+                                }}
                                 onNavigate={navigate}
                             />
                         )}
