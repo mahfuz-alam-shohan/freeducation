@@ -250,19 +250,21 @@ export const landingComponents = `
             { key: 'Christianity', label: 'Christianity', subtitle: 'খ্রিষ্টান ধর্ম' }
         ];
 
-        const useSubjectThumbnails = () => {
+        const useThumbnails = (endpoint, keyField) => {
             const [thumbnailMap, setThumbnailMap] = useState({});
 
             useEffect(() => {
                 let isActive = true;
                 const loadThumbnails = async () => {
                     try {
-                        const response = await fetch('/api/thumbnails');
+                        const response = await fetch(endpoint);
                         if (!response.ok) return;
                         const data = await response.json();
                         if (!isActive) return;
                         const map = (data.thumbnails || []).reduce((acc, item) => {
-                            acc[item.subjectKey] = {
+                            const key = item[keyField];
+                            if (!key) return acc;
+                            acc[key] = {
                                 url: item.url
                             };
                             return acc;
@@ -281,39 +283,8 @@ export const landingComponents = `
             return thumbnailMap;
         };
 
-        const useChapterThumbnails = () => {
-            const [thumbnailMap, setThumbnailMap] = useState({});
-
-            useEffect(() => {
-                let isActive = true;
-                const loadThumbnails = async () => {
-                    try {
-                        const response = await fetch('/api/chapter-thumbnails');
-                        if (!response.ok) return;
-                        const data = await response.json();
-                        if (!isActive) return;
-                        const map = (data.thumbnails || []).reduce((acc, item) => {
-                            acc[item.chapterKey] = {
-                                url: item.url
-                            };
-                            return acc;
-                        }, {});
-                        setThumbnailMap(map);
-                    } catch (error) {
-                        console.warn('Failed to load chapter thumbnails', error);
-                    }
-                };
-                loadThumbnails();
-                return () => {
-                    isActive = false;
-                };
-            }, []);
-
-            return thumbnailMap;
-        };
-
         const cardWidthClass = 'w-40 sm:w-48 md:w-52';
-        const cardGridGapClass = 'card-grid-gap justify-items-start';
+        const cardGridGapClass = 'gap-4 sm:gap-6';
         const cardSurfaceClass =
             'relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg group-hover:border-indigo-200 card-art-surface';
         const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm';
@@ -403,7 +374,7 @@ export const landingComponents = `
         );
 
         const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
-            const chapterThumbnails = useChapterThumbnails();
+            const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                     {chapters.map((chapter) => {
@@ -468,7 +439,7 @@ export const landingComponents = `
         const SubjectIndexPage = ({ classLabel, subjects, onNavigate }) => {
             const [activeGroup, setActiveGroup] = useState('All');
             const [query, setQuery] = useState('');
-            const thumbnailMap = useSubjectThumbnails();
+            const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
             const normalizedQuery = query.trim().toLowerCase();
             const groups = ['All', ...new Set(subjects.flatMap((subject) => subject.groups || []))];
             const filteredSubjects = subjects.filter((subject) => {
@@ -590,7 +561,7 @@ export const landingComponents = `
         );
 
         const PublicBanglaTopicGrid = ({ classLabel, subjectLabel, topics, onNavigate }) => {
-            const chapterThumbnails = useChapterThumbnails();
+            const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
 
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
@@ -616,7 +587,7 @@ export const landingComponents = `
         };
 
         const PublicBanglaTextList = ({ classLabel, subjectLabel, categoryLabel, subtitle, items, onSelectItem }) => {
-            const chapterThumbnails = useChapterThumbnails();
+            const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
 
             return (
                 <div className="space-y-4 font-bangla">
@@ -648,7 +619,7 @@ export const landingComponents = `
         };
 
         const PublicBanglaShohopathList = ({ classLabel, subjectLabel, items, onSelectItem }) => {
-            const chapterThumbnails = useChapterThumbnails();
+            const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
 
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
@@ -1298,7 +1269,7 @@ export const landingComponents = `
 
         const StudentLanding = ({ onNavigate }) => {
             const [quoteIndex, setQuoteIndex] = useState(0);
-            const thumbnailMap = useSubjectThumbnails();
+            const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
 
             useEffect(() => {
                 const timer = setInterval(() => {
