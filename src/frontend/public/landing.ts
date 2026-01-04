@@ -480,13 +480,13 @@ export const landingComponents = `
         const getVideoPreviewUrl = (video) => {
             if (video?.thumbnailUrl) return video.thumbnailUrl;
             const id = getYoutubeId(video?.url || '');
-            return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+            return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
         };
 
         const getVideoEmbedUrl = (url) => {
             const id = getYoutubeId(url);
             if (!id) return '';
-            return `https://www.youtube.com/embed/${id}`;
+            return 'https://www.youtube.com/embed/' + id;
         };
 
         const LearningButtonGrid = ({ buttons }) => (

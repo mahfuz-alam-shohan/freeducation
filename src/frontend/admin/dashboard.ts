@@ -2636,8 +2636,8 @@ export const dashboardComponents = `
                                 <div>
                                     <div className="text-sm font-semibold text-gray-900">{video.title}</div>
                                     <div className="text-xs text-gray-500 mt-1">
-                                        {(video.channelName && `Channel: ${video.channelName}`) || 'Channel not set'}
-                                        {video.duration ? ` • ${video.duration}` : ''}
+                                        {(video.channelName && ('Channel: ' + video.channelName)) || 'Channel not set'}
+                                        {video.duration ? ' • ' + video.duration : ''}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs font-semibold">
