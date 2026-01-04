@@ -33,7 +33,10 @@ export function renderAppHtml(initialView: string) {
     <style>
         :root {
             color-scheme: light;
-            --card-grid-gap: 0.5rem;
+            --card-grid-gap: clamp(0.75rem, 1.4vw, 1.5rem);
+            --card-art-ink: rgba(15, 23, 42, 0.2);
+            --card-art-accent: rgba(14, 116, 144, 0.35);
+            --card-art-rose: rgba(225, 29, 72, 0.28);
         }
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
@@ -53,6 +56,86 @@ export function renderAppHtml(initialView: string) {
         .marquee-wrapper:hover .marquee-track { animation-play-state: paused; }
         .soft-glow { background-image: linear-gradient(120deg, rgba(59, 130, 246, 0.08), rgba(14, 165, 233, 0.05), rgba(59, 130, 246, 0.08)); background-size: 200% 200%; animation: bgPan 18s ease infinite; }
         .card-grid-gap { gap: var(--card-grid-gap); }
+        .card-art-surface {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0));
+        }
+        .card-art-surface::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(135deg, var(--card-art-ink) 0 2px, transparent 2px 12px);
+            opacity: 0.4;
+        }
+        .card-art-surface::after {
+            content: '';
+            position: absolute;
+            inset: auto -20% -30% auto;
+            width: 70%;
+            height: 70%;
+            background: linear-gradient(120deg, var(--card-art-accent), var(--card-art-rose));
+            opacity: 0.25;
+            transform: rotate(-12deg);
+        }
+        .card-art-media {
+            position: relative;
+            z-index: 1;
+        }
+        .card-art-detail {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 2;
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid rgba(15, 23, 42, 0.15);
+            background: linear-gradient(160deg, rgba(15, 23, 42, 0.15), rgba(255, 255, 255, 0.85));
+        }
+        .art-panel {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(120deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0));
+        }
+        .art-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+        .art-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(120deg, rgba(15, 23, 42, 0.22) 0 3px, transparent 3px 14px);
+            opacity: 0.3;
+        }
+        .art-panel::after {
+            content: '';
+            position: absolute;
+            inset: -30% 10% auto auto;
+            width: 60%;
+            height: 60%;
+            background: linear-gradient(160deg, rgba(14, 116, 144, 0.45), rgba(225, 29, 72, 0.35));
+            opacity: 0.35;
+            transform: rotate(-6deg);
+        }
+        .admin-art-layer {
+            position: absolute;
+            inset: -20% -10% auto auto;
+            width: 60%;
+            height: 60%;
+            background: repeating-linear-gradient(135deg, rgba(15, 23, 42, 0.18) 0 3px, transparent 3px 12px),
+                linear-gradient(120deg, rgba(14, 116, 144, 0.35), rgba(59, 130, 246, 0.25));
+            opacity: 0.28;
+            pointer-events: none;
+        }
+        .admin-art-layer.secondary {
+            inset: auto auto -25% -15%;
+            width: 50%;
+            height: 50%;
+            background: repeating-linear-gradient(45deg, rgba(15, 23, 42, 0.2) 0 4px, transparent 4px 14px),
+                linear-gradient(160deg, rgba(225, 29, 72, 0.35), rgba(245, 158, 11, 0.3));
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes thumbnailFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
         @keyframes floatSlow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
