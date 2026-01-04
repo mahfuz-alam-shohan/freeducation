@@ -720,52 +720,119 @@ export const landingComponents = `
             );
         };
 
-        const PublicSidebar = ({ title, subtitle, onBack, onNavigate }) => (
-            <aside className="hidden lg:block w-64 shrink-0">
-                <div className="sticky top-24 space-y-4">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                        <div className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Hierarchy</div>
-                        <div className="text-sm font-semibold text-slate-900 mt-2">{title}</div>
-                        {subtitle && <div className="text-xs text-slate-500 mt-1">{subtitle}</div>}
+        const formatHierarchyLabel = (segment) => {
+            if (!segment) return '';
+            const normalized = segment.toLowerCase();
+            const replacements = {
+                ssc: 'SSC',
+                hsc: 'HSC',
+                ict: 'ICT',
+                mcq: 'MCQ',
+                cq: 'CQ',
+                srijonshil: 'Srijonshil',
+                shohopath: 'Shohopath',
+                shahitto: 'Shahitto',
+                goddo: 'Goddo',
+                poddo: 'Poddo',
+                topics: 'Topics',
+                topic: 'Topic',
+                chapters: 'Chapters',
+                videos: 'Videos'
+            };
+            if (replacements[normalized]) return replacements[normalized];
+            return segment
+                .split('-')
+                .map((part) => replacements[part] || part.charAt(0).toUpperCase() + part.slice(1))
+                .join(' ');
+        };
+
+        const buildHierarchyTrail = () => {
+            const { pathname } = window.location;
+            const parts = pathname.split('/').filter(Boolean);
+            const trail = [{ label: 'Home', path: '/' }];
+            let currentPath = '';
+            parts.forEach((part) => {
+                currentPath += '/' + part;
+                trail.push({
+                    label: formatHierarchyLabel(part),
+                    path: currentPath
+                });
+            });
+            return trail;
+        };
+
+        const PublicSidebar = ({ title, subtitle, onBack, onNavigate }) => {
+            const [trail, setTrail] = useState(buildHierarchyTrail());
+
+            useEffect(() => {
+                setTrail(buildHierarchyTrail());
+            }, [title, subtitle]);
+
+            return (
+                <aside className="hidden lg:flex lg:w-64 border-r border-gray-200 bg-white p-6 shrink-0">
+                    <div className="flex flex-col gap-6 w-full">
+                        <div>
+                            <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Hierarchy</div>
+                            <div className="mt-3 space-y-2">
+                                {trail.map((item, index) => {
+                                    const view = getViewFromPath(item.path);
+                                    return (
+                                        <button
+                                            key={item.path}
+                                            onClick={() => onNavigate(view)}
+                                            className={\`w-full text-left text-sm font-semibold transition \${index === trail.length - 1 ? 'text-blue-700' : 'text-slate-600 hover:text-slate-900'}\`}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className="mt-4 text-xs text-slate-500">
+                                {title}
+                                {subtitle ? \` · \${subtitle}\` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Shortcuts</div>
+                            <div className="mt-3 space-y-2">
+                                {onBack && (
+                                    <button
+                                        onClick={onBack}
+                                        className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                                    >
+                                        Back
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => onNavigate('landing')}
+                                    className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                                >
+                                    Home
+                                </button>
+                                <button
+                                    onClick={() => onNavigate('public-videos')}
+                                    className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                                >
+                                    Videos
+                                </button>
+                                <button
+                                    onClick={() => onNavigate('ssc-subjects')}
+                                    className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                                >
+                                    SSC Subjects
+                                </button>
+                                <button
+                                    onClick={() => onNavigate('hsc-subjects')}
+                                    className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                                >
+                                    HSC Subjects
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
-                        <div className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Shortcuts</div>
-                        {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
-                            >
-                                Back
-                            </button>
-                        )}
-                        <button
-                            onClick={() => onNavigate('landing')}
-                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
-                        >
-                            Home
-                        </button>
-                        <button
-                            onClick={() => onNavigate('public-videos')}
-                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
-                        >
-                            Videos
-                        </button>
-                        <button
-                            onClick={() => onNavigate('ssc-subjects')}
-                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
-                        >
-                            SSC Subjects
-                        </button>
-                        <button
-                            onClick={() => onNavigate('hsc-subjects')}
-                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
-                        >
-                            HSC Subjects
-                        </button>
-                    </div>
-                </div>
-            </aside>
-        );
+                </aside>
+            );
+        };
 
         const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#fff7ed]">

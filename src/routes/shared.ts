@@ -189,3 +189,17 @@ export const applyTeacherContentUpdate = (
 };
 
 export type ApiHandler = (request: Request, env: Env, path: string) => Promise<Response | null>;
+
+export const recordEditHistory = async (
+  db: D1Database,
+  payload: { id?: number } | null,
+  action: string,
+  details?: Record<string, unknown> | string | null
+) => {
+  if (!payload?.id) return;
+  const detailValue =
+    typeof details === "string" || details == null ? details : JSON.stringify(details);
+  await db.prepare("INSERT INTO edit_history (user_id, action, details) VALUES (?, ?, ?)")
+    .bind(payload.id, action, detailValue ?? null)
+    .run();
+};

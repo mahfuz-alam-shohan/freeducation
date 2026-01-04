@@ -1,5 +1,5 @@
 import type { Env } from "../types";
-import { apiHeaders, clampZoom, ensureAdmin, getAuthPayload, isValidKey } from "./shared";
+import { apiHeaders, clampZoom, ensureAdmin, getAuthPayload, isValidKey, recordEditHistory } from "./shared";
 
 type ThumbnailConfig = {
   table: "subject_thumbnails" | "chapter_thumbnails";
@@ -100,6 +100,11 @@ const handleThumbnailUpload = async (request: Request, env: Env, config: Thumbna
   );
   const bindValues = config.includeZoom ? [keyValue, fileKey, contentType, zoomValue] : [keyValue, fileKey, contentType];
   await statement.bind(...bindValues).run();
+
+  await recordEditHistory(env.DB, payload, "Thumbnail updated", {
+    key: keyValue,
+    type: config.table,
+  });
 
   const cacheBuster = Date.now();
   return Response.json(

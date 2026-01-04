@@ -5,6 +5,7 @@ import { handleClasses } from "./routes/classes";
 import { handleContent } from "./routes/content";
 import { handleFonts } from "./routes/fonts";
 import { handleSettings } from "./routes/settings";
+import { handleProfile } from "./routes/profile";
 import { handleSetup } from "./routes/setup";
 import { handleThumbnails } from "./routes/thumbnails";
 import { handleUsers } from "./routes/users";
@@ -22,6 +23,7 @@ const handlers = [
   handleContent,
   handleClasses,
   handleSettings,
+  handleProfile,
   handleVideos,
 ];
 
