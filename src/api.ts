@@ -82,7 +82,12 @@ const mergeMaps = (existing: any, updates: any) => {
   return { ...existing, ...(updates || {}) };
 };
 
-const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, assignment: { level: string; subject: string }) => {
+const applyTeacherContentUpdate = (
+  existingContent: any,
+  incomingContent: any,
+  assignment: { level: string; subject: string },
+  canEditStructure: boolean
+) => {
   const level = String(assignment.level || "").toUpperCase();
   const subject = normalizeSubject(String(assignment.subject || ""));
   const updated = { ...existingContent };
@@ -103,14 +108,18 @@ const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, a
 
   if (subject === "bangla 1st paper") {
     if (level === "SSC") {
-      applyArray("sscGoddoItems");
-      applyArray("sscPoddoItems");
-      applyArray("sscShohopathItems");
+      if (canEditStructure) {
+        applyArray("sscGoddoItems");
+        applyArray("sscPoddoItems");
+        applyArray("sscShohopathItems");
+      }
     }
     if (level === "HSC") {
-      applyArray("hscGoddoItems");
-      applyArray("hscPoddoItems");
-      applyArray("hscShohopathItems");
+      if (canEditStructure) {
+        applyArray("hscGoddoItems");
+        applyArray("hscPoddoItems");
+        applyArray("hscShohopathItems");
+      }
     }
     applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(prefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(prefix) && !key.startsWith(`${prefix}ICT-`));
@@ -119,7 +128,9 @@ const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, a
   }
 
   if (subject === "information and communication technology" && level === "SSC") {
-    applyArray("sscIctChapters");
+    if (canEditStructure) {
+      applyArray("sscIctChapters");
+    }
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(`${prefix}ICT-`));
     return updated;
   }
@@ -133,9 +144,11 @@ const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, a
   if (level === "SSC" && sscScienceSubjects[subject]) {
     const subjectLabel = sscScienceSubjects[subject];
     const keyPrefix = `${prefix}${subjectLabel}-`;
-    if (subject === "physics") applyArray("sscPhysicsChapters");
-    if (subject === "chemistry") applyArray("sscChemistryChapters");
-    if (subject === "biology") applyArray("sscBiologyChapters");
+    if (canEditStructure) {
+      if (subject === "physics") applyArray("sscPhysicsChapters");
+      if (subject === "chemistry") applyArray("sscChemistryChapters");
+      if (subject === "biology") applyArray("sscBiologyChapters");
+    }
     applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
@@ -154,7 +167,9 @@ const applyTeacherContentUpdate = (existingContent: any, incomingContent: any, a
   if (level === "HSC" && hscScienceSubjects[subject]) {
     const subjectConfig = hscScienceSubjects[subject];
     const keyPrefix = `${prefix}${subjectConfig.label}-`;
-    applyArray(subjectConfig.key);
+    if (canEditStructure) {
+      applyArray(subjectConfig.key);
+    }
     applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
@@ -290,6 +305,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (path === "/api/thumbnails" && request.method === "POST") {
           const payload = await getAuthPayload(request, env);
           if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+          if (!ensureAdmin(payload)) {
+            return Response.json({ success: false, error: "Admin access required." }, { status: 403, headers: apiHeaders });
+          }
           const formData = await request.formData();
           const subjectKey = String(formData.get("subjectKey") || "").trim().toLowerCase();
           if (!subjectKey || !/^[a-z0-9-]+$/.test(subjectKey)) {
@@ -381,6 +399,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (path === "/api/chapter-thumbnails" && request.method === "POST") {
           const payload = await getAuthPayload(request, env);
           if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+          if (!ensureAdmin(payload)) {
+            return Response.json({ success: false, error: "Admin access required." }, { status: 403, headers: apiHeaders });
+          }
           const formData = await request.formData();
           const chapterKey = String(formData.get("chapterKey") || "").trim().toLowerCase();
           if (!chapterKey || !/^[a-z0-9-]+$/.test(chapterKey)) {
@@ -522,6 +543,10 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           if (role === "teacher") {
             const row = await env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(user.id).first();
             assignment = row ? { level: row.level as string, subject: row.subject as string } : null;
+            const permissionsRow = await env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?")
+              .bind(user.id)
+              .first();
+            permissions = permissionsRow?.permissions ? JSON.parse(permissionsRow.permissions as string) : [];
           }
         } else {
           const legacy = await env.DB.prepare("SELECT * FROM admins WHERE username = ?").bind(cleanedUsername).first();
@@ -645,6 +670,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         const admins = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'admin' ORDER BY created_at DESC").all();
         const teachers = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'teacher' ORDER BY created_at DESC").all();
         const adminPermissions = await env.DB.prepare("SELECT user_id, permissions FROM admin_permissions").all();
+        const teacherPermissions = await env.DB.prepare("SELECT user_id, permissions FROM teacher_permissions").all();
         const teacherAssignments = await env.DB.prepare("SELECT user_id, level, subject FROM teacher_assignments").all();
 
         const permissionsMap = new Map<number, string[]>();
@@ -657,6 +683,12 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         (teacherAssignments.results || []).forEach((row: any) => {
           if (row?.user_id) {
             assignmentMap.set(row.user_id, { level: row.level as string, subject: row.subject as string });
+          }
+        });
+        const teacherPermissionsMap = new Map<number, string[]>();
+        (teacherPermissions.results || []).forEach((row: any) => {
+          if (row?.user_id) {
+            teacherPermissionsMap.set(row.user_id, row.permissions ? JSON.parse(row.permissions as string) : []);
           }
         });
 
@@ -675,6 +707,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
               email: row.email,
               level: assignmentMap.get(row.id)?.level || "",
               subject: assignmentMap.get(row.id)?.subject || "",
+              permissions: teacherPermissionsMap.get(row.id) || [],
             })),
           },
           { headers: apiHeaders }
@@ -720,8 +753,17 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           if (!level || !subject) {
             return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
           }
+          const rawPermissions = body.permissions || [];
+          const permissions = Array.isArray(rawPermissions)
+            ? rawPermissions.map((entry: any) => String(entry))
+            : Object.entries(rawPermissions)
+                .filter(([, enabled]) => Boolean(enabled))
+                .map(([key]) => key);
           await env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?)")
             .bind(inserted.id, level, subject)
+            .run();
+          await env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?)")
+            .bind(inserted.id, JSON.stringify(permissions))
             .run();
         }
 
@@ -740,6 +782,44 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         return Response.json({ success: true }, { headers: apiHeaders });
       }
 
+      if (path === "/api/users" && request.method === "PUT") {
+        const payload = await getAuthPayload(request, env);
+        if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+        const body = await request.json() as any;
+        const userId = Number(body.id);
+        if (!userId) {
+          return Response.json({ success: false, error: "User ID is required." }, { status: 400, headers: apiHeaders });
+        }
+        const role = String(body.role || "").trim().toLowerCase();
+        if (role !== "teacher") {
+          return Response.json({ success: false, error: "Only teacher updates are supported." }, { status: 400, headers: apiHeaders });
+        }
+        const level = String(body.level || "").trim();
+        const subject = String(body.subject || "").trim();
+        if (!level || !subject) {
+          return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
+        }
+        const rawPermissions = body.permissions || [];
+        const permissions = Array.isArray(rawPermissions)
+          ? rawPermissions.map((entry: any) => String(entry))
+          : Object.entries(rawPermissions)
+              .filter(([, enabled]) => Boolean(enabled))
+              .map(([key]) => key);
+        await env.DB.prepare(
+          "INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) " +
+            "ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject"
+        )
+          .bind(userId, level, subject)
+          .run();
+        await env.DB.prepare(
+          "INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) " +
+            "ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions"
+        )
+          .bind(userId, JSON.stringify(permissions))
+          .run();
+        return Response.json({ success: true }, { headers: apiHeaders });
+      }
+
       if (path === "/api/content" && request.method === "GET") {
         const row = await env.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind("app-content").first();
         let content = {};
@@ -753,7 +833,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         return Response.json({ success: true, content }, { headers: apiHeaders });
       }
 
-      if (path === "/api/content" && request.method === "PUT") {
+        if (path === "/api/content" && request.method === "PUT") {
         const payload = await getAuthPayload(request, env);
         if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
         const body = await request.json().catch(() => ({}));
@@ -773,9 +853,10 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           if (!payload.assignment) {
             return Response.json({ success: false, error: "Assignment missing." }, { status: 400, headers: apiHeaders });
           }
+          const canEditStructure = Array.isArray(payload.permissions) && payload.permissions.includes("structure");
           const row = await env.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind("app-content").first();
           const existingContent = row?.data ? safeParseContent(row.data) : {};
-          const updatedContent = applyTeacherContentUpdate(existingContent, body, payload.assignment);
+          const updatedContent = applyTeacherContentUpdate(existingContent, body, payload.assignment, canEditStructure);
           if (!updatedContent) {
             return Response.json({ success: false, error: "Subject is not configured for updates." }, { status: 400, headers: apiHeaders });
           }

@@ -26,6 +26,11 @@ export async function initDatabase(db: D1Database) {
       subject TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS teacher_permissions (
+      user_id INTEGER PRIMARY KEY,
+      permissions TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS content_store (
       key TEXT PRIMARY KEY,
       data TEXT NOT NULL,
@@ -103,6 +108,11 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "user_id", sql: "INTEGER PRIMARY KEY" },
     { name: "level", sql: "TEXT NOT NULL" },
     { name: "subject", sql: "TEXT NOT NULL" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  teacher_permissions: [
+    { name: "user_id", sql: "INTEGER PRIMARY KEY" },
+    { name: "permissions", sql: "TEXT NOT NULL" },
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
   content_store: [

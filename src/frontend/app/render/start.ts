@@ -1,6 +1,8 @@
 export const renderStart = `
             if (isLoading || hasAdmin === null) return <Loading />;
             const teacherSubjectConfig = getTeacherSubjectConfig(user?.assignment);
+            const canManageStructure = user?.role === 'admin' || user?.permissions?.includes('structure');
+            const canManageThumbnails = user?.role === 'admin';
 
             return (
                 <div className="min-h-screen flex flex-col">
