@@ -533,7 +533,7 @@ export const landingComponents = `
                             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
                                 <span className="inline-flex items-center gap-1">
                                     <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
-                                    {chapterCount !== null ? `${chapterCount} Chapters` : 'Chapters coming soon'}
+                                    {chapterCount !== null ? chapterCount + ' Chapters' : 'Chapters coming soon'}
                                 </span>
                                 {subject.lastRead && (
                                     <span className="inline-flex items-center gap-1 text-emerald-600">
