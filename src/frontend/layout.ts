@@ -125,7 +125,7 @@ export function renderAppHtml(initialView: string) {
         window.__INITIAL_VIEW = ${JSON.stringify(initialView)};
     </script>
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         // --- SHARED UI COMPONENTS ---
         ${uiComponents}

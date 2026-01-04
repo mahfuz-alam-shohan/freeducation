@@ -114,6 +114,7 @@ export const applyTeacherContentUpdate = (
     applyMapWithFilter("banglaQuestions", (key) => key.startsWith(prefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(prefix));
     applyMapWithFilter("notesByItem", (key) => key.startsWith(prefix));
+    applyMapWithFilter("videosByItem", (key) => key.startsWith(prefix));
     return updated;
   }
 
@@ -124,6 +125,7 @@ export const applyTeacherContentUpdate = (
     applyMapWithFilter("englishSecondQuestions", (key) => key.startsWith(prefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(prefix));
     applyMapWithFilter("notesByItem", (key) => key.startsWith(prefix));
+    applyMapWithFilter("videosByItem", (key) => key.startsWith(prefix));
     return updated;
   }
 
@@ -150,6 +152,7 @@ export const applyTeacherContentUpdate = (
     applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("videosByItem", (key) => key.startsWith(keyPrefix));
     return updated;
   }
 
@@ -173,6 +176,7 @@ export const applyTeacherContentUpdate = (
     applyMapWithFilter("srijonshilQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("mcqQuestions", (key) => key.startsWith(keyPrefix));
     applyMapWithFilter("notesByItem", (key) => key.startsWith(keyPrefix));
+    applyMapWithFilter("videosByItem", (key) => key.startsWith(keyPrefix));
     return updated;
   }
 

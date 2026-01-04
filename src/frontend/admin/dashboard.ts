@@ -1307,7 +1307,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaItemDetail = ({ classLabel, itemName, categoryName, notesByItem, onUpdateNotes, onNavigate }) => {
+        const BanglaItemDetail = ({ classLabel, itemName, categoryName, notesByItem, videosByItem, onUpdateNotes, onUpdateVideos, onNavigate }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const categoryRoute = classLabel === 'SSC'
                 ? (categoryName === 'পদ্য'
@@ -1446,6 +1446,12 @@ export const dashboardComponents = `
                             ))}
                         </ul>
                     </div>
+
+                    <VideoManager
+                        noteKey={noteKey}
+                        videosByItem={videosByItem}
+                        onUpdateVideos={onUpdateVideos}
+                    />
                     </div>
 
                     {isNoteModalOpen && (
@@ -2500,6 +2506,218 @@ export const dashboardComponents = `
             );
         };
 
+        const VideoManager = ({ noteKey, videosByItem, onUpdateVideos }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formState, setFormState] = useState({
+                title: '',
+                sourceType: 'link',
+                url: '',
+                file: null,
+                channelName: '',
+                channelUrl: '',
+                duration: ''
+            });
+            const videos = (videosByItem || {})[noteKey] || [];
+
+            const resetForm = () => {
+                setFormState({
+                    title: '',
+                    sourceType: 'link',
+                    url: '',
+                    file: null,
+                    channelName: '',
+                    channelUrl: '',
+                    duration: ''
+                });
+            };
+
+            const handleSave = async () => {
+                const trimmedTitle = formState.title.trim();
+                if (!trimmedTitle) return;
+                let url = formState.url.trim();
+                let fileKey = '';
+                if (formState.sourceType === 'upload') {
+                    const token = localStorage.getItem('auth_token');
+                    if (!token || !(formState.file instanceof File)) return;
+                    const formData = new FormData();
+                    formData.append('file', formState.file);
+                    const response = await fetch('/api/videos', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) return;
+                    url = data.url;
+                    fileKey = data.fileKey;
+                }
+                if (!url) return;
+                const nextEntry = {
+                    id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2),
+                    title: trimmedTitle,
+                    sourceType: formState.sourceType,
+                    url,
+                    fileKey,
+                    channelName: formState.channelName.trim(),
+                    channelUrl: formState.channelUrl.trim(),
+                    duration: formState.duration.trim()
+                };
+                if (onUpdateVideos) {
+                    onUpdateVideos((prev) => {
+                        const current = prev && prev[noteKey] ? [...prev[noteKey]] : [];
+                        current.push(nextEntry);
+                        return { ...prev, [noteKey]: current };
+                    });
+                }
+                setIsModalOpen(false);
+                resetForm();
+            };
+
+            const handleRemove = (entryId) => {
+                if (!onUpdateVideos) return;
+                onUpdateVideos((prev) => {
+                    const current = prev && prev[noteKey] ? [...prev[noteKey]] : [];
+                    return { ...prev, [noteKey]: current.filter((entry) => entry.id !== entryId) };
+                });
+            };
+
+            return (
+                <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                    <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                        <div>
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ভিডিও</div>
+                            <div className="text-sm font-semibold text-gray-700 mt-1">ভিডিও যোগ করুন বা লিংক দিন</div>
+                        </div>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            ভিডিও যোগ করুন
+                        </button>
+                    </div>
+                    <div className="divide-y">
+                        {videos.length === 0 && (
+                            <div className="px-4 py-3 text-sm text-gray-400">এখনো কোন ভিডিও যোগ করা হয়নি।</div>
+                        )}
+                        {videos.map((video) => (
+                            <div key={video.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                                <div className="space-y-1">
+                                    <div className="text-sm font-semibold text-gray-900">{video.title}</div>
+                                    <div className="text-xs text-gray-500">
+                                        {video.channelName && (
+                                            <span>{video.channelName}</span>
+                                        )}
+                                        {video.duration && (
+                                            <span className="ml-2">Duration: {video.duration}</span>
+                                        )}
+                                    </div>
+                                    {video.channelUrl && (
+                                        <a href={video.channelUrl} className="text-xs text-blue-500" target="_blank" rel="noreferrer">
+                                            {video.channelUrl}
+                                        </a>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => handleRemove(video.id)}
+                                    className="px-2 py-1 rounded-md border border-red-100 text-red-500 text-xs hover:bg-red-50 transition"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">ভিডিও যোগ করুন</h3>
+                                <p className="text-sm text-gray-500 mt-1">ভিডিও ফাইল আপলোড করুন অথবা লিংক দিন।</p>
+                                <div className="mt-4 space-y-3">
+                                    <input
+                                        value={formState.title}
+                                        onChange={(event) => setFormState((prev) => ({ ...prev, title: event.target.value }))}
+                                        placeholder="ভিডিও শিরোনাম"
+                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <div className="flex gap-3 text-xs font-semibold">
+                                        {['link', 'upload'].map((type) => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setFormState((prev) => ({ ...prev, sourceType: type }))}
+                                                className={
+                                                    'px-3 py-2 rounded-lg border ' +
+                                                    (formState.sourceType === type
+                                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                                        : 'border-gray-200 text-gray-600')
+                                                }
+                                            >
+                                                {type === 'link' ? 'লিংক' : 'আপলোড'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {formState.sourceType === 'link' ? (
+                                        <input
+                                            value={formState.url}
+                                            onChange={(event) => setFormState((prev) => ({ ...prev, url: event.target.value }))}
+                                            placeholder="ভিডিও লিংক"
+                                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        />
+                                    ) : (
+                                        <input
+                                            type="file"
+                                            accept="video/*"
+                                            onChange={(event) => {
+                                                const selected = event.target.files?.[0] || null;
+                                                setFormState((prev) => ({ ...prev, file: selected }));
+                                            }}
+                                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        />
+                                    )}
+                                    <input
+                                        value={formState.channelName}
+                                        onChange={(event) => setFormState((prev) => ({ ...prev, channelName: event.target.value }))}
+                                        placeholder="চ্যানেল নাম (ঐচ্ছিক)"
+                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <input
+                                        value={formState.channelUrl}
+                                        onChange={(event) => setFormState((prev) => ({ ...prev, channelUrl: event.target.value }))}
+                                        placeholder="চ্যানেল লিংক (ঐচ্ছিক)"
+                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <input
+                                        value={formState.duration}
+                                        onChange={(event) => setFormState((prev) => ({ ...prev, duration: event.target.value }))}
+                                        placeholder="সময়কাল (ঐচ্ছিক, যেমন 10:25)"
+                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         const ScienceTopicDetail = ({
             classLabel,
             subjectLabel,
@@ -2507,7 +2725,9 @@ export const dashboardComponents = `
             topic,
             noteKey,
             notesByItem,
+            videosByItem,
             onUpdateNotes,
+            onUpdateVideos,
             onBack,
             onNavigateCq,
             onNavigateMcq,
@@ -2620,6 +2840,12 @@ export const dashboardComponents = `
                             ))}
                         </ul>
                     </div>
+
+                    <VideoManager
+                        noteKey={noteKey}
+                        videosByItem={videosByItem}
+                        onUpdateVideos={onUpdateVideos}
+                    />
 
                     {isNoteModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
