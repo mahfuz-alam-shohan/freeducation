@@ -35,11 +35,6 @@ export const renderAdmin = `
                                     setSelectedIctClass('SSC');
                                     navigate('admin-ssc-ict-mcq');
                                 }}
-                                onSelectVideo={(chapter) => {
-                                    setSelectedIctChapter(chapter);
-                                    setSelectedIctClass('SSC');
-                                    navigate('admin-ssc-ict-videos');
-                                }}
                                 onBack={() => navigate('admin-groups-ssc')}
                                 onNavigate={navigate}
                                 canManageStructure={canManageStructure}
@@ -55,18 +50,6 @@ export const renderAdmin = `
                                 onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'mcq'))}
                                 onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'mcq'))}
                                 itemRoute={selectedIctClass === 'HSC' ? 'admin-hsc-ict' : 'admin-ssc-ict'}
-                                onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'admin-ssc-ict-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedIctChapter?.name || 'নির্বাচিত অধ্যায়') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey(selectedIctClass, 'ICT', selectedIctChapter?.id, 'video'))}
-                                backRoute="admin-ssc-ict"
                                 onNavigate={navigate}
                             />
                         )}
@@ -123,7 +106,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-ict-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-ict-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-ict-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-ict-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -174,18 +156,6 @@ export const renderAdmin = `
                                 onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq'))}
                                 onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq'))}
                                 itemRoute="admin-hsc-ict-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'admin-hsc-ict-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-ict-topic"
                                 onNavigate={navigate}
                             />
                         )}
@@ -240,7 +210,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-ssc-physics-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-physics-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-physics-mcq')}
-                                onNavigateVideo={() => navigate('admin-ssc-physics-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -291,18 +260,6 @@ export const renderAdmin = `
                                 onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'mcq'))}
                                 onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'mcq'))}
                                 itemRoute="admin-ssc-physics-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'admin-ssc-physics-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-ssc-physics-topic"
                                 onNavigate={navigate}
                             />
                         )}
@@ -357,7 +314,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-ssc-chemistry-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-chemistry-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-chemistry-mcq')}
-                                onNavigateVideo={() => navigate('admin-ssc-chemistry-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -420,18 +376,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-ssc-chemistry-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-ssc-chemistry-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-ssc-biology' && (
                             <ScienceChapterList
                                 classLabel="SSC"
@@ -483,7 +427,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-ssc-biology-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-biology-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-biology-mcq')}
-                                onNavigateVideo={() => navigate('admin-ssc-biology-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -546,18 +489,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-ssc-biology-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-ssc-biology-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-ssc-bangladesh-global-studies' && (
                             <ScienceChapterList
                                 classLabel="SSC"
@@ -609,7 +540,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-ssc-bangladesh-global-studies-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-bangladesh-global-studies-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-bangladesh-global-studies-mcq')}
-                                onNavigateVideo={() => navigate('admin-ssc-bangladesh-global-studies-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -693,31 +623,6 @@ export const renderAdmin = `
                                     getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'mcq')
                                 )}
                                 itemRoute="admin-ssc-bangladesh-global-studies-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'admin-ssc-bangladesh-global-studies-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={
-                                    videoResources[
-                                        getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'video')
-                                    ] || []
-                                }
-                                onAdd={addQuestionEntry(
-                                    setVideoResources,
-                                    getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'video')
-                                )}
-                                onUpdate={updateQuestionEntry(
-                                    setVideoResources,
-                                    getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'video')
-                                )}
-                                onDelete={removeQuestionEntry(
-                                    setVideoResources,
-                                    getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'video')
-                                )}
-                                backRoute="admin-ssc-bangladesh-global-studies-topic"
                                 onNavigate={navigate}
                             />
                         )}
@@ -806,7 +711,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-ssc-religion-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-religion-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-religion-mcq')}
-                                onNavigateVideo={() => navigate('admin-ssc-religion-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -893,31 +797,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-ssc-religion-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={
-                                    videoResources[
-                                        getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'video')
-                                    ] || []
-                                }
-                                onAdd={addQuestionEntry(
-                                    setVideoResources,
-                                    getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'video')
-                                )}
-                                onUpdate={updateQuestionEntry(
-                                    setVideoResources,
-                                    getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'video')
-                                )}
-                                onDelete={removeQuestionEntry(
-                                    setVideoResources,
-                                    getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'video')
-                                )}
-                                backRoute="admin-ssc-religion-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-hsc-physics-1st' && (
                             <ScienceChapterList
                                 classLabel="HSC"
@@ -969,7 +848,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-physics-1st-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-physics-1st-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-physics-1st-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-physics-1st-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1034,18 +912,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-hsc-physics-1st-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-physics-1st-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-hsc-physics-2nd' && (
                             <ScienceChapterList
                                 classLabel="HSC"
@@ -1097,7 +963,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-physics-2nd-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-physics-2nd-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-physics-2nd-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-physics-2nd-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1162,18 +1027,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-hsc-physics-2nd-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-physics-2nd-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-hsc-chemistry-1st' && (
                             <ScienceChapterList
                                 classLabel="HSC"
@@ -1225,7 +1078,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-chemistry-1st-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-chemistry-1st-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-chemistry-1st-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-chemistry-1st-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1290,18 +1142,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-hsc-chemistry-1st-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-chemistry-1st-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-hsc-chemistry-2nd' && (
                             <ScienceChapterList
                                 classLabel="HSC"
@@ -1353,7 +1193,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-chemistry-2nd-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-chemistry-2nd-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-chemistry-2nd-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-chemistry-2nd-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1418,18 +1257,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-hsc-chemistry-2nd-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-chemistry-2nd-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-hsc-biology-1st' && (
                             <ScienceChapterList
                                 classLabel="HSC"
@@ -1481,7 +1308,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-biology-1st-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-biology-1st-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-biology-1st-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-biology-1st-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1546,18 +1372,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'admin-hsc-biology-1st-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-biology-1st-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'admin-hsc-biology-2nd' && (
                             <ScienceChapterList
                                 classLabel="HSC"
@@ -1609,7 +1423,6 @@ export const renderAdmin = `
                                 onBack={() => navigate('admin-hsc-biology-2nd-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-biology-2nd-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-biology-2nd-mcq')}
-                                onNavigateVideo={() => navigate('admin-hsc-biology-2nd-videos')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1671,18 +1484,6 @@ export const renderAdmin = `
                                     getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'mcq')
                                 )}
                                 itemRoute="admin-hsc-biology-2nd-topic"
-                                onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'admin-hsc-biology-2nd-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedScienceTopic?.name || 'নির্বাচিত টপিক') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'video'))}
-                                backRoute="admin-hsc-biology-2nd-topic"
                                 onNavigate={navigate}
                             />
                         )}
@@ -1964,18 +1765,6 @@ export const renderAdmin = `
                                 onNavigate={navigate}
                             />
                         )}
-                        {view === 'bangla-ssc-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedBanglaItem || 'নির্বাচিত পাঠ') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, 'video'))}
-                                backRoute="bangla-ssc-item"
-                                onNavigate={navigate}
-                            />
-                        )}
                         {view === 'bangla-hsc-mcq' && (
                             <McqQuestionList
                                 classLabel="HSC"
@@ -1984,18 +1773,6 @@ export const renderAdmin = `
                                 onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
                                 onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
                                 onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'mcq'))}
-                                onNavigate={navigate}
-                            />
-                        )}
-                        {view === 'bangla-hsc-videos' && (
-                            <VideoResourceList
-                                title="ভিডিও রিসোর্স"
-                                subtitle={(selectedBanglaItem || 'নির্বাচিত পাঠ') + ' এর ভিডিও রিসোর্স যোগ করুন।'}
-                                videoList={videoResources[getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'video')] || []}
-                                onAdd={addQuestionEntry(setVideoResources, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'video'))}
-                                onUpdate={updateQuestionEntry(setVideoResources, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'video'))}
-                                onDelete={removeQuestionEntry(setVideoResources, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, 'video'))}
-                                backRoute="bangla-hsc-item"
                                 onNavigate={navigate}
                             />
                         )}

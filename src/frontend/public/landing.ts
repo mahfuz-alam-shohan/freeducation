@@ -861,7 +861,6 @@ export const landingComponents = `
             itemName,
             categoryName,
             notesByItem,
-            videoResources,
             srijonshilQuestions,
             mcqQuestions,
             getQuestionKey,
@@ -899,7 +898,6 @@ export const landingComponents = `
                 prefix: (index) => toBanglaNumber(index + 1)
             }));
             const mcqList = mcqQuestions?.[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
-            const videoList = (videoResources || {})[getQuestionKey(classLabel, categoryName, itemName, 'video')] || [];
 
             return (
                 <PublicBanglaShell
@@ -921,8 +919,7 @@ export const landingComponents = `
                                     {[
                                         { key: 'notes', label: 'Read (Notes)' },
                                         { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' },
-                                        { key: 'video', label: 'Watch (Video)' }
+                                        { key: 'mcq', label: 'Test (MCQ)' }
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -966,9 +963,6 @@ export const landingComponents = `
                                 )}
                                 {activeTab === 'mcq' && (
                                     <PublicMcqList mcqList={mcqList} />
-                                )}
-                                {activeTab === 'video' && (
-                                    <PublicVideoResourceList videoList={videoList} />
                                 )}
                             </div>
                         </div>
@@ -1035,61 +1029,6 @@ export const landingComponents = `
                         })}
                     </div>
                 </PublicBanglaShell>
-            );
-        };
-
-        const extractYoutubeId = (url) => {
-            if (!url) return '';
-            const trimmed = String(url).trim();
-            const match = trimmed.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([a-zA-Z0-9_-]{6,})/);
-            return match ? match[1] : '';
-        };
-
-        const getYoutubeThumbnail = (url) => {
-            const videoId = extractYoutubeId(url);
-            return videoId ? \`https://img.youtube.com/vi/\${videoId}/hqdefault.jpg\` : '';
-        };
-
-        const PublicVideoResourceList = ({ videoList }) => {
-            if (!videoList || videoList.length === 0) {
-                return <div className="text-sm text-slate-400">এখনো কোন ভিডিও যোগ করা হয়নি।</div>;
-            }
-
-            return (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    {videoList.map((entry, index) => {
-                        const thumbnail = getYoutubeThumbnail(entry.url);
-                        return (
-                            <div key={\`\${entry.title}-\${index}\`} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-                                <div className="aspect-video bg-slate-100 flex items-center justify-center">
-                                    {thumbnail ? (
-                                        <img
-                                            src={thumbnail}
-                                            alt={entry.title}
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Video</div>
-                                    )}
-                                </div>
-                                <div className="p-4 space-y-2">
-                                    <div className="text-sm font-semibold text-slate-900">{entry.title}</div>
-                                    <div className="text-xs text-slate-500">{entry.channel}</div>
-                                    <a
-                                        href={entry.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition"
-                                    >
-                                        Watch on YouTube
-                                        <span aria-hidden="true">↗</span>
-                                    </a>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
             );
         };
 
@@ -1246,12 +1185,10 @@ export const landingComponents = `
 
         const PublicIctChapterList = (props) => <PublicChapterList {...props} />;
 
-        const PublicIctMcqDetail = ({ classLabel, chapter, mcqQuestions, videoResources, getQuestionKey, onBack, onNavigate }) => {
+        const PublicIctMcqDetail = ({ classLabel, chapter, mcqQuestions, getQuestionKey, onBack, onNavigate }) => {
             const chapterKey = chapter?.id || '';
             const mcqList = mcqQuestions[getQuestionKey(classLabel, 'ICT', chapterKey, 'mcq')] || [];
-            const videoList = (videoResources || {})[getQuestionKey(classLabel, 'ICT', chapterKey, 'video')] || [];
             const chapterTitle = chapter?.name || 'অধ্যায় নির্বাচন করুন';
-            const [activeTab, setActiveTab] = useState('mcq');
 
             return (
                 <PublicIctShell
@@ -1266,38 +1203,7 @@ export const landingComponents = `
                             <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="border-b border-slate-100 px-4 pt-4">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {[
-                                        { key: 'mcq', label: 'Test (MCQ)' },
-                                        { key: 'video', label: 'Watch (Video)' }
-                                    ].map((tab) => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            className={
-                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
-                                                (activeTab === tab.key
-                                                    ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
-                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
-                                            }
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="px-4 py-5">
-                                {activeTab === 'mcq' && (
-                                    <PublicMcqList mcqList={mcqList} />
-                                )}
-                                {activeTab === 'video' && (
-                                    <PublicVideoResourceList videoList={videoList} />
-                                )}
-                            </div>
-                        </div>
+                        <PublicMcqList mcqList={mcqList} />
                     </div>
                 </PublicIctShell>
             );
@@ -1367,7 +1273,7 @@ export const landingComponents = `
                     >
                         <div className="text-xs uppercase tracking-[0.2em] text-slate-400">টপিক</div>
                         <div className="text-lg font-semibold text-slate-900 mt-2">{topic.name}</div>
-                        <p className="text-sm text-slate-500 mt-2">নোট, CQ, MCQ এবং ভিডিও দেখুন</p>
+                        <p className="text-sm text-slate-500 mt-2">নোট, CQ এবং MCQ দেখুন</p>
                     </button>
                 ))}
                 {topics.length === 0 && (
@@ -1385,7 +1291,6 @@ export const landingComponents = `
             topicName,
             noteKey,
             notesByItem,
-            videoList,
             cqQuestions,
             mcqList,
             onBack,
@@ -1430,8 +1335,7 @@ export const landingComponents = `
                                     {[
                                         { key: 'notes', label: 'Read (Notes)' },
                                         { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' },
-                                        { key: 'video', label: 'Watch (Video)' }
+                                        { key: 'mcq', label: 'Test (MCQ)' }
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -1475,9 +1379,6 @@ export const landingComponents = `
                                 )}
                                 {activeTab === 'mcq' && (
                                     <PublicMcqList mcqList={mcqList} />
-                                )}
-                                {activeTab === 'video' && (
-                                    <PublicVideoResourceList videoList={videoList} />
                                 )}
                             </div>
                         </div>
