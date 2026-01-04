@@ -2518,6 +2518,14 @@ export const dashboardComponents = `
                 duration: ''
             });
             const videos = (videosByItem || {})[noteKey] || [];
+            const formatDuration = (value) => {
+                if (value === null || value === undefined) return '';
+                const total = Math.floor(Number(value));
+                if (Number.isNaN(total)) return '';
+                const minutes = Math.floor(total / 60);
+                const seconds = total % 60;
+                return String(minutes) + ':' + String(seconds).padStart(2, '0');
+            };
 
             const resetForm = () => {
                 setFormState({
@@ -2645,7 +2653,11 @@ export const dashboardComponents = `
                                         {['link', 'upload'].map((type) => (
                                             <button
                                                 key={type}
-                                                onClick={() => setFormState((prev) => ({ ...prev, sourceType: type }))}
+                                                onClick={() => setFormState((prev) => ({
+                                                    ...prev,
+                                                    sourceType: type,
+                                                    duration: type === 'link' ? '' : prev.duration
+                                                }))}
                                                 className={
                                                     'px-3 py-2 rounded-lg border ' +
                                                     (formState.sourceType === type
@@ -2670,7 +2682,17 @@ export const dashboardComponents = `
                                             accept="video/*"
                                             onChange={(event) => {
                                                 const selected = event.target.files?.[0] || null;
-                                                setFormState((prev) => ({ ...prev, file: selected }));
+                                                setFormState((prev) => ({ ...prev, file: selected, duration: '' }));
+                                                if (!selected) return;
+                                                const previewUrl = URL.createObjectURL(selected);
+                                                const video = document.createElement('video');
+                                                video.preload = 'metadata';
+                                                video.src = previewUrl;
+                                                video.onloadedmetadata = () => {
+                                                    const nextDuration = formatDuration(video.duration);
+                                                    setFormState((prev) => ({ ...prev, duration: nextDuration }));
+                                                    URL.revokeObjectURL(previewUrl);
+                                                };
                                             }}
                                             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                                         />
@@ -2685,12 +2707,6 @@ export const dashboardComponents = `
                                         value={formState.channelUrl}
                                         onChange={(event) => setFormState((prev) => ({ ...prev, channelUrl: event.target.value }))}
                                         placeholder="চ্যানেল লিংক (ঐচ্ছিক)"
-                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                                    />
-                                    <input
-                                        value={formState.duration}
-                                        onChange={(event) => setFormState((prev) => ({ ...prev, duration: event.target.value }))}
-                                        placeholder="সময়কাল (ঐচ্ছিক, যেমন 10:25)"
                                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                                     />
                                 </div>

@@ -58,4 +58,5 @@ export const appState = `
             const [videosByItem, setVideosByItem] = useState({});
             const [contentLoaded, setContentLoaded] = useState(false);
             const [selectedVideoContext, setSelectedVideoContext] = useState(null);
+            const [selectedVideoId, setSelectedVideoId] = useState(null);
 `;

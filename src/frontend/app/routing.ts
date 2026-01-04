@@ -2,6 +2,7 @@ export const appRouting = `
             const viewToPath = {
                 landing: '/',
                 'public-videos': '/videos',
+                'public-video-player': '/videos/watch',
                 'ssc-subjects': '/ssc',
                 'hsc-subjects': '/hsc',
                 'public-bangla-ssc-1st-paper': '/ssc/bangla-1st-paper',
@@ -200,6 +201,7 @@ export const appRouting = `
                 'english-hsc-questions': '/dashboard/hsc/english-1st-paper/questions'
             };
             const getViewFromPath = (path) => {
+                if (path.startsWith('/videos/watch')) return 'public-video-player';
                 if (path.startsWith('/videos')) return 'public-videos';
                 if (path.startsWith('/hsc/english-1st-paper/questions')) return 'public-english-hsc-questions';
                 if (path.startsWith('/hsc/english-1st-paper/subtypes')) return 'public-english-hsc-subtypes';
