@@ -1323,6 +1323,12 @@ export const dashboardComponents = `
 
             const srijonshilRoute = classLabel === 'SSC' ? 'bangla-ssc-srijonshil-types' : 'bangla-hsc-srijonshil-types';
             const mcqRoute = classLabel === 'SSC' ? 'bangla-ssc-mcq' : 'bangla-hsc-mcq';
+            const scrollToVideos = () => {
+                const section = document.getElementById('video-resources');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
             const optionList = [
                 {
                     label: 'সৃজনশীল',
@@ -1333,6 +1339,11 @@ export const dashboardComponents = `
                     label: 'বহুনির্বাচনী',
                     description: 'MCQ প্রশ্ন তৈরি করুন',
                     route: mcqRoute
+                },
+                {
+                    label: 'ভিডিও রিসোর্স',
+                    description: 'অধ্যায়ের ভিডিও লিংক যোগ করুন',
+                    action: scrollToVideos
                 }
             ];
             const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -1340,6 +1351,7 @@ export const dashboardComponents = `
             const [editingNoteIndex, setEditingNoteIndex] = useState(null);
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
             const notes = (notesByItem || {})[noteKey] || [];
+            const videoKey = getVideoKey(classLabel, categoryName, itemName);
 
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
@@ -1402,7 +1414,13 @@ export const dashboardComponents = `
                         {optionList.map((option) => (
                             <button
                                 key={option.label}
-                                onClick={() => option.route && onNavigate(option.route)}
+                                onClick={() => {
+                                    if (option.action) {
+                                        option.action();
+                                    } else if (option.route) {
+                                        onNavigate(option.route);
+                                    }
+                                }}
                                 className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
                             >
                                 <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
@@ -1446,6 +1464,14 @@ export const dashboardComponents = `
                             ))}
                         </ul>
                     </div>
+                    </div>
+
+                    <div id="video-resources" className="mt-4">
+                        <VideoResourcePanel
+                            contentKey={videoKey}
+                            title={(itemName || 'পাঠ') + ' এর ভিডিও'}
+                            description="শিরোনাম দিন, তারপর YouTube লিংক যোগ করুন। চ্যানেল নাম স্বয়ংক্রিয়ভাবে যুক্ত হবে।"
+                        />
                     </div>
 
                     {isNoteModalOpen && (
@@ -1701,7 +1727,7 @@ export const dashboardComponents = `
             );
         };
 
-        const McqQuestionList = ({ classLabel, itemName, questions, onAdd, onUpdate, onDelete, onNavigate, itemRoute }) => {
+        const McqQuestionList = ({ classLabel, itemName, questions, onAdd, onUpdate, onDelete, onNavigate, itemRoute, videoKey, videoTitle }) => {
             const backRoute = itemRoute || (classLabel === 'SSC' ? 'bangla-ssc-item' : 'bangla-hsc-item');
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [questionInput, setQuestionInput] = useState('');
@@ -1711,6 +1737,12 @@ export const dashboardComponents = `
             const optionLabels = ['ক', 'খ', 'গ', 'ঘ'];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+            const scrollToVideos = () => {
+                const section = document.getElementById('video-resources');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
 
             const resetForm = () => {
                 setQuestionInput('');
@@ -1747,12 +1779,22 @@ export const dashboardComponents = `
                         >
                             Back
                         </button>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
-                        >
-                            MCQ যোগ করুন
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                            {videoKey && (
+                                <button
+                                    onClick={scrollToVideos}
+                                    className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                >
+                                    ভিডিও রিসোর্স
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                MCQ যোগ করুন
+                            </button>
+                        </div>
                     </div>
 
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
@@ -1806,6 +1848,16 @@ export const dashboardComponents = `
                             </div>
                         ))}
                     </div>
+
+                    {videoKey && (
+                        <div id="video-resources" className="mt-4">
+                            <VideoResourcePanel
+                                contentKey={videoKey}
+                                title={videoTitle || (itemName || 'অধ্যায়') + ' এর ভিডিও'}
+                                description="শিরোনাম দিন, তারপর YouTube লিংক যোগ করুন। চ্যানেল নাম স্বয়ংক্রিয়ভাবে যুক্ত হবে।"
+                            />
+                        </div>
+                    )}
 
                     {isModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
@@ -2500,11 +2552,200 @@ export const dashboardComponents = `
             );
         };
 
+        const VideoResourcePanel = ({ contentKey, title, description }) => {
+            const [videos, setVideos] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [titleInput, setTitleInput] = useState('');
+            const [urlInput, setUrlInput] = useState('');
+            const [editingId, setEditingId] = useState(null);
+            const [error, setError] = useState('');
+
+            const loadVideos = async () => {
+                if (!contentKey) return;
+                setIsLoading(true);
+                try {
+                    const response = await fetch(`/api/videos?key=${encodeURIComponent(contentKey)}`);
+                    const data = await response.json();
+                    if (data.success) {
+                        setVideos(Array.isArray(data.videos) ? data.videos : []);
+                    }
+                } catch (fetchError) {
+                    console.warn('Failed to load video resources', fetchError);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                if (!contentKey) {
+                    setVideos([]);
+                    setIsLoading(false);
+                    return;
+                }
+                loadVideos();
+            }, [contentKey]);
+
+            const resetForm = () => {
+                setTitleInput('');
+                setUrlInput('');
+                setEditingId(null);
+                setError('');
+            };
+
+            const handleSubmit = async () => {
+                const trimmedTitle = titleInput.trim();
+                const trimmedUrl = urlInput.trim();
+                if (!trimmedTitle || !trimmedUrl) {
+                    setError('শিরোনাম এবং ভিডিও লিংক দিন।');
+                    return;
+                }
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+                const payload = { title: trimmedTitle, url: trimmedUrl, contentKey };
+                const response = await fetch(editingId ? `/api/videos/${editingId}` : '/api/videos', {
+                    method: editingId ? 'PUT' : 'POST',
+                    headers: {
+                        Authorization: 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    setError(data.error || 'ভিডিও সংরক্ষণ করা যায়নি।');
+                    return;
+                }
+                if (editingId) {
+                    setVideos((prev) =>
+                        prev.map((video) =>
+                            video.id === editingId ? { ...video, ...data.video } : video
+                        )
+                    );
+                } else if (data.video) {
+                    setVideos((prev) => [data.video, ...prev]);
+                }
+                resetForm();
+            };
+
+            const handleEdit = (video) => {
+                setEditingId(video.id);
+                setTitleInput(video.title || '');
+                setUrlInput(video.url || '');
+                setError('');
+            };
+
+            const handleDelete = async (videoId) => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+                const shouldRemove = window.confirm('আপনি কি ভিডিও রিসোর্সটি মুছে ফেলতে চান?');
+                if (!shouldRemove) return;
+                const response = await fetch(`/api/videos/${videoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                });
+                if (response.ok) {
+                    setVideos((prev) => prev.filter((video) => video.id !== videoId));
+                }
+            };
+
+            return (
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                        <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ভিডিও রিসোর্স</div>
+                        <div className="text-sm font-semibold text-gray-700 mt-1">{title || 'ভিডিও তালিকা'}</div>
+                        {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
+                    </div>
+                    <div className="px-4 py-4 space-y-4 font-bangla">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <label className="text-xs uppercase tracking-[0.2em] text-gray-400">ভিডিও শিরোনাম</label>
+                                <input
+                                    value={titleInput}
+                                    onChange={(event) => setTitleInput(event.target.value)}
+                                    placeholder="উদাহরণ: বল ও গতি ব্যাখ্যা"
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs uppercase tracking-[0.2em] text-gray-400">YouTube লিংক</label>
+                                <input
+                                    value={urlInput}
+                                    onChange={(event) => setUrlInput(event.target.value)}
+                                    placeholder="https://www.youtube.com/..."
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                            </div>
+                        </div>
+                        {error && <div className="text-xs text-red-500">{error}</div>}
+                        <div className="flex flex-wrap gap-2 justify-end">
+                            {editingId !== null && (
+                                <button
+                                    onClick={resetForm}
+                                    className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                            <button
+                                onClick={handleSubmit}
+                                className="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                {editingId === null ? 'ভিডিও যোগ করুন' : 'ভিডিও আপডেট করুন'}
+                            </button>
+                        </div>
+                        {isLoading ? (
+                            <div className="text-sm text-gray-400">ভিডিও লোড হচ্ছে...</div>
+                        ) : videos.length === 0 ? (
+                            <div className="text-sm text-gray-400">এখনো কোন ভিডিও যোগ করা হয়নি।</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {videos.map((video) => (
+                                    <div key={video.id || video.url} className="border border-gray-100 rounded-xl p-3">
+                                        <div className="flex flex-wrap gap-3 items-start justify-between">
+                                            <div>
+                                                <div className="text-sm font-semibold text-gray-800">{video.title}</div>
+                                                <div className="text-xs text-gray-500 mt-1">{video.channel}</div>
+                                                <a
+                                                    href={video.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs text-blue-600 hover:text-blue-500 mt-2 inline-flex items-center gap-1"
+                                                >
+                                                    ভিডিও দেখুন <span aria-hidden="true">→</span>
+                                                </a>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs font-semibold">
+                                                <button
+                                                    onClick={() => handleEdit(video)}
+                                                    className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(video.id)}
+                                                    className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
         const ScienceTopicDetail = ({
             classLabel,
             subjectLabel,
             chapter,
             topic,
+            topicKey,
             noteKey,
             notesByItem,
             onUpdateNotes,
@@ -2519,6 +2760,13 @@ export const dashboardComponents = `
             const notes = (notesByItem || {})[noteKey] || [];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+            const videoKey = getVideoKey(classLabel, subjectLabel, topicKey);
+            const scrollToVideos = () => {
+                const section = document.getElementById('video-resources');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
 
             const openNoteModal = (index = null) => {
                 setEditingNoteIndex(index);
@@ -2567,7 +2815,7 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="mt-4 grid card-grid-gap sm:grid-cols-2 font-bangla">
+                    <div className="mt-4 grid card-grid-gap sm:grid-cols-2 lg:grid-cols-3 font-bangla">
                         <button
                             onClick={onNavigateCq}
                             className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
@@ -2583,6 +2831,14 @@ export const dashboardComponents = `
                             <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
                             <div className="text-lg font-semibold text-gray-900 mt-2">বহুনির্বাচনী (MCQ)</div>
                             <p className="text-sm text-gray-500 mt-2">MCQ প্রশ্ন তৈরি করুন</p>
+                        </button>
+                        <button
+                            onClick={scrollToVideos}
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">রিসোর্স</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">ভিডিও রিসোর্স</div>
+                            <p className="text-sm text-gray-500 mt-2">ভিডিও লিংক ও চ্যানেল যুক্ত করুন</p>
                         </button>
                     </div>
 
@@ -2619,6 +2875,14 @@ export const dashboardComponents = `
                                 </li>
                             ))}
                         </ul>
+                    </div>
+
+                    <div id="video-resources" className="mt-4">
+                        <VideoResourcePanel
+                            contentKey={videoKey}
+                            title={(topic?.name || 'টপিক') + ' এর ভিডিও'}
+                            description="শিরোনাম দিন, তারপর YouTube লিংক যোগ করুন। চ্যানেল নাম স্বয়ংক্রিয়ভাবে যুক্ত হবে।"
+                        />
                     </div>
 
                     {isNoteModalOpen && (
