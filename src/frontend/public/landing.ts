@@ -315,8 +315,8 @@ export const landingComponents = `
         const cardWidthClass = 'w-40 sm:w-48 md:w-52';
         const cardGridGapClass = 'card-grid-gap justify-items-start';
         const cardSurfaceClass =
-            'relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg card-art-surface';
-        const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white/90 p-4 sm:p-6 shadow-sm art-panel';
+            'relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg group-hover:border-indigo-200 card-art-surface';
+        const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm';
         const ArtPanelGrid = ({ children, className = '' }) => (
             <div className={cardPanelClass}>
                 <div className={'relative grid ' + cardGridGapClass + ' ' + className}>
@@ -339,13 +339,12 @@ export const landingComponents = `
                 >
                     <div className="space-y-2 h-full">
                         <div className={cardSurfaceClass}>
-                            <div className="card-art-detail" aria-hidden="true"></div>
                             {subject.thumbnailUrl ? (
                                 <img
                                     src={subject.thumbnailUrl}
                                     alt={subject.title + ' thumbnail'}
                                     loading="lazy"
-                                    className="w-full h-full object-cover transition-transform duration-300 card-art-media"
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media"
                                 />
                             ) : (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3 card-art-media">
@@ -382,13 +381,12 @@ export const landingComponents = `
             >
                 <div className="space-y-2 h-full">
                     <div className={cardSurfaceClass}>
-                        <div className="card-art-detail" aria-hidden="true"></div>
                         {thumbnailUrl ? (
                             <img
                                 src={thumbnailUrl}
                                 alt={title + ' thumbnail'}
                                 loading="lazy"
-                                className="w-full h-full object-cover card-art-media"
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media"
                             />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em] card-art-media">
@@ -436,7 +434,7 @@ export const landingComponents = `
                     <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
                     <button
                         onClick={onAll}
-                        className="text-xs font-semibold uppercase tracking-[0.2em] text-white bg-slate-900 px-3 py-1.5 rounded-full transition hover:bg-slate-800 flex items-center gap-2 pulse-soft"
+                        className="text-xs font-semibold uppercase tracking-[0.2em] text-white bg-indigo-600 px-3 py-1.5 rounded-full transition hover:bg-indigo-500 hover:-translate-y-0.5 hover:shadow-md flex items-center gap-2"
                     >
                         See all <i className="fa-solid fa-angle-right"></i>
                     </button>
@@ -483,7 +481,7 @@ export const landingComponents = `
             });
 
             return (
-                <div className="flex-1 bg-gradient-to-br from-white via-sky-50 to-indigo-50">
+                <div className="flex-1 bg-[#f3f6ff]">
                     <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div>
@@ -508,7 +506,7 @@ export const landingComponents = `
                                 <select
                                     value={activeGroup}
                                     onChange={(event) => setActiveGroup(event.target.value)}
-                                    className="mt-2 w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-slate-200"
+                                    className="mt-2 w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
                                 >
                                     {groups.map((group) => (
                                         <option key={group} value={group}>
@@ -523,7 +521,7 @@ export const landingComponents = `
                                     value={query}
                                     onChange={(event) => setQuery(event.target.value)}
                                     placeholder="Search subjects"
-                                    className="mt-2 w-full border border-slate-200 rounded-lg py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+                                    className="mt-2 w-full border border-slate-200 rounded-lg py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
                                 />
                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
                             </div>
@@ -555,10 +553,10 @@ export const landingComponents = `
         };
 
         const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
-            <div className="flex-1 bg-gradient-to-br from-white via-rose-50 to-amber-50">
+            <div className="flex-1 bg-[#fff7ed]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="space-y-6">
-                        <div className="rounded-3xl border border-rose-100 bg-white/90 p-5 sm:p-7 shadow-sm art-panel">
+                        <div className="rounded-3xl border border-rose-100 bg-white p-5 sm:p-7 shadow-sm">
                             <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
                                 <div>
                                     <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Bangla 1st Paper</div>
@@ -942,7 +940,7 @@ export const landingComponents = `
         };
 
         const PublicIctShell = ({ title, subtitle, classLabel, onBack, onNavigate, children }) => (
-            <div className="flex-1 bg-gradient-to-br from-white via-blue-50 to-amber-50">
+            <div className="flex-1 bg-[#ecfeff]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
@@ -999,7 +997,7 @@ export const landingComponents = `
         };
 
         const PublicScienceShell = ({ title, subtitle, subjectLabel, classLabel, onBack, onNavigate, children }) => (
-            <div className="flex-1 bg-gradient-to-br from-white via-emerald-50 to-sky-50">
+            <div className="flex-1 bg-[#ecfdf3]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
@@ -1041,7 +1039,6 @@ export const landingComponents = `
                     >
                         <div className="space-y-2 h-full">
                             <div className={cardSurfaceClass + ' flex items-center justify-center'}>
-                                <div className="card-art-detail" aria-hidden="true"></div>
                                 <div className="text-center px-3 card-art-media">
                                     <div className="text-lg font-semibold text-slate-900">{option.label}</div>
                                     <div className="text-xs text-slate-500 mt-2 font-bangla">{option.subtitle}</div>
@@ -1208,7 +1205,7 @@ export const landingComponents = `
         );
 
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
-            <div className="flex-1 bg-gradient-to-br from-white via-sky-50 to-indigo-50">
+            <div className="flex-1 bg-[#eef2ff]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
@@ -1313,10 +1310,10 @@ export const landingComponents = `
             const activeQuote = quoteItems[quoteIndex];
 
             return (
-                <div className="flex-1 bg-white">
-                    <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-fuchsia-500 to-rose-500 bg-pan-slow">
-                        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/15 blur-3xl"></div>
-                        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-300/30 blur-3xl"></div>
+                <div className="flex-1 bg-[#f3f6ff]">
+                    <section className="relative overflow-hidden bg-indigo-700">
+                        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-indigo-600/60"></div>
+                        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/40"></div>
                         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
                                 <div className="flex items-center gap-4 float-slow">
@@ -1335,7 +1332,7 @@ export const landingComponents = `
                                         </div>
                                     </div>
                                 </div>
-                                <div className="max-w-xl bg-white/15 border border-white/30 rounded-2xl p-6 text-white backdrop-blur float-slower">
+                                <div className="max-w-xl bg-indigo-600 border border-indigo-500 rounded-2xl p-6 text-white float-slower">
                                     <p className="text-base sm:text-lg font-serif italic leading-relaxed">
                                         “{activeQuote.text}”
                                     </p>
@@ -1345,7 +1342,7 @@ export const landingComponents = `
                         </div>
                     </section>
 
-                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-gradient-to-br from-white via-indigo-50 to-rose-50 bg-pan-slow">
+                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-white">
                         <div>
                             <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">Academic</h2>
