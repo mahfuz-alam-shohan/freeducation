@@ -150,7 +150,8 @@ export const appEffects = `
                     srijonshilQuestions,
                     mcqQuestions,
                     englishQuestions,
-                    notesByItem
+                    notesByItem,
+                    videoResources
                 };
 
                 const timeout = setTimeout(async () => {
@@ -194,6 +195,7 @@ export const appEffects = `
                 srijonshilQuestions,
                 mcqQuestions,
                 englishQuestions,
-                notesByItem
+                notesByItem,
+                videoResources
             ]);
 `;

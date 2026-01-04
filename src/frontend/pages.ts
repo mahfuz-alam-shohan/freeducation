@@ -30,11 +30,17 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/ssc/ict/mcq")) {
       return renderAppHtml("admin-ssc-ict-mcq");
     }
+    if (pathname.startsWith("/dashboard/ssc/ict/videos")) {
+      return renderAppHtml("admin-ssc-ict-videos");
+    }
     if (pathname.startsWith("/dashboard/ssc/ict")) {
       return renderAppHtml("admin-ssc-ict");
     }
     if (pathname.startsWith("/dashboard/hsc/ict/mcq")) {
       return renderAppHtml("admin-hsc-ict-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/ict/videos")) {
+      return renderAppHtml("admin-hsc-ict-videos");
     }
     if (pathname.startsWith("/dashboard/hsc/ict/cq/questions")) {
       return renderAppHtml("admin-hsc-ict-cq-questions");
@@ -65,6 +71,11 @@ export function getFrontendHtml(pathname: string) {
       pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/mcq")
     ) {
       return renderAppHtml("admin-ssc-bangladesh-global-studies-mcq");
+    }
+    if (
+      pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/videos")
+    ) {
+      return renderAppHtml("admin-ssc-bangladesh-global-studies-videos");
     }
     if (
       pathname.startsWith("/dashboard/ssc/bangladesh-and-global-studies/topic")
@@ -99,6 +110,11 @@ export function getFrontendHtml(pathname: string) {
       return renderAppHtml("admin-ssc-religion-mcq");
     }
     if (
+      pathname.startsWith("/dashboard/ssc/religion-and-moral-education/videos")
+    ) {
+      return renderAppHtml("admin-ssc-religion-videos");
+    }
+    if (
       pathname.startsWith("/dashboard/ssc/religion-and-moral-education/topic")
     ) {
       return renderAppHtml("admin-ssc-religion-topic");
@@ -129,6 +145,9 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/mcq")) {
       return renderAppHtml("admin-hsc-physics-1st-mcq");
     }
+    if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/videos")) {
+      return renderAppHtml("admin-hsc-physics-1st-videos");
+    }
     if (pathname.startsWith("/dashboard/hsc/physics-1st-paper/topic")) {
       return renderAppHtml("admin-hsc-physics-1st-topic");
     }
@@ -146,6 +165,9 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/mcq")) {
       return renderAppHtml("admin-hsc-physics-2nd-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/videos")) {
+      return renderAppHtml("admin-hsc-physics-2nd-videos");
     }
     if (pathname.startsWith("/dashboard/hsc/physics-2nd-paper/topic")) {
       return renderAppHtml("admin-hsc-physics-2nd-topic");
@@ -165,6 +187,9 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/mcq")) {
       return renderAppHtml("admin-hsc-chemistry-1st-mcq");
     }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/videos")) {
+      return renderAppHtml("admin-hsc-chemistry-1st-videos");
+    }
     if (pathname.startsWith("/dashboard/hsc/chemistry-1st-paper/topic")) {
       return renderAppHtml("admin-hsc-chemistry-1st-topic");
     }
@@ -182,6 +207,9 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/mcq")) {
       return renderAppHtml("admin-hsc-chemistry-2nd-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/videos")) {
+      return renderAppHtml("admin-hsc-chemistry-2nd-videos");
     }
     if (pathname.startsWith("/dashboard/hsc/chemistry-2nd-paper/topic")) {
       return renderAppHtml("admin-hsc-chemistry-2nd-topic");
@@ -201,6 +229,9 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/mcq")) {
       return renderAppHtml("admin-hsc-biology-1st-mcq");
     }
+    if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/videos")) {
+      return renderAppHtml("admin-hsc-biology-1st-videos");
+    }
     if (pathname.startsWith("/dashboard/hsc/biology-1st-paper/topic")) {
       return renderAppHtml("admin-hsc-biology-1st-topic");
     }
@@ -218,6 +249,9 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/mcq")) {
       return renderAppHtml("admin-hsc-biology-2nd-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/videos")) {
+      return renderAppHtml("admin-hsc-biology-2nd-videos");
     }
     if (pathname.startsWith("/dashboard/hsc/biology-2nd-paper/topic")) {
       return renderAppHtml("admin-hsc-biology-2nd-topic");
@@ -237,6 +271,9 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/ssc/physics/mcq")) {
       return renderAppHtml("admin-ssc-physics-mcq");
     }
+    if (pathname.startsWith("/dashboard/ssc/physics/videos")) {
+      return renderAppHtml("admin-ssc-physics-videos");
+    }
     if (pathname.startsWith("/dashboard/ssc/physics/topic")) {
       return renderAppHtml("admin-ssc-physics-topic");
     }
@@ -255,6 +292,9 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/ssc/chemistry/mcq")) {
       return renderAppHtml("admin-ssc-chemistry-mcq");
     }
+    if (pathname.startsWith("/dashboard/ssc/chemistry/videos")) {
+      return renderAppHtml("admin-ssc-chemistry-videos");
+    }
     if (pathname.startsWith("/dashboard/ssc/chemistry/topic")) {
       return renderAppHtml("admin-ssc-chemistry-topic");
     }
@@ -272,6 +312,9 @@ export function getFrontendHtml(pathname: string) {
     }
     if (pathname.startsWith("/dashboard/ssc/biology/mcq")) {
       return renderAppHtml("admin-ssc-biology-mcq");
+    }
+    if (pathname.startsWith("/dashboard/ssc/biology/videos")) {
+      return renderAppHtml("admin-ssc-biology-videos");
     }
     if (pathname.startsWith("/dashboard/ssc/biology/topic")) {
       return renderAppHtml("admin-ssc-biology-topic");
@@ -300,8 +343,14 @@ export function getFrontendHtml(pathname: string) {
     if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item/mcq")) {
       return renderAppHtml("bangla-ssc-mcq");
     }
+    if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item/videos")) {
+      return renderAppHtml("bangla-ssc-videos");
+    }
     if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/item/mcq")) {
       return renderAppHtml("bangla-hsc-mcq");
+    }
+    if (pathname.startsWith("/dashboard/hsc/bangla-1st-paper/item/videos")) {
+      return renderAppHtml("bangla-hsc-videos");
     }
     if (pathname.startsWith("/dashboard/ssc/bangla-1st-paper/item")) {
       return renderAppHtml("bangla-ssc-item");
