@@ -891,6 +891,7 @@ export const landingComponents = `
                 { key: 'gyan', label: 'জ্ঞান (ক)' },
                 { key: 'onudhabon', label: 'অনুধাবন (খ)' }
             ];
+            const videoKey = getVideoKey(classLabel, categoryName, itemName);
             const cqSections = srijonshilTypes.map((type) => ({
                 key: type.key,
                 label: type.label,
@@ -919,7 +920,8 @@ export const landingComponents = `
                                     {[
                                         { key: 'notes', label: 'Read (Notes)' },
                                         { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' }
+                                        { key: 'mcq', label: 'Test (MCQ)' },
+                                        { key: 'video', label: 'Watch (Video)' }
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -963,6 +965,9 @@ export const landingComponents = `
                                 )}
                                 {activeTab === 'mcq' && (
                                     <PublicMcqList mcqList={mcqList} />
+                                )}
+                                {activeTab === 'video' && (
+                                    <PublicVideoList contentKey={videoKey} />
                                 )}
                             </div>
                         </div>
@@ -1122,6 +1127,69 @@ export const landingComponents = `
             );
         };
 
+        const PublicVideoList = ({ contentKey }) => {
+            const [videos, setVideos] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                if (!contentKey) {
+                    setVideos([]);
+                    setIsLoading(false);
+                    return;
+                }
+                let isMounted = true;
+                const loadVideos = async () => {
+                    setIsLoading(true);
+                    try {
+                        const response = await fetch(\`/api/videos?key=\${encodeURIComponent(contentKey)}\`);
+                        const data = await response.json();
+                        if (isMounted && data.success) {
+                            setVideos(Array.isArray(data.videos) ? data.videos : []);
+                        }
+                    } catch (error) {
+                        console.warn('Failed to load video resources', error);
+                    } finally {
+                        if (isMounted) {
+                            setIsLoading(false);
+                        }
+                    }
+                };
+                loadVideos();
+                return () => {
+                    isMounted = false;
+                };
+            }, [contentKey]);
+
+            if (isLoading) {
+                return <div className="text-sm text-slate-400">ভিডিও লোড হচ্ছে...</div>;
+            }
+
+            if (!videos.length) {
+                return <div className="text-sm text-slate-400">এখনো কোন ভিডিও যোগ করা হয়নি।</div>;
+            }
+
+            return (
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {videos.map((video) => (
+                        <a
+                            key={video.id || video.url}
+                            href={video.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="border border-slate-200 rounded-2xl p-4 text-left hover:border-slate-300 hover:bg-slate-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Video Resource</div>
+                            <div className="text-sm font-semibold text-slate-900 mt-2">{video.title}</div>
+                            <div className="text-xs text-slate-500 mt-1">{video.channel}</div>
+                            <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-indigo-600">
+                                ভিডিও দেখুন <span aria-hidden="true">→</span>
+                            </div>
+                        </a>
+                    ))}
+                </div>
+            );
+        };
+
         const PublicBanglaMcqDetail = ({
             classLabel,
             itemName,
@@ -1189,6 +1257,8 @@ export const landingComponents = `
             const chapterKey = chapter?.id || '';
             const mcqList = mcqQuestions[getQuestionKey(classLabel, 'ICT', chapterKey, 'mcq')] || [];
             const chapterTitle = chapter?.name || 'অধ্যায় নির্বাচন করুন';
+            const videoKey = getVideoKey(classLabel, 'ICT', chapterKey);
+            const [activeTab, setActiveTab] = useState('mcq');
 
             return (
                 <PublicIctShell
@@ -1203,7 +1273,34 @@ export const landingComponents = `
                             <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
-                        <PublicMcqList mcqList={mcqList} />
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+                            <div className="border-b border-slate-100 px-4 pt-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {[
+                                        { key: 'mcq', label: 'Test (MCQ)' },
+                                        { key: 'video', label: 'Watch (Video)' }
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.key}
+                                            onClick={() => setActiveTab(tab.key)}
+                                            className={
+                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
+                                                (activeTab === tab.key
+                                                    ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
+                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
+                                            }
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="px-4 py-5">
+                                {activeTab === 'mcq' && <PublicMcqList mcqList={mcqList} />}
+                                {activeTab === 'video' && <PublicVideoList contentKey={videoKey} />}
+                            </div>
+                        </div>
                     </div>
                 </PublicIctShell>
             );
@@ -1289,6 +1386,7 @@ export const landingComponents = `
             classLabel,
             chapterName,
             topicName,
+            topicKey,
             noteKey,
             notesByItem,
             cqQuestions,
@@ -1303,6 +1401,7 @@ export const landingComponents = `
                 .map((digit) => banglaDigits[Number(digit)] ?? digit)
                 .join('');
             const [activeTab, setActiveTab] = useState('notes');
+            const videoKey = getVideoKey(classLabel, subjectLabel, topicKey);
             const cqSections = [
                 {
                     key: 'gyan',
@@ -1335,7 +1434,8 @@ export const landingComponents = `
                                     {[
                                         { key: 'notes', label: 'Read (Notes)' },
                                         { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' }
+                                        { key: 'mcq', label: 'Test (MCQ)' },
+                                        { key: 'video', label: 'Watch (Video)' }
                                     ].map((tab) => (
                                         <button
                                             key={tab.key}
@@ -1379,6 +1479,9 @@ export const landingComponents = `
                                 )}
                                 {activeTab === 'mcq' && (
                                     <PublicMcqList mcqList={mcqList} />
+                                )}
+                                {activeTab === 'video' && (
+                                    <PublicVideoList contentKey={videoKey} />
                                 )}
                             </div>
                         </div>

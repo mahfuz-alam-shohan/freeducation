@@ -8,6 +8,7 @@ import { handleSettings } from "./routes/settings";
 import { handleSetup } from "./routes/setup";
 import { handleThumbnails } from "./routes/thumbnails";
 import { handleUsers } from "./routes/users";
+import { handleVideos } from "./routes/videos";
 import { apiHeaders, corsHeaders } from "./routes/shared";
 
 export { corsHeaders };
@@ -21,6 +22,7 @@ const handlers = [
   handleContent,
   handleClasses,
   handleSettings,
+  handleVideos,
 ];
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
