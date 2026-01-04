@@ -2,11 +2,21 @@ export const appEffects = `
             // 1. Initial System Check & Session Restore
             useEffect(() => {
                 const initSystem = async () => {
-                    // A. Check Setup Status
-                    await fetch('/api/init', { method: 'POST' });
-                    const res = await fetch('/api/setup-status');
-                    const data = await res.json();
-                    setHasAdmin(data.hasAdmin);
+                    let setupStatusLoaded = false;
+                    let hasAdminValue = false;
+                    try {
+                        // A. Check Setup Status
+                        await fetch('/api/init', { method: 'POST' });
+                        const res = await fetch('/api/setup-status');
+                        if (res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            hasAdminValue = Boolean(data.hasAdmin);
+                            setupStatusLoaded = true;
+                        }
+                    } catch (error) {
+                        console.warn('Failed to load setup status', error);
+                    }
+                    setHasAdmin(hasAdminValue);
 
                     // B. Try to Restore Session
                     const token = localStorage.getItem('auth_token');
@@ -15,11 +25,15 @@ export const appEffects = `
                             const meRes = await fetch('/api/me', {
                                 headers: { 'Authorization': 'Bearer ' + token }
                             });
-                            const meData = await meRes.json();
-                            if (meData.user) {
-                                setUser(meData.user);
+                            if (meRes.ok) {
+                                const meData = await meRes.json().catch(() => ({}));
+                                if (meData.user) {
+                                    setUser(meData.user);
+                                } else {
+                                    // Invalid token
+                                    localStorage.removeItem('auth_token');
+                                }
                             } else {
-                                // Invalid token
                                 localStorage.removeItem('auth_token');
                             }
                         } catch (e) {
@@ -27,10 +41,10 @@ export const appEffects = `
                         }
                     }
 
-                    if (data.hasAdmin && view === 'register') {
+                    if (setupStatusLoaded && hasAdminValue && view === 'register') {
                         navigate('login', { replace: true });
                     }
-                    if (!data.hasAdmin && view === 'login') {
+                    if (setupStatusLoaded && !hasAdminValue && view === 'login') {
                         navigate('register', { replace: true });
                     }
                     if (!token && isDashboardView(view)) {
