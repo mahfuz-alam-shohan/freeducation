@@ -1,11 +1,21 @@
 export const appState = `
+            const loadBanglaSelection = () => {
+                try {
+                    const raw = localStorage.getItem('freeducation.bangla-selection');
+                    return raw ? JSON.parse(raw) : { itemName: '', categoryName: '' };
+                } catch (error) {
+                    console.warn('Failed to load Bangla selection', error);
+                    return { itemName: '', categoryName: '' };
+                }
+            };
+            const initialBanglaSelection = loadBanglaSelection();
             const initialView = window.__INITIAL_VIEW || getViewFromPath(window.location.pathname);
             const [view, setView] = useState(initialView);
             const [isLoading, setIsLoading] = useState(true);
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
-            const [selectedBanglaItem, setSelectedBanglaItem] = useState('');
-            const [selectedBanglaCategory, setSelectedBanglaCategory] = useState('');
+            const [selectedBanglaItem, setSelectedBanglaItem] = useState(initialBanglaSelection.itemName || '');
+            const [selectedBanglaCategory, setSelectedBanglaCategory] = useState(initialBanglaSelection.categoryName || '');
             const [selectedSrijonshilType, setSelectedSrijonshilType] = useState(null);
             const [selectedIctChapter, setSelectedIctChapter] = useState(null);
             const [selectedIctClass, setSelectedIctClass] = useState('SSC');

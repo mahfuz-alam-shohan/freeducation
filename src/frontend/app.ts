@@ -13,6 +13,8 @@ import { appEffects } from "./app/effects";
 import { authHandlers } from "./app/auth";
 import { teacherGuard } from "./app/teacher-guard";
 import { appRender } from "./app/render";
+import { uiComponents } from "./components/shared/ui";
+import { landingComponents } from "./public/landing";
 
 const appModules = [
   appRouting,
@@ -29,6 +31,8 @@ const appModules = [
   appEffects,
   authHandlers,
   teacherGuard,
+  uiComponents,
+  landingComponents,
   appRender,
 ];
 
