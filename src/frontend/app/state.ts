@@ -55,6 +55,5 @@ export const appState = `
             const [mcqQuestions, setMcqQuestions] = useState({});
             const [englishQuestions, setEnglishQuestions] = useState({});
             const [notesByItem, setNotesByItem] = useState({});
-            const [videoResources, setVideoResources] = useState({});
             const [contentLoaded, setContentLoaded] = useState(false);
 `;
