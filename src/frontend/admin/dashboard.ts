@@ -1307,16 +1307,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaItemDetail = ({
-            classLabel,
-            itemName,
-            categoryName,
-            notesByItem,
-            onUpdateNotes,
-            videosByItem,
-            onUpdateVideos,
-            onNavigate
-        }) => {
+        const BanglaItemDetail = ({ classLabel, itemName, categoryName, notesByItem, onUpdateNotes, onNavigate }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const categoryRoute = classLabel === 'SSC'
                 ? (categoryName === 'পদ্য'
@@ -1455,11 +1446,6 @@ export const dashboardComponents = `
                             ))}
                         </ul>
                     </div>
-                    <VideoManager
-                        noteKey={noteKey}
-                        videosByItem={videosByItem}
-                        onUpdateVideos={onUpdateVideos}
-                    />
                     </div>
 
                     {isNoteModalOpen && (
@@ -2514,288 +2500,6 @@ export const dashboardComponents = `
             );
         };
 
-        const VideoManager = ({ noteKey, videosByItem, onUpdateVideos }) => {
-            const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-            const [editingVideo, setEditingVideo] = useState(null);
-            const [videoTitle, setVideoTitle] = useState('');
-            const [videoSource, setVideoSource] = useState('link');
-            const [videoUrl, setVideoUrl] = useState('');
-            const [videoFile, setVideoFile] = useState(null);
-            const [channelName, setChannelName] = useState('');
-            const [channelUrl, setChannelUrl] = useState('');
-            const [durationText, setDurationText] = useState('');
-            const [thumbnailUrl, setThumbnailUrl] = useState('');
-            const [isUploading, setIsUploading] = useState(false);
-            const videos = (videosByItem || {})[noteKey] || [];
-
-            const resetVideoForm = () => {
-                setEditingVideo(null);
-                setVideoTitle('');
-                setVideoSource('link');
-                setVideoUrl('');
-                setVideoFile(null);
-                setChannelName('');
-                setChannelUrl('');
-                setDurationText('');
-                setThumbnailUrl('');
-            };
-
-            const openVideoModal = (video = null) => {
-                if (video) {
-                    setEditingVideo(video);
-                    setVideoTitle(video.title || '');
-                    setVideoSource(video.source || 'link');
-                    setVideoUrl(video.url || '');
-                    setChannelName(video.channelName || '');
-                    setChannelUrl(video.channelUrl || '');
-                    setDurationText(video.duration || '');
-                    setThumbnailUrl(video.thumbnailUrl || '');
-                } else {
-                    resetVideoForm();
-                }
-                setIsVideoModalOpen(true);
-            };
-
-            const handleVideoSave = async () => {
-                const trimmedTitle = videoTitle.trim();
-                if (!trimmedTitle) return;
-                let entry = editingVideo ? { ...editingVideo } : { id: Date.now() + '-' + Math.random().toString(16).slice(2) };
-                entry.title = trimmedTitle;
-                entry.source = videoSource;
-                entry.channelName = channelName.trim();
-                entry.channelUrl = channelUrl.trim();
-                entry.duration = durationText.trim();
-                entry.thumbnailUrl = thumbnailUrl.trim();
-
-                if (videoSource === 'upload') {
-                    if (videoFile) {
-                        const token = localStorage.getItem('auth_token');
-                        if (!token) return;
-                        setIsUploading(true);
-                        try {
-                            const formData = new FormData();
-                            formData.append('file', videoFile);
-                            const response = await fetch('/api/videos/upload', {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': 'Bearer ' + token
-                                },
-                                body: formData
-                            });
-                            const data = await response.json();
-                            if (!data.success) return;
-                            entry.fileKey = data.fileKey;
-                            entry.url = data.url;
-                        } catch (error) {
-                            console.warn('Failed to upload video', error);
-                            return;
-                        } finally {
-                            setIsUploading(false);
-                        }
-                    }
-                    if (!entry.url) return;
-                } else {
-                    const trimmedUrl = videoUrl.trim();
-                    if (!trimmedUrl) return;
-                    entry.url = trimmedUrl;
-                    entry.fileKey = null;
-                }
-
-                onUpdateVideos((prev) => {
-                    const current = prev && prev[noteKey] ? [...prev[noteKey]] : [];
-                    const next = editingVideo
-                        ? current.map((item) => (item.id === editingVideo.id ? entry : item))
-                        : [...current, entry];
-                    return { ...prev, [noteKey]: next };
-                });
-
-                setIsVideoModalOpen(false);
-                resetVideoForm();
-            };
-
-            return (
-                <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm font-bangla">
-                    <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
-                        <div>
-                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ভিডিও</div>
-                            <div className="text-sm font-semibold text-gray-700 mt-1">ভিডিও যুক্ত করুন</div>
-                        </div>
-                        <button
-                            onClick={() => openVideoModal()}
-                            className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                        >
-                            ভিডিও যোগ করুন
-                        </button>
-                    </div>
-                    <div className="divide-y">
-                        {videos.length === 0 && (
-                            <div className="px-4 py-3 text-sm text-gray-400">এখনো কোন ভিডিও যুক্ত হয়নি।</div>
-                        )}
-                        {videos.map((video) => (
-                            <div key={video.id} className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                    <div className="text-sm font-semibold text-gray-900">{video.title}</div>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                        {(video.channelName && ('Channel: ' + video.channelName)) || 'Channel not set'}
-                                        {video.duration ? ' • ' + video.duration : ''}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-semibold">
-                                    <button
-                                        onClick={() => openVideoModal(video)}
-                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const shouldRemove = window.confirm('আপনি কি এই ভিডিওটি মুছে ফেলতে চান?');
-                                            if (!shouldRemove) return;
-                                            onUpdateVideos((prev) => {
-                                                const current = prev && prev[noteKey] ? prev[noteKey] : [];
-                                                const next = current.filter((item) => item.id !== video.id);
-                                                return { ...prev, [noteKey]: next };
-                                            });
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {isVideoModalOpen && (
-                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
-                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 font-bangla">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    {editingVideo ? 'ভিডিও সম্পাদনা করুন' : 'নতুন ভিডিও যোগ করুন'}
-                                </h3>
-                                <div className="mt-4 space-y-4">
-                                    <div>
-                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">শিরোনাম</label>
-                                        <input
-                                            value={videoTitle}
-                                            onChange={(event) => setVideoTitle(event.target.value)}
-                                            placeholder="ভিডিও শিরোনাম"
-                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Source</label>
-                                        <div className="mt-2 flex gap-4 text-sm">
-                                            <label className="flex items-center gap-2">
-                                                <input
-                                                    type="radio"
-                                                    value="link"
-                                                    checked={videoSource === 'link'}
-                                                    onChange={() => setVideoSource('link')}
-                                                />
-                                                Link
-                                            </label>
-                                            <label className="flex items-center gap-2">
-                                                <input
-                                                    type="radio"
-                                                    value="upload"
-                                                    checked={videoSource === 'upload'}
-                                                    onChange={() => setVideoSource('upload')}
-                                                />
-                                                Upload
-                                            </label>
-                                        </div>
-                                    </div>
-                                    {videoSource === 'link' && (
-                                        <div>
-                                            <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Video link</label>
-                                            <input
-                                                value={videoUrl}
-                                                onChange={(event) => setVideoUrl(event.target.value)}
-                                                placeholder="https://..."
-                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            />
-                                        </div>
-                                    )}
-                                    {videoSource === 'upload' && (
-                                        <div>
-                                            <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Upload video</label>
-                                            <input
-                                                type="file"
-                                                accept="video/*"
-                                                onChange={(event) => setVideoFile(event.target.files?.[0] || null)}
-                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                                            />
-                                            {editingVideo?.url && (
-                                                <p className="text-xs text-gray-400 mt-2">Existing upload will be kept if no new file is chosen.</p>
-                                            )}
-                                        </div>
-                                    )}
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <div>
-                                            <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Channel name</label>
-                                            <input
-                                                value={channelName}
-                                                onChange={(event) => setChannelName(event.target.value)}
-                                                placeholder="Channel"
-                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Channel link</label>
-                                            <input
-                                                value={channelUrl}
-                                                onChange={(event) => setChannelUrl(event.target.value)}
-                                                placeholder="https://..."
-                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <div>
-                                            <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Duration</label>
-                                            <input
-                                                value={durationText}
-                                                onChange={(event) => setDurationText(event.target.value)}
-                                                placeholder="e.g. 12:30"
-                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail URL</label>
-                                            <input
-                                                value={thumbnailUrl}
-                                                onChange={(event) => setThumbnailUrl(event.target.value)}
-                                                placeholder="https://..."
-                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mt-6 flex justify-end gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setIsVideoModalOpen(false);
-                                            resetVideoForm();
-                                        }}
-                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleVideoSave}
-                                        disabled={isUploading}
-                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition disabled:opacity-60"
-                                    >
-                                        {isUploading ? 'Uploading...' : 'Save'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
         const ScienceTopicDetail = ({
             classLabel,
             subjectLabel,
@@ -2804,8 +2508,6 @@ export const dashboardComponents = `
             noteKey,
             notesByItem,
             onUpdateNotes,
-            videosByItem,
-            onUpdateVideos,
             onBack,
             onNavigateCq,
             onNavigateMcq,
@@ -2918,12 +2620,6 @@ export const dashboardComponents = `
                             ))}
                         </ul>
                     </div>
-
-                    <VideoManager
-                        noteKey={noteKey}
-                        videosByItem={videosByItem}
-                        onUpdateVideos={onUpdateVideos}
-                    />
 
                     {isNoteModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">

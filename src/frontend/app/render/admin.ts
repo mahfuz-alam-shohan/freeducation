@@ -103,8 +103,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-ict-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-ict-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-ict-mcq')}
@@ -209,8 +207,6 @@ export const renderAdmin = `
                                 noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-ssc-physics-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-physics-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-physics-mcq')}
@@ -315,8 +311,6 @@ export const renderAdmin = `
                                 noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-ssc-chemistry-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-chemistry-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-chemistry-mcq')}
@@ -430,8 +424,6 @@ export const renderAdmin = `
                                 noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-ssc-biology-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-biology-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-biology-mcq')}
@@ -545,8 +537,6 @@ export const renderAdmin = `
                                 noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-ssc-bangladesh-global-studies-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-bangladesh-global-studies-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-bangladesh-global-studies-mcq')}
@@ -718,8 +708,6 @@ export const renderAdmin = `
                                 noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-ssc-religion-topics')}
                                 onNavigateCq={() => navigate('admin-ssc-religion-cq-types')}
                                 onNavigateMcq={() => navigate('admin-ssc-religion-mcq')}
@@ -857,8 +845,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-physics-1st-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-physics-1st-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-physics-1st-mcq')}
@@ -974,8 +960,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-physics-2nd-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-physics-2nd-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-physics-2nd-mcq')}
@@ -1091,8 +1075,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-chemistry-1st-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-chemistry-1st-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-chemistry-1st-mcq')}
@@ -1208,8 +1190,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-chemistry-2nd-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-chemistry-2nd-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-chemistry-2nd-mcq')}
@@ -1325,8 +1305,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-biology-1st-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-biology-1st-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-biology-1st-mcq')}
@@ -1442,8 +1420,6 @@ export const renderAdmin = `
                                 noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onBack={() => navigate('admin-hsc-biology-2nd-topics')}
                                 onNavigateCq={() => navigate('admin-hsc-biology-2nd-cq-types')}
                                 onNavigateMcq={() => navigate('admin-hsc-biology-2nd-mcq')}
@@ -1725,10 +1701,6 @@ export const renderAdmin = `
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1739,10 +1711,6 @@ export const renderAdmin = `
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
                                 onUpdateNotes={setNotesByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
-                                videosByItem={videosByItem}
-                                onUpdateVideos={setVideosByItem}
                                 onNavigate={navigate}
                             />
                         )}
