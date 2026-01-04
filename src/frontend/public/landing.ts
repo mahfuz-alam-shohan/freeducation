@@ -720,38 +720,89 @@ export const landingComponents = `
             );
         };
 
+        const PublicSidebar = ({ title, subtitle, onBack, onNavigate }) => (
+            <aside className="hidden lg:block w-64 shrink-0">
+                <div className="sticky top-24 space-y-4">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Hierarchy</div>
+                        <div className="text-sm font-semibold text-slate-900 mt-2">{title}</div>
+                        {subtitle && <div className="text-xs text-slate-500 mt-1">{subtitle}</div>}
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
+                        <div className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Shortcuts</div>
+                        {onBack && (
+                            <button
+                                onClick={onBack}
+                                className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                            >
+                                Back
+                            </button>
+                        )}
+                        <button
+                            onClick={() => onNavigate('landing')}
+                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                        >
+                            Home
+                        </button>
+                        <button
+                            onClick={() => onNavigate('public-videos')}
+                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                        >
+                            Videos
+                        </button>
+                        <button
+                            onClick={() => onNavigate('ssc-subjects')}
+                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                        >
+                            SSC Subjects
+                        </button>
+                        <button
+                            onClick={() => onNavigate('hsc-subjects')}
+                            className="w-full text-left text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                        >
+                            HSC Subjects
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        );
+
         const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#fff7ed]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-rose-100 bg-white p-5 sm:p-7 shadow-sm">
-                            <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-                                <div>
+                            <div className="relative z-10 grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                                {onBack ? (
+                                    <button
+                                        onClick={onBack}
+                                        className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                        aria-label="Go back"
+                                    >
+                                        <i className="fa-solid fa-arrow-left"></i>
+                                    </button>
+                                ) : (
+                                    <div className="w-10 h-10" />
+                                )}
+                                <div className="text-center">
                                     <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Bangla 1st Paper</div>
                                     <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">
                                         {title}
                                     </h2>
                                     {subtitle && <p className="text-sm text-slate-600 mt-2 font-bangla">{subtitle}</p>}
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {onBack && (
-                                        <button
-                                            onClick={onBack}
-                                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                        >
-                                            Back
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => onNavigate('landing')}
-                                        className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                    >
-                                        Home
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => onNavigate('landing')}
+                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                                >
+                                    Home
+                                </button>
                             </div>
                         </div>
-                        {children}
+                        <div className="lg:flex lg:gap-8">
+                            <PublicSidebar title={title} subtitle={subtitle} onBack={onBack} onNavigate={onNavigate} />
+                            <div className="flex-1">{children}</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -760,29 +811,33 @@ export const landingComponents = `
         const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-white', onBack, onNavigate, children }) => (
             <div className={'flex-1 ' + backgroundClass}>
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="space-y-2">
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                        {onBack ? (
+                            <button
+                                onClick={onBack}
+                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                aria-label="Go back"
+                            >
+                                <i className="fa-solid fa-arrow-left"></i>
+                            </button>
+                        ) : (
+                            <div className="w-10 h-10" />
+                        )}
+                        <div className="text-center space-y-2">
                             <h2 className="text-3xl sm:text-4xl font-semibold text-slate-900 font-bangla">{title}</h2>
                             {subtitle && <p className="text-base text-slate-500 font-bangla">{subtitle}</p>}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            <button
-                                onClick={() => onNavigate('landing')}
-                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                            >
-                                Home
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => onNavigate('landing')}
+                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                        >
+                            Home
+                        </button>
                     </div>
-                    <div className="mt-6">{children}</div>
+                    <div className="mt-6 lg:flex lg:gap-8">
+                        <PublicSidebar title={title} subtitle={subtitle} onBack={onBack} onNavigate={onNavigate} />
+                        <div className="flex-1">{children}</div>
+                    </div>
                 </div>
             </div>
         );
@@ -1020,14 +1075,14 @@ export const landingComponents = `
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="flex flex-wrap gap-2">
                             {actionCards.map((card) => (
                                 <button
                                     key={card.key}
                                     onClick={card.disabled ? undefined : card.onClick}
                                     disabled={card.disabled}
                                     className={
-                                        'aspect-square rounded-xl border text-sm font-semibold transition flex items-center justify-center ' +
+                                        'rounded-lg border text-xs font-semibold transition px-3 py-1.5 ' +
                                         (card.disabled
                                             ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
                                             : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50')
@@ -1236,30 +1291,34 @@ export const landingComponents = `
         const PublicIctShell = ({ title, subtitle, classLabel, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#ecfeff]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                        {onBack ? (
+                            <button
+                                onClick={onBack}
+                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                aria-label="Go back"
+                            >
+                                <i className="fa-solid fa-arrow-left"></i>
+                            </button>
+                        ) : (
+                            <div className="w-10 h-10" />
+                        )}
+                        <div className="text-center">
                             <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{classLabel} ICT</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">{title}</h2>
                             {subtitle && <p className="text-sm text-slate-500 mt-2 font-bangla">{subtitle}</p>}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            <button
-                                onClick={() => onNavigate('landing')}
-                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                            >
-                                Home
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => onNavigate('landing')}
+                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                        >
+                            Home
+                        </button>
                     </div>
-                    {children}
+                    <div className="lg:flex lg:gap-8">
+                        <PublicSidebar title={title} subtitle={subtitle} onBack={onBack} onNavigate={onNavigate} />
+                        <div className="flex-1">{children}</div>
+                    </div>
                 </div>
             </div>
         );
@@ -1293,30 +1352,34 @@ export const landingComponents = `
         const PublicScienceShell = ({ title, subtitle, subjectLabel, classLabel, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#ecfdf3]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                        {onBack ? (
+                            <button
+                                onClick={onBack}
+                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                aria-label="Go back"
+                            >
+                                <i className="fa-solid fa-arrow-left"></i>
+                            </button>
+                        ) : (
+                            <div className="w-10 h-10" />
+                        )}
+                        <div className="text-center">
                             <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{classLabel} {subjectLabel}</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">{title}</h2>
                             {subtitle && <p className="text-sm text-slate-500 mt-2 font-bangla">{subtitle}</p>}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            <button
-                                onClick={() => onNavigate('landing')}
-                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                            >
-                                Home
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => onNavigate('landing')}
+                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                        >
+                            Home
+                        </button>
                     </div>
-                    {children}
+                    <div className="lg:flex lg:gap-8">
+                        <PublicSidebar title={title} subtitle={subtitle} onBack={onBack} onNavigate={onNavigate} />
+                        <div className="flex-1">{children}</div>
+                    </div>
                 </div>
             </div>
         );
@@ -1414,14 +1477,14 @@ export const landingComponents = `
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="flex flex-wrap gap-2">
                             {actionCards.map((card) => (
                                 <button
                                     key={card.key}
                                     onClick={card.disabled ? undefined : card.onClick}
                                     disabled={card.disabled}
                                     className={
-                                        'aspect-square rounded-xl border text-sm font-semibold transition flex items-center justify-center ' +
+                                        'rounded-lg border text-xs font-semibold transition px-3 py-1.5 ' +
                                         (card.disabled
                                             ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
                                             : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50')
@@ -1534,10 +1597,11 @@ export const landingComponents = `
             return video.url || '';
         };
 
-        const PublicVideoPlayer = ({ video, progress, onProgress }) => {
+        const PublicVideoPlayer = ({ video, progress, onProgress, onDuration, className }) => {
             const videoRef = useRef(null);
             const embedUrl = video?.sourceType === 'link' ? getYoutubeEmbedUrl(video.url) : '';
             const source = getVideoSource(video);
+            const frameClassName = className || 'w-full aspect-video rounded-xl border border-slate-200';
 
             useEffect(() => {
                 if (!videoRef.current) return;
@@ -1556,7 +1620,7 @@ export const landingComponents = `
                     <iframe
                         title={video.title}
                         src={embedUrl}
-                        className="w-full aspect-video rounded-xl border border-slate-200"
+                        className={frameClassName}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                     ></iframe>
@@ -1569,7 +1633,15 @@ export const landingComponents = `
                     src={source}
                     controls
                     playsInline
-                    className="w-full aspect-video rounded-xl border border-slate-200 bg-black"
+                    className={frameClassName + ' bg-black'}
+                    onLoadedMetadata={(event) => {
+                        if (onDuration) {
+                            onDuration(event.currentTarget.duration || 0);
+                        }
+                        if (onProgress) {
+                            onProgress(event.currentTarget.currentTime || 0, event.currentTarget.duration || 0);
+                        }
+                    }}
                     onTimeUpdate={(event) => {
                         if (!onProgress) return;
                         onProgress(event.currentTarget.currentTime, event.currentTarget.duration || 0);
@@ -1578,32 +1650,26 @@ export const landingComponents = `
             );
         };
 
-        const PublicVideoList = ({ context, videosByItem, onBack, onNavigate }) => {
+        const PublicVideoList = ({ context, videosByItem, onBack, onNavigate, onSelectVideo }) => {
             const { videoProgress, recentVideo, updateVideoProgress } = useVideoProgress();
             const resolvedContext = context || recentVideo?.context;
             const videos = resolvedContext ? (videosByItem?.[resolvedContext.noteKey] || []) : [];
-            const [activeVideoId, setActiveVideoId] = useState(() => recentVideo?.id || '');
-            const activeVideo = videos.find((video) => video.id === activeVideoId) || videos[0];
-            const activeProgress = activeVideo ? videoProgress?.[activeVideo.id] : null;
+            const [durationMap, setDurationMap] = useState({});
             const resolvedBack =
                 onBack || (resolvedContext?.backRoute ? () => onNavigate(resolvedContext.backRoute) : null);
 
-            useEffect(() => {
-                if (!activeVideoId && videos.length > 0) {
-                    setActiveVideoId(videos[0].id);
-                }
-            }, [activeVideoId, videos]);
-
             const handleSelect = (video) => {
-                setActiveVideoId(video.id);
                 updateVideoProgress({
                     id: video.id,
                     title: video.title,
                     context: resolvedContext,
-                    route: 'public-videos',
+                    route: 'public-video-player',
                     currentTime: videoProgress?.[video.id]?.currentTime || 0,
-                    duration: videoProgress?.[video.id]?.duration || 0
+                    duration: durationMap[video.id] || videoProgress?.[video.id]?.duration || 0
                 });
+                if (onSelectVideo) {
+                    onSelectVideo(video, resolvedContext);
+                }
             };
 
             const backgroundClass = resolvedContext?.backgroundClass || 'bg-white';
@@ -1618,39 +1684,9 @@ export const landingComponents = `
                     onBack={resolvedBack}
                     onNavigate={onNavigate}
                 >
-                    <div className="space-y-6 font-bangla">
-                        {activeVideo && (
-                            <div className="space-y-3">
-                                <div className="text-lg font-semibold text-slate-900">{activeVideo.title}</div>
-                                {activeVideo.channelName && (
-                                    <div className="text-sm text-slate-500">
-                                        {activeVideo.channelUrl ? (
-                                            <a href={activeVideo.channelUrl} target="_blank" rel="noreferrer" className="text-indigo-500">
-                                                {activeVideo.channelName}
-                                            </a>
-                                        ) : (
-                                            activeVideo.channelName
-                                        )}
-                                    </div>
-                                )}
-                                <PublicVideoPlayer
-                                    video={activeVideo}
-                                    progress={activeProgress}
-                                    onProgress={(currentTime, duration) => {
-                                        updateVideoProgress({
-                                            id: activeVideo.id,
-                                            title: activeVideo.title,
-                                            context: resolvedContext,
-                                            route: 'public-videos',
-                                            currentTime,
-                                            duration
-                                        });
-                                    }}
-                                />
-                            </div>
-                        )}
-
-                        <div className="space-y-4">
+                    <div className="space-y-4 font-bangla">
+                        <div className="text-xs uppercase tracking-[0.3em] text-slate-400">ভিডিও লিস্ট</div>
+                        <div className="space-y-3">
                             {videos.length === 0 && (
                                 <div className="text-sm text-slate-400">এখনো কোনো ভিডিও যোগ করা হয়নি।</div>
                             )}
@@ -1658,22 +1694,21 @@ export const landingComponents = `
                                 const progress = videoProgress?.[video.id];
                                 const previewUrl = getVideoSource(video);
                                 const embedUrl = video.sourceType === 'link' ? getYoutubeEmbedUrl(video.url) : '';
-                                const resumeText = progress?.currentTime
-                                    ? 'Resume at ' + formatDuration(progress.currentTime)
-                                    : '';
+                                const durationValue = durationMap[video.id] || progress?.duration || 0;
+                                const durationLabel = durationValue ? formatDuration(durationValue) : 'Unavailable';
                                 return (
                                     <button
                                         key={video.id}
                                         onClick={() => handleSelect(video)}
-                                        className="w-full text-left border border-slate-200 rounded-2xl p-4 hover:border-slate-300 hover:bg-slate-50 transition"
+                                        className="w-full text-left border border-slate-200 rounded-2xl px-3 py-2 hover:border-slate-300 hover:bg-slate-50 transition"
                                     >
-                                        <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] items-start">
-                                            <div className="w-full">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-20 h-12 shrink-0">
                                                 {embedUrl ? (
                                                     <iframe
                                                         title={video.title}
                                                         src={embedUrl}
-                                                        className="w-full aspect-video rounded-xl border border-slate-200"
+                                                        className="w-20 h-12 rounded-md border border-slate-200"
                                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                         allowFullScreen
                                                     ></iframe>
@@ -1682,33 +1717,37 @@ export const landingComponents = `
                                                         src={previewUrl}
                                                         muted
                                                         playsInline
-                                                        className="w-full aspect-video rounded-xl border border-slate-200 bg-black"
+                                                        preload="metadata"
+                                                        className="w-20 h-12 rounded-md border border-slate-200 bg-black object-cover"
+                                                        onLoadedMetadata={(event) => {
+                                                            const nextDuration = event.currentTarget.duration || 0;
+                                                            setDurationMap((prev) => ({ ...prev, [video.id]: nextDuration }));
+                                                        }}
                                                     />
                                                 ) : (
-                                                    <div className="w-full aspect-video rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-xs text-slate-400">
+                                                    <div className="w-20 h-12 rounded-md border border-slate-200 bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">
                                                         Preview unavailable
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="space-y-2">
-                                                <div className="text-base font-semibold text-slate-900">{video.title}</div>
-                                                {video.channelName && (
-                                                    <div className="text-xs text-slate-500">
-                                                        {video.channelUrl ? (
+                                            <div className="flex-1 space-y-1">
+                                                <div className="text-sm font-semibold text-slate-900 truncate">{video.title}</div>
+                                                <div className="text-xs text-slate-500">
+                                                    <span className="font-semibold text-slate-600">Channel:</span>{' '}
+                                                    {video.channelName ? (
+                                                        video.channelUrl ? (
                                                             <a href={video.channelUrl} target="_blank" rel="noreferrer" className="text-indigo-500">
                                                                 {video.channelName}
                                                             </a>
                                                         ) : (
                                                             video.channelName
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <div className="text-xs text-slate-400 space-x-2">
-                                                    {video.duration && <span>Duration: {video.duration}</span>}
-                                                    {progress?.duration && !video.duration && (
-                                                        <span>Duration: {formatDuration(progress.duration)}</span>
+                                                        )
+                                                    ) : (
+                                                        'Unavailable'
                                                     )}
-                                                    {resumeText && <span>{resumeText}</span>}
+                                                </div>
+                                                <div className="text-xs text-slate-500">
+                                                    <span className="font-semibold text-slate-600">Duration:</span> {durationLabel}
                                                 </div>
                                             </div>
                                         </div>
@@ -1721,33 +1760,114 @@ export const landingComponents = `
             );
         };
 
+        const PublicVideoDetail = ({ context, videoId, videosByItem, onBack, onNavigate }) => {
+            const { videoProgress, recentVideo, updateVideoProgress } = useVideoProgress();
+            const resolvedContext = context || recentVideo?.context;
+            const videos = resolvedContext ? (videosByItem?.[resolvedContext.noteKey] || []) : [];
+            const fallbackVideoId = videoId || recentVideo?.id;
+            const activeVideo = videos.find((video) => video.id === fallbackVideoId) || videos[0];
+            const progress = activeVideo ? videoProgress?.[activeVideo.id] : null;
+            const [duration, setDuration] = useState(progress?.duration || 0);
+            const resolvedBack = onBack || (() => onNavigate('public-videos'));
+            const backgroundClass = resolvedContext?.backgroundClass || 'bg-white';
+            const title = resolvedContext?.title || 'ভিডিও';
+            const subtitle = resolvedContext?.subtitle || '';
+
+            return (
+                <PublicSimpleShell
+                    backgroundClass={backgroundClass}
+                    title={title}
+                    subtitle={subtitle}
+                    onBack={resolvedBack}
+                    onNavigate={onNavigate}
+                >
+                    {activeVideo ? (
+                        <div className="space-y-4 font-bangla">
+                            <div className="space-y-1">
+                                <div className="text-base font-semibold text-slate-900">{activeVideo.title}</div>
+                                <div className="text-sm text-slate-600">
+                                    <span className="font-semibold">Channel:</span>{' '}
+                                    {activeVideo.channelName ? (
+                                        activeVideo.channelUrl ? (
+                                            <a href={activeVideo.channelUrl} target="_blank" rel="noreferrer" className="text-indigo-500">
+                                                {activeVideo.channelName}
+                                            </a>
+                                        ) : (
+                                            activeVideo.channelName
+                                        )
+                                    ) : (
+                                        'Unavailable'
+                                    )}
+                                </div>
+                                <div className="text-sm text-slate-600">
+                                    <span className="font-semibold">Duration:</span>{' '}
+                                    {duration ? formatDuration(duration) : 'Unavailable'}
+                                </div>
+                            </div>
+                            <div className="flex justify-center">
+                                <PublicVideoPlayer
+                                    video={activeVideo}
+                                    progress={progress}
+                                    className="w-full max-w-3xl aspect-video rounded-xl border border-slate-200"
+                                    onDuration={(nextDuration) => {
+                                        if (nextDuration) {
+                                            setDuration(nextDuration);
+                                        }
+                                    }}
+                                    onProgress={(currentTime, nextDuration) => {
+                                        if (nextDuration) {
+                                            setDuration(nextDuration);
+                                        }
+                                        updateVideoProgress({
+                                            id: activeVideo.id,
+                                            title: activeVideo.title,
+                                            context: resolvedContext,
+                                            route: 'public-video-player',
+                                            currentTime,
+                                            duration: nextDuration
+                                        });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-sm text-slate-400 font-bangla">এখনো কোনো ভিডিও যোগ করা হয়নি।</div>
+                    )}
+                </PublicSimpleShell>
+            );
+        };
+
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#eef2ff]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                        {onBack ? (
+                            <button
+                                onClick={onBack}
+                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                aria-label="Go back"
+                            >
+                                <i className="fa-solid fa-arrow-left"></i>
+                            </button>
+                        ) : (
+                            <div className="w-10 h-10" />
+                        )}
+                        <div className="text-center">
                             <div className="text-xs uppercase tracking-[0.2em] text-slate-400">English 1st Paper</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{title}</h2>
                             {subtitle && <p className="text-sm text-slate-500 mt-2">{subtitle}</p>}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            <button
-                                onClick={() => onNavigate('landing')}
-                                className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition"
-                            >
-                                Home
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => onNavigate('landing')}
+                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                        >
+                            Home
+                        </button>
                     </div>
-                    {children}
+                    <div className="lg:flex lg:gap-8">
+                        <PublicSidebar title={title} subtitle={subtitle} onBack={onBack} onNavigate={onNavigate} />
+                        <div className="flex-1">{children}</div>
+                    </div>
                 </div>
             </div>
         );
@@ -1969,6 +2089,7 @@ export const landingComponents = `
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
             PublicVideoList,
+            PublicVideoDetail,
             PublicReligionOptionList,
             PublicEnglishShell,
             PublicEnglishCardGrid,
@@ -1999,6 +2120,7 @@ export const landingComponents = `
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
             PublicVideoList,
+            PublicVideoDetail,
             PublicReligionOptionList,
             PublicEnglishShell,
             PublicEnglishCardGrid,

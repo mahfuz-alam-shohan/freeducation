@@ -10,6 +10,22 @@ export const renderPublic = `
                                         : null
                                 }
                                 onNavigate={navigate}
+                                onSelectVideo={(video, context) => {
+                                    setSelectedVideoId(video.id);
+                                    if (context) {
+                                        setSelectedVideoContext(context);
+                                    }
+                                    navigate('public-video-player');
+                                }}
+                            />
+                        )}
+                        {view === 'public-video-player' && (
+                            <PublicVideoDetail
+                                context={selectedVideoContext}
+                                videoId={selectedVideoId}
+                                videosByItem={videosByItem}
+                                onBack={() => navigate('public-videos')}
+                                onNavigate={navigate}
                             />
                         )}
                         {view === 'ssc-subjects' && (

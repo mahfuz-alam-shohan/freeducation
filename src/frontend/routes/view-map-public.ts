@@ -1,6 +1,7 @@
 export const publicViewEntries: Array<[string, string]> = [
   ["/", "landing"],
   ["/videos", "public-videos"],
+  ["/videos/watch", "public-video-player"],
   ["/ssc", "ssc-subjects"],
   ["/hsc", "hsc-subjects"],
   ["/ssc/bangla-1st-paper", "public-bangla-ssc-1st-paper"],
