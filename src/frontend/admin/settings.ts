@@ -604,6 +604,7 @@ export const settingsComponents = `
             const [teachers, setTeachers] = useState([]);
             const [admins, setAdmins] = useState([]);
             const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
+            const [isTeacherEditOpen, setIsTeacherEditOpen] = useState(false);
             const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
             const [statusMessage, setStatusMessage] = useState(null);
             const [teacherForm, setTeacherForm] = useState({
@@ -611,7 +612,20 @@ export const settingsComponents = `
                 email: '',
                 password: '',
                 level: 'SSC',
-                subject: ''
+                subject: '',
+                permissions: {
+                    structure: false
+                }
+            });
+            const [teacherEdit, setTeacherEdit] = useState({
+                id: null,
+                name: '',
+                email: '',
+                level: 'SSC',
+                subject: '',
+                permissions: {
+                    structure: false
+                }
             });
             const [adminForm, setAdminForm] = useState({
                 name: '',
@@ -647,7 +661,22 @@ export const settingsComponents = `
                     email: '',
                     password: '',
                     level: 'SSC',
-                    subject: ''
+                    subject: '',
+                    permissions: {
+                        structure: false
+                    }
+                });
+            };
+            const resetTeacherEdit = () => {
+                setTeacherEdit({
+                    id: null,
+                    name: '',
+                    email: '',
+                    level: 'SSC',
+                    subject: '',
+                    permissions: {
+                        structure: false
+                    }
                 });
             };
 
@@ -696,6 +725,9 @@ export const settingsComponents = `
                 if (!teacherForm.name || !teacherForm.email || !teacherForm.password || !teacherForm.subject) return;
                 const token = localStorage.getItem('auth_token');
                 if (!token) return;
+                const permissionList = Object.entries(teacherForm.permissions)
+                    .filter(([, enabled]) => enabled)
+                    .map(([key]) => key);
                 try {
                     const response = await fetch('/api/users', {
                         method: 'POST',
@@ -709,7 +741,8 @@ export const settingsComponents = `
                             email: teacherForm.email,
                             password: teacherForm.password,
                             level: teacherForm.level,
-                            subject: teacherForm.subject
+                            subject: teacherForm.subject,
+                            permissions: permissionList
                         })
                     });
                     const data = await response.json();
@@ -766,6 +799,57 @@ export const settingsComponents = `
                 settings: 'Settings',
                 thumbnails: 'Thumbnails',
                 userManagement: 'User management'
+            };
+            const teacherPermissionLabels = {
+                structure: 'Structure edits'
+            };
+            const handleEditTeacher = (teacher) => {
+                setTeacherEdit({
+                    id: teacher.id,
+                    name: teacher.name,
+                    email: teacher.email,
+                    level: teacher.level || 'SSC',
+                    subject: teacher.subject || '',
+                    permissions: {
+                        structure: teacher.permissions?.includes('structure') || false
+                    }
+                });
+                setIsTeacherEditOpen(true);
+            };
+            const handleUpdateTeacher = async () => {
+                if (!teacherEdit.id || !teacherEdit.subject) return;
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+                const permissionList = Object.entries(teacherEdit.permissions)
+                    .filter(([, enabled]) => enabled)
+                    .map(([key]) => key);
+                try {
+                    const response = await fetch('/api/users', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: teacherEdit.id,
+                            role: 'teacher',
+                            level: teacherEdit.level,
+                            subject: teacherEdit.subject,
+                            permissions: permissionList
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        await fetchUsers();
+                        resetTeacherEdit();
+                        setIsTeacherEditOpen(false);
+                        setStatusMessage(null);
+                    } else {
+                        setStatusMessage(data.error || 'Unable to update teacher.');
+                    }
+                } catch (error) {
+                    setStatusMessage('Unable to update teacher.');
+                }
             };
 
             return (
@@ -842,12 +926,14 @@ export const settingsComponents = `
                                             <th className="text-left px-4 py-3">Email</th>
                                             <th className="text-left px-4 py-3">Level</th>
                                             <th className="text-left px-4 py-3">Subject</th>
+                                            <th className="text-left px-4 py-3">Permissions</th>
+                                            <th className="text-left px-4 py-3">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {teachers.length === 0 && (
                                             <tr>
-                                                <td colSpan="4" className="px-4 py-6 text-center text-gray-400">
+                                                <td colSpan="6" className="px-4 py-6 text-center text-gray-400">
                                                     No teachers assigned yet.
                                                 </td>
                                             </tr>
@@ -858,6 +944,17 @@ export const settingsComponents = `
                                                 <td className="px-4 py-3 text-gray-500">{teacher.email}</td>
                                                 <td className="px-4 py-3 text-gray-500">{teacher.level}</td>
                                                 <td className="px-4 py-3 text-gray-500">{teacher.subject}</td>
+                                                <td className="px-4 py-3 text-gray-500 capitalize">
+                                                    {teacher.permissions?.length ? teacher.permissions.join(', ') : 'None'}
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">
+                                                    <button
+                                                        onClick={() => handleEditTeacher(teacher)}
+                                                        className="px-3 py-1.5 rounded-md text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -996,6 +1093,33 @@ export const settingsComponents = `
                                             </select>
                                         </div>
                                     </div>
+                                    <div>
+                                        <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Permissions</div>
+                                        <div className="mt-3 space-y-2">
+                                            {Object.entries(teacherPermissionLabels).map(([key, label]) => (
+                                                <label key={key} className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={teacherForm.permissions[key]}
+                                                        onChange={(event) =>
+                                                            setTeacherForm((prev) => ({
+                                                                ...prev,
+                                                                permissions: {
+                                                                    ...prev.permissions,
+                                                                    [key]: event.target.checked
+                                                                }
+                                                            }))
+                                                        }
+                                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
+                                                    />
+                                                    {label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            Enable structure edits only when teachers should change chapters or topics.
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
                                     <button
@@ -1012,6 +1136,126 @@ export const settingsComponents = `
                                         className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-gray-900 text-white hover:bg-gray-800 transition"
                                     >
                                         Save teacher
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isTeacherEditOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+                            <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Edit teacher</div>
+                                    <div className="text-lg font-semibold text-gray-900 mt-2">Update teacher access</div>
+                                    <div className="text-sm text-gray-500 mt-1">
+                                        Adjust the assigned subject and permissions for this teacher.
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Name</label>
+                                            <div className="mt-2 text-sm font-semibold text-gray-700">
+                                                {teacherEdit.name}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Email</label>
+                                            <div className="mt-2 text-sm text-gray-500">{teacherEdit.email}</div>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Level</label>
+                                            <select
+                                                value={teacherEdit.level}
+                                                onChange={(event) =>
+                                                    setTeacherEdit((prev) => ({
+                                                        ...prev,
+                                                        level: event.target.value,
+                                                        subject: ''
+                                                    }))
+                                                }
+                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            >
+                                                <option value="SSC">SSC</option>
+                                                <option value="HSC">HSC</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Subject</label>
+                                            <select
+                                                value={teacherEdit.subject}
+                                                onChange={(event) =>
+                                                    setTeacherEdit((prev) => ({ ...prev, subject: event.target.value }))
+                                                }
+                                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                            >
+                                                <option value="">Select subject</option>
+                                                {Array.from(
+                                                    Object.entries(adminSubjectGroups)
+                                                        .flatMap(([level, groups]) =>
+                                                            Object.values(groups).flatMap((subjects) =>
+                                                                subjects.map((subject) => ({ level, subject }))
+                                                            )
+                                                        )
+                                                        .filter((entry) => entry.level === teacherEdit.level)
+                                                        .reduce((map, entry) => {
+                                                            if (!map.has(entry.subject)) {
+                                                                map.set(entry.subject, entry);
+                                                            }
+                                                            return map;
+                                                        }, new Map())
+                                                        .values()
+                                                ).map((entry) => (
+                                                    <option key={entry.level + '-' + entry.subject} value={entry.subject}>
+                                                        {entry.subject}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Permissions</div>
+                                        <div className="mt-3 space-y-2">
+                                            {Object.entries(teacherPermissionLabels).map(([key, label]) => (
+                                                <label key={key} className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={teacherEdit.permissions[key]}
+                                                        onChange={(event) =>
+                                                            setTeacherEdit((prev) => ({
+                                                                ...prev,
+                                                                permissions: {
+                                                                    ...prev.permissions,
+                                                                    [key]: event.target.checked
+                                                                }
+                                                            }))
+                                                        }
+                                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
+                                                    />
+                                                    {label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsTeacherEditOpen(false);
+                                            resetTeacherEdit();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleUpdateTeacher}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-gray-900 text-white hover:bg-gray-800 transition"
+                                    >
+                                        Save changes
                                     </button>
                                 </div>
                             </div>

@@ -14,13 +14,13 @@ export const renderAdmin = `
                             <AdminGroupSelection classLabel="HSC" onNavigate={navigate} />
                         )}
                         {view === 'admin-ssc-science' && (
-                            <AdminGroupDetail classLabel="SSC" groupLabel="Science" onNavigate={navigate} />
+                            <AdminGroupDetail classLabel="SSC" groupLabel="Science" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'admin-ssc-humanities' && (
-                            <AdminGroupDetail classLabel="SSC" groupLabel="Humanities" onNavigate={navigate} />
+                            <AdminGroupDetail classLabel="SSC" groupLabel="Humanities" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'admin-ssc-business-studies' && (
-                            <AdminGroupDetail classLabel="SSC" groupLabel="Business Studies" onNavigate={navigate} />
+                            <AdminGroupDetail classLabel="SSC" groupLabel="Business Studies" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'admin-ssc-ict' && (
                             <IctChapterList
@@ -37,6 +37,8 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-groups-ssc')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-ssc-ict-mcq' && (
@@ -71,6 +73,8 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-groups-hsc')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-ict-topics' && (
@@ -87,6 +91,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-ict')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-ict-topic' && (
@@ -172,6 +177,8 @@ export const renderAdmin = `
                                     navigate('admin-ssc-physics-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-ssc-physics-topics' && (
@@ -188,6 +195,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-ssc-physics')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-ssc-physics-topic' && (
@@ -273,6 +281,8 @@ export const renderAdmin = `
                                     navigate('admin-ssc-chemistry-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-ssc-chemistry-topics' && (
@@ -289,6 +299,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-ssc-chemistry')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-ssc-chemistry-topic' && (
@@ -383,6 +394,8 @@ export const renderAdmin = `
                                     navigate('admin-ssc-biology-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-ssc-biology-topics' && (
@@ -399,6 +412,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-ssc-biology')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-ssc-biology-topic' && (
@@ -493,6 +507,8 @@ export const renderAdmin = `
                                     navigate('admin-ssc-bangladesh-global-studies-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-ssc-bangladesh-global-studies-topics' && (
@@ -509,6 +525,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-ssc-bangladesh-global-studies')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-ssc-bangladesh-global-studies-topic' && (
@@ -652,6 +669,8 @@ export const renderAdmin = `
                                     navigate('admin-ssc-religion-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-ssc-religion-topics' && (
@@ -677,6 +696,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-ssc-religion-chapters')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-ssc-religion-topic' && (
@@ -795,6 +815,8 @@ export const renderAdmin = `
                                     navigate('admin-hsc-physics-1st-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-physics-1st-topics' && (
@@ -811,6 +833,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-physics-1st')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-physics-1st-topic' && (
@@ -907,6 +930,8 @@ export const renderAdmin = `
                                     navigate('admin-hsc-physics-2nd-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-physics-2nd-topics' && (
@@ -923,6 +948,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-physics-2nd')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-physics-2nd-topic' && (
@@ -1019,6 +1045,8 @@ export const renderAdmin = `
                                     navigate('admin-hsc-chemistry-1st-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-chemistry-1st-topics' && (
@@ -1035,6 +1063,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-chemistry-1st')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-chemistry-1st-topic' && (
@@ -1131,6 +1160,8 @@ export const renderAdmin = `
                                     navigate('admin-hsc-chemistry-2nd-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-chemistry-2nd-topics' && (
@@ -1147,6 +1178,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-chemistry-2nd')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-chemistry-2nd-topic' && (
@@ -1243,6 +1275,8 @@ export const renderAdmin = `
                                     navigate('admin-hsc-biology-1st-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-biology-1st-topics' && (
@@ -1259,6 +1293,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-biology-1st')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-biology-1st-topic' && (
@@ -1355,6 +1390,8 @@ export const renderAdmin = `
                                     navigate('admin-hsc-biology-2nd-topics');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'admin-hsc-biology-2nd-topics' && (
@@ -1371,6 +1408,7 @@ export const renderAdmin = `
                                 }}
                                 onBack={() => navigate('admin-hsc-biology-2nd')}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
                             />
                         )}
                         {view === 'admin-hsc-biology-2nd-topic' && (
@@ -1450,13 +1488,13 @@ export const renderAdmin = `
                             />
                         )}
                         {view === 'admin-hsc-science' && (
-                            <AdminGroupDetail classLabel="HSC" groupLabel="Science" onNavigate={navigate} />
+                            <AdminGroupDetail classLabel="HSC" groupLabel="Science" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'admin-hsc-humanities' && (
-                            <AdminGroupDetail classLabel="HSC" groupLabel="Humanities" onNavigate={navigate} />
+                            <AdminGroupDetail classLabel="HSC" groupLabel="Humanities" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'admin-hsc-business-studies' && (
-                            <AdminGroupDetail classLabel="HSC" groupLabel="Business Studies" onNavigate={navigate} />
+                            <AdminGroupDetail classLabel="HSC" groupLabel="Business Studies" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'english-hsc-1st-paper' && (
                             <EnglishFirstPaperHome classLabel="HSC" onNavigate={navigate} />
@@ -1535,16 +1573,16 @@ export const renderAdmin = `
                             />
                         )}
                         {view === 'bangla-ssc-1st-paper' && (
-                            <BanglaFirstPaperTopics classLabel="SSC" onNavigate={navigate} />
+                            <BanglaFirstPaperTopics classLabel="SSC" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'bangla-hsc-1st-paper' && (
-                            <BanglaFirstPaperTopics classLabel="HSC" onNavigate={navigate} />
+                            <BanglaFirstPaperTopics classLabel="HSC" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'bangla-ssc-shahitto' && (
-                            <BanglaShahitto classLabel="SSC" onNavigate={navigate} />
+                            <BanglaShahitto classLabel="SSC" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'bangla-hsc-shahitto' && (
-                            <BanglaShahitto classLabel="HSC" onNavigate={navigate} />
+                            <BanglaShahitto classLabel="HSC" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
                         )}
                         {view === 'bangla-ssc-shohopath' && (
                             <BanglaShohopath
@@ -1559,6 +1597,8 @@ export const renderAdmin = `
                                     navigate('bangla-ssc-item');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'bangla-hsc-shohopath' && (
@@ -1574,6 +1614,8 @@ export const renderAdmin = `
                                     navigate('bangla-hsc-item');
                                 }}
                                 onNavigate={navigate}
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'bangla-ssc-goddo' && (
@@ -1591,6 +1633,8 @@ export const renderAdmin = `
                                 }}
                                 onNavigate={navigate}
                                 showAdd
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'bangla-ssc-poddo' && (
@@ -1608,6 +1652,8 @@ export const renderAdmin = `
                                 }}
                                 onNavigate={navigate}
                                 showAdd
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'bangla-hsc-goddo' && (
@@ -1625,6 +1671,8 @@ export const renderAdmin = `
                                 }}
                                 onNavigate={navigate}
                                 showAdd
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'bangla-hsc-poddo' && (
@@ -1642,6 +1690,8 @@ export const renderAdmin = `
                                 }}
                                 onNavigate={navigate}
                                 showAdd
+                                canManageStructure={canManageStructure}
+                                canManageThumbnails={canManageThumbnails}
                             />
                         )}
                         {view === 'bangla-ssc-item' && (

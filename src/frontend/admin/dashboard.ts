@@ -88,32 +88,38 @@ export const dashboardComponents = `
                     activeTab="classes"
                     onNavigate={onNavigate}
                 >
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
-                        {loading && (
-                            <div className="px-5 py-4 text-sm text-gray-400">Loading...</div>
-                        )}
-                        {!loading && filteredClasses.length === 0 && (
-                            <div className="px-5 py-4 text-sm text-gray-400">No classes available.</div>
-                        )}
-                        {filteredClasses.map((item) => {
-                            const route = getClassRoute(item.name);
-                            return (
-                                <button
-                                    key={item.id}
-                                    onClick={() => route && onNavigate(route)}
-                                    className={\`w-full flex items-center justify-between px-5 py-4 text-sm font-semibold transition \${route ? 'text-gray-700 hover:bg-gray-50' : 'text-gray-400 cursor-not-allowed'}\`}
-                                    disabled={!route}
-                                >
-                                    <div className="text-left">
-                                        <div className="text-xs uppercase tracking-[0.2em] text-gray-400">Class</div>
-                                        <div className="text-base font-semibold text-gray-900 mt-1">{item.name}</div>
-                                        <p className="text-xs text-gray-500 mt-2">Create subject groups and manage structure.</p>
-                                    </div>
-                                    <span className={\`text-xs uppercase tracking-[0.2em] \${route ? 'text-blue-600' : 'text-gray-300'}\`}>Open</span>
-                                </button>
-                            );
-                        })}
-                    </div>
+                    {loading && (
+                        <div className="px-5 py-4 text-sm text-gray-400">Loading...</div>
+                    )}
+                    {!loading && filteredClasses.length === 0 && (
+                        <div className="px-5 py-4 text-sm text-gray-400">No classes available.</div>
+                    )}
+                    {!loading && filteredClasses.length > 0 && (
+                        <div className="grid card-grid-gap sm:grid-cols-2">
+                            {filteredClasses.map((item) => {
+                                const route = getClassRoute(item.name);
+                                const isActive = Boolean(route);
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => route && onNavigate(route)}
+                                        className={\`border border-gray-200 rounded-2xl p-5 text-left shadow-sm transition \${isActive ? 'bg-white hover:border-gray-300 hover:bg-gray-50' : 'bg-gray-50 text-gray-400 cursor-not-allowed'}\`}
+                                        disabled={!route}
+                                    >
+                                        <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Class</div>
+                                        <div className="text-lg font-semibold text-gray-900 mt-2">{item.name}</div>
+                                        <div className="text-sm text-gray-500 mt-2">
+                                            Create subject groups and manage structure.
+                                        </div>
+                                        <div className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em]">
+                                            <span className={isActive ? 'text-blue-600' : 'text-gray-300'}>Open</span>
+                                            {isActive && <span className="text-gray-300">→</span>}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </AdminShell>
             );
         };
@@ -349,19 +355,19 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
+                    <div className="grid card-grid-gap sm:grid-cols-2 lg:grid-cols-3">
                         {groups.map((group) => (
                             <button
                                 key={group.title}
                                 onClick={() => onNavigate(getGroupRoute(group.title))}
-                                className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                                className="border border-gray-200 rounded-2xl p-5 text-left bg-white shadow-sm hover:border-gray-300 hover:bg-gray-50 transition"
                             >
                                 <div className="text-left">
                                     <div className="text-xs uppercase tracking-[0.2em] text-gray-400">Group</div>
                                     <div className="text-base font-semibold text-gray-900 mt-1">{group.title}</div>
                                     <p className="text-xs text-gray-500 mt-2">{group.description}</p>
                                 </div>
-                                <span className="text-xs uppercase tracking-[0.2em] text-blue-600">Open</span>
+                                <div className="mt-4 text-xs uppercase tracking-[0.2em] text-blue-600">Open</div>
                             </button>
                         ))}
                     </div>
@@ -369,7 +375,7 @@ export const dashboardComponents = `
             );
         };
 
-        const AdminGroupDetail = ({ classLabel, groupLabel, onNavigate }) => {
+        const AdminGroupDetail = ({ classLabel, groupLabel, onNavigate, canManageThumbnails }) => {
             const subjectMap = {
                 SSC: {
                     Science: [
@@ -504,11 +510,12 @@ export const dashboardComponents = `
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y soft-glow">
-                        {subjects.length === 0 && (
-                            <div className="px-5 py-4 text-sm text-gray-400">No subjects configured.</div>
-                        )}
-                        {subjects.map((subject) => {
+                    {subjects.length === 0 && (
+                        <div className="px-5 py-4 text-sm text-gray-400">No subjects configured.</div>
+                    )}
+                    {subjects.length > 0 && (
+                        <div className="grid card-grid-gap sm:grid-cols-2 lg:grid-cols-3">
+                            {subjects.map((subject) => {
                             const isBanglaFirst = subject === 'Bangla 1st Paper';
                             const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
                             const isIct = subject === 'Information and Communication Technology';
@@ -524,28 +531,6 @@ export const dashboardComponents = `
                             const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
                             const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
                             const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
-                            if (
-                                !isBanglaFirst &&
-                                !isEnglishFirst &&
-                                !isIct &&
-                                !isPhysics &&
-                                !isChemistry &&
-                                !isBiology &&
-                                !isBangladeshGlobal &&
-                                !isReligionMoral &&
-                                !isHscPhysics1 &&
-                                !isHscPhysics2 &&
-                                !isHscChem1 &&
-                                !isHscChem2 &&
-                                !isHscBio1 &&
-                                !isHscBio2
-                            ) {
-                                return (
-                                    <div key={subject} className="px-5 py-4 text-sm font-semibold text-gray-700">
-                                        {displayLabel}
-                                    </div>
-                                );
-                            }
                             const route = isBanglaFirst
                                 ? banglaRoute
                                 : isEnglishFirst
@@ -568,54 +553,60 @@ export const dashboardComponents = `
                                                             ? hscPhysics2Route
                                                             : isHscChem1
                                                                 ? hscChem1Route
-                                                                : isHscChem2
-                                                                    ? hscChem2Route
-                                                                    : isHscBio1
-                                                                        ? hscBio1Route
-                                                                        : hscBio2Route;
+                                                            : isHscChem2
+                                                                ? hscChem2Route
+                                                                : isHscBio1
+                                                                    ? hscBio1Route
+                                                                    : hscBio2Route;
                             const subjectKey = makeThumbnailKey(subject, classLabel);
                             const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
+                            const canOpen = Boolean(route);
                             return (
-                                <div
-                                    key={subject}
-                                    className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                                            {thumbnailUrl ? (
-                                                <img src={thumbnailUrl} alt={subject} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">
-                                                    No image
-                                                </div>
+                                <div key={subject} className="border border-gray-200 rounded-2xl bg-white shadow-sm overflow-hidden">
+                                    <div className="h-36 bg-gray-100 border-b border-gray-200">
+                                        {thumbnailUrl ? (
+                                            <img src={thumbnailUrl} alt={subject} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">
+                                                No image
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="p-4">
+                                        <div className="text-xs uppercase tracking-[0.2em] text-gray-400">Subject</div>
+                                        <div className={\`text-base font-semibold text-gray-900 mt-2 \${isBanglaFirst ? 'font-bangla' : ''}\`}>
+                                            {displayLabel}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">Manage chapters, topics, and content tools.</p>
+                                        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                                            <button
+                                                onClick={() => route && onNavigate(route)}
+                                                className={\`px-3 py-1.5 rounded-md border transition \${canOpen ? 'border-gray-200 text-gray-600 hover:bg-gray-50' : 'border-gray-100 text-gray-300 cursor-not-allowed'}\`}
+                                                disabled={!canOpen}
+                                            >
+                                                Open
+                                            </button>
+                                            {canManageThumbnails && (
+                                                <button
+                                                    onClick={() =>
+                                                        setActiveThumbnail({
+                                                            title: subject,
+                                                            subjectKey
+                                                        })
+                                                    }
+                                                    className="px-3 py-1.5 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                                >
+                                                    Thumbnail
+                                                </button>
                                             )}
                                         </div>
-                                        <span className={isBanglaFirst ? 'font-bangla' : ''}>{displayLabel}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-semibold">
-                                        <button
-                                            onClick={() => route && onNavigate(route)}
-                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                        >
-                                            Open
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                setActiveThumbnail({
-                                                    title: subject,
-                                                    subjectKey
-                                                })
-                                            }
-                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                        >
-                                            Thumbnail
-                                        </button>
                                     </div>
                                 </div>
                             );
                         })}
-                    </div>
-                    {activeThumbnail && (
+                        </div>
+                    )}
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a subject thumbnail for public cards."
@@ -637,7 +628,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaFirstPaperTopics = ({ classLabel, onNavigate }) => {
+        const BanglaFirstPaperTopics = ({ classLabel, onNavigate, canManageThumbnails }) => {
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
@@ -714,23 +705,25 @@ export const dashboardComponents = `
                                         >
                                             Open
                                         </button>
-                                        <button
-                                            onClick={() =>
-                                                setActiveThumbnail({
-                                                    title: topic.title,
-                                                    chapterKey
-                                                })
-                                            }
-                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                        >
-                                            Thumbnail
-                                        </button>
+                                        {canManageThumbnails && (
+                                            <button
+                                                onClick={() =>
+                                                    setActiveThumbnail({
+                                                        title: topic.title,
+                                                        chapterKey
+                                                    })
+                                                }
+                                                className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                            >
+                                                Thumbnail
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-                    {activeThumbnail && (
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a category thumbnail for Bangla 1st Paper."
@@ -752,7 +745,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaShahitto = ({ classLabel, onNavigate }) => {
+        const BanglaShahitto = ({ classLabel, onNavigate, canManageThumbnails }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const goddoRoute = classLabel === 'SSC' ? 'bangla-ssc-goddo' : 'bangla-hsc-goddo';
             const poddoRoute = classLabel === 'SSC' ? 'bangla-ssc-poddo' : 'bangla-hsc-poddo';
@@ -828,23 +821,25 @@ export const dashboardComponents = `
                                         >
                                             Open
                                         </button>
-                                        <button
-                                            onClick={() =>
-                                                setActiveThumbnail({
-                                                    title: card.title,
-                                                    chapterKey
-                                                })
-                                            }
-                                            className="px-3 py-1.5 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                        >
-                                            Thumbnail
-                                        </button>
+                                        {canManageThumbnails && (
+                                            <button
+                                                onClick={() =>
+                                                    setActiveThumbnail({
+                                                        title: card.title,
+                                                        chapterKey
+                                                    })
+                                                }
+                                                className="px-3 py-1.5 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                            >
+                                                Thumbnail
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-                    {activeThumbnail && (
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a category thumbnail for Bangla literature."
@@ -866,7 +861,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaShohopath = ({ classLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate }) => {
+        const BanglaShohopath = ({ classLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate, canManageStructure, canManageThumbnails }) => {
             const baseRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
@@ -937,12 +932,14 @@ export const dashboardComponents = `
                         >
                             Back
                         </button>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
-                        >
-                            Add
-                        </button>
+                        {canManageStructure && (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                Add
+                            </button>
+                        )}
                     </div>
 
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
@@ -959,39 +956,45 @@ export const dashboardComponents = `
                                     <span className="text-xs text-gray-500 mt-1">{item.type}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs font-semibold">
-                                    <button
-                                        onClick={() => {
-                                            setEditingItem(item);
-                                            setNewItemName(item.name);
-                                            setNewItemType(item.type);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                    >
-                                        Rename
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setActiveThumbnail({
-                                                title: item.name,
-                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ')
-                                            })
-                                        }
-                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                    >
-                                        Thumbnail
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
-                                            if (shouldRemove) {
-                                                onRemoveItem(item.id);
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                setEditingItem(item);
+                                                setNewItemName(item.name);
+                                                setNewItemType(item.type);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Rename
+                                        </button>
+                                    )}
+                                    {canManageThumbnails && (
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: item.name,
+                                                    chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ')
+                                                })
                                             }
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                    >
-                                        Delete
-                                    </button>
+                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    )}
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
+                                                if (shouldRemove) {
+                                                    onRemoveItem(item.id);
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => onSelectItem(item)}
                                         className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
@@ -1003,7 +1006,7 @@ export const dashboardComponents = `
                         ))}
                     </div>
 
-                    {isModalOpen && (
+                    {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -1028,26 +1031,28 @@ export const dashboardComponents = `
                                         ))}
                                     </select>
                                 </div>
-                                <div className="mt-4">
-                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (event) => {
-                                            const selected = event.target.files?.[0];
-                                            if (!selected) {
-                                                setThumbnailFile(null);
-                                                return;
-                                            }
-                                            const resized = await resizeImageFile(selected);
-                                            setThumbnailFile(resized || null);
-                                        }}
-                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                                    />
-                                    <p className="text-xs text-gray-400 mt-2">
-                                        Upload now or edit later with the thumbnail button.
-                                    </p>
-                                </div>
+                                {canManageThumbnails && (
+                                    <div className="mt-4">
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (event) => {
+                                                const selected = event.target.files?.[0];
+                                                if (!selected) {
+                                                    setThumbnailFile(null);
+                                                    return;
+                                                }
+                                                const resized = await resizeImageFile(selected);
+                                                setThumbnailFile(resized || null);
+                                            }}
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            Upload now or edit later with the thumbnail button.
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -1068,7 +1073,7 @@ export const dashboardComponents = `
                             </div>
                         </div>
                     )}
-                    {activeThumbnail && (
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a thumbnail for this সহপাঠ chapter."
@@ -1090,7 +1095,7 @@ export const dashboardComponents = `
             );
         };
 
-        const BanglaTextList = ({ classLabel, typeLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate, showAdd = false, baseRouteOverride }) => {
+        const BanglaTextList = ({ classLabel, typeLabel, items, onAddItem, onUpdateItem, onRemoveItem, onSelectItem, onNavigate, showAdd = false, baseRouteOverride, canManageStructure, canManageThumbnails }) => {
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1153,7 +1158,7 @@ export const dashboardComponents = `
                         >
                             Back
                         </button>
-                        {showAdd && (
+                        {showAdd && canManageStructure && (
                             <button
                                 onClick={() => setIsModalOpen(true)}
                                 className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
@@ -1174,38 +1179,44 @@ export const dashboardComponents = `
                             >
                                 <span>{item}</span>
                                 <div className="flex items-center gap-2 text-xs font-semibold">
-                                    <button
-                                        onClick={() => {
-                                            setEditingItem(item);
-                                            setNewItem(item);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                    >
-                                        Rename
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setActiveThumbnail({
-                                                title: item,
-                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel)
-                                            })
-                                        }
-                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                    >
-                                        Thumbnail
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
-                                            if (shouldRemove) {
-                                                onRemoveItem(item);
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                setEditingItem(item);
+                                                setNewItem(item);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Rename
+                                        </button>
+                                    )}
+                                    {canManageThumbnails && (
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: item,
+                                                    chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel)
+                                                })
                                             }
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                    >
-                                        Delete
-                                    </button>
+                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    )}
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?');
+                                                if (shouldRemove) {
+                                                    onRemoveItem(item);
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => onSelectItem(item)}
                                         className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
@@ -1217,7 +1228,7 @@ export const dashboardComponents = `
                         ))}
                     </div>
 
-                    {isModalOpen && (
+                    {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -1230,26 +1241,28 @@ export const dashboardComponents = `
                                     placeholder="উদাহরণ: অপরিচিতা"
                                     className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 />
-                                <div className="mt-4">
-                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (event) => {
-                                            const selected = event.target.files?.[0];
-                                            if (!selected) {
-                                                setThumbnailFile(null);
-                                                return;
-                                            }
-                                            const resized = await resizeImageFile(selected);
-                                            setThumbnailFile(resized || null);
-                                        }}
-                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                                    />
-                                    <p className="text-xs text-gray-400 mt-2">
-                                        Upload now or edit later from the chapter list.
-                                    </p>
-                                </div>
+                                {canManageThumbnails && (
+                                    <div className="mt-4">
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (event) => {
+                                                const selected = event.target.files?.[0];
+                                                if (!selected) {
+                                                    setThumbnailFile(null);
+                                                    return;
+                                                }
+                                                const resized = await resizeImageFile(selected);
+                                                setThumbnailFile(resized || null);
+                                            }}
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            Upload now or edit later from the chapter list.
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -1272,7 +1285,7 @@ export const dashboardComponents = `
                             </div>
                         </div>
                     )}
-                    {activeThumbnail && (
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a thumbnail for this chapter."
@@ -1868,7 +1881,7 @@ export const dashboardComponents = `
             );
         };
 
-        const IctChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onBack, onNavigate }) => {
+        const IctChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onBack, onNavigate, canManageStructure, canManageThumbnails }) => {
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1934,12 +1947,14 @@ export const dashboardComponents = `
                         >
                             Back
                         </button>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
-                        >
-                            অধ্যায় যোগ করুন
-                        </button>
+                        {canManageStructure && (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                অধ্যায় যোগ করুন
+                            </button>
+                        )}
                     </div>
 
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
@@ -1953,38 +1968,44 @@ export const dashboardComponents = `
                             >
                                 <span>{chapter.name}</span>
                                 <div className="flex items-center gap-2 text-xs font-semibold">
-                                    <button
-                                        onClick={() => {
-                                            setEditingChapter(chapter);
-                                            setChapterName(chapter.name);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                    >
-                                        Rename
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setActiveThumbnail({
-                                                title: chapter.name,
-                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id)
-                                            })
-                                        }
-                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                    >
-                                        Thumbnail
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
-                                            if (shouldRemove) {
-                                                onDelete(chapter.id);
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                setEditingChapter(chapter);
+                                                setChapterName(chapter.name);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Rename
+                                        </button>
+                                    )}
+                                    {canManageThumbnails && (
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: chapter.name,
+                                                    chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id)
+                                                })
                                             }
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                    >
-                                        Delete
-                                    </button>
+                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    )}
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
+                                                if (shouldRemove) {
+                                                    onDelete(chapter.id);
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => onSelect(chapter)}
                                         className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
@@ -1996,7 +2017,7 @@ export const dashboardComponents = `
                         ))}
                     </div>
 
-                    {isModalOpen && (
+                    {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -2009,26 +2030,28 @@ export const dashboardComponents = `
                                     placeholder="উদাহরণ: তথ্য ও যোগাযোগ প্রযুক্তি"
                                     className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 />
-                                <div className="mt-4">
-                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (event) => {
-                                            const selected = event.target.files?.[0];
-                                            if (!selected) {
-                                                setThumbnailFile(null);
-                                                return;
-                                            }
-                                            const resized = await resizeImageFile(selected);
-                                            setThumbnailFile(resized || null);
-                                        }}
-                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                                    />
-                                    <p className="text-xs text-gray-400 mt-2">
-                                        Upload now or edit later from the chapter list.
-                                    </p>
-                                </div>
+                                {canManageThumbnails && (
+                                    <div className="mt-4">
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (event) => {
+                                                const selected = event.target.files?.[0];
+                                                if (!selected) {
+                                                    setThumbnailFile(null);
+                                                    return;
+                                                }
+                                                const resized = await resizeImageFile(selected);
+                                                setThumbnailFile(resized || null);
+                                            }}
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            Upload now or edit later from the chapter list.
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -2049,7 +2072,7 @@ export const dashboardComponents = `
                             </div>
                         </div>
                     )}
-                    {activeThumbnail && (
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a thumbnail for this ICT chapter."
@@ -2115,7 +2138,9 @@ export const dashboardComponents = `
             onDelete,
             onSelect,
             onNavigate,
-            onBack
+            onBack,
+            canManageStructure,
+            canManageThumbnails
         }) => {
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
@@ -2182,12 +2207,14 @@ export const dashboardComponents = `
                         >
                             Back
                         </button>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
-                        >
-                            অধ্যায় যোগ করুন
-                        </button>
+                        {canManageStructure && (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                অধ্যায় যোগ করুন
+                            </button>
+                        )}
                     </div>
 
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
@@ -2204,38 +2231,44 @@ export const dashboardComponents = `
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-semibold">
-                                    <button
-                                        onClick={() => {
-                                            setEditingChapter(chapter);
-                                            setChapterName(chapter.name);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setActiveThumbnail({
-                                                title: chapter.name,
-                                                chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id)
-                                            })
-                                        }
-                                        className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
-                                    >
-                                        Thumbnail
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
-                                            if (shouldRemove) {
-                                                onDelete(chapter.id);
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                setEditingChapter(chapter);
+                                                setChapterName(chapter.name);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                        >
+                                            Edit
+                                        </button>
+                                    )}
+                                    {canManageThumbnails && (
+                                        <button
+                                            onClick={() =>
+                                                setActiveThumbnail({
+                                                    title: chapter.name,
+                                                    chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id)
+                                                })
                                             }
-                                        }}
-                                        className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                    >
-                                        Delete
-                                    </button>
+                                            className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            Thumbnail
+                                        </button>
+                                    )}
+                                    {canManageStructure && (
+                                        <button
+                                            onClick={() => {
+                                                const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?');
+                                                if (shouldRemove) {
+                                                    onDelete(chapter.id);
+                                                }
+                                            }}
+                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                         <button
                                             onClick={() => onSelect(chapter)}
                                             className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
@@ -2248,7 +2281,7 @@ export const dashboardComponents = `
                         ))}
                     </div>
 
-                    {isModalOpen && (
+                    {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
@@ -2261,26 +2294,28 @@ export const dashboardComponents = `
                                     placeholder="উদাহরণ: অধ্যায় ১"
                                     className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 />
-                                <div className="mt-4">
-                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (event) => {
-                                            const selected = event.target.files?.[0];
-                                            if (!selected) {
-                                                setThumbnailFile(null);
-                                                return;
-                                            }
-                                            const resized = await resizeImageFile(selected);
-                                            setThumbnailFile(resized || null);
-                                        }}
-                                        className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                                    />
-                                    <p className="text-xs text-gray-400 mt-2">
-                                        Upload now or edit later from the chapter list.
-                                    </p>
-                                </div>
+                                {canManageThumbnails && (
+                                    <div className="mt-4">
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (event) => {
+                                                const selected = event.target.files?.[0];
+                                                if (!selected) {
+                                                    setThumbnailFile(null);
+                                                    return;
+                                                }
+                                                const resized = await resizeImageFile(selected);
+                                                setThumbnailFile(resized || null);
+                                            }}
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            Upload now or edit later from the chapter list.
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="mt-5 flex justify-end gap-2">
                                     <button
                                         onClick={() => {
@@ -2301,7 +2336,7 @@ export const dashboardComponents = `
                             </div>
                         </div>
                     )}
-                    {activeThumbnail && (
+                    {activeThumbnail && canManageThumbnails && (
                         <ThumbnailUploadModal
                             title={activeThumbnail.title}
                             description="Upload a thumbnail for this chapter."
@@ -2332,7 +2367,8 @@ export const dashboardComponents = `
             onDeleteTopic,
             onSelectTopic,
             onBack,
-            onNavigate
+            onNavigate,
+            canManageStructure
         }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [topicName, setTopicName] = useState('');
@@ -2371,12 +2407,14 @@ export const dashboardComponents = `
                         >
                             Back
                         </button>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
-                        >
-                            টপিক যোগ করুন
-                        </button>
+                        {canManageStructure && (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                            >
+                                টপিক যোগ করুন
+                            </button>
+                        )}
                     </div>
 
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
@@ -2388,27 +2426,31 @@ export const dashboardComponents = `
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div className="text-sm font-semibold text-gray-900">{topic.name}</div>
                                     <div className="flex items-center gap-2 text-xs font-semibold">
-                                        <button
-                                            onClick={() => {
-                                                setEditingTopic(topic);
-                                                setTopicName(topic.name);
-                                                setIsModalOpen(true);
-                                            }}
-                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                const shouldRemove = window.confirm('আপনি কি এই টপিকটি মুছে ফেলতে চান?');
-                                                if (shouldRemove && chapter) {
-                                                    onDeleteTopic(chapter.id, topic.id);
-                                                }
-                                            }}
-                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                        >
-                                            Delete
-                                        </button>
+                                        {canManageStructure && (
+                                            <button
+                                                onClick={() => {
+                                                    setEditingTopic(topic);
+                                                    setTopicName(topic.name);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                            >
+                                                Edit
+                                            </button>
+                                        )}
+                                        {canManageStructure && (
+                                            <button
+                                                onClick={() => {
+                                                    const shouldRemove = window.confirm('আপনি কি এই টপিকটি মুছে ফেলতে চান?');
+                                                    if (shouldRemove && chapter) {
+                                                        onDeleteTopic(chapter.id, topic.id);
+                                                    }
+                                                }}
+                                                className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => onSelectTopic(topic)}
                                             className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
@@ -2421,7 +2463,7 @@ export const dashboardComponents = `
                         ))}
                     </div>
 
-                    {isModalOpen && (
+                    {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">
