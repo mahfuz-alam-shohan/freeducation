@@ -46,6 +46,18 @@ export const dashboardComponents = `
             );
         };
 
+        const extractYoutubeId = (url) => {
+            if (!url) return '';
+            const trimmed = String(url).trim();
+            const match = trimmed.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([a-zA-Z0-9_-]{6,})/);
+            return match ? match[1] : '';
+        };
+
+        const getYoutubeThumbnail = (url) => {
+            const videoId = extractYoutubeId(url);
+            return videoId ? \`https://img.youtube.com/vi/\${videoId}/hqdefault.jpg\` : '';
+        };
+
         const AdminDashboard = ({ onNavigate }) => {
             const [classes, setClasses] = useState([]);
             const [loading, setLoading] = useState(true);
@@ -1323,6 +1335,7 @@ export const dashboardComponents = `
 
             const srijonshilRoute = classLabel === 'SSC' ? 'bangla-ssc-srijonshil-types' : 'bangla-hsc-srijonshil-types';
             const mcqRoute = classLabel === 'SSC' ? 'bangla-ssc-mcq' : 'bangla-hsc-mcq';
+            const videoRoute = classLabel === 'SSC' ? 'bangla-ssc-videos' : 'bangla-hsc-videos';
             const optionList = [
                 {
                     label: 'সৃজনশীল',
@@ -1333,6 +1346,11 @@ export const dashboardComponents = `
                     label: 'বহুনির্বাচনী',
                     description: 'MCQ প্রশ্ন তৈরি করুন',
                     route: mcqRoute
+                },
+                {
+                    label: 'ভিডিও রিসোর্স',
+                    description: 'ভিডিও লিংক ও চ্যানেল যুক্ত করুন',
+                    route: videoRoute
                 }
             ];
             const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -1881,7 +1899,186 @@ export const dashboardComponents = `
             );
         };
 
-        const IctChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onBack, onNavigate, canManageStructure, canManageThumbnails }) => {
+        const VideoResourceList = ({ title, subtitle, videoList, onAdd, onUpdate, onDelete, onNavigate, backRoute }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editingIndex, setEditingIndex] = useState(null);
+            const [titleInput, setTitleInput] = useState('');
+            const [urlInput, setUrlInput] = useState('');
+            const [channelInput, setChannelInput] = useState('');
+
+            const resetForm = () => {
+                setEditingIndex(null);
+                setTitleInput('');
+                setUrlInput('');
+                setChannelInput('');
+            };
+
+            const openEditor = (index = null, entry = null) => {
+                setEditingIndex(index);
+                setTitleInput(entry?.title || '');
+                setUrlInput(entry?.url || '');
+                setChannelInput(entry?.channel || '');
+                setIsModalOpen(true);
+            };
+
+            const handleSave = () => {
+                const trimmedTitle = titleInput.trim();
+                const trimmedUrl = urlInput.trim();
+                const trimmedChannel = channelInput.trim();
+                if (!trimmedTitle || !trimmedUrl || !trimmedChannel) return;
+                const payload = { title: trimmedTitle, url: trimmedUrl, channel: trimmedChannel };
+                if (editingIndex === null) {
+                    onAdd(payload);
+                } else {
+                    onUpdate(editingIndex, payload);
+                }
+                resetForm();
+                setIsModalOpen(false);
+            };
+
+            return (
+                <AdminShell
+                    title={title}
+                    subtitle={subtitle}
+                    activeTab="classes"
+                    onNavigate={onNavigate}
+                >
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button
+                            onClick={() => onNavigate(backRoute)}
+                            className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => openEditor()}
+                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                        >
+                            ভিডিও যোগ করুন
+                        </button>
+                    </div>
+
+                    {videoList.length === 0 && (
+                        <div className="mt-4 bg-white border border-dashed border-gray-200 rounded-2xl p-6 text-sm text-gray-400 font-bangla">
+                            এখনো কোন ভিডিও যোগ করা হয়নি।
+                        </div>
+                    )}
+                    {videoList.length > 0 && (
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 font-bangla">
+                            {videoList.map((entry, index) => {
+                                const thumbnail = getYoutubeThumbnail(entry.url);
+                                return (
+                                    <div key={\`\${entry.title}-\${index}\`} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                                        <div className="aspect-video bg-gray-50 flex items-center justify-center">
+                                            {thumbnail ? (
+                                                <img
+                                                    src={thumbnail}
+                                                    alt={entry.title}
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Video</div>
+                                            )}
+                                        </div>
+                                        <div className="p-4 space-y-2">
+                                            <div className="text-sm font-semibold text-gray-900">{entry.title}</div>
+                                            <div className="text-xs text-gray-500">{entry.channel}</div>
+                                            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                                                <a
+                                                    href={entry.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition"
+                                                >
+                                                    Open link
+                                                </a>
+                                                <button
+                                                    onClick={() => openEditor(index, entry)}
+                                                    className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const shouldRemove = window.confirm('আপনি কি এই ভিডিওটি মুছে ফেলতে চান?');
+                                                        if (shouldRemove) {
+                                                            onDelete(index);
+                                                        }
+                                                    }}
+                                                    className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 font-bangla">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {editingIndex === null ? 'নতুন ভিডিও যোগ করুন' : 'ভিডিও সম্পাদনা করুন'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">ভিডিওর শিরোনাম, চ্যানেল এবং লিংক দিন।</p>
+                                <div className="mt-4 grid gap-3">
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">শিরোনাম</label>
+                                        <input
+                                            value={titleInput}
+                                            onChange={(event) => setTitleInput(event.target.value)}
+                                            placeholder="উদাহরণ: অধ্যায়ের মূল ধারণা"
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">চ্যানেল</label>
+                                        <input
+                                            value={channelInput}
+                                            onChange={(event) => setChannelInput(event.target.value)}
+                                            placeholder="উদাহরণ: Physics Academy"
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">ইউটিউব লিংক</label>
+                                        <input
+                                            value={urlInput}
+                                            onChange={(event) => setUrlInput(event.target.value)}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetForm();
+                                        }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </AdminShell>
+            );
+        };
+
+        const IctChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onSelectVideo, onBack, onNavigate, canManageStructure, canManageThumbnails }) => {
             const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
@@ -2011,6 +2208,12 @@ export const dashboardComponents = `
                                         className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition"
                                     >
                                         MCQ যোগ করুন
+                                    </button>
+                                    <button
+                                        onClick={() => onSelectVideo(chapter)}
+                                        className="text-xs uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-500 transition"
+                                    >
+                                        ভিডিও যোগ করুন
                                     </button>
                                 </div>
                             </div>
@@ -2511,6 +2714,7 @@ export const dashboardComponents = `
             onBack,
             onNavigateCq,
             onNavigateMcq,
+            onNavigateVideo,
             onNavigate
         }) => {
             const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -2583,6 +2787,14 @@ export const dashboardComponents = `
                             <div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div>
                             <div className="text-lg font-semibold text-gray-900 mt-2">বহুনির্বাচনী (MCQ)</div>
                             <p className="text-sm text-gray-500 mt-2">MCQ প্রশ্ন তৈরি করুন</p>
+                        </button>
+                        <button
+                            onClick={onNavigateVideo}
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"
+                        >
+                            <div className="text-xs uppercase tracking-[0.2em] text-gray-300">রিসোর্স</div>
+                            <div className="text-lg font-semibold text-gray-900 mt-2">ভিডিও রিসোর্স</div>
+                            <p className="text-sm text-gray-500 mt-2">ভিডিও লিংক ও চ্যানেল যোগ করুন</p>
                         </button>
                     </div>
 

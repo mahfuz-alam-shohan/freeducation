@@ -32,6 +32,7 @@ export const renderPublic = `
                                 classLabel={selectedIctClass}
                                 chapter={selectedIctChapter}
                                 mcqQuestions={mcqQuestions}
+                                videoResources={videoResources}
                                 getQuestionKey={getQuestionKey}
                                 onBack={() => navigate('public-ssc-ict')}
                                 onNavigate={navigate}
@@ -90,6 +91,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -178,6 +180,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -268,6 +271,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -358,6 +362,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan: srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'gyan')] || [],
                                     onudhabon:
@@ -448,6 +453,9 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={
+                                    videoResources[getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'video')] || []
+                                }
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -573,6 +581,9 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={
+                                    videoResources[getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'video')] || []
+                                }
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -679,6 +690,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'gyan')] ||
@@ -779,6 +791,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'gyan')] ||
@@ -879,6 +892,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -981,6 +995,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -1083,6 +1098,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -1185,6 +1201,7 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                videoList={videoResources[getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'video')] || []}
                                 cqQuestions={{
                                     gyan:
                                         srijonshilQuestions[
@@ -1423,6 +1440,7 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
+                                videoResources={videoResources}
                                 srijonshilQuestions={srijonshilQuestions}
                                 mcqQuestions={mcqQuestions}
                                 getQuestionKey={getQuestionKey}
@@ -1435,6 +1453,7 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
+                                videoResources={videoResources}
                                 srijonshilQuestions={srijonshilQuestions}
                                 mcqQuestions={mcqQuestions}
                                 getQuestionKey={getQuestionKey}
