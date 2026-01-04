@@ -19,8 +19,6 @@ export const appRouting = `
                 'public-bangla-hsc-srijonshil': '/hsc/bangla-1st-paper/item/srijonshil',
                 'public-bangla-ssc-mcq': '/ssc/bangla-1st-paper/item/mcq',
                 'public-bangla-hsc-mcq': '/hsc/bangla-1st-paper/item/mcq',
-                'public-bangla-ssc-videos': '/ssc/bangla-1st-paper/item/videos',
-                'public-bangla-hsc-videos': '/hsc/bangla-1st-paper/item/videos',
                 'public-ssc-ict': '/ssc/ict',
                 'public-ssc-ict-mcq': '/ssc/ict/mcq',
                 'public-hsc-ict': '/hsc/ict',
@@ -28,74 +26,62 @@ export const appRouting = `
                 'public-hsc-ict-topic': '/hsc/ict/topic',
                 'public-hsc-ict-cq': '/hsc/ict/cq',
                 'public-hsc-ict-mcq': '/hsc/ict/mcq',
-                'public-hsc-ict-videos': '/hsc/ict/videos',
                 'public-ssc-physics': '/ssc/physics',
                 'public-ssc-physics-topics': '/ssc/physics/topics',
                 'public-ssc-physics-topic': '/ssc/physics/topic',
                 'public-ssc-physics-cq': '/ssc/physics/cq',
                 'public-ssc-physics-mcq': '/ssc/physics/mcq',
-                'public-ssc-physics-videos': '/ssc/physics/videos',
                 'public-ssc-chemistry': '/ssc/chemistry',
                 'public-ssc-chemistry-topics': '/ssc/chemistry/topics',
                 'public-ssc-chemistry-topic': '/ssc/chemistry/topic',
                 'public-ssc-chemistry-cq': '/ssc/chemistry/cq',
                 'public-ssc-chemistry-mcq': '/ssc/chemistry/mcq',
-                'public-ssc-chemistry-videos': '/ssc/chemistry/videos',
                 'public-ssc-biology': '/ssc/biology',
                 'public-ssc-biology-topics': '/ssc/biology/topics',
                 'public-ssc-biology-topic': '/ssc/biology/topic',
                 'public-ssc-biology-cq': '/ssc/biology/cq',
                 'public-ssc-biology-mcq': '/ssc/biology/mcq',
-                'public-ssc-biology-videos': '/ssc/biology/videos',
                 'public-ssc-bangladesh-global-studies': '/ssc/bangladesh-and-global-studies',
                 'public-ssc-bangladesh-global-studies-topics': '/ssc/bangladesh-and-global-studies/topics',
                 'public-ssc-bangladesh-global-studies-topic': '/ssc/bangladesh-and-global-studies/topic',
                 'public-ssc-bangladesh-global-studies-cq': '/ssc/bangladesh-and-global-studies/cq',
                 'public-ssc-bangladesh-global-studies-mcq': '/ssc/bangladesh-and-global-studies/mcq',
-                'public-ssc-bangladesh-global-studies-videos': '/ssc/bangladesh-and-global-studies/videos',
                 'public-ssc-religion': '/ssc/religion-and-moral-education',
                 'public-ssc-religion-chapters': '/ssc/religion-and-moral-education/chapters',
                 'public-ssc-religion-topics': '/ssc/religion-and-moral-education/topics',
                 'public-ssc-religion-topic': '/ssc/religion-and-moral-education/topic',
                 'public-ssc-religion-cq': '/ssc/religion-and-moral-education/cq',
                 'public-ssc-religion-mcq': '/ssc/religion-and-moral-education/mcq',
-                'public-ssc-religion-videos': '/ssc/religion-and-moral-education/videos',
                 'public-hsc-physics-1st': '/hsc/physics-1st-paper',
                 'public-hsc-physics-1st-topics': '/hsc/physics-1st-paper/topics',
                 'public-hsc-physics-1st-topic': '/hsc/physics-1st-paper/topic',
                 'public-hsc-physics-1st-cq': '/hsc/physics-1st-paper/cq',
                 'public-hsc-physics-1st-mcq': '/hsc/physics-1st-paper/mcq',
-                'public-hsc-physics-1st-videos': '/hsc/physics-1st-paper/videos',
                 'public-hsc-physics-2nd': '/hsc/physics-2nd-paper',
                 'public-hsc-physics-2nd-topics': '/hsc/physics-2nd-paper/topics',
                 'public-hsc-physics-2nd-topic': '/hsc/physics-2nd-paper/topic',
                 'public-hsc-physics-2nd-cq': '/hsc/physics-2nd-paper/cq',
                 'public-hsc-physics-2nd-mcq': '/hsc/physics-2nd-paper/mcq',
-                'public-hsc-physics-2nd-videos': '/hsc/physics-2nd-paper/videos',
                 'public-hsc-chemistry-1st': '/hsc/chemistry-1st-paper',
                 'public-hsc-chemistry-1st-topics': '/hsc/chemistry-1st-paper/topics',
                 'public-hsc-chemistry-1st-topic': '/hsc/chemistry-1st-paper/topic',
                 'public-hsc-chemistry-1st-cq': '/hsc/chemistry-1st-paper/cq',
                 'public-hsc-chemistry-1st-mcq': '/hsc/chemistry-1st-paper/mcq',
-                'public-hsc-chemistry-1st-videos': '/hsc/chemistry-1st-paper/videos',
                 'public-hsc-chemistry-2nd': '/hsc/chemistry-2nd-paper',
                 'public-hsc-chemistry-2nd-topics': '/hsc/chemistry-2nd-paper/topics',
                 'public-hsc-chemistry-2nd-topic': '/hsc/chemistry-2nd-paper/topic',
                 'public-hsc-chemistry-2nd-cq': '/hsc/chemistry-2nd-paper/cq',
                 'public-hsc-chemistry-2nd-mcq': '/hsc/chemistry-2nd-paper/mcq',
-                'public-hsc-chemistry-2nd-videos': '/hsc/chemistry-2nd-paper/videos',
                 'public-hsc-biology-1st': '/hsc/biology-1st-paper',
                 'public-hsc-biology-1st-topics': '/hsc/biology-1st-paper/topics',
                 'public-hsc-biology-1st-topic': '/hsc/biology-1st-paper/topic',
                 'public-hsc-biology-1st-cq': '/hsc/biology-1st-paper/cq',
                 'public-hsc-biology-1st-mcq': '/hsc/biology-1st-paper/mcq',
-                'public-hsc-biology-1st-videos': '/hsc/biology-1st-paper/videos',
                 'public-hsc-biology-2nd': '/hsc/biology-2nd-paper',
                 'public-hsc-biology-2nd-topics': '/hsc/biology-2nd-paper/topics',
                 'public-hsc-biology-2nd-topic': '/hsc/biology-2nd-paper/topic',
                 'public-hsc-biology-2nd-cq': '/hsc/biology-2nd-paper/cq',
                 'public-hsc-biology-2nd-mcq': '/hsc/biology-2nd-paper/mcq',
-                'public-hsc-biology-2nd-videos': '/hsc/biology-2nd-paper/videos',
                 'public-english-hsc-1st-paper': '/hsc/english-1st-paper',
                 'public-english-hsc-reading': '/hsc/english-1st-paper/reading',
                 'public-english-hsc-writing': '/hsc/english-1st-paper/writing',
@@ -218,74 +204,62 @@ export const appRouting = `
                 if (path.startsWith('/hsc/english-1st-paper/reading')) return 'public-english-hsc-reading';
                 if (path.startsWith('/hsc/english-1st-paper/writing')) return 'public-english-hsc-writing';
                 if (path.startsWith('/hsc/english-1st-paper')) return 'public-english-hsc-1st-paper';
-                if (path.startsWith('/hsc/physics-1st-paper/videos')) return 'public-hsc-physics-1st-videos';
                 if (path.startsWith('/hsc/physics-1st-paper/mcq')) return 'public-hsc-physics-1st-mcq';
                 if (path.startsWith('/hsc/physics-1st-paper/cq')) return 'public-hsc-physics-1st-cq';
                 if (path.startsWith('/hsc/physics-1st-paper/topic')) return 'public-hsc-physics-1st-topic';
                 if (path.startsWith('/hsc/physics-1st-paper/topics')) return 'public-hsc-physics-1st-topics';
                 if (path.startsWith('/hsc/physics-1st-paper')) return 'public-hsc-physics-1st';
-                if (path.startsWith('/hsc/physics-2nd-paper/videos')) return 'public-hsc-physics-2nd-videos';
                 if (path.startsWith('/hsc/physics-2nd-paper/mcq')) return 'public-hsc-physics-2nd-mcq';
                 if (path.startsWith('/hsc/physics-2nd-paper/cq')) return 'public-hsc-physics-2nd-cq';
                 if (path.startsWith('/hsc/physics-2nd-paper/topic')) return 'public-hsc-physics-2nd-topic';
                 if (path.startsWith('/hsc/physics-2nd-paper/topics')) return 'public-hsc-physics-2nd-topics';
                 if (path.startsWith('/hsc/physics-2nd-paper')) return 'public-hsc-physics-2nd';
-                if (path.startsWith('/hsc/chemistry-1st-paper/videos')) return 'public-hsc-chemistry-1st-videos';
                 if (path.startsWith('/hsc/chemistry-1st-paper/mcq')) return 'public-hsc-chemistry-1st-mcq';
                 if (path.startsWith('/hsc/chemistry-1st-paper/cq')) return 'public-hsc-chemistry-1st-cq';
                 if (path.startsWith('/hsc/chemistry-1st-paper/topic')) return 'public-hsc-chemistry-1st-topic';
                 if (path.startsWith('/hsc/chemistry-1st-paper/topics')) return 'public-hsc-chemistry-1st-topics';
                 if (path.startsWith('/hsc/chemistry-1st-paper')) return 'public-hsc-chemistry-1st';
-                if (path.startsWith('/hsc/chemistry-2nd-paper/videos')) return 'public-hsc-chemistry-2nd-videos';
                 if (path.startsWith('/hsc/chemistry-2nd-paper/mcq')) return 'public-hsc-chemistry-2nd-mcq';
                 if (path.startsWith('/hsc/chemistry-2nd-paper/cq')) return 'public-hsc-chemistry-2nd-cq';
                 if (path.startsWith('/hsc/chemistry-2nd-paper/topic')) return 'public-hsc-chemistry-2nd-topic';
                 if (path.startsWith('/hsc/chemistry-2nd-paper/topics')) return 'public-hsc-chemistry-2nd-topics';
                 if (path.startsWith('/hsc/chemistry-2nd-paper')) return 'public-hsc-chemistry-2nd';
-                if (path.startsWith('/hsc/biology-1st-paper/videos')) return 'public-hsc-biology-1st-videos';
                 if (path.startsWith('/hsc/biology-1st-paper/mcq')) return 'public-hsc-biology-1st-mcq';
                 if (path.startsWith('/hsc/biology-1st-paper/cq')) return 'public-hsc-biology-1st-cq';
                 if (path.startsWith('/hsc/biology-1st-paper/topic')) return 'public-hsc-biology-1st-topic';
                 if (path.startsWith('/hsc/biology-1st-paper/topics')) return 'public-hsc-biology-1st-topics';
                 if (path.startsWith('/hsc/biology-1st-paper')) return 'public-hsc-biology-1st';
-                if (path.startsWith('/hsc/biology-2nd-paper/videos')) return 'public-hsc-biology-2nd-videos';
                 if (path.startsWith('/hsc/biology-2nd-paper/mcq')) return 'public-hsc-biology-2nd-mcq';
                 if (path.startsWith('/hsc/biology-2nd-paper/cq')) return 'public-hsc-biology-2nd-cq';
                 if (path.startsWith('/hsc/biology-2nd-paper/topic')) return 'public-hsc-biology-2nd-topic';
                 if (path.startsWith('/hsc/biology-2nd-paper/topics')) return 'public-hsc-biology-2nd-topics';
                 if (path.startsWith('/hsc/biology-2nd-paper')) return 'public-hsc-biology-2nd';
-                if (path.startsWith('/hsc/ict/videos')) return 'public-hsc-ict-videos';
                 if (path.startsWith('/hsc/ict/mcq')) return 'public-hsc-ict-mcq';
                 if (path.startsWith('/hsc/ict/cq')) return 'public-hsc-ict-cq';
                 if (path.startsWith('/hsc/ict/topics')) return 'public-hsc-ict-topics';
                 if (path.startsWith('/hsc/ict/topic')) return 'public-hsc-ict-topic';
                 if (path.startsWith('/hsc/ict')) return 'public-hsc-ict';
-                if (path.startsWith('/ssc/bangladesh-and-global-studies/videos')) return 'public-ssc-bangladesh-global-studies-videos';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies/mcq')) return 'public-ssc-bangladesh-global-studies-mcq';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies/cq')) return 'public-ssc-bangladesh-global-studies-cq';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies/topic')) return 'public-ssc-bangladesh-global-studies-topic';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies/topics')) return 'public-ssc-bangladesh-global-studies-topics';
                 if (path.startsWith('/ssc/bangladesh-and-global-studies')) return 'public-ssc-bangladesh-global-studies';
-                if (path.startsWith('/ssc/religion-and-moral-education/videos')) return 'public-ssc-religion-videos';
                 if (path.startsWith('/ssc/religion-and-moral-education/mcq')) return 'public-ssc-religion-mcq';
                 if (path.startsWith('/ssc/religion-and-moral-education/cq')) return 'public-ssc-religion-cq';
                 if (path.startsWith('/ssc/religion-and-moral-education/topic')) return 'public-ssc-religion-topic';
                 if (path.startsWith('/ssc/religion-and-moral-education/topics')) return 'public-ssc-religion-topics';
                 if (path.startsWith('/ssc/religion-and-moral-education/chapters')) return 'public-ssc-religion-chapters';
                 if (path.startsWith('/ssc/religion-and-moral-education')) return 'public-ssc-religion';
-                if (path.startsWith('/ssc/physics/videos')) return 'public-ssc-physics-videos';
                 if (path.startsWith('/ssc/physics/mcq')) return 'public-ssc-physics-mcq';
                 if (path.startsWith('/ssc/physics/cq')) return 'public-ssc-physics-cq';
                 if (path.startsWith('/ssc/physics/topic')) return 'public-ssc-physics-topic';
                 if (path.startsWith('/ssc/physics/topics')) return 'public-ssc-physics-topics';
                 if (path.startsWith('/ssc/physics')) return 'public-ssc-physics';
-                if (path.startsWith('/ssc/chemistry/videos')) return 'public-ssc-chemistry-videos';
                 if (path.startsWith('/ssc/chemistry/mcq')) return 'public-ssc-chemistry-mcq';
                 if (path.startsWith('/ssc/chemistry/cq')) return 'public-ssc-chemistry-cq';
                 if (path.startsWith('/ssc/chemistry/topic')) return 'public-ssc-chemistry-topic';
                 if (path.startsWith('/ssc/chemistry/topics')) return 'public-ssc-chemistry-topics';
                 if (path.startsWith('/ssc/chemistry')) return 'public-ssc-chemistry';
-                if (path.startsWith('/ssc/biology/videos')) return 'public-ssc-biology-videos';
                 if (path.startsWith('/ssc/biology/mcq')) return 'public-ssc-biology-mcq';
                 if (path.startsWith('/ssc/biology/cq')) return 'public-ssc-biology-cq';
                 if (path.startsWith('/ssc/biology/topic')) return 'public-ssc-biology-topic';
@@ -293,10 +267,8 @@ export const appRouting = `
                 if (path.startsWith('/ssc/biology')) return 'public-ssc-biology';
                 if (path.startsWith('/ssc/ict/mcq')) return 'public-ssc-ict-mcq';
                 if (path.startsWith('/ssc/ict')) return 'public-ssc-ict';
-                if (path.startsWith('/ssc/bangla-1st-paper/item/videos')) return 'public-bangla-ssc-videos';
                 if (path.startsWith('/ssc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-ssc-srijonshil';
                 if (path.startsWith('/hsc/bangla-1st-paper/item/srijonshil')) return 'public-bangla-hsc-srijonshil';
-                if (path.startsWith('/hsc/bangla-1st-paper/item/videos')) return 'public-bangla-hsc-videos';
                 if (path.startsWith('/ssc/bangla-1st-paper/item/mcq')) return 'public-bangla-ssc-mcq';
                 if (path.startsWith('/hsc/bangla-1st-paper/item/mcq')) return 'public-bangla-hsc-mcq';
                 if (path.startsWith('/ssc/bangla-1st-paper/item')) return 'public-bangla-ssc-item';

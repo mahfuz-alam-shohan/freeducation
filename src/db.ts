@@ -69,13 +69,6 @@ export async function initDatabase(db: D1Database) {
       content_type TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS video_assets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      file_key TEXT UNIQUE,
-      content_type TEXT,
-      original_name TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`),
     db.prepare(`INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')`),
     db.prepare(`INSERT OR IGNORE INTO class_groups (class_id, name)
       SELECT classes.id, group_names.name
@@ -153,12 +146,6 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "file_key", sql: "TEXT" },
     { name: "content_type", sql: "TEXT" },
     { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
-  ],
-  video_assets: [
-    { name: "file_key", sql: "TEXT UNIQUE" },
-    { name: "content_type", sql: "TEXT" },
-    { name: "original_name", sql: "TEXT" },
-    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
 };
 

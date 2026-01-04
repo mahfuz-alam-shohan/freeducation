@@ -90,9 +90,12 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-ict-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-ict-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-ict-videos')}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'onudhabon')] || []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-hsc-ict-topics')}
                                 onNavigate={navigate}
                             />
@@ -122,23 +125,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-ict-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-ict-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Information and Communication Technology"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-ict-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-ict-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-ssc-physics' && (
                             <PublicScienceShell
@@ -192,9 +178,13 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-ssc-physics-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-physics-mcq')}
-                                onNavigateVideos={() => navigate('public-ssc-physics-videos')}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'onudhabon')] ||
+                                        []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-ssc-physics-topics')}
                                 onNavigate={navigate}
                             />
@@ -225,23 +215,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-ssc-physics-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-ssc-physics-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Physics"
-                                classLabel="SSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-ssc-physics-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-ssc-physics-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-ssc-chemistry' && (
                             <PublicScienceShell
@@ -295,9 +268,13 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-ssc-chemistry-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-chemistry-mcq')}
-                                onNavigateVideos={() => navigate('public-ssc-chemistry-videos')}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'onudhabon')] ||
+                                        []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-ssc-chemistry-topics')}
                                 onNavigate={navigate}
                             />
@@ -328,23 +305,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-ssc-chemistry-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-ssc-chemistry-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Chemistry"
-                                classLabel="SSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-ssc-chemistry-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-ssc-chemistry-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-ssc-biology' && (
                             <PublicScienceShell
@@ -398,9 +358,13 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-ssc-biology-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-biology-mcq')}
-                                onNavigateVideos={() => navigate('public-ssc-biology-videos')}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'onudhabon')] ||
+                                        []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-ssc-biology-topics')}
                                 onNavigate={navigate}
                             />
@@ -431,23 +395,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-ssc-biology-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-ssc-biology-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Biology"
-                                classLabel="SSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-ssc-biology-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-ssc-biology-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-ssc-bangladesh-global-studies' && (
                             <PublicScienceShell
@@ -501,9 +448,21 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-ssc-bangladesh-global-studies-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-bangladesh-global-studies-mcq')}
-                                onNavigateVideos={() => navigate('public-ssc-bangladesh-global-studies-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[
+                                        getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'mcq')
+                                    ] || []
+                                }
                                 onBack={() => navigate('public-ssc-bangladesh-global-studies-topics')}
                                 onNavigate={navigate}
                             />
@@ -540,23 +499,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-ssc-bangladesh-global-studies-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-ssc-bangladesh-global-studies-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Bangladesh and Global Studies"
-                                classLabel="SSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-ssc-bangladesh-global-studies-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-ssc-bangladesh-global-studies-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-ssc-religion' && (
                             <PublicScienceShell
@@ -631,9 +573,21 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-ssc-religion-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-religion-mcq')}
-                                onNavigateVideos={() => navigate('public-ssc-religion-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[
+                                        getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'mcq')
+                                    ] || []
+                                }
                                 onBack={() => navigate('public-ssc-religion-topics')}
                                 onNavigate={navigate}
                             />
@@ -672,23 +626,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-ssc-religion-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-ssc-religion-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Religion and Moral Education"
-                                classLabel="SSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-ssc-religion-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-ssc-religion-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-hsc-physics-1st' && (
                             <PublicScienceShell
@@ -742,9 +679,18 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-physics-1st-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-physics-1st-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-physics-1st-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'gyan')] ||
+                                        [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-physics-1st-topics')}
                                 onNavigate={navigate}
                             />
@@ -780,23 +726,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-physics-1st-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-physics-1st-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Physics 1st Paper"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-physics-1st-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-physics-1st-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-hsc-physics-2nd' && (
                             <PublicScienceShell
@@ -850,9 +779,18 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-physics-2nd-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-physics-2nd-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-physics-2nd-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'gyan')] ||
+                                        [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-physics-2nd-topics')}
                                 onNavigate={navigate}
                             />
@@ -888,23 +826,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-physics-2nd-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-physics-2nd-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Physics 2nd Paper"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-physics-2nd-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-physics-2nd-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-hsc-chemistry-1st' && (
                             <PublicScienceShell
@@ -958,9 +879,19 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-chemistry-1st-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-chemistry-1st-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-chemistry-1st-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-chemistry-1st-topics')}
                                 onNavigate={navigate}
                             />
@@ -997,23 +928,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-chemistry-1st-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-chemistry-1st-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Chemistry 1st Paper"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-chemistry-1st-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-chemistry-1st-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-hsc-chemistry-2nd' && (
                             <PublicScienceShell
@@ -1067,9 +981,19 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-chemistry-2nd-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-chemistry-2nd-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-chemistry-2nd-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-chemistry-2nd-topics')}
                                 onNavigate={navigate}
                             />
@@ -1106,23 +1030,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-chemistry-2nd-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-chemistry-2nd-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Chemistry 2nd Paper"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-chemistry-2nd-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-chemistry-2nd-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-hsc-biology-1st' && (
                             <PublicScienceShell
@@ -1176,9 +1083,19 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-biology-1st-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-biology-1st-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-biology-1st-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-biology-1st-topics')}
                                 onNavigate={navigate}
                             />
@@ -1215,23 +1132,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-biology-1st-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-biology-1st-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Biology 1st Paper"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-biology-1st-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-biology-1st-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-hsc-biology-2nd' && (
                             <PublicScienceShell
@@ -1285,9 +1185,19 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
-                                onNavigateCq={() => navigate('public-hsc-biology-2nd-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-biology-2nd-mcq')}
-                                onNavigateVideos={() => navigate('public-hsc-biology-2nd-videos')}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-biology-2nd-topics')}
                                 onNavigate={navigate}
                             />
@@ -1324,23 +1234,6 @@ export const renderPublic = `
                                 onBack={() => navigate('public-hsc-biology-2nd-topic')}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-hsc-biology-2nd-videos' && (
-                            <PublicScienceShell
-                                subjectLabel="Biology 2nd Paper"
-                                classLabel="HSC"
-                                title={selectedScienceTopic?.name || 'ভিডিও'}
-                                subtitle={selectedScienceChapter?.name || ''}
-                                hideMeta
-                                onBack={() => navigate('public-hsc-biology-2nd-topic')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-hsc-biology-2nd-videos"
-                                />
-                            </PublicScienceShell>
                         )}
                         {view === 'public-bangla-ssc-1st-paper' && (
                             <PublicBanglaShell
@@ -1530,7 +1423,9 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
-                                onNavigateVideos={() => navigate('public-bangla-ssc-videos')}
+                                srijonshilQuestions={srijonshilQuestions}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1540,37 +1435,11 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
-                                onNavigateVideos={() => navigate('public-bangla-hsc-videos')}
+                                srijonshilQuestions={srijonshilQuestions}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
                                 onNavigate={navigate}
                             />
-                        )}
-                        {view === 'public-bangla-ssc-videos' && (
-                            <PublicBanglaShell
-                                title={selectedBanglaItem || 'ভিডিও'}
-                                hideMeta
-                                onBack={() => navigate('public-bangla-ssc-item')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['SSC', selectedBanglaCategory || 'general', selectedBanglaItem || ''].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-bangla-ssc-videos"
-                                />
-                            </PublicBanglaShell>
-                        )}
-                        {view === 'public-bangla-hsc-videos' && (
-                            <PublicBanglaShell
-                                title={selectedBanglaItem || 'ভিডিও'}
-                                hideMeta
-                                onBack={() => navigate('public-bangla-hsc-item')}
-                                onNavigate={navigate}
-                            >
-                                <PublicVideoList
-                                    noteKey={['HSC', selectedBanglaCategory || 'general', selectedBanglaItem || ''].join('-')}
-                                    videosByItem={videosByItem}
-                                    route="public-bangla-hsc-videos"
-                                />
-                            </PublicBanglaShell>
                         )}
                         {view === 'public-bangla-ssc-srijonshil' && (
                             <PublicBanglaSrijonshilDetail
