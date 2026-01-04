@@ -161,6 +161,30 @@ export const landingComponents = `
             'bg-violet-500',
             'bg-teal-500'
         ];
+        const getChapterCountForSubject = (classLabel, subject) => {
+            if (classLabel === 'SSC' && subject === 'Bangla 1st Paper') {
+                return sscGoddoItems.length + sscPoddoItems.length + sscShohopathItems.length;
+            }
+            if (classLabel === 'HSC' && subject === 'Bangla 1st Paper') {
+                return hscGoddoItems.length + hscPoddoItems.length + hscShohopathItems.length;
+            }
+            if (classLabel === 'SSC' && subject === 'Information and Communication Technology') return sscIctChapters.length;
+            if (classLabel === 'HSC' && subject === 'Information and Communication Technology') return hscIctChapters.length;
+            if (classLabel === 'SSC' && subject === 'Physics') return sscPhysicsChapters.length;
+            if (classLabel === 'SSC' && subject === 'Chemistry') return sscChemistryChapters.length;
+            if (classLabel === 'SSC' && subject === 'Biology') return sscBiologyChapters.length;
+            if (classLabel === 'SSC' && subject === 'Bangladesh and Global Studies') return sscBangladeshGlobalChapters.length;
+            if (classLabel === 'SSC' && subject === 'Religion and Moral Education') {
+                return Object.values(sscReligionChapters || {}).reduce((total, list) => total + (list?.length || 0), 0);
+            }
+            if (classLabel === 'HSC' && subject === 'Physics 1st Paper') return hscPhysics1stChapters.length;
+            if (classLabel === 'HSC' && subject === 'Physics 2nd Paper') return hscPhysics2ndChapters.length;
+            if (classLabel === 'HSC' && subject === 'Chemistry 1st Paper') return hscChemistry1stChapters.length;
+            if (classLabel === 'HSC' && subject === 'Chemistry 2nd Paper') return hscChemistry2ndChapters.length;
+            if (classLabel === 'HSC' && subject === 'Biology 1st Paper') return hscBiology1stChapters.length;
+            if (classLabel === 'HSC' && subject === 'Biology 2nd Paper') return hscBiology2ndChapters.length;
+            return null;
+        };
         const buildSubjectList = (classLabel) => {
             const groupMap = subjectGroups[classLabel] || {};
             let paletteIndex = 0;
@@ -195,6 +219,7 @@ export const landingComponents = `
                         accent,
                         groups: new Set([group]),
                         subjectKey: makeThumbnailKey(subject, classLabel),
+                        chapterCount: getChapterCountForSubject(classLabel, subject),
                         route: isBanglaFirst
                             ? (classLabel === 'SSC' ? 'public-bangla-ssc-1st-paper' : 'public-bangla-hsc-1st-paper')
                             : isEnglishFirst
@@ -468,7 +493,7 @@ export const landingComponents = `
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
-            const chapterCount = subject.chapterCount || (subject.groups?.length || 1) * 4 + 6;
+            const chapterCount = Number.isFinite(subject.chapterCount) ? subject.chapterCount : null;
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
@@ -508,7 +533,7 @@ export const landingComponents = `
                             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
                                 <span className="inline-flex items-center gap-1">
                                     <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
-                                    {chapterCount} Chapters
+                                    {chapterCount !== null ? chapterCount + ' Chapters' : 'Chapters coming soon'}
                                 </span>
                                 {subject.lastRead && (
                                     <span className="inline-flex items-center gap-1 text-emerald-600">
