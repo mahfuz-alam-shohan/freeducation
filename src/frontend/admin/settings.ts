@@ -139,6 +139,80 @@ export const settingsComponents = `
                 image.src = objectUrl;
             });
 
+        const formatRoleLabel = (role) => (role === 'teacher' ? 'Teacher' : 'Admin');
+
+        const useProfileData = () => {
+            const [profile, setProfile] = useState(null);
+            const [history, setHistory] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+
+            const loadProfile = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setIsLoading(false);
+                    return;
+                }
+                try {
+                    const [profileRes, historyRes] = await Promise.all([
+                        fetch('/api/profile', {
+                            headers: { Authorization: 'Bearer ' + token }
+                        }),
+                        fetch('/api/profile/history', {
+                            headers: { Authorization: 'Bearer ' + token }
+                        })
+                    ]);
+                    const profileData = await profileRes.json();
+                    const historyData = await historyRes.json();
+                    if (profileData.success) {
+                        setProfile(profileData.profile);
+                    }
+                    if (historyData.success) {
+                        setHistory(historyData.entries || []);
+                    }
+                } catch (error) {
+                    console.warn('Failed to load profile', error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                loadProfile();
+            }, []);
+
+            return {
+                profile,
+                history,
+                isLoading,
+                refreshProfile: loadProfile,
+                setProfile
+            };
+        };
+
+        const ProfileSummary = ({ profile, compact = false }) => {
+            if (!profile) return null;
+            return (
+                <div className={\`flex \${compact ? 'flex-col items-center text-center' : 'items-center'} gap-4\`}>
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                        {profile.avatarUrl ? (
+                            <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-sm font-semibold text-slate-400">
+                                {(profile.name || profile.username || '?').slice(0, 1).toUpperCase()}
+                            </span>
+                        )}
+                    </div>
+                    <div className={compact ? 'space-y-1' : ''}>
+                        <div className="text-sm font-semibold text-slate-900">{profile.name || profile.username}</div>
+                        <div className="text-xs text-slate-500">{profile.email || profile.username}</div>
+                        <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
+                            {formatRoleLabel(profile.role)}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const buildAdminSubjectList = () => {
             const subjectMap = new Map();
             Object.entries(adminSubjectGroups).forEach(([classLabel, groupMap]) => {
@@ -1355,13 +1429,254 @@ export const settingsComponents = `
             );
         };
 
+        const ProfileManagement = ({ onNavigate, onBack, showHistory, shell = 'admin' }) => {
+            const { profile, history, refreshProfile, setProfile } = useProfileData();
+            const [statusMessage, setStatusMessage] = useState(null);
+            const [nameInput, setNameInput] = useState('');
+            const [isSaving, setIsSaving] = useState(false);
+            const [avatarFile, setAvatarFile] = useState(null);
+            const [avatarPreview, setAvatarPreview] = useState('');
+            const ShellComponent = shell === 'teacher' ? TeacherShell : AdminShell;
+            const formatHistoryDetails = (details) => {
+                if (!details) return '';
+                try {
+                    const parsed = JSON.parse(details);
+                    if (parsed && typeof parsed === 'object') {
+                        return Object.entries(parsed)
+                            .map(([key, value]) => \`\${key}: \${value}\`)
+                            .join(' • ');
+                    }
+                } catch (error) {
+                    return details;
+                }
+                return details;
+            };
+
+            useEffect(() => {
+                if (profile?.name) {
+                    setNameInput(profile.name);
+                }
+            }, [profile?.name]);
+
+            useEffect(() => {
+                if (!avatarFile) {
+                    setAvatarPreview('');
+                    return undefined;
+                }
+                const nextUrl = URL.createObjectURL(avatarFile);
+                setAvatarPreview(nextUrl);
+                return () => URL.revokeObjectURL(nextUrl);
+            }, [avatarFile]);
+
+            const handleNameSave = async () => {
+                if (!nameInput.trim()) {
+                    setStatusMessage('Please enter a display name.');
+                    return;
+                }
+                setIsSaving(true);
+                setStatusMessage(null);
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setStatusMessage('You must be logged in to update your profile.');
+                    setIsSaving(false);
+                    return;
+                }
+                try {
+                    const response = await fetch('/api/profile', {
+                        method: 'PUT',
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name: nameInput.trim() })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setStatusMessage('Profile updated.');
+                        setProfile((prev) => ({ ...prev, name: nameInput.trim() }));
+                    } else {
+                        setStatusMessage(data.error || 'Profile update failed.');
+                    }
+                } catch (error) {
+                    setStatusMessage('Profile update failed.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            const handleAvatarUpload = async () => {
+                if (!avatarFile) {
+                    setStatusMessage('Please select an image to upload.');
+                    return;
+                }
+                setIsSaving(true);
+                setStatusMessage(null);
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setStatusMessage('You must be logged in to update your picture.');
+                    setIsSaving(false);
+                    return;
+                }
+                try {
+                    const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
+                    const formData = new FormData();
+                    formData.append('file', resized || avatarFile);
+                    const response = await fetch('/api/profile/avatar', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setStatusMessage('Profile picture updated.');
+                        setAvatarFile(null);
+                        await refreshProfile();
+                    } else {
+                        setStatusMessage(data.error || 'Upload failed.');
+                    }
+                } catch (error) {
+                    setStatusMessage('Upload failed.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            const resolvedPreview = avatarPreview || profile?.avatarUrl;
+
+            return (
+                <ShellComponent
+                    title="Profile management"
+                    subtitle="Review your account details and update your profile."
+                    activeTab="settings"
+                    onNavigate={onNavigate}
+                >
+                    <div className="space-y-6">
+                        <div className="flex items-start gap-6 flex-col md:flex-row">
+                            <div className="w-full md:w-60 space-y-3">
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Profile picture</div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-20 h-20 rounded-2xl border border-gray-200 bg-gray-100 overflow-hidden flex items-center justify-center">
+                                        {resolvedPreview ? (
+                                            <img src={resolvedPreview} alt="Profile preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-xs font-semibold text-gray-400 uppercase">No photo</span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] border border-gray-200 text-gray-600 cursor-pointer hover:bg-gray-50 transition">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(event) => setAvatarFile(event.target.files?.[0] || null)}
+                                                className="hidden"
+                                            />
+                                            {profile?.avatarUrl ? 'Change picture' : 'Upload picture'}
+                                        </label>
+                                        <button
+                                            onClick={handleAvatarUpload}
+                                            disabled={isSaving || !avatarFile}
+                                            className="block px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] bg-gray-900 text-white hover:bg-gray-800 transition disabled:opacity-50"
+                                        >
+                                            {isSaving ? 'Saving...' : 'Save picture'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-1 space-y-4">
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Profile details</div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Display name</label>
+                                        <input
+                                            type="text"
+                                            value={nameInput}
+                                            onChange={(event) => setNameInput(event.target.value)}
+                                            className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="Enter your name"
+                                        />
+                                    </div>
+                                    <div className="text-sm text-gray-600 space-y-2">
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Email</div>
+                                            <div className="mt-2">{profile?.email || profile?.username || '—'}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Role</div>
+                                            <div className="mt-2">{formatRoleLabel(profile?.role)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={handleNameSave}
+                                        disabled={isSaving}
+                                        className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-blue-600 text-white hover:bg-blue-500 transition disabled:opacity-60"
+                                    >
+                                        {isSaving ? 'Saving...' : 'Save changes'}
+                                    </button>
+                                </div>
+                                {statusMessage && <div className="text-sm text-gray-500">{statusMessage}</div>}
+                            </div>
+                        </div>
+                        {showHistory && (
+                            <div className="border border-gray-200 rounded-2xl p-5 space-y-3">
+                                <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Recent activity</div>
+                                <div className="space-y-3">
+                                    {history.length === 0 ? (
+                                        <div className="text-sm text-gray-500">No recent edits yet.</div>
+                                    ) : (
+                                        history.map((entry, index) => (
+                                            <div key={index} className="text-sm text-gray-600">
+                                                <div className="font-semibold text-gray-800">{entry.action}</div>
+                                                <div className="text-xs text-gray-400">
+                                                    {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ''}
+                                                </div>
+                                                {entry.details && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {formatHistoryDetails(entry.details)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        {onBack && (
+                            <button
+                                onClick={onBack}
+                                className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 hover:text-gray-800 transition"
+                            >
+                                <i className="fa-solid fa-arrow-left"></i>
+                                Back to settings
+                            </button>
+                        )}
+                    </div>
+                </ShellComponent>
+            );
+        };
+
         const AdminSettings = ({ onNavigate }) => {
             const [statusMessage, setStatusMessage] = useState(null);
             const [isResetting, setIsResetting] = useState(false);
             const [activePanel, setActivePanel] = useState('main');
+            const [isHardResetting, setIsHardResetting] = useState(false);
+            const [hardResetPassword, setHardResetPassword] = useState('');
+            const { profile } = useProfileData();
 
             if (activePanel === 'users') {
                 return <UserManagementSettings onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
+            }
+            if (activePanel === 'profile') {
+                return (
+                    <ProfileManagement
+                        onNavigate={onNavigate}
+                        onBack={() => setActivePanel('main')}
+                        showHistory
+                    />
+                );
             }
 
             const handleReset = async () => {
@@ -1400,6 +1715,48 @@ export const settingsComponents = `
                 }
             };
 
+            const handleHardReset = async () => {
+                if (!hardResetPassword) {
+                    setStatusMessage('Enter your password to continue.');
+                    return;
+                }
+                const confirmed = window.confirm(
+                    'Hard reset will wipe all data, users, and content. This cannot be undone. Continue?'
+                );
+                if (!confirmed) return;
+                setIsHardResetting(true);
+                setStatusMessage(null);
+
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setStatusMessage('You must be logged in to reset the site.');
+                    setIsHardResetting(false);
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/settings/hard-reset', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ password: hardResetPassword })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        localStorage.removeItem('auth_token');
+                        window.location.href = '/register';
+                        return;
+                    }
+                    setStatusMessage(data.error || 'Hard reset failed.');
+                } catch (error) {
+                    setStatusMessage('Hard reset failed. Please try again.');
+                } finally {
+                    setIsHardResetting(false);
+                }
+            };
+
             return (
                 <AdminShell
                     title="Settings"
@@ -1407,22 +1764,56 @@ export const settingsComponents = `
                     activeTab="settings"
                     onNavigate={onNavigate}
                 >
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y divide-gray-200">
-                        <button
-                            onClick={() => setActivePanel('users')}
-                            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-                        >
-                            <span>User management</span>
-                            <span className="text-xs text-gray-400">Assign teacher and admin access</span>
-                        </button>
-                        <button
-                            onClick={handleReset}
-                            disabled={isResetting}
-                            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:text-gray-400"
-                        >
-                            <span>Reset settings</span>
-                            <span className="text-xs text-gray-400">{isResetting ? 'Working...' : ''}</span>
-                        </button>
+                    <div className="space-y-6">
+                        <div className="lg:hidden">
+                            <ProfileSummary profile={profile} compact />
+                        </div>
+                        <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200">
+                            <button
+                                onClick={() => setActivePanel('profile')}
+                                className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                            >
+                                <span>Profile management</span>
+                                <span className="text-xs text-gray-400">Update picture and name</span>
+                            </button>
+                            <button
+                                onClick={() => setActivePanel('users')}
+                                className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                            >
+                                <span>User management</span>
+                                <span className="text-xs text-gray-400">Assign teacher and admin access</span>
+                            </button>
+                            <button
+                                onClick={handleReset}
+                                disabled={isResetting}
+                                className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition disabled:text-gray-400"
+                            >
+                                <span>Reset settings</span>
+                                <span className="text-xs text-gray-400">{isResetting ? 'Working...' : ''}</span>
+                            </button>
+                        </div>
+                        <div className="border border-rose-200 rounded-2xl p-5 space-y-3 bg-rose-50/40">
+                            <div className="text-xs uppercase tracking-[0.3em] text-rose-400">Hard reset</div>
+                            <p className="text-sm text-rose-600">
+                                This will remove all data, drop every table, and reset the site to first setup.
+                            </p>
+                            <input
+                                type="password"
+                                value={hardResetPassword}
+                                onChange={(event) => setHardResetPassword(event.target.value)}
+                                className="w-full border border-rose-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 bg-white"
+                                placeholder="Confirm with your password"
+                            />
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={handleHardReset}
+                                    disabled={isHardResetting}
+                                    className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-rose-600 text-white hover:bg-rose-500 transition disabled:opacity-60"
+                                >
+                                    {isHardResetting ? 'Resetting...' : 'Hard reset'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     {statusMessage && (
                         <div className="text-sm text-gray-500">{statusMessage}</div>
@@ -1438,6 +1829,19 @@ export const settingsComponents = `
                 newPassword: '',
                 confirmPassword: ''
             });
+            const [activePanel, setActivePanel] = useState('main');
+            const { profile } = useProfileData();
+
+            if (activePanel === 'profile') {
+                return (
+                    <ProfileManagement
+                        onNavigate={onNavigate}
+                        onBack={() => setActivePanel('main')}
+                        showHistory={false}
+                        shell="teacher"
+                    />
+                );
+            }
 
             const handleChangePassword = async () => {
                 if (!formState.currentPassword || !formState.newPassword || !formState.confirmPassword) {
@@ -1488,60 +1892,95 @@ export const settingsComponents = `
             return (
                 <TeacherShell
                     title="Settings"
-                    subtitle="Update your login password securely."
+                    subtitle="Manage your profile details and security."
                     activeTab="settings"
                     onNavigate={onNavigate}
                 >
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4 max-w-xl">
-                        <div>
-                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Current password</label>
-                            <input
-                                type="password"
-                                value={formState.currentPassword}
-                                onChange={(event) =>
-                                    setFormState((prev) => ({ ...prev, currentPassword: event.target.value }))
-                                }
-                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Enter current password"
-                            />
+                    {activePanel === 'main' ? (
+                        <div className="space-y-6 max-w-xl">
+                            <div className="lg:hidden">
+                                <ProfileSummary profile={profile} compact />
+                            </div>
+                            <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200">
+                                <button
+                                    onClick={() => setActivePanel('profile')}
+                                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                    <span>Profile management</span>
+                                    <span className="text-xs text-gray-400">Update picture and name</span>
+                                </button>
+                                <button
+                                    onClick={() => setActivePanel('password')}
+                                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                    <span>Change password</span>
+                                    <span className="text-xs text-gray-400">Update your login credentials</span>
+                                </button>
+                            </div>
+                            {statusMessage && <div className="text-sm text-gray-500">{statusMessage}</div>}
                         </div>
-                        <div>
-                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">New password</label>
-                            <input
-                                type="password"
-                                value={formState.newPassword}
-                                onChange={(event) =>
-                                    setFormState((prev) => ({ ...prev, newPassword: event.target.value }))
-                                }
-                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Create a new password"
-                            />
+                    ) : (
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4 max-w-xl">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Change password</div>
+                                    <div className="text-sm text-gray-500 mt-1">Use your current password to update it.</div>
+                                </div>
+                                <button
+                                    onClick={() => setActivePanel('main')}
+                                    className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 hover:text-gray-800 transition"
+                                >
+                                    Back
+                                </button>
+                            </div>
+                            <div>
+                                <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Current password</label>
+                                <input
+                                    type="password"
+                                    value={formState.currentPassword}
+                                    onChange={(event) =>
+                                        setFormState((prev) => ({ ...prev, currentPassword: event.target.value }))
+                                    }
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Enter current password"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs uppercase tracking-[0.3em] text-gray-400">New password</label>
+                                <input
+                                    type="password"
+                                    value={formState.newPassword}
+                                    onChange={(event) =>
+                                        setFormState((prev) => ({ ...prev, newPassword: event.target.value }))
+                                    }
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Create a new password"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Confirm password</label>
+                                <input
+                                    type="password"
+                                    value={formState.confirmPassword}
+                                    onChange={(event) =>
+                                        setFormState((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                                    }
+                                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Re-enter the new password"
+                                />
+                            </div>
+                            {statusMessage && <div className="text-sm text-gray-500">{statusMessage}</div>}
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={handleChangePassword}
+                                    disabled={isSaving}
+                                    className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-blue-600 text-white hover:bg-blue-500 transition disabled:opacity-60"
+                                >
+                                    {isSaving ? 'Saving...' : 'Update password'}
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-xs uppercase tracking-[0.3em] text-gray-400">Confirm password</label>
-                            <input
-                                type="password"
-                                value={formState.confirmPassword}
-                                onChange={(event) =>
-                                    setFormState((prev) => ({ ...prev, confirmPassword: event.target.value }))
-                                }
-                                className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Re-enter the new password"
-                            />
-                        </div>
-                        {statusMessage && (
-                            <div className="text-sm text-gray-500">{statusMessage}</div>
-                        )}
-                        <div className="flex justify-end">
-                            <button
-                                onClick={handleChangePassword}
-                                disabled={isSaving}
-                                className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] bg-blue-600 text-white hover:bg-blue-500 transition disabled:opacity-60"
-                            >
-                                {isSaving ? 'Saving...' : 'Update password'}
-                            </button>
-                        </div>
-                    </div>
+                    )}
                 </TeacherShell>
             );
         };

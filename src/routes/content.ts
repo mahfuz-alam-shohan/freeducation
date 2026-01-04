@@ -1,5 +1,5 @@
 import type { Env } from "../types";
-import { apiHeaders, applyTeacherContentUpdate, ensureAdmin, getAuthPayload, safeParseContent } from "./shared";
+import { apiHeaders, applyTeacherContentUpdate, ensureAdmin, getAuthPayload, recordEditHistory, safeParseContent } from "./shared";
 
 export const handleContent = async (request: Request, env: Env, path: string): Promise<Response | null> => {
   if (path !== "/api/content") return null;
@@ -26,6 +26,7 @@ export const handleContent = async (request: Request, env: Env, path: string): P
         "INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) " +
           "ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP"
       ).bind("app-content", JSON.stringify(body)).run();
+      await recordEditHistory(env.DB, payload, "Content updated", { scope: "admin" });
       return Response.json({ success: true }, { headers: apiHeaders });
     }
 
@@ -44,6 +45,11 @@ export const handleContent = async (request: Request, env: Env, path: string): P
         "INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) " +
           "ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP"
       ).bind("app-content", JSON.stringify(updatedContent)).run();
+      await recordEditHistory(env.DB, payload, "Content updated", {
+        scope: "teacher",
+        level: payload.assignment.level,
+        subject: payload.assignment.subject,
+      });
       return Response.json({ success: true }, { headers: apiHeaders });
     }
 

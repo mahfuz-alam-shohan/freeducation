@@ -15,6 +15,12 @@ export async function initDatabase(db: D1Database) {
       role TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS user_profiles (
+      user_id INTEGER PRIMARY KEY,
+      avatar_key TEXT,
+      avatar_content_type TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS admin_permissions (
       user_id INTEGER PRIMARY KEY,
       permissions TEXT NOT NULL,
@@ -69,6 +75,13 @@ export async function initDatabase(db: D1Database) {
       content_type TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS edit_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      action TEXT NOT NULL,
+      details TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare(`INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')`),
     db.prepare(`INSERT OR IGNORE INTO class_groups (class_id, name)
       SELECT classes.id, group_names.name
@@ -98,6 +111,12 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "password_hash", sql: "TEXT" },
     { name: "role", sql: "TEXT NOT NULL" },
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  user_profiles: [
+    { name: "user_id", sql: "INTEGER PRIMARY KEY" },
+    { name: "avatar_key", sql: "TEXT" },
+    { name: "avatar_content_type", sql: "TEXT" },
+    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
   admin_permissions: [
     { name: "user_id", sql: "INTEGER PRIMARY KEY" },
@@ -146,6 +165,12 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "file_key", sql: "TEXT" },
     { name: "content_type", sql: "TEXT" },
     { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  edit_history: [
+    { name: "user_id", sql: "INTEGER NOT NULL" },
+    { name: "action", sql: "TEXT NOT NULL" },
+    { name: "details", sql: "TEXT" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
 };
 
