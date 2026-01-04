@@ -27,7 +27,8 @@ export const contentState = `
                 srijonshilQuestions: {},
                 mcqQuestions: {},
                 englishQuestions: {},
-                notesByItem: {}
+                notesByItem: {},
+                videosByItem: {}
             };
 
             const applyContentState = (content) => {
@@ -67,5 +68,6 @@ export const contentState = `
                 setMcqQuestions(merged.mcqQuestions || {});
                 setEnglishQuestions(merged.englishQuestions || {});
                 setNotesByItem(merged.notesByItem || {});
+                setVideosByItem(merged.videosByItem || {});
             };
 `;
