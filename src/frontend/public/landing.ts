@@ -283,10 +283,102 @@ export const landingComponents = `
             return thumbnailMap;
         };
 
-        const cardWidthClass = 'w-40 sm:w-48 md:w-52';
+        const READ_PROGRESS_KEY = 'freeducation.read-progress';
+        const RECENT_READ_KEY = 'freeducation.recent-read';
+
+        const loadReadProgress = () => {
+            try {
+                const raw = localStorage.getItem(READ_PROGRESS_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (error) {
+                console.warn('Failed to read progress data', error);
+                return {};
+            }
+        };
+
+        const loadRecentRead = () => {
+            try {
+                const raw = localStorage.getItem(RECENT_READ_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                console.warn('Failed to read recent chapter', error);
+                return null;
+            }
+        };
+
+        const storeReadProgress = (entry) => {
+            const current = loadReadProgress();
+            const updated = {
+                ...current,
+                [entry.key]: {
+                    label: entry.label,
+                    subjectLabel: entry.subjectLabel,
+                    updatedAt: entry.updatedAt
+                }
+            };
+            try {
+                localStorage.setItem(READ_PROGRESS_KEY, JSON.stringify(updated));
+                localStorage.setItem(
+                    RECENT_READ_KEY,
+                    JSON.stringify({
+                        label: entry.label,
+                        route: entry.route,
+                        updatedAt: entry.updatedAt
+                    })
+                );
+            } catch (error) {
+                console.warn('Failed to store reading progress', error);
+            }
+            return updated;
+        };
+
+        const storeBanglaSelection = ({ classLabel, categoryName, itemName }) => {
+            try {
+                localStorage.setItem(
+                    'freeducation.bangla-selection',
+                    JSON.stringify({
+                        classLabel,
+                        categoryName,
+                        itemName
+                    })
+                );
+            } catch (error) {
+                console.warn('Failed to store Bangla selection', error);
+            }
+        };
+
+        const getLastReadForSubject = (readMap, subjectLabel) => {
+            const entries = Object.values(readMap || {}).filter((entry) => entry.subjectLabel === subjectLabel);
+            if (entries.length === 0) return '';
+            entries.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+            return entries[0]?.label || '';
+        };
+
+        const useReadingProgress = () => {
+            const [readMap, setReadMap] = useState(() => loadReadProgress());
+            const [recentRead, setRecentRead] = useState(() => loadRecentRead());
+
+            const markRead = (entry) => {
+                const timestamped = {
+                    ...entry,
+                    updatedAt: Date.now()
+                };
+                const updated = storeReadProgress(timestamped);
+                setReadMap(updated);
+                setRecentRead({
+                    label: entry.label,
+                    route: entry.route,
+                    updatedAt: timestamped.updatedAt
+                });
+            };
+
+            return { readMap, recentRead, markRead };
+        };
+
+        const cardWidthClass = 'w-36 sm:w-40 md:w-44';
         const cardGridGapClass = 'gap-4 sm:gap-6';
         const cardSurfaceClass =
-            'relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg group-hover:border-indigo-200 card-art-surface';
+            'relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg group-hover:border-indigo-200 card-art-surface';
         const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm';
         const ArtPanelGrid = ({ children, className = '' }) => (
             <div className={cardPanelClass}>
@@ -298,6 +390,7 @@ export const landingComponents = `
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
+            const chapterCount = subject.chapterCount || (subject.groups?.length || 1) * 4 + 6;
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
@@ -308,7 +401,7 @@ export const landingComponents = `
                     }
                     disabled={!isActive}
                 >
-                    <div className="space-y-2 h-full">
+                    <div className="space-y-1.5 h-full">
                         <div className={cardSurfaceClass}>
                             {subject.thumbnailUrl ? (
                                 <img
@@ -318,14 +411,14 @@ export const landingComponents = `
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media"
                                 />
                             ) : (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3 card-art-media">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2 card-art-media">
                                     <div
                                         className={
-                                            'h-10 w-10 rounded-lg text-white flex items-center justify-center shadow-sm ' +
+                                            'h-9 w-9 rounded-lg text-white flex items-center justify-center shadow-sm ' +
                                             subject.accent
                                         }
                                     >
-                                        <i className={'fa-solid ' + subject.icon + ' text-sm'}></i>
+                                        <i className={'fa-solid ' + subject.icon + ' text-xs'}></i>
                                     </div>
                                     <div className="text-[9px] uppercase tracking-[0.3em]">Thumbnail</div>
                                 </div>
@@ -333,7 +426,19 @@ export const landingComponents = `
                         </div>
                         <div className="flex-1">
                             <div className="text-xs sm:text-sm font-semibold text-slate-900">{subject.title}</div>
-                            {subject.subtitle && <div className="text-xs text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
+                            {subject.subtitle && <div className="text-[11px] text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
+                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                                <span className="inline-flex items-center gap-1">
+                                    <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
+                                    {chapterCount} Chapters
+                                </span>
+                                {subject.lastRead && (
+                                    <span className="inline-flex items-center gap-1 text-emerald-600">
+                                        <i className="fa-solid fa-check text-[10px]"></i>
+                                        Last read: {subject.lastRead}
+                                    </span>
+                                )}
+                            </div>
                             {showGroup && (
                                 <div className="mt-2 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-slate-400">
                                     {subject.groupLabel}
@@ -345,13 +450,19 @@ export const landingComponents = `
             );
         };
 
-        const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '' }) => (
+        const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '', isRead = false }) => (
             <button
                 onClick={onClick}
-                className={className + ' block text-left transition-all duration-300 group float-slow'}
+                className={className + ' block text-left transition-all duration-300 group'}
             >
                 <div className="space-y-2 h-full">
-                    <div className={cardSurfaceClass}>
+                    <div className={cardSurfaceClass + (isRead ? ' ring-1 ring-emerald-200' : '')}>
+                        {isRead && (
+                            <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+                                <i className="fa-solid fa-check text-[10px]"></i>
+                                Read
+                            </div>
+                        )}
                         {thumbnailUrl ? (
                             <img
                                 src={thumbnailUrl}
@@ -373,8 +484,9 @@ export const landingComponents = `
             </button>
         );
 
-        const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter }) => {
+        const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter, recentRoute }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
+            const { readMap, markRead } = useReadingProgress();
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                     {chapters.map((chapter) => {
@@ -385,7 +497,16 @@ export const landingComponents = `
                                 title={chapter.name}
                                 subtitle={subjectLabel}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                onClick={() => onSelectChapter(chapter)}
+                                isRead={Boolean(readMap[chapterKey])}
+                                onClick={() => {
+                                    markRead({
+                                        key: chapterKey,
+                                        label: chapter.name,
+                                        subjectLabel,
+                                        route: recentRoute
+                                    });
+                                    onSelectChapter(chapter);
+                                }}
                                 className={cardWidthClass + ' font-bangla'}
                             />
                         );
@@ -399,7 +520,7 @@ export const landingComponents = `
             );
         };
 
-        const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap }) => (
+        const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap, readMap }) => (
             <section className="space-y-3">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
@@ -410,28 +531,23 @@ export const landingComponents = `
                         See all <i className="fa-solid fa-angle-right"></i>
                     </button>
                 </div>
-                <div className="marquee-wrapper">
-                    <div className={'marquee-track items-stretch ' + cardGridGapClass + ' pb-4'}>
-                        {[...subjects, ...subjects].map((subject, index) => {
+                <div className={'flex items-stretch ' + cardGridGapClass + ' pb-4 overflow-x-auto snap-x scrollbar-hide'}>
+                    {subjects.map((subject) => {
                         const thumbnail = thumbnailMap[subject.subjectKey];
+                        const lastRead = getLastReadForSubject(readMap, subject.title);
                         return (
                             <SubjectCard
-                                key={subject.subjectKey + '-' + index}
+                                key={subject.subjectKey}
                                 subject={{
                                     ...subject,
+                                    lastRead,
                                     thumbnailUrl: thumbnail?.url
                                 }}
                                 onNavigate={onNavigate}
-                                className={
-                                    'flex-shrink-0 ' +
-                                    cardWidthClass +
-                                    ' ' +
-                                    (index % 2 === 0 ? 'float-slow' : 'float-slower')
-                                }
+                                className={'flex-shrink-0 snap-start ' + cardWidthClass}
                             />
                         );
                     })}
-                    </div>
                 </div>
             </section>
         );
@@ -440,6 +556,7 @@ export const landingComponents = `
             const [activeGroup, setActiveGroup] = useState('All');
             const [query, setQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
+            const { readMap } = useReadingProgress();
             const normalizedQuery = query.trim().toLowerCase();
             const groups = ['All', ...new Set(subjects.flatMap((subject) => subject.groups || []))];
             const filteredSubjects = subjects.filter((subject) => {
@@ -504,11 +621,13 @@ export const landingComponents = `
                         <div className={'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ' + cardGridGapClass + ' mt-4'}>
                             {filteredSubjects.map((subject) => {
                                 const thumbnail = thumbnailMap[subject.subjectKey];
+                                const lastRead = getLastReadForSubject(readMap, subject.title);
                                 return (
                                     <SubjectCard
                                         key={subject.subjectKey}
                                         subject={{
                                             ...subject,
+                                            lastRead,
                                             thumbnailUrl: thumbnail?.url
                                         }}
                                         onNavigate={onNavigate}
@@ -562,6 +681,7 @@ export const landingComponents = `
 
         const PublicBanglaTopicGrid = ({ classLabel, subjectLabel, topics, onNavigate }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
+            const { readMap, markRead } = useReadingProgress();
 
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
@@ -577,7 +697,16 @@ export const landingComponents = `
                                 title={topic.title}
                                 subtitle={topic.description}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                onClick={() => topic.route && onNavigate(topic.route)}
+                                isRead={Boolean(readMap[chapterKey])}
+                                onClick={() => {
+                                    markRead({
+                                        key: chapterKey,
+                                        label: topic.title,
+                                        subjectLabel,
+                                        route: topic.route
+                                    });
+                                    topic.route && onNavigate(topic.route);
+                                }}
                                 className={cardWidthClass}
                             />
                         );
@@ -588,6 +717,7 @@ export const landingComponents = `
 
         const PublicBanglaTextList = ({ classLabel, subjectLabel, categoryLabel, subtitle, items, onSelectItem }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
+            const { readMap, markRead } = useReadingProgress();
 
             return (
                 <div className="space-y-4 font-bangla">
@@ -608,7 +738,21 @@ export const landingComponents = `
                                     title={item}
                                     subtitle={categoryLabel}
                                     thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                    onClick={() => onSelectItem(item)}
+                                    isRead={Boolean(readMap[chapterKey])}
+                                    onClick={() => {
+                                        storeBanglaSelection({
+                                            classLabel,
+                                            categoryName: categoryLabel,
+                                            itemName: item
+                                        });
+                                        markRead({
+                                            key: chapterKey,
+                                            label: item,
+                                            subjectLabel,
+                                            route: classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item'
+                                        });
+                                        onSelectItem(item);
+                                    }}
                                     className={cardWidthClass}
                                 />
                             );
@@ -620,6 +764,7 @@ export const landingComponents = `
 
         const PublicBanglaShohopathList = ({ classLabel, subjectLabel, items, onSelectItem }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
+            const { readMap, markRead } = useReadingProgress();
 
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
@@ -638,7 +783,21 @@ export const landingComponents = `
                                 title={item.name}
                                 subtitle={item.type}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
-                                onClick={() => onSelectItem(item)}
+                                isRead={Boolean(readMap[chapterKey])}
+                                onClick={() => {
+                                    storeBanglaSelection({
+                                        classLabel,
+                                        categoryName: item.type,
+                                        itemName: item.name
+                                    });
+                                    markRead({
+                                        key: chapterKey,
+                                        label: item.name,
+                                        subjectLabel,
+                                        route: classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item'
+                                    });
+                                    onSelectItem(item);
+                                }}
                                 className={cardWidthClass}
                             />
                         );
@@ -647,11 +806,64 @@ export const landingComponents = `
             );
         };
 
+        const CqQuestionList = ({ sections }) => {
+            const [openMap, setOpenMap] = useState({});
+            const toggleAnswer = (sectionKey, index) => {
+                setOpenMap((prev) => ({
+                    ...prev,
+                    [sectionKey + '-' + index]: !prev[sectionKey + '-' + index]
+                }));
+            };
+            if (!sections.length) {
+                return <div className="text-sm text-slate-400">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>;
+            }
+            return (
+                <div className="space-y-4">
+                    {sections.map((section) => (
+                        <div key={section.key} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
+                            <div className="text-sm font-semibold text-slate-900">{section.label}</div>
+                            {section.items.length === 0 ? (
+                                <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>
+                            ) : (
+                                <div className="mt-4 space-y-4">
+                                    {section.items.map((entry, index) => {
+                                        const openKey = section.key + '-' + index;
+                                        const isOpen = Boolean(openMap[openKey]);
+                                        return (
+                                            <div key={entry.question + '-' + index} className="space-y-2">
+                                                <div className="text-sm font-semibold text-slate-800">
+                                                    {section.prefix(index)}. {entry.question}
+                                                </div>
+                                                <button
+                                                    onClick={() => toggleAnswer(section.key, index)}
+                                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition"
+                                                >
+                                                    {isOpen ? 'উত্তর লুকান' : 'উত্তর দেখুন'}
+                                                </button>
+                                                {isOpen && (
+                                                    <div className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3">
+                                                        {entry.answer}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
         const PublicBanglaItemDetail = ({
             classLabel,
             itemName,
             categoryName,
             notesByItem,
+            srijonshilQuestions,
+            mcqQuestions,
+            getQuestionKey,
             onNavigate
         }) => {
             const categoryRoute = classLabel === 'SSC'
@@ -671,11 +883,21 @@ export const landingComponents = `
                 .split('')
                 .map((digit) => banglaDigits[Number(digit)] ?? digit)
                 .join('');
-            const srijonshilRoute = classLabel === 'SSC' ? 'public-bangla-ssc-srijonshil' : 'public-bangla-hsc-srijonshil';
-            const mcqRoute = classLabel === 'SSC' ? 'public-bangla-ssc-mcq' : 'public-bangla-hsc-mcq';
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
             const notes = (notesByItem || {})[noteKey] || [];
             const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
+            const [activeTab, setActiveTab] = useState('notes');
+            const srijonshilTypes = [
+                { key: 'gyan', label: 'জ্ঞান (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
+            ];
+            const cqSections = srijonshilTypes.map((type) => ({
+                key: type.key,
+                label: type.label,
+                items: srijonshilQuestions?.[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [],
+                prefix: (index) => toBanglaNumber(index + 1)
+            }));
+            const mcqList = mcqQuestions?.[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
 
             return (
                 <PublicBanglaShell
@@ -690,39 +912,59 @@ export const landingComponents = `
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
                         </div>
 
-                        <div className="flex flex-wrap justify-center gap-3">
-                            <button
-                                onClick={() => onNavigate(srijonshilRoute)}
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-rose-100 bg-rose-50 text-rose-700 text-sm font-semibold hover:bg-rose-100 transition"
-                            >
-                                সৃজনশীল
-                            </button>
-                            <button
-                                onClick={() => onNavigate(mcqRoute)}
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-amber-100 bg-amber-50 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition"
-                            >
-                                বহুনির্বাচনী
-                            </button>
-                        </div>
-
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="px-4 py-3 border-b border-slate-100">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                <div className="text-sm font-semibold text-slate-700 mt-1">অধ্যায়ের গুরুত্বপূর্ণ নোট</div>
+                            <div className="border-b border-slate-100 px-4 pt-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {[
+                                        { key: 'notes', label: 'Read (Notes)' },
+                                        { key: 'cq', label: 'Practice (CQ)' },
+                                        { key: 'mcq', label: 'Test (MCQ)' }
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.key}
+                                            onClick={() => setActiveTab(tab.key)}
+                                            className={
+                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
+                                                (activeTab === tab.key
+                                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
+                                            }
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <ul className="divide-y">
-                                {notes.length === 0 && (
-                                    <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                            <div className="px-4 py-5">
+                                {activeTab === 'notes' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
+                                            <div className="text-sm font-semibold text-slate-700 mt-1">অধ্যায়ের গুরুত্বপূর্ণ নোট</div>
+                                        </div>
+                                        <ul className="divide-y border border-slate-100 rounded-xl">
+                                            {notes.length === 0 && (
+                                                <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                                            )}
+                                            {notes.map((note, index) => (
+                                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
+                                                    <span className="text-sm font-semibold text-slate-500">
+                                                        {toBanglaNumber(index + 1)}.
+                                                    </span>
+                                                    <div className="text-sm text-slate-700">{note}</div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 )}
-                                {notes.map((note, index) => (
-                                    <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
-                                        <span className="text-sm font-semibold text-slate-500">
-                                            {toBanglaNumber(index + 1)}.
-                                        </span>
-                                        <div className="text-sm text-slate-700">{note}</div>
-                                    </li>
-                                ))}
-                            </ul>
+                                {activeTab === 'cq' && (
+                                    <CqQuestionList sections={cqSections} />
+                                )}
+                                {activeTab === 'mcq' && (
+                                    <PublicMcqList mcqList={mcqList} />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </PublicBanglaShell>
@@ -1049,10 +1291,10 @@ export const landingComponents = `
             topicName,
             noteKey,
             notesByItem,
+            cqQuestions,
+            mcqList,
             onBack,
-            onNavigate,
-            onNavigateCq,
-            onNavigateMcq
+            onNavigate
         }) => {
             const notes = (notesByItem || {})[noteKey] || [];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -1060,6 +1302,21 @@ export const landingComponents = `
                 .split('')
                 .map((digit) => banglaDigits[Number(digit)] ?? digit)
                 .join('');
+            const [activeTab, setActiveTab] = useState('notes');
+            const cqSections = [
+                {
+                    key: 'gyan',
+                    label: 'জ্ঞান (ক)',
+                    items: cqQuestions?.gyan || [],
+                    prefix: (index) => toBanglaNumber(index + 1)
+                },
+                {
+                    key: 'onudhabon',
+                    label: 'অনুধাবন (খ)',
+                    items: cqQuestions?.onudhabon || [],
+                    prefix: (index) => toBanglaNumber(index + 1)
+                }
+            ];
 
             return (
                 <PublicScienceShell
@@ -1071,39 +1328,59 @@ export const landingComponents = `
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="flex flex-wrap justify-center gap-3">
-                            <button
-                                onClick={onNavigateCq}
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition pulse-soft"
-                            >
-                                সৃজনশীল (CQ)
-                            </button>
-                            <button
-                                onClick={onNavigateMcq}
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-sky-100 bg-sky-50 text-sky-700 text-sm font-semibold hover:bg-sky-100 transition pulse-soft"
-                            >
-                                বহুনির্বাচনী (MCQ)
-                            </button>
-                        </div>
-
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="px-4 py-3 border-b border-slate-100">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                <div className="text-sm font-semibold text-slate-700 mt-1">টপিকের মূল ধারণা</div>
+                            <div className="border-b border-slate-100 px-4 pt-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {[
+                                        { key: 'notes', label: 'Read (Notes)' },
+                                        { key: 'cq', label: 'Practice (CQ)' },
+                                        { key: 'mcq', label: 'Test (MCQ)' }
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.key}
+                                            onClick={() => setActiveTab(tab.key)}
+                                            className={
+                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
+                                                (activeTab === tab.key
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
+                                            }
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <ul className="divide-y">
-                                {notes.length === 0 && (
-                                    <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                            <div className="px-4 py-5">
+                                {activeTab === 'notes' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
+                                            <div className="text-sm font-semibold text-slate-700 mt-1">টপিকের মূল ধারণা</div>
+                                        </div>
+                                        <ul className="divide-y border border-slate-100 rounded-xl">
+                                            {notes.length === 0 && (
+                                                <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
+                                            )}
+                                            {notes.map((note, index) => (
+                                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
+                                                    <span className="text-sm font-semibold text-slate-500">
+                                                        {toBanglaNumber(index + 1)}.
+                                                    </span>
+                                                    <div className="text-sm text-slate-700">{note}</div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 )}
-                                {notes.map((note, index) => (
-                                    <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
-                                        <span className="text-sm font-semibold text-slate-500">
-                                            {toBanglaNumber(index + 1)}.
-                                        </span>
-                                        <div className="text-sm text-slate-700">{note}</div>
-                                    </li>
-                                ))}
-                            </ul>
+                                {activeTab === 'cq' && (
+                                    <CqQuestionList sections={cqSections} />
+                                )}
+                                {activeTab === 'mcq' && (
+                                    <PublicMcqList mcqList={mcqList} />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </PublicScienceShell>
@@ -1269,7 +1546,9 @@ export const landingComponents = `
 
         const StudentLanding = ({ onNavigate }) => {
             const [quoteIndex, setQuoteIndex] = useState(0);
+            const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
+            const { readMap, recentRead } = useReadingProgress();
 
             useEffect(() => {
                 const timer = setInterval(() => {
@@ -1279,6 +1558,22 @@ export const landingComponents = `
             }, []);
 
             const activeQuote = quoteItems[quoteIndex];
+            const continueLabel = recentRead?.label;
+            const continueRoute = recentRead?.route;
+
+            const handleQuickSearch = () => {
+                const normalized = quickQuery.trim().toLowerCase();
+                if (!normalized) return;
+                const candidates = [...sscSubjects, ...hscSubjects];
+                const match = candidates.find((subject) => {
+                    const title = subject.title.toLowerCase();
+                    const subtitle = subject.subtitle?.toLowerCase() || '';
+                    return title.includes(normalized) || subtitle.includes(normalized);
+                });
+                if (match?.route) {
+                    onNavigate(match.route);
+                }
+            };
 
             return (
                 <div className="flex-1 bg-[#f3f6ff]">
@@ -1287,7 +1582,7 @@ export const landingComponents = `
                         <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/40"></div>
                         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-                                <div className="flex items-center gap-4 float-slow">
+                                <div className="flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-2xl bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
                                         <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" />
@@ -1303,13 +1598,46 @@ export const landingComponents = `
                                         </div>
                                     </div>
                                 </div>
-                                <div className="max-w-xl bg-indigo-600 border border-indigo-500 rounded-2xl p-6 text-white float-slower">
+                                <div className="max-w-xl bg-indigo-600 border border-indigo-500 rounded-2xl p-6 text-white">
                                     <p className="text-base sm:text-lg font-serif italic leading-relaxed">
                                         “{activeQuote.text}”
                                     </p>
                                     <p className="text-sm font-semibold text-white/90 mt-3">— {activeQuote.author}</p>
                                 </div>
                             </div>
+                            <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-center">
+                                <div className="relative">
+                                    <label className="text-[11px] uppercase tracking-[0.3em] text-white/70">Quick Search</label>
+                                    <input
+                                        value={quickQuery}
+                                        onChange={(event) => setQuickQuery(event.target.value)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter') handleQuickSearch();
+                                        }}
+                                        placeholder="Search Bangla, Physics, ICT..."
+                                        className="mt-2 w-full rounded-2xl border border-white/30 bg-white/95 py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-white"
+                                    />
+                                    <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
+                                </div>
+                                <button
+                                    onClick={handleQuickSearch}
+                                    className="mt-6 lg:mt-7 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+                                >
+                                    Find subject
+                                    <i className="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                            {continueLabel && continueRoute && (
+                                <div className="mt-6">
+                                    <button
+                                        onClick={() => onNavigate(continueRoute)}
+                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-2xl bg-emerald-400/90 text-emerald-950 px-5 py-3 text-sm font-semibold shadow-sm hover:bg-emerald-300 transition"
+                                    >
+                                        <i className="fa-solid fa-play"></i>
+                                        Continue Reading: {continueLabel}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -1324,6 +1652,7 @@ export const landingComponents = `
                             onNavigate={onNavigate}
                             onAll={() => onNavigate('ssc-subjects')}
                             thumbnailMap={thumbnailMap}
+                            readMap={readMap}
                         />
                         <SubjectRow
                             title="HSC"
@@ -1331,6 +1660,7 @@ export const landingComponents = `
                             onNavigate={onNavigate}
                             onAll={() => onNavigate('hsc-subjects')}
                             thumbnailMap={thumbnailMap}
+                            readMap={readMap}
                         />
                     </section>
                 </div>

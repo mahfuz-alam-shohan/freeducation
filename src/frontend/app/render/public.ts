@@ -18,6 +18,7 @@ export const renderPublic = `
                                     classLabel="SSC"
                                     subjectLabel="Information and Communication Technology"
                                     chapters={sscIctChapters}
+                                    recentRoute="public-ssc-ict"
                                     onSelectChapter={(chapter) => {
                                         setSelectedIctChapter(chapter);
                                         setSelectedIctClass('SSC');
@@ -49,6 +50,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Information and Communication Technology"
                                     chapters={hscIctChapters}
+                                    recentRoute="public-hsc-ict"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -88,9 +90,13 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'ICT', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'onudhabon')] || []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-hsc-ict-topics')}
-                                onNavigateCq={() => navigate('public-hsc-ict-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-ict-mcq')}
                                 onNavigate={navigate}
                             />
                         )}
@@ -133,6 +139,7 @@ export const renderPublic = `
                                     classLabel="SSC"
                                     subjectLabel="Physics"
                                     chapters={sscPhysicsChapters}
+                                    recentRoute="public-ssc-physics"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -171,10 +178,15 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Physics', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'onudhabon')] ||
+                                        []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-ssc-physics-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-ssc-physics-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-physics-mcq')}
                             />
                         )}
                         {view === 'public-ssc-physics-cq' && (
@@ -217,6 +229,7 @@ export const renderPublic = `
                                     classLabel="SSC"
                                     subjectLabel="Chemistry"
                                     chapters={sscChemistryChapters}
+                                    recentRoute="public-ssc-chemistry"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -255,10 +268,15 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Chemistry', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'onudhabon')] ||
+                                        []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-ssc-chemistry-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-ssc-chemistry-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-chemistry-mcq')}
                             />
                         )}
                         {view === 'public-ssc-chemistry-cq' && (
@@ -301,6 +319,7 @@ export const renderPublic = `
                                     classLabel="SSC"
                                     subjectLabel="Biology"
                                     chapters={sscBiologyChapters}
+                                    recentRoute="public-ssc-biology"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -339,10 +358,15 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Biology', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan: srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'gyan')] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'onudhabon')] ||
+                                        []
+                                }}
+                                mcqList={mcqQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'mcq')] || []}
                                 onBack={() => navigate('public-ssc-biology-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-ssc-biology-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-biology-mcq')}
                             />
                         )}
                         {view === 'public-ssc-biology-cq' && (
@@ -385,6 +409,7 @@ export const renderPublic = `
                                     classLabel="SSC"
                                     subjectLabel="Bangladesh and Global Studies"
                                     chapters={sscBangladeshGlobalChapters}
+                                    recentRoute="public-ssc-bangladesh-global-studies"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -423,10 +448,23 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', 'Bangladesh and Global Studies', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[
+                                        getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'mcq')
+                                    ] || []
+                                }
                                 onBack={() => navigate('public-ssc-bangladesh-global-studies-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-ssc-bangladesh-global-studies-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-bangladesh-global-studies-mcq')}
                             />
                         )}
                         {view === 'public-ssc-bangladesh-global-studies-cq' && (
@@ -495,6 +533,7 @@ export const renderPublic = `
                                     classLabel="SSC"
                                     subjectLabel="Religion and Moral Education"
                                     chapters={sscReligionChapters[selectedReligion?.key] || []}
+                                    recentRoute="public-ssc-religion-chapters"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -534,10 +573,23 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[
+                                        getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'mcq')
+                                    ] || []
+                                }
                                 onBack={() => navigate('public-ssc-religion-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-ssc-religion-cq')}
-                                onNavigateMcq={() => navigate('public-ssc-religion-mcq')}
                             />
                         )}
                         {view === 'public-ssc-religion-cq' && (
@@ -588,6 +640,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Physics 1st Paper"
                                     chapters={hscPhysics1stChapters}
+                                    recentRoute="public-hsc-physics-1st"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -626,10 +679,20 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'gyan')] ||
+                                        [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-physics-1st-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-hsc-physics-1st-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-physics-1st-mcq')}
                             />
                         )}
                         {view === 'public-hsc-physics-1st-cq' && (
@@ -677,6 +740,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Physics 2nd Paper"
                                     chapters={hscPhysics2ndChapters}
+                                    recentRoute="public-hsc-physics-2nd"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -715,10 +779,20 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Physics 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'gyan')] ||
+                                        [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-physics-2nd-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-hsc-physics-2nd-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-physics-2nd-mcq')}
                             />
                         )}
                         {view === 'public-hsc-physics-2nd-cq' && (
@@ -766,6 +840,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Chemistry 1st Paper"
                                     chapters={hscChemistry1stChapters}
+                                    recentRoute="public-hsc-chemistry-1st"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -804,10 +879,21 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-chemistry-1st-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-hsc-chemistry-1st-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-chemistry-1st-mcq')}
                             />
                         )}
                         {view === 'public-hsc-chemistry-1st-cq' && (
@@ -856,6 +942,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Chemistry 2nd Paper"
                                     chapters={hscChemistry2ndChapters}
+                                    recentRoute="public-hsc-chemistry-2nd"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -894,10 +981,21 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Chemistry 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-chemistry-2nd-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-hsc-chemistry-2nd-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-chemistry-2nd-mcq')}
                             />
                         )}
                         {view === 'public-hsc-chemistry-2nd-cq' && (
@@ -946,6 +1044,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Biology 1st Paper"
                                     chapters={hscBiology1stChapters}
+                                    recentRoute="public-hsc-biology-1st"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -984,10 +1083,21 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 1st Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-biology-1st-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-hsc-biology-1st-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-biology-1st-mcq')}
                             />
                         )}
                         {view === 'public-hsc-biology-1st-cq' && (
@@ -1036,6 +1146,7 @@ export const renderPublic = `
                                     classLabel="HSC"
                                     subjectLabel="Biology 2nd Paper"
                                     chapters={hscBiology2ndChapters}
+                                    recentRoute="public-hsc-biology-2nd"
                                     onSelectChapter={(chapter) => {
                                         setSelectedScienceChapter(chapter);
                                         setSelectedScienceSubject({
@@ -1074,10 +1185,21 @@ export const renderPublic = `
                                 topicName={selectedScienceTopic?.name}
                                 noteKey={['HSC', 'Biology 2nd Paper', activeScienceTopicKey].join('-')}
                                 notesByItem={notesByItem}
+                                cqQuestions={{
+                                    gyan:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'gyan')
+                                        ] || [],
+                                    onudhabon:
+                                        srijonshilQuestions[
+                                            getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                                        ] || []
+                                }}
+                                mcqList={
+                                    mcqQuestions[getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'mcq')] || []
+                                }
                                 onBack={() => navigate('public-hsc-biology-2nd-topics')}
                                 onNavigate={navigate}
-                                onNavigateCq={() => navigate('public-hsc-biology-2nd-cq')}
-                                onNavigateMcq={() => navigate('public-hsc-biology-2nd-mcq')}
                             />
                         )}
                         {view === 'public-hsc-biology-2nd-cq' && (
@@ -1301,6 +1423,9 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
+                                srijonshilQuestions={srijonshilQuestions}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
                                 onNavigate={navigate}
                             />
                         )}
@@ -1310,6 +1435,9 @@ export const renderPublic = `
                                 itemName={selectedBanglaItem}
                                 categoryName={selectedBanglaCategory}
                                 notesByItem={notesByItem}
+                                srijonshilQuestions={srijonshilQuestions}
+                                mcqQuestions={mcqQuestions}
+                                getQuestionKey={getQuestionKey}
                                 onNavigate={navigate}
                             />
                         )}
