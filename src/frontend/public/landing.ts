@@ -285,6 +285,8 @@ export const landingComponents = `
 
         const READ_PROGRESS_KEY = 'freeducation.read-progress';
         const RECENT_READ_KEY = 'freeducation.recent-read';
+        const VIDEO_PROGRESS_KEY = 'freeducation.video-progress';
+        const RECENT_VIDEO_KEY = 'freeducation.recent-video';
 
         const loadReadProgress = () => {
             try {
@@ -354,6 +356,62 @@ export const landingComponents = `
             return entries[0]?.label || '';
         };
 
+        const getVideoProgressKey = (noteKey, videoId) => [noteKey || 'item', videoId || 'video'].join('::');
+
+        const loadVideoProgress = () => {
+            try {
+                const raw = localStorage.getItem(VIDEO_PROGRESS_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (error) {
+                console.warn('Failed to read video progress data', error);
+                return {};
+            }
+        };
+
+        const loadRecentVideo = () => {
+            try {
+                const raw = localStorage.getItem(RECENT_VIDEO_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                console.warn('Failed to read recent video', error);
+                return null;
+            }
+        };
+
+        const storeVideoProgress = (entry) => {
+            const current = loadVideoProgress();
+            const updated = {
+                ...current,
+                [entry.key]: {
+                    videoId: entry.videoId,
+                    noteKey: entry.noteKey,
+                    title: entry.title,
+                    route: entry.route,
+                    currentTime: entry.currentTime,
+                    duration: entry.duration,
+                    updatedAt: entry.updatedAt
+                }
+            };
+            try {
+                localStorage.setItem(VIDEO_PROGRESS_KEY, JSON.stringify(updated));
+                localStorage.setItem(
+                    RECENT_VIDEO_KEY,
+                    JSON.stringify({
+                        videoId: entry.videoId,
+                        noteKey: entry.noteKey,
+                        title: entry.title,
+                        route: entry.route,
+                        currentTime: entry.currentTime,
+                        duration: entry.duration,
+                        updatedAt: entry.updatedAt
+                    })
+                );
+            } catch (error) {
+                console.warn('Failed to store video progress', error);
+            }
+            return updated;
+        };
+
         const useReadingProgress = () => {
             const [readMap, setReadMap] = useState(() => loadReadProgress());
             const [recentRead, setRecentRead] = useState(() => loadRecentRead());
@@ -375,6 +433,31 @@ export const landingComponents = `
             return { readMap, recentRead, markRead };
         };
 
+        const useVideoProgress = () => {
+            const [progressMap, setProgressMap] = useState(() => loadVideoProgress());
+            const [recentVideo, setRecentVideo] = useState(() => loadRecentVideo());
+
+            const markVideoProgress = (entry) => {
+                const timestamped = {
+                    ...entry,
+                    updatedAt: Date.now()
+                };
+                const updated = storeVideoProgress(timestamped);
+                setProgressMap(updated);
+                setRecentVideo({
+                    videoId: entry.videoId,
+                    noteKey: entry.noteKey,
+                    title: entry.title,
+                    route: entry.route,
+                    currentTime: entry.currentTime,
+                    duration: entry.duration,
+                    updatedAt: timestamped.updatedAt
+                });
+            };
+
+            return { progressMap, recentVideo, markVideoProgress };
+        };
+
         const cardWidthClass = 'w-36 sm:w-40 md:w-44';
         const cardGridGapClass = 'gap-4 sm:gap-6';
         const cardSurfaceClass =
@@ -385,6 +468,57 @@ export const landingComponents = `
                 <div className={'relative grid ' + cardGridGapClass + ' ' + className}>
                     {children}
                 </div>
+            </div>
+        );
+
+        const getYoutubeId = (url) => {
+            if (!url) return '';
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{6,})/);
+            return match ? match[1] : '';
+        };
+
+        const getVideoPreviewUrl = (video) => {
+            if (video?.thumbnailUrl) return video.thumbnailUrl;
+            const id = getYoutubeId(video?.url || '');
+            return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+        };
+
+        const getVideoEmbedUrl = (url) => {
+            const id = getYoutubeId(url);
+            if (!id) return '';
+            return `https://www.youtube.com/embed/${id}`;
+        };
+
+        const LearningButtonGrid = ({ buttons }) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {buttons.map((button) => (
+                    <button
+                        key={button.key}
+                        onClick={button.onClick}
+                        disabled={button.disabled}
+                        className={
+                            'aspect-square rounded-xl border text-sm font-semibold uppercase tracking-[0.2em] transition ' +
+                            (button.disabled
+                                ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50')
+                        }
+                    >
+                        {button.label}
+                    </button>
+                ))}
+            </div>
+        );
+
+        const FlatNotesList = ({ notes }) => (
+            <div className="space-y-3">
+                {notes.length === 0 && (
+                    <div className="text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</div>
+                )}
+                {notes.map((note, index) => (
+                    <div key={index} className="text-sm text-slate-700">
+                        {note}
+                    </div>
+                ))}
             </div>
         );
 
@@ -642,14 +776,16 @@ export const landingComponents = `
             );
         };
 
-        const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
+        const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children, hideMeta = false }) => (
             <div className="flex-1 bg-[#fff7ed]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-rose-100 bg-white p-5 sm:p-7 shadow-sm">
                             <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Bangla 1st Paper</div>
+                                    {!hideMeta && (
+                                        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Bangla 1st Paper</div>
+                                    )}
                                     <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">
                                         {title}
                                     </h2>
@@ -861,10 +997,8 @@ export const landingComponents = `
             itemName,
             categoryName,
             notesByItem,
-            srijonshilQuestions,
-            mcqQuestions,
-            getQuestionKey,
-            onNavigate
+            onNavigate,
+            onNavigateVideos
         }) => {
             const categoryRoute = classLabel === 'SSC'
                 ? (categoryName === 'পদ্য'
@@ -878,94 +1012,42 @@ export const landingComponents = `
                         ? 'public-bangla-hsc-shohopath'
                         : 'public-bangla-hsc-goddo');
 
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const toBanglaNumber = (value) => String(value)
-                .split('')
-                .map((digit) => banglaDigits[Number(digit)] ?? digit)
-                .join('');
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
             const notes = (notesByItem || {})[noteKey] || [];
             const chapterTitle = itemName || 'পাঠ নির্বাচন করুন';
-            const [activeTab, setActiveTab] = useState('notes');
-            const srijonshilTypes = [
-                { key: 'gyan', label: 'জ্ঞান (ক)' },
-                { key: 'onudhabon', label: 'অনুধাবন (খ)' }
+            const actionButtons = [
+                {
+                    key: 'cq',
+                    label: 'CQ',
+                    onClick: () => onNavigate(classLabel === 'SSC' ? 'public-bangla-ssc-srijonshil' : 'public-bangla-hsc-srijonshil')
+                },
+                {
+                    key: 'mcq',
+                    label: 'MCQ',
+                    onClick: () => onNavigate(classLabel === 'SSC' ? 'public-bangla-ssc-mcq' : 'public-bangla-hsc-mcq')
+                },
+                {
+                    key: 'videos',
+                    label: 'Videos',
+                    onClick: onNavigateVideos
+                },
+                {
+                    key: 'practice',
+                    label: 'Practice',
+                    disabled: true
+                }
             ];
-            const cqSections = srijonshilTypes.map((type) => ({
-                key: type.key,
-                label: type.label,
-                items: srijonshilQuestions?.[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [],
-                prefix: (index) => toBanglaNumber(index + 1)
-            }));
-            const mcqList = mcqQuestions?.[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
 
             return (
                 <PublicBanglaShell
-                    title="পাঠ তথ্য"
-                    subtitle={categoryName ? 'বিভাগ: ' + categoryName : ''}
+                    title={chapterTitle}
+                    hideMeta
                     onBack={() => onNavigate(categoryRoute)}
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="text-center">
-                            <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
-                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
-                        </div>
-
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="border-b border-slate-100 px-4 pt-4">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {[
-                                        { key: 'notes', label: 'Read (Notes)' },
-                                        { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' }
-                                    ].map((tab) => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            className={
-                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
-                                                (activeTab === tab.key
-                                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
-                                            }
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="px-4 py-5">
-                                {activeTab === 'notes' && (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                            <div className="text-sm font-semibold text-slate-700 mt-1">অধ্যায়ের গুরুত্বপূর্ণ নোট</div>
-                                        </div>
-                                        <ul className="divide-y border border-slate-100 rounded-xl">
-                                            {notes.length === 0 && (
-                                                <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
-                                            )}
-                                            {notes.map((note, index) => (
-                                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
-                                                    <span className="text-sm font-semibold text-slate-500">
-                                                        {toBanglaNumber(index + 1)}.
-                                                    </span>
-                                                    <div className="text-sm text-slate-700">{note}</div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {activeTab === 'cq' && (
-                                    <CqQuestionList sections={cqSections} />
-                                )}
-                                {activeTab === 'mcq' && (
-                                    <PublicMcqList mcqList={mcqList} />
-                                )}
-                            </div>
-                        </div>
+                        <LearningButtonGrid buttons={actionButtons} />
+                        <FlatNotesList notes={notes} />
                     </div>
                 </PublicBanglaShell>
             );
@@ -1209,12 +1291,14 @@ export const landingComponents = `
             );
         };
 
-        const PublicScienceShell = ({ title, subtitle, subjectLabel, classLabel, onBack, onNavigate, children }) => (
+        const PublicScienceShell = ({ title, subtitle, subjectLabel, classLabel, onBack, onNavigate, children, hideMeta = false }) => (
             <div className="flex-1 bg-[#ecfdf3]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{classLabel} {subjectLabel}</div>
+                            {!hideMeta && (
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{classLabel} {subjectLabel}</div>
+                            )}
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2 font-bangla">{title}</h2>
                             {subtitle && <p className="text-sm text-slate-500 mt-2 font-bangla">{subtitle}</p>}
                         </div>
@@ -1291,31 +1375,18 @@ export const landingComponents = `
             topicName,
             noteKey,
             notesByItem,
-            cqQuestions,
-            mcqList,
+            onNavigateCq,
+            onNavigateMcq,
+            onNavigateVideos,
             onBack,
             onNavigate
         }) => {
             const notes = (notesByItem || {})[noteKey] || [];
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const toBanglaNumber = (value) => String(value)
-                .split('')
-                .map((digit) => banglaDigits[Number(digit)] ?? digit)
-                .join('');
-            const [activeTab, setActiveTab] = useState('notes');
-            const cqSections = [
-                {
-                    key: 'gyan',
-                    label: 'জ্ঞান (ক)',
-                    items: cqQuestions?.gyan || [],
-                    prefix: (index) => toBanglaNumber(index + 1)
-                },
-                {
-                    key: 'onudhabon',
-                    label: 'অনুধাবন (খ)',
-                    items: cqQuestions?.onudhabon || [],
-                    prefix: (index) => toBanglaNumber(index + 1)
-                }
+            const actionButtons = [
+                { key: 'cq', label: 'CQ', onClick: onNavigateCq },
+                { key: 'mcq', label: 'MCQ', onClick: onNavigateMcq },
+                { key: 'videos', label: 'Videos', onClick: onNavigateVideos },
+                { key: 'practice', label: 'Practice', disabled: true }
             ];
 
             return (
@@ -1323,67 +1394,163 @@ export const landingComponents = `
                     subjectLabel={subjectLabel}
                     classLabel={classLabel}
                     title={topicName || 'টপিক নির্বাচন করুন'}
-                    subtitle={chapterName ? 'অধ্যায়: ' + chapterName : ''}
+                    subtitle={chapterName || ''}
+                    hideMeta
                     onBack={onBack}
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6 font-bangla">
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="border-b border-slate-100 px-4 pt-4">
-                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Learning tabs</div>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {[
-                                        { key: 'notes', label: 'Read (Notes)' },
-                                        { key: 'cq', label: 'Practice (CQ)' },
-                                        { key: 'mcq', label: 'Test (MCQ)' }
-                                    ].map((tab) => (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            className={
-                                                'px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border transition ' +
-                                                (activeTab === tab.key
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300')
-                                            }
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="px-4 py-5">
-                                {activeTab === 'notes' && (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">নোটস</div>
-                                            <div className="text-sm font-semibold text-slate-700 mt-1">টপিকের মূল ধারণা</div>
-                                        </div>
-                                        <ul className="divide-y border border-slate-100 rounded-xl">
-                                            {notes.length === 0 && (
-                                                <li className="px-4 py-3 text-sm text-slate-400">এখনো কোন নোট যোগ করা হয়নি।</li>
-                                            )}
-                                            {notes.map((note, index) => (
-                                                <li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3">
-                                                    <span className="text-sm font-semibold text-slate-500">
-                                                        {toBanglaNumber(index + 1)}.
-                                                    </span>
-                                                    <div className="text-sm text-slate-700">{note}</div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {activeTab === 'cq' && (
-                                    <CqQuestionList sections={cqSections} />
-                                )}
-                                {activeTab === 'mcq' && (
-                                    <PublicMcqList mcqList={mcqList} />
-                                )}
-                            </div>
-                        </div>
+                        <LearningButtonGrid buttons={actionButtons} />
+                        <FlatNotesList notes={notes} />
                     </div>
                 </PublicScienceShell>
+            );
+        };
+
+        const PublicVideoList = ({ noteKey, videosByItem, route }) => {
+            const videos = (videosByItem || {})[noteKey] || [];
+            const { progressMap, recentVideo, markVideoProgress } = useVideoProgress();
+            const [activeVideo, setActiveVideo] = useState(null);
+            const [resumeAt, setResumeAt] = useState(0);
+            const videoRef = useRef(null);
+            const lastProgressRef = useRef(0);
+
+            useEffect(() => {
+                if (!recentVideo || recentVideo.noteKey !== noteKey) return;
+                const match = videos.find((video) => video.id === recentVideo.videoId);
+                if (match) {
+                    setActiveVideo(match);
+                    setResumeAt(recentVideo.currentTime || 0);
+                }
+            }, [recentVideo, noteKey, videos]);
+
+            useEffect(() => {
+                if (!activeVideo) return;
+                const key = getVideoProgressKey(noteKey, activeVideo.id);
+                const existing = progressMap[key];
+                if (existing?.currentTime) {
+                    setResumeAt(existing.currentTime);
+                }
+            }, [activeVideo, noteKey, progressMap]);
+
+            const handleSelectVideo = (video) => {
+                const key = getVideoProgressKey(noteKey, video.id);
+                const existing = progressMap[key];
+                setActiveVideo(video);
+                setResumeAt(existing?.currentTime || 0);
+                markVideoProgress({
+                    key,
+                    videoId: video.id,
+                    noteKey,
+                    title: video.title,
+                    route,
+                    currentTime: existing?.currentTime || 0,
+                    duration: existing?.duration || 0
+                });
+            };
+
+            const handleTimeUpdate = () => {
+                const player = videoRef.current;
+                if (!player || !activeVideo) return;
+                const now = Date.now();
+                if (now - lastProgressRef.current < 2500) return;
+                lastProgressRef.current = now;
+                const key = getVideoProgressKey(noteKey, activeVideo.id);
+                markVideoProgress({
+                    key,
+                    videoId: activeVideo.id,
+                    noteKey,
+                    title: activeVideo.title,
+                    route,
+                    currentTime: player.currentTime || 0,
+                    duration: player.duration || 0
+                });
+            };
+
+            const handleLoadedMetadata = () => {
+                const player = videoRef.current;
+                if (!player || !resumeAt) return;
+                player.currentTime = Math.min(resumeAt, player.duration || resumeAt);
+            };
+
+            const activeEmbedUrl = activeVideo ? getVideoEmbedUrl(activeVideo.url) : '';
+            const canTrackProgress = activeVideo && !activeEmbedUrl;
+
+            return (
+                <div className="space-y-5 font-bangla">
+                    {activeVideo && (
+                        <div className="space-y-3">
+                            <div>
+                                <h3 className="text-xl sm:text-2xl font-semibold text-slate-900">{activeVideo.title}</h3>
+                                {activeVideo.channelName && (
+                                    <div className="text-sm text-slate-500 mt-1">
+                                        {activeVideo.channelUrl ? (
+                                            <a href={activeVideo.channelUrl} target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-500">
+                                                {activeVideo.channelName}
+                                            </a>
+                                        ) : (
+                                            activeVideo.channelName
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            {activeEmbedUrl ? (
+                                <div className="w-full aspect-video bg-black rounded-lg overflow-hidden">
+                                    <iframe
+                                        src={activeEmbedUrl}
+                                        title={activeVideo.title}
+                                        className="w-full h-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            ) : (
+                                <video
+                                    ref={videoRef}
+                                    src={activeVideo.url}
+                                    controls
+                                    className="w-full rounded-lg bg-black"
+                                    onTimeUpdate={canTrackProgress ? handleTimeUpdate : undefined}
+                                    onLoadedMetadata={canTrackProgress ? handleLoadedMetadata : undefined}
+                                    onPause={canTrackProgress ? handleTimeUpdate : undefined}
+                                />
+                            )}
+                        </div>
+                    )}
+                    <div className="space-y-3">
+                        {videos.length === 0 && (
+                            <div className="text-sm text-slate-400">এখনো কোন ভিডিও যোগ করা হয়নি।</div>
+                        )}
+                        {videos.map((video) => {
+                            const previewUrl = getVideoPreviewUrl(video);
+                            return (
+                                <button
+                                    key={video.id}
+                                    onClick={() => handleSelectVideo(video)}
+                                    className="w-full text-left border border-slate-200 rounded-xl p-3 hover:border-emerald-200 hover:bg-emerald-50 transition"
+                                >
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <div className="w-full sm:w-40 aspect-video bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center text-xs text-slate-400">
+                                            {previewUrl ? (
+                                                <img src={previewUrl} alt={video.title} className="w-full h-full object-cover" />
+                                            ) : (
+                                                'No preview'
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-sm font-semibold text-slate-900">{video.title}</div>
+                                            <div className="text-xs text-slate-500 mt-1">
+                                                {video.channelName && <span>{video.channelName}</span>}
+                                                {video.channelName && video.duration && <span> • </span>}
+                                                {video.duration && <span>{video.duration}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             );
         };
 
@@ -1549,6 +1716,7 @@ export const landingComponents = `
             const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
             const { readMap, recentRead } = useReadingProgress();
+            const { recentVideo } = useVideoProgress();
 
             useEffect(() => {
                 const timer = setInterval(() => {
@@ -1560,6 +1728,8 @@ export const landingComponents = `
             const activeQuote = quoteItems[quoteIndex];
             const continueLabel = recentRead?.label;
             const continueRoute = recentRead?.route;
+            const continueVideoLabel = recentVideo?.title;
+            const continueVideoRoute = recentVideo?.route;
 
             const handleQuickSearch = () => {
                 const normalized = quickQuery.trim().toLowerCase();
@@ -1638,6 +1808,17 @@ export const landingComponents = `
                                     </button>
                                 </div>
                             )}
+                            {continueVideoLabel && continueVideoRoute && (
+                                <div className="mt-4">
+                                    <button
+                                        onClick={() => onNavigate(continueVideoRoute)}
+                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-2xl bg-blue-400/90 text-blue-950 px-5 py-3 text-sm font-semibold shadow-sm hover:bg-blue-300 transition"
+                                    >
+                                        <i className="fa-solid fa-play"></i>
+                                        Continue Watching: {continueVideoLabel}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -1683,6 +1864,7 @@ export const landingComponents = `
             PublicScienceChapterList,
             PublicScienceTopicList,
             PublicScienceTopicDetail,
+            PublicVideoList,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
             PublicReligionOptionList,
@@ -1712,6 +1894,7 @@ export const landingComponents = `
             PublicScienceChapterList,
             PublicScienceTopicList,
             PublicScienceTopicDetail,
+            PublicVideoList,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
             PublicReligionOptionList,
