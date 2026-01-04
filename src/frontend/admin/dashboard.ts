@@ -1801,52 +1801,63 @@ export const dashboardComponents = `
                         {questions.length === 0 && (
                             <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন MCQ যোগ করা হয়নি।</div>
                         )}
-                        {questions.map((entry, index) => (
-                            <div key={\`\${entry.question}-\${index}\`} className="px-5 py-4">
-                                <div className="flex flex-wrap gap-3 items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="text-sm font-semibold text-gray-800">
-                                            {toBanglaNumber(index + 1)}. {entry.question}
+                        {questions.map((entry, index) => {
+                            const resolvedOptions = Array.isArray(entry.options) ? entry.options : [];
+                            const paddedOptions = [
+                                ...resolvedOptions,
+                                ...Array.from({ length: Math.max(0, 4 - resolvedOptions.length) }, () => '')
+                            ];
+                            const resolvedAnswerIndex = Number.isInteger(entry.answerIndex) ? entry.answerIndex : 0;
+                            const answerLabel = optionLabels[resolvedAnswerIndex] || optionLabels[0];
+                            const answerValue = paddedOptions[resolvedAnswerIndex] || '';
+
+                            return (
+                                <div key={\`\${entry.question}-\${index}\`} className="px-5 py-4">
+                                    <div className="flex flex-wrap gap-3 items-start justify-between">
+                                        <div className="flex-1">
+                                            <div className="text-sm font-semibold text-gray-800">
+                                                {toBanglaNumber(index + 1)}. {entry.question}
+                                            </div>
+                                            <div className="mt-2 grid gap-1 text-sm text-gray-600">
+                                                {paddedOptions.map((option, optionIndex) => (
+                                                    <div key={\`\${option}-\${optionIndex}\`}>
+                                                        {optionLabels[optionIndex]}. {option}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="mt-2 text-sm text-gray-700">
+                                                উত্তর: {answerLabel}। {answerValue}
+                                            </div>
                                         </div>
-                                        <div className="mt-2 grid gap-1 text-sm text-gray-600">
-                                            {entry.options.map((option, optionIndex) => (
-                                                <div key={\`\${option}-\${optionIndex}\`}>
-                                                    {optionLabels[optionIndex]}. {option}
-                                                </div>
-                                            ))}
+                                        <div className="flex items-center gap-2 text-xs font-semibold">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingIndex(index);
+                                                    setQuestionInput(entry.question);
+                                                    setOptionsInput(paddedOptions);
+                                                    setAnswerIndex(resolvedAnswerIndex);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const shouldRemove = window.confirm('আপনি কি এই MCQ মুছে ফেলতে চান?');
+                                                    if (shouldRemove) {
+                                                        onDelete(index);
+                                                    }
+                                                }}
+                                                className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
+                                            >
+                                                Delete
+                                            </button>
                                         </div>
-                                        <div className="mt-2 text-sm text-gray-700">
-                                            উত্তর: {optionLabels[entry.answerIndex]}। {entry.options[entry.answerIndex]}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-semibold">
-                                        <button
-                                            onClick={() => {
-                                                setEditingIndex(index);
-                                                setQuestionInput(entry.question);
-                                                setOptionsInput(entry.options);
-                                                setAnswerIndex(entry.answerIndex);
-                                                setIsModalOpen(true);
-                                            }}
-                                            className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                const shouldRemove = window.confirm('আপনি কি এই MCQ মুছে ফেলতে চান?');
-                                                if (shouldRemove) {
-                                                    onDelete(index);
-                                                }
-                                            }}
-                                            className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition"
-                                        >
-                                            Delete
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {videoKey && (
