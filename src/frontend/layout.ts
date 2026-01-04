@@ -150,7 +150,15 @@ export function renderAppHtml(initialView: string) {
         ${mainApp}
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        try {
+            root.render(<App />);
+        } catch (error) {
+            console.error('Failed to render app', error);
+            const rootEl = document.getElementById('root');
+            if (rootEl) {
+                rootEl.innerHTML = '<div style="padding:24px;font-family:Inter, sans-serif;"><h2>Something went wrong.</h2><p>Please refresh the page or contact support if the problem persists.</p></div>';
+            }
+        }
     </script>
 </body>
 </html>

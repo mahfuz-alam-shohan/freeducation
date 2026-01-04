@@ -32,18 +32,20 @@ const requireJwtSecret = (env: Env) => {
   return secret;
 };
 
+const fontFormatMatchers = [
+  { format: "woff2", contentHints: ["woff2"], extensions: [".woff2"] },
+  { format: "woff", contentHints: ["woff"], extensions: [".woff"] },
+  { format: "opentype", contentHints: ["opentype"], extensions: [".otf"] },
+  { format: "truetype", contentHints: ["truetype"], extensions: [".ttf"] },
+];
+
 const inferFontFormat = (contentType: string | null, fileName: string | null) => {
   const lowerType = (contentType || "").toLowerCase();
-  if (lowerType.includes("woff2")) return "woff2";
-  if (lowerType.includes("woff")) return "woff";
-  if (lowerType.includes("opentype")) return "opentype";
-  if (lowerType.includes("truetype")) return "truetype";
-
   const lowerName = (fileName || "").toLowerCase();
-  if (lowerName.endsWith(".woff2")) return "woff2";
-  if (lowerName.endsWith(".woff")) return "woff";
-  if (lowerName.endsWith(".otf")) return "opentype";
-  if (lowerName.endsWith(".ttf")) return "truetype";
+  for (const matcher of fontFormatMatchers) {
+    if (matcher.contentHints.some((hint) => lowerType.includes(hint))) return matcher.format;
+    if (matcher.extensions.some((ext) => lowerName.endsWith(ext))) return matcher.format;
+  }
   return "truetype";
 };
 
@@ -62,6 +64,157 @@ const ensureAdmin = (payload: any | null) => {
 };
 
 const normalizeSubject = (value: string) => value.trim().toLowerCase();
+const normalizeLevel = (value: string) => value.trim().toUpperCase();
+const isValidKey = (value: string) => /^[a-z0-9-]+$/.test(value);
+const isValidSubject = (value: string) => /^[a-z0-9\s-]+$/.test(value);
+const isValidLevel = (value: string) => ["SSC", "HSC"].includes(value);
+
+const buildPasswordHash = async (password: string) => {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = Array.from(salt)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const hash = await hashPassword(password, saltHex);
+  return {
+    saltHex,
+    passwordHash: `${saltHex}:${hash}`,
+  };
+};
+
+type ThumbnailConfig = {
+  table: "subject_thumbnails" | "chapter_thumbnails";
+  keyColumn: "subject_key" | "chapter_key";
+  keyField: "subjectKey" | "chapterKey";
+  urlPrefix: "/api/thumbnails" | "/api/chapter-thumbnails";
+  bucketPrefix: "thumbnails" | "chapter-thumbnails";
+  includeZoom: boolean;
+};
+
+const subjectThumbnailConfig: ThumbnailConfig = {
+  table: "subject_thumbnails",
+  keyColumn: "subject_key",
+  keyField: "subjectKey",
+  urlPrefix: "/api/thumbnails",
+  bucketPrefix: "thumbnails",
+  includeZoom: true,
+};
+
+const chapterThumbnailConfig: ThumbnailConfig = {
+  table: "chapter_thumbnails",
+  keyColumn: "chapter_key",
+  keyField: "chapterKey",
+  urlPrefix: "/api/chapter-thumbnails",
+  bucketPrefix: "chapter-thumbnails",
+  includeZoom: false,
+};
+
+const getThumbnailVersion = (row: any) =>
+  row?.updated_at ? new Date(row.updated_at as string).getTime() : Date.now();
+
+const handleThumbnailList = async (env: Env, config: ThumbnailConfig) => {
+  const columns = config.includeZoom ? `${config.keyColumn}, zoom, updated_at` : `${config.keyColumn}, updated_at`;
+  const rows = await env.DB.prepare(
+    `SELECT ${columns} FROM ${config.table} ORDER BY updated_at DESC`
+  ).all();
+  const thumbnails = (rows.results || []).map((row: any) => {
+    const version = getThumbnailVersion(row);
+    const keyValue = row[config.keyColumn];
+    return {
+      [config.keyField]: keyValue,
+      ...(config.includeZoom ? { zoom: typeof row.zoom === "number" ? row.zoom : 1 } : {}),
+      url: `${config.urlPrefix}/${keyValue}?v=${version}`,
+    };
+  });
+  return Response.json({ thumbnails }, { headers: apiHeaders });
+};
+
+const handleThumbnailUpload = async (request: Request, env: Env, config: ThumbnailConfig) => {
+  const payload = await getAuthPayload(request, env);
+  if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+  if (!ensureAdmin(payload)) {
+    return Response.json({ success: false, error: "Admin access required." }, { status: 403, headers: apiHeaders });
+  }
+  const formData = await request.formData();
+  const keyValue = String(formData.get(config.keyField) || "").trim().toLowerCase();
+  if (!keyValue || !isValidKey(keyValue)) {
+    return Response.json({ success: false, error: `Invalid ${config.keyField.replace("Key", " key")}.` }, { status: 400, headers: apiHeaders });
+  }
+  const zoomValue = config.includeZoom ? clampZoom(Number(formData.get("zoom"))) : null;
+  const file = formData.get("file");
+  const existing = await env.DB.prepare(
+    `SELECT file_key, content_type${config.includeZoom ? ", zoom" : ""} FROM ${config.table} WHERE ${config.keyColumn} = ?`
+  )
+    .bind(keyValue)
+    .first();
+
+  if (!(file instanceof File) && !existing) {
+    return Response.json({ success: false, error: "Thumbnail file is required." }, { status: 400, headers: apiHeaders });
+  }
+
+  let fileKey = existing?.file_key as string | undefined;
+  let contentType = existing?.content_type as string | undefined;
+
+  if (file instanceof File) {
+    const arrayBuffer = await file.arrayBuffer();
+    fileKey = `${config.bucketPrefix}/${keyValue}-${crypto.randomUUID()}-${file.name}`;
+    contentType = file.type || "application/octet-stream";
+    await env.BUCKET.put(fileKey, arrayBuffer, {
+      httpMetadata: {
+        contentType,
+      },
+    });
+    if (existing?.file_key) {
+      await env.BUCKET.delete(existing.file_key as string);
+    }
+  }
+
+  const insertColumns = config.includeZoom
+    ? `${config.keyColumn}, file_key, content_type, zoom, updated_at`
+    : `${config.keyColumn}, file_key, content_type, updated_at`;
+  const insertValues = config.includeZoom ? "?, ?, ?, ?, CURRENT_TIMESTAMP" : "?, ?, ?, CURRENT_TIMESTAMP";
+  const updateColumns = config.includeZoom
+    ? "file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP"
+    : "file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP";
+  const statement = env.DB.prepare(
+    `INSERT INTO ${config.table} (${insertColumns}) VALUES (${insertValues}) ON CONFLICT(${config.keyColumn}) DO UPDATE SET ${updateColumns}`
+  );
+  const bindValues = config.includeZoom ? [keyValue, fileKey, contentType, zoomValue] : [keyValue, fileKey, contentType];
+  await statement.bind(...bindValues).run();
+
+  const cacheBuster = Date.now();
+  return Response.json(
+    {
+      success: true,
+      thumbnail: {
+        [config.keyField]: keyValue,
+        ...(config.includeZoom ? { zoom: zoomValue } : {}),
+        url: `${config.urlPrefix}/${keyValue}?v=${cacheBuster}`,
+      },
+    },
+    { headers: apiHeaders }
+  );
+};
+
+const handleThumbnailGet = async (env: Env, config: ThumbnailConfig, rawKey: string) => {
+  const keyValue = decodeURIComponent(rawKey).toLowerCase();
+  if (!keyValue || !isValidKey(keyValue)) {
+    return Response.json({ success: false, error: `Invalid ${config.keyField.replace("Key", " key")}.` }, { status: 400, headers: apiHeaders });
+  }
+  const thumbnail = await env.DB.prepare(`SELECT file_key, content_type FROM ${config.table} WHERE ${config.keyColumn} = ?`)
+    .bind(keyValue)
+    .first();
+  if (!thumbnail) {
+    return Response.json({ success: false, error: "Thumbnail not found." }, { status: 404, headers: apiHeaders });
+  }
+  const object = await env.BUCKET.get(thumbnail.file_key as string);
+  if (!object) {
+    return Response.json({ success: false, error: "Thumbnail file missing." }, { status: 404, headers: apiHeaders });
+  }
+  const headers = new Headers(apiHeaders);
+  headers.set("Content-Type", (thumbnail.content_type as string) || "application/octet-stream");
+  headers.set("Cache-Control", "public, max-age=86400");
+  return new Response(object.body, { headers });
+};
 
 const safeParseContent = (data: unknown) => {
   if (typeof data !== "string") return {};
@@ -288,188 +441,29 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
       if (path.startsWith("/api/thumbnails")) {
         if (path === "/api/thumbnails" && request.method === "GET") {
-          const rows = await env.DB.prepare(
-            "SELECT subject_key, zoom, updated_at FROM subject_thumbnails ORDER BY updated_at DESC"
-          ).all();
-          const thumbnails = (rows.results || []).map((row: any) => {
-            const version = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
-            return {
-              subjectKey: row.subject_key,
-              zoom: typeof row.zoom === "number" ? row.zoom : 1,
-              url: `/api/thumbnails/${row.subject_key}?v=${version}`,
-            };
-          });
-          return Response.json({ thumbnails }, { headers: apiHeaders });
+          return handleThumbnailList(env, subjectThumbnailConfig);
         }
 
         if (path === "/api/thumbnails" && request.method === "POST") {
-          const payload = await getAuthPayload(request, env);
-          if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
-          if (!ensureAdmin(payload)) {
-            return Response.json({ success: false, error: "Admin access required." }, { status: 403, headers: apiHeaders });
-          }
-          const formData = await request.formData();
-          const subjectKey = String(formData.get("subjectKey") || "").trim().toLowerCase();
-          if (!subjectKey || !/^[a-z0-9-]+$/.test(subjectKey)) {
-            return Response.json({ success: false, error: "Invalid subject key." }, { status: 400, headers: apiHeaders });
-          }
-          const zoomValue = clampZoom(Number(formData.get("zoom")));
-          const file = formData.get("file");
-          const existing = await env.DB.prepare("SELECT file_key, content_type FROM subject_thumbnails WHERE subject_key = ?")
-            .bind(subjectKey)
-            .first();
-
-          if (!(file instanceof File) && !existing) {
-            return Response.json({ success: false, error: "Thumbnail file is required." }, { status: 400, headers: apiHeaders });
-          }
-
-          let fileKey = existing?.file_key as string | undefined;
-          let contentType = existing?.content_type as string | undefined;
-
-          if (file instanceof File) {
-            const arrayBuffer = await file.arrayBuffer();
-            fileKey = `thumbnails/${subjectKey}-${crypto.randomUUID()}-${file.name}`;
-            contentType = file.type || "application/octet-stream";
-            await env.BUCKET.put(fileKey, arrayBuffer, {
-              httpMetadata: {
-                contentType,
-              },
-            });
-            if (existing?.file_key) {
-              await env.BUCKET.delete(existing.file_key as string);
-            }
-          }
-
-          await env.DB.prepare(
-            "INSERT INTO subject_thumbnails (subject_key, file_key, content_type, zoom, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) " +
-              "ON CONFLICT(subject_key) DO UPDATE SET file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP"
-          ).bind(subjectKey, fileKey, contentType, zoomValue).run();
-
-          const cacheBuster = Date.now();
-          return Response.json(
-            {
-              success: true,
-              thumbnail: {
-                subjectKey,
-                zoom: zoomValue,
-                url: `/api/thumbnails/${subjectKey}?v=${cacheBuster}`,
-              },
-            },
-            { headers: apiHeaders }
-          );
+          return handleThumbnailUpload(request, env, subjectThumbnailConfig);
         }
 
         if (path.startsWith("/api/thumbnails/") && request.method === "GET") {
-          const subjectKey = decodeURIComponent(path.replace("/api/thumbnails/", "")).toLowerCase();
-          if (!subjectKey || !/^[a-z0-9-]+$/.test(subjectKey)) {
-            return Response.json({ success: false, error: "Invalid subject key." }, { status: 400, headers: apiHeaders });
-          }
-          const thumbnail = await env.DB.prepare("SELECT file_key, content_type FROM subject_thumbnails WHERE subject_key = ?")
-            .bind(subjectKey)
-            .first();
-          if (!thumbnail) {
-            return Response.json({ success: false, error: "Thumbnail not found." }, { status: 404, headers: apiHeaders });
-          }
-          const object = await env.BUCKET.get(thumbnail.file_key as string);
-          if (!object) {
-            return Response.json({ success: false, error: "Thumbnail file missing." }, { status: 404, headers: apiHeaders });
-          }
-          const headers = new Headers(apiHeaders);
-          headers.set("Content-Type", (thumbnail.content_type as string) || "application/octet-stream");
-          headers.set("Cache-Control", "public, max-age=86400");
-          return new Response(object.body, { headers });
+          return handleThumbnailGet(env, subjectThumbnailConfig, path.replace("/api/thumbnails/", ""));
         }
       }
 
       if (path.startsWith("/api/chapter-thumbnails")) {
         if (path === "/api/chapter-thumbnails" && request.method === "GET") {
-          const rows = await env.DB.prepare(
-            "SELECT chapter_key, updated_at FROM chapter_thumbnails ORDER BY updated_at DESC"
-          ).all();
-          const thumbnails = (rows.results || []).map((row: any) => {
-            const version = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
-            return {
-              chapterKey: row.chapter_key,
-              url: `/api/chapter-thumbnails/${row.chapter_key}?v=${version}`,
-            };
-          });
-          return Response.json({ thumbnails }, { headers: apiHeaders });
+          return handleThumbnailList(env, chapterThumbnailConfig);
         }
 
         if (path === "/api/chapter-thumbnails" && request.method === "POST") {
-          const payload = await getAuthPayload(request, env);
-          if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
-          if (!ensureAdmin(payload)) {
-            return Response.json({ success: false, error: "Admin access required." }, { status: 403, headers: apiHeaders });
-          }
-          const formData = await request.formData();
-          const chapterKey = String(formData.get("chapterKey") || "").trim().toLowerCase();
-          if (!chapterKey || !/^[a-z0-9-]+$/.test(chapterKey)) {
-            return Response.json({ success: false, error: "Invalid chapter key." }, { status: 400, headers: apiHeaders });
-          }
-          const file = formData.get("file");
-          const existing = await env.DB.prepare("SELECT file_key, content_type FROM chapter_thumbnails WHERE chapter_key = ?")
-            .bind(chapterKey)
-            .first();
-
-          if (!(file instanceof File) && !existing) {
-            return Response.json({ success: false, error: "Thumbnail file is required." }, { status: 400, headers: apiHeaders });
-          }
-
-          let fileKey = existing?.file_key as string | undefined;
-          let contentType = existing?.content_type as string | undefined;
-
-          if (file instanceof File) {
-            const arrayBuffer = await file.arrayBuffer();
-            fileKey = `chapter-thumbnails/${chapterKey}-${crypto.randomUUID()}-${file.name}`;
-            contentType = file.type || "application/octet-stream";
-            await env.BUCKET.put(fileKey, arrayBuffer, {
-              httpMetadata: {
-                contentType,
-              },
-            });
-            if (existing?.file_key) {
-              await env.BUCKET.delete(existing.file_key as string);
-            }
-          }
-
-          await env.DB.prepare(
-            "INSERT INTO chapter_thumbnails (chapter_key, file_key, content_type, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) " +
-              "ON CONFLICT(chapter_key) DO UPDATE SET file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP"
-          ).bind(chapterKey, fileKey, contentType).run();
-
-          const cacheBuster = Date.now();
-          return Response.json(
-            {
-              success: true,
-              thumbnail: {
-                chapterKey,
-                url: `/api/chapter-thumbnails/${chapterKey}?v=${cacheBuster}`,
-              },
-            },
-            { headers: apiHeaders }
-          );
+          return handleThumbnailUpload(request, env, chapterThumbnailConfig);
         }
 
         if (path.startsWith("/api/chapter-thumbnails/") && request.method === "GET") {
-          const chapterKey = decodeURIComponent(path.replace("/api/chapter-thumbnails/", "")).toLowerCase();
-          if (!chapterKey || !/^[a-z0-9-]+$/.test(chapterKey)) {
-            return Response.json({ success: false, error: "Invalid chapter key." }, { status: 400, headers: apiHeaders });
-          }
-          const thumbnail = await env.DB.prepare("SELECT file_key, content_type FROM chapter_thumbnails WHERE chapter_key = ?")
-            .bind(chapterKey)
-            .first();
-          if (!thumbnail) {
-            return Response.json({ success: false, error: "Thumbnail not found." }, { status: 404, headers: apiHeaders });
-          }
-          const object = await env.BUCKET.get(thumbnail.file_key as string);
-          if (!object) {
-            return Response.json({ success: false, error: "Thumbnail file missing." }, { status: 404, headers: apiHeaders });
-          }
-          const headers = new Headers(apiHeaders);
-          headers.set("Content-Type", (thumbnail.content_type as string) || "application/octet-stream");
-          headers.set("Cache-Control", "public, max-age=86400");
-          return new Response(object.body, { headers });
+          return handleThumbnailGet(env, chapterThumbnailConfig, path.replace("/api/chapter-thumbnails/", ""));
         }
       }
 
@@ -504,10 +498,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           return Response.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400, headers: apiHeaders });
         }
 
-        const salt = crypto.getRandomValues(new Uint8Array(16));
-        const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
-        const hash = await hashPassword(cleanedPassword, saltHex);
-        const passwordHash = `${saltHex}:${hash}`;
+        const { passwordHash } = await buildPasswordHash(cleanedPassword);
         await env.DB.batch([
           env.DB.prepare("INSERT INTO users (username, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)")
             .bind(cleanedUsername, cleanedUsername, null, passwordHash, "admin"),
@@ -643,10 +634,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           return Response.json({ success: false, error: "Current password is incorrect." }, { status: 401, headers: apiHeaders });
         }
 
-        const salt = crypto.getRandomValues(new Uint8Array(16));
-        const newSaltHex = Array.from(salt).map(b => b.toString(16).padStart(2, "0")).join("");
-        const nextHash = await hashPassword(newPassword, newSaltHex);
-        const nextPasswordHash = `${newSaltHex}:${nextHash}`;
+        const { passwordHash: nextPasswordHash } = await buildPasswordHash(newPassword);
 
         const updates = [];
         if (userRow?.id) {
@@ -732,10 +720,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           return Response.json({ success: false, error: "Invalid role." }, { status: 400, headers: apiHeaders });
         }
 
-        const salt = crypto.getRandomValues(new Uint8Array(16));
-        const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
-        const hash = await hashPassword(password, saltHex);
-        const passwordHash = `${saltHex}:${hash}`;
+        const { passwordHash } = await buildPasswordHash(password);
         const username = email;
 
         await env.DB.prepare(
@@ -748,10 +733,13 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         }
 
         if (role === "teacher") {
-          const level = String(body.level || "").trim();
-          const subject = String(body.subject || "").trim();
+          const level = normalizeLevel(String(body.level || ""));
+          const subject = normalizeSubject(String(body.subject || ""));
           if (!level || !subject) {
             return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
+          }
+          if (!isValidLevel(level) || !isValidSubject(subject)) {
+            return Response.json({ success: false, error: "Invalid teacher level or subject." }, { status: 400, headers: apiHeaders });
           }
           const rawPermissions = body.permissions || [];
           const permissions = Array.isArray(rawPermissions)
@@ -759,12 +747,17 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             : Object.entries(rawPermissions)
                 .filter(([, enabled]) => Boolean(enabled))
                 .map(([key]) => key);
-          await env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?)")
-            .bind(inserted.id, level, subject)
-            .run();
-          await env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?)")
-            .bind(inserted.id, JSON.stringify(permissions))
-            .run();
+          await env.DB.batch([
+            env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?)").bind(
+              inserted.id,
+              level,
+              subject
+            ),
+            env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?)").bind(
+              inserted.id,
+              JSON.stringify(permissions)
+            ),
+          ]);
         }
 
         if (role === "admin") {
@@ -794,10 +787,13 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         if (role !== "teacher") {
           return Response.json({ success: false, error: "Only teacher updates are supported." }, { status: 400, headers: apiHeaders });
         }
-        const level = String(body.level || "").trim();
-        const subject = String(body.subject || "").trim();
+        const level = normalizeLevel(String(body.level || ""));
+        const subject = normalizeSubject(String(body.subject || ""));
         if (!level || !subject) {
           return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
+        }
+        if (!isValidLevel(level) || !isValidSubject(subject)) {
+          return Response.json({ success: false, error: "Invalid teacher level or subject." }, { status: 400, headers: apiHeaders });
         }
         const rawPermissions = body.permissions || [];
         const permissions = Array.isArray(rawPermissions)
@@ -805,18 +801,16 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           : Object.entries(rawPermissions)
               .filter(([, enabled]) => Boolean(enabled))
               .map(([key]) => key);
-        await env.DB.prepare(
-          "INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) " +
-            "ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject"
-        )
-          .bind(userId, level, subject)
-          .run();
-        await env.DB.prepare(
-          "INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) " +
-            "ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions"
-        )
-          .bind(userId, JSON.stringify(permissions))
-          .run();
+        await env.DB.batch([
+          env.DB.prepare(
+            "INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) " +
+              "ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject"
+          ).bind(userId, level, subject),
+          env.DB.prepare(
+            "INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) " +
+              "ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions"
+          ).bind(userId, JSON.stringify(permissions)),
+        ]);
         return Response.json({ success: true }, { headers: apiHeaders });
       }
 

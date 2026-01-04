@@ -14,8 +14,26 @@ import { authHandlers } from "./app/auth";
 import { teacherGuard } from "./app/teacher-guard";
 import { appRender } from "./app/render";
 
+const appModules = [
+  appRouting,
+  appState,
+  keyHelpers,
+  teacherConfig,
+  contentState,
+  banglaTopics,
+  englishTypes,
+  derivedState,
+  questionHelpers,
+  collectionHelpers,
+  navigationHelpers,
+  appEffects,
+  authHandlers,
+  teacherGuard,
+  appRender,
+];
+
 export const mainApp = `
         function App() {
-${appRouting}${appState}${keyHelpers}${teacherConfig}${contentState}${banglaTopics}${englishTypes}${derivedState}${questionHelpers}${collectionHelpers}${navigationHelpers}${appEffects}${authHandlers}${teacherGuard}${appRender}
+${appModules.join("\n")}
         }
 `;
