@@ -2564,7 +2564,7 @@ export const dashboardComponents = `
                 if (!contentKey) return;
                 setIsLoading(true);
                 try {
-                    const response = await fetch(`/api/videos?key=${encodeURIComponent(contentKey)}`);
+                    const response = await fetch(\`/api/videos?key=\${encodeURIComponent(contentKey)}\`);
                     const data = await response.json();
                     if (data.success) {
                         setVideos(Array.isArray(data.videos) ? data.videos : []);
@@ -2639,7 +2639,7 @@ export const dashboardComponents = `
                 if (!token) return;
                 const shouldRemove = window.confirm('আপনি কি ভিডিও রিসোর্সটি মুছে ফেলতে চান?');
                 if (!shouldRemove) return;
-                const response = await fetch(`/api/videos/${videoId}`, {
+                const response = await fetch(\`/api/videos/\${videoId}\`, {
                     method: 'DELETE',
                     headers: {
                         Authorization: 'Bearer ' + token
