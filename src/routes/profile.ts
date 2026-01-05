@@ -1,8 +1,21 @@
+import { verifyToken } from "../auth";
 import type { Env } from "../types";
-import { apiHeaders, getAuthPayload, recordEditHistory } from "./shared";
+import { apiHeaders, getAuthPayload, recordEditHistory, requireJwtSecret } from "./shared";
 
-const getAvatarUrl = (updatedAt: string | null | undefined) =>
-  `/api/profile/avatar?v=${updatedAt ? new Date(updatedAt).getTime() : Date.now()}`;
+const getAvatarUrl = (updatedAt: string | null | undefined, token?: string | null) => {
+  const version = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+  const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
+  return `/api/profile/avatar?v=${version}${tokenParam}`;
+};
+
+const getAvatarAuthPayload = async (request: Request, env: Env) => {
+  const headerPayload = await getAuthPayload(request, env);
+  if (headerPayload) return headerPayload;
+  const token = new URL(request.url).searchParams.get("token");
+  if (!token) return null;
+  const secret = requireJwtSecret(env);
+  return await verifyToken(token, secret);
+};
 
 export const handleProfile = async (request: Request, env: Env, path: string): Promise<Response | null> => {
   if (!path.startsWith("/api/profile")) return null;
@@ -10,6 +23,8 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
   if (path === "/api/profile" && request.method === "GET") {
     const payload = await getAuthPayload(request, env);
     if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+    const authHeader = request.headers.get("Authorization");
+    const authToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
     const userRow = await env.DB.prepare("SELECT id, username, name, email, role FROM users WHERE id = ?")
       .bind(payload.id)
@@ -60,7 +75,7 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
                 subject: assignmentRow.subject,
               }
             : null,
-          avatarUrl: avatarRow?.avatar_key ? getAvatarUrl(avatarRow.updated_at as string) : null,
+          avatarUrl: avatarRow?.avatar_key ? getAvatarUrl(avatarRow.updated_at as string, authToken) : null,
         },
       },
       { headers: apiHeaders }
@@ -86,7 +101,7 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
   }
 
   if (path === "/api/profile/avatar" && request.method === "GET") {
-    const payload = await getAuthPayload(request, env);
+    const payload = await getAvatarAuthPayload(request, env);
     if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
 
     const avatarRow = await env.DB.prepare("SELECT avatar_key, avatar_content_type FROM user_profiles WHERE user_id = ?")
@@ -108,6 +123,8 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
   if (path === "/api/profile/avatar" && request.method === "POST") {
     const payload = await getAuthPayload(request, env);
     if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+    const authHeader = request.headers.get("Authorization");
+    const authToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     const formData = await request.formData();
     const file = formData.get("file");
     if (!(file instanceof File)) {
@@ -143,7 +160,7 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
     return Response.json(
       {
         success: true,
-        avatarUrl: getAvatarUrl(new Date().toISOString()),
+        avatarUrl: getAvatarUrl(new Date().toISOString(), authToken),
       },
       { headers: apiHeaders }
     );
