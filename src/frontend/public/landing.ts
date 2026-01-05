@@ -455,10 +455,11 @@ export const landingComponents = `
         };
 
         const cardWidthClass = 'w-36 sm:w-40 md:w-44';
-        const cardGridGapClass = 'gap-4 sm:gap-6';
+        const cardGridGapClass = 'gap-2 sm:gap-4';
         const cardSurfaceClass =
-            'relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg group-hover:border-indigo-200 card-art-surface';
-        const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm';
+            'relative w-full aspect-[4/5] rounded-lg overflow-hidden border border-slate-200 bg-white transition group-hover:border-indigo-200 card-art-surface';
+        const cardPanelClass = 'relative';
+        const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
         const getSubjectChapterCount = (subject) => {
             if (!contentLoaded || !subject) return null;
             const title = subject.title;
@@ -490,7 +491,7 @@ export const landingComponents = `
         };
         const ArtPanelGrid = ({ children, className = '' }) => (
             <div className={cardPanelClass}>
-                <div className={'relative grid ' + cardGridGapClass + ' ' + className}>
+                <div className={'relative grid justify-items-center ' + cardGridGapClass + ' ' + className}>
                     {children}
                 </div>
             </div>
@@ -509,7 +510,7 @@ export const landingComponents = `
                     }
                     disabled={!isActive}
                 >
-                    <div className="space-y-1.5 h-full">
+                    <div className="space-y-1.5 h-full text-center">
                         <div className={cardSurfaceClass}>
                             {subject.thumbnailUrl ? (
                                 <img
@@ -532,10 +533,10 @@ export const landingComponents = `
                                 </div>
                             )}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 flex flex-col items-center text-center">
                             <div className="text-xs sm:text-sm font-semibold text-slate-900">{subject.title}</div>
                             {subject.subtitle && <div className="text-[11px] text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
-                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                            <div className="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
                                 {chapterCount !== null && (
                                     <span className="inline-flex items-center gap-1">
                                         <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
@@ -565,10 +566,10 @@ export const landingComponents = `
                 onClick={onClick}
                 className={className + ' block text-left transition-all duration-300 group'}
             >
-                <div className="space-y-2 h-full">
+                <div className="space-y-2 h-full text-center">
                     <div className={cardSurfaceClass + (isRead ? ' ring-1 ring-emerald-200' : '')}>
                         {isRead && (
-                            <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+                            <div className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
                                 <i className="fa-solid fa-check text-[10px]"></i>
                                 Read
                             </div>
@@ -586,7 +587,7 @@ export const landingComponents = `
                             </div>
                         )}
                     </div>
-                    <div>
+                    <div className="text-center">
                         <div className="text-xs sm:text-sm font-semibold text-slate-900">{title}</div>
                         {subtitle && <div className="text-[11px] text-slate-500 mt-1">{subtitle}</div>}
                     </div>
@@ -622,7 +623,7 @@ export const landingComponents = `
                         );
                     })}
                     {chapters.length === 0 && (
-                        <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
+                        <div className="border border-dashed border-slate-200 rounded-md p-6 text-sm text-slate-400 font-bangla text-center">
                             এখনো কোনো অধ্যায় যোগ করা হয়নি।
                         </div>
                     )}
@@ -632,11 +633,11 @@ export const landingComponents = `
 
         const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap, readMap }) => (
             <section className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col items-center gap-2 text-center">
                     <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
                     <button
                         onClick={onAll}
-                        className="text-xs font-semibold uppercase tracking-[0.2em] text-white bg-indigo-600 px-3 py-1.5 rounded-full transition hover:bg-indigo-500 hover:-translate-y-0.5 hover:shadow-md flex items-center gap-2"
+                        className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-md transition hover:border-indigo-300 hover:text-indigo-700 flex items-center gap-2"
                     >
                         See all <i className="fa-solid fa-angle-right"></i>
                     </button>
@@ -681,19 +682,17 @@ export const landingComponents = `
             return (
                 <div className="flex-1 bg-[#f3f6ff]">
                     <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                            <div>
-                                <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
-                                <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">
-                                    {classLabel} Subjects
-                                </h2>
-                                <p className="text-sm text-slate-500 mt-2">
-                                    Browse the complete {classLabel} list by group or search for a subject.
-                                </p>
-                            </div>
+                        <div className="flex flex-col items-center text-center gap-2">
+                            <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
+                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">
+                                {classLabel} Subjects
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-2">
+                                Browse the complete {classLabel} list by group or search for a subject.
+                            </p>
                             <button
                                 onClick={() => onNavigate('landing')}
-                                className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+                                className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-md transition hover:border-indigo-300 hover:text-indigo-700"
                             >
                                 Back to Home
                             </button>
@@ -724,11 +723,11 @@ export const landingComponents = `
                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
                             </div>
                         </div>
-                        <div className="mt-6 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
+                        <div className="mt-6 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-400">
                             <span>Showing</span>
                             <span>{filteredSubjects.length} subjects</span>
                         </div>
-                        <div className={'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ' + cardGridGapClass + ' mt-4'}>
+                        <div className={'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 justify-items-center ' + cardGridGapClass + ' mt-4'}>
                             {filteredSubjects.map((subject) => {
                                 const thumbnail = thumbnailMap[subject.subjectKey];
                                 const lastRead = getLastReadForSubject(readMap, subject.title);
@@ -870,12 +869,12 @@ export const landingComponents = `
             <div className="flex-1 bg-[#fff7ed]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
                     <div className="space-y-6">
-                        <div className="rounded-3xl border border-rose-100 bg-white p-5 sm:p-7 shadow-sm">
-                            <div className="relative z-10 grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                        <div className="border-b border-slate-200 pb-4">
+                            <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
                                 {onBack ? (
                                     <button
                                         onClick={onBack}
-                                        className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                        className="w-10 h-10 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
                                         aria-label="Go back"
                                     >
                                         <i className="fa-solid fa-arrow-left"></i>
@@ -892,7 +891,7 @@ export const landingComponents = `
                                 </div>
                                 <button
                                     onClick={() => onNavigate('landing')}
-                                    className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                                    className="px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
                                 >
                                     Home
                                 </button>
@@ -910,11 +909,11 @@ export const landingComponents = `
         const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-white', onBack, onNavigate, children }) => (
             <div className={'flex-1 ' + backgroundClass}>
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 border-b border-slate-200 pb-4">
                         {onBack ? (
                             <button
                                 onClick={onBack}
-                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                className="w-10 h-10 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
                                 aria-label="Go back"
                             >
                                 <i className="fa-solid fa-arrow-left"></i>
@@ -928,7 +927,7 @@ export const landingComponents = `
                         </div>
                         <button
                             onClick={() => onNavigate('landing')}
-                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                            className="px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
                         >
                             Home
                         </button>
@@ -1082,7 +1081,7 @@ export const landingComponents = `
             return (
                 <div className="space-y-4">
                     {sections.map((section) => (
-                        <div key={section.key} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
+                        <div key={section.key} className={flatSectionClass}>
                             <div className="text-sm font-semibold text-slate-900">{section.label}</div>
                             {section.items.length === 0 ? (
                                 <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>
@@ -1173,22 +1172,22 @@ export const landingComponents = `
                     onBack={() => onNavigate(categoryRoute)}
                     onNavigate={onNavigate}
                 >
-                    <div className="space-y-6 font-bangla">
+                    <div className="space-y-6 font-bangla text-left">
                         <div className="flex flex-wrap gap-2">
                             {actionCards.map((card) => (
-                                <button
-                                    key={card.key}
-                                    onClick={card.disabled ? undefined : card.onClick}
-                                    disabled={card.disabled}
-                                    className={
-                                        'rounded-lg border text-xs font-semibold transition px-3 py-1.5 ' +
-                                        (card.disabled
-                                            ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
-                                            : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50')
-                                    }
-                                >
-                                    {card.label}
-                                </button>
+                            <button
+                                key={card.key}
+                                onClick={card.disabled ? undefined : card.onClick}
+                                disabled={card.disabled}
+                                className={
+                                    'rounded-md border text-xs font-semibold transition px-3 py-1.5 ' +
+                                    (card.disabled
+                                        ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
+                                        : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50')
+                                }
+                            >
+                                {card.label}
+                            </button>
                             ))}
                         </div>
                         <div className="space-y-2 text-sm text-slate-700">
@@ -1233,7 +1232,7 @@ export const landingComponents = `
                     onBack={() => onNavigate(itemRoute)}
                     onNavigate={onNavigate}
                 >
-                    <div className="space-y-6 font-bangla">
+                    <div className="space-y-6 font-bangla text-left">
                         <div className="text-center">
                             <div className="text-xs uppercase tracking-[0.3em] text-slate-400">অধ্যায়</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{chapterTitle}</h2>
@@ -1241,7 +1240,7 @@ export const landingComponents = `
                         {srijonshilTypes.map((type) => {
                             const list = srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [];
                             return (
-                                <div key={type.key} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
+                                <div key={type.key} className={flatSectionClass}>
                                     <div className="text-sm font-semibold text-slate-900">{type.label}</div>
                                     {list.length === 0 ? (
                                         <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>
@@ -1312,19 +1311,19 @@ export const landingComponents = `
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={showAll}
-                                className="px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                                className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
                             >
                                 সকল উত্তর দেখুন
                             </button>
                             <button
                                 onClick={hideAll}
-                                className="px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                                className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
                             >
                                 সকল উত্তর লুকান
                             </button>
                         </div>
                     </div>
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm divide-y">
+                    <div className="border-y border-slate-200 divide-y">
                         {mcqList.map((entry, index) => (
                             <div key={entry.question + '-' + index} className="px-4 py-4">
                                 <div className="text-sm font-semibold text-slate-900">
@@ -1340,7 +1339,7 @@ export const landingComponents = `
                                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
                                     <button
                                         onClick={() => toggleAnswer(index)}
-                                        className="px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                                        className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
                                     >
                                         {isOpen(index) ? 'উত্তর লুকান' : 'উত্তর দেখুন'}
                                     </button>
@@ -1390,11 +1389,11 @@ export const landingComponents = `
         const PublicIctShell = ({ title, subtitle, classLabel, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#ecfeff]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 border-b border-slate-200 pb-4">
                         {onBack ? (
                             <button
                                 onClick={onBack}
-                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                className="w-10 h-10 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
                                 aria-label="Go back"
                             >
                                 <i className="fa-solid fa-arrow-left"></i>
@@ -1409,7 +1408,7 @@ export const landingComponents = `
                         </div>
                         <button
                             onClick={() => onNavigate('landing')}
-                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                            className="px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
                         >
                             Home
                         </button>
@@ -1451,11 +1450,11 @@ export const landingComponents = `
         const PublicScienceShell = ({ title, subtitle, subjectLabel, classLabel, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#ecfdf3]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 border-b border-slate-200 pb-4">
                         {onBack ? (
                             <button
                                 onClick={onBack}
-                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                className="w-10 h-10 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
                                 aria-label="Go back"
                             >
                                 <i className="fa-solid fa-arrow-left"></i>
@@ -1470,7 +1469,7 @@ export const landingComponents = `
                         </div>
                         <button
                             onClick={() => onNavigate('landing')}
-                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                            className="px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
                         >
                             Home
                         </button>
@@ -1507,12 +1506,12 @@ export const landingComponents = `
         );
 
         const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
-            <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3'}>
+            <div className={'grid justify-items-center ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3'}>
                 {topics.map((topic) => (
                     <button
                         key={topic.id}
                         onClick={() => onSelectTopic(topic)}
-                        className="w-full border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
+                        className="w-full border border-slate-200 rounded-md p-4 text-center hover:border-slate-300 hover:bg-slate-50 transition font-bangla"
                     >
                         <div className="text-xs uppercase tracking-[0.2em] text-slate-400">টপিক</div>
                         <div className="text-lg font-semibold text-slate-900 mt-2">{topic.name}</div>
@@ -1520,7 +1519,7 @@ export const landingComponents = `
                     </button>
                 ))}
                 {topics.length === 0 && (
-                    <div className="border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-slate-400 font-bangla">
+                    <div className="border border-dashed border-slate-200 rounded-md p-6 text-sm text-slate-400 font-bangla text-center">
                         এখনো কোনো টপিক যোগ করা হয়নি।
                     </div>
                 )}
@@ -1632,7 +1631,7 @@ export const landingComponents = `
                         {cqTypes.map((type) => {
                             const list = questions[type.key] || [];
                             return (
-                                <div key={type.key} className="border border-slate-200 rounded-2xl bg-white p-5 shadow-sm">
+                                <div key={type.key} className={flatSectionClass}>
                                     <div className="text-sm font-semibold text-slate-900">{type.label}</div>
                                     {list.length === 0 ? (
                                         <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>
@@ -1700,7 +1699,7 @@ export const landingComponents = `
             const videoRef = useRef(null);
             const embedUrl = video?.sourceType === 'link' ? getYoutubeEmbedUrl(video.url) : '';
             const source = getVideoSource(video);
-            const frameClassName = className || 'w-full aspect-video rounded-xl border border-slate-200';
+            const frameClassName = className || 'w-full aspect-video rounded-md border border-slate-200';
 
             useEffect(() => {
                 if (!videoRef.current) return;
@@ -1783,7 +1782,7 @@ export const landingComponents = `
                     onBack={resolvedBack}
                     onNavigate={onNavigate}
                 >
-                    <div className="space-y-4 font-bangla">
+                    <div className="space-y-4 font-bangla text-left">
                         <div className="text-xs uppercase tracking-[0.3em] text-slate-400">ভিডিও লিস্ট</div>
                         <div className="space-y-3">
                             {videos.length === 0 && (
@@ -1799,7 +1798,7 @@ export const landingComponents = `
                                     <button
                                         key={video.id}
                                         onClick={() => handleSelect(video)}
-                                        className="w-full text-left border border-slate-200 rounded-2xl px-3 py-2 hover:border-slate-300 hover:bg-slate-50 transition"
+                                        className="w-full text-left border-b border-slate-200 last:border-b-0 px-2 py-3 hover:bg-slate-50 transition"
                                     >
                                         <div className="flex items-start gap-3">
                                             <div className="w-20 h-12 shrink-0">
@@ -1881,7 +1880,7 @@ export const landingComponents = `
                     onNavigate={onNavigate}
                 >
                     {activeVideo ? (
-                        <div className="space-y-4 font-bangla">
+                        <div className="space-y-4 font-bangla text-left">
                             <div className="space-y-1">
                                 <div className="text-base font-semibold text-slate-900">{activeVideo.title}</div>
                                 <div className="text-sm text-slate-600">
@@ -1907,7 +1906,7 @@ export const landingComponents = `
                                 <PublicVideoPlayer
                                     video={activeVideo}
                                     progress={progress}
-                                    className="w-full max-w-3xl aspect-video rounded-xl border border-slate-200"
+                                    className="w-full max-w-3xl aspect-video rounded-md border border-slate-200"
                                     onDuration={(nextDuration) => {
                                         if (nextDuration) {
                                             setDuration(nextDuration);
@@ -1939,11 +1938,11 @@ export const landingComponents = `
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <div className="flex-1 bg-[#eef2ff]">
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4">
+                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 border-b border-slate-200 pb-4">
                         {onBack ? (
                             <button
                                 onClick={onBack}
-                                className="w-10 h-10 rounded-full border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
+                                className="w-10 h-10 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center"
                                 aria-label="Go back"
                             >
                                 <i className="fa-solid fa-arrow-left"></i>
@@ -1958,7 +1957,7 @@ export const landingComponents = `
                         </div>
                         <button
                             onClick={() => onNavigate('landing')}
-                            className="px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
+                            className="px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end"
                         >
                             Home
                         </button>
@@ -1972,12 +1971,12 @@ export const landingComponents = `
         );
 
         const PublicEnglishCardGrid = ({ items, onNavigate }) => (
-            <div className={'grid ' + cardGridGapClass + ' sm:grid-cols-2'}>
+            <div className={'grid justify-items-center ' + cardGridGapClass + ' sm:grid-cols-2'}>
                 {items.map((item) => (
                     <button
                         key={item.key}
                         onClick={() => item.route && onNavigate(item.route)}
-                        className="w-full border border-slate-200 rounded-2xl p-5 text-left hover:border-slate-300 hover:bg-slate-50 transition"
+                        className="w-full border border-slate-200 rounded-md p-4 text-center hover:border-slate-300 hover:bg-slate-50 transition"
                     >
                         <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Section</div>
                         <div className="text-lg font-semibold text-slate-900 mt-2">{item.title}</div>
@@ -1988,12 +1987,12 @@ export const landingComponents = `
         );
 
         const PublicEnglishTypeList = ({ items, onSelect }) => (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm divide-y">
+            <div className="border-y border-slate-200 divide-y">
                 {items.map((item) => (
                     <button
                         key={item.key}
                         onClick={() => onSelect(item)}
-                        className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                        className="w-full flex items-center justify-between px-2 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-left"
                     >
                         <div className="text-left space-y-1">
                             <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Question type</div>
@@ -2009,20 +2008,18 @@ export const landingComponents = `
                     </button>
                 ))}
                 {items.length === 0 && (
-                    <div className="px-5 py-4 text-sm text-slate-400">No question types available yet.</div>
+                    <div className="px-2 py-4 text-sm text-slate-400">No question types available yet.</div>
                 )}
             </div>
         );
 
         const PublicEnglishQuestionList = ({ questions }) => (
-            <div className="space-y-4">
+            <div className="space-y-4 text-left">
                 {questions.length === 0 && (
-                    <div className="bg-white border border-slate-200 rounded-2xl p-5 text-sm text-slate-400">
-                        No questions have been added yet.
-                    </div>
+                    <div className="text-sm text-slate-400">No questions have been added yet.</div>
                 )}
                 {questions.map((entry, index) => (
-                    <div key={index} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2">
+                    <div key={index} className={flatSectionClass + ' space-y-2'}>
                         <div className="text-sm font-semibold text-slate-900">Q{index + 1}. {entry.question}</div>
                         <div className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3">
                             Answer: {entry.answer}
@@ -2051,19 +2048,315 @@ export const landingComponents = `
             const continueRoute = recentRead?.route;
             const continueVideoTitle = recentVideo?.title;
             const continueVideoRoute = recentVideo?.route || 'public-videos';
+            const normalizedQuickQuery = quickQuery.trim().toLowerCase();
+            const buildQuickSearchEntries = () => {
+                const entries = [];
+                const addEntry = (entry) => entries.push(entry);
+                const addContentEntries = ({ noteKey, parentLabel, onSelect, videoContext }) => {
+                    const notes = (notesByItem || {})[noteKey] || [];
+                    notes.forEach((note, index) => {
+                        addEntry({
+                            type: 'Content',
+                            title: note,
+                            subtitle: parentLabel + ' • Note ' + (index + 1),
+                            keywords: [note, parentLabel, 'note', 'content'].join(' '),
+                            onSelect
+                        });
+                    });
+                    const videos = (videosByItem || {})[noteKey] || [];
+                    videos.forEach((video) => {
+                        addEntry({
+                            type: 'Video',
+                            title: video.title,
+                            subtitle: parentLabel + ' • Video',
+                            keywords: [video.title, parentLabel, 'video'].join(' '),
+                            onSelect: () => {
+                                setSelectedVideoContext({
+                                    ...videoContext,
+                                    noteKey
+                                });
+                                setSelectedVideoId(video.id);
+                                onNavigate('public-video-player');
+                            }
+                        });
+                    });
+                };
 
-            const handleQuickSearch = () => {
-                const normalized = quickQuery.trim().toLowerCase();
-                if (!normalized) return;
-                const candidates = [...sscSubjects, ...hscSubjects];
-                const match = candidates.find((subject) => {
-                    const title = subject.title.toLowerCase();
-                    const subtitle = subject.subtitle?.toLowerCase() || '';
-                    return title.includes(normalized) || subtitle.includes(normalized);
+                [...sscSubjects, ...hscSubjects].forEach((subject) => {
+                    if (!subject.route) return;
+                    addEntry({
+                        type: 'Subject',
+                        title: subject.title,
+                        subtitle: subject.classLabel + ' • ' + subject.groupLabel,
+                        keywords: [subject.title, subject.subtitle, subject.classLabel, subject.groupLabel].join(' '),
+                        onSelect: () => onNavigate(subject.route)
+                    });
                 });
-                if (match?.route) {
-                    onNavigate(match.route);
-                }
+
+                const scienceConfigs = [
+                    {
+                        classLabel: 'SSC',
+                        subjectLabel: 'Physics',
+                        chapters: sscPhysicsChapters,
+                        listRoute: 'public-ssc-physics-topics',
+                        topicRoute: 'public-ssc-physics-topic'
+                    },
+                    {
+                        classLabel: 'SSC',
+                        subjectLabel: 'Chemistry',
+                        chapters: sscChemistryChapters,
+                        listRoute: 'public-ssc-chemistry-topics',
+                        topicRoute: 'public-ssc-chemistry-topic'
+                    },
+                    {
+                        classLabel: 'SSC',
+                        subjectLabel: 'Biology',
+                        chapters: sscBiologyChapters,
+                        listRoute: 'public-ssc-biology-topics',
+                        topicRoute: 'public-ssc-biology-topic'
+                    },
+                    {
+                        classLabel: 'SSC',
+                        subjectLabel: 'Bangladesh and Global Studies',
+                        chapters: sscBangladeshGlobalChapters,
+                        listRoute: 'public-ssc-bangladesh-global-studies-topics',
+                        topicRoute: 'public-ssc-bangladesh-global-studies-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Physics 1st Paper',
+                        chapters: hscPhysics1stChapters,
+                        listRoute: 'public-hsc-physics-1st-topics',
+                        topicRoute: 'public-hsc-physics-1st-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Physics 2nd Paper',
+                        chapters: hscPhysics2ndChapters,
+                        listRoute: 'public-hsc-physics-2nd-topics',
+                        topicRoute: 'public-hsc-physics-2nd-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Chemistry 1st Paper',
+                        chapters: hscChemistry1stChapters,
+                        listRoute: 'public-hsc-chemistry-1st-topics',
+                        topicRoute: 'public-hsc-chemistry-1st-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Chemistry 2nd Paper',
+                        chapters: hscChemistry2ndChapters,
+                        listRoute: 'public-hsc-chemistry-2nd-topics',
+                        topicRoute: 'public-hsc-chemistry-2nd-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Biology 1st Paper',
+                        chapters: hscBiology1stChapters,
+                        listRoute: 'public-hsc-biology-1st-topics',
+                        topicRoute: 'public-hsc-biology-1st-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Biology 2nd Paper',
+                        chapters: hscBiology2ndChapters,
+                        listRoute: 'public-hsc-biology-2nd-topics',
+                        topicRoute: 'public-hsc-biology-2nd-topic'
+                    },
+                    {
+                        classLabel: 'HSC',
+                        subjectLabel: 'Information and Communication Technology',
+                        chapters: hscIctChapters,
+                        listRoute: 'public-hsc-ict-topics',
+                        topicRoute: 'public-hsc-ict-topic',
+                        questionKey: 'ICT'
+                    }
+                ];
+
+                scienceConfigs.forEach((config) => {
+                    (config.chapters || []).forEach((chapter) => {
+                        addEntry({
+                            type: 'Chapter',
+                            title: chapter.name,
+                            subtitle: config.subjectLabel + ' • ' + config.classLabel,
+                            keywords: [chapter.name, config.subjectLabel, config.classLabel, 'chapter'].join(' '),
+                            onSelect: () => {
+                                setSelectedScienceChapter(chapter);
+                                setSelectedScienceSubject({
+                                    classLabel: config.classLabel,
+                                    subjectLabel: config.subjectLabel,
+                                    questionKey: config.questionKey
+                                });
+                                setSelectedScienceTopic(null);
+                                onNavigate(config.listRoute);
+                            }
+                        });
+                        (chapter.topics || []).forEach((topic) => {
+                            const topicKey = getScienceTopicKey(chapter.id, topic.id);
+                            const noteKey = [config.classLabel, config.subjectLabel, topicKey].join('-');
+                            const topicAction = () => {
+                                setSelectedScienceChapter(chapter);
+                                setSelectedScienceSubject({
+                                    classLabel: config.classLabel,
+                                    subjectLabel: config.subjectLabel,
+                                    questionKey: config.questionKey
+                                });
+                                setSelectedScienceTopic(topic);
+                                onNavigate(config.topicRoute);
+                            };
+                            const parentLabel = topic.name + ' • ' + chapter.name;
+                            addEntry({
+                                type: 'Topic',
+                                title: topic.name,
+                                subtitle: config.subjectLabel + ' • ' + chapter.name,
+                                keywords: [topic.name, chapter.name, config.subjectLabel, 'topic'].join(' '),
+                                onSelect: topicAction
+                            });
+                            addContentEntries({
+                                noteKey,
+                                parentLabel,
+                                onSelect: topicAction,
+                                videoContext: {
+                                    title: topic.name,
+                                    subtitle: chapter.name,
+                                    backRoute: config.topicRoute,
+                                    backgroundClass: 'bg-[#ecfdf3]'
+                                }
+                            });
+                        });
+                    });
+                });
+
+                (sscIctChapters || []).forEach((chapter) => {
+                    addEntry({
+                        type: 'Chapter',
+                        title: chapter.name,
+                        subtitle: 'ICT • SSC',
+                        keywords: [chapter.name, 'ICT', 'SSC', 'chapter'].join(' '),
+                        onSelect: () => {
+                            setSelectedIctChapter(chapter);
+                            setSelectedIctClass('SSC');
+                            onNavigate('public-ssc-ict-mcq');
+                        }
+                    });
+                });
+
+                religionOptions.forEach((option) => {
+                    const chapters = (sscReligionChapters || {})[option.key] || [];
+                    chapters.forEach((chapter) => {
+                        addEntry({
+                            type: 'Chapter',
+                            title: chapter.name,
+                            subtitle: option.label + ' • Religion',
+                            keywords: [chapter.name, option.label, option.subtitle, 'religion', 'chapter'].join(' '),
+                            onSelect: () => {
+                                setSelectedReligion(option);
+                                setSelectedScienceChapter(chapter);
+                                setSelectedScienceSubject({
+                                    classLabel: 'SSC',
+                                    subjectLabel: 'Religion and Moral Education',
+                                    religionKey: option.key
+                                });
+                                setSelectedScienceTopic(null);
+                                onNavigate('public-ssc-religion-topics');
+                            }
+                        });
+                        (chapter.topics || []).forEach((topic) => {
+                            const topicKey = getScienceTopicKey(chapter.id, topic.id);
+                            const noteKey = ['SSC', getReligionSubjectKey(option), topicKey].join('-');
+                            const topicAction = () => {
+                                setSelectedReligion(option);
+                                setSelectedScienceChapter(chapter);
+                                setSelectedScienceSubject({
+                                    classLabel: 'SSC',
+                                    subjectLabel: 'Religion and Moral Education',
+                                    religionKey: option.key
+                                });
+                                setSelectedScienceTopic(topic);
+                                onNavigate('public-ssc-religion-topic');
+                            };
+                            const parentLabel = topic.name + ' • ' + chapter.name;
+                            addEntry({
+                                type: 'Topic',
+                                title: topic.name,
+                                subtitle: option.label + ' • ' + chapter.name,
+                                keywords: [topic.name, chapter.name, option.label, 'religion', 'topic'].join(' '),
+                                onSelect: topicAction
+                            });
+                            addContentEntries({
+                                noteKey,
+                                parentLabel,
+                                onSelect: topicAction,
+                                videoContext: {
+                                    title: topic.name,
+                                    subtitle: chapter.name,
+                                    backRoute: 'public-ssc-religion-topic',
+                                    backgroundClass: 'bg-[#ecfdf3]'
+                                }
+                            });
+                        });
+                    });
+                });
+
+                const addBanglaItems = (classLabel, categoryLabel, items, itemRoute) => {
+                    (items || []).forEach((item) => {
+                        const itemName = typeof item === 'string' ? item : item.name;
+                        const label = typeof item === 'string' ? categoryLabel : item.type;
+                        if (!itemName || !label) return;
+                        const noteKey = [classLabel, label, itemName].join('-');
+                        const itemAction = () => {
+                            storeBanglaSelection({
+                                classLabel,
+                                categoryName: label,
+                                itemName
+                            });
+                            setSelectedBanglaItem(itemName);
+                            setSelectedBanglaCategory(label);
+                            onNavigate(itemRoute);
+                        };
+                        const parentLabel = itemName + ' • ' + label;
+                        addEntry({
+                            type: 'Content',
+                            title: itemName,
+                            subtitle: classLabel + ' Bangla • ' + label,
+                            keywords: [itemName, label, classLabel, 'bangla', 'content'].join(' '),
+                            onSelect: itemAction
+                        });
+                        addContentEntries({
+                            noteKey,
+                            parentLabel,
+                            onSelect: itemAction,
+                            videoContext: {
+                                title: itemName,
+                                subtitle: label,
+                                backRoute: itemRoute,
+                                backgroundClass: 'bg-[#fff7ed]'
+                            }
+                        });
+                    });
+                };
+
+                addBanglaItems('SSC', 'গদ্য', sscGoddoItems, 'public-bangla-ssc-item');
+                addBanglaItems('SSC', 'পদ্য', sscPoddoItems, 'public-bangla-ssc-item');
+                addBanglaItems('SSC', 'সহপাঠ', sscShohopathItems, 'public-bangla-ssc-item');
+                addBanglaItems('HSC', 'গদ্য', hscGoddoItems, 'public-bangla-hsc-item');
+                addBanglaItems('HSC', 'পদ্য', hscPoddoItems, 'public-bangla-hsc-item');
+                addBanglaItems('HSC', 'সহপাঠ', hscShohopathItems, 'public-bangla-hsc-item');
+
+                return entries;
+            };
+
+            const quickResults = normalizedQuickQuery
+                ? buildQuickSearchEntries().filter((entry) => {
+                    const haystack = (entry.keywords || entry.title || '').toLowerCase();
+                    return haystack.includes(normalizedQuickQuery);
+                }).slice(0, 10)
+                : [];
+
+            const handleQuickSelect = (entry) => {
+                if (!entry?.onSelect) return;
+                entry.onSelect();
             };
 
             return (
@@ -2074,7 +2367,7 @@ export const landingComponents = `
                         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
+                                    <div className="w-14 h-14 rounded-md bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
                                         <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" />
                                             <path d="M6.5 11.2V16c0 .7.4 1.4 1.1 1.7C9 18.4 10.4 19 12 19s3-.6 4.4-1.3c.7-.3 1.1-1 1.1-1.7v-4.8" />
@@ -2089,40 +2382,57 @@ export const landingComponents = `
                                         </div>
                                     </div>
                                 </div>
-                                <div className="max-w-xl bg-indigo-600 border border-indigo-500 rounded-2xl p-6 text-white">
+                                <div className="max-w-xl bg-indigo-600 border border-indigo-500 rounded-md p-6 text-white">
                                     <p className="text-base sm:text-lg font-serif italic leading-relaxed">
                                         “{activeQuote.text}”
                                     </p>
                                     <p className="text-sm font-semibold text-white/90 mt-3">— {activeQuote.author}</p>
                                 </div>
                             </div>
-                            <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-center">
+                            <div className="mt-6">
                                 <div className="relative">
                                     <label className="text-[11px] uppercase tracking-[0.3em] text-white/70">Quick Search</label>
                                     <input
                                         value={quickQuery}
                                         onChange={(event) => setQuickQuery(event.target.value)}
                                         onKeyDown={(event) => {
-                                            if (event.key === 'Enter') handleQuickSearch();
+                                            if (event.key === 'Enter' && quickResults[0]) {
+                                                handleQuickSelect(quickResults[0]);
+                                            }
                                         }}
-                                        placeholder="Search Bangla, Physics, ICT..."
-                                        className="mt-2 w-full rounded-2xl border border-white/30 bg-white/95 py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-white"
+                                        placeholder="Search subjects, chapters, topics, notes, videos..."
+                                        className="mt-2 w-full rounded-lg border border-white/30 bg-white/95 py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-white"
                                     />
                                     <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
+                                    {normalizedQuickQuery && (
+                                        <div className="absolute left-0 right-0 mt-2 z-[40] rounded-lg border border-white/40 bg-white/95 text-slate-700 max-h-72 overflow-y-auto">
+                                            {quickResults.length === 0 && (
+                                                <div className="px-4 py-3 text-sm text-slate-400 text-left">
+                                                    No matches found.
+                                                </div>
+                                            )}
+                                            {quickResults.map((entry, index) => (
+                                                <button
+                                                    key={entry.title + '-' + entry.type + '-' + index}
+                                                    onClick={() => handleQuickSelect(entry)}
+                                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 transition"
+                                                >
+                                                    <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">{entry.type}</div>
+                                                    <div className="text-sm font-semibold text-slate-900">{entry.title}</div>
+                                                    {entry.subtitle && (
+                                                        <div className="text-xs text-slate-500 mt-1">{entry.subtitle}</div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                                <button
-                                    onClick={handleQuickSearch}
-                                    className="mt-6 lg:mt-7 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700 shadow-sm transition hover:bg-indigo-50"
-                                >
-                                    Find subject
-                                    <i className="fa-solid fa-arrow-right"></i>
-                                </button>
                             </div>
                             {continueLabel && continueRoute && (
                                 <div className="mt-6">
                                     <button
                                         onClick={() => onNavigate(continueRoute)}
-                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-2xl bg-emerald-400/90 text-emerald-950 px-5 py-3 text-sm font-semibold shadow-sm hover:bg-emerald-300 transition"
+                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-md bg-emerald-400/90 text-emerald-950 px-5 py-3 text-sm font-semibold shadow-sm hover:bg-emerald-300 transition"
                                     >
                                         <i className="fa-solid fa-play"></i>
                                         Continue Reading: {continueLabel}
@@ -2133,7 +2443,7 @@ export const landingComponents = `
                                 <div className="mt-3">
                                     <button
                                         onClick={() => onNavigate(continueVideoRoute)}
-                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-2xl bg-indigo-500/90 text-white px-5 py-3 text-sm font-semibold shadow-sm hover:bg-indigo-400 transition"
+                                        className="w-full sm:w-auto inline-flex items-center gap-3 rounded-md bg-indigo-500/90 text-white px-5 py-3 text-sm font-semibold shadow-sm hover:bg-indigo-400 transition"
                                     >
                                         <i className="fa-solid fa-circle-play"></i>
                                         Continue Watching: {continueVideoTitle}
@@ -2144,7 +2454,7 @@ export const landingComponents = `
                     </section>
 
                     <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-white">
-                        <div>
+                        <div className="text-center">
                             <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">Academic</h2>
                         </div>
