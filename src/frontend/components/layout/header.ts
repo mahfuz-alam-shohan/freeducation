@@ -1,44 +1,8 @@
 export const navBarComponent = `
         const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
-            const [profile, setProfile] = useState(null);
             const closeMenu = () => setIsMenuOpen(false);
             const openMenu = () => setIsMenuOpen(true);
-
-            const buildAuthedAvatarUrl = (url, token) => {
-                if (!url) return null;
-                if (!token) return url;
-                const joiner = url.includes('?') ? '&' : '?';
-                return url + joiner + 'token=' + encodeURIComponent(token);
-            };
-
-            useEffect(() => {
-                let isActive = true;
-                const loadProfile = async () => {
-                    const token = localStorage.getItem('auth_token');
-                    if (!token || !user) {
-                        if (isActive) setProfile(null);
-                        return;
-                    }
-                    try {
-                        const response = await fetch('/api/profile', {
-                            headers: { Authorization: 'Bearer ' + token }
-                        });
-                        const data = await response.json();
-                        if (!isActive) return;
-                        if (data.success) {
-                            const avatarUrl = buildAuthedAvatarUrl(data.profile.avatarUrl, token);
-                            setProfile({ ...data.profile, avatarUrl });
-                        }
-                    } catch (error) {
-                        if (isActive) setProfile(null);
-                    }
-                };
-                loadProfile();
-                return () => {
-                    isActive = false;
-                };
-            }, [user]);
 
             return (
                 <>
@@ -110,46 +74,34 @@ export const navBarComponent = `
                                 </div>
                                 <div className="mt-5 space-y-4 flex-1 overflow-y-auto">
                                     {user ? (
-                                        <div className="space-y-4">
-                                            <div className="rounded-2xl border border-slate-200 p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
-                                                        {profile?.avatarUrl ? (
-                                                            <img src={profile.avatarUrl} alt={profile.name || user.username} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <span className="text-sm font-semibold text-slate-400">
-                                                                {(profile?.name || user.username || '?').slice(0, 1).toUpperCase()}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm font-semibold text-slate-900">{profile?.name || user.username}</div>
-                                                        <div className="text-xs text-slate-500">{profile?.email || user.username}</div>
-                                                    </div>
+                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                                    {user.username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-slate-900">{user.username}</div>
+                                                    <div className="text-xs text-slate-500 capitalize">{user.role}</div>
                                                 </div>
                                             </div>
-                                            <div className="border border-slate-200 rounded-2xl divide-y divide-slate-200">
-                                                <button
-                                                    onClick={() => {
-                                                        closeMenu();
-                                                        onNavigate('dashboard');
-                                                    }}
-                                                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
-                                                >
-                                                    <span>View dashboard</span>
-                                                    <i className="fa-solid fa-chevron-right text-xs text-slate-400"></i>
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        closeMenu();
-                                                        onNavigate('admin-settings');
-                                                    }}
-                                                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
-                                                >
-                                                    <span>Settings</span>
-                                                    <i className="fa-solid fa-chevron-right text-xs text-slate-400"></i>
-                                                </button>
-                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    closeMenu();
+                                                    onNavigate('dashboard');
+                                                }}
+                                                className="w-full text-left text-sm font-semibold text-blue-600"
+                                            >
+                                                Open Dashboard
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    closeMenu();
+                                                    onLogout();
+                                                }}
+                                                className="w-full text-left text-sm font-semibold text-red-500"
+                                            >
+                                                Log Out
+                                            </button>
                                         </div>
                                     ) : (
                                         <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
@@ -205,17 +157,6 @@ export const navBarComponent = `
                                         </button>
                                     </div>
                                 </div>
-                                {user && (
-                                    <button
-                                        onClick={() => {
-                                            closeMenu();
-                                            onLogout();
-                                        }}
-                                        className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-600 hover:bg-red-100 transition"
-                                    >
-                                        Log Out
-                                    </button>
-                                )}
                             </div>
                         </div>
                     )}

@@ -141,13 +141,6 @@ export const settingsComponents = `
 
         const formatRoleLabel = (role) => (role === 'teacher' ? 'Teacher' : 'Admin');
 
-        const buildAuthedAvatarUrl = (url, token) => {
-            if (!url) return null;
-            if (!token) return url;
-            const joiner = url.includes('?') ? '&' : '?';
-            return url + joiner + 'token=' + encodeURIComponent(token);
-        };
-
         const useProfileData = () => {
             const [profile, setProfile] = useState(null);
             const [history, setHistory] = useState([]);
@@ -171,8 +164,7 @@ export const settingsComponents = `
                     const profileData = await profileRes.json();
                     const historyData = await historyRes.json();
                     if (profileData.success) {
-                        const avatarUrl = buildAuthedAvatarUrl(profileData.profile.avatarUrl, token);
-                        setProfile({ ...profileData.profile, avatarUrl });
+                        setProfile(profileData.profile);
                     }
                     if (historyData.success) {
                         setHistory(historyData.entries || []);
