@@ -76,11 +76,17 @@ export const navBarComponent = `
                                             className="flex items-center gap-2 px-2 py-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition"
                                             aria-label={user?.role === 'teacher' ? 'Open teacher dashboard' : 'Open admin dashboard'}
                                         >
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                                                {user.username.charAt(0).toUpperCase()}
+                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm overflow-hidden">
+                                                {profile?.avatarUrl ? (
+                                                    <img src={profile.avatarUrl} alt={profile?.name || user.username} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span>
+                                                        {(profile?.name || user.username || '?').charAt(0).toUpperCase()}
+                                                    </span>
+                                                )}
                                             </div>
                                             <span className="font-semibold text-gray-700 text-sm hidden sm:block">
-                                                {user.username}
+                                                {profile?.name || user.username}
                                             </span>
                                         </button>
                                         <button
@@ -119,34 +125,27 @@ export const navBarComponent = `
                                         <i className="fa-solid fa-xmark"></i>
                                     </button>
                                 </div>
-                                <div className="mt-5 space-y-4 flex-1 overflow-y-auto">
+                                <div className="mt-5 space-y-5 flex-1 overflow-y-auto">
                                     {user ? (
-                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
-                                                    {profile?.avatarUrl ? (
-                                                        <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span className="text-sm font-semibold text-slate-400">
-                                                            {(profile?.name || user.username || '?').slice(0, 1).toUpperCase()}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-slate-900">
-                                                        {profile?.name || user.username}
-                                                    </div>
-                                                    <div className="text-xs text-slate-500">
-                                                        {profile?.email || profile?.username || user.username}
-                                                    </div>
-                                                    <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-                                                        {profile?.role || user.role}
-                                                    </div>
-                                                </div>
+                                        <div className="flex flex-col items-center text-center gap-2">
+                                            <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                                {profile?.avatarUrl ? (
+                                                    <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-base font-semibold text-slate-400">
+                                                        {(profile?.name || user.username || '?').slice(0, 1).toUpperCase()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-sm font-semibold text-slate-900">
+                                                {profile?.name || user.username}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {profile?.email || profile?.username || user.username}
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
+                                        <div className="space-y-2">
                                             <div className="text-sm font-semibold text-slate-700">Welcome</div>
                                             <button
                                                 onClick={() => {
@@ -160,7 +159,7 @@ export const navBarComponent = `
                                         </div>
                                     )}
                                     {user && (
-                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
+                                        <div className="space-y-2">
                                             <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Main menu</div>
                                             <button
                                                 onClick={() => {
@@ -174,7 +173,7 @@ export const navBarComponent = `
                                             </button>
                                         </div>
                                     )}
-                                    <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
+                                    <div className="space-y-2">
                                         <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Shortcuts</div>
                                         <button
                                             onClick={() => {
