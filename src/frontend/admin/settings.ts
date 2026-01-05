@@ -1765,9 +1765,6 @@ export const settingsComponents = `
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6">
-                        <div className="lg:hidden">
-                            <ProfileSummary profile={profile} compact />
-                        </div>
                         <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200">
                             <button
                                 onClick={() => setActivePanel('profile')}
@@ -1898,9 +1895,6 @@ export const settingsComponents = `
                 >
                     {activePanel === 'main' ? (
                         <div className="space-y-6 max-w-xl">
-                            <div className="lg:hidden">
-                                <ProfileSummary profile={profile} compact />
-                            </div>
                             <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200">
                                 <button
                                     onClick={() => setActivePanel('profile')}

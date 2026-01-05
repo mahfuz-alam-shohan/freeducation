@@ -468,7 +468,10 @@ export const landingComponents = `
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
-            const chapterCount = subject.chapterCount || (subject.groups?.length || 1) * 4 + 6;
+            const chapterCount =
+                typeof subject.chapterCount === 'number' && Number.isFinite(subject.chapterCount)
+                    ? subject.chapterCount
+                    : null;
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
@@ -506,10 +509,12 @@ export const landingComponents = `
                             <div className="text-xs sm:text-sm font-semibold text-slate-900">{subject.title}</div>
                             {subject.subtitle && <div className="text-[11px] text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
                             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                                <span className="inline-flex items-center gap-1">
-                                    <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
-                                    {chapterCount} Chapters
-                                </span>
+                                {chapterCount !== null && chapterCount > 0 && (
+                                    <span className="inline-flex items-center gap-1">
+                                        <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
+                                        {chapterCount} {chapterCount === 1 ? 'Chapter' : 'Chapters'}
+                                    </span>
+                                )}
                                 {subject.lastRead && (
                                     <span className="inline-flex items-center gap-1 text-emerald-600">
                                         <i className="fa-solid fa-check text-[10px]"></i>
@@ -598,7 +603,7 @@ export const landingComponents = `
             );
         };
 
-        const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap, readMap }) => (
+        const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap, readMap, chapterCounts }) => (
             <section className="space-y-3">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
@@ -619,6 +624,7 @@ export const landingComponents = `
                                 subject={{
                                     ...subject,
                                     lastRead,
+                                    chapterCount: chapterCounts?.[subject.subjectKey],
                                     thumbnailUrl: thumbnail?.url
                                 }}
                                 onNavigate={onNavigate}
@@ -630,7 +636,7 @@ export const landingComponents = `
             </section>
         );
 
-        const SubjectIndexPage = ({ classLabel, subjects, onNavigate }) => {
+        const SubjectIndexPage = ({ classLabel, subjects, onNavigate, chapterCounts }) => {
             const [activeGroup, setActiveGroup] = useState('All');
             const [query, setQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
@@ -706,6 +712,7 @@ export const landingComponents = `
                                         subject={{
                                             ...subject,
                                             lastRead,
+                                            chapterCount: chapterCounts?.[subject.subjectKey],
                                             thumbnailUrl: thumbnail?.url
                                         }}
                                         onNavigate={onNavigate}
@@ -2000,7 +2007,7 @@ export const landingComponents = `
             </div>
         );
 
-        const StudentLanding = ({ onNavigate }) => {
+        const StudentLanding = ({ onNavigate, chapterCounts }) => {
             const [quoteIndex, setQuoteIndex] = useState(0);
             const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
@@ -2123,6 +2130,7 @@ export const landingComponents = `
                             onAll={() => onNavigate('ssc-subjects')}
                             thumbnailMap={thumbnailMap}
                             readMap={readMap}
+                            chapterCounts={chapterCounts}
                         />
                         <SubjectRow
                             title="HSC"
@@ -2131,6 +2139,7 @@ export const landingComponents = `
                             onAll={() => onNavigate('hsc-subjects')}
                             thumbnailMap={thumbnailMap}
                             readMap={readMap}
+                            chapterCounts={chapterCounts}
                         />
                     </section>
                 </div>
