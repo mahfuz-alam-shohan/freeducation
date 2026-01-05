@@ -1,5 +1,5 @@
 export const renderPublic = `
-{view === 'landing' && <StudentLanding onNavigate={navigate} chapterCounts={subjectChapterCounts} />}
+{view === 'landing' && <StudentLanding onNavigate={navigate} />}
                         {view === 'public-videos' && (
                             <PublicVideoList
                                 context={selectedVideoContext}
@@ -29,20 +29,10 @@ export const renderPublic = `
                             />
                         )}
                         {view === 'ssc-subjects' && (
-                            <SubjectIndexPage
-                                classLabel="SSC"
-                                subjects={sscSubjects}
-                                onNavigate={navigate}
-                                chapterCounts={subjectChapterCounts}
-                            />
+                            <SubjectIndexPage classLabel="SSC" subjects={sscSubjects} onNavigate={navigate} />
                         )}
                         {view === 'hsc-subjects' && (
-                            <SubjectIndexPage
-                                classLabel="HSC"
-                                subjects={hscSubjects}
-                                onNavigate={navigate}
-                                chapterCounts={subjectChapterCounts}
-                            />
+                            <SubjectIndexPage classLabel="HSC" subjects={hscSubjects} onNavigate={navigate} />
                         )}
                         {view === 'public-ssc-ict' && (
                             <PublicIctShell

@@ -1,59 +1,8 @@
 export const navBarComponent = `
         const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
-            const [profile, setProfile] = useState(null);
-            const [avatarError, setAvatarError] = useState(false);
             const closeMenu = () => setIsMenuOpen(false);
             const openMenu = () => setIsMenuOpen(true);
-
-            useEffect(() => {
-                let isActive = true;
-                if (!user) {
-                    setProfile(null);
-                    setAvatarError(false);
-                    return () => {
-                        isActive = false;
-                    };
-                }
-                const token = localStorage.getItem('auth_token');
-                if (!token) {
-                    setProfile(null);
-                    setAvatarError(false);
-                    return () => {
-                        isActive = false;
-                    };
-                }
-                const loadProfile = async () => {
-                    try {
-                        const response = await fetch('/api/profile', {
-                            headers: { Authorization: 'Bearer ' + token }
-                        });
-                        const data = await response.json();
-                        if (!isActive) return;
-                        if (data.success) {
-                            setProfile(data.profile);
-                            setAvatarError(false);
-                        }
-                    } catch (error) {
-                        if (!isActive) return;
-                        setProfile(null);
-                    }
-                };
-                loadProfile();
-                return () => {
-                    isActive = false;
-                };
-            }, [user?.username, user?.role]);
-
-            const roleLabel = profile?.role
-                ? profile.role === 'teacher'
-                    ? 'Teacher'
-                    : 'Admin'
-                : user?.role === 'teacher'
-                    ? 'Teacher'
-                    : user?.role === 'admin'
-                        ? 'Admin'
-                        : '';
 
             return (
                 <>
@@ -125,34 +74,34 @@ export const navBarComponent = `
                                 </div>
                                 <div className="mt-5 space-y-4 flex-1 overflow-y-auto">
                                     {user ? (
-                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50">
+                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-full overflow-hidden bg-white border border-slate-200 flex items-center justify-center text-slate-400">
-                                                    {profile?.avatarUrl && !avatarError ? (
-                                                        <img
-                                                            src={profile.avatarUrl}
-                                                            alt={profile.name || user.username}
-                                                            className="w-full h-full object-cover"
-                                                            onError={() => setAvatarError(true)}
-                                                        />
-                                                    ) : (
-                                                        <span className="text-sm font-semibold">
-                                                            {(profile?.name || user.username || '?').slice(0, 1).toUpperCase()}
-                                                        </span>
-                                                    )}
+                                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                                    {user.username.charAt(0).toUpperCase()}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <div className="text-sm font-semibold text-slate-900 truncate">
-                                                        {profile?.name || user.username}
-                                                    </div>
-                                                    <div className="text-xs text-slate-500 truncate">
-                                                        {profile?.email || user.username}
-                                                    </div>
-                                                    <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-                                                        {roleLabel}
-                                                    </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-slate-900">{user.username}</div>
+                                                    <div className="text-xs text-slate-500 capitalize">{user.role}</div>
                                                 </div>
                                             </div>
+                                            <button
+                                                onClick={() => {
+                                                    closeMenu();
+                                                    onNavigate('dashboard');
+                                                }}
+                                                className="w-full text-left text-sm font-semibold text-blue-600"
+                                            >
+                                                Open Dashboard
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    closeMenu();
+                                                    onLogout();
+                                                }}
+                                                className="w-full text-left text-sm font-semibold text-red-500"
+                                            >
+                                                Log Out
+                                            </button>
                                         </div>
                                     ) : (
                                         <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
@@ -169,74 +118,45 @@ export const navBarComponent = `
                                         </div>
                                     )}
                                     <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
-                                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Menu</div>
-                                        {user && (
-                                            <button
-                                                onClick={() => {
-                                                    closeMenu();
-                                                    onNavigate('dashboard');
-                                                }}
-                                                className="w-full text-left text-sm font-semibold text-slate-700 flex items-center justify-between"
-                                            >
-                                                View Dashboard
-                                                <i className="fa-solid fa-chevron-right text-xs text-slate-400"></i>
-                                            </button>
-                                        )}
+                                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Shortcuts</div>
                                         <button
                                             onClick={() => {
                                                 closeMenu();
                                                 onNavigate('landing');
                                             }}
-                                            className="w-full text-left text-sm text-slate-600 flex items-center justify-between"
+                                            className="w-full text-left text-sm text-slate-600"
                                         >
                                             Home
-                                            <i className="fa-solid fa-chevron-right text-xs text-slate-300"></i>
                                         </button>
                                         <button
                                             onClick={() => {
                                                 closeMenu();
                                                 onNavigate('public-videos');
                                             }}
-                                            className="w-full text-left text-sm text-slate-600 flex items-center justify-between"
+                                            className="w-full text-left text-sm text-slate-600"
                                         >
                                             Videos
-                                            <i className="fa-solid fa-chevron-right text-xs text-slate-300"></i>
                                         </button>
                                         <button
                                             onClick={() => {
                                                 closeMenu();
                                                 onNavigate('ssc-subjects');
                                             }}
-                                            className="w-full text-left text-sm text-slate-600 flex items-center justify-between"
+                                            className="w-full text-left text-sm text-slate-600"
                                         >
                                             SSC Subjects
-                                            <i className="fa-solid fa-chevron-right text-xs text-slate-300"></i>
                                         </button>
                                         <button
                                             onClick={() => {
                                                 closeMenu();
                                                 onNavigate('hsc-subjects');
                                             }}
-                                            className="w-full text-left text-sm text-slate-600 flex items-center justify-between"
+                                            className="w-full text-left text-sm text-slate-600"
                                         >
                                             HSC Subjects
-                                            <i className="fa-solid fa-chevron-right text-xs text-slate-300"></i>
                                         </button>
                                     </div>
                                 </div>
-                                {user && (
-                                    <div className="pt-4">
-                                        <button
-                                            onClick={() => {
-                                                closeMenu();
-                                                onLogout();
-                                            }}
-                                            className="w-full px-4 py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition"
-                                        >
-                                            Log Out
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     )}
