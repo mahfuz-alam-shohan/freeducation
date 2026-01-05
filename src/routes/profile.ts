@@ -1,11 +1,22 @@
 import type { Env } from "../types";
-import { apiHeaders, getAuthPayload, recordEditHistory } from "./shared";
+import { verifyToken } from "../auth";
+import { apiHeaders, getAuthPayload, recordEditHistory, requireJwtSecret } from "./shared";
 
 const getAvatarUrl = (updatedAt: string | null | undefined) =>
   `/api/profile/avatar?v=${updatedAt ? new Date(updatedAt).getTime() : Date.now()}`;
 
 export const handleProfile = async (request: Request, env: Env, path: string): Promise<Response | null> => {
   if (!path.startsWith("/api/profile")) return null;
+
+  const getTokenPayload = async () => {
+    const tokenPayload = await getAuthPayload(request, env);
+    if (tokenPayload) return tokenPayload;
+    const url = new URL(request.url);
+    const token = url.searchParams.get("token");
+    if (!token) return null;
+    const secret = requireJwtSecret(env);
+    return await verifyToken(token, secret);
+  };
 
   if (path === "/api/profile" && request.method === "GET") {
     const payload = await getAuthPayload(request, env);
@@ -86,7 +97,7 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
   }
 
   if (path === "/api/profile/avatar" && request.method === "GET") {
-    const payload = await getAuthPayload(request, env);
+    const payload = await getTokenPayload();
     if (!payload) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
 
     const avatarRow = await env.DB.prepare("SELECT avatar_key, avatar_content_type FROM user_profiles WHERE user_id = ?")

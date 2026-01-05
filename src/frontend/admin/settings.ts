@@ -139,6 +139,17 @@ export const settingsComponents = `
                 image.src = objectUrl;
             });
 
+        const appendTokenToAvatarUrl = (avatarUrl, token) => {
+            if (!avatarUrl || !token) return avatarUrl;
+            try {
+                const resolved = new URL(avatarUrl, window.location.origin);
+                resolved.searchParams.set('token', token);
+                return resolved.pathname + resolved.search;
+            } catch (error) {
+                return avatarUrl;
+            }
+        };
+
         const formatRoleLabel = (role) => (role === 'teacher' ? 'Teacher' : 'Admin');
 
         const useProfileData = () => {
@@ -164,7 +175,11 @@ export const settingsComponents = `
                     const profileData = await profileRes.json();
                     const historyData = await historyRes.json();
                     if (profileData.success) {
-                        setProfile(profileData.profile);
+                        const token = localStorage.getItem('auth_token');
+                        setProfile({
+                            ...profileData.profile,
+                            avatarUrl: appendTokenToAvatarUrl(profileData.profile?.avatarUrl, token)
+                        });
                     }
                     if (historyData.success) {
                         setHistory(historyData.entries || []);
@@ -1765,9 +1780,6 @@ export const settingsComponents = `
                     onNavigate={onNavigate}
                 >
                     <div className="space-y-6">
-                        <div className="lg:hidden">
-                            <ProfileSummary profile={profile} compact />
-                        </div>
                         <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200">
                             <button
                                 onClick={() => setActivePanel('profile')}
@@ -1898,9 +1910,6 @@ export const settingsComponents = `
                 >
                     {activePanel === 'main' ? (
                         <div className="space-y-6 max-w-xl">
-                            <div className="lg:hidden">
-                                <ProfileSummary profile={profile} compact />
-                            </div>
                             <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200">
                                 <button
                                     onClick={() => setActivePanel('profile')}
