@@ -1,8 +1,55 @@
 export const navBarComponent = `
         const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [profile, setProfile] = useState(null);
             const closeMenu = () => setIsMenuOpen(false);
             const openMenu = () => setIsMenuOpen(true);
+            const appendTokenToAvatarUrl = (avatarUrl, token) => {
+                if (!avatarUrl || !token) return avatarUrl;
+                try {
+                    const resolved = new URL(avatarUrl, window.location.origin);
+                    resolved.searchParams.set('token', token);
+                    return resolved.pathname + resolved.search;
+                } catch (error) {
+                    return avatarUrl;
+                }
+            };
+
+            useEffect(() => {
+                if (!user) {
+                    setProfile(null);
+                    return;
+                }
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setProfile(null);
+                    return;
+                }
+                let isActive = true;
+                const loadProfile = async () => {
+                    try {
+                        const response = await fetch('/api/profile', {
+                            headers: { Authorization: 'Bearer ' + token }
+                        });
+                        const data = await response.json();
+                        if (!isActive) return;
+                        if (data.success) {
+                            setProfile({
+                                ...data.profile,
+                                avatarUrl: appendTokenToAvatarUrl(data.profile?.avatarUrl, token)
+                            });
+                        }
+                    } catch (error) {
+                        if (isActive) {
+                            setProfile(null);
+                        }
+                    }
+                };
+                loadProfile();
+                return () => {
+                    isActive = false;
+                };
+            }, [user?.username, user?.role]);
 
             return (
                 <>
@@ -74,34 +121,29 @@ export const navBarComponent = `
                                 </div>
                                 <div className="mt-5 space-y-4 flex-1 overflow-y-auto">
                                     {user ? (
-                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
+                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                                                    {user.username.charAt(0).toUpperCase()}
+                                                <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                                    {profile?.avatarUrl ? (
+                                                        <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-sm font-semibold text-slate-400">
+                                                            {(profile?.name || user.username || '?').slice(0, 1).toUpperCase()}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-slate-900">{user.username}</div>
-                                                    <div className="text-xs text-slate-500 capitalize">{user.role}</div>
+                                                    <div className="text-sm font-semibold text-slate-900">
+                                                        {profile?.name || user.username}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {profile?.email || profile?.username || user.username}
+                                                    </div>
+                                                    <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
+                                                        {profile?.role || user.role}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    closeMenu();
-                                                    onNavigate('dashboard');
-                                                }}
-                                                className="w-full text-left text-sm font-semibold text-blue-600"
-                                            >
-                                                Open Dashboard
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    closeMenu();
-                                                    onLogout();
-                                                }}
-                                                className="w-full text-left text-sm font-semibold text-red-500"
-                                            >
-                                                Log Out
-                                            </button>
                                         </div>
                                     ) : (
                                         <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
@@ -114,6 +156,21 @@ export const navBarComponent = `
                                                 className="w-full text-left text-sm font-semibold text-blue-600"
                                             >
                                                 {hasAdmin ? 'User Login' : 'User Signup'}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {user && (
+                                        <div className="rounded-2xl border border-slate-200 p-4 space-y-2">
+                                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Main menu</div>
+                                            <button
+                                                onClick={() => {
+                                                    closeMenu();
+                                                    onNavigate('dashboard');
+                                                }}
+                                                className="w-full flex items-center justify-between text-sm text-slate-600 hover:text-slate-900 transition"
+                                            >
+                                                <span>View dashboard</span>
+                                                <i className="fa-solid fa-chevron-right text-xs text-slate-400"></i>
                                             </button>
                                         </div>
                                     )}
@@ -157,6 +214,19 @@ export const navBarComponent = `
                                         </button>
                                     </div>
                                 </div>
+                                {user && (
+                                    <div className="pt-4 border-t border-slate-200">
+                                        <button
+                                            onClick={() => {
+                                                closeMenu();
+                                                onLogout();
+                                            }}
+                                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition"
+                                        >
+                                            Log Out
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

@@ -194,6 +194,7 @@ export const landingComponents = `
                         icon: subjectIconMap[subject] || 'fa-book',
                         accent,
                         groups: new Set([group]),
+                        classLabel,
                         subjectKey: makeThumbnailKey(subject, classLabel),
                         route: isBanglaFirst
                             ? (classLabel === 'SSC' ? 'public-bangla-ssc-1st-paper' : 'public-bangla-hsc-1st-paper')
@@ -458,6 +459,35 @@ export const landingComponents = `
         const cardSurfaceClass =
             'relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg group-hover:border-indigo-200 card-art-surface';
         const cardPanelClass = 'relative rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm';
+        const getSubjectChapterCount = (subject) => {
+            if (!contentLoaded || !subject) return null;
+            const title = subject.title;
+            if (subject.classLabel === 'SSC') {
+                if (title === 'Information and Communication Technology') return sscIctChapters.length;
+                if (title === 'Physics') return sscPhysicsChapters.length;
+                if (title === 'Chemistry') return sscChemistryChapters.length;
+                if (title === 'Biology') return sscBiologyChapters.length;
+                if (title === 'Bangladesh and Global Studies') return sscBangladeshGlobalChapters.length;
+                if (title === 'Religion and Moral Education') {
+                    return Object.values(sscReligionChapters || {}).reduce(
+                        (total, chapters) => total + (chapters?.length || 0),
+                        0
+                    );
+                }
+                return null;
+            }
+            if (subject.classLabel === 'HSC') {
+                if (title === 'Information and Communication Technology') return hscIctChapters.length;
+                if (title === 'Physics 1st Paper') return hscPhysics1stChapters.length;
+                if (title === 'Physics 2nd Paper') return hscPhysics2ndChapters.length;
+                if (title === 'Chemistry 1st Paper') return hscChemistry1stChapters.length;
+                if (title === 'Chemistry 2nd Paper') return hscChemistry2ndChapters.length;
+                if (title === 'Biology 1st Paper') return hscBiology1stChapters.length;
+                if (title === 'Biology 2nd Paper') return hscBiology2ndChapters.length;
+                return null;
+            }
+            return null;
+        };
         const ArtPanelGrid = ({ children, className = '' }) => (
             <div className={cardPanelClass}>
                 <div className={'relative grid ' + cardGridGapClass + ' ' + className}>
@@ -468,7 +498,7 @@ export const landingComponents = `
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
-            const chapterCount = subject.chapterCount || (subject.groups?.length || 1) * 4 + 6;
+            const chapterCount = getSubjectChapterCount(subject);
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
@@ -506,10 +536,12 @@ export const landingComponents = `
                             <div className="text-xs sm:text-sm font-semibold text-slate-900">{subject.title}</div>
                             {subject.subtitle && <div className="text-[11px] text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
                             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                                <span className="inline-flex items-center gap-1">
-                                    <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
-                                    {chapterCount} Chapters
-                                </span>
+                                {chapterCount !== null && (
+                                    <span className="inline-flex items-center gap-1">
+                                        <i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>
+                                        {chapterCount} Chapters
+                                    </span>
+                                )}
                                 {subject.lastRead && (
                                     <span className="inline-flex items-center gap-1 text-emerald-600">
                                         <i className="fa-solid fa-check text-[10px]"></i>
