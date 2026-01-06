@@ -2361,10 +2361,12 @@ export const landingComponents = `
 
             return (
                 <div className="flex-1 bg-[#f3f6ff]">
-                    <section className="relative overflow-hidden bg-indigo-700">
-                        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-indigo-600/60"></div>
-                        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/40"></div>
-                        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative">
+                    <section className="relative bg-indigo-700">
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                             <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-indigo-600/60"></div>
+                             <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/40"></div>
+                        </div>
+                        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative z-10">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
                                 <div className="flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-md bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
@@ -2405,7 +2407,7 @@ export const landingComponents = `
                                     />
                                     <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
                                     {normalizedQuickQuery && (
-                                        <div className="absolute left-0 right-0 mt-2 z-[40] rounded-lg border border-white/40 bg-white/95 text-slate-700 max-h-72 overflow-y-auto">
+                                        <div className="absolute left-0 right-0 mt-2 z-[100] rounded-lg border border-white/40 bg-white/95 text-slate-700 max-h-72 overflow-y-auto shadow-2xl">
                                             {quickResults.length === 0 && (
                                                 <div className="px-4 py-3 text-sm text-slate-400 text-left">
                                                     No matches found.
@@ -2453,7 +2455,7 @@ export const landingComponents = `
                         </div>
                     </section>
 
-                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-white">
+                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-white relative z-0">
                         <div className="text-center">
                             <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
                             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">Academic</h2>
