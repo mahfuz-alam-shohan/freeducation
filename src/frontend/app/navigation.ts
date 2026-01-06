@@ -14,6 +14,11 @@ export const navigationHelpers = `
                 }
             };
 
+            // NEW: Helper to prevent history loops
+            const goBack = (fallbackView) => {
+                navigate(fallbackView, { replace: true });
+            };
+
             useEffect(() => {
                 const handlePopState = () => {
                     syncRoutesFromLocation();
