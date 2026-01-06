@@ -8,4 +8,5 @@ export const renderStart = `
                 <div className="min-h-screen flex flex-col">
                     <NavBar user={user} hasAdmin={hasAdmin} onNavigate={navigate} onLogout={handleLogout} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
+                        <div key={view} className="flex-grow flex flex-col animate-fade-in">
 `;
