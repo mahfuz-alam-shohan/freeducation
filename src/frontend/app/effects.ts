@@ -55,7 +55,13 @@ export const appEffects = `
                         setContentLoaded(true);
                     }
                 };
+                
+                // Initial load
                 loadContent();
+
+                // Auto-refresh every 15 seconds
+                const interval = setInterval(loadContent, 15000);
+                return () => clearInterval(interval);
             }, []);
 
             const getScienceChapterList = (selection) => {
