@@ -14,7 +14,8 @@ export const navigationHelpers = `
                 }
             };
 
-            // NEW: Helper to prevent history loops
+            // FIX: This helper replaces the history entry instead of pushing a new one,
+            // preventing the "infinite loop" feeling when going back.
             const goBack = (fallbackView) => {
                 navigate(fallbackView, { replace: true });
             };
