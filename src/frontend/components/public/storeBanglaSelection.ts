@@ -1,4 +1,4 @@
-export const  =`
+export const storeBanglaSelection  =`
         const storeBanglaSelection = ({ classLabel, categoryName, itemName }) => {
             try {
                 localStorage.setItem(
