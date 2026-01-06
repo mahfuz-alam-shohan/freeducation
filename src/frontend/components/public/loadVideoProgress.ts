@@ -1,4 +1,4 @@
-export const  =`
+export const loadVideoProgress =`
 const loadVideoProgress = () => {
             try {
                 const raw = localStorage.getItem(VIDEO_PROGRESS_KEY);
