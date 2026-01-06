@@ -1,4 +1,4 @@
-export const  =`
+export const useReadingProgress =`
 const useReadingProgress = () => {
             const [readMap, setReadMap] = useState(() => loadReadProgress());
             const [recentRead, setRecentRead] = useState(() => loadRecentRead());
