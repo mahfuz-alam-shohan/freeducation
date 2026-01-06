@@ -1,4 +1,7 @@
 export const appEffects = `
+            // Ref to track if we are currently fetching data (to prevent auto-save loops)
+            const isFetchingRef = useRef(false);
+
             // 1. Initial System Check & Session Restore
             useEffect(() => {
                 const initSystem = async () => {
@@ -41,13 +44,35 @@ export const appEffects = `
                 initSystem();
             }, []);
 
+            // 2. Smart Background Refresh
             useEffect(() => {
                 const loadContent = async () => {
+                    // BUSY CHECK: If user is typing in a form, skip this refresh cycle
+                    const active = document.activeElement;
+                    const isUserBusy = active && (
+                        active.tagName === 'INPUT' || 
+                        active.tagName === 'TEXTAREA' || 
+                        active.tagName === 'SELECT' ||
+                        active.isContentEditable
+                    );
+
+                    if (isUserBusy) {
+                        // User is busy, simply return and try again next cycle
+                        return;
+                    }
+
                     try {
                         const response = await fetch('/api/content');
                         const data = await response.json();
                         if (data.success && data.content) {
+                            // Mark as fetching so the "Save" effect knows to ignore this change
+                            isFetchingRef.current = true;
                             applyContentState(data.content);
+                            
+                            // Reset the flag after a short delay (longer than the save debounce)
+                            setTimeout(() => {
+                                isFetchingRef.current = false;
+                            }, 1000);
                         }
                     } catch (e) {
                         console.warn('Failed to load content', e);
@@ -130,6 +155,10 @@ export const appEffects = `
                 if (!user) return;
                 const canEditContent = user.role === 'admin' || (user.role === 'teacher' && user.assignment);
                 if (!canEditContent) return;
+                
+                // If this change was caused by a background fetch, do NOT save it back to server
+                if (isFetchingRef.current) return;
+
                 const token = localStorage.getItem('auth_token');
                 if (!token) return;
 
