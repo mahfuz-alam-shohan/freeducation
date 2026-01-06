@@ -1,4 +1,4 @@
-export const  =`
+export const useThumbnails =`
 const useThumbnails = (endpoint, keyField) => {
             const [thumbnailMap, setThumbnailMap] = useState({});
 
