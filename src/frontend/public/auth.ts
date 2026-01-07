@@ -1,92 +1,102 @@
 export const authComponents = `
-        function AuthForm({ mode, onSubmit }) {
+        const AuthForm = ({ mode, onSubmit }) => {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
-            const [loading, setLoading] = useState(false);
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState('');
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
-                setLoading(true);
-                await onSubmit(username, password);
-                setLoading(false);
+                setIsLoading(true);
+                setError('');
+                try {
+                    await onSubmit({ username, password });
+                } catch (err) {
+                    setError('Authentication failed. Please check your credentials.');
+                } finally {
+                    setIsLoading(false);
+                }
             };
 
             return (
-                <div className="min-h-[80vh] px-4 md:px-6 py-8 md:py-10 animate-fade-in font-sans">
-                    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.25fr_1fr] gap-6 items-center">
-                        <div className="bg-indigo-700 text-white rounded-3xl p-7 lg:p-9 shadow-xl border border-indigo-600">
-                            <LogoMark className="mb-6" textClassName="text-white" subtitle="Account access starts here." />
-                            <h2 className="text-2xl md:text-3xl font-bold mb-4">Access your account securely.</h2>
-                            <p className="text-indigo-100 text-sm md:text-base mb-6">
-                                Create your account or sign in to continue.
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                <div className="bg-indigo-600 rounded-2xl p-3">
-                                    <div className="font-semibold mb-1">Quick Access</div>
-                                    <p className="text-indigo-100">Sign in with your credentials anytime.</p>
-                                </div>
-                                <div className="bg-indigo-600 rounded-2xl p-3">
-                                    <div className="font-semibold mb-1">Secure</div>
-                                    <p className="text-indigo-100">Your login stays protected.</p>
-                                </div>
+                <div className="flex-1 flex items-center justify-center bg-[#f3f6ff] px-4 py-12">
+                    <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-100 p-8">
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 mb-4">
+                                <i className={mode === 'login' ? "fa-solid fa-lock" : "fa-solid fa-user-plus"}></i>
                             </div>
+                            <h2 className="text-2xl font-bold text-slate-900">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
+                            <p className="text-sm text-slate-500 mt-2">
+                                {mode === 'login' ? 'Please sign in to continue.' : 'Join us to start learning.'}
+                            </p>
                         </div>
 
-                        <div className="bg-white p-7 lg:p-9 rounded-3xl shadow-md border border-gray-200">
-                            <div className="mb-8">
-                                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-sm mb-4 text-white text-xl">
-                                    <i className={mode === 'login' ? 'fas fa-shield-alt' : 'fas fa-user-plus'}></i>
-                                </div>
-                                <h2 className="text-2xl font-bold text-gray-900">
-                                    {mode === 'login' ? 'User Login' : 'User Signup'}
-                                </h2>
-                                <p className="text-gray-500 text-sm mt-2">
-                                    {mode === 'login' ? 'Enter your credentials to continue.' : 'Create your account.'}
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+                                <i className="fa-solid fa-circle-exclamation text-red-500 mt-0.5"></i>
+                                <div className="text-sm text-red-600">{error}</div>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">
+                                    {mode === 'login' ? 'Email or Username' : 'Username'}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                    placeholder={mode === 'login' ? "Enter your email" : "Choose a username"}
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">Password</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <i className="fa-solid fa-circle-notch fa-spin"></i>
+                                        <span>Processing...</span>
+                                    </>
+                                ) : (
+                                    <span>{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
+                                )}
+                            </button>
+                        </form>
+
+                        {/* --- NEW: Link is now INSIDE the box --- */}
+                        {mode === 'login' && (
+                            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+                                <p className="text-sm text-slate-500">
+                                    Don't have an account?{' '}
+                                    <button 
+                                        onClick={() => navigate('student-register')} 
+                                        className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                                    >
+                                        Create Free Student Account
+                                    </button>
                                 </p>
                             </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Username</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-3 text-gray-400 text-sm"><i className="fas fa-user"></i></span>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            className="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-base"
-                                            placeholder="Enter username"
-                                            value={username}
-                                            onChange={e => setUsername(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Password</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-3 text-gray-400 text-sm"><i className="fas fa-lock"></i></span>
-                                        <input 
-                                            type="password" 
-                                            required 
-                                            className="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-base"
-                                            placeholder="••••••••"
-                                            value={password}
-                                            onChange={e => setPassword(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <button 
-                                    type="submit" 
-                                    disabled={loading}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-sm transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed text-sm mt-2"
-                                >
-                                    {loading ? <i className="fas fa-spinner fa-spin"></i> : (mode === 'login' ? 'Login' : 'Create Account')}
-                                </button>
-                            </form>
-                        </div>
+                        )}
                     </div>
                 </div>
             );
-        }
+        };
 `;
