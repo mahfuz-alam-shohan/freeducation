@@ -88,6 +88,7 @@ export const dashboardMain = `
             };
 
             return (
+                <AdminShell title="" subtitle="" activeTab="classes" onNavigate={onNavigate}>
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         
                         {/* Welcome / Header Banner */}
@@ -155,7 +156,7 @@ export const dashboardMain = `
                             </div>
                         )}
                     </div>
-        
+                </AdminShell>
             );
         };
 `;
