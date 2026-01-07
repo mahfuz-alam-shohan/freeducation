@@ -1,12 +1,12 @@
 export const dashboardUsers = `
     const AdminUserList = ({ onNavigate }) => {
         const [users, setUsers] = useState({ admins: [], teachers: [], students: [] });
-        const [activeTab, setActiveTab] = useState('students'); // Default to students
+        const [activeTab, setActiveTab] = useState('students');
         const [isLoading, setIsLoading] = useState(true);
         
         // Modal States
         const [selectedUser, setSelectedUser] = useState(null);
-        const [actionType, setActionType] = useState(null); // 'reveal' or 'reset'
+        const [actionType, setActionType] = useState(null);
         const [adminPass, setAdminPass] = useState('');
         const [newPass, setNewPass] = useState('');
         const [modalMessage, setModalMessage] = useState('');
@@ -81,13 +81,13 @@ export const dashboardUsers = `
                                         onClick={() => { setSelectedUser(u); setActionType('reveal'); setModalMessage(''); }}
                                         className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium"
                                     >
-                                        <i className="fa-solid fa-eye mr-1"></i> See Hash
+                                        <i className="fa-solid fa-eye mr-1"></i>
                                     </button>
                                     <button 
                                         onClick={() => { setSelectedUser(u); setActionType('reset'); setModalMessage(''); }}
                                         className="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-medium"
                                     >
-                                        <i className="fa-solid fa-key mr-1"></i> Reset
+                                        <i className="fa-solid fa-key mr-1"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -98,66 +98,70 @@ export const dashboardUsers = `
             </div>
         );
 
+        // --- FIX IS HERE: Wrapped in AdminShell ---
         return (
-            <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-                        <p className="text-slate-500">Manage students, teachers, and admins.</p>
+            <AdminShell 
+                title="User Management" 
+                subtitle="Manage students, teachers, and admins." 
+                activeTab="users" 
+                onNavigate={onNavigate}
+            >
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                            {['students', 'teachers', 'admins'].map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={\`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition \${activeTab === tab ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}\`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex bg-slate-100 p-1 rounded-xl">
-                        {['students', 'teachers', 'admins'].map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={\`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition \${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}\`}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
-                {isLoading ? <div className="text-center py-12"><i className="fa-solid fa-circle-notch fa-spin text-indigo-600 text-xl"></i></div> : renderTable(users[activeTab] || [])}
+                    {isLoading ? <div className="text-center py-12"><i className="fa-solid fa-circle-notch fa-spin text-indigo-600 text-xl"></i></div> : renderTable(users[activeTab] || [])}
 
-                {selectedUser && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-                            <h3 className="text-lg font-bold text-slate-900 mb-4">
-                                {actionType === 'reveal' ? 'View Password Hash' : 'Reset Password'}
-                            </h3>
-                            <p className="text-sm text-slate-500 mb-4">
-                                For user: <span className="font-semibold text-slate-900">{selectedUser.name}</span>
-                            </p>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Your Admin Password</label>
-                                    <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className="w-full p-3 border rounded-lg" placeholder="Confirm your identity" />
-                                </div>
+                    {selectedUser && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                                    {actionType === 'reveal' ? 'Security Check' : 'Reset Password'}
+                                </h3>
+                                <p className="text-sm text-slate-500 mb-4">
+                                    Action for user: <span className="font-semibold text-slate-900">{selectedUser.name}</span>
+                                </p>
                                 
-                                {actionType === 'reset' && (
+                                <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1">New Password for User</label>
-                                        <input type="text" value={newPass} onChange={e => setNewPass(e.target.value)} className="w-full p-3 border rounded-lg" placeholder="Enter new password" />
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Your Admin Password</label>
+                                        <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Confirm your identity" />
                                     </div>
-                                )}
-                                
-                                {modalMessage && (
-                                    <div className="p-3 bg-slate-50 text-slate-700 text-sm rounded-lg border border-slate-200 break-all font-mono">
-                                        {modalMessage}
+                                    
+                                    {actionType === 'reset' && (
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-1">New Password for User</label>
+                                            <input type="text" value={newPass} onChange={e => setNewPass(e.target.value)} className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Enter new password" />
+                                        </div>
+                                    )}
+                                    
+                                    {modalMessage && (
+                                        <div className="p-3 bg-slate-50 text-slate-700 text-xs rounded-lg border border-slate-200 break-all font-mono">
+                                            {modalMessage}
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex gap-3 pt-2">
+                                        <button onClick={handleAction} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition shadow-lg shadow-indigo-200">Confirm</button>
+                                        <button onClick={() => setSelectedUser(null)} className="flex-1 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-lg transition">Close</button>
                                     </div>
-                                )}
-                                
-                                <div className="flex gap-3 pt-2">
-                                    <button onClick={handleAction} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg">Confirm</button>
-                                    <button onClick={() => setSelectedUser(null)} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg">Close</button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            </AdminShell>
         );
     };
 `;
