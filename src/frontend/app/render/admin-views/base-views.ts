@@ -1,5 +1,20 @@
 export const baseViews = `
-{view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
+{view === 'login' && (
+    <div className="flex-1 flex flex-col items-center justify-center bg-[#f3f6ff] px-4 py-12">
+        <AuthForm mode="login" onSubmit={handleLogin} />
+        <div className="mt-6 text-center">
+            <p className="text-sm text-slate-500">
+                Don't have an account?{' '}
+                <button 
+                    onClick={() => navigate('student-register')} 
+                    className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                >
+                    Create Free Student Account
+                </button>
+            </p>
+        </div>
+    </div>
+)}
 {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
 {view === 'dashboard' && user?.role === 'teacher' && (
     <TeacherDashboard assignment={user.assignment} subjectConfig={teacherSubjectConfig} onNavigate={navigate} />
