@@ -9,27 +9,28 @@ import {
   normalizeEmail,
   normalizeLevel,
   normalizeSubject,
-  hashPassword // Import this helper
+  hashPassword // <--- Added this import
 } from "./shared";
 
 export const handleUsers = async (request: Request, env: Env, path: string): Promise<Response | null> => {
-  // 1. GET USER LIST
+  
+  // --- 1. GET ALL USERS (Admins, Teachers, Students) ---
   if (path === "/api/users" && request.method === "GET") {
     const payload = await getAuthPayload(request, env);
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
-    
-    // Fetch all roles
+
+    // Fetch lists
     const admins = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'admin' ORDER BY created_at DESC").all();
     const teachers = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'teacher' ORDER BY created_at DESC").all();
-    
     // NEW: Fetch Students
     const students = await env.DB.prepare("SELECT id, name, email, class_label, group_label FROM users WHERE role = 'student' ORDER BY created_at DESC").all();
 
-    // Fetch Permissions/Assignments (Existing logic)
+    // Fetch Permissions & Assignments
     const adminPermissions = await env.DB.prepare("SELECT user_id, permissions FROM admin_permissions").all();
     const teacherPermissions = await env.DB.prepare("SELECT user_id, permissions FROM teacher_permissions").all();
     const teacherAssignments = await env.DB.prepare("SELECT user_id, level, subject FROM teacher_assignments").all();
 
+    // Map helpers
     const permissionsMap = new Map<number, string[]>();
     (adminPermissions.results || []).forEach((row: any) => {
       if (row?.user_id) permissionsMap.set(row.user_id, row.permissions ? JSON.parse(row.permissions as string) : []);
@@ -57,29 +58,134 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
           subject: assignmentMap.get(row.id)?.subject || "",
           permissions: teacherPermissionsMap.get(row.id) || [],
         })),
-        // NEW: Return students
+        // NEW: Return students list
         students: (students.results || []).map((row: any) => ({
-            id: row.id, name: row.name, email: row.email, 
-            classLabel: row.class_label, groupLabel: row.group_label
+          id: row.id, name: row.name, email: row.email, 
+          classLabel: row.class_label, groupLabel: row.group_label
         }))
       },
       { headers: apiHeaders }
     );
   }
 
-  // 2. CREATE ADMIN/TEACHER (Existing logic)
+  // --- 2. CREATE USER (Admin or Teacher) ---
   if (path === "/api/users" && request.method === "POST") {
-    // ... (Keep existing POST logic for creating admins/teachers if you wish, or copy from previous version. 
-    // For brevity, I am assuming you want the NEW features primarily. 
-    // IF YOU NEED THE FULL POST LOGIC back, let me know, but it takes space. 
-    // I will include the critical parts for REVEAL and RESET below.)
+    const payload = await getAuthPayload(request, env);
+    if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
     
-    // ... [Insert previous POST logic here if needed for creating teachers] ...
-    // For now, let's focus on the NEW endpoints:
-    return null; 
+    const body = (await request.json()) as any;
+    const role = String(body.role || "").trim().toLowerCase();
+    const name = String(body.name || "").trim();
+    const email = normalizeEmail(String(body.email || ""));
+    const password = String(body.password || "");
+    
+    if (!name || !email || !password) {
+      return Response.json({ success: false, error: "Name, email, and password are required." }, { status: 400, headers: apiHeaders });
+    }
+    if (password.length < 8) {
+      return Response.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400, headers: apiHeaders });
+    }
+    if (!["admin", "teacher"].includes(role)) {
+      return Response.json({ success: false, error: "Invalid role." }, { status: 400, headers: apiHeaders });
+    }
+
+    const { passwordHash } = await buildPasswordHash(password);
+    // For admins/teachers, username is email
+    const username = email;
+
+    await env.DB.prepare(
+      "INSERT INTO users (username, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)"
+    ).bind(username, name, email, passwordHash, role).run();
+
+    const inserted = await env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
+    if (!inserted?.id) {
+      return Response.json({ success: false, error: "User creation failed." }, { status: 500, headers: apiHeaders });
+    }
+
+    if (role === "teacher") {
+      const level = normalizeLevel(String(body.level || ""));
+      const subject = normalizeSubject(String(body.subject || ""));
+      if (!level || !subject) {
+        return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
+      }
+      if (!isValidLevel(level) || !isValidSubject(subject)) {
+        return Response.json({ success: false, error: "Invalid teacher level or subject." }, { status: 400, headers: apiHeaders });
+      }
+      const rawPermissions = body.permissions || [];
+      const permissions = Array.isArray(rawPermissions)
+        ? rawPermissions.map((entry: any) => String(entry))
+        : Object.entries(rawPermissions)
+            .filter(([, enabled]) => Boolean(enabled))
+            .map(([key]) => key);
+            
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?)").bind(
+          inserted.id, level, subject
+        ),
+        env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?)").bind(
+          inserted.id, JSON.stringify(permissions)
+        ),
+      ]);
+    }
+
+    if (role === "admin") {
+      const rawPermissions = body.permissions || [];
+      const permissions = Array.isArray(rawPermissions)
+        ? rawPermissions.map((entry: any) => String(entry))
+        : Object.entries(rawPermissions)
+            .filter(([, enabled]) => Boolean(enabled))
+            .map(([key]) => key);
+      await env.DB.prepare("INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)")
+        .bind(inserted.id, JSON.stringify(permissions))
+        .run();
+    }
+
+    return Response.json({ success: true }, { headers: apiHeaders });
   }
 
-  // 3. NEW: REVEAL PASSWORD HASH
+  // --- 3. UPDATE USER (Teacher only) ---
+  if (path === "/api/users" && request.method === "PUT") {
+    const payload = await getAuthPayload(request, env);
+    if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+    
+    const body = (await request.json()) as any;
+    const userId = Number(body.id);
+    if (!userId) {
+      return Response.json({ success: false, error: "User ID is required." }, { status: 400, headers: apiHeaders });
+    }
+    const role = String(body.role || "").trim().toLowerCase();
+    if (role !== "teacher") {
+      return Response.json({ success: false, error: "Only teacher updates are supported." }, { status: 400, headers: apiHeaders });
+    }
+    const level = normalizeLevel(String(body.level || ""));
+    const subject = normalizeSubject(String(body.subject || ""));
+    if (!level || !subject) {
+      return Response.json({ success: false, error: "Teacher level and subject are required." }, { status: 400, headers: apiHeaders });
+    }
+    if (!isValidLevel(level) || !isValidSubject(subject)) {
+      return Response.json({ success: false, error: "Invalid teacher level or subject." }, { status: 400, headers: apiHeaders });
+    }
+    const rawPermissions = body.permissions || [];
+    const permissions = Array.isArray(rawPermissions)
+      ? rawPermissions.map((entry: any) => String(entry))
+      : Object.entries(rawPermissions)
+          .filter(([, enabled]) => Boolean(enabled))
+          .map(([key]) => key);
+          
+    await env.DB.batch([
+      env.DB.prepare(
+        "INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) " +
+        "ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject"
+      ).bind(userId, level, subject),
+      env.DB.prepare(
+        "INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) " +
+        "ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions"
+      ).bind(userId, JSON.stringify(permissions)),
+    ]);
+    return Response.json({ success: true }, { headers: apiHeaders });
+  }
+
+  // --- 4. NEW: REVEAL PASSWORD HASH ---
   if (path === "/api/users/reveal" && request.method === "POST") {
     const payload = await getAuthPayload(request, env);
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
@@ -103,7 +209,7 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
     return Response.json({ success: true, hash: target.password_hash }, { headers: apiHeaders });
   }
 
-  // 4. NEW: RESET PASSWORD
+  // --- 5. NEW: RESET PASSWORD ---
   if (path === "/api/users/reset" && request.method === "POST") {
     const payload = await getAuthPayload(request, env);
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
