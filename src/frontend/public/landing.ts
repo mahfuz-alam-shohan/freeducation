@@ -7,7 +7,7 @@ import { landingVideo } from './landing-parts/video';
 import { landingIndex } from './landing-parts/index-page';
 import { landingHome } from './landing-parts/home-page';
 import { landingExports } from './landing-parts/exports';
-import { studentAuthLogic } from './landing-parts/student-auth'; // <--- NEW IMPORT
+import { studentAuthLogic } from './landing-parts/student-auth'; // <--- We import the logic here
 
 export const landingComponents = `
         const LandingModule = (() => {
@@ -19,5 +19,5 @@ export const landingComponents = `
     landingVideo +
     landingIndex +
     landingHome +
-    landingExports + 
-    studentAuthLogic; // <--- ADDED HERE
+    studentAuthLogic + // <--- We add it to the build here
+    landingExports;
