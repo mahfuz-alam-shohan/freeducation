@@ -1,5 +1,5 @@
 export const baseViews = `
-{view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} />}
+{view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} onNavigate={navigate} />}
 {view === 'register' && <AuthForm mode="register" onSubmit={handleRegister} />}
 {view === 'dashboard' && user?.role === 'teacher' && (
     <TeacherDashboard assignment={user.assignment} subjectConfig={teacherSubjectConfig} onNavigate={navigate} />
