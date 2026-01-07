@@ -41,8 +41,15 @@ export const landingUi = `
         );
 
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
+            const [isLoaded, setIsLoaded] = useState(false);
             const isActive = Boolean(subject.route);
             const chapterCount = getSubjectChapterCount(subject);
+            
+            // If there is no URL, we consider it "loaded" so the placeholder shows immediately
+            useEffect(() => {
+                if (!subject.thumbnailUrl) setIsLoaded(true);
+            }, [subject.thumbnailUrl]);
+
             return (
                 <button
                     onClick={() => isActive && onNavigate(subject.route)}
@@ -52,7 +59,20 @@ export const landingUi = `
                     <div className="space-y-1.5 h-full text-center">
                         <div className={cardSurfaceClass}>
                             {subject.thumbnailUrl ? (
-                                <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="lazy" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media" />
+                                <>
+                                    {!isLoaded && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
+                                            <div className="w-6 h-6 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
+                                    <img 
+                                        src={subject.thumbnailUrl} 
+                                        alt={subject.title + ' thumbnail'} 
+                                        loading="lazy" 
+                                        onLoad={() => setIsLoaded(true)}
+                                        className={'w-full h-full object-cover transition-all duration-500 group-hover:scale-105 card-art-media ' + (isLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm')} 
+                                    />
+                                </>
                             ) : (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2 card-art-media">
                                     <div className={'h-9 w-9 rounded-lg text-white flex items-center justify-center shadow-sm ' + subject.accent}>
@@ -76,28 +96,49 @@ export const landingUi = `
             );
         };
 
-        const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '', isRead = false }) => (
-            <button onClick={onClick} className={className + ' block text-left transition-all duration-300 group'}>
-                <div className="space-y-2 h-full text-center">
-                    <div className={cardSurfaceClass + (isRead ? ' ring-1 ring-emerald-200' : '')}>
-                        {isRead && (
-                            <div className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
-                                <i className="fa-solid fa-check text-[10px]"></i>Read
-                            </div>
-                        )}
-                        {thumbnailUrl ? (
-                            <img src={thumbnailUrl} alt={title + ' thumbnail'} loading="lazy" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media" />
-                        ) : (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em] card-art-media"><span>No thumbnail</span></div>
-                        )}
+        const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '', isRead = false }) => {
+            const [isLoaded, setIsLoaded] = useState(false);
+
+            useEffect(() => {
+                if (!thumbnailUrl) setIsLoaded(true);
+            }, [thumbnailUrl]);
+
+            return (
+                <button onClick={onClick} className={className + ' block text-left transition-all duration-300 group'}>
+                    <div className="space-y-2 h-full text-center">
+                        <div className={cardSurfaceClass + (isRead ? ' ring-1 ring-emerald-200' : '')}>
+                            {isRead && (
+                                <div className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+                                    <i className="fa-solid fa-check text-[10px]"></i>Read
+                                </div>
+                            )}
+                            {thumbnailUrl ? (
+                                <>
+                                    {!isLoaded && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
+                                            <div className="w-6 h-6 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
+                                    <img 
+                                        src={thumbnailUrl} 
+                                        alt={title + ' thumbnail'} 
+                                        loading="lazy" 
+                                        onLoad={() => setIsLoaded(true)}
+                                        className={'w-full h-full object-cover transition-all duration-500 group-hover:scale-105 card-art-media ' + (isLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm')} 
+                                    />
+                                </>
+                            ) : (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em] card-art-media"><span>No thumbnail</span></div>
+                            )}
+                        </div>
+                        <div className="text-center">
+                            <div className="text-xs sm:text-sm font-semibold text-slate-900">{title}</div>
+                            {subtitle && <div className="text-[11px] text-slate-500 mt-1">{subtitle}</div>}
+                        </div>
                     </div>
-                    <div className="text-center">
-                        <div className="text-xs sm:text-sm font-semibold text-slate-900">{title}</div>
-                        {subtitle && <div className="text-[11px] text-slate-500 mt-1">{subtitle}</div>}
-                    </div>
-                </div>
-            </button>
-        );
+                </button>
+            );
+        };
 
         const PublicChapterList = ({ classLabel, subjectLabel, chapters, onSelectChapter, recentRoute }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
