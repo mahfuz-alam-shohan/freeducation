@@ -6,6 +6,7 @@ import { religionViews } from './admin-views/religion-views';
 import { englishViews } from './admin-views/english-views';
 import { banglaViews } from './admin-views/bangla-views';
 import { settingsViews } from './admin-views/settings-views';
+import { usersViews } from './admin-views/users-views'; // <--- NEW IMPORT
 
 export const renderAdmin = baseViews +
     ictViews +
@@ -14,4 +15,5 @@ export const renderAdmin = baseViews +
     religionViews +
     englishViews +
     banglaViews +
-    settingsViews;
+    settingsViews +
+    usersViews; // <--- ADDED HERE
