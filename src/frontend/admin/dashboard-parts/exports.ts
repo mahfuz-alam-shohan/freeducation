@@ -4,6 +4,7 @@ export const dashboardExports = `
             AdminDashboard,
             AdminGroupSelection,
             AdminGroupDetail,
+            AdminUserList, // <--- ADDED THIS (This was missing!)
             BanglaFirstPaperTopics,
             BanglaShahitto,
             BanglaShohopath,
