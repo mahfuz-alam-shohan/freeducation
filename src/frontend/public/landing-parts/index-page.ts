@@ -11,6 +11,13 @@ export const landingIndex = `
                 const matchesQuery = !normalizedQuery || subject.title.toLowerCase().includes(normalizedQuery) || subject.subtitle.toLowerCase().includes(normalizedQuery);
                 return matchesGroup && matchesQuery;
             });
+
+            // Collect images for visible subjects
+            const imageUrls = filteredSubjects.map(s => thumbnailMap[s.subjectKey]?.url);
+            const isReady = useImagePreloader(imageUrls);
+
+            if (!isReady && filteredSubjects.length > 0) return <FullScreenLoader />;
+
             return (
                 <div className="flex-1 bg-[#f3f6ff]">
                     <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
