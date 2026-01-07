@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { sendVerificationEmail } from '../utils/email';
+import { buildPasswordHash } from './shared'; // <--- IMPORT THIS
 
 const studentAuth = new Hono<{ 
     Bindings: { 
@@ -64,12 +65,14 @@ studentAuth.post('/register-verify', async (c) => {
             return c.json({ success: false, error: 'Invalid code' }, 400);
         }
 
-        // --- FIXED: Using 'password_hash' and adding 'username' ---
-        // Note: We use the email as the username for students to keep it simple and unique.
+        // --- SECURITY FIX: HASH THE PASSWORD ---
+        const { passwordHash } = await buildPasswordHash(password); 
+
+        // Insert the HASHED password, not the plain one
         await c.env.DB.prepare(`
             INSERT INTO users (name, email, password_hash, role, class_label, group_label, created_at, username)
             VALUES (?, ?, ?, 'student', ?, ?, ?, ?)
-        `).bind(name, email, password, classLabel, groupLabel, Date.now(), email).run();
+        `).bind(name, email, passwordHash, classLabel, groupLabel, Date.now(), email).run();
 
         // Delete used OTP
         await c.env.DB.prepare('DELETE FROM email_verifications WHERE email = ?').bind(email).run();
