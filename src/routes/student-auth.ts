@@ -11,7 +11,7 @@ const studentAuth = new Hono<{
     } 
 }>();
 
-// 1. Request OTP (User clicks "Continue")
+// 1. Request OTP
 studentAuth.post('/register-request', async (c) => {
     try {
         const { name, email, password, classLabel, groupLabel } = await c.req.json();
@@ -28,15 +28,14 @@ studentAuth.post('/register-request', async (c) => {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-        // Save OTP to DB (Insert or Update if exists)
+        // Save OTP
         await c.env.DB.prepare(`
             INSERT INTO email_verifications (email, code, expires_at) VALUES (?, ?, ?)
             ON CONFLICT(email) DO UPDATE SET code = ?, expires_at = ?, attempts = 0
         `).bind(email, code, expiresAt, code, expiresAt).run();
 
-        // Send Email using Gmail API
+        // Send Email
         const sent = await sendVerificationEmail(email, code, c.env);
-
         if (!sent) {
             return c.json({ success: false, error: 'Failed to send email. Please try again later.' }, 500);
         }
@@ -48,32 +47,28 @@ studentAuth.post('/register-request', async (c) => {
     }
 });
 
-// 2. Verify OTP (User enters code)
+// 2. Verify OTP and Create Account
 studentAuth.post('/register-verify', async (c) => {
     try {
         const { email, code, name, password, classLabel, groupLabel } = await c.req.json();
 
-        // Fetch stored OTP
+        // Fetch OTP
         const record = await c.env.DB.prepare('SELECT * FROM email_verifications WHERE email = ?').bind(email).first();
-
         if (!record) return c.json({ success: false, error: 'No verification request found' }, 400);
         
-        // Check expiration
         if (Date.now() > (record.expires_at as number)) {
             return c.json({ success: false, error: 'Code expired. Try again.' }, 400);
         }
 
-        // Check code match
         if (String(record.code) !== String(code)) {
             return c.json({ success: false, error: 'Invalid code' }, 400);
         }
 
-        // Create User
-        const userId = crypto.randomUUID();
+        // --- FIX IS HERE: REMOVED userId AND LET DB AUTO-INCREMENT ID ---
         await c.env.DB.prepare(`
-            INSERT INTO users (id, name, email, password, role, class_label, group_label, created_at)
-            VALUES (?, ?, ?, ?, 'student', ?, ?, ?)
-        `).bind(userId, name, email, password, classLabel, groupLabel, Date.now()).run();
+            INSERT INTO users (name, email, password, role, class_label, group_label, created_at)
+            VALUES (?, ?, ?, 'student', ?, ?, ?)
+        `).bind(name, email, password, classLabel, groupLabel, Date.now()).run();
 
         // Delete used OTP
         await c.env.DB.prepare('DELETE FROM email_verifications WHERE email = ?').bind(email).run();
