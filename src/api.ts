@@ -1,49 +1,44 @@
-import { initDatabase } from "./db";
-import type { Env } from "./types";
-import { handleAuth } from "./routes/auth";
-import { handleClasses } from "./routes/classes";
-import { handleContent } from "./routes/content";
-import { handleFonts } from "./routes/fonts";
-import { handleSettings } from "./routes/settings";
-import { handleProfile } from "./routes/profile";
-import { handleSetup } from "./routes/setup";
-import { handleThumbnails } from "./routes/thumbnails";
-import { handleUsers } from "./routes/users";
-import { handleVideos } from "./routes/videos";
-import { apiHeaders, corsHeaders } from "./routes/shared";
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import type { Env } from './types';
 
-export { corsHeaders };
+// Import all your routes
+import auth from './routes/auth';
+import users from './routes/users';
+import classes from './routes/classes';
+import content from './routes/content';
+import videos from './routes/videos';
+import thumbnails from './routes/thumbnails';
+import settings from './routes/settings';
+import setup from './routes/setup';
+import profile from './routes/profile';
+import shared from './routes/shared';
+import fonts from './routes/fonts';
+import studentAuth from './routes/student-auth'; // <--- The new route
 
-const handlers = [
-  handleFonts,
-  handleThumbnails,
-  handleSetup,
-  handleAuth,
-  handleUsers,
-  handleContent,
-  handleClasses,
-  handleSettings,
-  handleProfile,
-  handleVideos,
-];
+const app = new Hono<{ Bindings: Env }>();
 
-export async function handleApiRequest(request: Request, env: Env): Promise<Response | null> {
-  const url = new URL(request.url);
-  const path = url.pathname;
+// Global Middleware
+app.use('/api/*', cors());
 
-  if (request.method === "OPTIONS") return new Response(null, { headers: apiHeaders });
-  if (!path.startsWith("/api/")) return null;
+// Register Routes
+app.route('/api/auth', auth);
+app.route('/api/users', users);
+app.route('/api/classes', classes);
+app.route('/api/content', content);
+app.route('/api/videos', videos);
+app.route('/api/thumbnails', thumbnails);
+app.route('/api/settings', settings);
+app.route('/api/setup', setup);
+app.route('/api/profile', profile);
+app.route('/api/shared', shared);
+app.route('/api/fonts', fonts);
 
-  try {
-    await initDatabase(env.DB);
+// Register the Student Auth Route
+app.route('/api/student', studentAuth); 
 
-    for (const handler of handlers) {
-      const response = await handler(request, env, path);
-      if (response) return response;
-    }
-  } catch (e: any) {
-    return Response.json({ success: false, error: e.message || "Internal Server Error" }, { status: 500, headers: apiHeaders });
-  }
+// Root API check
+app.get('/api', (c) => c.json({ status: 'ok', version: '1.0.0' }));
 
-  return null;
-}
+// Export the handler for index.ts
+export const handleApiRequest = (request: Request, env: Env) => app.fetch(request, env);
