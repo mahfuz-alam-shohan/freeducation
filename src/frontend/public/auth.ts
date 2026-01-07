@@ -1,5 +1,5 @@
 export const authComponents = `
-        const AuthForm = ({ mode, onSubmit }) => {
+        const AuthForm = ({ mode, onSubmit, onNavigate }) => {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
             const [isLoading, setIsLoading] = useState(false);
@@ -81,13 +81,12 @@ export const authComponents = `
                             </button>
                         </form>
 
-                        {/* --- NEW: Link is now INSIDE the box --- */}
                         {mode === 'login' && (
                             <div className="mt-8 pt-6 border-t border-slate-100 text-center">
                                 <p className="text-sm text-slate-500">
                                     Don't have an account?{' '}
                                     <button 
-                                        onClick={() => navigate('student-register')} 
+                                        onClick={() => onNavigate('student-register')} 
                                         className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
                                     >
                                         Create Free Student Account
