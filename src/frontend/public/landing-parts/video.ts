@@ -22,9 +22,11 @@ export const landingVideo = `
 
         const PublicVideoPlayer = ({ video, progress, onProgress, onDuration, className }) => {
             const videoRef = useRef(null);
+            const [playbackRate, setPlaybackRate] = useState(1.0);
             const embedUrl = video?.sourceType === 'link' ? getYoutubeEmbedUrl(video.url) : '';
             const source = getVideoSource(video);
             const frameClassName = className || 'w-full aspect-video rounded-md border border-slate-200';
+
             useEffect(() => {
                 if (!videoRef.current) return;
                 const node = videoRef.current;
@@ -34,16 +36,42 @@ export const landingVideo = `
                 node.addEventListener('loadedmetadata', handleLoaded);
                 return () => node.removeEventListener('loadedmetadata', handleLoaded);
             }, [video?.id]);
+
+            // Handle speed change
+            useEffect(() => {
+                if (videoRef.current) {
+                    videoRef.current.playbackRate = playbackRate;
+                }
+            }, [playbackRate]);
+
+            const cycleSpeed = () => {
+                const rates = [1.0, 1.25, 1.5, 2.0];
+                const nextIndex = (rates.indexOf(playbackRate) + 1) % rates.length;
+                setPlaybackRate(rates[nextIndex]);
+            };
+
             if (embedUrl) return <iframe title={video.title} src={embedUrl} className={frameClassName} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>;
+            
             return (
-                <video
-                    ref={videoRef} src={source} controls playsInline className={frameClassName + ' bg-black'}
-                    onLoadedMetadata={(event) => {
-                        if (onDuration) { onDuration(event.currentTarget.duration || 0); }
-                        if (onProgress) { onProgress(event.currentTarget.currentTime || 0, event.currentTarget.duration || 0); }
-                    }}
-                    onTimeUpdate={(event) => { if (!onProgress) return; onProgress(event.currentTarget.currentTime, event.currentTarget.duration || 0); }}
-                />
+                <div className="relative group">
+                    <video
+                        ref={videoRef} src={source} controls playsInline className={frameClassName + ' bg-black'}
+                        onLoadedMetadata={(event) => {
+                            if (onDuration) { onDuration(event.currentTarget.duration || 0); }
+                            if (onProgress) { onProgress(event.currentTarget.currentTime || 0, event.currentTarget.duration || 0); }
+                        }}
+                        onTimeUpdate={(event) => { if (!onProgress) return; onProgress(event.currentTarget.currentTime, event.currentTarget.duration || 0); }}
+                    />
+                    {/* Speed Control Overlay Button */}
+                    <button 
+                        onClick={cycleSpeed}
+                        className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100 flex items-center gap-1"
+                        title="Change Playback Speed"
+                    >
+                        <i className="fa-solid fa-gauge-high"></i>
+                        {playbackRate}x
+                    </button>
+                </div>
             );
         };
 
