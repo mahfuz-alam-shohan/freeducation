@@ -1,11 +1,12 @@
 export const adminShellComponent = `
-        const AdminShell = ({ title, subtitle, activeTab, onNavigate, children }) => {
+        const AdminShell = ({ activeTab, onNavigate, children }) => {
             return (
                 <div className="flex flex-col lg:flex-row flex-1 bg-gray-100">
                     <AdminSidebar activeTab={activeTab} onNavigate={onNavigate} />
 
                     <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8 pb-24 lg:pb-8 flex flex-col gap-6 bg-gray-100">
-                        {(title || subtitle) && <AdminPageHeader title={title} subtitle={subtitle} />}
+                        {/* Title and Subtitle removed as requested. Content files will handle their own headers. */}
+                        
                         <section className="relative flex flex-col gap-6">
                             {children}
                         </section>
