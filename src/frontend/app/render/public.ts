@@ -7,6 +7,7 @@ import { scienceHscBiologyViews } from './public-views/science-hsc-biology-views
 import { humanitiesViews } from './public-views/humanities-views';
 import { banglaViews } from './public-views/bangla-views';
 import { englishViews } from './public-views/english-views';
+import { studentAuthViews } from './public-views/student-auth-views';
 
 export const renderPublic = landingViews +
     ictViews +
@@ -17,6 +18,4 @@ export const renderPublic = landingViews +
     humanitiesViews +
     banglaViews +
     englishViews +
-    `
-    {view === 'student-register' && <StudentRegister onNavigate={navigate} />}
-    `;
+    studentAuthViews;
