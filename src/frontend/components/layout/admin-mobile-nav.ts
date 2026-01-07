@@ -2,15 +2,17 @@ export const adminMobileNavComponent = `
         const AdminMobileNav = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'classes', label: 'Classes', icon: 'fa-layer-group' },
+                { id: 'users', label: 'Users', icon: 'fa-users' }, // <--- NEW BUTTON
                 { id: 'settings', label: 'Settings', icon: 'fa-gear' }
             ];
             const navRoutes = {
                 classes: 'dashboard',
+                users: 'admin-users', // <--- NEW ROUTE
                 settings: 'admin-settings'
             };
 
             return (
-                <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-sm">
+                <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-sm z-50">
                     <div className="flex justify-around">
                         {navItems.map((item) => (
                             <button
