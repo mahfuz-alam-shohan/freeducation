@@ -1,11 +1,22 @@
 export async function initDatabase(db: D1Database) {
   await db.batch([
+    // --- 1. NEW: Email Verifications Table ---
+    db.prepare(`CREATE TABLE IF NOT EXISTS email_verifications (
+      email TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      attempts INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
+
+    // --- Existing Tables ---
     db.prepare(`CREATE TABLE IF NOT EXISTS admins (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
       password_hash TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    // Updated Users Table (Added class_label and group_label)
     db.prepare(`CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
@@ -13,6 +24,8 @@ export async function initDatabase(db: D1Database) {
       email TEXT UNIQUE,
       password_hash TEXT,
       role TEXT NOT NULL,
+      class_label TEXT,
+      group_label TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS user_profiles (
@@ -98,7 +111,15 @@ type ColumnDefinition = {
   sql: string;
 };
 
+// Define columns here to ensure they are added if they don't exist
 const tableColumns: Record<string, ColumnDefinition[]> = {
+  email_verifications: [
+    { name: "email", sql: "TEXT PRIMARY KEY" },
+    { name: "code", sql: "TEXT NOT NULL" },
+    { name: "expires_at", sql: "INTEGER NOT NULL" },
+    { name: "attempts", sql: "INTEGER DEFAULT 0" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
   admins: [
     { name: "username", sql: "TEXT UNIQUE" },
     { name: "password_hash", sql: "TEXT" },
@@ -110,6 +131,8 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "email", sql: "TEXT UNIQUE" },
     { name: "password_hash", sql: "TEXT" },
     { name: "role", sql: "TEXT NOT NULL" },
+    { name: "class_label", sql: "TEXT" }, // New column
+    { name: "group_label", sql: "TEXT" }, // New column
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
   user_profiles: [
@@ -176,12 +199,17 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
 
 const ensureTableColumns = async (db: D1Database) => {
   for (const [table, columns] of Object.entries(tableColumns)) {
-    const info = await db.prepare(`PRAGMA table_info(${table})`).all();
-    const existing = new Set((info.results || []).map((row: any) => String(row.name)));
-    for (const column of columns) {
-      if (!existing.has(column.name)) {
-        await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column.name} ${column.sql}`).run();
+    try {
+      const info = await db.prepare(`PRAGMA table_info(${table})`).all();
+      const existing = new Set((info.results || []).map((row: any) => String(row.name)));
+      for (const column of columns) {
+        if (!existing.has(column.name)) {
+          console.log(`Adding missing column ${column.name} to table ${table}`);
+          await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column.name} ${column.sql}`).run();
+        }
       }
+    } catch (e) {
+      console.warn(`Skipping column check for ${table}, it might not exist yet.`, e);
     }
   }
 };
