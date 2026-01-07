@@ -110,47 +110,83 @@ export const dashboardUsers = `
 
         const renderTable = (list) => (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                            <th className="p-4 font-semibold">Name</th>
-                            <th className="p-4 font-semibold">Email</th>
-                            {activeTab === 'students' ? <th className="p-4 font-semibold">Class/Group</th> : <th className="p-4 font-semibold">Access</th>}
-                            <th className="p-4 font-semibold text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {list.map(u => (
-                            <tr key={u.id} className="hover:bg-slate-50 transition">
-                                <td className="p-4 font-medium text-slate-900">{u.name}</td>
-                                <td className="p-4 text-slate-600">{u.email}</td>
-                                {activeTab === 'students' ? (
-                                    <td className="p-4 text-slate-600"><span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-bold mr-2">{u.classLabel}</span><span className="text-xs">{u.groupLabel}</span></td>
-                                ) : (
-                                    <td className="p-4 text-slate-600 text-xs">{activeTab === 'teachers' ? (u.level + ' - ' + u.subject) : 'Full Admin'}</td>
-                                )}
-                                <td className="p-4 text-right space-x-2">
-                                    <button onClick={() => { setSelectedUser(u); setActionType('reveal'); setModalMessage(''); }} className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg"><i className="fa-solid fa-eye"></i></button>
-                                    <button onClick={() => { setSelectedUser(u); setActionType('reset'); setModalMessage(''); }} className="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg"><i className="fa-solid fa-key"></i></button>
-                                </td>
+                {/* DESKTOP TABLE VIEW (Hidden on Mobile) */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                                <th className="p-4 font-semibold">Name</th>
+                                <th className="p-4 font-semibold">Email</th>
+                                {activeTab === 'students' ? <th className="p-4 font-semibold">Class/Group</th> : <th className="p-4 font-semibold">Access</th>}
+                                <th className="p-4 font-semibold text-right">Actions</th>
                             </tr>
-                        ))}
-                        {list.length === 0 && <tr><td colSpan="4" className="p-8 text-center text-slate-400">No users found.</td></tr>}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {list.map(u => (
+                                <tr key={u.id} className="hover:bg-slate-50 transition">
+                                    <td className="p-4 font-medium text-slate-900">{u.name}</td>
+                                    <td className="p-4 text-slate-600">{u.email}</td>
+                                    {activeTab === 'students' ? (
+                                        <td className="p-4 text-slate-600"><span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-bold mr-2">{u.classLabel}</span><span className="text-xs">{u.groupLabel}</span></td>
+                                    ) : (
+                                        <td className="p-4 text-slate-600 text-xs">{activeTab === 'teachers' ? (u.level + ' - ' + u.subject) : 'Full Admin'}</td>
+                                    )}
+                                    <td className="p-4 text-right space-x-2">
+                                        <button onClick={() => { setSelectedUser(u); setActionType('reveal'); setModalMessage(''); }} className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg"><i className="fa-solid fa-eye"></i></button>
+                                        <button onClick={() => { setSelectedUser(u); setActionType('reset'); setModalMessage(''); }} className="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg"><i className="fa-solid fa-key"></i></button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {list.length === 0 && <tr><td colSpan="4" className="p-8 text-center text-slate-400">No users found.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* MOBILE CARD VIEW (Hidden on PC) */}
+                <div className="md:hidden divide-y divide-slate-100">
+                    {list.map(u => (
+                        <div key={u.id} className="p-4 flex flex-col gap-3">
+                            <div className="flex justify-between items-start gap-3">
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-bold text-slate-900 truncate">{u.name}</div>
+                                    <div className="text-xs text-slate-500 truncate">{u.email}</div>
+                                </div>
+                                <div className="flex shrink-0 gap-2">
+                                    <button onClick={() => { setSelectedUser(u); setActionType('reveal'); setModalMessage(''); }} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg shadow-sm"><i className="fa-solid fa-eye"></i></button>
+                                    <button onClick={() => { setSelectedUser(u); setActionType('reset'); setModalMessage(''); }} className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg shadow-sm"><i className="fa-solid fa-key"></i></button>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                                {activeTab === 'students' ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-bold">{u.classLabel}</span>
+                                        <span className="text-xs font-medium text-slate-600">{u.groupLabel}</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-slate-600">
+                                        <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider mr-1">Access:</span>
+                                        {activeTab === 'teachers' ? (u.level + ' • ' + u.subject) : 'Full Admin'}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                    {list.length === 0 && <div className="p-8 text-center text-slate-400">No users found.</div>}
+                </div>
             </div>
         );
 
         return (
             <AdminShell title="User Management" subtitle="Manage students, teachers, and admins." activeTab="users" onNavigate={onNavigate}>
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+                        <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm overflow-x-auto no-scrollbar">
                             {['students', 'teachers', 'admins'].map(tab => (
-                                <button key={tab} onClick={() => setActiveTab(tab)} className={\`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition \${activeTab === tab ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}\`}>{tab}</button>
+                                <button key={tab} onClick={() => setActiveTab(tab)} className={\`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition whitespace-nowrap \${activeTab === tab ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}\`}>{tab}</button>
                             ))}
                         </div>
-                        <button onClick={() => setIsCreateOpen(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider shadow-lg shadow-indigo-200 transition">
+                        <button onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider shadow-lg shadow-indigo-200 transition">
                             <i className="fa-solid fa-plus mr-2"></i> Add {activeTab.slice(0, -1)}
                         </button>
                     </div>
