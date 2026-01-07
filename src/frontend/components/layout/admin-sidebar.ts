@@ -2,10 +2,12 @@ export const adminSidebarComponent = `
         const AdminSidebar = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'classes', label: 'Classes', icon: 'fa-layer-group' },
+                { id: 'users', label: 'Users', icon: 'fa-users' }, // <--- NEW BUTTON
                 { id: 'settings', label: 'Settings', icon: 'fa-gear' }
             ];
             const navRoutes = {
                 classes: 'dashboard',
+                users: 'admin-users', // <--- NEW ROUTE
                 settings: 'admin-settings'
             };
 
