@@ -5,8 +5,8 @@ export const dashboardMain = `
                 <TeacherShell title="Teacher Portal" subtitle="Manage your assigned subject content." activeTab="subject" onNavigate={onNavigate}>
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         {!hasAssignment && (
-                            <div className="bg-white p-8 border border-slate-300 text-center shadow-sm">
-                                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 text-slate-400 mb-4">
+                            <div className="bg-white p-8 border border-slate-200 text-center shadow-sm">
+                                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 text-slate-400 mb-4 rounded-md">
                                     <i className="fa-solid fa-chalkboard-user text-2xl"></i>
                                 </div>
                                 <h3 className="text-lg font-bold text-slate-800">No Assignment</h3>
@@ -16,30 +16,34 @@ export const dashboardMain = `
 
                         {hasAssignment && (
                             <div className="bg-white shadow-sm border border-slate-200">
-                                {/* Header Strip */}
-                                <div className="bg-white border-b border-slate-200 p-6 sm:p-8 flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-600">
-                                        <span className="w-2 h-2 bg-indigo-600"></span>
-                                        Current Assignment
+                                {/* Header Strip - Sharp Corners */}
+                                <div className="bg-indigo-600 p-6 sm:p-8 flex flex-col gap-2 relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-200">
+                                            <span className="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
+                                            Current Assignment
+                                        </div>
+                                        <h2 className="text-3xl font-bold text-white mt-1">{assignment.subject}</h2>
+                                        <div className="inline-block mt-3 px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-md uppercase tracking-wider">
+                                            Class: {assignment.level}
+                                        </div>
                                     </div>
-                                    <h2 className="text-3xl font-bold text-slate-900">{assignment.subject}</h2>
-                                    <div className="self-start px-3 py-1 bg-slate-100 text-slate-700 text-sm font-bold border border-slate-300">
-                                        Class: {assignment.level}
-                                    </div>
+                                    {/* Abstract BG Pattern */}
+                                    <i className="fa-solid fa-book-open absolute -right-6 -bottom-6 text-9xl text-indigo-500 opacity-20 rotate-12"></i>
                                 </div>
                                 
-                                <div className="p-6 sm:p-8 bg-slate-50/50">
-                                    <p className="text-slate-600 mb-8 leading-relaxed max-w-2xl">
+                                <div className="p-6 sm:p-8 bg-white">
+                                    <p className="text-slate-600 mb-8 leading-relaxed max-w-2xl text-lg">
                                         {subjectConfig?.description || 'Manage chapters, videos, and quizzes for this subject.'}
                                     </p>
                                     
                                     {subjectConfig?.route ? (
-                                        <button onClick={() => onNavigate(subjectConfig.route)} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-sm flex items-center justify-center gap-3">
+                                        <button onClick={() => onNavigate(subjectConfig.route)} className="w-full sm:w-auto px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all shadow-lg hover:shadow-xl rounded-md flex items-center justify-center gap-3">
                                             <span>MANAGE CONTENT</span>
                                             <i className="fa-solid fa-arrow-right"></i>
                                         </button>
                                     ) : (
-                                        <div className="p-4 bg-slate-100 text-slate-500 text-sm border border-slate-200 italic flex items-center gap-2">
+                                        <div className="p-4 bg-slate-50 text-slate-500 text-sm border border-slate-200 italic flex items-center gap-2 rounded-md">
                                             <i className="fa-solid fa-lock"></i> Content tools unavailable.
                                         </div>
                                     )}
@@ -77,20 +81,24 @@ export const dashboardMain = `
                 return null;
             };
 
-            // Helper for flat colors
-            const getBorderColor = (name) => {
+            // Previous Colors requested by user
+            const getGradient = (name) => {
                 return name.toUpperCase() === 'SSC' 
-                    ? 'border-emerald-500' 
-                    : 'border-blue-600';
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' 
+                    : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-200';
+            };
+
+            const getIcon = (name) => {
+                 return name.toUpperCase() === 'SSC' ? 'fa-flask' : 'fa-graduation-cap';
             };
 
             return (
                 <AdminShell title="Academic Control" subtitle="Overview of your academy structure." activeTab="classes" onNavigate={onNavigate}>
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         
-                        {/* Welcome Banner - Light & Clean */}
+                        {/* Welcome Banner - Clean & Boxy */}
                         <div className="bg-white border-l-4 border-indigo-600 p-6 sm:p-8 shadow-sm">
-                            <h2 className="text-2xl font-bold text-slate-900 mb-2">ACADEMIC PROGRAMS</h2>
+                            <h2 className="text-2xl font-bold text-slate-900 mb-2 uppercase tracking-tight">Academic Programs</h2>
                             <p className="text-slate-500 max-w-lg text-sm sm:text-base">
                                 Select a program level below to manage groups, subjects, and learning materials.
                             </p>
@@ -104,7 +112,7 @@ export const dashboardMain = `
                         )}
 
                         {!loading && filteredClasses.length === 0 && (
-                            <div className="text-center py-12 bg-white border border-slate-200">
+                            <div className="text-center py-12 bg-white border border-slate-200 shadow-sm">
                                 <p className="text-slate-400">No active academic programs found.</p>
                             </div>
                         )}
@@ -114,28 +122,34 @@ export const dashboardMain = `
                                 {filteredClasses.map((item) => {
                                     const route = getClassRoute(item.name);
                                     const isActive = Boolean(route);
-                                    const borderColor = isActive ? getBorderColor(item.name) : 'border-slate-200';
-                                    
+                                    const gradientClass = isActive ? getGradient(item.name) : 'bg-slate-100 border border-slate-200';
+                                    const textClass = isActive ? 'text-white' : 'text-slate-400';
+
                                     return (
                                         <button 
                                             key={item.id} 
                                             onClick={() => route && onNavigate(route)} 
                                             disabled={!route}
-                                            className={\`relative group p-6 sm:p-8 text-left bg-white border border-slate-200 border-l-4 transition-all duration-200 hover:shadow-md \${borderColor} \${isActive ? 'hover:bg-slate-50 cursor-pointer' : 'opacity-60 cursor-not-allowed'}\`}
+                                            className={\`relative group p-6 sm:p-8 text-left transition-all duration-300 hover:scale-[1.01] hover:shadow-xl rounded-sm \${gradientClass} \${isActive ? 'cursor-pointer' : 'cursor-not-allowed'}\`}
                                         >
-                                            <div className="flex flex-col h-full justify-between gap-6">
+                                            <div className="relative z-10 flex flex-col h-full justify-between gap-8">
                                                 <div>
-                                                    <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Program</div>
-                                                    <div className="text-3xl sm:text-5xl font-black text-slate-800">{item.name}</div>
+                                                    <div className={\`text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 opacity-80 \${textClass}\`}>Program</div>
+                                                    <div className={\`text-3xl sm:text-5xl font-black tracking-tight \${textClass}\`}>{item.name}</div>
                                                 </div>
                                                 
-                                                <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
-                                                    <span className={\`text-[10px] sm:text-xs font-bold px-2 py-1 uppercase tracking-wider border \${isActive ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-100 text-slate-500 border-slate-200'}\`}>
-                                                        {isActive ? 'ENTER PANEL' : 'LOCKED'}
+                                                <div className="flex items-center justify-between">
+                                                    <span className={\`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-md uppercase tracking-wider \${isActive ? 'bg-white/20 text-white backdrop-blur-md border border-white/30' : 'bg-slate-200 text-slate-500'}\`}>
+                                                        {isActive ? 'Enter Panel' : 'Locked'}
                                                     </span>
-                                                    {isActive && <i className="fa-solid fa-arrow-right text-slate-400 group-hover:text-slate-900 transition-colors"></i>}
+                                                    {isActive && <i className="fa-solid fa-arrow-right text-white/90 text-xl group-hover:translate-x-1 transition-transform"></i>}
                                                 </div>
                                             </div>
+                                            
+                                            {/* Decorative Background Icon */}
+                                            {isActive && (
+                                                <i className={\`fa-solid \${getIcon(item.name)} absolute -bottom-6 -right-6 text-9xl text-white opacity-10 rotate-12 group-hover:rotate-6 transition-transform\`}></i>
+                                            )}
                                         </button>
                                     );
                                 })}
