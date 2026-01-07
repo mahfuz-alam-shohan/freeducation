@@ -2,35 +2,49 @@ export const dashboardMain = `
         const TeacherDashboard = ({ assignment, subjectConfig, onNavigate }) => {
             const hasAssignment = assignment && assignment.level && assignment.subject;
             return (
-                <TeacherShell title="" subtitle="" activeTab="subject" onNavigate={onNavigate}>
-                    {/* FULL SCREEN GRAY BACKGROUND */}
-                    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#eaeded] flex flex-col items-center justify-center p-6">
-                        
+                <TeacherShell title="Teacher Portal" subtitle="Manage your assigned subject content." activeTab="subject" onNavigate={onNavigate}>
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         {!hasAssignment && (
-                            <div className="w-full max-w-md bg-white border border-slate-400 p-8 text-center shadow-sm rounded-sm">
-                                <i className="fa-solid fa-circle-exclamation text-3xl text-slate-400 mb-4"></i>
-                                <p className="text-slate-600 font-serif font-bold text-sm uppercase tracking-widest">No Assignment Found</p>
+                            <div className="bg-white p-8 border border-slate-200 text-center shadow-sm">
+                                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 text-slate-400 mb-4 rounded-md">
+                                    <i className="fa-solid fa-chalkboard-user text-2xl"></i>
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-800">No Assignment</h3>
+                                <p className="text-slate-600 mt-2 text-sm">Contact an admin to assign a subject to your account.</p>
                             </div>
                         )}
 
                         {hasAssignment && (
-                            <div className="w-full max-w-2xl bg-white border-2 border-slate-400 shadow-md rounded-sm overflow-hidden">
-                                {/* FLUSH HEADER - NO TITLE TEXT ABOVE */}
-                                <div className="bg-[#2c3e50] p-5 text-center border-b-4 border-[#34495e]">
-                                    <h2 className="text-2xl font-serif font-bold text-white tracking-widest uppercase">{assignment.subject}</h2>
-                                    <div className="mt-2 inline-block px-3 py-0.5 bg-white text-[#2c3e50] text-[10px] font-bold uppercase tracking-[0.2em]">
-                                        {assignment.level}
+                            <div className="bg-white shadow-sm border border-slate-200">
+                                {/* Header Strip - Sharp Corners */}
+                                <div className="bg-indigo-600 p-6 sm:p-8 flex flex-col gap-2 relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-200">
+                                            <span className="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
+                                            Current Assignment
+                                        </div>
+                                        <h2 className="text-3xl font-bold text-white mt-1">{assignment.subject}</h2>
+                                        <div className="inline-block mt-3 px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-md uppercase tracking-wider">
+                                            Class: {assignment.level}
+                                        </div>
                                     </div>
+                                    {/* Abstract BG Pattern */}
+                                    <i className="fa-solid fa-book-open absolute -right-6 -bottom-6 text-9xl text-indigo-500 opacity-20 rotate-12"></i>
                                 </div>
                                 
-                                <div className="p-10 text-center bg-white">
+                                <div className="p-6 sm:p-8 bg-white">
+                                    <p className="text-slate-600 mb-8 leading-relaxed max-w-2xl text-lg">
+                                        {subjectConfig?.description || 'Manage chapters, videos, and quizzes for this subject.'}
+                                    </p>
+                                    
                                     {subjectConfig?.route ? (
-                                        <button onClick={() => onNavigate(subjectConfig.route)} className="px-10 py-3 bg-[#2980b9] hover:bg-[#2573a7] text-white font-serif font-bold uppercase tracking-widest transition-none border-b-4 border-[#1a5276] active:border-b-0 active:translate-y-1 active:shadow-inner rounded-sm">
-                                            Manage Content
+                                        <button onClick={() => onNavigate(subjectConfig.route)} className="w-full sm:w-auto px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all shadow-lg hover:shadow-xl rounded-md flex items-center justify-center gap-3">
+                                            <span>MANAGE CONTENT</span>
+                                            <i className="fa-solid fa-arrow-right"></i>
                                         </button>
                                     ) : (
-                                        <div className="inline-block px-6 py-2 bg-slate-100 text-slate-500 font-serif font-bold border border-slate-300 uppercase tracking-wider text-xs">
-                                            Locked
+                                        <div className="p-4 bg-slate-50 text-slate-500 text-sm border border-slate-200 italic flex items-center gap-2 rounded-md">
+                                            <i className="fa-solid fa-lock"></i> Content tools unavailable.
                                         </div>
                                     )}
                                 </div>
@@ -67,56 +81,74 @@ export const dashboardMain = `
                 return null;
             };
 
-            // STRICT FLAT COLORS (No Gradients)
-            const getTheme = (name) => {
+            // Previous Colors requested by user
+            const getGradient = (name) => {
                 return name.toUpperCase() === 'SSC' 
-                    ? 'bg-[#16a085] hover:bg-[#117a65] border-[#0e6655]' // Teal
-                    : 'bg-[#2980b9] hover:bg-[#2573a7] border-[#1a5276]'; // Blue
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' 
+                    : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-200';
+            };
+
+            const getIcon = (name) => {
+                 return name.toUpperCase() === 'SSC' ? 'fa-flask' : 'fa-graduation-cap';
             };
 
             return (
-                <AdminShell title="" subtitle="" activeTab="classes" onNavigate={onNavigate}>
-                    {/* FULL SCREEN GRAY BACKGROUND - NO HEADLINES */}
-                    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#eaeded] flex items-center justify-center p-6">
+                <AdminShell title="Academic Control" subtitle="Overview of your academy structure." activeTab="classes" onNavigate={onNavigate}>
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         
-                        {loading && (
-                             <i className="fa-solid fa-spinner fa-spin text-slate-400 text-3xl"></i>
-                        )}
+                        {/* Welcome Banner - Clean & Boxy */}
+                        <div className="bg-white border-l-4 border-indigo-600 p-6 sm:p-8 shadow-sm">
+                            <h2 className="text-2xl font-bold text-slate-900 mb-2 uppercase tracking-tight">Academic Programs</h2>
+                            <p className="text-slate-500 max-w-lg text-sm sm:text-base">
+                                Select a program level below to manage groups, subjects, and learning materials.
+                            </p>
+                        </div>
 
-                        {!loading && filteredClasses.length === 0 && (
-                            <div className="p-8 border-2 border-dashed border-slate-300 bg-white/50 text-center rounded-sm">
-                                <p className="text-slate-500 font-serif italic">No programs available.</p>
+                        {/* Content Area */}
+                        {loading && (
+                            <div className="flex justify-center py-12">
+                                <i className="fa-solid fa-circle-notch fa-spin text-slate-400 text-2xl"></i>
                             </div>
                         )}
 
-                        {/* CENTERED BUTTON GRID - NO TITLE ABOVE */}
+                        {!loading && filteredClasses.length === 0 && (
+                            <div className="text-center py-12 bg-white border border-slate-200 shadow-sm">
+                                <p className="text-slate-400">No active academic programs found.</p>
+                            </div>
+                        )}
+
                         {!loading && filteredClasses.length > 0 && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
+                            <div className="grid grid-cols-2 gap-4 sm:gap-6">
                                 {filteredClasses.map((item) => {
                                     const route = getClassRoute(item.name);
                                     const isActive = Boolean(route);
-                                    const themeClass = isActive ? getTheme(item.name) : 'bg-slate-300 border-slate-400 cursor-not-allowed';
-                                    
+                                    const gradientClass = isActive ? getGradient(item.name) : 'bg-slate-100 border border-slate-200';
+                                    const textClass = isActive ? 'text-white' : 'text-slate-400';
+
                                     return (
                                         <button 
                                             key={item.id} 
                                             onClick={() => route && onNavigate(route)} 
                                             disabled={!route}
-                                            className={\`group h-32 px-8 flex items-center justify-between transition-none shadow-sm border-b-[6px] active:border-b-0 active:translate-y-[6px] rounded-sm bg-white \${themeClass}\`}
+                                            className={\`relative group p-6 sm:p-8 text-left transition-all duration-300 hover:scale-[1.01] hover:shadow-xl rounded-sm \${gradientClass} \${isActive ? 'cursor-pointer' : 'cursor-not-allowed'}\`}
                                         >
-                                            <div className="flex flex-col items-start">
-                                                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/80 mb-1">
-                                                    Program
-                                                </span>
-                                                <span className="text-4xl font-serif font-bold text-white tracking-widest">
-                                                    {item.name}
-                                                </span>
+                                            <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+                                                <div>
+                                                    <div className={\`text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 opacity-80 \${textClass}\`}>Program</div>
+                                                    <div className={\`text-3xl sm:text-5xl font-black tracking-tight \${textClass}\`}>{item.name}</div>
+                                                </div>
+                                                
+                                                <div className="flex items-center justify-between">
+                                                    <span className={\`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-md uppercase tracking-wider \${isActive ? 'bg-white/20 text-white backdrop-blur-md border border-white/30' : 'bg-slate-200 text-slate-500'}\`}>
+                                                        {isActive ? 'Enter Panel' : 'Locked'}
+                                                    </span>
+                                                    {isActive && <i className="fa-solid fa-arrow-right text-white/90 text-xl group-hover:translate-x-1 transition-transform"></i>}
+                                                </div>
                                             </div>
                                             
+                                            {/* Decorative Background Icon */}
                                             {isActive && (
-                                                <div className="w-12 h-12 flex items-center justify-center bg-black/10 text-white rounded-sm group-hover:bg-white group-hover:text-[#2c3e50] transition-colors">
-                                                     <i className="fa-solid fa-arrow-right text-lg"></i>
-                                                </div>
+                                                <i className={\`fa-solid \${getIcon(item.name)} absolute -bottom-6 -right-6 text-9xl text-white opacity-10 rotate-12 group-hover:rotate-6 transition-transform\`}></i>
                                             )}
                                         </button>
                                     );
