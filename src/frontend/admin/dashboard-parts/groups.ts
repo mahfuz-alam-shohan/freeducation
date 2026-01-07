@@ -12,7 +12,6 @@ export const dashboardGroups = `
                 return \`admin-\${base}-\${groupKey}\`;
             };
 
-            // Helper for flat colors based on group name to match the style
             const getBorderColor = (title) => {
                 const t = title.toLowerCase();
                 if (t.includes('science')) return 'border-indigo-500';
@@ -95,13 +94,17 @@ export const dashboardGroups = `
 
             return (
                 <AdminShell title={\`\${classLabel} - \${groupLabel}\`} subtitle="Manage the subject list for this group." activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex justify-between items-center">
-                        <button onClick={() => onNavigate(groupRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back to Groups</button>
-                        <button onClick={() => onNavigate('dashboard')} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back to Dashboard</button>
+                    <div className="flex justify-between items-center mb-6">
+                        <button onClick={() => onNavigate(groupRoute)} className="px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition flex items-center gap-2">
+                            <i className="fa-solid fa-arrow-left"></i> Back to Groups
+                        </button>
                     </div>
+                    
                     {subjects.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">No subjects configured.</div>}
+                    
+                    {/* Compact Portrait Grid */}
                     {subjects.length > 0 && (
-                        <div className="grid card-grid-gap sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {subjects.map((subject) => {
                                 const isBanglaFirst = subject === 'Bangla 1st Paper';
                                 const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
@@ -117,23 +120,57 @@ export const dashboardGroups = `
                                 const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
                                 const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
                                 const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
+                                
                                 const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
                                 const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : hscBio2Route;
                                 const subjectKey = makeThumbnailKey(subject, classLabel);
                                 const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
                                 const canOpen = Boolean(route);
+
                                 return (
-                                    <div key={subject} className="border border-gray-200 rounded-2xl bg-white shadow-sm overflow-hidden">
-                                        <div className="h-36 bg-gray-100 border-b border-gray-200">
-                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={subject} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
-                                        </div>
-                                        <div className="p-4">
-                                            <div className="text-xs uppercase tracking-[0.2em] text-gray-400">Subject</div>
-                                            <div className={\`text-base font-semibold text-gray-900 mt-2 \${isBanglaFirst ? 'font-bangla' : ''}\`}>{displayLabel}</div>
-                                            <p className="text-xs text-gray-500 mt-2">Manage chapters, topics, and content tools.</p>
-                                            <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                                                <button onClick={() => route && onNavigate(route)} className={\`px-3 py-1.5 rounded-md border transition \${canOpen ? 'border-gray-200 text-gray-600 hover:bg-gray-50' : 'border-gray-100 text-gray-300 cursor-not-allowed'}\`} disabled={!canOpen}>Open</button>
-                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: subject, subjectKey })} className="px-3 py-1.5 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                    <div key={subject} className="group relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 bg-slate-900">
+                                        
+                                        {/* Full Background Thumbnail */}
+                                        {thumbnailUrl ? (
+                                            <img src={thumbnailUrl} alt={subject} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90" />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                                                <i className="fa-solid fa-book text-slate-700 text-4xl"></i>
+                                            </div>
+                                        )}
+
+                                        {/* Gradient Overlay (Darkens bottom for text/buttons) */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+
+                                        {/* Content Overlay */}
+                                        <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-end">
+                                            {/* Subject Name */}
+                                            <div className="mb-3">
+                                                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Subject</div>
+                                                <h3 className={\`text-white font-bold leading-tight \${isBanglaFirst ? 'font-bangla text-base' : 'text-sm sm:text-base'}\`}>
+                                                    {displayLabel}
+                                                </h3>
+                                            </div>
+
+                                            {/* Action Buttons - Compact & Fitting */}
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={() => route && onNavigate(route)} 
+                                                    disabled={!canOpen}
+                                                    className={\`flex-1 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded text-center transition-colors backdrop-blur-md \${canOpen ? 'bg-white/90 text-slate-900 hover:bg-white' : 'bg-white/10 text-slate-400 cursor-not-allowed'}\`}
+                                                >
+                                                    {canOpen ? 'Open' : 'Locked'}
+                                                </button>
+                                                
+                                                {canManageThumbnails && (
+                                                    <button 
+                                                        onClick={() => setActiveThumbnail({ title: subject, subjectKey })} 
+                                                        className="w-8 h-8 sm:w-auto sm:px-3 sm:h-auto flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded backdrop-blur-md border border-white/10 transition-colors"
+                                                        title="Change Thumbnail"
+                                                    >
+                                                        <i className="fa-solid fa-camera text-xs"></i>
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -141,6 +178,7 @@ export const dashboardGroups = `
                             })}
                         </div>
                     )}
+
                     {activeThumbnail && canManageThumbnails && <ThumbnailUploadModal title={activeThumbnail.title} description="Upload a subject thumbnail for public cards." uploadUrl="/api/thumbnails" keyField="subjectKey" itemKey={activeThumbnail.subjectKey} existingUrl={subjectThumbnails[activeThumbnail.subjectKey]?.url} onSaved={(thumbnail) => { setSubjectThumbnails((prev) => ({ ...prev, [thumbnail.subjectKey]: { url: thumbnail.url } })); setActiveThumbnail(null); }} onClose={() => setActiveThumbnail(null)} />}
                 </AdminShell>
             );
