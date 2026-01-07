@@ -1,6 +1,7 @@
 export const landingExports = `
         return {
             StudentLanding,
+            StudentRegister, // <--- ADDED THIS
             SubjectIndexPage,
             PublicBanglaShell,
             PublicBanglaTopicGrid,
@@ -30,8 +31,10 @@ export const landingExports = `
             religionOptions
         };
         })();
+        
+        // Destructure it here too so the View can see it
         const {
-            StudentLanding, SubjectIndexPage, PublicBanglaShell, PublicBanglaTopicGrid, PublicBanglaTextList,
+            StudentLanding, StudentRegister, SubjectIndexPage, PublicBanglaShell, PublicBanglaTopicGrid, PublicBanglaTextList,
             PublicBanglaShohopathList, PublicBanglaItemDetail, PublicBanglaSrijonshilDetail, PublicBanglaMcqDetail,
             PublicIctShell, PublicIctChapterList, PublicIctMcqDetail, PublicScienceShell, PublicScienceChapterList,
             PublicScienceTopicList, PublicScienceTopicDetail, PublicScienceCqDetail, PublicScienceMcqDetail,
