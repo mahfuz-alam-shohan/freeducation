@@ -1,44 +1,56 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env } from './types';
+import studentAuth from './routes/student-auth';
 
-// Import all your routes
-import auth from './routes/auth';
-import users from './routes/users';
-import classes from './routes/classes';
-import content from './routes/content';
-import videos from './routes/videos';
-import thumbnails from './routes/thumbnails';
-import settings from './routes/settings';
-import setup from './routes/setup';
-import profile from './routes/profile';
-import shared from './routes/shared';
-import fonts from './routes/fonts';
-import studentAuth from './routes/student-auth'; // <--- The new route
+// --- Legacy Imports (Using 'import *' to safely find the handler functions) ---
+import * as auth from './routes/auth';
+import * as users from './routes/users';
+import * as classes from './routes/classes';
+import * as content from './routes/content';
+import * as videos from './routes/videos';
+import * as thumbnails from './routes/thumbnails';
+import * as settings from './routes/settings';
+import * as setup from './routes/setup';
+import * as profile from './routes/profile';
+import * as fonts from './routes/fonts';
+// Note: 'shared.ts' is excluded because it contains helpers, not routes.
 
+// Helper to find the main handler function in a legacy module
+function findLegacyHandler(mod: any) {
+  // Looks for the first exported function (e.g., handleAuth, handleUsers)
+  return Object.values(mod).find(item => typeof item === 'function') as Function | undefined;
+}
+
+// --- New Hono App (For Student Auth) ---
 const app = new Hono<{ Bindings: Env }>();
-
-// Global Middleware
 app.use('/api/*', cors());
+app.route('/api/student', studentAuth);
 
-// Register Routes
-app.route('/api/auth', auth);
-app.route('/api/users', users);
-app.route('/api/classes', classes);
-app.route('/api/content', content);
-app.route('/api/videos', videos);
-app.route('/api/thumbnails', thumbnails);
-app.route('/api/settings', settings);
-app.route('/api/setup', setup);
-app.route('/api/profile', profile);
-app.route('/api/shared', shared);
-app.route('/api/fonts', fonts);
+// --- Main Request Handler ---
+export const handleApiRequest = async (request: Request, env: Env) => {
+  const url = new URL(request.url);
+  const path = url.pathname;
 
-// Register the Student Auth Route
-app.route('/api/student', studentAuth); 
+  // 1. Try the New System first (Student Routes)
+  if (path.startsWith('/api/student')) {
+    return app.fetch(request, env);
+  }
 
-// Root API check
-app.get('/api', (c) => c.json({ status: 'ok', version: '1.0.0' }));
+  // 2. Fallback to Legacy System (Admin, Teacher, etc.)
+  const legacyModules = [
+    auth, users, classes, content, videos, thumbnails, settings, setup, profile, fonts
+  ];
 
-// Export the handler for index.ts
-export const handleApiRequest = (request: Request, env: Env) => app.fetch(request, env);
+  for (const mod of legacyModules) {
+    const handler = findLegacyHandler(mod);
+    if (handler) {
+      // Legacy handlers typically expect (request, env, path)
+      const response = await handler(request, env, path);
+      if (response) return response;
+    }
+  }
+
+  // 3. If no API matched, return null (so index.ts can serve the Frontend)
+  return null;
+};
