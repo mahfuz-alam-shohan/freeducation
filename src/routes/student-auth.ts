@@ -64,11 +64,12 @@ studentAuth.post('/register-verify', async (c) => {
             return c.json({ success: false, error: 'Invalid code' }, 400);
         }
 
-        // --- FIX IS HERE: REMOVED userId AND LET DB AUTO-INCREMENT ID ---
+        // --- FIXED: Using 'password_hash' and adding 'username' ---
+        // Note: We use the email as the username for students to keep it simple and unique.
         await c.env.DB.prepare(`
-            INSERT INTO users (name, email, password, role, class_label, group_label, created_at)
-            VALUES (?, ?, ?, 'student', ?, ?, ?)
-        `).bind(name, email, password, classLabel, groupLabel, Date.now()).run();
+            INSERT INTO users (name, email, password_hash, role, class_label, group_label, created_at, username)
+            VALUES (?, ?, ?, 'student', ?, ?, ?, ?)
+        `).bind(name, email, password, classLabel, groupLabel, Date.now(), email).run();
 
         // Delete used OTP
         await c.env.DB.prepare('DELETE FROM email_verifications WHERE email = ?').bind(email).run();
@@ -76,7 +77,7 @@ studentAuth.post('/register-verify', async (c) => {
         return c.json({ success: true, message: 'Account created' });
     } catch (e) {
         console.error("Verify Error:", e);
-        return c.json({ success: false, error: 'Database error' }, 500);
+        return c.json({ success: false, error: 'Database error: ' + (e instanceof Error ? e.message : String(e)) }, 500);
     }
 });
 
