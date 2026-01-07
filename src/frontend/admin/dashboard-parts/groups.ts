@@ -1,20 +1,60 @@
 export const dashboardGroups = `
         const AdminGroupSelection = ({ classLabel, onNavigate }) => {
-            const groups = [{ title: 'Science', description: 'Physics, Chemistry, Biology' }, { title: 'Humanities', description: 'Arts, Social Science' }, { title: 'Business Studies', description: 'Commerce, Finance' }];
+            const groups = [
+                { title: 'Science', description: 'Physics, Chemistry, Biology' },
+                { title: 'Humanities', description: 'Arts, Social Science' },
+                { title: 'Business Studies', description: 'Commerce, Finance' }
+            ];
+
             const getGroupRoute = (groupTitle) => {
                 const base = String(classLabel || '').toLowerCase();
                 const groupKey = String(groupTitle || '').toLowerCase().replace(/\\s+/g, '-');
                 return \`admin-\${base}-\${groupKey}\`;
             };
+
+            // Helper for flat colors based on group name to match the style
+            const getBorderColor = (title) => {
+                const t = title.toLowerCase();
+                if (t.includes('science')) return 'border-indigo-500';
+                if (t.includes('humanities')) return 'border-orange-500';
+                if (t.includes('business')) return 'border-sky-500';
+                return 'border-slate-200';
+            };
+
             return (
                 <AdminShell title={"Class " + classLabel} subtitle="Choose a group to manage materials." activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex justify-end"><button onClick={() => onNavigate('dashboard')} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back to Dashboard</button></div>
-                    <div className="grid card-grid-gap sm:grid-cols-2 lg:grid-cols-3">
-                        {groups.map((group) => (
-                            <button key={group.title} onClick={() => onNavigate(getGroupRoute(group.title))} className="border border-gray-200 rounded-2xl p-5 text-left bg-white shadow-sm hover:border-gray-300 hover:bg-gray-50 transition">
-                                <div className="text-left"><div className="text-xs uppercase tracking-[0.2em] text-gray-400">Group</div><div className="text-base font-semibold text-gray-900 mt-1">{group.title}</div><p className="text-xs text-gray-500 mt-2">{group.description}</p></div><div className="mt-4 text-xs uppercase tracking-[0.2em] text-blue-600">Open</div>
-                            </button>
-                        ))}
+                    <div className="flex justify-end mb-6">
+                        <button onClick={() => onNavigate('dashboard')} className="px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition flex items-center gap-2">
+                            <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {groups.map((group) => {
+                            const borderColor = getBorderColor(group.title);
+                            return (
+                                <button 
+                                    key={group.title} 
+                                    onClick={() => onNavigate(getGroupRoute(group.title))} 
+                                    className={\`relative group p-6 sm:p-8 text-left bg-white border border-slate-200 border-l-4 transition-all duration-200 hover:shadow-md hover:bg-slate-50 cursor-pointer \${borderColor}\`}
+                                >
+                                    <div className="flex flex-col h-full justify-between gap-6">
+                                        <div>
+                                            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Group</div>
+                                            <div className="text-2xl sm:text-3xl font-black text-slate-800 leading-tight">{group.title}</div>
+                                            <p className="text-slate-500 text-xs mt-2">{group.description}</p>
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
+                                            <span className="text-[10px] sm:text-xs font-bold px-2 py-1 uppercase tracking-wider border bg-slate-900 text-white border-slate-900">
+                                                OPEN GROUP
+                                            </span>
+                                            <i className="fa-solid fa-arrow-right text-slate-400 group-hover:text-slate-900 transition-colors"></i>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </AdminShell>
             );
