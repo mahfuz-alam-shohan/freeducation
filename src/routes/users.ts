@@ -9,8 +9,9 @@ import {
   normalizeEmail,
   normalizeLevel,
   normalizeSubject,
-  hashPassword // <--- Added this import
 } from "./shared";
+// FIX: Import hashPassword from the correct location
+import { hashPassword } from "../auth";
 
 export const handleUsers = async (request: Request, env: Env, path: string): Promise<Response | null> => {
   
@@ -22,7 +23,6 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
     // Fetch lists
     const admins = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'admin' ORDER BY created_at DESC").all();
     const teachers = await env.DB.prepare("SELECT id, name, email FROM users WHERE role = 'teacher' ORDER BY created_at DESC").all();
-    // NEW: Fetch Students
     const students = await env.DB.prepare("SELECT id, name, email, class_label, group_label FROM users WHERE role = 'student' ORDER BY created_at DESC").all();
 
     // Fetch Permissions & Assignments
@@ -58,7 +58,6 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
           subject: assignmentMap.get(row.id)?.subject || "",
           permissions: teacherPermissionsMap.get(row.id) || [],
         })),
-        // NEW: Return students list
         students: (students.results || []).map((row: any) => ({
           id: row.id, name: row.name, email: row.email, 
           classLabel: row.class_label, groupLabel: row.group_label
@@ -90,7 +89,6 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
     }
 
     const { passwordHash } = await buildPasswordHash(password);
-    // For admins/teachers, username is email
     const username = email;
 
     await env.DB.prepare(
@@ -185,14 +183,13 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
     return Response.json({ success: true }, { headers: apiHeaders });
   }
 
-  // --- 4. NEW: REVEAL PASSWORD HASH ---
+  // --- 4. REVEAL PASSWORD HASH ---
   if (path === "/api/users/reveal" && request.method === "POST") {
     const payload = await getAuthPayload(request, env);
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
     
     const { adminPassword, targetId } = await request.json() as any;
 
-    // Verify Admin Password
     const admin = await env.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(payload.id).first();
     if (!admin) return Response.json({ success: false, error: "Admin not found" }, { status: 401, headers: apiHeaders });
 
@@ -202,21 +199,19 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
         return Response.json({ success: false, error: "Incorrect Admin Password" }, { status: 401, headers: apiHeaders });
     }
 
-    // Get Target Hash
     const target = await env.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(targetId).first();
     if (!target) return Response.json({ success: false, error: "User not found" }, { status: 404, headers: apiHeaders });
 
     return Response.json({ success: true, hash: target.password_hash }, { headers: apiHeaders });
   }
 
-  // --- 5. NEW: RESET PASSWORD ---
+  // --- 5. RESET PASSWORD ---
   if (path === "/api/users/reset" && request.method === "POST") {
     const payload = await getAuthPayload(request, env);
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
     
     const { adminPassword, targetId, newPassword } = await request.json() as any;
 
-    // Verify Admin Password
     const admin = await env.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(payload.id).first();
     if (!admin) return Response.json({ success: false, error: "Admin not found" }, { status: 401, headers: apiHeaders });
 
@@ -228,7 +223,6 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
 
     if (newPassword.length < 8) return Response.json({ success: false, error: "New password too short" }, { status: 400, headers: apiHeaders });
 
-    // Update Password
     const { passwordHash } = await buildPasswordHash(newPassword);
     await env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(passwordHash, targetId).run();
 
