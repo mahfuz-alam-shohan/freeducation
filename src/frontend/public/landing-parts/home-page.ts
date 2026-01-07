@@ -6,6 +6,11 @@ export const landingHome = `
             const { readMap, recentRead } = useReadingProgress();
             const { recentVideo } = useVideoProgress();
 
+            // Collect all images we need to show
+            const allSubjects = [...sscFeaturedSubjects, ...hscFeaturedSubjects];
+            const imageUrls = allSubjects.map(s => thumbnailMap[s.subjectKey]?.url);
+            const isReady = useImagePreloader(imageUrls);
+
             useEffect(() => {
                 const timer = setInterval(() => { setQuoteIndex((prev) => (prev + 1) % quoteItems.length); }, 9000);
                 return () => clearInterval(timer);
@@ -118,6 +123,8 @@ export const landingHome = `
 
             const quickResults = normalizedQuickQuery ? buildQuickSearchEntries().filter((entry) => { const haystack = (entry.keywords || entry.title || '').toLowerCase(); return haystack.includes(normalizedQuickQuery); }).slice(0, 10) : [];
             const handleQuickSelect = (entry) => { if (!entry?.onSelect) return; entry.onSelect(); };
+
+            if (!isReady) return <FullScreenLoader />;
 
             return (
                 <div className="flex-1 bg-[#f3f6ff]">
