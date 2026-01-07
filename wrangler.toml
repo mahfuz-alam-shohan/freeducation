@@ -11,7 +11,7 @@ database_id = "6df7d84c-673b-4c1e-be9f-292c8f6a55f9"
 GMAIL_CLIENT_ID = "151296843802-ansdm59387uk2r0lfaebvkr5566beq3g.apps.googleusercontent.com"
 GMAIL_CLIENT_SECRET = "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"
 GMAIL_REFRESH_TOKEN = "1//047Rxk_CAUUvpCgYIARAAGAQSNwF-L9Iro5UdL91EkNaDDzfXpc9_7i4ZiA4bqe2YxK7gtZ76sC36W16yYkylDysJGKcn9fnWRaM"
-
+JWT_SECRET = "some-random-secret-text-for-security"
 # R2 Bucket Binding
 [[r2_buckets]]
 binding = "BUCKET"
