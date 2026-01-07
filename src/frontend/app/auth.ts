@@ -1,12 +1,13 @@
 export const authHandlers = `
-            const handleLogin = async (username, password) => {
+            // FIX: We now accept an object { username, password }
+            const handleLogin = async ({ username, password }) => {
                 const res = await fetch('/api/login', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // SAVE TOKEN!
                     localStorage.setItem('auth_token', data.token);
                     setUser({
                         username: data.username,
@@ -16,7 +17,7 @@ export const authHandlers = `
                     });
                     navigate('dashboard');
                 } else {
-                    alert(data.error);
+                    alert(data.error || 'Login failed');
                 }
             };
 
@@ -26,9 +27,10 @@ export const authHandlers = `
                 navigate('landing');
             };
 
-            const handleRegister = async (username, password) => {
+            const handleRegister = async ({ username, password }) => {
                 const res = await fetch('/api/register-admin', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 const data = await res.json();
