@@ -4,23 +4,44 @@ export const dashboardUsers = `
         const [activeTab, setActiveTab] = useState('students');
         const [isLoading, setIsLoading] = useState(true);
         
-        // --- Selection & Actions ---
+        // Modal & Selection States
         const [selectedUser, setSelectedUser] = useState(null);
-        const [actionType, setActionType] = useState(null); // 'reveal', 'reset'
+        const [actionType, setActionType] = useState(null); // 'reveal' or 'reset'
         const [adminPass, setAdminPass] = useState('');
         const [newPass, setNewPass] = useState('');
         const [modalMessage, setModalMessage] = useState('');
 
-        // --- Create User Form State ---
+        // Create User Form State
         const [isCreateOpen, setIsCreateOpen] = useState(false);
         const [createForm, setCreateForm] = useState({
             name: '', email: '', password: '', 
-            classLabel: 'SSC', groupLabel: 'Science', // Student specific
-            level: 'SSC', subject: '', permissions: [] // Teacher specific
+            classLabel: 'SSC', groupLabel: 'Science', // For Students
+            level: 'SSC', subject: '', permissions: [] // For Teachers
         });
 
-        // Hardcoded subject list for teachers (simplified)
-        const subjectsList = ['Bangla 1st', 'Bangla 2nd', 'English 1st', 'English 2nd', 'Math', 'Physics', 'Chemistry', 'Biology', 'ICT', 'Religion'];
+        // FULL SUBJECT MAP (Matches Settings)
+        const adminSubjectGroups = {
+            SSC: {
+                Science: ['Bangla 1st Paper', 'Bangla 2nd Paper', 'English 1st Paper', 'English 2nd Paper', 'General Mathematics', 'Physics', 'Chemistry', 'Biology', 'Higher Mathematics', 'Bangladesh and Global Studies', 'Information and Communication Technology', 'Religion and Moral Education'],
+                Humanities: ['Bangla 1st Paper', 'Bangla 2nd Paper', 'English 1st Paper', 'English 2nd Paper', 'General Mathematics', 'Bangladesh and Global Studies', 'Information and Communication Technology', 'Geography and Environment', 'History of Bangladesh and World Civilization', 'Civics and Citizenship', 'Religion and Moral Education'],
+                'Business Studies': ['Bangla 1st Paper', 'Bangla 2nd Paper', 'English 1st Paper', 'English 2nd Paper', 'General Mathematics', 'Bangladesh and Global Studies', 'Information and Communication Technology', 'Accounting', 'Business Entrepreneurship', 'Finance and Banking', 'Religion and Moral Education']
+            },
+            HSC: {
+                Science: ['Bangla 1st Paper', 'Bangla 2nd Paper', 'English 1st Paper', 'English 2nd Paper', 'Information and Communication Technology', 'Physics 1st Paper', 'Physics 2nd Paper', 'Chemistry 1st Paper', 'Chemistry 2nd Paper', 'Biology 1st Paper', 'Biology 2nd Paper', 'Higher Mathematics 1st Paper', 'Higher Mathematics 2nd Paper'],
+                Humanities: ['Bangla 1st Paper', 'Bangla 2nd Paper', 'English 1st Paper', 'English 2nd Paper', 'Information and Communication Technology', 'Economics 1st Paper', 'Economics 2nd Paper', 'History 1st Paper', 'History 2nd Paper', 'Civics and Good Governance 1st Paper', 'Civics and Good Governance 2nd Paper', 'Logic 1st Paper', 'Logic 2nd Paper'],
+                'Business Studies': ['Bangla 1st Paper', 'Bangla 2nd Paper', 'English 1st Paper', 'English 2nd Paper', 'Information and Communication Technology', 'Accounting 1st Paper', 'Accounting 2nd Paper', 'Business Organization and Management 1st Paper', 'Business Organization and Management 2nd Paper', 'Finance, Banking and Insurance 1st Paper', 'Finance, Banking and Insurance 2nd Paper', 'Production Management and Marketing 1st Paper', 'Production Management and Marketing 2nd Paper']
+            }
+        };
+
+        // Compute available subjects for Teacher Dropdown based on selected Level
+        const getTeacherSubjects = (level) => {
+            if (!level) return [];
+            const groups = adminSubjectGroups[level] || {};
+            // Flatten all subjects from all groups in that level, remove duplicates
+            const allSubjects = new Set();
+            Object.values(groups).forEach(list => list.forEach(sub => allSubjects.add(sub)));
+            return Array.from(allSubjects).sort();
+        };
 
         useEffect(() => { fetchUsers(); }, []);
 
@@ -44,15 +65,14 @@ export const dashboardUsers = `
             });
             const data = await res.json();
             if (data.success) {
-                if (actionType === 'reveal') setModalMessage('Hash: ' + data.hash.substring(0, 20) + '...');
+                if (actionType === 'reveal') setModalMessage('Hash: ' + data.hash.substring(0, 20) + '... (Hidden)');
                 else { setModalMessage('Success!'); setTimeout(() => { setSelectedUser(null); setAdminPass(''); }, 1500); }
             } else setModalMessage('Error: ' + data.error);
         };
 
         const handleCreateUser = async () => {
-            if (!createForm.name || !createForm.email || !createForm.password) return alert('Fill required fields');
+            if (!createForm.name || !createForm.email || !createForm.password) return alert('Please fill all required fields');
             
-            // Prepare body based on role
             const body = {
                 role: activeTab === 'students' ? 'student' : (activeTab === 'teachers' ? 'teacher' : 'admin'),
                 name: createForm.name,
@@ -64,11 +84,12 @@ export const dashboardUsers = `
                 body.classLabel = createForm.classLabel;
                 body.groupLabel = createForm.groupLabel;
             } else if (activeTab === 'teachers') {
+                if (!createForm.subject) return alert('Please select a subject');
                 body.level = createForm.level;
                 body.subject = createForm.subject;
-                body.permissions = ['structure']; // Default permission
+                body.permissions = ['structure'];
             } else if (activeTab === 'admins') {
-                body.permissions = ['dashboard', 'classes', 'settings', 'users']; // Default full access
+                body.permissions = ['dashboard', 'classes', 'settings', 'users'];
             }
 
             const res = await fetch('/api/users', {
@@ -79,6 +100,7 @@ export const dashboardUsers = `
             const data = await res.json();
             if (data.success) {
                 setIsCreateOpen(false);
+                // Reset form
                 setCreateForm({ name: '', email: '', password: '', classLabel: 'SSC', groupLabel: 'Science', level: 'SSC', subject: '', permissions: [] });
                 fetchUsers();
             } else {
@@ -135,7 +157,7 @@ export const dashboardUsers = `
 
                     {isLoading ? <div className="text-center py-12"><i className="fa-solid fa-circle-notch fa-spin text-indigo-600 text-xl"></i></div> : renderTable(users[activeTab] || [])}
 
-                    {/* --- REVEAL / RESET MODAL --- */}
+                    {/* REVEAL / RESET MODAL */}
                     {selectedUser && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
                             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
@@ -154,7 +176,7 @@ export const dashboardUsers = `
                         </div>
                     )}
 
-                    {/* --- CREATE USER MODAL --- */}
+                    {/* CREATE USER MODAL */}
                     {isCreateOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
                             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
@@ -181,7 +203,12 @@ export const dashboardUsers = `
                                     {activeTab === 'teachers' && (
                                         <div className="grid grid-cols-2 gap-4">
                                             <div><label className="block text-xs font-bold uppercase text-slate-400 mb-1">Level</label><select value={createForm.level} onChange={e => setCreateForm({...createForm, level: e.target.value})} className="w-full p-3 border border-slate-200 rounded-lg bg-white"><option>SSC</option><option>HSC</option></select></div>
-                                            <div><label className="block text-xs font-bold uppercase text-slate-400 mb-1">Subject</label><select value={createForm.subject} onChange={e => setCreateForm({...createForm, subject: e.target.value})} className="w-full p-3 border border-slate-200 rounded-lg bg-white"><option value="">Select...</option>{subjectsList.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                            <div><label className="block text-xs font-bold uppercase text-slate-400 mb-1">Subject</label>
+                                                <select value={createForm.subject} onChange={e => setCreateForm({...createForm, subject: e.target.value})} className="w-full p-3 border border-slate-200 rounded-lg bg-white">
+                                                    <option value="">Select...</option>
+                                                    {getTeacherSubjects(createForm.level).map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                            </div>
                                         </div>
                                     )}
 
