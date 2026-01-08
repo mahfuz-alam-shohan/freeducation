@@ -237,9 +237,11 @@ export const landingUi = `
                                 <div 
                                     key={index} 
                                     onClick={() => onNavigate(subject.route)}
-                                    className="flex-none w-72 snap-start cursor-pointer group"
+                                    // UPDATED: w-60 (Portrait width)
+                                    className="flex-none w-60 snap-start cursor-pointer group"
                                 >
-                                    <div className="aspect-[16/10] rounded-2xl bg-white border border-slate-100 mb-4 overflow-hidden relative shadow-sm group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 transition-all duration-300">
+                                    {/* UPDATED: aspect-[3/4] (Portrait ratio) */}
+                                    <div className="aspect-[3/4] rounded-2xl bg-white border border-slate-100 mb-4 overflow-hidden relative shadow-sm group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 transition-all duration-300">
                                         {thumbnail ? (
                                             <img src={thumbnail.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                         ) : (
