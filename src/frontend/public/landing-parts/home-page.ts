@@ -3,8 +3,7 @@ export const landingHome = `
             const [quoteIndex, setQuoteIndex] = useState(0);
             const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
-            const { readMap, recentRead } = useReadingProgress();
-            const { recentVideo } = useVideoProgress();
+            const { readMap } = useReadingProgress(); // Removed recentRead as it is no longer used
 
             // Collect all images we need to show
             const allSubjects = [...sscFeaturedSubjects, ...hscFeaturedSubjects];
@@ -17,10 +16,8 @@ export const landingHome = `
             }, []);
 
             const activeQuote = quoteItems[quoteIndex];
-            const continueLabel = recentRead?.label;
-            const continueRoute = recentRead?.route;
-            const continueVideoTitle = recentVideo?.title;
-            const continueVideoRoute = recentVideo?.route || 'public-videos';
+            // Removed continueLabel, continueRoute, continueVideoTitle, continueVideoRoute logic
+
             const normalizedQuickQuery = quickQuery.trim().toLowerCase();
             const buildQuickSearchEntries = () => {
                 const entries = [];
@@ -141,12 +138,15 @@ export const landingHome = `
                                     </div>
                                     <div><div className="text-3xl sm:text-4xl font-semibold text-white">Freeducation</div><div className="text-sm text-white/80 uppercase tracking-[0.2em] mt-1">Serve education with clarity</div></div>
                                 </div>
-                                <div className="max-w-xl bg-indigo-600 border border-indigo-500 rounded-md p-6 text-white">
-                                    <p className="text-base sm:text-lg font-serif italic leading-relaxed">“{activeQuote.text}”</p>
-                                    <p className="text-sm font-semibold text-white/90 mt-3">— {activeQuote.author}</p>
+                                
+                                {/* Updated Quote Section - Boxless/Plain */}
+                                <div className="max-w-xl text-white">
+                                    <p className="text-base sm:text-lg font-serif italic leading-relaxed opacity-90">“{activeQuote.text}”</p>
+                                    <p className="text-sm font-semibold opacity-80 mt-2">— {activeQuote.author}</p>
                                 </div>
                             </div>
-                            <div className="mt-6">
+                            
+                            <div className="mt-8">
                                 <div className="relative">
                                     <label className="text-[11px] uppercase tracking-[0.3em] text-white/70">Quick Search</label>
                                     <input value={quickQuery} onChange={(event) => setQuickQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && quickResults[0]) { handleQuickSelect(quickResults[0]); } }} placeholder="Search subjects, chapters, topics, notes, videos..." className="mt-2 w-full rounded-lg border border-white/30 bg-white/95 py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-white" />
@@ -165,12 +165,8 @@ export const landingHome = `
                                     )}
                                 </div>
                             </div>
-                            {continueLabel && continueRoute && (
-                                <div className="mt-6"><button onClick={() => onNavigate(continueRoute)} className="w-full sm:w-auto inline-flex items-center gap-3 rounded-md bg-emerald-400/90 text-emerald-950 px-5 py-3 text-sm font-semibold shadow-sm hover:bg-emerald-300 transition"><i className="fa-solid fa-play"></i>Continue Reading: {continueLabel}</button></div>
-                            )}
-                            {continueVideoTitle && (
-                                <div className="mt-3"><button onClick={() => onNavigate(continueVideoRoute)} className="w-full sm:w-auto inline-flex items-center gap-3 rounded-md bg-indigo-500/90 text-white px-5 py-3 text-sm font-semibold shadow-sm hover:bg-indigo-400 transition"><i className="fa-solid fa-circle-play"></i>Continue Watching: {continueVideoTitle}</button></div>
-                            )}
+
+                            {/* Continue buttons removed here */}
                         </div>
                     </section>
                     <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-white relative z-0">
