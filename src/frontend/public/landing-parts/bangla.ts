@@ -7,8 +7,9 @@ export const landingBangla = `
                 onNavigate={onNavigate} 
                 backgroundClass="bg-slate-50"
                 badge={
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-rose-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-rose-600 shadow-sm">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                    /* LEGACY UPDATE: Square Badge */
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-rose-100 text-[10px] font-bold uppercase tracking-widest text-rose-600 shadow-sm">
+                        <span className="w-1.5 h-1.5 bg-rose-500"></span>
                         Bangla 1st Paper
                     </div>
                 }
@@ -121,17 +122,16 @@ export const landingBangla = `
                 <PublicBanglaShell title={itemName || 'পাঠ নির্বাচন করুন'} onBack={() => onNavigate(categoryRoute)} onNavigate={onNavigate}>
                     <div className="space-y-8 font-bangla text-left max-w-4xl mx-auto">
                         
-                        {/* Action Buttons */}
+                        {/* LEGACY UPDATE: Square Action Buttons */}
                         <div className="flex flex-wrap justify-center gap-4">
                             {actionCards.map((card) => (
-                                <button key={card.key} onClick={card.onClick} className="flex items-center gap-3 px-5 py-3 bg-white border border-slate-200 rounded-full hover:border-indigo-300 hover:shadow-md hover:text-indigo-700 transition group shadow-sm">
+                                <button key={card.key} onClick={card.onClick} className="flex items-center gap-3 px-5 py-3 bg-white border border-slate-200 hover:border-indigo-300 hover:shadow-md hover:text-indigo-700 transition group shadow-sm">
                                     <i className={'fa-solid ' + card.icon + ' text-indigo-400 group-hover:text-indigo-600'}></i>
                                     <span className="font-bold text-sm">{card.label}</span>
                                 </button>
                             ))}
                         </div>
 
-                        {/* Notes: Using BookReader for Textbook Feel */}
                         <BookReader>
                             {notes.length === 0 && <div className="text-center py-8 text-slate-400 italic">এখনো কোন নোট যোগ করা হয়নি।</div>}
                             {notes.map((note, index) => (
@@ -158,7 +158,8 @@ export const landingBangla = `
                             return (
                                 <div key={type.key}>
                                     <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                                        <span className="w-8 h-1 bg-indigo-500 rounded-full"></span>
+                                        {/* LEGACY UPDATE: Square marker */}
+                                        <span className="w-8 h-1 bg-indigo-500"></span>
                                         {type.label}
                                     </h3>
                                     <BookReader>
@@ -186,7 +187,8 @@ export const landingBangla = `
             const mcqList = mcqQuestions[getQuestionKey(classLabel, categoryName, itemName, 'mcq')] || [];
             return (
                 <PublicBanglaShell title="বহুনির্বাচনী প্রশ্ন" subtitle={itemName ? itemName : ''} onBack={() => onNavigate(itemRoute)} onNavigate={onNavigate}>
-                     <div className="max-w-4xl mx-auto bg-white/60 backdrop-blur-md rounded-2xl p-8 border border-white shadow-sm font-bangla">
+                     {/* LEGACY UPDATE: Removed rounded container */}
+                     <div className="max-w-4xl mx-auto bg-white/60 backdrop-blur-md p-8 border border-white shadow-sm font-bangla">
                         <PublicMcqList mcqList={mcqList} />
                     </div>
                 </PublicBanglaShell>
