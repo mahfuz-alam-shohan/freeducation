@@ -3,7 +3,7 @@ export const landingHome = `
             const [quoteIndex, setQuoteIndex] = useState(0);
             const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
-            const { readMap } = useReadingProgress(); // Removed recentRead as it is no longer used
+            const { readMap } = useReadingProgress();
 
             // Collect all images we need to show
             const allSubjects = [...sscFeaturedSubjects, ...hscFeaturedSubjects];
@@ -16,7 +16,6 @@ export const landingHome = `
             }, []);
 
             const activeQuote = quoteItems[quoteIndex];
-            // Removed continueLabel, continueRoute, continueVideoTitle, continueVideoRoute logic
 
             const normalizedQuickQuery = quickQuery.trim().toLowerCase();
             const buildQuickSearchEntries = () => {
@@ -124,7 +123,13 @@ export const landingHome = `
             if (!isReady) return <FullScreenLoader />;
 
             return (
-                <div className="flex-1 bg-[#f3f6ff]">
+                <div className="flex-1 bg-white">
+                    {/* Style to hide scrollbars for the academic section */}
+                    <style>{\`
+                        .hide-scrollbars *::-webkit-scrollbar { display: none !important; }
+                        .hide-scrollbars * { -ms-overflow-style: none; scrollbar-width: none; }
+                    \`}</style>
+
                     <section className="relative bg-indigo-700">
                         <div className="absolute inset-0 overflow-hidden pointer-events-none">
                              <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-indigo-600/60"></div>
@@ -138,14 +143,11 @@ export const landingHome = `
                                     </div>
                                     <div><div className="text-3xl sm:text-4xl font-semibold text-white">Freeducation</div><div className="text-sm text-white/80 uppercase tracking-[0.2em] mt-1">Serve education with clarity</div></div>
                                 </div>
-                                
-                                {/* Updated Quote Section - Boxless/Plain */}
                                 <div className="max-w-xl text-white">
                                     <p className="text-base sm:text-lg font-serif italic leading-relaxed opacity-90">“{activeQuote.text}”</p>
                                     <p className="text-sm font-semibold opacity-80 mt-2">— {activeQuote.author}</p>
                                 </div>
                             </div>
-                            
                             <div className="mt-8">
                                 <div className="relative">
                                     <label className="text-[11px] uppercase tracking-[0.3em] text-white/70">Quick Search</label>
@@ -165,17 +167,44 @@ export const landingHome = `
                                     )}
                                 </div>
                             </div>
-
-                            {/* Continue buttons removed here */}
                         </div>
                     </section>
-                    <section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6 bg-white relative z-0">
-                        <div className="text-center">
-                            <div className="text-xs uppercase tracking-[0.2em] text-indigo-500">Academic</div>
-                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">Academic</h2>
+
+                    {/* Academic Section with Styled Background & No Scrollbars */}
+                    <section className="relative w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-16 space-y-10 bg-slate-50 z-0 hide-scrollbars overflow-hidden">
+                        
+                        {/* Abstract Background Art */}
+                        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-30">
+                            {/* Circle 1 */}
+                            <svg className="absolute -top-20 -left-20 w-96 h-96 text-slate-200" fill="currentColor" viewBox="0 0 200 200">
+                                <path fillOpacity="0.5" d="M44.5,-73.2C58.9,-68.7,72.6,-61.4,82.4,-50.3C92.2,-39.2,98.1,-24.3,95.8,-10.1C93.5,4.1,83,17.6,73.4,30.2C63.8,42.8,55.1,54.6,44.1,63.9C33.1,73.2,19.9,80,6.1,80.9C-7.7,81.8,-22,76.8,-34.5,69.5C-47,62.2,-57.6,52.6,-66.1,41.4C-74.6,30.2,-81,17.4,-80.7,5C-80.4,-7.4,-73.4,-19.4,-64.3,-29.4C-55.2,-39.4,-44,-47.4,-32.2,-53.4C-20.4,-59.4,-8,-63.3,4,-69.5C16.1,-75.7,30.1,-69.1,44.5,-73.2Z" transform="translate(100 100)" />
+                            </svg>
+                            {/* Circle 2 */}
+                            <svg className="absolute bottom-0 right-0 w-[500px] h-[500px] text-slate-200" fill="currentColor" viewBox="0 0 200 200">
+                                <path fillOpacity="0.5" d="M39.9,-65.7C50.8,-57.5,58.3,-45.3,64.6,-33.4C70.9,-21.5,76,-9.9,74.9,1.1C73.8,12.1,66.5,22.5,58.8,32.3C51.1,42.1,43,51.3,33.3,58.3C23.6,65.3,12.3,70.1,0.6,69.1C-11.1,68.1,-22.8,61.3,-33.4,54.5C-44,47.7,-53.5,40.9,-60.7,31.7C-67.9,22.5,-72.8,10.9,-70.9,0.5C-69,-9.9,-60.3,-19.1,-52.1,-27.6C-43.9,-36.1,-36.2,-43.9,-27.3,-53.6C-18.4,-63.3,-8.2,-74.9,3.3,-80.6C14.8,-86.3,29,-86,39.9,-65.7Z" transform="translate(100 100)" />
+                            </svg>
+                            {/* Dots Pattern */}
+                            <div className="absolute top-20 right-20 w-32 h-32 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px'}}></div>
+                            <div className="absolute bottom-20 left-20 w-48 h-48 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px'}}></div>
                         </div>
-                        <SubjectRow title="SSC" subjects={sscFeaturedSubjects} onNavigate={onNavigate} onAll={() => onNavigate('ssc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
-                        <SubjectRow title="HSC" subjects={hscFeaturedSubjects} onNavigate={onNavigate} onAll={() => onNavigate('hsc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+
+                        {/* Styled Header Section */}
+                        <div className="relative z-10 mb-12 text-center">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 font-serif tracking-tight">
+                                <span className="relative inline-block">
+                                    Academic Courses
+                                    <span className="absolute -bottom-2 left-0 w-full h-1.5 bg-indigo-500 rounded-full opacity-20"></span>
+                                </span>
+                            </h2>
+                            <p className="mt-4 text-slate-500 max-w-lg mx-auto text-base">Select your class level below to explore subjects, chapters, and resources.</p>
+                        </div>
+
+                        {/* Content */}
+                        <div className="relative z-10">
+                            <SubjectRow title="SSC" subjects={sscFeaturedSubjects} onNavigate={onNavigate} onAll={() => onNavigate('ssc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+                            <div className="h-10"></div> {/* Spacer */}
+                            <SubjectRow title="HSC" subjects={hscFeaturedSubjects} onNavigate={onNavigate} onAll={() => onNavigate('hsc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+                        </div>
                     </section>
                 </div>
             );
