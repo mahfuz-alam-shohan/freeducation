@@ -42,9 +42,13 @@ export const landingUi = `
             return ready;
         };
 
-        const cardWidthClass = 'w-36 sm:w-40 md:w-44';
-        const cardGridGapClass = 'gap-2 sm:gap-4';
-        const cardSurfaceClass = 'relative w-full aspect-[4/5] rounded-lg overflow-hidden border border-slate-200 bg-white transition group-hover:border-indigo-200 card-art-surface';
+        // UPDATED: Global Card Width to match Landing Page Portrait sizing
+        const cardWidthClass = 'w-40 sm:w-44'; 
+        const cardGridGapClass = 'gap-4 sm:gap-6';
+        
+        // UPDATED: Global Card Surface to match Portrait (3:4) and Rounded-2xl design
+        const cardSurfaceClass = 'relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-slate-100 bg-white transition-all duration-300 group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 card-art-surface';
+        
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
@@ -83,48 +87,64 @@ export const landingUi = `
             </div>
         );
 
+        // UPDATED: SubjectCard now fully implements the new Portrait Design
         const SubjectCard = ({ subject, onNavigate, className = '', showGroup = false }) => {
             const isActive = Boolean(subject.route);
             const chapterCount = getSubjectChapterCount(subject);
             return (
-                <button
+                <div 
                     onClick={() => isActive && onNavigate(subject.route)}
-                    className={className + ' block h-full text-left transition-all duration-300 group ' + (isActive ? 'cursor-pointer' : 'opacity-60 cursor-default')}
-                    disabled={!isActive}
+                    className={className + ' block text-left transition-all duration-300 group ' + (isActive ? 'cursor-pointer' : 'opacity-60 cursor-default')}
                 >
-                    <div className="space-y-1.5 h-full text-center">
-                        <div className={cardSurfaceClass}>
-                            {subject.thumbnailUrl ? (
-                                <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="eager" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media" />
-                            ) : (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2 card-art-media">
-                                    <div className={'h-9 w-9 rounded-lg text-white flex items-center justify-center shadow-sm ' + subject.accent}>
-                                        <i className={'fa-solid ' + subject.icon + ' text-xs'}></i>
-                                    </div>
-                                    <div className="text-[9px] uppercase tracking-[0.3em]">Thumbnail</div>
+                    <div className={cardSurfaceClass + ' mb-3 relative'}>
+                        {subject.thumbnailUrl ? (
+                            <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="eager" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 card-art-media" />
+                        ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 bg-slate-50 gap-2 card-art-media">
+                                <div className={'h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-sm ' + subject.accent}>
+                                    <i className={'fa-solid ' + subject.icon + ' text-sm text-slate-400'}></i>
                                 </div>
-                            )}
-                        </div>
-                        <div className="flex-1 flex flex-col items-center text-center">
-                            <div className="text-xs sm:text-sm font-semibold text-slate-900">{subject.title}</div>
-                            {subject.subtitle && <div className="text-[11px] text-slate-500 font-bangla mt-1">{subject.subtitle}</div>}
-                            <div className="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                                {chapterCount !== null && <span className="inline-flex items-center gap-1"><i className="fa-solid fa-layer-group text-[10px] text-slate-400"></i>{chapterCount} Chapters</span>}
-                                {subject.lastRead && <span className="inline-flex items-center gap-1 text-emerald-600"><i className="fa-solid fa-check text-[10px]"></i>Last read: {subject.lastRead}</span>}
                             </div>
-                            {showGroup && <div className="mt-2 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-slate-400">{subject.groupLabel}</div>}
-                        </div>
+                        )}
+                        
+                        {/* Gradient Overlay for Text Contrast */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                        {/* Read Status Badge */}
+                        {subject.lastRead && (
+                             <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/95 backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider rounded shadow-sm flex items-center gap-1 z-10">
+                                <i className="fa-solid fa-check-circle"></i>
+                                Read
+                             </div>
+                        )}
+                        
+                        {/* Group Label Badge (Optional) */}
+                        {showGroup && subject.groupLabel && (
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-wider rounded shadow-sm z-10">
+                                {subject.groupLabel}
+                            </div>
+                        )}
                     </div>
-                </button>
+                    
+                    <div className="pl-1">
+                        <h4 className="font-bold text-base text-slate-800 leading-tight group-hover:text-indigo-700 transition-colors font-serif">{subject.title}</h4>
+                        <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wide font-medium">
+                            {subject.subtitle}
+                            {chapterCount !== null && <span className="mx-1">•</span>}
+                            {chapterCount !== null && <span>{chapterCount} Ch</span>}
+                        </p>
+                    </div>
+                </div>
             );
         };
 
+        // Updated ChapterCard to match the rounded/clean aesthetic
         const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '', isRead = false }) => (
             <button onClick={onClick} className={className + ' block text-left transition-all duration-300 group'}>
                 <div className="space-y-2 h-full text-center">
-                    <div className={cardSurfaceClass + (isRead ? ' ring-1 ring-emerald-200' : '')}>
+                    <div className={cardSurfaceClass + (isRead ? ' ring-2 ring-emerald-400' : '')}>
                         {isRead && (
-                            <div className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+                            <div className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm z-10">
                                 <i className="fa-solid fa-check text-[10px]"></i>Read
                             </div>
                         )}
@@ -133,10 +153,11 @@ export const landingUi = `
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em] card-art-media"><span>No thumbnail</span></div>
                         )}
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
-                    <div className="text-center">
-                        <div className="text-xs sm:text-sm font-semibold text-slate-900">{title}</div>
-                        {subtitle && <div className="text-[11px] text-slate-500 mt-1">{subtitle}</div>}
+                    <div className="text-center px-1">
+                        <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors font-bangla">{title}</div>
+                        {subtitle && <div className="text-[10px] text-slate-500 mt-0.5">{subtitle}</div>}
                     </div>
                 </div>
             </button>
@@ -245,37 +266,13 @@ export const landingUi = `
                             const lastRead = getLastReadForSubject(readMap, subject.title);
                             
                             return (
-                                <div 
-                                    key={index} 
-                                    onClick={() => onNavigate(subject.route)}
-                                    // UPDATED: w-40 sm:w-44 (Smaller, manageable size)
-                                    className="flex-none w-40 sm:w-44 snap-start cursor-pointer group"
-                                >
-                                    {/* Aspect Ratio 3:4 (Portrait) */}
-                                    <div className="aspect-[3/4] rounded-2xl bg-white border border-slate-100 mb-3 overflow-hidden relative shadow-sm group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 transition-all duration-300">
-                                        {thumbnail ? (
-                                            <img src={thumbnail.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50">
-                                                <i className="fa-solid fa-book-open text-3xl opacity-40"></i>
-                                            </div>
-                                        )}
-                                        
-                                        {/* Gradient Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                        
-                                        {lastRead && (
-                                             <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/90 text-emerald-600 text-[9px] font-bold uppercase tracking-wider rounded backdrop-blur-sm shadow-sm flex items-center gap-1">
-                                                <i className="fa-solid fa-check-circle"></i>
-                                                Read
-                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="pl-1">
-                                        <h4 className="font-bold text-base text-slate-800 leading-tight group-hover:text-indigo-700 transition-colors font-serif">{subject.title}</h4>
-                                        <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wide font-medium">{subject.subtitle}</p>
-                                    </div>
-                                </div>
+                                <SubjectCard
+                                    key={index}
+                                    subject={{ ...subject, lastRead, thumbnailUrl: thumbnail?.url }}
+                                    onNavigate={onNavigate}
+                                    // Use flex-none and snap-start for scrolling, plus standard width
+                                    className={'flex-none snap-start ' + cardWidthClass}
+                                />
                             );
                         })}
                     </div>
