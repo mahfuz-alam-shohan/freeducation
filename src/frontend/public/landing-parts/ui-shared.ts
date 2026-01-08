@@ -44,8 +44,8 @@ export const landingUi = `
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
-        // NEW: CSS for the "Living Sketchbook" Animation
-        const LegacyAnimationStyles = () => (
+        // NEW: Styles for the Magical Floating Ink
+        const FloatingInkStyles = () => (
             <style>{\`
                 @keyframes drawStroke {
                     0% { stroke-dashoffset: 1000; opacity: 0; }
@@ -57,6 +57,10 @@ export const landingUi = `
                     0%, 100% { transform: translateY(0px); }
                     50% { transform: translateY(-10px); }
                 }
+                @keyframes floatUpVanish {
+                    0% { transform: translateY(0); opacity: 0.7; }
+                    100% { transform: translateY(-150px); opacity: 0; }
+                }
                 .sketch-line {
                     stroke-dasharray: 1000;
                     stroke-dashoffset: 1000;
@@ -65,25 +69,106 @@ export const landingUi = `
                     stroke-linejoin: round;
                     fill: none;
                 }
+                .ink-trail {
+                    pointer-events: none;
+                    fill: none;
+                    stroke: #475569; /* Slate-600 (Pencil Lead Color) */
+                    stroke-width: 2;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+                .ink-floating {
+                    animation: floatUpVanish 4s ease-out forwards;
+                }
                 .delay-1 { animation-delay: 0s; }
                 .delay-2 { animation-delay: 3s; }
                 .delay-3 { animation-delay: 5s; }
             \`}</style>
         );
 
-        // UPDATED: Background Art with "Living Sketchbook" Animations
+        // NEW: Interactive Sketch Overlay Component
+        const InteractiveSketchOverlay = () => {
+            const [paths, setPaths] = useState([]); // Completed paths floating away
+            const [currentPoints, setCurrentPoints] = useState([]); // Currently drawing
+            const svgRef = useRef(null);
+            const timerRef = useRef(null);
+
+            // Convert array of points to SVG path 'd' string
+            const getPathD = (points) => {
+                if (points.length < 2) return '';
+                // Simple line smoothing could go here, but straight lines work for 'sketch' look
+                return \`M \${points[0].x} \${points[0].y} \` + points.slice(1).map(p => \`L \${p.x} \${p.y}\`).join(' ');
+            };
+
+            useEffect(() => {
+                const handleMove = (e) => {
+                    const x = e.clientX || (e.touches && e.touches[0].clientX);
+                    const y = e.clientY || (e.touches && e.touches[0].clientY);
+                    if (x === undefined || y === undefined) return;
+
+                    setCurrentPoints(prev => [...prev, { x, y }]);
+
+                    // Debounce: If user stops moving for 100ms, finalize the stroke
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(finalizeStroke, 150);
+                };
+
+                const finalizeStroke = () => {
+                    setCurrentPoints(curr => {
+                        if (curr.length > 2) {
+                            const newPath = {
+                                id: Date.now() + Math.random(),
+                                d: getPathD(curr)
+                            };
+                            setPaths(prev => [...prev, newPath]);
+                            
+                            // Cleanup after animation (4s)
+                            setTimeout(() => {
+                                setPaths(prev => prev.filter(p => p.id !== newPath.id));
+                            }, 4000);
+                        }
+                        return [];
+                    });
+                };
+
+                // Attach to window to capture scroll-swipes
+                window.addEventListener('mousemove', handleMove);
+                window.addEventListener('touchmove', handleMove, { passive: true });
+                window.addEventListener('pointerup', finalizeStroke);
+
+                return () => {
+                    window.removeEventListener('mousemove', handleMove);
+                    window.removeEventListener('touchmove', handleMove);
+                    window.removeEventListener('pointerup', finalizeStroke);
+                };
+            }, []);
+
+            return (
+                <div className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
+                    <svg className="w-full h-full overflow-visible">
+                        {/* Floating (Finished) Paths */}
+                        {paths.map(p => (
+                            <path key={p.id} d={p.d} className="ink-trail ink-floating" />
+                        ))}
+                        
+                        {/* Active (Drawing) Path */}
+                        {currentPoints.length > 1 && (
+                            <path d={getPathD(currentPoints)} className="ink-trail" style={{ opacity: 0.8 }} />
+                        )}
+                    </svg>
+                </div>
+            );
+        };
+
         const BackgroundArt = () => (
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
-                <LegacyAnimationStyles />
+                <FloatingInkStyles />
                 
                 {/* 1. Geometry Sketch (Top Right) */}
                 <div className="absolute top-10 right-10 opacity-10 text-indigo-900 w-64 h-64">
                     <svg viewBox="0 0 200 200" className="w-full h-full">
-                        {/* Triangle */}
                         <path d="M50 150 L150 150 L100 50 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-1" />
-                        {/* Angle Arc */}
                         <path d="M90 70 Q100 80 110 70" stroke="currentColor" strokeWidth="1" className="sketch-line delay-1" />
-                        {/* Height Line */}
                         <path d="M100 50 L100 150" stroke="currentColor" strokeWidth="1" strokeDasharray="5 5" className="sketch-line delay-1" />
                     </svg>
                 </div>
@@ -91,11 +176,8 @@ export const landingUi = `
                 {/* 2. Physics Trajectory (Bottom Left) */}
                 <div className="absolute bottom-20 left-10 opacity-10 text-slate-800 w-80 h-40">
                     <svg viewBox="0 0 300 150" className="w-full h-full">
-                        {/* Ground */}
                         <line x1="0" y1="140" x2="300" y2="140" stroke="currentColor" strokeWidth="2" />
-                        {/* Parabola */}
                         <path d="M20 140 Q 150 -50 280 140" stroke="currentColor" strokeWidth="2" className="sketch-line delay-2" />
-                        {/* Vector Arrows */}
                         <path d="M20 140 L 50 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
                         <path d="M280 140 L 250 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
                     </svg>
@@ -349,7 +431,11 @@ export const landingUi = `
 
         const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-slate-50', badge, onBack, onNavigate, children }) => (
             <div className={'flex-1 min-h-screen relative ' + backgroundClass}>
+                {/* 1. Background Art & Animation */}
                 <BackgroundArt />
+                {/* 2. Interactive Sketch Overlay */}
+                <InteractiveSketchOverlay />
+
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
                     <div className="flex flex-col items-center justify-center text-center gap-4 mb-10 pb-6 border-b border-slate-200/50">
                         <div className="w-full flex items-center justify-between absolute top-8 px-4 sm:px-12 left-0 z-20 pointer-events-none">
