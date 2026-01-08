@@ -121,7 +121,7 @@ export const navBarComponent = `
                                     /* Desktop Guest Controls - Straight Buttons */
                                     <div className="hidden sm:flex items-center gap-3">
                                         <button
-                                            onClick={() => onNavigate('register')}
+                                            onClick={() => onNavigate('student-register')}
                                             className="text-sm font-medium text-indigo-100 hover:text-white transition px-4 py-2"
                                         >
                                             Sign Up
@@ -197,7 +197,7 @@ export const navBarComponent = `
                                             <p className="text-slate-600 text-sm mb-4">Join Freeducation today.</p>
                                             <div className="grid grid-cols-2 gap-3">
                                                  <button
-                                                    onClick={() => { closeMenu(); onNavigate('register'); }}
+                                                    onClick={() => { closeMenu(); onNavigate('student-register'); }}
                                                     className="py-2.5 rounded-lg border border-indigo-600 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition"
                                                 >
                                                     Sign Up
