@@ -9,8 +9,6 @@ export const landingUi = `
         const useImagePreloader = (urls) => {
             const [ready, setReady] = useState(false);
             useEffect(() => {
-                // If there are no images to load, we are ready immediately
-                // But we add a small delay to prevent flickering if data comes in fast
                 const validUrls = urls.filter(Boolean);
                 if (validUrls.length === 0) {
                     const timer = setTimeout(() => setReady(true), 100); 
@@ -40,7 +38,7 @@ export const landingUi = `
                 });
 
                 return () => { mounted = false; };
-            }, [JSON.stringify(urls)]); // Re-run if the list of images changes
+            }, [JSON.stringify(urls)]); 
             return ready;
         };
 
@@ -190,23 +188,36 @@ export const landingUi = `
 
             return (
                 <div className="w-full mb-12">
-                    {/* Stylized Header Section */}
-                    <div className="relative mb-8 px-2">
-                        {/* Abstract Art Blobs behind the text */}
-                        <div className="absolute -left-4 -top-8 w-32 h-32 bg-indigo-100/50 rounded-full blur-2xl pointer-events-none"></div>
-                        <div className="absolute left-16 -top-4 w-20 h-20 bg-amber-100/60 rounded-full blur-xl pointer-events-none"></div>
+                    {/* Stylized Header Section with Extraordinary Background Design */}
+                    <div className="relative mb-8 px-2 py-4">
+                        
+                        {/* Background Design: Geometric Constellation Pattern */}
+                        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+                             <svg className="absolute top-0 left-0 w-64 h-64 text-slate-200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="2" fill="currentColor" />
+                                <circle cx="120" cy="30" r="2" fill="currentColor" />
+                                <circle cx="160" cy="90" r="2" fill="currentColor" />
+                                <circle cx="40" cy="140" r="2" fill="currentColor" />
+                                <path d="M50 50 L120 30 L160 90" stroke="currentColor" strokeWidth="0.5" />
+                                <path d="M50 50 L40 140" stroke="currentColor" strokeWidth="0.5" />
+                                <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+                            </svg>
+                             <svg className="absolute bottom-0 right-10 w-48 h-48 text-indigo-100" viewBox="0 0 100 100" fill="none">
+                                <rect x="20" y="20" width="60" height="60" transform="rotate(15 50 50)" stroke="currentColor" strokeWidth="1" />
+                                <rect x="20" y="20" width="60" height="60" transform="rotate(-15 50 50)" stroke="currentColor" strokeWidth="1" />
+                            </svg>
+                        </div>
 
-                        <div className="relative flex items-end justify-between z-10">
+                        <div className="relative flex items-end justify-between z-10 pl-2">
                             <div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] pl-1 mb-2 block">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] pl-1 mb-1 block">
                                     Curriculum
                                 </span>
                                 <h3 className="text-4xl font-bold text-slate-800 font-serif leading-none relative inline-block">
                                     {title}
-                                    {/* Artistic Underline SVG */}
-                                    <svg className="absolute -bottom-3 left-0 w-[110%] h-3 text-indigo-400/40" viewBox="0 0 100 10" preserveAspectRatio="none">
-                                        <path d="M0 5 Q 50 12 100 5" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
-                                    </svg>
+                                    {/* Abstract Underline */}
+                                    <span className="absolute -bottom-2 left-0 w-2/3 h-1.5 bg-indigo-500/20 rounded-full"></span>
+                                    <span className="absolute -bottom-2 left-2/3 w-1.5 h-1.5 bg-amber-400 rounded-full ml-1"></span>
                                 </h3>
                             </div>
 
@@ -226,7 +237,7 @@ export const landingUi = `
                     
                     <div 
                         ref={containerRef}
-                        className="flex overflow-x-auto gap-5 pb-8 px-2 snap-x hide-scrollbars pt-2"
+                        className="flex overflow-x-auto gap-4 pb-8 px-2 snap-x hide-scrollbars pt-2"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                         {subjects.map((subject, index) => {
@@ -237,11 +248,11 @@ export const landingUi = `
                                 <div 
                                     key={index} 
                                     onClick={() => onNavigate(subject.route)}
-                                    // UPDATED: w-60 (Portrait width)
-                                    className="flex-none w-60 snap-start cursor-pointer group"
+                                    // UPDATED: w-40 sm:w-44 (Smaller, manageable size)
+                                    className="flex-none w-40 sm:w-44 snap-start cursor-pointer group"
                                 >
-                                    {/* UPDATED: aspect-[3/4] (Portrait ratio) */}
-                                    <div className="aspect-[3/4] rounded-2xl bg-white border border-slate-100 mb-4 overflow-hidden relative shadow-sm group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 transition-all duration-300">
+                                    {/* Aspect Ratio 3:4 (Portrait) */}
+                                    <div className="aspect-[3/4] rounded-2xl bg-white border border-slate-100 mb-3 overflow-hidden relative shadow-sm group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 transition-all duration-300">
                                         {thumbnail ? (
                                             <img src={thumbnail.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                         ) : (
@@ -254,15 +265,15 @@ export const landingUi = `
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         
                                         {lastRead && (
-                                             <div className="absolute top-3 right-3 px-2 py-1 bg-white/90 text-emerald-600 text-[10px] font-bold uppercase tracking-wider rounded-md backdrop-blur-sm shadow-sm flex items-center gap-1">
+                                             <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/90 text-emerald-600 text-[9px] font-bold uppercase tracking-wider rounded backdrop-blur-sm shadow-sm flex items-center gap-1">
                                                 <i className="fa-solid fa-check-circle"></i>
                                                 Read
                                              </div>
                                         )}
                                     </div>
                                     <div className="pl-1">
-                                        <h4 className="font-bold text-lg text-slate-800 leading-tight group-hover:text-indigo-700 transition-colors font-serif">{subject.title}</h4>
-                                        <p className="text-xs text-slate-400 mt-1.5 uppercase tracking-wide font-medium">{subject.subtitle}</p>
+                                        <h4 className="font-bold text-base text-slate-800 leading-tight group-hover:text-indigo-700 transition-colors font-serif">{subject.title}</h4>
+                                        <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wide font-medium">{subject.subtitle}</p>
                                     </div>
                                 </div>
                             );
