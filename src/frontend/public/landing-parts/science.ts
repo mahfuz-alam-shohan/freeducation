@@ -1,6 +1,6 @@
 export const landingScience = `
         const PublicIctShell = ({ title, subtitle, classLabel, onBack, onNavigate, children }) => {
-            // Reusing the upgraded PublicSimpleShell for consistency
+            // Reusing the upgraded PublicSimpleShell
             return (
                 <PublicSimpleShell 
                     title={title} 
@@ -10,7 +10,7 @@ export const landingScience = `
                     backgroundClass="bg-slate-50"
                 >
                     <div className="mb-6 flex justify-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-indigo-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-500 shadow-sm">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-cyan-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-cyan-600 shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
                             {classLabel} ICT
                         </div>
