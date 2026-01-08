@@ -40,27 +40,81 @@ export const landingUi = `
 
         const cardWidthClass = 'w-40 sm:w-44';
         const cardGridGapClass = 'gap-4 sm:gap-6';
-        // LEGACY UPDATE: rounded-none
         const cardSurfaceClass = 'relative w-full aspect-[3/4] rounded-none overflow-hidden border border-slate-200 bg-white transition-all duration-300 group-hover:shadow-xl group-hover:border-indigo-300 group-hover:-translate-y-1 card-art-surface';
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
+        // NEW: CSS for the "Living Sketchbook" Animation
+        const LegacyAnimationStyles = () => (
+            <style>{\`
+                @keyframes drawStroke {
+                    0% { stroke-dashoffset: 1000; opacity: 0; }
+                    10% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { stroke-dashoffset: 0; opacity: 0; }
+                }
+                @keyframes floatSlow {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-10px); }
+                }
+                .sketch-line {
+                    stroke-dasharray: 1000;
+                    stroke-dashoffset: 1000;
+                    animation: drawStroke 8s ease-in-out infinite;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                    fill: none;
+                }
+                .delay-1 { animation-delay: 0s; }
+                .delay-2 { animation-delay: 3s; }
+                .delay-3 { animation-delay: 5s; }
+            \`}</style>
+        );
+
+        // UPDATED: Background Art with "Living Sketchbook" Animations
         const BackgroundArt = () => (
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed opacity-20">
-                 <svg className="absolute -top-20 -right-20 w-[600px] h-[600px] text-indigo-100 opacity-60" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="0.5" />
-                    <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-                </svg>
-                 <svg className="absolute top-10 left-0 w-96 h-96 text-amber-50 opacity-50" viewBox="0 0 200 200" fill="none">
-                    <path d="M40 40 L90 20 L140 60" stroke="currentColor" strokeWidth="1.5" />
-                    <circle cx="40" cy="40" r="3" fill="#fbbf24" />
-                    <circle cx="90" cy="20" r="3" fill="#fbbf24" />
-                </svg>
-                <div className="absolute bottom-0 left-0 w-full h-64 opacity-10" style={{backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '24px 24px'}}></div>
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
+                <LegacyAnimationStyles />
+                
+                {/* 1. Geometry Sketch (Top Right) */}
+                <div className="absolute top-10 right-10 opacity-10 text-indigo-900 w-64 h-64">
+                    <svg viewBox="0 0 200 200" className="w-full h-full">
+                        {/* Triangle */}
+                        <path d="M50 150 L150 150 L100 50 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-1" />
+                        {/* Angle Arc */}
+                        <path d="M90 70 Q100 80 110 70" stroke="currentColor" strokeWidth="1" className="sketch-line delay-1" />
+                        {/* Height Line */}
+                        <path d="M100 50 L100 150" stroke="currentColor" strokeWidth="1" strokeDasharray="5 5" className="sketch-line delay-1" />
+                    </svg>
+                </div>
+
+                {/* 2. Physics Trajectory (Bottom Left) */}
+                <div className="absolute bottom-20 left-10 opacity-10 text-slate-800 w-80 h-40">
+                    <svg viewBox="0 0 300 150" className="w-full h-full">
+                        {/* Ground */}
+                        <line x1="0" y1="140" x2="300" y2="140" stroke="currentColor" strokeWidth="2" />
+                        {/* Parabola */}
+                        <path d="M20 140 Q 150 -50 280 140" stroke="currentColor" strokeWidth="2" className="sketch-line delay-2" />
+                        {/* Vector Arrows */}
+                        <path d="M20 140 L 50 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
+                        <path d="M280 140 L 250 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
+                    </svg>
+                </div>
+
+                {/* 3. Chemistry Benzene Ring (Top Left - Floating) */}
+                <div className="absolute top-20 left-20 opacity-10 text-slate-900 w-48 h-48" style={{animation: 'floatSlow 6s ease-in-out infinite'}}>
+                    <svg viewBox="0 0 100 100" className="w-full h-full">
+                        <path d="M50 10 L85 30 L85 70 L50 90 L15 70 L15 30 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-3" />
+                        <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" className="sketch-line delay-3" />
+                        <path d="M50 10 L50 30" stroke="currentColor" strokeWidth="1" className="sketch-line delay-3" />
+                    </svg>
+                </div>
+
+                {/* Paper Texture Overlay */}
+                <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px'}}></div>
             </div>
         );
 
-        // LEGACY UPDATE: Square corners (rounded-none)
         const BookReader = ({ children, className = '' }) => (
             <div className={'bg-[#fdfbf7] border border-[#eaddcf] rounded-none p-8 sm:p-12 shadow-sm relative overflow-hidden ' + className}>
                 <div className="absolute inset-0 pointer-events-none opacity-40" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")'}}></div>
@@ -118,7 +172,6 @@ export const landingUi = `
                             <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="eager" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 card-art-media" />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 bg-slate-50 gap-2 card-art-media">
-                                {/* LEGACY UPDATE: Square Icon Box */}
                                 <div className={'h-10 w-10 bg-white border border-slate-100 flex items-center justify-center shadow-sm ' + subject.accent}>
                                     <i className={'fa-solid ' + subject.icon + ' text-sm text-slate-400'}></i>
                                 </div>
@@ -224,10 +277,8 @@ export const landingUi = `
                                 </h3>
                             </div>
                             <div className="flex items-center gap-3 pb-1">
-                                {/* LEGACY UPDATE: Square Scroll Buttons */}
                                 <button onClick={() => scroll('left')} className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-left text-sm"></i></button>
                                 <button onClick={() => scroll('right')} className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-right text-sm"></i></button>
-                                {/* LEGACY UPDATE: Square View All */}
                                 <button onClick={onAll} className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm ml-2">View All</button>
                             </div>
                         </div>
@@ -296,7 +347,6 @@ export const landingUi = `
             );
         };
 
-        // LEGACY UPDATE: Square Home/Back Buttons, no rounded shell
         const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-slate-50', badge, onBack, onNavigate, children }) => (
             <div className={'flex-1 min-h-screen relative ' + backgroundClass}>
                 <BackgroundArt />
