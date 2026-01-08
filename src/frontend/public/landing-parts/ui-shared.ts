@@ -44,7 +44,6 @@ export const landingUi = `
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
-        // NEW: Styles for the Magical Floating Ink
         const FloatingInkStyles = () => (
             <style>{\`
                 @keyframes drawStroke {
@@ -72,7 +71,7 @@ export const landingUi = `
                 .ink-trail {
                     pointer-events: none;
                     fill: none;
-                    stroke: #475569; /* Slate-600 (Pencil Lead Color) */
+                    stroke: #475569;
                     stroke-width: 2;
                     stroke-linecap: round;
                     stroke-linejoin: round;
@@ -86,29 +85,37 @@ export const landingUi = `
             \`}</style>
         );
 
-        // NEW: Interactive Sketch Overlay Component
+        // UPDATED: Toggle-able Sketch Overlay
         const InteractiveSketchOverlay = () => {
-            const [paths, setPaths] = useState([]); // Completed paths floating away
-            const [currentPoints, setCurrentPoints] = useState([]); // Currently drawing
-            const svgRef = useRef(null);
+            const [enabled, setEnabled] = useState(typeof localStorage !== 'undefined' ? localStorage.getItem('sketch_enabled') !== 'false' : true);
+            const [paths, setPaths] = useState([]);
+            const [currentPoints, setCurrentPoints] = useState([]);
             const timerRef = useRef(null);
 
-            // Convert array of points to SVG path 'd' string
+            useEffect(() => {
+                const handleToggle = () => setEnabled(localStorage.getItem('sketch_enabled') !== 'false');
+                window.addEventListener('sketch-toggle', handleToggle);
+                return () => window.removeEventListener('sketch-toggle', handleToggle);
+            }, []);
+
             const getPathD = (points) => {
                 if (points.length < 2) return '';
-                // Simple line smoothing could go here, but straight lines work for 'sketch' look
                 return \`M \${points[0].x} \${points[0].y} \` + points.slice(1).map(p => \`L \${p.x} \${p.y}\`).join(' ');
             };
 
             useEffect(() => {
+                if (!enabled) {
+                    setPaths([]);
+                    setCurrentPoints([]);
+                    return;
+                }
+
                 const handleMove = (e) => {
                     const x = e.clientX || (e.touches && e.touches[0].clientX);
                     const y = e.clientY || (e.touches && e.touches[0].clientY);
                     if (x === undefined || y === undefined) return;
 
                     setCurrentPoints(prev => [...prev, { x, y }]);
-
-                    // Debounce: If user stops moving for 100ms, finalize the stroke
                     if (timerRef.current) clearTimeout(timerRef.current);
                     timerRef.current = setTimeout(finalizeStroke, 150);
                 };
@@ -116,22 +123,14 @@ export const landingUi = `
                 const finalizeStroke = () => {
                     setCurrentPoints(curr => {
                         if (curr.length > 2) {
-                            const newPath = {
-                                id: Date.now() + Math.random(),
-                                d: getPathD(curr)
-                            };
+                            const newPath = { id: Date.now() + Math.random(), d: getPathD(curr) };
                             setPaths(prev => [...prev, newPath]);
-                            
-                            // Cleanup after animation (4s)
-                            setTimeout(() => {
-                                setPaths(prev => prev.filter(p => p.id !== newPath.id));
-                            }, 4000);
+                            setTimeout(() => { setPaths(prev => prev.filter(p => p.id !== newPath.id)); }, 4000);
                         }
                         return [];
                     });
                 };
 
-                // Attach to window to capture scroll-swipes
                 window.addEventListener('mousemove', handleMove);
                 window.addEventListener('touchmove', handleMove, { passive: true });
                 window.addEventListener('pointerup', finalizeStroke);
@@ -141,61 +140,68 @@ export const landingUi = `
                     window.removeEventListener('touchmove', handleMove);
                     window.removeEventListener('pointerup', finalizeStroke);
                 };
-            }, []);
+            }, [enabled]);
+
+            if (!enabled) return null;
 
             return (
                 <div className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
                     <svg className="w-full h-full overflow-visible">
-                        {/* Floating (Finished) Paths */}
-                        {paths.map(p => (
-                            <path key={p.id} d={p.d} className="ink-trail ink-floating" />
-                        ))}
-                        
-                        {/* Active (Drawing) Path */}
-                        {currentPoints.length > 1 && (
-                            <path d={getPathD(currentPoints)} className="ink-trail" style={{ opacity: 0.8 }} />
-                        )}
+                        {paths.map(p => <path key={p.id} d={p.d} className="ink-trail ink-floating" />)}
+                        {currentPoints.length > 1 && <path d={getPathD(currentPoints)} className="ink-trail" style={{ opacity: 0.8 }} />}
                     </svg>
                 </div>
             );
         };
 
-        const BackgroundArt = () => (
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
-                <FloatingInkStyles />
-                
-                {/* 1. Geometry Sketch (Top Right) */}
-                <div className="absolute top-10 right-10 opacity-10 text-indigo-900 w-64 h-64">
-                    <svg viewBox="0 0 200 200" className="w-full h-full">
-                        <path d="M50 150 L150 150 L100 50 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-1" />
-                        <path d="M90 70 Q100 80 110 70" stroke="currentColor" strokeWidth="1" className="sketch-line delay-1" />
-                        <path d="M100 50 L100 150" stroke="currentColor" strokeWidth="1" strokeDasharray="5 5" className="sketch-line delay-1" />
-                    </svg>
-                </div>
+        // UPDATED: Toggle-able Background Art
+        const BackgroundArt = () => {
+            const [enabled, setEnabled] = useState(typeof localStorage !== 'undefined' ? localStorage.getItem('sketch_enabled') !== 'false' : true);
 
-                {/* 2. Physics Trajectory (Bottom Left) */}
-                <div className="absolute bottom-20 left-10 opacity-10 text-slate-800 w-80 h-40">
-                    <svg viewBox="0 0 300 150" className="w-full h-full">
-                        <line x1="0" y1="140" x2="300" y2="140" stroke="currentColor" strokeWidth="2" />
-                        <path d="M20 140 Q 150 -50 280 140" stroke="currentColor" strokeWidth="2" className="sketch-line delay-2" />
-                        <path d="M20 140 L 50 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
-                        <path d="M280 140 L 250 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
-                    </svg>
-                </div>
+            useEffect(() => {
+                const handleToggle = () => setEnabled(localStorage.getItem('sketch_enabled') !== 'false');
+                window.addEventListener('sketch-toggle', handleToggle);
+                return () => window.removeEventListener('sketch-toggle', handleToggle);
+            }, []);
 
-                {/* 3. Chemistry Benzene Ring (Top Left - Floating) */}
-                <div className="absolute top-20 left-20 opacity-10 text-slate-900 w-48 h-48" style={{animation: 'floatSlow 6s ease-in-out infinite'}}>
-                    <svg viewBox="0 0 100 100" className="w-full h-full">
-                        <path d="M50 10 L85 30 L85 70 L50 90 L15 70 L15 30 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-3" />
-                        <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" className="sketch-line delay-3" />
-                        <path d="M50 10 L50 30" stroke="currentColor" strokeWidth="1" className="sketch-line delay-3" />
-                    </svg>
-                </div>
+            if (!enabled) return null;
 
-                {/* Paper Texture Overlay */}
-                <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px'}}></div>
-            </div>
-        );
+            return (
+                <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
+                    <FloatingInkStyles />
+                    
+                    {/* Geometry Sketch */}
+                    <div className="absolute top-10 right-10 opacity-10 text-indigo-900 w-64 h-64">
+                        <svg viewBox="0 0 200 200" className="w-full h-full">
+                            <path d="M50 150 L150 150 L100 50 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-1" />
+                            <path d="M90 70 Q100 80 110 70" stroke="currentColor" strokeWidth="1" className="sketch-line delay-1" />
+                            <path d="M100 50 L100 150" stroke="currentColor" strokeWidth="1" strokeDasharray="5 5" className="sketch-line delay-1" />
+                        </svg>
+                    </div>
+
+                    {/* Physics Trajectory */}
+                    <div className="absolute bottom-20 left-10 opacity-10 text-slate-800 w-80 h-40">
+                        <svg viewBox="0 0 300 150" className="w-full h-full">
+                            <line x1="0" y1="140" x2="300" y2="140" stroke="currentColor" strokeWidth="2" />
+                            <path d="M20 140 Q 150 -50 280 140" stroke="currentColor" strokeWidth="2" className="sketch-line delay-2" />
+                            <path d="M20 140 L 50 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
+                            <path d="M280 140 L 250 100" stroke="currentColor" strokeWidth="1" className="sketch-line delay-2" />
+                        </svg>
+                    </div>
+
+                    {/* Chemistry Benzene */}
+                    <div className="absolute top-20 left-20 opacity-10 text-slate-900 w-48 h-48" style={{animation: 'floatSlow 6s ease-in-out infinite'}}>
+                        <svg viewBox="0 0 100 100" className="w-full h-full">
+                            <path d="M50 10 L85 30 L85 70 L50 90 L15 70 L15 30 Z" stroke="currentColor" strokeWidth="2" className="sketch-line delay-3" />
+                            <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" className="sketch-line delay-3" />
+                            <path d="M50 10 L50 30" stroke="currentColor" strokeWidth="1" className="sketch-line delay-3" />
+                        </svg>
+                    </div>
+
+                    <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px'}}></div>
+                </div>
+            );
+        };
 
         const BookReader = ({ children, className = '' }) => (
             <div className={'bg-[#fdfbf7] border border-[#eaddcf] rounded-none p-8 sm:p-12 shadow-sm relative overflow-hidden ' + className}>
@@ -431,9 +437,7 @@ export const landingUi = `
 
         const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-slate-50', badge, onBack, onNavigate, children }) => (
             <div className={'flex-1 min-h-screen relative ' + backgroundClass}>
-                {/* 1. Background Art & Animation */}
                 <BackgroundArt />
-                {/* 2. Interactive Sketch Overlay */}
                 <InteractiveSketchOverlay />
 
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
