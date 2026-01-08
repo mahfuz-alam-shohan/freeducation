@@ -2,8 +2,19 @@ export const navBarComponent = `
         const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [profile, setProfile] = useState(null);
+            // NEW: Toggle state for sketch/animations
+            const [sketchEnabled, setSketchEnabled] = useState(typeof localStorage !== 'undefined' ? localStorage.getItem('sketch_enabled') !== 'false' : true);
+
             const closeMenu = () => setIsMenuOpen(false);
             const openMenu = () => setIsMenuOpen(true);
+
+            // NEW: Toggle Handler
+            const toggleSketch = () => {
+                const newState = !sketchEnabled;
+                setSketchEnabled(newState);
+                localStorage.setItem('sketch_enabled', newState);
+                window.dispatchEvent(new Event('sketch-toggle'));
+            };
 
             const appendTokenToAvatarUrl = (avatarUrl, token) => {
                 if (!avatarUrl || !token) return avatarUrl;
@@ -17,6 +28,9 @@ export const navBarComponent = `
             };
 
             useEffect(() => {
+                // Sync state with local storage on mount/change
+                const handleStorage = () => setSketchEnabled(localStorage.getItem('sketch_enabled') !== 'false');
+                window.addEventListener('sketch-toggle', handleStorage);
                 if (!user) {
                     setProfile(null);
                     return;
@@ -49,10 +63,10 @@ export const navBarComponent = `
                 loadProfile();
                 return () => {
                     isActive = false;
+                    window.removeEventListener('sketch-toggle', handleStorage);
                 };
             }, [user?.username, user?.role]);
 
-            // Helper to get initials
             const getInitials = () => (profile?.name || user?.username || '?').charAt(0).toUpperCase();
 
             return (
@@ -75,6 +89,15 @@ export const navBarComponent = `
                             {/* Right Side Actions */}
                             <div className="flex items-center gap-4">
                                 
+                                {/* NEW: Desktop Animation Toggle (Magic Wand) */}
+                                <button
+                                    onClick={toggleSketch}
+                                    className={'hidden sm:flex w-9 h-9 rounded-full items-center justify-center transition ' + (sketchEnabled ? 'text-amber-300 hover:text-white bg-white/10' : 'text-indigo-300 hover:text-white')}
+                                    title={sketchEnabled ? "Disable Magic Effects" : "Enable Magic Effects"}
+                                >
+                                    <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                </button>
+
                                 {/* Mobile Menu Button (Hamburger) */}
                                 <button
                                     onClick={openMenu}
@@ -87,7 +110,6 @@ export const navBarComponent = `
                                 {/* Desktop User Controls */}
                                 {user ? (
                                     <div className="hidden sm:flex items-center gap-5">
-                                        {/* User Profile - No Box, Direct Placement */}
                                         <button
                                             onClick={() => onNavigate('dashboard')}
                                             className="flex items-center gap-3 group focus:outline-none"
@@ -105,10 +127,8 @@ export const navBarComponent = `
                                             </span>
                                         </button>
 
-                                        {/* Separator */}
                                         <div className="h-6 w-px bg-indigo-500"></div>
 
-                                        {/* Logout Icon Button */}
                                         <button
                                             onClick={onLogout}
                                             className="text-indigo-200 hover:text-white transition-colors p-2"
@@ -118,7 +138,6 @@ export const navBarComponent = `
                                         </button>
                                     </div>
                                 ) : (
-                                    /* Desktop Guest Controls - Straight Buttons */
                                     <div className="hidden sm:flex items-center gap-3">
                                         <button
                                             onClick={() => onNavigate('student-register')}
@@ -160,9 +179,7 @@ export const navBarComponent = `
 
                                 <div className="flex-1 overflow-y-auto">
                                     {user ? (
-                                        /* Logged In Mobile View - Boxless & Vertical Stack */
                                         <div className="mb-8 flex flex-col items-center">
-                                            {/* Avatar centered at top */}
                                             <div className="w-16 h-16 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl mb-3 shadow-sm">
                                                 {profile?.avatarUrl ? (
                                                     <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
@@ -170,18 +187,12 @@ export const navBarComponent = `
                                                     getInitials()
                                                 )}
                                             </div>
-                                            
-                                            {/* Name */}
                                             <div className="font-bold text-slate-900 text-lg text-center leading-tight">
                                                 {profile?.name || user.username}
                                             </div>
-                                            
-                                            {/* Email */}
                                             <div className="text-sm text-slate-500 mt-1 text-center mb-5">
                                                 {profile?.email || user.username}
                                             </div>
-
-                                            {/* Dashboard Button */}
                                             <button
                                                 onClick={() => {
                                                     closeMenu();
@@ -229,6 +240,17 @@ export const navBarComponent = `
                                         <button onClick={() => { closeMenu(); onNavigate('hsc-subjects'); }} className="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition font-medium flex items-center justify-between group">
                                             <span>HSC Subjects</span>
                                             <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
+                                        </button>
+                                        
+                                        {/* NEW: Mobile Animation Toggle */}
+                                        <button onClick={toggleSketch} className="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition font-medium flex items-center justify-between group">
+                                            <div className="flex items-center gap-2">
+                                                <span>Magic Effects</span>
+                                                {sketchEnabled && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 rounded font-bold">ON</span>}
+                                            </div>
+                                            <div className={'w-8 h-4 rounded-full relative transition ' + (sketchEnabled ? 'bg-indigo-500' : 'bg-slate-300')}>
+                                                <div className={'absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ' + (sketchEnabled ? 'left-4.5' : 'left-0.5')} style={{left: sketchEnabled ? '18px' : '2px'}}></div>
+                                            </div>
                                         </button>
                                     </div>
                                 </div>
