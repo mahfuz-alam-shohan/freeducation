@@ -178,21 +178,97 @@ export const landingUi = `
             );
         };
 
-        const SubjectRow = ({ title, onAll, subjects, onNavigate, thumbnailMap, readMap }) => (
-            <section className="space-y-3">
-                <div className="flex flex-col items-center gap-2 text-center">
-                    <h3 className="text-lg sm:text-xl font-semibold text-slate-900">{title}</h3>
-                    <button onClick={onAll} className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-md transition hover:border-indigo-300 hover:text-indigo-700 flex items-center gap-2">See all <i className="fa-solid fa-angle-right"></i></button>
+        const SubjectRow = ({ title, subjects, onNavigate, onAll, thumbnailMap, readMap }) => {
+            const containerRef = useRef(null);
+
+            const scroll = (direction) => {
+                if (containerRef.current) {
+                    const scrollAmount = direction === 'left' ? -300 : 300;
+                    containerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                }
+            };
+
+            return (
+                <div className="w-full mb-12">
+                    {/* Stylized Header Section */}
+                    <div className="relative mb-8 px-2">
+                        {/* Abstract Art Blobs behind the text */}
+                        <div className="absolute -left-4 -top-8 w-32 h-32 bg-indigo-100/50 rounded-full blur-2xl pointer-events-none"></div>
+                        <div className="absolute left-16 -top-4 w-20 h-20 bg-amber-100/60 rounded-full blur-xl pointer-events-none"></div>
+
+                        <div className="relative flex items-end justify-between z-10">
+                            <div>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] pl-1 mb-2 block">
+                                    Curriculum
+                                </span>
+                                <h3 className="text-4xl font-bold text-slate-800 font-serif leading-none relative inline-block">
+                                    {title}
+                                    {/* Artistic Underline SVG */}
+                                    <svg className="absolute -bottom-3 left-0 w-[110%] h-3 text-indigo-400/40" viewBox="0 0 100 10" preserveAspectRatio="none">
+                                        <path d="M0 5 Q 50 12 100 5" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
+                                    </svg>
+                                </h3>
+                            </div>
+
+                            <div className="flex items-center gap-3 pb-1">
+                                <button onClick={() => scroll('left')} className="w-9 h-9 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 flex items-center justify-center transition shadow-sm hidden sm:flex">
+                                    <i className="fa-solid fa-arrow-left text-sm"></i>
+                                </button>
+                                <button onClick={() => scroll('right')} className="w-9 h-9 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 flex items-center justify-center transition shadow-sm hidden sm:flex">
+                                    <i className="fa-solid fa-arrow-right text-sm"></i>
+                                </button>
+                                <button onClick={onAll} className="px-4 py-2 rounded-full bg-white border border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition shadow-sm ml-2">
+                                    View All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div 
+                        ref={containerRef}
+                        className="flex overflow-x-auto gap-5 pb-8 px-2 snap-x hide-scrollbars pt-2"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                        {subjects.map((subject, index) => {
+                            const thumbnail = thumbnailMap[subject.subjectKey];
+                            const lastRead = getLastReadForSubject(readMap, subject.title);
+                            
+                            return (
+                                <div 
+                                    key={index} 
+                                    onClick={() => onNavigate(subject.route)}
+                                    className="flex-none w-72 snap-start cursor-pointer group"
+                                >
+                                    <div className="aspect-[16/10] rounded-2xl bg-white border border-slate-100 mb-4 overflow-hidden relative shadow-sm group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 transition-all duration-300">
+                                        {thumbnail ? (
+                                            <img src={thumbnail.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50">
+                                                <i className="fa-solid fa-book-open text-3xl opacity-40"></i>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Gradient Overlay */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        
+                                        {lastRead && (
+                                             <div className="absolute top-3 right-3 px-2 py-1 bg-white/90 text-emerald-600 text-[10px] font-bold uppercase tracking-wider rounded-md backdrop-blur-sm shadow-sm flex items-center gap-1">
+                                                <i className="fa-solid fa-check-circle"></i>
+                                                Read
+                                             </div>
+                                        )}
+                                    </div>
+                                    <div className="pl-1">
+                                        <h4 className="font-bold text-lg text-slate-800 leading-tight group-hover:text-indigo-700 transition-colors font-serif">{subject.title}</h4>
+                                        <p className="text-xs text-slate-400 mt-1.5 uppercase tracking-wide font-medium">{subject.subtitle}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
-                <div className={'flex items-stretch ' + cardGridGapClass + ' pb-4 overflow-x-auto snap-x scrollbar-hide'}>
-                    {subjects.map((subject) => {
-                        const thumbnail = thumbnailMap[subject.subjectKey];
-                        const lastRead = getLastReadForSubject(readMap, subject.title);
-                        return <SubjectCard key={subject.subjectKey} subject={{ ...subject, lastRead, thumbnailUrl: thumbnail?.url }} onNavigate={onNavigate} className={'flex-shrink-0 snap-start ' + cardWidthClass} />;
-                    })}
-                </div>
-            </section>
-        );
+            );
+        };
 
         const formatHierarchyLabel = (segment) => {
             if (!segment) return '';
