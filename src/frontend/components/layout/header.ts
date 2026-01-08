@@ -160,30 +160,34 @@ export const navBarComponent = `
 
                                 <div className="flex-1 overflow-y-auto">
                                     {user ? (
-                                        <div className="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <div className="w-12 h-12 rounded-full overflow-hidden bg-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-lg">
-                                                    {profile?.avatarUrl ? (
-                                                        <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        getInitials()
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-slate-900 leading-tight">
-                                                        {profile?.name || user.username}
-                                                    </div>
-                                                    <div className="text-xs text-slate-500 mt-0.5">
-                                                        {profile?.email || user.username}
-                                                    </div>
-                                                </div>
+                                        /* Logged In Mobile View - Boxless & Vertical Stack */
+                                        <div className="mb-8 flex flex-col items-center">
+                                            {/* Avatar centered at top */}
+                                            <div className="w-16 h-16 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl mb-3 shadow-sm">
+                                                {profile?.avatarUrl ? (
+                                                    <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    getInitials()
+                                                )}
                                             </div>
+                                            
+                                            {/* Name */}
+                                            <div className="font-bold text-slate-900 text-lg text-center leading-tight">
+                                                {profile?.name || user.username}
+                                            </div>
+                                            
+                                            {/* Email */}
+                                            <div className="text-sm text-slate-500 mt-1 text-center mb-5">
+                                                {profile?.email || user.username}
+                                            </div>
+
+                                            {/* Dashboard Button */}
                                             <button
                                                 onClick={() => {
                                                     closeMenu();
                                                     onNavigate('dashboard');
                                                 }}
-                                                className="w-full py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition text-center"
+                                                className="w-full py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition text-center shadow-sm"
                                             >
                                                 Go to Dashboard
                                             </button>
