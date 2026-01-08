@@ -1,7 +1,7 @@
 export const landingUi = `
         const FullScreenLoader = () => (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-                <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 animate-spin"></div>
                 <div className="mt-4 text-sm font-semibold text-slate-500 uppercase tracking-[0.2em] animate-pulse">Loading Content...</div>
             </div>
         );
@@ -40,11 +40,11 @@ export const landingUi = `
 
         const cardWidthClass = 'w-40 sm:w-44';
         const cardGridGapClass = 'gap-4 sm:gap-6';
-        const cardSurfaceClass = 'relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-slate-100 bg-white transition-all duration-300 group-hover:shadow-xl group-hover:shadow-indigo-100/50 group-hover:-translate-y-1 card-art-surface';
+        // LEGACY UPDATE: rounded-none
+        const cardSurfaceClass = 'relative w-full aspect-[3/4] rounded-none overflow-hidden border border-slate-200 bg-white transition-all duration-300 group-hover:shadow-xl group-hover:border-indigo-300 group-hover:-translate-y-1 card-art-surface';
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
-        // Reusable Background Art (Subtler for readability)
         const BackgroundArt = () => (
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed opacity-20">
                  <svg className="absolute -top-20 -right-20 w-[600px] h-[600px] text-indigo-100 opacity-60" viewBox="0 0 100 100" fill="none">
@@ -60,10 +60,9 @@ export const landingUi = `
             </div>
         );
 
-        // NEW: Book Reader Component for "Book Text" feel
+        // LEGACY UPDATE: Square corners (rounded-none)
         const BookReader = ({ children, className = '' }) => (
-            <div className={'bg-[#fdfbf7] border border-[#eaddcf] rounded-xl p-8 sm:p-12 shadow-sm relative overflow-hidden ' + className}>
-                {/* Paper Texture Overlay */}
+            <div className={'bg-[#fdfbf7] border border-[#eaddcf] rounded-none p-8 sm:p-12 shadow-sm relative overflow-hidden ' + className}>
                 <div className="absolute inset-0 pointer-events-none opacity-40" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")'}}></div>
                 <div className="relative z-10 font-serif text-slate-800 text-lg leading-loose text-justify space-y-4">
                     {children}
@@ -74,7 +73,6 @@ export const landingUi = `
         const getSubjectChapterCount = (subject) => {
             if (!contentLoaded || !subject) return null;
             const title = subject.title;
-            // ... (keep existing logic)
             if (subject.classLabel === 'SSC') {
                 if (title === 'Information and Communication Technology') return sscIctChapters.length;
                 if (title === 'Physics') return sscPhysicsChapters.length;
@@ -120,20 +118,21 @@ export const landingUi = `
                             <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="eager" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 card-art-media" />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 bg-slate-50 gap-2 card-art-media">
-                                <div className={'h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-sm ' + subject.accent}>
+                                {/* LEGACY UPDATE: Square Icon Box */}
+                                <div className={'h-10 w-10 bg-white border border-slate-100 flex items-center justify-center shadow-sm ' + subject.accent}>
                                     <i className={'fa-solid ' + subject.icon + ' text-sm text-slate-400'}></i>
                                 </div>
                             </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                         {subject.lastRead && (
-                             <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/95 backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider rounded shadow-sm flex items-center gap-1 z-10">
+                             <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/95 backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 border border-emerald-100">
                                 <i className="fa-solid fa-check-circle"></i>
                                 Read
                              </div>
                         )}
                         {showGroup && subject.groupLabel && (
-                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-wider rounded shadow-sm z-10">
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-wider shadow-sm z-10">
                                 {subject.groupLabel}
                             </div>
                         )}
@@ -155,7 +154,7 @@ export const landingUi = `
                 <div className="space-y-2 h-full text-center">
                     <div className={cardSurfaceClass + (isRead ? ' ring-2 ring-emerald-400' : '')}>
                         {isRead && (
-                            <div className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm z-10">
+                            <div className="absolute top-2 right-2 inline-flex items-center gap-1 bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm z-10 border border-emerald-600">
                                 <i className="fa-solid fa-check text-[10px]"></i>Read
                             </div>
                         )}
@@ -199,7 +198,7 @@ export const landingUi = `
                             />
                         );
                     })}
-                    {chapters.length === 0 && <div className="border border-dashed border-slate-200 rounded-md p-6 text-sm text-slate-400 font-bangla text-center">এখনো কোনো অধ্যায় যোগ করা হয়নি।</div>}
+                    {chapters.length === 0 && <div className="border border-dashed border-slate-200 p-6 text-sm text-slate-400 font-bangla text-center">এখনো কোনো অধ্যায় যোগ করা হয়নি।</div>}
                 </ArtPanelGrid>
             );
         };
@@ -215,20 +214,21 @@ export const landingUi = `
             return (
                 <div className="w-full mb-12">
                     <div className="relative mb-8 px-2 py-4">
-                         {/* Reusing shared background art if needed or keeping simple */}
                         <div className="relative flex items-end justify-between z-10 pl-2">
                             <div>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] pl-1 mb-1 block">Curriculum</span>
                                 <h3 className="text-4xl font-bold text-slate-800 font-serif leading-none relative inline-block">
                                     {title}
-                                    <span className="absolute -bottom-2 left-0 w-2/3 h-1.5 bg-indigo-500/20 rounded-full"></span>
-                                    <span className="absolute -bottom-2 left-2/3 w-1.5 h-1.5 bg-amber-400 rounded-full ml-1"></span>
+                                    <span className="absolute -bottom-2 left-0 w-2/3 h-1.5 bg-indigo-500/20"></span>
+                                    <span className="absolute -bottom-2 left-2/3 w-1.5 h-1.5 bg-amber-400 ml-1"></span>
                                 </h3>
                             </div>
                             <div className="flex items-center gap-3 pb-1">
-                                <button onClick={() => scroll('left')} className="w-9 h-9 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-left text-sm"></i></button>
-                                <button onClick={() => scroll('right')} className="w-9 h-9 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-right text-sm"></i></button>
-                                <button onClick={onAll} className="px-4 py-2 rounded-full bg-white border border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition shadow-sm ml-2">View All</button>
+                                {/* LEGACY UPDATE: Square Scroll Buttons */}
+                                <button onClick={() => scroll('left')} className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-left text-sm"></i></button>
+                                <button onClick={() => scroll('right')} className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-right text-sm"></i></button>
+                                {/* LEGACY UPDATE: Square View All */}
+                                <button onClick={onAll} className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm ml-2">View All</button>
                             </div>
                         </div>
                     </div>
@@ -267,7 +267,7 @@ export const landingUi = `
             const [trail, setTrail] = useState(buildHierarchyTrail());
             useEffect(() => { setTrail(buildHierarchyTrail()); }, [title, subtitle]);
             return (
-                <aside className="hidden lg:flex lg:w-64 border-r border-slate-100 bg-white/50 backdrop-blur-sm p-6 shrink-0 rounded-l-2xl">
+                <aside className="hidden lg:flex lg:w-64 border-r border-slate-200 bg-white/50 backdrop-blur-sm p-6 shrink-0">
                     <div className="flex flex-col gap-6 w-full">
                         <div>
                             <div className="text-[11px] uppercase tracking-[0.3em] text-slate-400 font-bold">Location</div>
@@ -296,26 +296,22 @@ export const landingUi = `
             );
         };
 
-        // UPDATED: PublicSimpleShell now accepts "badge" for centered sub-header
+        // LEGACY UPDATE: Square Home/Back Buttons, no rounded shell
         const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-slate-50', badge, onBack, onNavigate, children }) => (
             <div className={'flex-1 min-h-screen relative ' + backgroundClass}>
                 <BackgroundArt />
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
-                    {/* Centered Legacy Header */}
                     <div className="flex flex-col items-center justify-center text-center gap-4 mb-10 pb-6 border-b border-slate-200/50">
-                        {/* Navigation Row */}
                         <div className="w-full flex items-center justify-between absolute top-8 px-4 sm:px-12 left-0 z-20 pointer-events-none">
                              {onBack ? (
-                                <button onClick={onBack} className="pointer-events-auto w-10 h-10 rounded-full bg-white/80 border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition flex items-center justify-center group backdrop-blur-sm">
+                                <button onClick={onBack} className="pointer-events-auto w-10 h-10 bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-300 shadow-sm transition flex items-center justify-center group backdrop-blur-sm">
                                     <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
                                 </button>
                             ) : <div></div>}
-                             <button onClick={() => onNavigate('landing')} className="pointer-events-auto px-4 py-2 rounded-full bg-white/80 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-indigo-600 hover:border-indigo-200 transition shadow-sm backdrop-blur-sm">
+                             <button onClick={() => onNavigate('landing')} className="pointer-events-auto px-4 py-2 bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm backdrop-blur-sm">
                                 Home
                             </button>
                         </div>
-
-                        {/* Content */}
                         <div className="mt-12">
                             {badge && <div className="mb-4">{badge}</div>}
                             <h2 className="text-3xl sm:text-5xl font-bold text-slate-900 font-serif leading-tight">
@@ -366,7 +362,6 @@ export const landingUi = `
         };
 
         const PublicMcqList = ({ mcqList }) => {
-             // ... existing MCQ Logic ...
             const optionLabels = ['ক', 'খ', 'গ', 'ঘ'];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
@@ -394,7 +389,7 @@ export const landingUi = `
                                 <div className="grid gap-2 text-sm text-slate-600 font-bangla ml-4">{(entry.options || []).map((option, optionIndex) => <div key={entry.question + '-' + optionIndex}>{optionLabels[optionIndex]}. {option}</div>)}</div>
                                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
                                     <button onClick={() => toggleAnswer(index)} className="font-bold text-indigo-600 hover:text-indigo-500 uppercase tracking-wider">{isOpen(index) ? 'Hide Answer' : 'Show Answer'}</button>
-                                    {isOpen(index) && <div className="text-emerald-700 font-bold font-bangla bg-emerald-50 px-2 py-1 rounded">উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}</div>}
+                                    {isOpen(index) && <div className="text-emerald-700 font-bold font-bangla bg-emerald-50 px-2 py-1 border border-emerald-100">উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}</div>}
                                 </div>
                             </div>
                         ))}
