@@ -1,19 +1,18 @@
 export const landingEnglish = `
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
-            // Reusing the upgraded PublicSimpleShell for consistency
             <PublicSimpleShell 
                 title={title} 
                 subtitle={subtitle} 
                 onBack={onBack} 
                 onNavigate={onNavigate} 
                 backgroundClass="bg-slate-50"
-            >
-                 <div className="mb-6 flex justify-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-blue-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-blue-600 shadow-sm">
+                badge={
+                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-blue-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-blue-600 shadow-sm">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                         English 1st Paper
                     </div>
-                </div>
+                }
+            >
                 {children}
             </PublicSimpleShell>
         );
@@ -43,7 +42,7 @@ export const landingEnglish = `
         );
 
         const PublicEnglishTypeList = ({ items, onSelect }) => (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 max-w-5xl mx-auto">
                 {items.map((item) => (
                     <button key={item.key} onClick={() => onSelect(item)} className="relative w-full bg-white border border-slate-200 rounded-2xl p-6 text-left hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-50/50 hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
                         <div className="relative z-10">
@@ -61,8 +60,6 @@ export const landingEnglish = `
                                 </div>
                             )}
                         </div>
-                         {/* Decorative BG */}
-                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-indigo-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
                     </button>
                 ))}
                 {items.length === 0 && <div className="col-span-full py-12 text-center text-slate-400 italic">No question types available yet.</div>}
@@ -70,23 +67,24 @@ export const landingEnglish = `
         );
 
         const PublicEnglishQuestionList = ({ questions }) => (
-            <div className="space-y-6 text-left">
+            <div className="max-w-4xl mx-auto space-y-8">
                 {questions.length === 0 && <div className="text-center py-12 text-slate-400 italic">No questions have been added yet.</div>}
+                {/* Using BookReader logic for Questions as well for consistency */}
                 {questions.map((entry, index) => (
-                    <div key={index} className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:border-indigo-200 transition-colors">
-                        <div className="flex gap-3 mb-4">
-                            <span className="flex-none w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold text-sm flex items-center justify-center">
+                    <BookReader key={index}>
+                        <div className="flex gap-4">
+                            <div className="flex-none w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold font-serif flex items-center justify-center -mt-1">
                                 Q{index + 1}
-                            </span>
-                            <div className="text-base font-semibold text-slate-800 pt-1">{entry.question}</div>
-                        </div>
-                        <div className="pl-11">
-                            <div className="text-sm text-slate-600 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50">
-                                <span className="font-bold text-emerald-700 block mb-1 uppercase tracking-wide text-[10px]">Answer</span>
-                                {entry.answer}
+                            </div>
+                            <div className="space-y-4 w-full">
+                                <div className="text-lg font-semibold text-slate-900 font-serif">{entry.question}</div>
+                                <div className="bg-white/50 border-l-4 border-emerald-400 pl-4 py-2">
+                                    <span className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Answer</span>
+                                    <div className="text-slate-800">{entry.answer}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </BookReader>
                 ))}
             </div>
         );
