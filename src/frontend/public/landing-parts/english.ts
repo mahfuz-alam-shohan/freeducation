@@ -1,60 +1,91 @@
 export const landingEnglish = `
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
-            <div className="flex-1 bg-[#eef2ff]">
-                <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-5">
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 border-b border-slate-200 pb-4">
-                        {onBack ? <button onClick={onBack} className="w-10 h-10 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition flex items-center justify-center" aria-label="Go back"><i className="fa-solid fa-arrow-left"></i></button> : <div className="w-10 h-10" />}
-                        <div className="text-center">
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">English 1st Paper</div>
-                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-2">{title}</h2>
-                            {subtitle && <p className="text-sm text-slate-500 mt-2">{subtitle}</p>}
-                        </div>
-                        <button onClick={() => onNavigate('landing')} className="px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-slate-300 transition justify-self-end">Home</button>
-                    </div>
-                    <div className="lg:flex lg:gap-8">
-                        <PublicSidebar title={title} subtitle={subtitle} onBack={onBack} onNavigate={onNavigate} />
-                        <div className="flex-1">{children}</div>
+            // Reusing the upgraded PublicSimpleShell for consistency
+            <PublicSimpleShell 
+                title={title} 
+                subtitle={subtitle} 
+                onBack={onBack} 
+                onNavigate={onNavigate} 
+                backgroundClass="bg-slate-50"
+            >
+                 <div className="mb-6 flex justify-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-blue-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-blue-600 shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        English 1st Paper
                     </div>
                 </div>
-            </div>
+                {children}
+            </PublicSimpleShell>
         );
 
         const PublicEnglishCardGrid = ({ items, onNavigate }) => (
-            <div className={'grid justify-items-center ' + cardGridGapClass + ' sm:grid-cols-2'}>
+            <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                 {items.map((item) => (
-                    <button key={item.key} onClick={() => item.route && onNavigate(item.route)} className="w-full border border-slate-200 rounded-md p-4 text-center hover:border-slate-300 hover:bg-slate-50 transition">
-                        <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Section</div>
-                        <div className="text-lg font-semibold text-slate-900 mt-2">{item.title}</div>
-                        <p className="text-sm text-slate-500 mt-2">{item.description}</p>
+                    <button 
+                        key={item.key} 
+                        onClick={() => item.route && onNavigate(item.route)} 
+                        className="text-left transition-all duration-300 group w-full"
+                    >
+                        <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-slate-100 bg-white hover:shadow-xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col items-center justify-center text-center">
+                            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i className="fa-solid fa-book-open text-lg"></i>
+                            </div>
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">Section</div>
+                            <div className="text-lg font-bold text-slate-900 font-serif mb-2">{item.title}</div>
+                            <p className="text-xs text-slate-500 line-clamp-2">{item.description}</p>
+                            
+                            {/* Decorative Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-indigo-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                        </div>
                     </button>
                 ))}
-            </div>
+            </ArtPanelGrid>
         );
 
         const PublicEnglishTypeList = ({ items, onSelect }) => (
-            <div className="border-y border-slate-200 divide-y">
+            <div className="grid gap-4 sm:grid-cols-2">
                 {items.map((item) => (
-                    <button key={item.key} onClick={() => onSelect(item)} className="w-full flex items-center justify-between px-2 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-left">
-                        <div className="text-left space-y-1">
-                            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Question type</div>
-                            <div className="text-base font-semibold text-slate-900">{item.label}</div>
-                            {item.description && <p className="text-xs text-slate-500">{item.description}</p>}
-                            {item.children?.length > 0 && <p className="text-xs text-indigo-500">Includes {item.children.map((child) => child.label).join(', ')}</p>}
+                    <button key={item.key} onClick={() => onSelect(item)} className="relative w-full bg-white border border-slate-200 rounded-2xl p-6 text-left hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-50/50 hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">Question Type</div>
+                                <i className="fa-solid fa-arrow-right text-indigo-300 group-hover:text-indigo-600 transition-colors"></i>
+                            </div>
+                            <div className="text-lg font-bold text-slate-900 font-serif mb-1 group-hover:text-indigo-700 transition-colors">{item.label}</div>
+                            {item.description && <p className="text-sm text-slate-500">{item.description}</p>}
+                            {item.children?.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-1">
+                                    {item.children.map((child) => (
+                                        <span key={child.key} className="inline-block px-2 py-0.5 bg-slate-50 text-slate-500 text-[10px] rounded border border-slate-100">{child.label}</span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <span className="text-xs uppercase tracking-[0.2em] text-indigo-600">Open</span>
+                         {/* Decorative BG */}
+                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-indigo-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
                     </button>
                 ))}
-                {items.length === 0 && <div className="px-2 py-4 text-sm text-slate-400">No question types available yet.</div>}
+                {items.length === 0 && <div className="col-span-full py-12 text-center text-slate-400 italic">No question types available yet.</div>}
             </div>
         );
 
         const PublicEnglishQuestionList = ({ questions }) => (
-            <div className="space-y-4 text-left">
-                {questions.length === 0 && <div className="text-sm text-slate-400">No questions have been added yet.</div>}
+            <div className="space-y-6 text-left">
+                {questions.length === 0 && <div className="text-center py-12 text-slate-400 italic">No questions have been added yet.</div>}
                 {questions.map((entry, index) => (
-                    <div key={index} className={flatSectionClass + ' space-y-2'}>
-                        <div className="text-sm font-semibold text-slate-900">Q{index + 1}. {entry.question}</div>
-                        <div className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3">Answer: {entry.answer}</div>
+                    <div key={index} className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:border-indigo-200 transition-colors">
+                        <div className="flex gap-3 mb-4">
+                            <span className="flex-none w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold text-sm flex items-center justify-center">
+                                Q{index + 1}
+                            </span>
+                            <div className="text-base font-semibold text-slate-800 pt-1">{entry.question}</div>
+                        </div>
+                        <div className="pl-11">
+                            <div className="text-sm text-slate-600 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50">
+                                <span className="font-bold text-emerald-700 block mb-1 uppercase tracking-wide text-[10px]">Answer</span>
+                                {entry.answer}
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
