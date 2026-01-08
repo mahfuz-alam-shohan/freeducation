@@ -44,33 +44,37 @@ export const landingUi = `
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
-        // Reusable Background Art Component
+        // Reusable Background Art (Subtler for readability)
         const BackgroundArt = () => (
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed opacity-30">
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed opacity-20">
                  <svg className="absolute -top-20 -right-20 w-[600px] h-[600px] text-indigo-100 opacity-60" viewBox="0 0 100 100" fill="none">
                     <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="0.5" />
                     <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-                    <circle cx="50" cy="50" r="25" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-                    <circle cx="50" cy="50" r="15" fill="currentColor" opacity="0.2" />
                 </svg>
-                 <svg className="absolute top-10 left-0 w-96 h-96 text-slate-300 opacity-50" viewBox="0 0 200 200" fill="none">
+                 <svg className="absolute top-10 left-0 w-96 h-96 text-amber-50 opacity-50" viewBox="0 0 200 200" fill="none">
                     <path d="M40 40 L90 20 L140 60" stroke="currentColor" strokeWidth="1.5" />
                     <circle cx="40" cy="40" r="3" fill="#fbbf24" />
                     <circle cx="90" cy="20" r="3" fill="#fbbf24" />
-                    <circle cx="140" cy="60" r="3" fill="#fbbf24" />
-                    <path d="M40 40 L60 120 L120 100" stroke="currentColor" strokeWidth="1" strokeDasharray="5 5" />
-                    <circle cx="60" cy="120" r="2" fill="currentColor" />
-                    <circle cx="120" cy="100" r="2" fill="currentColor" />
                 </svg>
-                <div className="absolute bottom-0 left-0 w-full h-64 opacity-20" style={{backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '24px 24px'}}></div>
-                <svg className="absolute bottom-40 right-40 w-24 h-24 text-indigo-200 opacity-80 animate-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z" /></svg>
-                <svg className="absolute top-1/2 left-20 w-16 h-16 text-amber-200 opacity-80" viewBox="0 0 24 24" fill="currentColor" style={{transform: 'rotate(45deg)'}}><rect width="24" height="24" rx="4" /></svg>
+                <div className="absolute bottom-0 left-0 w-full h-64 opacity-10" style={{backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '24px 24px'}}></div>
+            </div>
+        );
+
+        // NEW: Book Reader Component for "Book Text" feel
+        const BookReader = ({ children, className = '' }) => (
+            <div className={'bg-[#fdfbf7] border border-[#eaddcf] rounded-xl p-8 sm:p-12 shadow-sm relative overflow-hidden ' + className}>
+                {/* Paper Texture Overlay */}
+                <div className="absolute inset-0 pointer-events-none opacity-40" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")'}}></div>
+                <div className="relative z-10 font-serif text-slate-800 text-lg leading-loose text-justify space-y-4">
+                    {children}
+                </div>
             </div>
         );
 
         const getSubjectChapterCount = (subject) => {
             if (!contentLoaded || !subject) return null;
             const title = subject.title;
+            // ... (keep existing logic)
             if (subject.classLabel === 'SSC') {
                 if (title === 'Information and Communication Technology') return sscIctChapters.length;
                 if (title === 'Physics') return sscPhysicsChapters.length;
@@ -211,17 +215,7 @@ export const landingUi = `
             return (
                 <div className="w-full mb-12">
                     <div className="relative mb-8 px-2 py-4">
-                        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
-                             <svg className="absolute top-0 left-0 w-64 h-64 text-slate-200" viewBox="0 0 200 200" fill="none">
-                                <circle cx="50" cy="50" r="2" fill="currentColor" />
-                                <circle cx="120" cy="30" r="2" fill="currentColor" />
-                                <path d="M50 50 L120 30" stroke="currentColor" strokeWidth="0.5" />
-                                <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
-                            </svg>
-                             <svg className="absolute bottom-0 right-10 w-48 h-48 text-indigo-100" viewBox="0 0 100 100" fill="none">
-                                <rect x="20" y="20" width="60" height="60" transform="rotate(15 50 50)" stroke="currentColor" strokeWidth="1" />
-                            </svg>
-                        </div>
+                         {/* Reusing shared background art if needed or keeping simple */}
                         <div className="relative flex items-end justify-between z-10 pl-2">
                             <div>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] pl-1 mb-1 block">Curriculum</span>
@@ -302,28 +296,33 @@ export const landingUi = `
             );
         };
 
-        const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-slate-50', onBack, onNavigate, children }) => (
+        // UPDATED: PublicSimpleShell now accepts "badge" for centered sub-header
+        const PublicSimpleShell = ({ title, subtitle, backgroundClass = 'bg-slate-50', badge, onBack, onNavigate, children }) => (
             <div className={'flex-1 min-h-screen relative ' + backgroundClass}>
                 <BackgroundArt />
                 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
-                    {/* Stylized Header */}
-                    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-4 border-b border-slate-200/60 pb-6 mb-8">
-                        {onBack ? (
-                            <button onClick={onBack} className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition flex items-center justify-center group">
-                                <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                    {/* Centered Legacy Header */}
+                    <div className="flex flex-col items-center justify-center text-center gap-4 mb-10 pb-6 border-b border-slate-200/50">
+                        {/* Navigation Row */}
+                        <div className="w-full flex items-center justify-between absolute top-8 px-4 sm:px-12 left-0 z-20 pointer-events-none">
+                             {onBack ? (
+                                <button onClick={onBack} className="pointer-events-auto w-10 h-10 rounded-full bg-white/80 border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition flex items-center justify-center group backdrop-blur-sm">
+                                    <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                                </button>
+                            ) : <div></div>}
+                             <button onClick={() => onNavigate('landing')} className="pointer-events-auto px-4 py-2 rounded-full bg-white/80 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-indigo-600 hover:border-indigo-200 transition shadow-sm backdrop-blur-sm">
+                                Home
                             </button>
-                        ) : <div className="w-12 h-12" />}
-                        
-                        <div className="text-center space-y-2">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 font-serif leading-tight">
+                        </div>
+
+                        {/* Content */}
+                        <div className="mt-12">
+                            {badge && <div className="mb-4">{badge}</div>}
+                            <h2 className="text-3xl sm:text-5xl font-bold text-slate-900 font-serif leading-tight">
                                 {title}
                             </h2>
-                            {subtitle && <p className="text-base text-slate-500 font-serif italic opacity-80">{subtitle}</p>}
+                            {subtitle && <p className="text-lg text-slate-500 font-serif italic mt-3 opacity-80 max-w-2xl mx-auto">{subtitle}</p>}
                         </div>
-                        
-                        <button onClick={() => onNavigate('landing')} className="px-5 py-2.5 rounded-full bg-white/80 border border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-indigo-600 hover:border-indigo-200 transition shadow-sm backdrop-blur-sm">
-                            Home
-                        </button>
                     </div>
 
                     <div className="mt-6 lg:flex lg:gap-8">
@@ -339,22 +338,22 @@ export const landingUi = `
         const CqQuestionList = ({ sections }) => {
             const [openMap, setOpenMap] = useState({});
             const toggleAnswer = (sectionKey, index) => { setOpenMap((prev) => ({ ...prev, [sectionKey + '-' + index]: !prev[sectionKey + '-' + index] })); };
-            if (!sections.length) return <div className="text-sm text-slate-400">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>;
+            if (!sections.length) return <div className="text-sm text-slate-400 font-serif italic">No questions added yet.</div>;
             return (
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {sections.map((section) => (
                         <div key={section.key} className={flatSectionClass}>
-                            <div className="text-sm font-semibold text-slate-900">{section.label}</div>
-                            {section.items.length === 0 ? <div className="text-sm text-slate-400 mt-3">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div> : (
-                                <div className="mt-4 space-y-4">
+                            <div className="text-base font-bold text-slate-900 font-serif mb-4">{section.label}</div>
+                            {section.items.length === 0 ? <div className="text-sm text-slate-400 mt-3 italic">No questions.</div> : (
+                                <div className="space-y-6">
                                     {section.items.map((entry, index) => {
                                         const openKey = section.key + '-' + index;
                                         const isOpen = Boolean(openMap[openKey]);
                                         return (
-                                            <div key={entry.question + '-' + index} className="space-y-2">
-                                                <div className="text-sm font-semibold text-slate-800">{section.prefix(index)}. {entry.question}</div>
-                                                <button onClick={() => toggleAnswer(section.key, index)} className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition">{isOpen ? 'উত্তর লুকান' : 'উত্তর দেখুন'}</button>
-                                                {isOpen && <div className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3">{entry.answer}</div>}
+                                            <div key={entry.question + '-' + index} className="space-y-3">
+                                                <div className="font-medium text-slate-800 leading-relaxed font-serif">{section.prefix(index)}. {entry.question}</div>
+                                                <button onClick={() => toggleAnswer(section.key, index)} className="text-xs font-bold text-indigo-600 hover:text-indigo-500 transition uppercase tracking-wider">{isOpen ? 'Hide Answer' : 'Show Answer'}</button>
+                                                {isOpen && <div className="text-sm text-slate-700 bg-slate-50 p-4 border-l-4 border-indigo-200 leading-relaxed font-serif text-justify">{entry.answer}</div>}
                                             </div>
                                         );
                                     })}
@@ -367,6 +366,7 @@ export const landingUi = `
         };
 
         const PublicMcqList = ({ mcqList }) => {
+             // ... existing MCQ Logic ...
             const optionLabels = ['ক', 'খ', 'গ', 'ঘ'];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
@@ -376,24 +376,25 @@ export const landingUi = `
             const toggleAnswer = (index) => { setOpenOverrides((prev) => ({ ...prev, [index]: !isOpen(index) })); };
             const showAll = () => { setGlobalOpen(true); setOpenOverrides({}); };
             const hideAll = () => { setGlobalOpen(false); setOpenOverrides({}); };
-            if (mcqList.length === 0) return <div className="text-sm text-slate-400">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>;
+            if (mcqList.length === 0) return <div className="text-sm text-slate-400 italic font-serif">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>;
             return (
-                <div className="space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
-                        <span>মোট প্রশ্ন: {toBanglaNumber(mcqList.length)}</span>
+                <div className="space-y-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">
+                        <span>Total: {toBanglaNumber(mcqList.length)}</span>
                         <div className="flex flex-wrap gap-2">
-                            <button onClick={showAll} className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition">সকল উত্তর দেখুন</button>
-                            <button onClick={hideAll} className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition">সকল উত্তর লুকান</button>
+                            <button onClick={showAll} className="hover:text-indigo-600 transition">Show All</button>
+                            <span>/</span>
+                            <button onClick={hideAll} className="hover:text-indigo-600 transition">Hide All</button>
                         </div>
                     </div>
-                    <div className="border-y border-slate-200 divide-y">
+                    <div className="divide-y divide-slate-100">
                         {mcqList.map((entry, index) => (
-                            <div key={entry.question + '-' + index} className="px-4 py-4">
-                                <div className="text-sm font-semibold text-slate-900">{toBanglaNumber(index + 1)}. {entry.question}</div>
-                                <div className="mt-2 grid gap-1 text-sm text-slate-700">{(entry.options || []).map((option, optionIndex) => <div key={entry.question + '-' + optionIndex}>{optionLabels[optionIndex]}. {option}</div>)}</div>
-                                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-                                    <button onClick={() => toggleAnswer(index)} className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition">{isOpen(index) ? 'উত্তর লুকান' : 'উত্তর দেখুন'}</button>
-                                    {isOpen(index) && <div className="text-emerald-700 font-semibold">উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}</div>}
+                            <div key={entry.question + '-' + index} className="py-6">
+                                <div className="text-base font-semibold text-slate-900 font-bangla mb-3">{toBanglaNumber(index + 1)}. {entry.question}</div>
+                                <div className="grid gap-2 text-sm text-slate-600 font-bangla ml-4">{(entry.options || []).map((option, optionIndex) => <div key={entry.question + '-' + optionIndex}>{optionLabels[optionIndex]}. {option}</div>)}</div>
+                                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <button onClick={() => toggleAnswer(index)} className="font-bold text-indigo-600 hover:text-indigo-500 uppercase tracking-wider">{isOpen(index) ? 'Hide Answer' : 'Show Answer'}</button>
+                                    {isOpen(index) && <div className="text-emerald-700 font-bold font-bangla bg-emerald-50 px-2 py-1 rounded">উত্তর: {optionLabels[entry.answerIndex]}। {entry.options?.[entry.answerIndex]}</div>}
                                 </div>
                             </div>
                         ))}
