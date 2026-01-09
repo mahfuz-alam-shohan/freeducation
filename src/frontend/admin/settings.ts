@@ -28,7 +28,6 @@ export const settingsComponents = `
 
         const formatRoleLabel = (role) => (role === 'teacher' ? 'Teacher' : 'Admin');
 
-        // NEW: Helper to securely load avatar images
         const appendTokenToAvatarUrl = (avatarUrl, token) => {
             if (!avatarUrl || !token) return avatarUrl;
             try {
@@ -57,7 +56,6 @@ export const settingsComponents = `
                     const hData = await historyRes.json();
                     
                     if (pData.success) {
-                        // FIX: Ensure avatar URL has token attached so it loads
                         const profileWithToken = {
                             ...pData.profile,
                             avatarUrl: appendTokenToAvatarUrl(pData.profile?.avatarUrl, token)
@@ -73,6 +71,8 @@ export const settingsComponents = `
         };
 
         // --- COMPONENTS ---
+        
+        // 1. Profile Editor Component
         const ProfileManagement = ({ onNavigate, onBack, showHistory, shell = 'admin' }) => {
             const { profile, history, refreshProfile, setProfile } = useProfileData();
             const [statusMessage, setStatusMessage] = useState(null);
@@ -110,8 +110,8 @@ export const settingsComponents = `
             };
 
             return (
-                <ShellComponent title="Profile" subtitle="Update your personal details." activeTab="settings" onNavigate={onNavigate}>
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl">
+                <ShellComponent title="Edit Profile" subtitle="Update personal details" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="animate-fade-in bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-sm">
                         <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
                             <div className="w-28 h-28 sm:w-24 sm:h-24 bg-slate-100 rounded-full border-2 border-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
                                 <img 
@@ -167,14 +167,10 @@ export const settingsComponents = `
             );
         };
 
-        const AdminSettings = ({ onNavigate }) => {
+        // 2. Danger Zone Component
+        const DangerZonePanel = ({ onBack, onNavigate }) => {
             const [statusMessage, setStatusMessage] = useState(null);
-            const [activePanel, setActivePanel] = useState('main');
             const [hardResetPassword, setHardResetPassword] = useState('');
-
-            if (activePanel === 'profile') {
-                return <ProfileManagement onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
-            }
 
             const handleHardReset = async () => {
                 if (!hardResetPassword) return setStatusMessage('Password required.');
@@ -187,26 +183,96 @@ export const settingsComponents = `
             };
 
             return (
-                <AdminShell title="Settings" subtitle="System preferences and maintenance." activeTab="settings" onNavigate={onNavigate}>
-                    <div className="max-w-2xl space-y-6">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <button onClick={() => setActivePanel('profile')} className="p-6 bg-white border border-slate-200 rounded-xl text-left hover:border-indigo-300 transition shadow-sm group">
-                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition"><i className="fa-solid fa-user-circle text-xl"></i></div>
-                                <div className="font-bold text-slate-900">Profile</div>
-                                <div className="text-xs text-slate-500 mt-1">Edit name & photo</div>
-                            </button>
-                            {/* Soft Reset button removed */}
-                        </div>
-
-                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-6">
-                            <h3 className="text-rose-700 font-bold mb-2"><i className="fa-solid fa-triangle-exclamation mr-2"></i>Danger Zone</h3>
-                            <p className="text-xs text-rose-600 mb-4">Hard Reset wipes the entire database. Users, content, everything.</p>
-                            <div className="flex gap-2">
-                                <input type="password" value={hardResetPassword} onChange={e => setHardResetPassword(e.target.value)} className="flex-1 p-2 text-sm border border-rose-200 rounded bg-white" placeholder="Admin Password"/>
-                                <button onClick={handleHardReset} className="px-4 py-2 bg-rose-600 text-white text-xs font-bold rounded hover:bg-rose-700">NUKE SITE</button>
+                 <AdminShell title="System Reset" subtitle="Danger Zone" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="animate-fade-in max-w-2xl">
+                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-6 shadow-sm">
+                            <h3 className="text-rose-700 font-bold mb-4 flex items-center gap-2 text-lg">
+                                <i className="fa-solid fa-triangle-exclamation"></i>
+                                Danger Zone
+                            </h3>
+                            <p className="text-sm text-rose-800/80 mb-6 leading-relaxed">
+                                You are about to perform a Hard Reset. This will <strong>permanently delete</strong> all database content, including users, classes, subjects, and files. This action is irreversible.
+                            </p>
+                            
+                            <div className="space-y-4 bg-white p-5 rounded-lg border border-rose-100">
+                                <div>
+                                    <label className="block text-xs font-bold text-rose-500 uppercase tracking-wider mb-2">Admin Password</label>
+                                    <input 
+                                        type="password" 
+                                        value={hardResetPassword} 
+                                        onChange={e => setHardResetPassword(e.target.value)} 
+                                        className="w-full p-3 text-sm border border-rose-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" 
+                                        placeholder="Enter password to confirm"
+                                    />
+                                </div>
+                                
+                                <button 
+                                    onClick={handleHardReset} 
+                                    className="w-full py-3 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-700 transition shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <i className="fa-solid fa-radiation"></i>
+                                    NUKE SITE (Hard Reset)
+                                </button>
                             </div>
-                            {statusMessage && <p className="text-xs text-rose-600 mt-2">{statusMessage}</p>}
+                            
+                            {statusMessage && <p className="text-sm text-rose-700 mt-4 font-medium text-center bg-rose-100 p-2 rounded">{statusMessage}</p>}
                         </div>
+                        
+                        <button onClick={onBack} className="mt-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition">
+                            <i className="fa-solid fa-arrow-left"></i> Back to settings
+                        </button>
+                    </div>
+                </AdminShell>
+            );
+        };
+
+        // 3. Main Admin Settings Controller
+        const AdminSettings = ({ onNavigate }) => {
+            const [activePanel, setActivePanel] = useState('main'); // 'main', 'profile', 'danger'
+
+            // Render Sub-Panels
+            if (activePanel === 'profile') {
+                return <ProfileManagement onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
+            }
+            if (activePanel === 'danger') {
+                return <DangerZonePanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
+            }
+
+            // Render Main List View
+            return (
+                <AdminShell title="Settings" subtitle="System preferences" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="max-w-2xl bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-fade-in">
+                        
+                        {/* Profile Option */}
+                        <button 
+                            onClick={() => setActivePanel('profile')} 
+                            className="w-full flex items-center gap-4 p-5 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
+                                    <i className="fa-solid fa-user-gear text-lg"></i>
+                            </div>
+                            <div className="flex-1">
+                                    <div className="font-semibold text-slate-900 text-base">Profile Settings</div>
+                                    <div className="text-sm text-slate-500 mt-0.5">Manage your personal details and avatar</div>
+                            </div>
+                            <i className="fa-solid fa-chevron-right text-slate-300 group-hover:text-indigo-400"></i>
+                        </button>
+
+                        {/* Danger Zone Option */}
+                        <button 
+                            onClick={() => setActivePanel('danger')} 
+                            className="w-full flex items-center gap-4 p-5 hover:bg-rose-50/20 transition text-left group"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
+                                    <i className="fa-solid fa-triangle-exclamation text-lg"></i>
+                            </div>
+                            <div className="flex-1">
+                                    <div className="font-semibold text-slate-900 text-base">Danger Zone</div>
+                                    <div className="text-sm text-slate-500 mt-0.5">System reset and data deletion</div>
+                            </div>
+                            <i className="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-400"></i>
+                        </button>
+
                     </div>
                 </AdminShell>
             );
