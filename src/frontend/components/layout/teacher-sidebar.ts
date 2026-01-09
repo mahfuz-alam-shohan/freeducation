@@ -16,9 +16,9 @@ export const teacherSidebarComponent = `
                             <button
                                 key={item.id}
                                 onClick={() => onNavigate(navRoutes[item.id] || 'dashboard')}
-                                className={\`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition \${activeTab === item.id ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}\`}
+                                className={\`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 \${activeTab === item.id ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'}\`}
                             >
-                                <i className={\`fas \${item.icon}\`}></i>
+                                <i className={\`fas \${item.icon} \${activeTab === item.id ? 'text-indigo-600' : 'text-slate-400'}\`}></i>
                                 {item.label}
                             </button>
                         ))}
