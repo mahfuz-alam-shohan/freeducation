@@ -111,7 +111,7 @@ export const settingsComponents = `
 
             return (
                 <ShellComponent title="Edit Profile" subtitle="Update personal details" activeTab="settings" onNavigate={onNavigate}>
-                    <div className="animate-fade-in bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-sm">
+                    <div className="animate-fade-in bg-white border border-slate-200 rounded-xl p-6 max-w-2xl shadow-sm">
                         <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
                             <div className="w-28 h-28 sm:w-24 sm:h-24 bg-slate-100 rounded-full border-2 border-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
                                 <img 
@@ -162,7 +162,7 @@ export const settingsComponents = `
                             </div>
                         </div>
                     </div>
-                    {onBack && <button onClick={onBack} className="mt-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition"><i className="fa-solid fa-arrow-left"></i> Back to settings</button>}
+                    {onBack && <button onClick={onBack} className="mt-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition"><i className="fa-solid fa-arrow-left"></i> Back</button>}
                 </ShellComponent>
             );
         };
@@ -219,7 +219,7 @@ export const settingsComponents = `
                         </div>
                         
                         <button onClick={onBack} className="mt-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition">
-                            <i className="fa-solid fa-arrow-left"></i> Back to settings
+                            <i className="fa-solid fa-arrow-left"></i> Back
                         </button>
                     </div>
                 </AdminShell>
@@ -238,39 +238,37 @@ export const settingsComponents = `
                 return <DangerZonePanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
             }
 
-            // Render Main List View
+            // Render Main List View - Compact "Clean Type" Visual
             return (
                 <AdminShell title="Settings" subtitle="System preferences" activeTab="settings" onNavigate={onNavigate}>
-                    <div className="max-w-2xl bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-fade-in">
+                    <div className="max-w-xl bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-fade-in">
                         
-                        {/* Profile Option */}
+                        {/* Profile Option - Narrow & Clean */}
                         <button 
                             onClick={() => setActivePanel('profile')} 
-                            className="w-full flex items-center gap-4 p-5 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
+                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
                         >
-                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                    <i className="fa-solid fa-user-gear text-lg"></i>
+                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <i className="fa-solid fa-user-gear text-sm"></i>
                             </div>
                             <div className="flex-1">
-                                    <div className="font-semibold text-slate-900 text-base">Profile Settings</div>
-                                    <div className="text-sm text-slate-500 mt-0.5">Manage your personal details and avatar</div>
+                                    <div className="font-medium text-slate-700 text-sm">Profile Settings</div>
                             </div>
-                            <i className="fa-solid fa-chevron-right text-slate-300 group-hover:text-indigo-400"></i>
+                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
                         </button>
 
-                        {/* Danger Zone Option */}
+                        {/* Danger Zone Option - Narrow & Clean */}
                         <button 
                             onClick={() => setActivePanel('danger')} 
-                            className="w-full flex items-center gap-4 p-5 hover:bg-rose-50/20 transition text-left group"
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-rose-50/30 transition text-left group"
                         >
-                            <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                    <i className="fa-solid fa-triangle-exclamation text-lg"></i>
+                            <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <i className="fa-solid fa-triangle-exclamation text-sm"></i>
                             </div>
                             <div className="flex-1">
-                                    <div className="font-semibold text-slate-900 text-base">Danger Zone</div>
-                                    <div className="text-sm text-slate-500 mt-0.5">System reset and data deletion</div>
+                                    <div className="font-medium text-slate-700 text-sm">Danger Zone</div>
                             </div>
-                            <i className="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-400"></i>
+                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-rose-400"></i>
                         </button>
 
                     </div>
