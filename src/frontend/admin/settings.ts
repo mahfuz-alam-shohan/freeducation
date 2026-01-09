@@ -104,7 +104,7 @@ export const settingsComponents = `
                 if (data.success) { 
                     setStatusMessage('Picture updated.'); 
                     setAvatarFile(null); 
-                    await refreshProfile(); // This will reload with the correct token
+                    await refreshProfile(); 
                 }
                 setIsSaving(false);
             };
@@ -112,11 +112,7 @@ export const settingsComponents = `
             return (
                 <ShellComponent title="Profile" subtitle="Update your personal details." activeTab="settings" onNavigate={onNavigate}>
                     <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl">
-                        
-                        {/* FIX: Mobile Responsive Layout (stack on mobile, row on desktop) */}
                         <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-                            
-                            {/* Avatar Section */}
                             <div className="w-28 h-28 sm:w-24 sm:h-24 bg-slate-100 rounded-full border-2 border-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
                                 <img 
                                     src={avatarPreview || profile?.avatarUrl} 
@@ -124,7 +120,6 @@ export const settingsComponents = `
                                     alt="Profile"
                                     onError={(e) => { e.target.style.display = 'none'; }} 
                                 />
-                                {/* Fallback icon if image fails or is missing */}
                                 {(!avatarPreview && !profile?.avatarUrl) && (
                                     <div className="w-full h-full flex items-center justify-center text-slate-300">
                                         <i className="fa-solid fa-user text-4xl"></i>
@@ -132,7 +127,6 @@ export const settingsComponents = `
                                 )}
                             </div>
 
-                            {/* Inputs Section */}
                             <div className="flex-1 space-y-4 w-full text-center sm:text-left">
                                 <div className="space-y-1">
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Change Photo</label>
@@ -175,22 +169,12 @@ export const settingsComponents = `
 
         const AdminSettings = ({ onNavigate }) => {
             const [statusMessage, setStatusMessage] = useState(null);
-            const [isResetting, setIsResetting] = useState(false);
             const [activePanel, setActivePanel] = useState('main');
             const [hardResetPassword, setHardResetPassword] = useState('');
 
             if (activePanel === 'profile') {
                 return <ProfileManagement onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
             }
-
-            const handleReset = async () => {
-                if(!confirm('Reset settings? Clears fonts and thumbnails.')) return;
-                setIsResetting(true);
-                const token = localStorage.getItem('auth_token');
-                await fetch('/api/settings/reset', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ confirm: true }) });
-                setIsResetting(false);
-                setStatusMessage('Reset complete.');
-            };
 
             const handleHardReset = async () => {
                 if (!hardResetPassword) return setStatusMessage('Password required.');
@@ -211,11 +195,7 @@ export const settingsComponents = `
                                 <div className="font-bold text-slate-900">Profile</div>
                                 <div className="text-xs text-slate-500 mt-1">Edit name & photo</div>
                             </button>
-                            <button onClick={handleReset} disabled={isResetting} className="p-6 bg-white border border-slate-200 rounded-xl text-left hover:border-amber-300 transition shadow-sm group">
-                                <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition"><i className="fa-solid fa-rotate-right text-xl"></i></div>
-                                <div className="font-bold text-slate-900">Soft Reset</div>
-                                <div className="text-xs text-slate-500 mt-1">Clear visuals only</div>
-                            </button>
+                            {/* Soft Reset button removed */}
                         </div>
 
                         <div className="bg-rose-50 border border-rose-100 rounded-xl p-6">
