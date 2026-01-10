@@ -1,5 +1,5 @@
 name = "freeducation"
-main = "src/index.ts"
+main = "src/platform/entry.ts"
 compatibility_date = "2025-12-29"
 
 # D1 Database Binding
