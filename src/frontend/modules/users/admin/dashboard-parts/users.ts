@@ -10,6 +10,11 @@ export const dashboardUsers = `
         const [adminPass, setAdminPass] = useState('');
         const [newPass, setNewPass] = useState('');
         const [modalMessage, setModalMessage] = useState('');
+        const [detailUserId, setDetailUserId] = useState(null);
+        const [detailData, setDetailData] = useState(null);
+        const [detailForm, setDetailForm] = useState(null);
+        const [detailLoading, setDetailLoading] = useState(false);
+        const [detailMessage, setDetailMessage] = useState('');
 
         // Create User Form State
         const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -50,6 +55,89 @@ export const dashboardUsers = `
             const data = await res.json();
             if (data.success) setUsers(data);
             setIsLoading(false);
+        };
+
+        const loadUserDetails = async (userId) => {
+            setDetailLoading(true);
+            setDetailMessage('');
+            setDetailData(null);
+            const token = localStorage.getItem('auth_token');
+            if (!token) { setDetailLoading(false); return; }
+            try {
+                const res = await fetch('/api/users/details?id=' + userId, { headers: { Authorization: 'Bearer ' + token } });
+                const data = await res.json();
+                if (data.success) {
+                    setDetailData(data.user);
+                    setDetailForm({
+                        name: data.user.name || '',
+                        email: data.user.email || '',
+                        classLabel: data.user.classLabel || '',
+                        groupLabel: data.user.groupLabel || '',
+                        religion: data.user.religion || '',
+                        dateOfBirth: data.user.dateOfBirth || '',
+                        batchYear: data.user.batchYear || ''
+                    });
+                } else {
+                    setDetailMessage(data.error || 'Unable to load user.');
+                }
+            } catch (e) {
+                setDetailMessage('Unable to load user.');
+            }
+            setDetailLoading(false);
+        };
+
+        const handleDetailSave = async () => {
+            if (!detailForm?.name || !detailForm?.email) {
+                setDetailMessage('Name and email are required.');
+                return;
+            }
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+            setDetailLoading(true);
+            setDetailMessage('');
+            try {
+                const res = await fetch('/api/users/details', {
+                    method: 'PUT',
+                    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: detailUserId, ...detailForm })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setDetailMessage('Student updated.');
+                    fetchUsers();
+                } else {
+                    setDetailMessage(data.error || 'Update failed.');
+                }
+            } catch (e) {
+                setDetailMessage('Update failed.');
+            }
+            setDetailLoading(false);
+        };
+
+        const handleUserDelete = async () => {
+            const token = localStorage.getItem('auth_token');
+            if (!token || !detailUserId) return;
+            if (!confirm('Delete this student account? This action cannot be undone.')) return;
+            setDetailLoading(true);
+            try {
+                const res = await fetch('/api/users/delete', {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: detailUserId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setDetailUserId(null);
+                    setDetailData(null);
+                    setDetailForm(null);
+                    fetchUsers();
+                } else {
+                    setDetailMessage(data.error || 'Delete failed.');
+                }
+            } catch (e) {
+                setDetailMessage('Delete failed.');
+            }
+            setDetailLoading(false);
         };
 
         const handleAction = async () => {
@@ -132,6 +220,9 @@ export const dashboardUsers = `
                                         <td className="p-4 text-slate-600 text-xs">{activeTab === 'teachers' ? (u.level + ' - ' + u.subject) : 'Full Admin'}</td>
                                     )}
                                     <td className="p-4 text-right space-x-2">
+                                        {activeTab === 'students' && (
+                                            <button onClick={() => { setDetailUserId(u.id); loadUserDetails(u.id); }} className="text-xs px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg"><i className="fa-solid fa-user-pen"></i></button>
+                                        )}
                                         <button onClick={() => { setSelectedUser(u); setActionType('reveal'); setModalMessage(''); }} className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg"><i className="fa-solid fa-eye"></i></button>
                                         <button onClick={() => { setSelectedUser(u); setActionType('reset'); setModalMessage(''); }} className="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg"><i className="fa-solid fa-key"></i></button>
                                     </td>
@@ -152,6 +243,9 @@ export const dashboardUsers = `
                                     <div className="text-xs text-slate-500 truncate">{u.email}</div>
                                 </div>
                                 <div className="flex shrink-0 gap-2">
+                                    {activeTab === 'students' && (
+                                        <button onClick={() => { setDetailUserId(u.id); loadUserDetails(u.id); }} className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg shadow-sm"><i className="fa-solid fa-user-pen"></i></button>
+                                    )}
                                     <button onClick={() => { setSelectedUser(u); setActionType('reveal'); setModalMessage(''); }} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg shadow-sm"><i className="fa-solid fa-eye"></i></button>
                                     <button onClick={() => { setSelectedUser(u); setActionType('reset'); setModalMessage(''); }} className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg shadow-sm"><i className="fa-solid fa-key"></i></button>
                                 </div>
@@ -212,6 +306,95 @@ export const dashboardUsers = `
                         </div>
                     )}
 
+                    {detailUserId && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-900">Student Profile</h3>
+                                        {detailData && <p className="text-xs text-slate-400">Joined {new Date(detailData.createdAt).toLocaleDateString()}</p>}
+                                    </div>
+                                    <button onClick={() => { setDetailUserId(null); setDetailData(null); setDetailForm(null); }}><i className="fa-solid fa-xmark text-slate-400 hover:text-slate-600 text-xl"></i></button>
+                                </div>
+
+                                {detailLoading && <div className="text-center text-sm text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading...</div>}
+
+                                {!detailLoading && detailForm && (
+                                    <div className="space-y-5">
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Name</label>
+                                                <input value={detailForm.name} onChange={e => setDetailForm({ ...detailForm, name: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Email</label>
+                                                <input value={detailForm.email} onChange={e => setDetailForm({ ...detailForm, email: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Class</label>
+                                                <select value={detailForm.classLabel} onChange={e => setDetailForm({ ...detailForm, classLabel: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg bg-white">
+                                                    <option value="">Select</option>
+                                                    <option value="SSC">SSC</option>
+                                                    <option value="HSC">HSC</option>
+                                                    <option value="6-8">Class 6-8</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Group</label>
+                                                <select value={detailForm.groupLabel} onChange={e => setDetailForm({ ...detailForm, groupLabel: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg bg-white" disabled={!(detailForm.classLabel === 'SSC' || detailForm.classLabel === 'HSC')}>
+                                                    <option value="">Select</option>
+                                                    <option value="Science">Science</option>
+                                                    <option value="Humanities">Humanities</option>
+                                                    <option value="Business Studies">Business Studies</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Religion</label>
+                                                <select value={detailForm.religion} onChange={e => setDetailForm({ ...detailForm, religion: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg bg-white">
+                                                    <option value="">Select</option>
+                                                    <option value="Islam">Islam</option>
+                                                    <option value="Hinduism">Hinduism</option>
+                                                    <option value="Buddhism">Buddhism</option>
+                                                    <option value="Christianity">Christianity</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Date of Birth</label>
+                                                <input type="date" value={detailForm.dateOfBirth} onChange={e => setDetailForm({ ...detailForm, dateOfBirth: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg" />
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">SSC/HSC Batch Year</label>
+                                                <input value={detailForm.batchYear} onChange={e => setDetailForm({ ...detailForm, batchYear: e.target.value })} className="w-full p-3 border border-slate-200 rounded-lg" disabled={!(detailForm.classLabel === 'SSC' || detailForm.classLabel === 'HSC')} />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50 rounded-xl p-4">
+                                            <div className="text-xs uppercase tracking-wider text-slate-400">Points</div>
+                                            <div className="text-lg font-semibold text-slate-800">{detailData?.points || 0}</div>
+                                            <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
+                                                {(detailData?.pointLogs || []).length === 0 && <div className="text-xs text-slate-400">No point logs yet.</div>}
+                                                {(detailData?.pointLogs || []).map((log, index) => (
+                                                    <div key={log.createdAt + '-' + index} className="flex items-center justify-between text-xs text-slate-600">
+                                                        <span>{log.reason === 'profile_complete' ? 'Profile completed' : log.reason}</span>
+                                                        <span className="font-semibold text-emerald-600">+{log.points}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {detailMessage && <div className="p-3 bg-slate-50 text-slate-600 text-xs rounded-lg border border-slate-200">{detailMessage}</div>}
+
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <button onClick={handleDetailSave} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg">Save Changes</button>
+                                            <button onClick={handleUserDelete} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg">Delete Student</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* CREATE USER MODAL */}
                     {isCreateOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
@@ -230,8 +413,29 @@ export const dashboardUsers = `
                                     {/* Student Fields */}
                                     {activeTab === 'students' && (
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div><label className="block text-xs font-bold uppercase text-slate-400 mb-1">Class</label><select value={createForm.classLabel} onChange={e => setCreateForm({...createForm, classLabel: e.target.value})} className="w-full p-3 border border-slate-200 rounded-lg bg-white"><option>SSC</option><option>HSC</option></select></div>
-                                            <div><label className="block text-xs font-bold uppercase text-slate-400 mb-1">Group</label><select value={createForm.groupLabel} onChange={e => setCreateForm({...createForm, groupLabel: e.target.value})} className="w-full p-3 border border-slate-200 rounded-lg bg-white"><option>Science</option><option>Humanities</option><option>Business Studies</option></select></div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Class</label>
+                                                <select value={createForm.classLabel} onChange={e => {
+                                                    const nextClass = e.target.value;
+                                                    setCreateForm({
+                                                        ...createForm,
+                                                        classLabel: nextClass,
+                                                        groupLabel: nextClass === 'SSC' || nextClass === 'HSC' ? createForm.groupLabel : ''
+                                                    });
+                                                }} className="w-full p-3 border border-slate-200 rounded-lg bg-white">
+                                                    <option>SSC</option>
+                                                    <option>HSC</option>
+                                                    <option value="6-8">Class 6-8</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Group</label>
+                                                <select value={createForm.groupLabel} onChange={e => setCreateForm({...createForm, groupLabel: e.target.value})} className="w-full p-3 border border-slate-200 rounded-lg bg-white" disabled={!(createForm.classLabel === 'SSC' || createForm.classLabel === 'HSC')}>
+                                                    <option>Science</option>
+                                                    <option>Humanities</option>
+                                                    <option>Business Studies</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     )}
 

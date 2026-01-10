@@ -4,6 +4,7 @@ export const landingIndex = `
             const [query, setQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
             const { readMap } = useReadingProgress();
+            const isStudentRestricted = user?.role === 'student' && user?.classLabel && user.classLabel !== classLabel;
             const normalizedQuery = query.trim().toLowerCase();
             const groups = ['All', ...new Set(subjects.flatMap((subject) => subject.groups || []))];
             const filteredSubjects = subjects.filter((subject) => {
@@ -15,6 +16,21 @@ export const landingIndex = `
             // Collect images for visible subjects
             const imageUrls = filteredSubjects.map(s => thumbnailMap[s.subjectKey]?.url);
             const isReady = useImagePreloader(imageUrls);
+
+            if (isStudentRestricted) {
+                return (
+                    <div className="flex-1 min-h-screen flex items-center justify-center bg-slate-50 px-6">
+                        <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-md text-center shadow-sm">
+                            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                                <i className="fa-solid fa-lock"></i>
+                            </div>
+                            <h2 className="text-xl font-semibold text-slate-900">Class library locked</h2>
+                            <p className="text-sm text-slate-500 mt-2">Switch to your assigned class to explore your learning library.</p>
+                            <button onClick={() => onNavigate('student-class')} className="mt-5 w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg">Go to my class</button>
+                        </div>
+                    </div>
+                );
+            }
 
             if (!isReady && filteredSubjects.length > 0) return <FullScreenLoader />;
 

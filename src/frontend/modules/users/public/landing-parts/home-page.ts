@@ -4,9 +4,18 @@ export const landingHome = `
             const [quickQuery, setQuickQuery] = useState('');
             const thumbnailMap = useThumbnails('/api/thumbnails', 'subjectKey');
             const { readMap } = useReadingProgress();
+            const isStudent = user?.role === 'student';
+            const studentClass = user?.classLabel;
+            const allowedClass = isStudent && (studentClass === 'SSC' || studentClass === 'HSC') ? studentClass : null;
+            const showSsc = !allowedClass || allowedClass === 'SSC';
+            const showHsc = !allowedClass || allowedClass === 'HSC';
+            const scopedSscSubjects = showSsc ? sscSubjects : [];
+            const scopedHscSubjects = showHsc ? hscSubjects : [];
+            const scopedSscFeatured = showSsc ? sscFeaturedSubjects : [];
+            const scopedHscFeatured = showHsc ? hscFeaturedSubjects : [];
 
             // Collect all images we need to show
-            const allSubjects = [...sscFeaturedSubjects, ...hscFeaturedSubjects];
+            const allSubjects = [...scopedSscFeatured, ...scopedHscFeatured];
             const imageUrls = allSubjects.map(s => thumbnailMap[s.subjectKey]?.url);
             const isReady = useImagePreloader(imageUrls);
 
@@ -35,23 +44,27 @@ export const landingHome = `
                     });
                 };
 
-                [...sscSubjects, ...hscSubjects].forEach((subject) => {
+                [...scopedSscSubjects, ...scopedHscSubjects].forEach((subject) => {
                     if (!subject.route) return;
                     addEntry({ type: 'Subject', title: subject.title, subtitle: subject.classLabel + ' • ' + subject.groupLabel, keywords: [subject.title, subject.subtitle, subject.classLabel, subject.groupLabel].join(' '), onSelect: () => onNavigate(subject.route) });
                 });
 
                 const scienceConfigs = [
-                    { classLabel: 'SSC', subjectLabel: 'Physics', chapters: sscPhysicsChapters, listRoute: 'public-ssc-physics-topics', topicRoute: 'public-ssc-physics-topic' },
-                    { classLabel: 'SSC', subjectLabel: 'Chemistry', chapters: sscChemistryChapters, listRoute: 'public-ssc-chemistry-topics', topicRoute: 'public-ssc-chemistry-topic' },
-                    { classLabel: 'SSC', subjectLabel: 'Biology', chapters: sscBiologyChapters, listRoute: 'public-ssc-biology-topics', topicRoute: 'public-ssc-biology-topic' },
-                    { classLabel: 'SSC', subjectLabel: 'Bangladesh and Global Studies', chapters: sscBangladeshGlobalChapters, listRoute: 'public-ssc-bangladesh-global-studies-topics', topicRoute: 'public-ssc-bangladesh-global-studies-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Physics 1st Paper', chapters: hscPhysics1stChapters, listRoute: 'public-hsc-physics-1st-topics', topicRoute: 'public-hsc-physics-1st-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Physics 2nd Paper', chapters: hscPhysics2ndChapters, listRoute: 'public-hsc-physics-2nd-topics', topicRoute: 'public-hsc-physics-2nd-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Chemistry 1st Paper', chapters: hscChemistry1stChapters, listRoute: 'public-hsc-chemistry-1st-topics', topicRoute: 'public-hsc-chemistry-1st-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Chemistry 2nd Paper', chapters: hscChemistry2ndChapters, listRoute: 'public-hsc-chemistry-2nd-topics', topicRoute: 'public-hsc-chemistry-2nd-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Biology 1st Paper', chapters: hscBiology1stChapters, listRoute: 'public-hsc-biology-1st-topics', topicRoute: 'public-hsc-biology-1st-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Biology 2nd Paper', chapters: hscBiology2ndChapters, listRoute: 'public-hsc-biology-2nd-topics', topicRoute: 'public-hsc-biology-2nd-topic' },
-                    { classLabel: 'HSC', subjectLabel: 'Information and Communication Technology', chapters: hscIctChapters, listRoute: 'public-hsc-ict-topics', topicRoute: 'public-hsc-ict-topic', questionKey: 'ICT' }
+                    ...(showSsc ? [
+                        { classLabel: 'SSC', subjectLabel: 'Physics', chapters: sscPhysicsChapters, listRoute: 'public-ssc-physics-topics', topicRoute: 'public-ssc-physics-topic' },
+                        { classLabel: 'SSC', subjectLabel: 'Chemistry', chapters: sscChemistryChapters, listRoute: 'public-ssc-chemistry-topics', topicRoute: 'public-ssc-chemistry-topic' },
+                        { classLabel: 'SSC', subjectLabel: 'Biology', chapters: sscBiologyChapters, listRoute: 'public-ssc-biology-topics', topicRoute: 'public-ssc-biology-topic' },
+                        { classLabel: 'SSC', subjectLabel: 'Bangladesh and Global Studies', chapters: sscBangladeshGlobalChapters, listRoute: 'public-ssc-bangladesh-global-studies-topics', topicRoute: 'public-ssc-bangladesh-global-studies-topic' }
+                    ] : []),
+                    ...(showHsc ? [
+                        { classLabel: 'HSC', subjectLabel: 'Physics 1st Paper', chapters: hscPhysics1stChapters, listRoute: 'public-hsc-physics-1st-topics', topicRoute: 'public-hsc-physics-1st-topic' },
+                        { classLabel: 'HSC', subjectLabel: 'Physics 2nd Paper', chapters: hscPhysics2ndChapters, listRoute: 'public-hsc-physics-2nd-topics', topicRoute: 'public-hsc-physics-2nd-topic' },
+                        { classLabel: 'HSC', subjectLabel: 'Chemistry 1st Paper', chapters: hscChemistry1stChapters, listRoute: 'public-hsc-chemistry-1st-topics', topicRoute: 'public-hsc-chemistry-1st-topic' },
+                        { classLabel: 'HSC', subjectLabel: 'Chemistry 2nd Paper', chapters: hscChemistry2ndChapters, listRoute: 'public-hsc-chemistry-2nd-topics', topicRoute: 'public-hsc-chemistry-2nd-topic' },
+                        { classLabel: 'HSC', subjectLabel: 'Biology 1st Paper', chapters: hscBiology1stChapters, listRoute: 'public-hsc-biology-1st-topics', topicRoute: 'public-hsc-biology-1st-topic' },
+                        { classLabel: 'HSC', subjectLabel: 'Biology 2nd Paper', chapters: hscBiology2ndChapters, listRoute: 'public-hsc-biology-2nd-topics', topicRoute: 'public-hsc-biology-2nd-topic' },
+                        { classLabel: 'HSC', subjectLabel: 'Information and Communication Technology', chapters: hscIctChapters, listRoute: 'public-hsc-ict-topics', topicRoute: 'public-hsc-ict-topic', questionKey: 'ICT' }
+                    ] : [])
                 ];
 
                 scienceConfigs.forEach((config) => {
@@ -71,14 +84,14 @@ export const landingHome = `
                     });
                 });
 
-                (sscIctChapters || []).forEach((chapter) => {
+                if (showSsc) (sscIctChapters || []).forEach((chapter) => {
                     addEntry({
                         type: 'Chapter', title: chapter.name, subtitle: 'ICT • SSC', keywords: [chapter.name, 'ICT', 'SSC', 'chapter'].join(' '),
                         onSelect: () => { setSelectedIctChapter(chapter); setSelectedIctClass('SSC'); onNavigate('public-ssc-ict-mcq'); }
                     });
                 });
 
-                religionOptions.forEach((option) => {
+                if (showSsc) religionOptions.forEach((option) => {
                     const chapters = (sscReligionChapters || {})[option.key] || [];
                     chapters.forEach((chapter) => {
                         addEntry({
@@ -108,12 +121,16 @@ export const landingHome = `
                         addContentEntries({ noteKey, parentLabel, onSelect: itemAction, videoContext: { title: itemName, subtitle: label, backRoute: itemRoute, backgroundClass: 'bg-[#fff7ed]' } });
                     });
                 };
-                addBanglaItems('SSC', 'গদ্য', sscGoddoItems, 'public-bangla-ssc-item');
-                addBanglaItems('SSC', 'পদ্য', sscPoddoItems, 'public-bangla-ssc-item');
-                addBanglaItems('SSC', 'সহপাঠ', sscShohopathItems, 'public-bangla-ssc-item');
-                addBanglaItems('HSC', 'গদ্য', hscGoddoItems, 'public-bangla-hsc-item');
-                addBanglaItems('HSC', 'পদ্য', hscPoddoItems, 'public-bangla-hsc-item');
-                addBanglaItems('HSC', 'সহপাঠ', hscShohopathItems, 'public-bangla-hsc-item');
+                if (showSsc) {
+                    addBanglaItems('SSC', 'গদ্য', sscGoddoItems, 'public-bangla-ssc-item');
+                    addBanglaItems('SSC', 'পদ্য', sscPoddoItems, 'public-bangla-ssc-item');
+                    addBanglaItems('SSC', 'সহপাঠ', sscShohopathItems, 'public-bangla-ssc-item');
+                }
+                if (showHsc) {
+                    addBanglaItems('HSC', 'গদ্য', hscGoddoItems, 'public-bangla-hsc-item');
+                    addBanglaItems('HSC', 'পদ্য', hscPoddoItems, 'public-bangla-hsc-item');
+                    addBanglaItems('HSC', 'সহপাঠ', hscShohopathItems, 'public-bangla-hsc-item');
+                }
                 return entries;
             };
 
@@ -201,9 +218,20 @@ export const landingHome = `
 
                         {/* Content */}
                         <div className="relative z-10">
-                            <SubjectRow title="SSC" subjects={sscFeaturedSubjects} onNavigate={onNavigate} onAll={() => onNavigate('ssc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
-                            <div className="h-10"></div> {/* Spacer */}
-                            <SubjectRow title="HSC" subjects={hscFeaturedSubjects} onNavigate={onNavigate} onAll={() => onNavigate('hsc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+                            {allowedClass ? (
+                                <SubjectRow title={allowedClass} subjects={allowedClass === 'SSC' ? scopedSscFeatured : scopedHscFeatured} onNavigate={onNavigate} onAll={() => onNavigate(allowedClass === 'SSC' ? 'ssc-subjects' : 'hsc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+                            ) : (
+                                <>
+                                    <SubjectRow title="SSC" subjects={scopedSscFeatured} onNavigate={onNavigate} onAll={() => onNavigate('ssc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+                                    <div className="h-10"></div>
+                                    <SubjectRow title="HSC" subjects={scopedHscFeatured} onNavigate={onNavigate} onAll={() => onNavigate('hsc-subjects')} thumbnailMap={thumbnailMap} readMap={readMap} />
+                                </>
+                            )}
+                            {isStudent && studentClass && !allowedClass && (
+                                <div className="mt-10 bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-center text-sm text-slate-500">
+                                    Academic content for this class level is coming soon. Keep your profile updated for new updates.
+                                </div>
+                            )}
                         </div>
                     </section>
                 </div>

@@ -217,5 +217,143 @@ export const handleUsers = async (request: Request, env: Env, path: string): Pro
     return Response.json({ success: true }, { headers: apiHeaders });
   }
 
+  if (path === "/api/users/details" && request.method === "GET") {
+    const payload = await getAuthPayload(request, env);
+    if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+
+    const url = new URL(request.url);
+    const userId = Number(url.searchParams.get("id"));
+    if (!userId) {
+      return Response.json({ success: false, error: "User ID is required" }, { status: 400, headers: apiHeaders });
+    }
+
+    const userRow = await env.DB.prepare(
+      "SELECT id, name, email, role, class_label, group_label, religion, date_of_birth, batch_year, points, created_at FROM users WHERE id = ?"
+    )
+      .bind(userId)
+      .first();
+
+    if (!userRow) {
+      return Response.json({ success: false, error: "User not found" }, { status: 404, headers: apiHeaders });
+    }
+
+    const logs = await env.DB.prepare(
+      "SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC"
+    )
+      .bind(userId)
+      .all();
+
+    return Response.json(
+      {
+        success: true,
+        user: {
+          id: userRow.id,
+          name: userRow.name,
+          email: userRow.email,
+          role: userRow.role,
+          classLabel: userRow.class_label,
+          groupLabel: userRow.group_label,
+          religion: userRow.religion,
+          dateOfBirth: userRow.date_of_birth,
+          batchYear: userRow.batch_year,
+          points: userRow.points || 0,
+          createdAt: userRow.created_at,
+          pointLogs: (logs.results || []).map((row: any) => ({
+            points: row.points,
+            reason: row.reason,
+            createdAt: row.created_at,
+          })),
+        },
+      },
+      { headers: apiHeaders }
+    );
+  }
+
+  if (path === "/api/users/details" && request.method === "PUT") {
+    const payload = await getAuthPayload(request, env);
+    if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+
+    const body = (await request.json()) as any;
+    const userId = Number(body.id);
+    if (!userId) {
+      return Response.json({ success: false, error: "User ID is required" }, { status: 400, headers: apiHeaders });
+    }
+
+    const existing = await env.DB.prepare(
+      "SELECT id, email, role FROM users WHERE id = ?"
+    )
+      .bind(userId)
+      .first();
+
+    if (!existing) {
+      return Response.json({ success: false, error: "User not found" }, { status: 404, headers: apiHeaders });
+    }
+
+    if (existing.role !== "student") {
+      return Response.json({ success: false, error: "Only student accounts can be edited here." }, { status: 400, headers: apiHeaders });
+    }
+
+    const name = body.name ? String(body.name).trim() : null;
+    const email = body.email ? normalizeEmail(String(body.email)) : null;
+    const classLabel = body.classLabel ? String(body.classLabel).trim() : null;
+    const groupLabel = body.groupLabel ? String(body.groupLabel).trim() : null;
+    const religion = body.religion ? String(body.religion).trim() : null;
+    const dateOfBirth = body.dateOfBirth ? String(body.dateOfBirth).trim() : null;
+    const batchYear = body.batchYear ? String(body.batchYear).trim() : null;
+
+    const nextEmail = email || (existing.email as string);
+    if (email && email !== existing.email) {
+      const conflict = await env.DB.prepare("SELECT id FROM users WHERE email = ? AND id != ?").bind(email, userId).first();
+      if (conflict) {
+        return Response.json({ success: false, error: "Email already in use." }, { status: 400, headers: apiHeaders });
+      }
+    }
+
+    await env.DB.prepare(
+      "UPDATE users SET name = ?, email = ?, username = ?, class_label = ?, group_label = ?, religion = ?, date_of_birth = ?, batch_year = ? WHERE id = ?"
+    )
+      .bind(name, nextEmail, nextEmail, classLabel, groupLabel, religion, dateOfBirth, batchYear, userId)
+      .run();
+
+    return Response.json({ success: true }, { headers: apiHeaders });
+  }
+
+  if (path === "/api/users/delete" && request.method === "POST") {
+    const payload = await getAuthPayload(request, env);
+    if (!ensureAdmin(payload)) return Response.json({ success: false, error: "Unauthorized" }, { status: 401, headers: apiHeaders });
+
+    const body = (await request.json()) as any;
+    const userId = Number(body.id);
+    if (!userId) {
+      return Response.json({ success: false, error: "User ID is required" }, { status: 400, headers: apiHeaders });
+    }
+
+    const userRow = await env.DB.prepare("SELECT role FROM users WHERE id = ?").bind(userId).first();
+    if (!userRow) {
+      return Response.json({ success: false, error: "User not found" }, { status: 404, headers: apiHeaders });
+    }
+    if (userRow.role !== "student") {
+      return Response.json({ success: false, error: "Only student accounts can be deleted here." }, { status: 400, headers: apiHeaders });
+    }
+
+    const avatarRow = await env.DB.prepare("SELECT avatar_key FROM user_profiles WHERE user_id = ?").bind(userId).first();
+
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM user_profiles WHERE user_id = ?").bind(userId),
+      env.DB.prepare("DELETE FROM admin_permissions WHERE user_id = ?").bind(userId),
+      env.DB.prepare("DELETE FROM teacher_assignments WHERE user_id = ?").bind(userId),
+      env.DB.prepare("DELETE FROM teacher_permissions WHERE user_id = ?").bind(userId),
+      env.DB.prepare("DELETE FROM edit_history WHERE user_id = ?").bind(userId),
+      env.DB.prepare("DELETE FROM user_points_log WHERE user_id = ?").bind(userId),
+      env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId),
+    ]);
+
+    if (avatarRow?.avatar_key) {
+      await env.BUCKET.delete(avatarRow.avatar_key as string);
+    }
+
+    return Response.json({ success: true }, { headers: apiHeaders });
+  }
+
   return null;
 };

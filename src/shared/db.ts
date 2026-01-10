@@ -26,6 +26,10 @@ export async function initDatabase(db: D1Database) {
       role TEXT NOT NULL,
       class_label TEXT,
       group_label TEXT,
+      religion TEXT,
+      date_of_birth TEXT,
+      batch_year TEXT,
+      points INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS user_profiles (
@@ -95,6 +99,13 @@ export async function initDatabase(db: D1Database) {
       details TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS user_points_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      points INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare(`INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')`),
     db.prepare(`INSERT OR IGNORE INTO class_groups (class_id, name)
       SELECT classes.id, group_names.name
@@ -133,6 +144,10 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "role", sql: "TEXT NOT NULL" },
     { name: "class_label", sql: "TEXT" }, // New column
     { name: "group_label", sql: "TEXT" }, // New column
+    { name: "religion", sql: "TEXT" },
+    { name: "date_of_birth", sql: "TEXT" },
+    { name: "batch_year", sql: "TEXT" },
+    { name: "points", sql: "INTEGER DEFAULT 0" },
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
   user_profiles: [
@@ -193,6 +208,12 @@ const tableColumns: Record<string, ColumnDefinition[]> = {
     { name: "user_id", sql: "INTEGER NOT NULL" },
     { name: "action", sql: "TEXT NOT NULL" },
     { name: "details", sql: "TEXT" },
+    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+  ],
+  user_points_log: [
+    { name: "user_id", sql: "INTEGER NOT NULL" },
+    { name: "points", sql: "INTEGER NOT NULL" },
+    { name: "reason", sql: "TEXT NOT NULL" },
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
 };

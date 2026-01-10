@@ -360,11 +360,220 @@ export const settingsComponents = `
             return <ProfileManagement onNavigate={onNavigate} shell="teacher" />;
         };
 
+        const StudentProfileDetails = ({ onNavigate, onBack }) => {
+            const [form, setForm] = useState({
+                email: '',
+                religion: '',
+                classLabel: '',
+                groupLabel: '',
+                dateOfBirth: '',
+                batchYear: ''
+            });
+            const [isLoading, setIsLoading] = useState(true);
+            const [isSaving, setIsSaving] = useState(false);
+            const [statusMessage, setStatusMessage] = useState('');
+
+            const computeAge = (dob) => {
+                if (!dob) return '';
+                const birthDate = new Date(dob);
+                if (Number.isNaN(birthDate.getTime())) return '';
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age -= 1;
+                }
+                return age >= 0 ? String(age) : '';
+            };
+
+            const loadProfile = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setIsLoading(false); return; }
+                try {
+                    const res = await fetch('/api/student/profile', { headers: { Authorization: 'Bearer ' + token } });
+                    const data = await res.json();
+                    if (data.success) {
+                        setForm({
+                            email: data.profile?.email || '',
+                            religion: data.profile?.religion || '',
+                            classLabel: data.profile?.classLabel || '',
+                            groupLabel: data.profile?.groupLabel || '',
+                            dateOfBirth: data.profile?.dateOfBirth || '',
+                            batchYear: data.profile?.batchYear || ''
+                        });
+                    }
+                } catch (e) {} finally { setIsLoading(false); }
+            };
+
+            useEffect(() => { loadProfile(); }, []);
+
+            const handleSave = async () => {
+                setIsSaving(true);
+                setStatusMessage('');
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setIsSaving(false); return; }
+                try {
+                    const res = await fetch('/api/student/profile', {
+                        method: 'PUT',
+                        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            religion: form.religion,
+                            classLabel: form.classLabel,
+                            groupLabel: form.classLabel === 'SSC' || form.classLabel === 'HSC' ? form.groupLabel : '',
+                            dateOfBirth: form.dateOfBirth,
+                            batchYear: form.classLabel === 'SSC' || form.classLabel === 'HSC' ? form.batchYear : ''
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        setStatusMessage(data.pointsAwarded ? 'Profile updated and 10 points added!' : 'Profile updated.');
+                        const meRes = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + token } });
+                        const meData = await meRes.json();
+                        if (meData.user) setUser(meData.user);
+                    } else {
+                        setStatusMessage(data.error || 'Update failed.');
+                    }
+                } catch (e) {
+                    setStatusMessage('Update failed.');
+                }
+                setIsSaving(false);
+            };
+
+            const age = computeAge(form.dateOfBirth);
+            const showGroup = form.classLabel === 'SSC' || form.classLabel === 'HSC';
+
+            return (
+                <StudentShell title="Profile Details" subtitle="Keep your student profile updated" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl shadow-sm space-y-5 animate-fade-in">
+                        {isLoading ? (
+                            <div className="text-center text-sm text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading profile...</div>
+                        ) : (
+                            <>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
+                                        <input value={form.email} disabled className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Religion</label>
+                                        <select value={form.religion} onChange={e => setForm({ ...form, religion: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white">
+                                            <option value="">Select religion</option>
+                                            <option value="Islam">Islam</option>
+                                            <option value="Hinduism">Hinduism</option>
+                                            <option value="Buddhism">Buddhism</option>
+                                            <option value="Christianity">Christianity</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Class Level</label>
+                                        <select value={form.classLabel} onChange={e => setForm({ ...form, classLabel: e.target.value, groupLabel: e.target.value === 'SSC' || e.target.value === 'HSC' ? form.groupLabel : '' })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white">
+                                            <option value="">Select class</option>
+                                            <option value="SSC">SSC</option>
+                                            <option value="HSC">HSC</option>
+                                            <option value="6-8">Class 6-8</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Group</label>
+                                        <select value={form.groupLabel} onChange={e => setForm({ ...form, groupLabel: e.target.value })} disabled={!showGroup} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white disabled:bg-slate-50 disabled:text-slate-400">
+                                            <option value="">Select group</option>
+                                            <option value="Science">Science</option>
+                                            <option value="Humanities">Humanities</option>
+                                            <option value="Business Studies">Business Studies</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Date of Birth</label>
+                                        <input type="date" value={form.dateOfBirth} onChange={e => setForm({ ...form, dateOfBirth: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Age</label>
+                                        <input value={age} disabled className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500" />
+                                    </div>
+                                    <div className="sm:col-span-2">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">SSC/HSC Batch Year</label>
+                                        <input value={form.batchYear} onChange={e => setForm({ ...form, batchYear: e.target.value })} disabled={!showGroup} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm disabled:bg-slate-50 disabled:text-slate-400" placeholder="e.g. 2026" />
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                                    <button onClick={handleSave} disabled={isSaving} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50">
+                                        {isSaving ? 'Saving...' : 'Save Details'}
+                                    </button>
+                                    {onBack && <button onClick={onBack} className="px-6 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Back</button>}
+                                </div>
+
+                                {statusMessage && <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium">{statusMessage}</div>}
+                            </>
+                        )}
+                    </div>
+                </StudentShell>
+            );
+        };
+
+        const StudentPointsPanel = ({ onNavigate, onBack }) => {
+            const [points, setPoints] = useState(0);
+            const [logs, setLogs] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+
+            const loadPoints = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setIsLoading(false); return; }
+                try {
+                    const res = await fetch('/api/points', { headers: { Authorization: 'Bearer ' + token } });
+                    const data = await res.json();
+                    if (data.success) {
+                        setPoints(data.points || 0);
+                        setLogs(data.logs || []);
+                    }
+                } catch (e) {} finally { setIsLoading(false); }
+            };
+
+            useEffect(() => { loadPoints(); }, []);
+
+            return (
+                <StudentShell title="My Points" subtitle="Track your achievements" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-3xl shadow-sm space-y-6 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <div className="text-xs uppercase tracking-wider text-slate-400">Total Points</div>
+                                <div className="text-3xl font-semibold text-slate-900">{points}</div>
+                            </div>
+                            {onBack && <button onClick={onBack} className="px-5 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Back</button>}
+                        </div>
+                        {isLoading ? (
+                            <div className="text-center text-sm text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading points...</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {logs.length === 0 && <div className="text-sm text-slate-500">No points earned yet.</div>}
+                                {logs.map((log, index) => (
+                                    <div key={log.createdAt + '-' + index} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
+                                        <div>
+                                            <div className="text-sm font-semibold text-slate-800">{log.reason === 'profile_complete' ? 'Profile completed' : log.reason}</div>
+                                            <div className="text-xs text-slate-400">{new Date(log.createdAt).toLocaleString()}</div>
+                                        </div>
+                                        <div className="text-sm font-bold text-emerald-600">+{log.points}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </StudentShell>
+            );
+        };
+
         const StudentSettings = ({ onNavigate }) => {
             const [activePanel, setActivePanel] = useState('main');
 
             if (activePanel === 'profile') {
                 return <ProfileManagement onNavigate={onNavigate} onBack={() => setActivePanel('main')} shell="student" />;
+            }
+            if (activePanel === 'details') {
+                return <StudentProfileDetails onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
+            }
+            if (activePanel === 'points') {
+                return <StudentPointsPanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
             }
             if (activePanel === 'password') {
                 return <ChangePasswordPanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} shell="student" />;
@@ -384,6 +593,32 @@ export const settingsComponents = `
                                 <div className="font-medium text-slate-700 text-sm">Profile</div>
                             </div>
                             <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
+                        </button>
+
+                        <button
+                            onClick={() => setActivePanel('details')}
+                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                <i className="fa-solid fa-id-card text-sm"></i>
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-medium text-slate-700 text-sm">Profile Details</div>
+                            </div>
+                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
+                        </button>
+
+                        <button
+                            onClick={() => setActivePanel('points')}
+                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                <i className="fa-solid fa-coins text-sm"></i>
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-medium text-slate-700 text-sm">My Points</div>
+                            </div>
+                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-emerald-400"></i>
                         </button>
 
                         <button

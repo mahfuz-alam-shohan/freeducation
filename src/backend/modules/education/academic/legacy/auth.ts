@@ -121,16 +121,21 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
 
   if (path === "/api/me" && request.method === "GET") {
     const payload = await getAuthPayload(request, env);
+    const userRow = payload
+      ? await env.DB.prepare("SELECT username, role, class_label, group_label FROM users WHERE id = ?")
+          .bind(payload.id)
+          .first()
+      : null;
     return Response.json(
       {
         user: payload
           ? {
-              username: payload.username,
-              role: payload.role,
+              username: userRow?.username || payload.username,
+              role: userRow?.role || payload.role,
               permissions: payload.permissions || [],
               assignment: payload.assignment || null,
-              classLabel: payload.classLabel || null,
-              groupLabel: payload.groupLabel || null,
+              classLabel: userRow?.class_label || payload.classLabel || null,
+              groupLabel: userRow?.group_label || payload.groupLabel || null,
             }
           : null,
       },
