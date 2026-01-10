@@ -1,6 +1,6 @@
 export const setupComponents = `
         const SetupView = ({ onNavigate }) => {
-            const [siteName, setSiteName] = useState('');
+            const [adminName, setAdminName] = useState('');
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
             const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,7 +35,7 @@ export const setupComponents = `
                     const res = await fetch('/api/system/init', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ siteName, email, password, confirmPassword })
+                        body: JSON.stringify({ adminName, email, password, confirmPassword })
                     });
                     const data = await res.json();
                     if (!data.success) {
@@ -80,13 +80,13 @@ export const setupComponents = `
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div>
-                                <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">Site Name</label>
+                                <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">Admin Name</label>
                                 <input
                                     type="text"
-                                    value={siteName}
-                                    onChange={(e) => setSiteName(e.target.value)}
+                                    value={adminName}
+                                    onChange={(e) => setAdminName(e.target.value)}
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                                    placeholder="Enter your site name"
+                                    placeholder="Enter admin name"
                                     required
                                 />
                             </div>

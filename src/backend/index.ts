@@ -37,6 +37,26 @@ app.all('/api/system/*', async (c) => {
   return response ?? c.notFound();
 });
 
+app.all('/api/login', async (c) => {
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api/login');
+  return response ?? c.notFound();
+});
+
+app.all('/api/register-admin', async (c) => {
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api/register-admin');
+  return response ?? c.notFound();
+});
+
+app.all('/api/me', async (c) => {
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api/me');
+  return response ?? c.notFound();
+});
+
+app.all('/api/change-password', async (c) => {
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api/change-password');
+  return response ?? c.notFound();
+});
+
 app.all('/api/users', async (c) => {
   const response = await forwardToModule(adminModule, c.req.raw, c.env, '/api/users');
   return response ?? c.notFound();

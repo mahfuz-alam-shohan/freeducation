@@ -25,14 +25,14 @@ export const handleSetup = async (request: Request, env: Env, path: string): Pro
   }
 
   const body = await request.json().catch(() => ({}));
-  const siteName = String(body.siteName || '').trim();
+  const adminName = String(body.adminName || '').trim();
   const email = normalizeEmail(String(body.email || ''));
   const password = String(body.password || '');
   const confirmPassword = String(body.confirmPassword || '');
 
-  if (!siteName || !email || !password || !confirmPassword) {
+  if (!adminName || !email || !password || !confirmPassword) {
     return Response.json(
-      { success: false, error: 'Site name, email, and password are required.' },
+      { success: false, error: 'Admin name, email, and password are required.' },
       { status: 400, headers: apiHeaders }
     );
   }
@@ -61,11 +61,11 @@ export const handleSetup = async (request: Request, env: Env, path: string): Pro
   }
 
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)').bind(adminRow.id, siteName, siteName),
+    env.DB.prepare('INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)').bind(adminRow.id, adminName, adminName),
     env.DB
       .prepare('INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)')
       .bind(adminRow.id, JSON.stringify(defaultAdminPermissions)),
-    env.DB.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').bind(siteName, passwordHash),
+    env.DB.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').bind(adminName, passwordHash),
   ]);
 
   return Response.json(
