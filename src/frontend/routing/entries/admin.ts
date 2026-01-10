@@ -1,4 +1,4 @@
-export const adminViewEntries: Array<[string, string]> = [
+export const adminRoutes: Array<[string, string]> = [
   ["/dashboard", "dashboard"],
   ["/dashboard/ssc", "admin-groups-ssc"],
   ["/dashboard/hsc", "admin-groups-hsc"],
