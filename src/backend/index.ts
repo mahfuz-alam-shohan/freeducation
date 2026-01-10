@@ -79,6 +79,65 @@ app.all('/api/users/*', async (c) => {
   return c.notFound();
 });
 
+app.all('/api/student', async (c) => {
+  const response = await forwardToModule(studentModule, c.req.raw, c.env, '/api/student');
+  return response ?? c.notFound();
+});
+
+app.all('/api/student/*', async (c) => {
+  const suffix = c.req.path.replace('/api/student', '');
+  const nextPath = `/api/student${suffix}` || '/api/student';
+  const response = await forwardToModule(studentModule, c.req.raw, c.env, nextPath);
+  return response ?? c.notFound();
+});
+
+app.all('/api/points', async (c) => {
+  const response = await forwardToModule(studentModule, c.req.raw, c.env, '/api/points');
+  return response ?? c.notFound();
+});
+
+app.all('/api/classes', async (c) => {
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/classes');
+  return response ?? c.notFound();
+});
+
+app.all('/api/content', async (c) => {
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/content');
+  return response ?? c.notFound();
+});
+
+app.all('/api/content/*', async (c) => {
+  const suffix = c.req.path.replace('/api/content', '');
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, `/api/content${suffix}`);
+  return response ?? c.notFound();
+});
+
+app.all('/api/videos', async (c) => {
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/videos');
+  return response ?? c.notFound();
+});
+
+app.all('/api/videos/*', async (c) => {
+  const suffix = c.req.path.replace('/api/videos', '');
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, `/api/videos${suffix}`);
+  return response ?? c.notFound();
+});
+
+app.all('/api/thumbnails', async (c) => {
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/thumbnails');
+  return response ?? c.notFound();
+});
+
+app.all('/api/chapter-thumbnails', async (c) => {
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/chapter-thumbnails');
+  return response ?? c.notFound();
+});
+
+app.all('/api/fonts', async (c) => {
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/fonts');
+  return response ?? c.notFound();
+});
+
 app.all('/api/academic', async (c) => {
   const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api');
   return response ?? c.notFound();
