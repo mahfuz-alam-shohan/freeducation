@@ -21,18 +21,6 @@ const isCompleteProfile = (profile: {
   return true;
 };
 
-const loadPointsLog = async (db: D1Database, userId: number) => {
-  const rows = await db
-    .prepare('SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC')
-    .bind(userId)
-    .all();
-  return (rows.results || []).map((row: any) => ({
-    points: row.points,
-    reason: row.reason,
-    createdAt: row.created_at,
-  }));
-};
-
 export const handleStudentProfile = async (request: Request, env: Env, path: string): Promise<Response | null> => {
   if (path === '/api/student/profile' && request.method === 'GET') {
     const payload = await getAuthPayload(request, env);
@@ -116,13 +104,18 @@ export const handleStudentProfile = async (request: Request, env: Env, path: str
         .first();
       if (!hasLog) {
         pointsAwarded = 10;
-        const nextPoints = Number(existing.points || 0) + pointsAwarded;
-        await env.DB.batch([
-          env.DB.prepare('UPDATE users SET points = ? WHERE id = ?').bind(nextPoints, payload.id),
-          env.DB
-            .prepare('INSERT INTO user_points_log (user_id, points, reason) VALUES (?, ?, ?)')
-            .bind(payload.id, pointsAwarded, 'profile_complete'),
-        ]);
+        const insertResult = await env.DB
+          .prepare(
+            'INSERT INTO user_points_log (user_id, points, reason) VALUES (?, ?, ?) ON CONFLICT(user_id, reason) DO NOTHING'
+          )
+          .bind(payload.id, pointsAwarded, 'profile_complete')
+          .run();
+        const changes = (insertResult as any)?.meta?.changes ?? 0;
+        if (changes > 0) {
+          await env.DB.prepare('UPDATE users SET points = points + ? WHERE id = ?').bind(pointsAwarded, payload.id).run();
+        } else {
+          pointsAwarded = 0;
+        }
       }
     }
 
@@ -135,21 +128,6 @@ export const handleStudentProfile = async (request: Request, env: Env, path: str
     });
 
     return Response.json({ success: true, pointsAwarded }, { headers: apiHeaders });
-  }
-
-  if (path === '/api/points' && request.method === 'GET') {
-    const payload = await getAuthPayload(request, env);
-    if (!payload || payload.role !== 'student') {
-      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: apiHeaders });
-    }
-
-    const row = await env.DB.prepare('SELECT points FROM users WHERE id = ?').bind(payload.id).first();
-    if (!row) {
-      return Response.json({ success: false, error: 'User not found' }, { status: 404, headers: apiHeaders });
-    }
-    const logs = await loadPointsLog(env.DB, payload.id);
-
-    return Response.json({ success: true, points: row.points || 0, logs }, { headers: apiHeaders });
   }
 
   return null;

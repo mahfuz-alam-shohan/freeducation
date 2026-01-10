@@ -1,6 +1,6 @@
 import type { Env } from '../../../../shared/types';
 import type { ApiModule } from '../..';
-import { handleAdminUsers } from './controller';
+import { handleAdminUsers } from './user-management';
 import '../schema';
 
 const handlers = [handleAdminUsers];

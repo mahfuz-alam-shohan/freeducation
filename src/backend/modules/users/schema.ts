@@ -158,4 +158,5 @@ registerTableSchema({
     { name: "reason", sql: "TEXT NOT NULL" },
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],
+  seeds: ["CREATE UNIQUE INDEX IF NOT EXISTS user_points_log_unique ON user_points_log (user_id, reason)"],
 });

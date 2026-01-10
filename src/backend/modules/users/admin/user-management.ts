@@ -198,123 +198,26 @@ export const handleAdminUsers = async (request: Request, env: Env, path: string)
     const target = await env.DB.prepare('SELECT password_hash FROM users WHERE id = ?').bind(targetId).first();
     if (!target) return Response.json({ success: false, error: 'User not found' }, { status: 404, headers: apiHeaders });
 
-    return Response.json({ success: true, hash: target.password_hash }, { headers: apiHeaders });
+    return Response.json({ success: true, passwordHash: target.password_hash }, { headers: apiHeaders });
   }
 
-  if (path === '/api/users/reset' && request.method === 'POST') {
-    const payload = await getAuthPayload(request, env);
-    if (!ensureAdmin(payload)) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: apiHeaders });
-
-    const { adminPassword, targetId, newPassword } = (await request.json()) as any;
-
-    const admin = await env.DB.prepare('SELECT password_hash FROM users WHERE id = ?').bind(payload.id).first();
-    if (!admin) return Response.json({ success: false, error: 'Admin not found' }, { status: 401, headers: apiHeaders });
-
-    const [saltHex, originalHash] = (admin.password_hash as string).split(':');
-    const hashCheck = await hashPassword(adminPassword, saltHex);
-    if (hashCheck !== originalHash) {
-      return Response.json({ success: false, error: 'Incorrect Admin Password' }, { status: 401, headers: apiHeaders });
-    }
-
-    if (newPassword.length < 8) return Response.json({ success: false, error: 'New password too short' }, { status: 400, headers: apiHeaders });
-
-    const { passwordHash } = await buildPasswordHash(newPassword);
-    await env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(passwordHash, targetId).run();
-
-    return Response.json({ success: true }, { headers: apiHeaders });
-  }
-
-  if (path === '/api/users/details' && request.method === 'GET') {
-    const payload = await getAuthPayload(request, env);
-    if (!ensureAdmin(payload)) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: apiHeaders });
-
-    const url = new URL(request.url);
-    const userId = Number(url.searchParams.get('id'));
-    if (!userId) {
-      return Response.json({ success: false, error: 'User ID is required' }, { status: 400, headers: apiHeaders });
-    }
-
-    const userRow = await env.DB
-      .prepare('SELECT id, name, email, role, class_label, group_label, religion, date_of_birth, batch_year, points, created_at FROM users WHERE id = ?')
-      .bind(userId)
-      .first();
-
-    if (!userRow) {
-      return Response.json({ success: false, error: 'User not found' }, { status: 404, headers: apiHeaders });
-    }
-
-    const logs = await env.DB.prepare('SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC')
-      .bind(userId)
-      .all();
-
-    return Response.json(
-      {
-        success: true,
-        user: {
-          id: userRow.id,
-          name: userRow.name,
-          email: userRow.email,
-          role: userRow.role,
-          classLabel: userRow.class_label,
-          groupLabel: userRow.group_label,
-          religion: userRow.religion,
-          dateOfBirth: userRow.date_of_birth,
-          batchYear: userRow.batch_year,
-          points: userRow.points || 0,
-          createdAt: userRow.created_at,
-          pointLogs: (logs.results || []).map((row: any) => ({
-            points: row.points,
-            reason: row.reason,
-            createdAt: row.created_at,
-          })),
-        },
-      },
-      { headers: apiHeaders }
-    );
-  }
-
-  if (path === '/api/users/details' && request.method === 'PUT') {
+  if (path === '/api/users/reset-password' && request.method === 'POST') {
     const payload = await getAuthPayload(request, env);
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: apiHeaders });
 
     const body = (await request.json()) as any;
-    const userId = Number(body.id);
-    if (!userId) {
-      return Response.json({ success: false, error: 'User ID is required' }, { status: 400, headers: apiHeaders });
+    const userId = Number(body.userId);
+    const password = String(body.password || '');
+
+    if (!userId || !password) {
+      return Response.json({ success: false, error: 'User ID and password are required.' }, { status: 400, headers: apiHeaders });
+    }
+    if (password.length < 8) {
+      return Response.json({ success: false, error: 'Password must be at least 8 characters.' }, { status: 400, headers: apiHeaders });
     }
 
-    const existing = await fetchUserById(env.DB, userId);
-
-    if (!existing) {
-      return Response.json({ success: false, error: 'User not found' }, { status: 404, headers: apiHeaders });
-    }
-
-    if (existing.role !== 'student') {
-      return Response.json({ success: false, error: 'Only student accounts can be edited here.' }, { status: 400, headers: apiHeaders });
-    }
-
-    const name = body.name ? String(body.name).trim() : null;
-    const email = body.email ? normalizeEmail(String(body.email)) : null;
-    const classLabel = body.classLabel ? String(body.classLabel).trim() : null;
-    const groupLabel = body.groupLabel ? String(body.groupLabel).trim() : null;
-    const religion = body.religion ? String(body.religion).trim() : null;
-    const dateOfBirth = body.dateOfBirth ? String(body.dateOfBirth).trim() : null;
-    const batchYear = body.batchYear ? String(body.batchYear).trim() : null;
-
-    const nextEmail = email || (existing.email as string);
-    if (email && email !== existing.email) {
-      const conflict = await env.DB.prepare('SELECT id FROM users WHERE email = ? AND id != ?').bind(email, userId).first();
-      if (conflict) {
-        return Response.json({ success: false, error: 'Email already in use.' }, { status: 400, headers: apiHeaders });
-      }
-    }
-
-    await env.DB
-      .prepare(
-        'UPDATE users SET name = ?, email = ?, username = ?, class_label = ?, group_label = ?, religion = ?, date_of_birth = ?, batch_year = ? WHERE id = ?'
-      )
-      .bind(name, nextEmail, nextEmail, classLabel, groupLabel, religion, dateOfBirth, batchYear, userId)
-      .run();
+    const { passwordHash } = await buildPasswordHash(password);
+    await env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(passwordHash, userId).run();
 
     return Response.json({ success: true }, { headers: apiHeaders });
   }
@@ -324,34 +227,23 @@ export const handleAdminUsers = async (request: Request, env: Env, path: string)
     if (!ensureAdmin(payload)) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: apiHeaders });
 
     const body = (await request.json()) as any;
-    const userId = Number(body.id);
+    const userId = Number(body.userId);
+
     if (!userId) {
-      return Response.json({ success: false, error: 'User ID is required' }, { status: 400, headers: apiHeaders });
+      return Response.json({ success: false, error: 'User ID is required.' }, { status: 400, headers: apiHeaders });
     }
 
-    const userRow = await env.DB.prepare('SELECT role FROM users WHERE id = ?').bind(userId).first();
-    if (!userRow) {
-      return Response.json({ success: false, error: 'User not found' }, { status: 404, headers: apiHeaders });
+    const existing = await fetchUserById(env.DB, userId);
+    if (!existing) {
+      return Response.json({ success: false, error: 'User not found.' }, { status: 404, headers: apiHeaders });
     }
-    if (userRow.role !== 'student') {
-      return Response.json({ success: false, error: 'Only student accounts can be deleted here.' }, { status: 400, headers: apiHeaders });
-    }
-
-    const avatarRow = await env.DB.prepare('SELECT avatar_key FROM user_profiles WHERE user_id = ?').bind(userId).first();
 
     await env.DB.batch([
-      env.DB.prepare('DELETE FROM user_profiles WHERE user_id = ?').bind(userId),
-      env.DB.prepare('DELETE FROM admin_permissions WHERE user_id = ?').bind(userId),
-      env.DB.prepare('DELETE FROM teacher_assignments WHERE user_id = ?').bind(userId),
-      env.DB.prepare('DELETE FROM teacher_permissions WHERE user_id = ?').bind(userId),
-      env.DB.prepare('DELETE FROM edit_history WHERE user_id = ?').bind(userId),
-      env.DB.prepare('DELETE FROM user_points_log WHERE user_id = ?').bind(userId),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM admin_permissions WHERE user_id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM teacher_permissions WHERE user_id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM teacher_assignments WHERE user_id = ?').bind(userId),
     ]);
-
-    if (avatarRow?.avatar_key) {
-      await env.BUCKET.delete(avatarRow.avatar_key as string);
-    }
 
     return Response.json({ success: true }, { headers: apiHeaders });
   }

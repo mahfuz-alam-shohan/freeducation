@@ -1,4 +1,5 @@
 import { contentKeys } from './data';
+import type { ExamProvider } from '../../../shared/exams';
 
 export const pickContentSlice = (content: Record<string, unknown>) =>
   Object.fromEntries(contentKeys.map((key) => [key, content[key]]));
@@ -12,3 +13,8 @@ export const applyContentSlice = (content: Record<string, unknown>, update: Reco
   }
   return next;
 };
+
+export const getExamProvider = (): ExamProvider => ({
+  generateQuestions: () => [],
+  validateAnswer: () => 0,
+});

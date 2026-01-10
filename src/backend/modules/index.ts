@@ -4,6 +4,8 @@ import { createAdminModule } from './users/admin';
 import { createStudentModule } from './users/student';
 import { createTeacherModule } from './users/teacher';
 import { createSubjectsModule } from './education/academic/subjects';
+import { createSocialModule } from './social';
+import { createResearchModule } from './research';
 
 export type ApiModule = {
   id: string;
@@ -17,4 +19,6 @@ export const apiModules: ApiModule[] = [
   createTeacherModule(),
   createStudentModule(),
   createSubjectsModule(),
+  createSocialModule(),
+  createResearchModule(),
 ];

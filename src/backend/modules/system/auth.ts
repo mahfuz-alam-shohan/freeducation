@@ -1,5 +1,6 @@
 import { createToken, hashPassword } from '../../../shared/auth';
 import type { Env } from '../../../shared/types';
+import { sendVerificationEmail } from '../../../shared/utils/email';
 import {
   apiHeaders,
   buildPasswordHash,
@@ -50,6 +51,74 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
       env.DB.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').bind(cleanedUsername, passwordHash),
     ]);
     return Response.json({ success: true }, { headers: apiHeaders });
+  }
+
+  if (path === '/api/student/register-request' && request.method === 'POST') {
+    const { name, email, password } = (await request.json()) as any;
+
+    if (!email || !password || !name) {
+      return Response.json({ success: false, error: 'Missing fields' }, { status: 400, headers: apiHeaders });
+    }
+
+    const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+    if (existing) {
+      return Response.json({ success: false, error: 'User already exists. Please login.' }, { status: 400, headers: apiHeaders });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+
+    await env.DB.prepare(
+      `
+      INSERT INTO email_verifications (email, code, expires_at) VALUES (?, ?, ?)
+      ON CONFLICT(email) DO UPDATE SET code = ?, expires_at = ?, attempts = 0
+    `
+    )
+      .bind(email, code, expiresAt, code, expiresAt)
+      .run();
+
+    const sent = await sendVerificationEmail(email, code, env as any);
+    if (!sent) {
+      return Response.json(
+        { success: false, error: 'Failed to send email. Please try again later.' },
+        { status: 500, headers: apiHeaders }
+      );
+    }
+
+    return Response.json({ success: true, message: 'OTP sent' }, { headers: apiHeaders });
+  }
+
+  if (path === '/api/student/register-verify' && request.method === 'POST') {
+    const { email, code, name, password, classLabel, groupLabel } = (await request.json()) as any;
+
+    const record = await env.DB.prepare('SELECT * FROM email_verifications WHERE email = ?').bind(email).first();
+    if (!record) {
+      return Response.json({ success: false, error: 'No verification request found' }, { status: 400, headers: apiHeaders });
+    }
+
+    if (Date.now() > (record.expires_at as number)) {
+      return Response.json({ success: false, error: 'Code expired. Try again.' }, { status: 400, headers: apiHeaders });
+    }
+
+    if (String(record.code) !== String(code)) {
+      return Response.json({ success: false, error: 'Invalid code' }, { status: 400, headers: apiHeaders });
+    }
+
+    const { passwordHash } = await buildPasswordHash(password);
+
+    await env.DB
+      .prepare(
+        `
+      INSERT INTO users (name, email, password_hash, role, class_label, group_label, created_at, username)
+      VALUES (?, ?, ?, 'student', ?, ?, ?, ?)
+    `
+      )
+      .bind(name, email, passwordHash, classLabel, groupLabel, Date.now(), email)
+      .run();
+
+    await env.DB.prepare('DELETE FROM email_verifications WHERE email = ?').bind(email).run();
+
+    return Response.json({ success: true, message: 'Account created' }, { headers: apiHeaders });
   }
 
   if (path === '/api/login' && request.method === 'POST') {

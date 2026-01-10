@@ -3,11 +3,12 @@ import type { ApiModule } from '..';
 import { handleAuth } from './auth';
 import { handleSettings } from './settings';
 import { handleSetup } from './setup';
+import { handleSystemSync } from './sync';
 import { handleProfile } from '../users/shared/profile';
 import '../users/schema';
 import '../education/shared/schema';
 
-const handlers = [handleAuth, handleSettings, handleSetup, handleProfile];
+const handlers = [handleAuth, handleSettings, handleSetup, handleSystemSync, handleProfile];
 
 export const createSystemModule = (): ApiModule => ({
   id: 'system',
