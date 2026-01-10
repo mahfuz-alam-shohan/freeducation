@@ -30,4 +30,7 @@ export const adminRouteViews = `
 {view === 'admin-users' && (
     <AdminUserList onNavigate={navigate} />
 )}
+{view === 'admin-user-profile' && (
+    <AdminStudentProfile onNavigate={navigate} />
+)}
 `;

@@ -4,6 +4,7 @@ export const dashboardExports = `
             AdminGroupSelection,
             AdminGroupDetail,
             AdminUserList,
+            AdminStudentProfile,
             BanglaFirstPaperTopics,
             BanglaShahitto,
             BanglaShohopath,
