@@ -11,7 +11,7 @@ import { landingComponents } from './modules/public/landing';
 import { authComponents } from './modules/public/auth';
 import { dashboardComponents } from './modules/admin/dashboard';
 import { settingsComponents } from './modules/admin/settings';
-import { mainApp } from './modules/app';
+import { mainApp } from './app';
 
 export function renderAppHtml(viewName: string): string {
   return `<!DOCTYPE html>
