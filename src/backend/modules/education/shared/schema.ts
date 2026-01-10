@@ -1,29 +1,29 @@
-import { registerTableSchema } from "../../../../../shared/db/schema";
+import { registerTableSchema } from '../../../../shared/db/schema';
 
 registerTableSchema({
-  name: "content_store",
+  name: 'content_store',
   createSql: `CREATE TABLE IF NOT EXISTS content_store (
     key TEXT PRIMARY KEY,
     data TEXT NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
   columns: [
-    { name: "key", sql: "TEXT PRIMARY KEY" },
-    { name: "data", sql: "TEXT NOT NULL" },
-    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+    { name: 'key', sql: 'TEXT PRIMARY KEY' },
+    { name: 'data', sql: 'TEXT NOT NULL' },
+    { name: 'updated_at', sql: 'DATETIME DEFAULT CURRENT_TIMESTAMP' },
   ],
 });
 
 registerTableSchema({
-  name: "classes",
+  name: 'classes',
   createSql: `CREATE TABLE IF NOT EXISTS classes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
   columns: [
-    { name: "name", sql: "TEXT UNIQUE" },
-    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+    { name: 'name', sql: 'TEXT UNIQUE' },
+    { name: 'created_at', sql: 'DATETIME DEFAULT CURRENT_TIMESTAMP' },
   ],
   seeds: [
     "INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')",
@@ -36,7 +36,7 @@ registerTableSchema({
 });
 
 registerTableSchema({
-  name: "class_groups",
+  name: 'class_groups',
   createSql: `CREATE TABLE IF NOT EXISTS class_groups (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     class_id INTEGER NOT NULL,
@@ -45,14 +45,14 @@ registerTableSchema({
     UNIQUE(class_id, name)
   )`,
   columns: [
-    { name: "class_id", sql: "INTEGER NOT NULL" },
-    { name: "name", sql: "TEXT NOT NULL" },
-    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+    { name: 'class_id', sql: 'INTEGER NOT NULL' },
+    { name: 'name', sql: 'TEXT NOT NULL' },
+    { name: 'created_at', sql: 'DATETIME DEFAULT CURRENT_TIMESTAMP' },
   ],
 });
 
 registerTableSchema({
-  name: "fonts",
+  name: 'fonts',
   createSql: `CREATE TABLE IF NOT EXISTS fonts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
@@ -62,16 +62,16 @@ registerTableSchema({
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
   columns: [
-    { name: "name", sql: "TEXT" },
-    { name: "file_key", sql: "TEXT" },
-    { name: "content_type", sql: "TEXT" },
-    { name: "original_name", sql: "TEXT" },
-    { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+    { name: 'name', sql: 'TEXT' },
+    { name: 'file_key', sql: 'TEXT' },
+    { name: 'content_type', sql: 'TEXT' },
+    { name: 'original_name', sql: 'TEXT' },
+    { name: 'created_at', sql: 'DATETIME DEFAULT CURRENT_TIMESTAMP' },
   ],
 });
 
 registerTableSchema({
-  name: "subject_thumbnails",
+  name: 'subject_thumbnails',
   createSql: `CREATE TABLE IF NOT EXISTS subject_thumbnails (
     subject_key TEXT PRIMARY KEY,
     file_key TEXT,
@@ -80,15 +80,15 @@ registerTableSchema({
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
   columns: [
-    { name: "file_key", sql: "TEXT" },
-    { name: "content_type", sql: "TEXT" },
-    { name: "zoom", sql: "REAL DEFAULT 1" },
-    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+    { name: 'file_key', sql: 'TEXT' },
+    { name: 'content_type', sql: 'TEXT' },
+    { name: 'zoom', sql: 'REAL DEFAULT 1' },
+    { name: 'updated_at', sql: 'DATETIME DEFAULT CURRENT_TIMESTAMP' },
   ],
 });
 
 registerTableSchema({
-  name: "chapter_thumbnails",
+  name: 'chapter_thumbnails',
   createSql: `CREATE TABLE IF NOT EXISTS chapter_thumbnails (
     chapter_key TEXT PRIMARY KEY,
     file_key TEXT,
@@ -96,8 +96,8 @@ registerTableSchema({
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
   columns: [
-    { name: "file_key", sql: "TEXT" },
-    { name: "content_type", sql: "TEXT" },
-    { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+    { name: 'file_key', sql: 'TEXT' },
+    { name: 'content_type', sql: 'TEXT' },
+    { name: 'updated_at', sql: 'DATETIME DEFAULT CURRENT_TIMESTAMP' },
   ],
 });
