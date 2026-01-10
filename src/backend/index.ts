@@ -6,6 +6,8 @@ import { createStudentModule } from './core/users/student';
 import { createTeacherModule } from './core/users/teacher';
 import { createSubjectsModule } from './domains/academic/subjects';
 import type { ApiModule } from './core/registry';
+import { apiHeaders } from './core/users/shared/utils';
+import { ensureDatabaseReady } from './core/db/ensure';
 
 export const app = new Hono<{ Bindings: Env }>();
 
@@ -94,10 +96,11 @@ export const handleApiRequest = async (request: Request, env: Env) => {
     return null;
   }
 
+  await ensureDatabaseReady(env);
   const response = await app.fetch(request, env);
-  if (response.status === 404) {
-    return null;
+  if (response.status !== 404) {
+    return response;
   }
 
-  return response;
+  return Response.json({ success: false, error: 'API route not found.' }, { status: 404, headers: apiHeaders });
 };
