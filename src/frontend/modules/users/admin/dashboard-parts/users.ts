@@ -336,7 +336,9 @@ export const dashboardUsers = `
                                                     <option value="">Select</option>
                                                     <option value="SSC">SSC</option>
                                                     <option value="HSC">HSC</option>
-                                                    <option value="6-8">Class 6-8</option>
+                                                    <option value="6">Class 6</option>
+                                                    <option value="7">Class 7</option>
+                                                    <option value="8">Class 8</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -425,7 +427,9 @@ export const dashboardUsers = `
                                                 }} className="w-full p-3 border border-slate-200 rounded-lg bg-white">
                                                     <option>SSC</option>
                                                     <option>HSC</option>
-                                                    <option value="6-8">Class 6-8</option>
+                                                    <option value="6">Class 6</option>
+                                                    <option value="7">Class 7</option>
+                                                    <option value="8">Class 8</option>
                                                 </select>
                                             </div>
                                             <div>
