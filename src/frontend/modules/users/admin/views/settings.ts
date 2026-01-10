@@ -44,7 +44,7 @@ export const settingsComponents = `
             if (response.ok && data?.success) {
                 return { ok: true, data };
             }
-            const errorMessage = data?.error || data?.message || `${fallbackMessage} (status ${response.status})`;
+            const errorMessage = data?.error || data?.message || (fallbackMessage + ' (status ' + response.status + ')');
             return { ok: false, data, errorMessage };
         };
 
