@@ -87,7 +87,8 @@ app.all('/api/users/*', async (c) => {
     const response = await forwardToModule(teacherModule, c.req.raw, c.env, nextPath);
     return response ?? c.notFound();
   }
-  return c.notFound();
+  const response = await forwardToModule(adminModule, c.req.raw, c.env, `/api/users${suffix}`);
+  return response ?? c.notFound();
 });
 
 app.all('/api/student', async (c) => {
