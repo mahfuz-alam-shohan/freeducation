@@ -39,6 +39,15 @@ export const settingsComponents = `
             }
         };
 
+        const parseApiResponse = async (response, fallbackMessage) => {
+            const data = await response.json().catch(() => null);
+            if (response.ok && data?.success) {
+                return { ok: true, data };
+            }
+            const errorMessage = data?.error || data?.message || (fallbackMessage + ' (status ' + response.status + ')');
+            return { ok: false, data, errorMessage };
+        };
+
         const useProfileData = () => {
             const [profile, setProfile] = useState(null);
             const [history, setHistory] = useState([]);
@@ -102,12 +111,12 @@ export const settingsComponents = `
                         headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name: trimmedName })
                     });
-                    const data = await response.json();
-                    if (response.ok && data.success) {
+                    const { ok, errorMessage } = await parseApiResponse(response, 'Profile update failed.');
+                    if (ok) {
                         messages.push('Name updated.');
                         setProfile(p => ({...p, name: trimmedName}));
                     } else {
-                        errors.push(data.error || 'Profile update failed.');
+                        errors.push(errorMessage);
                     }
                 }
 
@@ -115,14 +124,14 @@ export const settingsComponents = `
                     const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
                     const formData = new FormData(); formData.append('file', resized || avatarFile);
                     const response = await fetch('/api/profile/avatar', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
-                    const data = await response.json();
-                    if (response.ok && data.success) { 
+                    const { ok, errorMessage } = await parseApiResponse(response, 'Avatar upload failed.');
+                    if (ok) { 
                         messages.push('Picture updated.');
                         setAvatarFile(null);
                         setAvatarPreview('');
                         await refreshProfile(); 
                     } else {
-                        errors.push(data.error || 'Avatar upload failed.');
+                        errors.push(errorMessage);
                     }
                 }
 
@@ -510,14 +519,14 @@ export const settingsComponents = `
                             batchYear: details.classLabel === 'SSC' || details.classLabel === 'HSC' ? details.batchYear : ''
                         })
                     });
-                    const data = await res.json();
-                    if (data.success) {
+                    const { ok, data, errorMessage } = await parseApiResponse(res, 'Update failed.');
+                    if (ok) {
                         setDetailsMessage(data.pointsAwarded ? 'Profile updated and 10 points added!' : 'Profile updated.');
                     } else {
-                        setDetailsMessage(data.error || 'Update failed.');
+                        setDetailsMessage(errorMessage);
                     }
                 } catch (e) {
-                    setDetailsMessage('Update failed.');
+                    setDetailsMessage('Update failed. Please try again.');
                 }
                 setIsSaving(false);
             };
