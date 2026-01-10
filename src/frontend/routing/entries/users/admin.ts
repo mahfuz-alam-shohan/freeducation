@@ -83,6 +83,8 @@ export const adminRoutes: Array<[string, string]> = [
   ["/dashboard/hsc/science", "admin-hsc-science"],
   ["/dashboard/hsc/humanities", "admin-hsc-humanities"],
   ["/dashboard/hsc/business-studies", "admin-hsc-business-studies"],
+  ["/dashboard/users", "admin-users"],
+  ["/dashboard/users/profile", "admin-user-profile"],
   ["/dashboard/settings", "admin-settings"],
   ["/dashboard/ssc/bangla-1st-paper", "bangla-ssc-1st-paper"],
   ["/dashboard/hsc/bangla-1st-paper", "bangla-hsc-1st-paper"],

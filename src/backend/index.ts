@@ -128,8 +128,20 @@ app.all('/api/thumbnails', async (c) => {
   return response ?? c.notFound();
 });
 
+app.all('/api/thumbnails/*', async (c) => {
+  const suffix = c.req.path.replace('/api/thumbnails', '');
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, `/api/thumbnails${suffix}`);
+  return response ?? c.notFound();
+});
+
 app.all('/api/chapter-thumbnails', async (c) => {
   const response = await forwardToModule(subjectsModule, c.req.raw, c.env, '/api/chapter-thumbnails');
+  return response ?? c.notFound();
+});
+
+app.all('/api/chapter-thumbnails/*', async (c) => {
+  const suffix = c.req.path.replace('/api/chapter-thumbnails', '');
+  const response = await forwardToModule(subjectsModule, c.req.raw, c.env, `/api/chapter-thumbnails${suffix}`);
   return response ?? c.notFound();
 });
 

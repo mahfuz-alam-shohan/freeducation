@@ -80,10 +80,10 @@ export const appEffects = `
                             isFetchingRef.current = true;
                             applyContentState(data.content);
                             
-                            // Reset the flag after a short delay (longer than the save debounce)
+                            // Reset the flag after the state update cycle finishes.
                             setTimeout(() => {
                                 isFetchingRef.current = false;
-                            }, 1000);
+                            }, 0);
                         }
                     } catch (e) {
                         console.warn('Failed to load content', e);

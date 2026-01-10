@@ -85,26 +85,53 @@ export const settingsComponents = `
             useEffect(() => { if (profile?.name) setNameInput(profile.name); }, [profile?.name]);
             useEffect(() => { if (avatarFile) setAvatarPreview(URL.createObjectURL(avatarFile)); }, [avatarFile]);
 
-            const handleNameSave = async () => {
+            const handleProfileSave = async () => {
                 setIsSaving(true);
+                setStatusMessage(null);
                 const token = localStorage.getItem('auth_token');
-                const response = await fetch('/api/profile', { method: 'PUT', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: nameInput.trim() }) });
-                const data = await response.json();
-                if (data.success) { setStatusMessage('Profile updated.'); setProfile(p => ({...p, name: nameInput})); }
-                setIsSaving(false);
-            };
+                if (!token) { setStatusMessage('Please log in again.'); setIsSaving(false); return; }
 
-            const handleAvatarUpload = async () => {
-                setIsSaving(true);
-                const token = localStorage.getItem('auth_token');
-                const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
-                const formData = new FormData(); formData.append('file', resized || avatarFile);
-                const response = await fetch('/api/profile/avatar', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
-                const data = await response.json();
-                if (data.success) { 
-                    setStatusMessage('Picture updated.'); 
-                    setAvatarFile(null); 
-                    await refreshProfile(); 
+                const messages = [];
+                const errors = [];
+                const trimmedName = nameInput.trim();
+                const shouldUpdateName = trimmedName && trimmedName !== profile?.name;
+
+                if (shouldUpdateName) {
+                    const response = await fetch('/api/profile', {
+                        method: 'PUT',
+                        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: trimmedName })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        messages.push('Name updated.');
+                        setProfile(p => ({...p, name: trimmedName}));
+                    } else {
+                        errors.push(data.error || 'Profile update failed.');
+                    }
+                }
+
+                if (avatarFile) {
+                    const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
+                    const formData = new FormData(); formData.append('file', resized || avatarFile);
+                    const response = await fetch('/api/profile/avatar', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
+                    const data = await response.json();
+                    if (response.ok && data.success) { 
+                        messages.push('Picture updated.');
+                        setAvatarFile(null);
+                        setAvatarPreview('');
+                        await refreshProfile(); 
+                    } else {
+                        errors.push(data.error || 'Avatar upload failed.');
+                    }
+                }
+
+                if (errors.length) {
+                    setStatusMessage(errors[0]);
+                } else if (messages.length) {
+                    setStatusMessage(messages.join(' '));
+                } else {
+                    setStatusMessage('No changes to save.');
                 }
                 setIsSaving(false);
             };
@@ -150,7 +177,7 @@ export const settingsComponents = `
 
                                 <div className="pt-2">
                                     <button 
-                                        onClick={() => { if(avatarFile) handleAvatarUpload(); else handleNameSave(); }} 
+                                        onClick={handleProfileSave} 
                                         disabled={isSaving} 
                                         className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -381,26 +408,53 @@ export const settingsComponents = `
             useEffect(() => { if (profile?.name) setNameInput(profile.name); }, [profile?.name]);
             useEffect(() => { if (avatarFile) setAvatarPreview(URL.createObjectURL(avatarFile)); }, [avatarFile]);
 
-            const handleNameSave = async () => {
+            const handleProfileSave = async () => {
                 setIsSaving(true);
+                setStatusMessage(null);
                 const token = localStorage.getItem('auth_token');
-                const response = await fetch('/api/profile', { method: 'PUT', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: nameInput.trim() }) });
-                const data = await response.json();
-                if (data.success) { setStatusMessage('Profile updated.'); setProfile(p => ({...p, name: nameInput})); }
-                setIsSaving(false);
-            };
+                if (!token) { setStatusMessage('Please log in again.'); setIsSaving(false); return; }
 
-            const handleAvatarUpload = async () => {
-                setIsSaving(true);
-                const token = localStorage.getItem('auth_token');
-                const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
-                const formData = new FormData(); formData.append('file', resized || avatarFile);
-                const response = await fetch('/api/profile/avatar', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
-                const data = await response.json();
-                if (data.success) { 
-                    setStatusMessage('Picture updated.'); 
-                    setAvatarFile(null); 
-                    await refreshProfile(); 
+                const messages = [];
+                const errors = [];
+                const trimmedName = nameInput.trim();
+                const shouldUpdateName = trimmedName && trimmedName !== profile?.name;
+
+                if (shouldUpdateName) {
+                    const response = await fetch('/api/profile', {
+                        method: 'PUT',
+                        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: trimmedName })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        messages.push('Name updated.');
+                        setProfile(p => ({...p, name: trimmedName}));
+                    } else {
+                        errors.push(data.error || 'Profile update failed.');
+                    }
+                }
+
+                if (avatarFile) {
+                    const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
+                    const formData = new FormData(); formData.append('file', resized || avatarFile);
+                    const response = await fetch('/api/profile/avatar', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
+                    const data = await response.json();
+                    if (response.ok && data.success) { 
+                        messages.push('Picture updated.');
+                        setAvatarFile(null);
+                        setAvatarPreview('');
+                        await refreshProfile(); 
+                    } else {
+                        errors.push(data.error || 'Avatar upload failed.');
+                    }
+                }
+
+                if (errors.length) {
+                    setStatusMessage(errors[0]);
+                } else if (messages.length) {
+                    setStatusMessage(messages.join(' '));
+                } else {
+                    setStatusMessage('No changes to save.');
                 }
                 setIsSaving(false);
             };
@@ -459,9 +513,6 @@ export const settingsComponents = `
                     const data = await res.json();
                     if (data.success) {
                         setDetailsMessage(data.pointsAwarded ? 'Profile updated and 10 points added!' : 'Profile updated.');
-                        const meRes = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + token } });
-                        const meData = await meRes.json();
-                        if (meData.user) setUser(meData.user);
                     } else {
                         setDetailsMessage(data.error || 'Update failed.');
                     }
@@ -516,7 +567,7 @@ export const settingsComponents = `
 
                                     <div className="pt-2">
                                         <button 
-                                            onClick={() => { if(avatarFile) handleAvatarUpload(); else handleNameSave(); }} 
+                                            onClick={handleProfileSave} 
                                             disabled={isSaving} 
                                             className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
