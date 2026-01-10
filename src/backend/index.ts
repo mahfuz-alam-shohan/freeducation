@@ -59,6 +59,17 @@ app.all('/api/change-password', async (c) => {
   return response ?? c.notFound();
 });
 
+app.all('/api/profile', async (c) => {
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api/profile');
+  return response ?? c.notFound();
+});
+
+app.all('/api/profile/*', async (c) => {
+  const suffix = c.req.path.replace('/api/profile', '');
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, `/api/profile${suffix}`);
+  return response ?? c.notFound();
+});
+
 app.all('/api/users', async (c) => {
   const response = await forwardToModule(adminModule, c.req.raw, c.env, '/api/users');
   return response ?? c.notFound();
