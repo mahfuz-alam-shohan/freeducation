@@ -10,12 +10,10 @@ import { studentMobileNavComponent } from './shared/components/layout/student-mo
 import { studentShellComponent } from './shared/components/layout/student-shell';
 import { studentSidebarComponent } from './shared/components/layout/student-sidebar';
 import { uiComponents } from './shared/components/ui';
-import { landingComponents } from './modules/users/public/landing';
-import { authComponents } from './modules/users/public/auth';
-import { adminDashboardComponents } from './modules/users/admin/dashboard';
-import { studentDashboardComponents } from './modules/users/student/dashboard';
-import { teacherDashboardComponents } from './modules/users/teacher/dashboard';
-import { settingsComponents } from './modules/users/admin/settings';
+import { landingComponents, authComponents } from './modules/users/public';
+import { adminDashboardComponents, settingsComponents } from './modules/users/admin';
+import { studentDashboardComponents } from './modules/users/student';
+import { teacherDashboardComponents } from './modules/users/teacher';
 import { mainApp } from './app';
 
 export function renderAppHtml(initialView: string) {

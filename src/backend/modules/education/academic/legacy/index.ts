@@ -3,8 +3,6 @@ import type { ApiModule } from '../../..';
 import * as auth from './auth';
 import * as users from './users';
 import * as classes from './classes';
-import * as content from './content';
-import * as videos from './videos';
 import * as thumbnails from './thumbnails';
 import * as settings from './settings';
 import * as setup from './setup';
@@ -25,7 +23,7 @@ export const createLegacyModule = (): ApiModule => ({
   handle: async (request, env) => {
     const url = new URL(request.url);
     const path = url.pathname;
-    const legacyModules = [auth, users, classes, content, videos, thumbnails, settings, setup, profile, fonts, student];
+    const legacyModules = [auth, users, classes, thumbnails, settings, setup, profile, fonts, student];
 
     for (const mod of legacyModules) {
       const handler = findLegacyHandler(mod as Record<string, unknown>);
