@@ -1,5 +1,5 @@
 import type { Env } from '../shared/types';
-import { apiModules } from './modules';
+import { apiModules } from './core/registry';
 
 export const handleApiRequest = async (request: Request, env: Env) => {
   const url = new URL(request.url);
