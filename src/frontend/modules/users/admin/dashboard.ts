@@ -7,10 +7,9 @@ import { dashboardBangla } from './dashboard-parts/bangla';
 import { dashboardScience } from './dashboard-parts/science-ict';
 import { dashboardEnglish } from './dashboard-parts/english';
 import { dashboardExports } from './dashboard-parts/exports';
-import { dashboardUsers } from './dashboard-parts/users'; // <--- NEW IMPORT (You need to create the file first)
+import { dashboardUsers } from './dashboard-parts/users';
 
-export const dashboardComponents = `
-    /* -- Dashboard Module -- */
+export const adminDashboardComponents = `
     const DashboardModule = (() => {
 ` + dashboardUtils +
     dashboardShared +
@@ -20,17 +19,16 @@ export const dashboardComponents = `
     dashboardBangla +
     dashboardScience +
     dashboardEnglish +
-    dashboardUsers + // <--- ADDED HERE
+    dashboardUsers +
     dashboardExports +
     `
     })();
 
     const {
-        TeacherDashboard,
         AdminDashboard,
         AdminGroupSelection,
         AdminGroupDetail,
-        AdminUserList, // <--- EXPORTED HERE
+        AdminUserList,
         BanglaFirstPaperTopics,
         BanglaShahitto,
         BanglaShohopath,

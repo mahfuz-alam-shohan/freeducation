@@ -23,7 +23,10 @@ export const baseViews = `
 {view === 'dashboard' && user?.role === 'teacher' && (
     <TeacherDashboard assignment={user.assignment} subjectConfig={teacherSubjectConfig} onNavigate={navigate} />
 )}
-{view === 'dashboard' && (!user || user.role !== 'teacher') && (
+{view === 'dashboard' && user?.role === 'student' && (
+    <StudentDashboard onNavigate={navigate} />
+)}
+{view === 'dashboard' && (!user || (user.role !== 'teacher' && user.role !== 'student')) && (
     <AdminDashboard onNavigate={navigate} />
 )}
 {view === 'admin-groups-ssc' && (

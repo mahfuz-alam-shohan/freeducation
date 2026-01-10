@@ -1,4 +1,4 @@
-export const publicViewEntries: Array<[string, string]> = [
+export const publicRoutes: Array<[string, string]> = [
   ["/", "landing"],
   ["/videos", "public-videos"],
   ["/videos/watch", "public-video-player"],
