@@ -5,7 +5,7 @@ Freeducation is a lightweight Learning Management System (LMS) built on a Cloudf
 - **Public (Student) side**: Landing and student-facing experience.
 - **Admin side**: Authentication and administration workflows.
 
-This repository keeps the server logic and UI templates together for a fast, server-rendered experience while keeping the front-end split cleanly between public and admin areas.
+This repository keeps the server logic and UI templates together for a fast, server-rendered experience while splitting modules by user roles and education platforms.
 
 ## Bangla 1st Paper Admin Flow
 
@@ -25,24 +25,19 @@ This repository keeps the server logic and UI templates together for a fast, ser
 
 ```
 src/
-  api.ts                 # API routes (auth, classes, fonts)
-  auth.ts                # Token + password hashing helpers
-  db.ts                  # Database setup helpers
-  index.ts               # Worker entrypoint and HTML response
-  types.ts               # Cloudflare environment types
-  frontend/
-    pages.ts             # Front-end route map
+  entry.ts               # Worker entrypoint and HTML response
+  backend/               # API routing and backend modules
+    modules/
+      users/             # User role APIs (admin, teacher, student, public)
+      education/         # Academic and future learning APIs
+  frontend/              # HTML shell and client bundles
     layout.ts            # HTML shell + component injection
     app.ts               # Client-side routing + app state
-    admin/               # Admin-only UI modules
-      dashboard.ts
-      settings.ts
-    public/              # Student-facing UI modules
-      landing.ts
-      auth.ts
-    components/
-      layout/            # Shared layout primitives (nav, sidebars)
-      shared/            # Shared UI primitives
+    modules/
+      users/             # Role dashboards and views
+      platforms/         # Academic, non-academic, social modules
+    shared/              # Shared layout primitives (nav, sidebars)
+  shared/                # Token, database, types, and shared helpers
 ```
 
 ## Security Notes
@@ -68,5 +63,5 @@ wrangler dev
 
 ## Notes
 
-This repo is intentionally minimal. Build on top of the public/admin separation as the product grows.
-The public landing highlights the first 8 subjects for SSC and HSC in the horizontal rows (see `src/frontend/public/landing.ts`).
+This repo is intentionally minimal. Build on top of the role/platform separation as the product grows.
+The public landing highlights the first 8 subjects for SSC and HSC in the horizontal rows (see `src/frontend/modules/users/public/landing.ts`).
