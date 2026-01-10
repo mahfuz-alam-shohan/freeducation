@@ -9,7 +9,9 @@ import { teacherSidebarComponent } from './shared/components/layout/teacher-side
 import { uiComponents } from './shared/components/ui';
 import { landingComponents } from './modules/users/public/landing';
 import { authComponents } from './modules/users/public/auth';
-import { dashboardComponents } from './modules/users/admin/dashboard';
+import { adminDashboardComponents } from './modules/users/admin/dashboard';
+import { studentDashboardComponents } from './modules/users/student/dashboard';
+import { teacherDashboardComponents } from './modules/users/teacher/dashboard';
 import { settingsComponents } from './modules/users/admin/settings';
 import { mainApp } from './app';
 
@@ -138,7 +140,9 @@ export function renderAppHtml(initialView: string) {
 
         ${authComponents}
         ${landingComponents}
-        ${dashboardComponents}
+        ${adminDashboardComponents}
+        ${teacherDashboardComponents}
+        ${studentDashboardComponents}
         ${settingsComponents}
 
         ${mainApp}

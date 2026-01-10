@@ -1,10 +1,9 @@
 export const dashboardExports = `
         return {
-            TeacherDashboard,
             AdminDashboard,
             AdminGroupSelection,
             AdminGroupDetail,
-            AdminUserList, // <--- ADDED THIS (This was missing!)
+            AdminUserList,
             BanglaFirstPaperTopics,
             BanglaShahitto,
             BanglaShohopath,
