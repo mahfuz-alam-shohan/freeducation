@@ -204,9 +204,8 @@ export const landingUi = `
         };
 
         const BookReader = ({ children, className = '' }) => (
-            <div className={'bg-[#fdfbf7] border border-[#eaddcf] rounded-none p-8 sm:p-12 shadow-sm relative overflow-hidden ' + className}>
-                <div className="absolute inset-0 pointer-events-none opacity-40" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/cream-paper.png")'}}></div>
-                <div className="relative z-10 font-serif text-slate-800 text-lg leading-loose text-justify space-y-4">
+            <div className={'w-full ' + className}>
+                <div className="font-serif text-slate-900 text-sm leading-snug text-justify space-y-2">
                     {children}
                 </div>
             </div>
