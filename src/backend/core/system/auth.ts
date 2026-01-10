@@ -1,4 +1,4 @@
-import { createToken, hashPassword } from '../../../shared/auth';
+import { createToken, hashPassword, verifyPassword } from '../../../shared/auth';
 import type { Env } from '../../../shared/types';
 import {
   apiHeaders,
@@ -83,9 +83,8 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
     let groupLabel: string | null = null;
 
     if (user) {
-      const [saltHex, originalHash] = (user.password_hash as string).split(':');
-      const hash = await hashPassword(cleanedPassword, saltHex);
-      if (hash !== originalHash) {
+      const isValidPassword = await verifyPassword(user.password_hash as string, cleanedPassword);
+      if (!isValidPassword) {
         return Response.json({ success: false, error: 'Invalid credentials' }, { status: 401, headers: apiHeaders });
       }
 
@@ -117,9 +116,8 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
       }
       user = legacy;
       role = 'admin';
-      const [saltHex, originalHash] = (legacy.password_hash as string).split(':');
-      const hash = await hashPassword(cleanedPassword, saltHex);
-      if (hash !== originalHash) {
+      const isValidPassword = await verifyPassword(legacy.password_hash as string, cleanedPassword);
+      if (!isValidPassword) {
         return Response.json({ success: false, error: 'Invalid credentials' }, { status: 401, headers: apiHeaders });
       }
       permissions = ['dashboard', 'classes', 'settings', 'thumbnails', 'userManagement'];
