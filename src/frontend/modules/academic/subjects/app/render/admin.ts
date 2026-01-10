@@ -1,9 +1,9 @@
-import { baseViews } from './admin-views/base-views';
-import { settingsViews } from './admin-views/settings-views';
-import { usersViews } from './admin-views/users-views'; // <--- NEW IMPORT
+import { adminRouteViews } from '../../../../users/admin/views/routes';
+import { studentRouteViews } from '../../../../users/student/views/routes';
+import { teacherRouteViews } from '../../../../users/teacher/views/routes';
 import { subjectAdminViews } from '../../registry';
 
-export const renderAdmin = baseViews +
-    subjectAdminViews +
-    settingsViews +
-    usersViews; // <--- ADDED HERE
+export const renderAdmin = teacherRouteViews +
+    studentRouteViews +
+    adminRouteViews +
+    subjectAdminViews;

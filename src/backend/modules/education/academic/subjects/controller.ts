@@ -1,5 +1,5 @@
 import type { Env } from '../../../../../shared/types';
-import { apiHeaders, applyTeacherContentUpdate, ensureAdmin, getAuthPayload, recordEditHistory } from '../legacy/shared';
+import { apiHeaders, applyTeacherContentUpdate, ensureAdmin, getAuthPayload, recordEditHistory } from '../../../users/shared/utils';
 import { readContent, writeContent } from './data';
 import { subjectModules } from './registry';
 

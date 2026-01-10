@@ -1,5 +1,5 @@
 import type { Env } from '../../../../../shared/types';
-import { safeParseContent } from '../legacy/shared';
+import { safeParseContent } from '../../../users/shared/utils';
 
 const CONTENT_KEY = 'app-content';
 

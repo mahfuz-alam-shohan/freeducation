@@ -14,12 +14,18 @@ import { appRender } from './academic/subjects/app/render';
 import { subjectStates, subjectTypes } from './academic/subjects/registry';
 import { uiComponents } from '../shared/components/ui';
 import { landingComponents } from './users/public';
+import { publicState } from './users/public/state';
+import { teacherState } from './users/teacher/state';
+import { studentState } from './users/student/state';
 
 export const frontendModules = [
   appRouting,
   appState,
+  publicState,
   ...subjectStates,
   contentState,
+  teacherState,
+  studentState,
   ...subjectTypes,
   keyHelpers,
   teacherConfig,

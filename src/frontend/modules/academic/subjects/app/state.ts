@@ -4,11 +4,5 @@ export const appState = `
             const [isLoading, setIsLoading] = useState(true);
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
-            const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
-            const [mcqQuestions, setMcqQuestions] = useState({});
-            const [notesByItem, setNotesByItem] = useState({});
-            const [videosByItem, setVideosByItem] = useState({});
             const [contentLoaded, setContentLoaded] = useState(false);
-            const [selectedVideoContext, setSelectedVideoContext] = useState(null);
-            const [selectedVideoId, setSelectedVideoId] = useState(null);
 `;

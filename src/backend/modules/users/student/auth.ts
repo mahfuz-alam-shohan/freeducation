@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sendVerificationEmail } from '../../../../shared/utils/email';
-import { buildPasswordHash } from '../../education/academic/legacy/shared';
+import { buildPasswordHash } from '../shared/utils';
 
 const studentAuth = new Hono<{
   Bindings: {

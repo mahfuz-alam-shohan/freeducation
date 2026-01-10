@@ -4,6 +4,7 @@ import { subjectModule as humanitiesModule } from './humanities';
 import { subjectModule as ictModule } from './ict';
 import { subjectModule as religionModule } from './religion';
 import { subjectModule as scienceModule } from './science';
+import { subjectModule as sharedModule } from './shared';
 
 export type SubjectModule = {
   id: string;
@@ -22,6 +23,7 @@ const subjectModules = [
   ictModule,
   religionModule,
   scienceModule,
+  sharedModule,
 ].sort((a, b) => a.id.localeCompare(b.id));
 
 const subjectStates = subjectModules
