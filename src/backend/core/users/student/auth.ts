@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sendVerificationEmail } from '../../../../shared/utils/email';
-import { buildPasswordHash } from '../shared/utils';
+import { buildPasswordHash, normalizeEmail } from '../shared/utils';
 
 const studentAuth = new Hono<{
   Bindings: {
@@ -15,10 +15,18 @@ const studentAuth = new Hono<{
 studentAuth.post('/register-request', async (c) => {
   try {
     const { name, email, password, classLabel, groupLabel } = await c.req.json();
+    const cleanedName = String(name || '').trim();
+    const normalizedEmail = normalizeEmail(String(email || ''));
+    const cleanedPassword = String(password || '');
 
-    if (!email || !password || !name) return c.json({ success: false, error: 'Missing fields' }, 400);
+    if (!normalizedEmail || !cleanedPassword || !cleanedName) {
+      return c.json({ success: false, error: 'Missing fields' }, 400);
+    }
+    if (cleanedPassword.length < 8) {
+      return c.json({ success: false, error: 'Password must be at least 8 characters.' }, 400);
+    }
 
-    const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+    const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(normalizedEmail).first();
     if (existing) {
       return c.json({ success: false, error: 'User already exists. Please login.' }, 400);
     }
@@ -29,9 +37,9 @@ studentAuth.post('/register-request', async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO email_verifications (email, code, expires_at) VALUES (?, ?, ?)
       ON CONFLICT(email) DO UPDATE SET code = ?, expires_at = ?, attempts = 0
-    `).bind(email, code, expiresAt, code, expiresAt).run();
+    `).bind(normalizedEmail, code, expiresAt, code, expiresAt).run();
 
-    const sent = await sendVerificationEmail(email, code, c.env);
+    const sent = await sendVerificationEmail(normalizedEmail, code, c.env);
     if (!sent) {
       return c.json({ success: false, error: 'Failed to send email. Please try again later.' }, 500);
     }
@@ -46,8 +54,18 @@ studentAuth.post('/register-request', async (c) => {
 studentAuth.post('/register-verify', async (c) => {
   try {
     const { email, code, name, password, classLabel, groupLabel } = await c.req.json();
+    const normalizedEmail = normalizeEmail(String(email || ''));
+    const cleanedName = String(name || '').trim();
+    const cleanedPassword = String(password || '');
 
-    const record = await c.env.DB.prepare('SELECT * FROM email_verifications WHERE email = ?').bind(email).first();
+    if (!normalizedEmail || !cleanedName || !cleanedPassword) {
+      return c.json({ success: false, error: 'Missing fields' }, 400);
+    }
+    if (cleanedPassword.length < 8) {
+      return c.json({ success: false, error: 'Password must be at least 8 characters.' }, 400);
+    }
+
+    const record = await c.env.DB.prepare('SELECT * FROM email_verifications WHERE email = ?').bind(normalizedEmail).first();
     if (!record) return c.json({ success: false, error: 'No verification request found' }, 400);
 
     if (Date.now() > (record.expires_at as number)) {
@@ -58,26 +76,33 @@ studentAuth.post('/register-verify', async (c) => {
       return c.json({ success: false, error: 'Invalid code' }, 400);
     }
 
-    const { passwordHash } = await buildPasswordHash(password);
+    const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(normalizedEmail).first();
+    if (existing) {
+      return c.json({ success: false, error: 'User already exists. Please login.' }, 400);
+    }
+
+    const { passwordHash } = await buildPasswordHash(cleanedPassword);
 
     await c.env.DB
       .prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)')
-      .bind(email, passwordHash, 'student')
+      .bind(normalizedEmail, passwordHash, 'student')
       .run();
 
-    const inserted = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+    const inserted = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(normalizedEmail).first();
     if (!inserted?.id) {
       return c.json({ success: false, error: 'Account creation failed' }, 500);
     }
 
     await c.env.DB.batch([
-      c.env.DB.prepare('INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)').bind(inserted.id, email, name),
+      c.env.DB
+        .prepare('INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)')
+        .bind(inserted.id, normalizedEmail, cleanedName),
       c.env.DB
         .prepare('INSERT INTO academic_profiles (user_id, class_label, group_label) VALUES (?, ?, ?)')
         .bind(inserted.id, classLabel || null, groupLabel || null),
     ]);
 
-    await c.env.DB.prepare('DELETE FROM email_verifications WHERE email = ?').bind(email).run();
+    await c.env.DB.prepare('DELETE FROM email_verifications WHERE email = ?').bind(normalizedEmail).run();
 
     return c.json({ success: true, message: 'Account created' });
   } catch (e) {
