@@ -75,4 +75,11 @@ export async function hashPassword(password: string, salt: string): Promise<stri
         .join('');
 }
 
+export async function verifyPassword(storedHash: string, inputPassword: string): Promise<boolean> {
+    if (!storedHash) return false;
+    const [saltHex, originalHash] = storedHash.split(':');
+    if (!saltHex || !originalHash) return false;
+    const hashedInput = await hashPassword(inputPassword, saltHex);
+    return hashedInput === originalHash;
+}
 
