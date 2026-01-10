@@ -5,7 +5,14 @@ import { apiHeaders, buildPasswordHash, normalizeEmail } from '../users/shared/u
 const defaultAdminPermissions = ['dashboard', 'classes', 'settings', 'thumbnails', 'userManagement'];
 
 export const handleSetup = async (request: Request, env: Env, path: string): Promise<Response | null> => {
-  if (path !== '/api/init' || request.method !== 'POST') {
+  if (path === '/api/system/status' && request.method === 'GET') {
+    const adminCountRow = await env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first();
+    const legacyCountRow = await env.DB.prepare('SELECT count(*) as count FROM admins').first();
+    const initialized = Number(adminCountRow?.count || 0) > 0 || Number(legacyCountRow?.count || 0) > 0;
+    return Response.json({ initialized }, { headers: apiHeaders });
+  }
+
+  if (path !== '/api/system/init' || request.method !== 'POST') {
     return null;
   }
 
@@ -18,19 +25,26 @@ export const handleSetup = async (request: Request, env: Env, path: string): Pro
   }
 
   const body = await request.json().catch(() => ({}));
+  const siteName = String(body.siteName || '').trim();
   const email = normalizeEmail(String(body.email || ''));
   const password = String(body.password || '');
-  const name = String(body.name || '').trim();
+  const confirmPassword = String(body.confirmPassword || '');
 
-  if (!email || !password || !name) {
+  if (!siteName || !email || !password || !confirmPassword) {
     return Response.json(
-      { success: false, error: 'Name, email, and password are required.' },
+      { success: false, error: 'Site name, email, and password are required.' },
       { status: 400, headers: apiHeaders }
     );
   }
   if (password.length < 8) {
     return Response.json(
       { success: false, error: 'Password must be at least 8 characters.' },
+      { status: 400, headers: apiHeaders }
+    );
+  }
+  if (password !== confirmPassword) {
+    return Response.json(
+      { success: false, error: 'Passwords do not match.' },
       { status: 400, headers: apiHeaders }
     );
   }
@@ -47,11 +61,11 @@ export const handleSetup = async (request: Request, env: Env, path: string): Pro
   }
 
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)').bind(adminRow.id, name, name),
+    env.DB.prepare('INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)').bind(adminRow.id, siteName, siteName),
     env.DB
       .prepare('INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)')
       .bind(adminRow.id, JSON.stringify(defaultAdminPermissions)),
-    env.DB.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').bind(name, passwordHash),
+    env.DB.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').bind(siteName, passwordHash),
   ]);
 
   return Response.json(

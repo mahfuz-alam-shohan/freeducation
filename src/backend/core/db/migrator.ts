@@ -13,6 +13,7 @@ type ColumnChange = {
 type MigrationReport = {
   createdTables: string[];
   addedColumns: ColumnChange[];
+  droppedTables: string[];
   errors: { table: string; error: string }[];
 };
 
@@ -71,13 +72,38 @@ const backfillProfiles = async (db: D1Database) => {
   }
 };
 
+const loadDatabaseTables = async (db: D1Database) => {
+  const result = await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+  return (result.results || []).map((row: any) => String(row.name));
+};
+
+const shouldSkipDrop = (tableName: string) => tableName.startsWith('sqlite_') || tableName === 'd1_migrations';
+
 export const syncDatabaseSchema = async (env: Env): Promise<MigrationReport> => {
   const schemas = getTableSchemas();
+  const schemaNames = new Set(schemas.map((schema) => schema.name));
   const report: MigrationReport = {
     createdTables: [],
     addedColumns: [],
+    droppedTables: [],
     errors: [],
   };
+
+  const databaseTables = await loadDatabaseTables(env.DB);
+  for (const tableName of databaseTables) {
+    if (shouldSkipDrop(tableName)) continue;
+    if (schemaNames.has(tableName)) continue;
+    try {
+      const safeName = tableName.replace(/"/g, '""');
+      await env.DB.prepare(`DROP TABLE IF EXISTS "${safeName}"`).run();
+      report.droppedTables.push(tableName);
+    } catch (error) {
+      report.errors.push({
+        table: tableName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   for (const schema of schemas) {
     try {

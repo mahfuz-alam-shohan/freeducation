@@ -89,5 +89,6 @@ export const publicRoutes: Array<[string, string]> = [
   ["/hsc/english-1st-paper/subtypes", "public-english-hsc-subtypes"],
   ["/hsc/english-1st-paper/questions", "public-english-hsc-questions"],
   ["/login", "login"],
+  ["/setup", "setup"],
   ["/register", "register"],
 ];
