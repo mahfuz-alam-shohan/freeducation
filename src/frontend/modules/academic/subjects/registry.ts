@@ -1,3 +1,10 @@
+import { subjectModule as banglaModule } from './bangla';
+import { subjectModule as englishModule } from './english';
+import { subjectModule as humanitiesModule } from './humanities';
+import { subjectModule as ictModule } from './ict';
+import { subjectModule as religionModule } from './religion';
+import { subjectModule as scienceModule } from './science';
+
 export type SubjectModule = {
   id: string;
   state?: string;
@@ -8,11 +15,14 @@ export type SubjectModule = {
   };
 };
 
-const subjectEntries = (import.meta as any).glob('./*/index.ts', { eager: true });
-const subjectModules = Object.values(subjectEntries)
-  .map((entry) => (entry as { subjectModule?: SubjectModule }).subjectModule)
-  .filter((module): module is SubjectModule => Boolean(module))
-  .sort((a, b) => a.id.localeCompare(b.id));
+const subjectModules = [
+  banglaModule,
+  englishModule,
+  humanitiesModule,
+  ictModule,
+  religionModule,
+  scienceModule,
+].sort((a, b) => a.id.localeCompare(b.id));
 
 const subjectStates = subjectModules
   .map((module) => module.state)
