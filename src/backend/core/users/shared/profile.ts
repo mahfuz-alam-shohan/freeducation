@@ -35,11 +35,15 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
 
     if (!profileUser && payload.role === 'admin') {
       const legacyRow = await env.DB.prepare('SELECT id, username FROM admins WHERE id = ?').bind(payload.id).first();
+      const legacyProfile = await env.DB
+        .prepare('SELECT username, name FROM user_profiles WHERE user_id = ?')
+        .bind(payload.id)
+        .first();
       profileUser = legacyRow
         ? {
             id: legacyRow.id,
-            username: legacyRow.username,
-            name: legacyRow.username,
+            username: (legacyProfile?.username as string) || legacyRow.username,
+            name: (legacyProfile?.name as string) || (legacyProfile?.username as string) || legacyRow.username,
             email: null,
             role: 'admin',
           }
