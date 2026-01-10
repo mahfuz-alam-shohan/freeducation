@@ -6,10 +6,10 @@ export const landingUi = `
             </div>
         );
 
-        const useImagePreloader = (urls) => {
+        const useImagePreloader = (urls, { eagerCount = 6, maxWaitMs = 1200 } = {}) => {
             const [ready, setReady] = useState(false);
             useEffect(() => {
-                const validUrls = urls.filter(Boolean);
+                const validUrls = urls.filter(Boolean).slice(0, eagerCount);
                 if (validUrls.length === 0) {
                     const timer = setTimeout(() => setReady(true), 100); 
                     return () => clearTimeout(timer);
@@ -23,6 +23,9 @@ export const landingUi = `
                         setReady(true);
                     }
                 };
+                const timeoutId = setTimeout(() => {
+                    if (mounted) setReady(true);
+                }, maxWaitMs);
                 validUrls.forEach((url) => {
                     const img = new Image();
                     img.src = url;
@@ -33,14 +36,14 @@ export const landingUi = `
                         img.onerror = check;
                     }
                 });
-                return () => { mounted = false; };
-            }, [JSON.stringify(urls)]); 
+                return () => { mounted = false; clearTimeout(timeoutId); };
+            }, [JSON.stringify(urls), eagerCount, maxWaitMs]); 
             return ready;
         };
 
-        const cardWidthClass = 'w-40 sm:w-44';
+        const cardWidthClass = 'w-36 sm:w-44';
         const cardGridGapClass = 'gap-4 sm:gap-6';
-        const cardSurfaceClass = 'relative w-full aspect-[3/4] rounded-none overflow-hidden border border-slate-200 bg-white transition-all duration-300 group-hover:shadow-xl group-hover:border-indigo-300 group-hover:-translate-y-1 card-art-surface';
+        const cardSurfaceClass = 'relative w-full aspect-[3/4] rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md shadow-[0_20px_45px_-30px_rgba(15,23,42,0.7)] ring-1 ring-white/70 transition-all duration-300 group-hover:shadow-[0_28px_60px_-35px_rgba(30,64,175,0.55)] group-hover:-translate-y-1 card-art-surface';
         const cardPanelClass = 'relative';
         const flatSectionClass = 'border-b border-slate-200 pb-4 last:border-b-0';
 
@@ -256,7 +259,7 @@ export const landingUi = `
                 >
                     <div className={cardSurfaceClass + ' mb-3 relative'}>
                         {subject.thumbnailUrl ? (
-                            <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="eager" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 card-art-media" />
+                            <img src={subject.thumbnailUrl} alt={subject.title + ' thumbnail'} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 card-art-media" />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 bg-slate-50 gap-2 card-art-media">
                                 <div className={'h-10 w-10 bg-white border border-slate-100 flex items-center justify-center shadow-sm ' + subject.accent}>
@@ -299,7 +302,7 @@ export const landingUi = `
                             </div>
                         )}
                         {thumbnailUrl ? (
-                            <img src={thumbnailUrl} alt={title + ' thumbnail'} loading="eager" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media" />
+                            <img src={thumbnailUrl} alt={title + ' thumbnail'} loading="lazy" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 card-art-media" />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-[9px] uppercase tracking-[0.3em] card-art-media"><span>No thumbnail</span></div>
                         )}
@@ -317,7 +320,7 @@ export const landingUi = `
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
             const { readMap, markRead } = useReadingProgress();
             const imageUrls = chapters.map(c => chapterThumbnails[makeChapterThumbnailKey(classLabel, subjectLabel, c.id)]?.url);
-            const isReady = useImagePreloader(imageUrls);
+            const isReady = useImagePreloader(imageUrls, { eagerCount: 8, maxWaitMs: 1000 });
             if (!isReady && chapters.length > 0) return <FullScreenLoader />;
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -354,7 +357,7 @@ export const landingUi = `
             return (
                 <div className="w-full mb-12">
                     <div className="relative mb-8 px-2 py-4">
-                        <div className="relative flex items-end justify-between z-10 pl-2">
+                        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between z-10 pl-2">
                             <div>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] pl-1 mb-1 block">Curriculum</span>
                                 <h3 className="text-4xl font-bold text-slate-800 font-serif leading-none relative inline-block">
@@ -363,7 +366,7 @@ export const landingUi = `
                                     <span className="absolute -bottom-2 left-2/3 w-1.5 h-1.5 bg-amber-400 ml-1"></span>
                                 </h3>
                             </div>
-                            <div className="flex items-center gap-3 pb-1">
+                            <div className="flex flex-wrap items-center gap-3 pb-1">
                                 <button onClick={() => scroll('left')} className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-left text-sm"></i></button>
                                 <button onClick={() => scroll('right')} className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 flex items-center justify-center transition shadow-sm hidden sm:flex"><i className="fa-solid fa-arrow-right text-sm"></i></button>
                                 <button onClick={onAll} className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm ml-2">View All</button>

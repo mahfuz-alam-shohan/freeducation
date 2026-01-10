@@ -43,7 +43,11 @@ export const dashboardUsers = `
             return Array.from(allSubjects).sort();
         };
 
-        useEffect(() => { fetchUsers(); }, []);
+        useEffect(() => {
+            fetchUsers();
+            const interval = setInterval(fetchUsers, 30000);
+            return () => clearInterval(interval);
+        }, []);
 
         const fetchUsers = async () => {
             const res = await fetch('/api/users', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }});
@@ -406,7 +410,9 @@ export const dashboardUsers = `
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <button onClick={handleBack} className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">Back to Users</button>
-                        {detailData && <div className="text-xs text-slate-400">Joined {new Date(detailData.createdAt).toLocaleDateString()}</div>}
+                        {detailData?.createdAt && !Number.isNaN(Date.parse(detailData.createdAt)) && (
+                            <div className="text-xs text-slate-400">Joined {new Date(detailData.createdAt).toLocaleDateString()}</div>
+                        )}
                     </div>
 
                     {!userId && (
