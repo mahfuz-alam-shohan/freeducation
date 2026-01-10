@@ -3,6 +3,7 @@ import { appState } from './modules/platforms/academic/subjects/app/state';
 import { keyHelpers } from './modules/platforms/academic/subjects/app/key-helpers';
 import { teacherConfig } from './modules/platforms/academic/subjects/app/teacher-config';
 import { contentState } from './modules/platforms/academic/subjects/app/content-state';
+import { banglaState } from './modules/platforms/academic/subjects/bangla/state';
 import { banglaTopics } from './modules/platforms/academic/subjects/bangla/topics';
 import { englishTypes } from './modules/platforms/academic/subjects/english/types';
 import { derivedState } from './modules/platforms/academic/subjects/app/derived-state';
@@ -21,6 +22,7 @@ const appModules = [
   appState,
   keyHelpers,
   teacherConfig,
+  banglaState,
   contentState,
   banglaTopics,
   englishTypes,
