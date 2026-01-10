@@ -1,6 +1,14 @@
 export const adminStudentProfile = `
     const AdminStudentProfile = ({ onNavigate }) => {
-        const [userId, setUserId] = useState(() => Number(sessionStorage.getItem('admin_user_profile_id') || 0));
+        const [userId, setUserId] = useState(() => {
+            const params = new URLSearchParams(window.location.search);
+            const queryId = Number(params.get('id'));
+            if (queryId) {
+                sessionStorage.setItem('admin_user_profile_id', String(queryId));
+                return queryId;
+            }
+            return Number(sessionStorage.getItem('admin_user_profile_id') || 0);
+        });
         const [detailData, setDetailData] = useState(null);
         const [detailForm, setDetailForm] = useState(null);
         const [detailLoading, setDetailLoading] = useState(false);
@@ -8,6 +16,13 @@ export const adminStudentProfile = `
         const [editingField, setEditingField] = useState(null);
 
         useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const queryId = Number(params.get('id'));
+            if (queryId && queryId !== userId) {
+                sessionStorage.setItem('admin_user_profile_id', String(queryId));
+                setUserId(queryId);
+                return;
+            }
             const stored = Number(sessionStorage.getItem('admin_user_profile_id') || 0);
             if (stored !== userId) setUserId(stored);
         }, []);
@@ -123,6 +138,10 @@ export const adminStudentProfile = `
                     )}
 
                     {detailLoading && <div className="text-center text-sm text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading...</div>}
+
+                    {!detailLoading && detailMessage && !detailForm && (
+                        <div className="bg-white border border-slate-200 rounded-xl p-6 text-sm text-slate-500">{detailMessage}</div>
+                    )}
 
                     {!detailLoading && detailForm && (
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">

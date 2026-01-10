@@ -58,7 +58,7 @@ export const adminUserList = `
 
         const openUserProfile = (userId) => {
             sessionStorage.setItem('admin_user_profile_id', String(userId));
-            onNavigate('admin-user-profile');
+            onNavigate('admin-user-profile', { path: '/dashboard/users/profile?id=' + userId });
         };
 
         const handleAction = async () => {
