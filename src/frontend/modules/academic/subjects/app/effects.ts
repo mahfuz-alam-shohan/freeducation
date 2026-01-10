@@ -6,10 +6,10 @@ export const appEffects = `
             useEffect(() => {
                 const initSystem = async () => {
                     // A. Check Setup Status
-                    await fetch('/api/init', { method: 'POST' });
-                    const res = await fetch('/api/setup-status');
+                    const res = await fetch(statusEndpoint);
                     const data = await res.json();
-                    setHasAdmin(data.hasAdmin);
+                    const initialized = Boolean(data.initialized);
+                    setHasAdmin(initialized);
 
                     // B. Try to Restore Session
                     const token = localStorage.getItem('auth_token');
@@ -30,11 +30,11 @@ export const appEffects = `
                         }
                     }
 
-                    if (data.hasAdmin && view === 'register') {
+                    if (initialized && view === 'register') {
                         navigate('login', { replace: true });
                     }
-                    if (!data.hasAdmin && view === 'login') {
-                        navigate('register', { replace: true });
+                    if (!initialized && view !== 'setup') {
+                        navigate('setup', { replace: true });
                     }
                     if (!token && isDashboardView(view)) {
                         navigate('landing', { replace: true });

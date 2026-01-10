@@ -9,13 +9,6 @@ import {
 } from '../users/shared/utils';
 
 export const handleAuth = async (request: Request, env: Env, path: string): Promise<Response | null> => {
-  if (path === '/api/setup-status') {
-    const result = await env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first();
-    const legacy = await env.DB.prepare('SELECT count(*) as count FROM admins').first();
-    const hasAdmin = (result?.count as number) > 0 || (legacy?.count as number) > 0;
-    return Response.json({ hasAdmin }, { headers: apiHeaders });
-  }
-
   if (path === '/api/register-admin' && request.method === 'POST') {
     const { username, password } = (await request.json()) as any;
     const count = await env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first();
