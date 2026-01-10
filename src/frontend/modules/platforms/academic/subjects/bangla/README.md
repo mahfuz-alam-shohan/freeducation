@@ -1,5 +1,6 @@
 # Bangla Subject
 
-Keep Bangla-specific topics, collections, and utilities in this folder.
+Bangla subject modules live here.
 
-Add new modules here and export them to the academic runtime from `frontend/app.ts`.
+- `topics.ts` keeps topic data for public navigation.
+- `views/` keeps Bangla-specific admin and public view templates.

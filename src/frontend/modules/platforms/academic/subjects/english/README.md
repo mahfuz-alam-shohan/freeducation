@@ -1,5 +1,6 @@
 # English Subject
 
-Keep English-specific types, topics, and helpers in this folder.
+English subject modules live here.
 
-Add new modules here and export them to the academic runtime from `frontend/app.ts`.
+- `types.ts` keeps English question type data.
+- `views/` keeps English-specific admin and public view templates.
