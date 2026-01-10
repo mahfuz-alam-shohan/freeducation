@@ -92,7 +92,9 @@ const StudentRegister = ({ onNavigate }) => {
                                     }}>
                                     <option value="SSC">SSC</option>
                                     <option value="HSC">HSC</option>
-                                    <option value="6-8">Class 6-8</option>
+                                    <option value="6">Class 6</option>
+                                    <option value="7">Class 7</option>
+                                    <option value="8">Class 8</option>
                                 </select>
                             </div>
                             <div>

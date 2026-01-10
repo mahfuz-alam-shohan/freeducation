@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import type { Env } from '../../../../shared/types';
 import type { ApiModule } from '../..';
 import studentAuth from './auth';
+import '../schema';
 
 const app = new Hono<{ Bindings: Env }>();
 app.use('/api/*', cors());

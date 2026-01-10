@@ -11,6 +11,7 @@ import * as setup from './setup';
 import * as profile from './profile';
 import * as fonts from './fonts';
 import * as student from './student';
+import './schema';
 
 const findLegacyHandler = (mod: Record<string, unknown>) => {
   return Object.values(mod).find((item) => typeof item === 'function') as
