@@ -82,15 +82,23 @@ const StudentRegister = ({ onNavigate }) => {
                             <div>
                                 <label className="text-xs font-bold uppercase text-slate-400 tracking-wider">Class</label>
                                 <select className="w-full mt-1 p-3 border border-slate-200 rounded-lg bg-white"
-                                    value={formData.classLabel} onChange={e => setFormData({...formData, classLabel: e.target.value})}>
+                                    value={formData.classLabel} onChange={e => {
+                                        const nextClass = e.target.value;
+                                        setFormData({
+                                            ...formData,
+                                            classLabel: nextClass,
+                                            groupLabel: nextClass === 'SSC' || nextClass === 'HSC' ? formData.groupLabel : ''
+                                        });
+                                    }}>
                                     <option value="SSC">SSC</option>
                                     <option value="HSC">HSC</option>
+                                    <option value="6-8">Class 6-8</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="text-xs font-bold uppercase text-slate-400 tracking-wider">Group</label>
                                 <select className="w-full mt-1 p-3 border border-slate-200 rounded-lg bg-white"
-                                    value={formData.groupLabel} onChange={e => setFormData({...formData, groupLabel: e.target.value})}>
+                                    value={formData.groupLabel} onChange={e => setFormData({...formData, groupLabel: e.target.value})} disabled={!(formData.classLabel === 'SSC' || formData.classLabel === 'HSC')}>
                                     <option value="Science">Science</option>
                                     <option value="Humanities">Humanities</option>
                                     <option value="Business Studies">Business</option>
