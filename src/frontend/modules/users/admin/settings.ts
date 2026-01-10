@@ -80,7 +80,7 @@ export const settingsComponents = `
             const [isSaving, setIsSaving] = useState(false);
             const [avatarFile, setAvatarFile] = useState(null);
             const [avatarPreview, setAvatarPreview] = useState('');
-            const ShellComponent = shell === 'teacher' ? TeacherShell : AdminShell;
+            const ShellComponent = shell === 'teacher' ? TeacherShell : shell === 'student' ? StudentShell : AdminShell;
 
             useEffect(() => { if (profile?.name) setNameInput(profile.name); }, [profile?.name]);
             useEffect(() => { if (avatarFile) setAvatarPreview(URL.createObjectURL(avatarFile)); }, [avatarFile]);
@@ -167,7 +167,87 @@ export const settingsComponents = `
             );
         };
 
-        // 2. Danger Zone Component
+        // 2. Change Password Component
+        const ChangePasswordPanel = ({ onNavigate, onBack, shell = 'admin' }) => {
+            const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            const [statusMessage, setStatusMessage] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+            const ShellComponent = shell === 'teacher' ? TeacherShell : shell === 'student' ? StudentShell : AdminShell;
+
+            const handleSubmit = async () => {
+                setIsSaving(true);
+                setStatusMessage(null);
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    setStatusMessage('Please log in again.');
+                    setIsSaving(false);
+                    return;
+                }
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(form)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setStatusMessage('Password updated successfully.');
+                    setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                } else {
+                    setStatusMessage(data.error || 'Password update failed.');
+                }
+                setIsSaving(false);
+            };
+
+            return (
+                <ShellComponent title="Change Password" subtitle="Keep your account secure" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-xl shadow-sm animate-fade-in">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Current Password</label>
+                                <input
+                                    type="password"
+                                    value={form.currentPassword}
+                                    onChange={e => setForm({ ...form, currentPassword: e.target.value })}
+                                    className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                    placeholder="Enter current password"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">New Password</label>
+                                <input
+                                    type="password"
+                                    value={form.newPassword}
+                                    onChange={e => setForm({ ...form, newPassword: e.target.value })}
+                                    className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                    placeholder="Enter new password"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={form.confirmPassword}
+                                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                    className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                    placeholder="Re-enter new password"
+                                />
+                            </div>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSaving}
+                                className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? 'Saving...' : 'Update Password'}
+                            </button>
+                            {statusMessage && <div className="p-3 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium">{statusMessage}</div>}
+                        </div>
+                    </div>
+                    {onBack && <button onClick={onBack} className="mt-6 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition"><i className="fa-solid fa-arrow-left"></i> Back</button>}
+                </ShellComponent>
+            );
+        };
+
+        // 3. Danger Zone Component
         const DangerZonePanel = ({ onBack, onNavigate }) => {
             const [statusMessage, setStatusMessage] = useState(null);
             const [hardResetPassword, setHardResetPassword] = useState('');
@@ -226,7 +306,7 @@ export const settingsComponents = `
             );
         };
 
-        // 3. Main Admin Settings Controller
+        // 4. Main Admin Settings Controller
         const AdminSettings = ({ onNavigate }) => {
             const [activePanel, setActivePanel] = useState('main'); // 'main', 'profile', 'danger'
 
@@ -280,7 +360,50 @@ export const settingsComponents = `
             return <ProfileManagement onNavigate={onNavigate} shell="teacher" />;
         };
 
-        return { AdminSettings, TeacherSettings };
+        const StudentSettings = ({ onNavigate }) => {
+            const [activePanel, setActivePanel] = useState('main');
+
+            if (activePanel === 'profile') {
+                return <ProfileManagement onNavigate={onNavigate} onBack={() => setActivePanel('main')} shell="student" />;
+            }
+            if (activePanel === 'password') {
+                return <ChangePasswordPanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} shell="student" />;
+            }
+
+            return (
+                <StudentShell title="Settings" subtitle="Account preferences" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="max-w-xl bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-fade-in">
+                        <button
+                            onClick={() => setActivePanel('profile')}
+                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                <i className="fa-solid fa-user-gear text-sm"></i>
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-medium text-slate-700 text-sm">Profile</div>
+                            </div>
+                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
+                        </button>
+
+                        <button
+                            onClick={() => setActivePanel('password')}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition text-left group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                <i className="fa-solid fa-key text-sm"></i>
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-medium text-slate-700 text-sm">Change Password</div>
+                            </div>
+                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
+                        </button>
+                    </div>
+                </StudentShell>
+            );
+        };
+
+        return { AdminSettings, TeacherSettings, StudentSettings };
         })();
-        const { AdminSettings, TeacherSettings } = AdminSettingsModule;
+        const { AdminSettings, TeacherSettings, StudentSettings } = AdminSettingsModule;
 `;

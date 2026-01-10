@@ -13,7 +13,9 @@ export const authHandlers = `
                         username: data.username,
                         role: data.role,
                         permissions: data.permissions || [],
-                        assignment: data.assignment || null
+                        assignment: data.assignment || null,
+                        classLabel: data.classLabel || null,
+                        groupLabel: data.groupLabel || null
                     });
                     navigate('dashboard');
                 } else {
