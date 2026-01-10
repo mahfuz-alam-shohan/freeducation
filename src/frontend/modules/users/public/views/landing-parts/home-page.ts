@@ -17,7 +17,7 @@ export const landingHome = `
             // Collect all images we need to show
             const allSubjects = [...scopedSscFeatured, ...scopedHscFeatured];
             const imageUrls = allSubjects.map(s => thumbnailMap[s.subjectKey]?.url);
-            const isReady = useImagePreloader(imageUrls);
+            const isReady = useImagePreloader(imageUrls, { eagerCount: 6, maxWaitMs: 900 });
 
             useEffect(() => {
                 const timer = setInterval(() => { setQuoteIndex((prev) => (prev + 1) % quoteItems.length); }, 9000);
