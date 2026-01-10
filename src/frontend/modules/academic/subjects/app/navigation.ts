@@ -5,9 +5,9 @@ export const navigationHelpers = `
             };
 
             const navigate = (nextView, options = {}) => {
-                const { replace = false } = options;
+                const { replace = false, path } = options;
                 setView(nextView);
-                const nextPath = viewToPath[nextView] || '/';
+                const nextPath = path || viewToPath[nextView] || '/';
                 if (window.location.pathname !== nextPath) {
                     const method = replace ? 'replaceState' : 'pushState';
                     window.history[method]({ view: nextView }, '', nextPath);
