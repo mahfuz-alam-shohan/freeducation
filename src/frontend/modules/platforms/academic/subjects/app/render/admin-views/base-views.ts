@@ -24,7 +24,13 @@ export const baseViews = `
     <TeacherDashboard assignment={user.assignment} subjectConfig={teacherSubjectConfig} onNavigate={navigate} />
 )}
 {view === 'dashboard' && user?.role === 'student' && (
-    <StudentDashboard onNavigate={navigate} />
+    <StudentClassView user={user} onNavigate={navigate} />
+)}
+{view === 'student-class' && user?.role === 'student' && (
+    <StudentClassView user={user} onNavigate={navigate} />
+)}
+{view === 'student-settings' && user?.role === 'student' && (
+    <StudentSettings onNavigate={navigate} />
 )}
 {view === 'dashboard' && (!user || (user.role !== 'teacher' && user.role !== 'student')) && (
     <AdminDashboard onNavigate={navigate} />

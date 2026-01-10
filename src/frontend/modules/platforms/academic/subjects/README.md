@@ -1,3 +1,3 @@
 # Academic Subjects
 
-Each subject gets its own folder with topic or chapter submodules.
+Academic subject flows live in `app/`, with shared subject experiences and views kept alongside the module.

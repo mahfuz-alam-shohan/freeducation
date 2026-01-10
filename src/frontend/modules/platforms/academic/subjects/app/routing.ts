@@ -1,4 +1,4 @@
-import { matchEntries, viewToPath } from '../../../../routing/routes';
+import { matchEntries, viewToPath } from '../../../../../routing/routes';
 
 const viewToPathJson = JSON.stringify(viewToPath);
 const matchEntriesJson = JSON.stringify(matchEntries);

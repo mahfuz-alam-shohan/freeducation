@@ -6,6 +6,9 @@ import { adminSidebarComponent } from './shared/components/layout/admin-sidebar'
 import { teacherMobileNavComponent } from './shared/components/layout/teacher-mobile-nav';
 import { teacherShellComponent } from './shared/components/layout/teacher-shell';
 import { teacherSidebarComponent } from './shared/components/layout/teacher-sidebar';
+import { studentMobileNavComponent } from './shared/components/layout/student-mobile-nav';
+import { studentShellComponent } from './shared/components/layout/student-shell';
+import { studentSidebarComponent } from './shared/components/layout/student-sidebar';
 import { uiComponents } from './shared/components/ui';
 import { landingComponents } from './modules/users/public/landing';
 import { authComponents } from './modules/users/public/auth';
@@ -137,6 +140,9 @@ export function renderAppHtml(initialView: string) {
         ${teacherSidebarComponent}
         ${teacherMobileNavComponent}
         ${teacherShellComponent}
+        ${studentSidebarComponent}
+        ${studentMobileNavComponent}
+        ${studentShellComponent}
 
         ${authComponents}
         ${landingComponents}

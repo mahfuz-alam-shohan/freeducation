@@ -211,6 +211,7 @@ export const teacherConfig = `
             const isDashboardView = (targetView) =>
                 targetView === 'dashboard' ||
                 targetView === 'admin-settings' ||
+                targetView.startsWith('student-') ||
                 targetView.startsWith('admin-') ||
                 targetView.startsWith('bangla-') ||
                 targetView.startsWith('english-');

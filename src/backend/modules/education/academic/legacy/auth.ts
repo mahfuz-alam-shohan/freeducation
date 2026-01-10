@@ -56,6 +56,8 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
     let role = user?.role as string | undefined;
     let permissions: string[] = [];
     let assignment: { level: string; subject: string } | null = null;
+    let classLabel: string | null = null;
+    let groupLabel: string | null = null;
 
     if (user) {
       const [saltHex, originalHash] = (user.password_hash as string).split(":");
@@ -73,6 +75,10 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
           .bind(user.id)
           .first();
         permissions = permissionsRow?.permissions ? JSON.parse(permissionsRow.permissions as string) : [];
+      }
+      if (role === "student") {
+        classLabel = (user.class_label as string) || null;
+        groupLabel = (user.group_label as string) || null;
       }
     } else {
       const legacy = await env.DB.prepare("SELECT * FROM admins WHERE username = ?").bind(cleanedUsername).first();
@@ -93,6 +99,8 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
         role,
         permissions,
         assignment,
+        classLabel,
+        groupLabel,
       },
       secret
     );
@@ -103,6 +111,8 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
         role,
         permissions,
         assignment,
+        classLabel,
+        groupLabel,
         token,
       },
       { headers: apiHeaders }
@@ -119,6 +129,8 @@ export const handleAuth = async (request: Request, env: Env, path: string): Prom
               role: payload.role,
               permissions: payload.permissions || [],
               assignment: payload.assignment || null,
+              classLabel: payload.classLabel || null,
+              groupLabel: payload.groupLabel || null,
             }
           : null,
       },

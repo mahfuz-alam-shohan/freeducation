@@ -1,30 +1,86 @@
 export const studentDashboardComponents = `
-    const StudentDashboard = ({ onNavigate }) => (
-        <div className="min-h-screen bg-[#f3f6ff] px-4 py-10 sm:px-8">
-            <div className="max-w-5xl mx-auto space-y-8">
-                <div className="text-center space-y-2">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Student Dashboard</h1>
-                    <p className="text-slate-600">Pick up where you left off or explore new lessons.</p>
+    const StudentClassView = ({ user, onNavigate }) => {
+        const classLabel = user?.classLabel || user?.class_label || '';
+        const groupLabel = user?.groupLabel || user?.group_label || '';
+        const hasClass = Boolean(classLabel);
+        const classSubjects = classLabel === 'HSC' ? hscSubjects : sscSubjects;
+        const subjectPool = Array.isArray(classSubjects) ? classSubjects : [];
+        const normalizedGroup = groupLabel || 'Common';
+        const filteredSubjects = subjectPool.filter((subject) => {
+            if (!groupLabel) return true;
+            const groups = subject.groups || [];
+            return groups.includes(groupLabel) || subject.groupLabel === 'Common';
+        });
+        const classRoute = classLabel === 'HSC' ? 'hsc-subjects' : 'ssc-subjects';
+
+        return (
+            <StudentShell
+                title="My Class"
+                subtitle={hasClass ? classLabel + (groupLabel ? ' • ' + groupLabel : '') + ' learning space' : 'Connect your class to see content'}
+                activeTab="class"
+                onNavigate={onNavigate}
+            >
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Your Class</div>
+                            <div className="mt-2 text-2xl font-semibold text-slate-900">
+                                {hasClass ? classLabel : 'No class assigned'}
+                            </div>
+                            {hasClass && (
+                                <div className="mt-1 text-sm text-slate-500">
+                                    {groupLabel ? groupLabel + ' group' : 'General group'}
+                                </div>
+                            )}
+                        </div>
+                        {hasClass && (
+                            <button
+                                onClick={() => onNavigate(classRoute)}
+                                className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition"
+                            >
+                                View full library
+                            </button>
+                        )}
+                    </div>
+                    {!hasClass && (
+                        <div className="text-sm text-slate-500">
+                            Your account does not have a class assigned yet. Please contact your teacher or admin.
+                        </div>
+                    )}
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <button onClick={() => onNavigate('ssc-subjects')} className="bg-white border border-slate-200 rounded-2xl p-6 text-left shadow-sm hover:shadow-md transition">
-                        <div className="text-xs font-semibold uppercase tracking-widest text-indigo-600">SSC</div>
-                        <div className="mt-3 text-lg font-semibold text-slate-900">SSC Subjects</div>
-                        <div className="mt-1 text-sm text-slate-500">Explore SSC course materials.</div>
-                    </button>
-                    <button onClick={() => onNavigate('hsc-subjects')} className="bg-white border border-slate-200 rounded-2xl p-6 text-left shadow-sm hover:shadow-md transition">
-                        <div className="text-xs font-semibold uppercase tracking-widest text-indigo-600">HSC</div>
-                        <div className="mt-3 text-lg font-semibold text-slate-900">HSC Subjects</div>
-                        <div className="mt-1 text-sm text-slate-500">Jump into HSC learning paths.</div>
-                    </button>
-                    <button onClick={() => onNavigate('public-videos')} className="bg-white border border-slate-200 rounded-2xl p-6 text-left shadow-sm hover:shadow-md transition">
-                        <div className="text-xs font-semibold uppercase tracking-widest text-indigo-600">Videos</div>
-                        <div className="mt-3 text-lg font-semibold text-slate-900">Watch Lectures</div>
-                        <div className="mt-1 text-sm text-slate-500">Review lessons with video content.</div>
-                    </button>
+                <div className="space-y-3">
+                    <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Subjects</div>
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {filteredSubjects.map((subject) => (
+                            <button
+                                key={subject.subjectKey}
+                                onClick={() => subject.route && onNavigate(subject.route)}
+                                className="group w-full text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className={'w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-sm ' + subject.accent}>
+                                        <i className={'fa-solid ' + subject.icon}></i>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="text-sm font-semibold text-slate-900">{subject.title}</div>
+                                        {subject.subtitle && <div className="text-xs text-slate-500 mt-1">{subject.subtitle}</div>}
+                                        <div className="text-xs text-slate-400 mt-2">
+                                            {subject.groupLabel === 'Common' ? 'Common subject' : normalizedGroup + ' group'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-4 text-xs font-semibold text-indigo-600">Open subject</div>
+                            </button>
+                        ))}
+                        {filteredSubjects.length === 0 && (
+                            <div className="col-span-full bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-center text-sm text-slate-500">
+                                No subjects available for this class yet.
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-        </div>
-    );
+            </StudentShell>
+        );
+    };
 `;
