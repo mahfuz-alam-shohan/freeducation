@@ -27,13 +27,13 @@ const teacherModule = createTeacherModule();
 const subjectsModule = createSubjectsModule();
 
 app.all('/api/system', async (c) => {
-  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api');
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, '/api/system');
   return response ?? c.notFound();
 });
 
 app.all('/api/system/*', async (c) => {
   const suffix = c.req.path.replace('/api/system', '');
-  const response = await forwardToModule(systemModule, c.req.raw, c.env, `/api${suffix}`);
+  const response = await forwardToModule(systemModule, c.req.raw, c.env, `/api/system${suffix}`);
   return response ?? c.notFound();
 });
 
