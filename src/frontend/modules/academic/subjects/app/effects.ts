@@ -5,41 +5,52 @@ export const appEffects = `
             // 1. Initial System Check & Session Restore
             useEffect(() => {
                 const initSystem = async () => {
-                    // A. Check Setup Status
-                    const res = await fetch(statusEndpoint);
-                    const data = await res.json();
-                    const initialized = Boolean(data.initialized);
-                    setHasAdmin(initialized);
+                    try {
+                        // A. Check Setup Status
+                        const res = await fetch(statusEndpoint);
+                        if (!res.ok) {
+                            throw new Error('Status check failed');
+                        }
+                        const data = await res.json();
+                        const initialized = Boolean(data.initialized);
+                        setHasAdmin(initialized);
 
-                    // B. Try to Restore Session
-                    const token = localStorage.getItem('auth_token');
-                    if (token) {
-                        try {
-                            const meRes = await fetch('/api/me', {
-                                headers: { 'Authorization': 'Bearer ' + token }
-                            });
-                            const meData = await meRes.json();
-                            if (meData.user) {
-                                setUser(meData.user);
-                            } else {
-                                // Invalid token
+                        // B. Try to Restore Session
+                        const token = localStorage.getItem('auth_token');
+                        if (token) {
+                            try {
+                                const meRes = await fetch('/api/me', {
+                                    headers: { 'Authorization': 'Bearer ' + token }
+                                });
+                                const meData = await meRes.json();
+                                if (meData.user) {
+                                    setUser(meData.user);
+                                } else {
+                                    // Invalid token
+                                    localStorage.removeItem('auth_token');
+                                }
+                            } catch (e) {
                                 localStorage.removeItem('auth_token');
                             }
-                        } catch (e) {
-                            localStorage.removeItem('auth_token');
                         }
-                    }
 
-                    if (initialized && view === 'register') {
-                        navigate('login', { replace: true });
+                        if (initialized && view === 'register') {
+                            navigate('login', { replace: true });
+                        }
+                        if (!initialized && view !== 'setup') {
+                            navigate('setup', { replace: true });
+                        }
+                        if (!token && isDashboardView(view)) {
+                            navigate('landing', { replace: true });
+                        }
+                    } catch (e) {
+                        setHasAdmin(false);
+                        if (view !== 'setup') {
+                            navigate('setup', { replace: true });
+                        }
+                    } finally {
+                        setIsLoading(false);
                     }
-                    if (!initialized && view !== 'setup') {
-                        navigate('setup', { replace: true });
-                    }
-                    if (!token && isDashboardView(view)) {
-                        navigate('landing', { replace: true });
-                    }
-                    setIsLoading(false);
                 };
                 initSystem();
             }, []);
