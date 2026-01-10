@@ -360,8 +360,14 @@ export const settingsComponents = `
             return <ProfileManagement onNavigate={onNavigate} shell="teacher" />;
         };
 
-        const StudentProfileDetails = ({ onNavigate, onBack }) => {
-            const [form, setForm] = useState({
+        const StudentProfilePanel = ({ onNavigate, onBack }) => {
+            const { profile, refreshProfile, setProfile } = useProfileData();
+            const [statusMessage, setStatusMessage] = useState(null);
+            const [nameInput, setNameInput] = useState('');
+            const [isSaving, setIsSaving] = useState(false);
+            const [avatarFile, setAvatarFile] = useState(null);
+            const [avatarPreview, setAvatarPreview] = useState('');
+            const [details, setDetails] = useState({
                 email: '',
                 religion: '',
                 classLabel: '',
@@ -369,9 +375,35 @@ export const settingsComponents = `
                 dateOfBirth: '',
                 batchYear: ''
             });
-            const [isLoading, setIsLoading] = useState(true);
-            const [isSaving, setIsSaving] = useState(false);
-            const [statusMessage, setStatusMessage] = useState('');
+            const [isLoadingDetails, setIsLoadingDetails] = useState(true);
+            const [detailsMessage, setDetailsMessage] = useState('');
+
+            useEffect(() => { if (profile?.name) setNameInput(profile.name); }, [profile?.name]);
+            useEffect(() => { if (avatarFile) setAvatarPreview(URL.createObjectURL(avatarFile)); }, [avatarFile]);
+
+            const handleNameSave = async () => {
+                setIsSaving(true);
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch('/api/profile', { method: 'PUT', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: nameInput.trim() }) });
+                const data = await response.json();
+                if (data.success) { setStatusMessage('Profile updated.'); setProfile(p => ({...p, name: nameInput})); }
+                setIsSaving(false);
+            };
+
+            const handleAvatarUpload = async () => {
+                setIsSaving(true);
+                const token = localStorage.getItem('auth_token');
+                const resized = await resizeImageFile(avatarFile, { maxWidth: 480, maxHeight: 480, quality: 0.8 });
+                const formData = new FormData(); formData.append('file', resized || avatarFile);
+                const response = await fetch('/api/profile/avatar', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
+                const data = await response.json();
+                if (data.success) { 
+                    setStatusMessage('Picture updated.'); 
+                    setAvatarFile(null); 
+                    await refreshProfile(); 
+                }
+                setIsSaving(false);
+            };
 
             const computeAge = (dob) => {
                 if (!dob) return '';
@@ -386,14 +418,14 @@ export const settingsComponents = `
                 return age >= 0 ? String(age) : '';
             };
 
-            const loadProfile = async () => {
+            const loadDetails = async () => {
                 const token = localStorage.getItem('auth_token');
-                if (!token) { setIsLoading(false); return; }
+                if (!token) { setIsLoadingDetails(false); return; }
                 try {
                     const res = await fetch('/api/student/profile', { headers: { Authorization: 'Bearer ' + token } });
                     const data = await res.json();
                     if (data.success) {
-                        setForm({
+                        setDetails({
                             email: data.profile?.email || '',
                             religion: data.profile?.religion || '',
                             classLabel: data.profile?.classLabel || '',
@@ -402,14 +434,14 @@ export const settingsComponents = `
                             batchYear: data.profile?.batchYear || ''
                         });
                     }
-                } catch (e) {} finally { setIsLoading(false); }
+                } catch (e) {} finally { setIsLoadingDetails(false); }
             };
 
-            useEffect(() => { loadProfile(); }, []);
+            useEffect(() => { loadDetails(); }, []);
 
-            const handleSave = async () => {
+            const handleDetailsSave = async () => {
                 setIsSaving(true);
-                setStatusMessage('');
+                setDetailsMessage('');
                 const token = localStorage.getItem('auth_token');
                 if (!token) { setIsSaving(false); return; }
                 try {
@@ -417,96 +449,153 @@ export const settingsComponents = `
                         method: 'PUT',
                         headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            religion: form.religion,
-                            classLabel: form.classLabel,
-                            groupLabel: form.classLabel === 'SSC' || form.classLabel === 'HSC' ? form.groupLabel : '',
-                            dateOfBirth: form.dateOfBirth,
-                            batchYear: form.classLabel === 'SSC' || form.classLabel === 'HSC' ? form.batchYear : ''
+                            religion: details.religion,
+                            classLabel: details.classLabel,
+                            groupLabel: details.classLabel === 'SSC' || details.classLabel === 'HSC' ? details.groupLabel : '',
+                            dateOfBirth: details.dateOfBirth,
+                            batchYear: details.classLabel === 'SSC' || details.classLabel === 'HSC' ? details.batchYear : ''
                         })
                     });
                     const data = await res.json();
                     if (data.success) {
-                        setStatusMessage(data.pointsAwarded ? 'Profile updated and 10 points added!' : 'Profile updated.');
+                        setDetailsMessage(data.pointsAwarded ? 'Profile updated and 10 points added!' : 'Profile updated.');
                         const meRes = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + token } });
                         const meData = await meRes.json();
                         if (meData.user) setUser(meData.user);
                     } else {
-                        setStatusMessage(data.error || 'Update failed.');
+                        setDetailsMessage(data.error || 'Update failed.');
                     }
                 } catch (e) {
-                    setStatusMessage('Update failed.');
+                    setDetailsMessage('Update failed.');
                 }
                 setIsSaving(false);
             };
 
-            const age = computeAge(form.dateOfBirth);
-            const showGroup = form.classLabel === 'SSC' || form.classLabel === 'HSC';
+            const age = computeAge(details.dateOfBirth);
+            const showGroup = details.classLabel === 'SSC' || details.classLabel === 'HSC';
 
             return (
-                <StudentShell title="Profile Details" subtitle="Keep your student profile updated" activeTab="settings" onNavigate={onNavigate}>
-                    <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl shadow-sm space-y-5 animate-fade-in">
-                        {isLoading ? (
-                            <div className="text-center text-sm text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading profile...</div>
-                        ) : (
-                            <>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
-                                        <input value={form.email} disabled className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Religion</label>
-                                        <select value={form.religion} onChange={e => setForm({ ...form, religion: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white">
-                                            <option value="">Select religion</option>
-                                            <option value="Islam">Islam</option>
-                                            <option value="Hinduism">Hinduism</option>
-                                            <option value="Buddhism">Buddhism</option>
-                                            <option value="Christianity">Christianity</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Class Level</label>
-                                        <select value={form.classLabel} onChange={e => setForm({ ...form, classLabel: e.target.value, groupLabel: e.target.value === 'SSC' || e.target.value === 'HSC' ? form.groupLabel : '' })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white">
-                                            <option value="">Select class</option>
-                                            <option value="SSC">SSC</option>
-                                            <option value="HSC">HSC</option>
-                                            <option value="6-8">Class 6-8</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Group</label>
-                                        <select value={form.groupLabel} onChange={e => setForm({ ...form, groupLabel: e.target.value })} disabled={!showGroup} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white disabled:bg-slate-50 disabled:text-slate-400">
-                                            <option value="">Select group</option>
-                                            <option value="Science">Science</option>
-                                            <option value="Humanities">Humanities</option>
-                                            <option value="Business Studies">Business Studies</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Date of Birth</label>
-                                        <input type="date" value={form.dateOfBirth} onChange={e => setForm({ ...form, dateOfBirth: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Age</label>
-                                        <input value={age} disabled className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500" />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">SSC/HSC Batch Year</label>
-                                        <input value={form.batchYear} onChange={e => setForm({ ...form, batchYear: e.target.value })} disabled={!showGroup} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm disabled:bg-slate-50 disabled:text-slate-400" placeholder="e.g. 2026" />
-                                    </div>
+                <StudentShell title="Profile" subtitle="Update your profile and details" activeTab="settings" onNavigate={onNavigate}>
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl shadow-sm">
+                            <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+                                <div className="w-28 h-28 sm:w-24 sm:h-24 bg-slate-100 rounded-full border-2 border-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
+                                    <img 
+                                        src={avatarPreview || profile?.avatarUrl} 
+                                        className="w-full h-full object-cover" 
+                                        alt="Profile"
+                                        onError={(e) => { e.target.style.display = 'none'; }} 
+                                    />
+                                    {(!avatarPreview && !profile?.avatarUrl) && (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                            <i className="fa-solid fa-user text-4xl"></i>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                                    <button onClick={handleSave} disabled={isSaving} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50">
-                                        {isSaving ? 'Saving...' : 'Save Details'}
-                                    </button>
-                                    {onBack && <button onClick={onBack} className="px-6 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Back</button>}
-                                </div>
+                                <div className="flex-1 space-y-4 w-full text-center sm:text-left">
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Change Photo</label>
+                                        <input 
+                                            type="file" 
+                                            onChange={e => setAvatarFile(e.target.files[0])} 
+                                            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition cursor-pointer mx-auto sm:mx-0"
+                                        />
+                                    </div>
 
-                                {statusMessage && <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium">{statusMessage}</div>}
-                            </>
-                        )}
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Display Name</label>
+                                        <input 
+                                            type="text" 
+                                            value={nameInput} 
+                                            onChange={e => setNameInput(e.target.value)} 
+                                            className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" 
+                                            placeholder="Display Name"
+                                        />
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <button 
+                                            onClick={() => { if(avatarFile) handleAvatarUpload(); else handleNameSave(); }} 
+                                            disabled={isSaving} 
+                                            className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving ? 'Saving...' : 'Save Changes'}
+                                        </button>
+                                    </div>
+
+                                    {statusMessage && <div className="p-3 bg-green-50 text-green-700 rounded-lg text-xs font-medium animate-fade-in text-center sm:text-left">{statusMessage}</div>}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl shadow-sm space-y-5">
+                            {isLoadingDetails ? (
+                                <div className="text-center text-sm text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading profile...</div>
+                            ) : (
+                                <>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
+                                            <input value={details.email} disabled className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Religion</label>
+                                            <select value={details.religion} onChange={e => setDetails({ ...details, religion: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white">
+                                                <option value="">Select religion</option>
+                                                <option value="Islam">Islam</option>
+                                                <option value="Hinduism">Hinduism</option>
+                                                <option value="Buddhism">Buddhism</option>
+                                                <option value="Christianity">Christianity</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Class Level</label>
+                                            <select value={details.classLabel} onChange={e => setDetails({ ...details, classLabel: e.target.value, groupLabel: e.target.value === 'SSC' || e.target.value === 'HSC' ? details.groupLabel : '' })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white">
+                                                <option value="">Select class</option>
+                                                <option value="SSC">SSC</option>
+                                                <option value="HSC">HSC</option>
+                                                <option value="6">Class 6</option>
+                                                <option value="7">Class 7</option>
+                                                <option value="8">Class 8</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Group</label>
+                                            <select value={details.groupLabel} onChange={e => setDetails({ ...details, groupLabel: e.target.value })} disabled={!showGroup} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-white disabled:bg-slate-50 disabled:text-slate-400">
+                                                <option value="">Select group</option>
+                                                <option value="Science">Science</option>
+                                                <option value="Humanities">Humanities</option>
+                                                <option value="Business Studies">Business Studies</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Date of Birth</label>
+                                            <input type="date" value={details.dateOfBirth} onChange={e => setDetails({ ...details, dateOfBirth: e.target.value })} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Age</label>
+                                            <input value={age} disabled className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500" />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">SSC/HSC Batch Year</label>
+                                            <input value={details.batchYear} onChange={e => setDetails({ ...details, batchYear: e.target.value })} disabled={!showGroup} className="w-full mt-1 p-3 border border-slate-200 rounded-lg text-sm disabled:bg-slate-50 disabled:text-slate-400" placeholder="e.g. 2026" />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                                        <button onClick={handleDetailsSave} disabled={isSaving} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition disabled:opacity-50">
+                                            {isSaving ? 'Saving...' : 'Save Details'}
+                                        </button>
+                                    </div>
+
+                                    {detailsMessage && <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium">{detailsMessage}</div>}
+                                </>
+                            )}
+                        </div>
+
+                        {onBack && <button onClick={onBack} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition"><i className="fa-solid fa-arrow-left"></i> Back</button>}
                     </div>
                 </StudentShell>
             );
@@ -567,10 +656,7 @@ export const settingsComponents = `
             const [activePanel, setActivePanel] = useState('main');
 
             if (activePanel === 'profile') {
-                return <ProfileManagement onNavigate={onNavigate} onBack={() => setActivePanel('main')} shell="student" />;
-            }
-            if (activePanel === 'details') {
-                return <StudentProfileDetails onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
+                return <StudentProfilePanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
             }
             if (activePanel === 'points') {
                 return <StudentPointsPanel onNavigate={onNavigate} onBack={() => setActivePanel('main')} />;
@@ -591,19 +677,6 @@ export const settingsComponents = `
                             </div>
                             <div className="flex-1">
                                 <div className="font-medium text-slate-700 text-sm">Profile</div>
-                            </div>
-                            <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
-                        </button>
-
-                        <button
-                            onClick={() => setActivePanel('details')}
-                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-left group"
-                        >
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
-                                <i className="fa-solid fa-id-card text-sm"></i>
-                            </div>
-                            <div className="flex-1">
-                                <div className="font-medium text-slate-700 text-sm">Profile Details</div>
                             </div>
                             <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-400"></i>
                         </button>
