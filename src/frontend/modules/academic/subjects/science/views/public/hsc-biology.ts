@@ -69,6 +69,10 @@ export const scienceHscBiologyViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -92,6 +96,10 @@ export const scienceHscBiologyViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Biology 1st Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-hsc-biology-1st-topic')}
@@ -181,6 +189,10 @@ export const scienceHscBiologyViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -204,6 +216,10 @@ export const scienceHscBiologyViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Biology 2nd Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-hsc-biology-2nd-topic')}

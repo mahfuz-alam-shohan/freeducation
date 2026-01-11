@@ -69,26 +69,36 @@ export const landingEnglish = `
             </div>
         );
 
-        const PublicEnglishQuestionList = ({ questions }) => (
-            <div className="max-w-4xl mx-auto space-y-8">
-                {questions.length === 0 && <div className="text-center py-12 text-slate-400 italic">No questions have been added yet.</div>}
-                {questions.map((entry, index) => (
-                    <BookReader key={index}>
-                        <div className="flex gap-4">
-                            {/* LEGACY UPDATE: Square Q Marker */}
-                            <div className="flex-none w-8 h-8 bg-indigo-100 text-indigo-700 font-bold font-serif flex items-center justify-center -mt-1">
-                                Q{index + 1}
-                            </div>
-                            <div className="space-y-4 w-full">
-                                <div className="text-lg font-semibold text-slate-900 font-serif">{entry.question}</div>
-                                <div className="bg-white/50 border-l-4 border-emerald-400 pl-4 py-2">
-                                    <span className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Answer</span>
-                                    <div className="text-slate-800">{entry.answer}</div>
+        const PublicEnglishQuestionList = ({ questions }) => {
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
+            return (
+                <div className="max-w-4xl mx-auto space-y-8">
+                    {questions.length === 0 && <div className="text-center py-12 text-slate-400 italic">No questions have been added yet.</div>}
+                    {questions.map((entry, index) => (
+                        <BookReader key={index}>
+                            <div className="flex gap-4">
+                                {/* LEGACY UPDATE: Square Q Marker */}
+                                <div className="flex-none w-8 h-8 bg-indigo-100 text-indigo-700 font-bold font-serif flex items-center justify-center -mt-1">
+                                    Q{index + 1}
+                                </div>
+                                <div className="space-y-4 w-full">
+                                    <div className="text-lg font-semibold text-slate-900 font-serif">{entry.question}</div>
+                                    {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
+                                    <div className="bg-white/50 border-l-4 border-emerald-400 pl-4 py-2">
+                                        <span className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Answer</span>
+                                        <div className="text-slate-800">{entry.answer}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </BookReader>
-                ))}
-            </div>
-        );
+                        </BookReader>
+                    ))}
+                </div>
+            );
+        };
 `;

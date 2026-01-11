@@ -37,14 +37,17 @@ export const dashboardEnglish = `
         const EnglishQuestionList = ({ title, subtitle, questions, onAdd, onUpdate, onDelete, onBack, onNavigate }) => {
             const [questionInput, setQuestionInput] = useState('');
             const [answerInput, setAnswerInput] = useState('');
+            const [starRating, setStarRating] = useState(0);
             const [editingIndex, setEditingIndex] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const resetForm = () => { setQuestionInput(''); setAnswerInput(''); setEditingIndex(null); };
+            const resetForm = () => { setQuestionInput(''); setAnswerInput(''); setStarRating(0); setEditingIndex(null); };
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
             const handleSave = () => {
                 const trimmedQuestion = questionInput.trim();
                 const trimmedAnswer = answerInput.trim();
                 if (!trimmedQuestion || !trimmedAnswer) return;
-                if (editingIndex === null) { onAdd({ question: trimmedQuestion, answer: trimmedAnswer }); } else { onUpdate(editingIndex, { question: trimmedQuestion, answer: trimmedAnswer }); }
+                const payload = { question: trimmedQuestion, answer: trimmedAnswer, stars: normalizeStars(starRating) };
+                if (editingIndex === null) { onAdd(payload); } else { onUpdate(editingIndex, payload); }
                 resetForm(); setIsModalOpen(false);
             };
             return (
@@ -58,9 +61,10 @@ export const dashboardEnglish = `
                         {questions.map((entry, index) => (
                             <div key={index} className="px-5 py-4 text-sm text-gray-700 space-y-2">
                                 <div className="font-semibold text-gray-900">Q{index + 1}. {entry.question}</div>
+                                {normalizeStars(entry.stars) > 0 && <div className="text-[10px] text-amber-500">{'★'.repeat(normalizeStars(entry.stars))}</div>}
                                 <div className="text-sm text-gray-600">Answer: {entry.answer}</div>
                                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                                    <button onClick={() => { setEditingIndex(index); setQuestionInput(entry.question); setAnswerInput(entry.answer); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>
+                                    <button onClick={() => { setEditingIndex(index); setQuestionInput(entry.question); setAnswerInput(entry.answer); setStarRating(normalizeStars(entry.stars)); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>
                                     <button onClick={() => { const shouldDelete = window.confirm('Delete this question?'); if (shouldDelete) { onDelete(index); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>
                                 </div>
                             </div>
@@ -73,6 +77,17 @@ export const dashboardEnglish = `
                                 <p className="text-sm text-gray-500 mt-1">Provide the question prompt and answer.</p>
                                 <textarea value={questionInput} onChange={(event) => setQuestionInput(event.target.value)} placeholder="Question prompt" rows={3} className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
                                 <textarea value={answerInput} onChange={(event) => setAnswerInput(event.target.value)} placeholder="Answer" rows={3} className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                                <div className="mt-4">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">Importance (Stars)</label>
+                                    <div className="mt-2 flex items-center gap-2 text-xs">
+                                        <button onClick={() => setStarRating(0)} className={'text-xs px-2 py-1 rounded-md border ' + (starRating === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
+                                        <div className="flex items-center gap-1 text-xs">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button key={star} onClick={() => setStarRating(star)} className={star <= starRating ? 'text-amber-400' : 'text-slate-200'}>★</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsModalOpen(false); resetForm(); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
                             </div>
                         </div>

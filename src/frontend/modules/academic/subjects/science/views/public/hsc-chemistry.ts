@@ -69,6 +69,10 @@ export const scienceHscChemistryViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -92,6 +96,10 @@ export const scienceHscChemistryViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-hsc-chemistry-1st-topic')}
@@ -181,6 +189,10 @@ export const scienceHscChemistryViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -204,6 +216,10 @@ export const scienceHscChemistryViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-hsc-chemistry-2nd-topic')}

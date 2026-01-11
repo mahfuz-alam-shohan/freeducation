@@ -165,12 +165,43 @@ export const landingBangla = `
 
         const PublicBanglaSrijonshilDetail = ({ classLabel, itemName, categoryName, srijonshilQuestions, getQuestionKey, onNavigate }) => {
             const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
-            const srijonshilTypes = [{ key: 'gyan', label: 'জ্ঞানমূলক (ক)' }, { key: 'onudhabon', label: 'অনুধাবনমূলক (খ)' }];
+            const srijonshilTypes = [
+                { key: 'gyan', label: 'জ্ঞানমূলক (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবনমূলক (খ)' },
+                { key: 'scenario', label: 'গ ও ঘ (সিনারিও)' }
+            ];
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
             return (
                 <PublicBanglaShell title="সৃজনশীল প্রশ্ন" subtitle={itemName ? itemName : ''} onBack={() => onNavigate(itemRoute)} onNavigate={onNavigate}>
                     <div className="space-y-12 font-bangla text-left max-w-4xl mx-auto">
                         {srijonshilTypes.map((type) => {
                             const list = srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [];
+                            const scenarioEntries = type.key === 'scenario'
+                                ? list.flatMap((entry, index) => [
+                                    {
+                                        id: 'scenario-' + index + '-g',
+                                        label: 'গ',
+                                        scenario: entry.scenario,
+                                        question: entry.questionG,
+                                        answer: entry.answerG,
+                                        stars: entry.starsG
+                                    },
+                                    {
+                                        id: 'scenario-' + index + '-gh',
+                                        label: 'ঘ',
+                                        scenario: entry.scenario,
+                                        question: entry.questionGh,
+                                        answer: entry.answerGh,
+                                        stars: entry.starsGh
+                                    }
+                                ])
+                                : [];
                             return (
                                 <div key={type.key}>
                                     <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
@@ -181,12 +212,25 @@ export const landingBangla = `
                                     <BookReader>
                                         {list.length === 0 ? <div className="text-sm text-slate-400 italic">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div> : (
                                             <div className="space-y-8">
-                                                {list.map((entry, index) => (
-                                                    <div key={entry.question + '-' + index} className="space-y-3">
-                                                        <div className="font-bold text-slate-900">{index + 1}. {entry.question}</div>
-                                                        <div className="text-slate-800 leading-relaxed pl-4 border-l-2 border-indigo-200/50">{entry.answer}</div>
-                                                    </div>
-                                                ))}
+                                                {type.key === 'scenario' ? (
+                                                    scenarioEntries.map((entry, index) => (
+                                                        <div key={entry.id} className="space-y-3">
+                                                            <div className="font-bold text-slate-900">{index + 1}. <span className="text-xs uppercase tracking-[0.2em] text-slate-400 ml-2">সিনারিও</span></div>
+                                                            <div className="text-slate-800 leading-relaxed whitespace-pre-wrap">{entry.scenario}</div>
+                                                            <div className="font-semibold text-slate-900">{entry.label}. {entry.question}</div>
+                                                            {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
+                                                            <div className="text-slate-800 leading-relaxed pl-4 border-l-2 border-indigo-200/50 whitespace-pre-wrap">{entry.answer}</div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    list.map((entry, index) => (
+                                                        <div key={entry.question + '-' + index} className="space-y-3">
+                                                            <div className="font-bold text-slate-900">{index + 1}. {entry.question}</div>
+                                                            {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
+                                                            <div className="text-slate-800 leading-relaxed pl-4 border-l-2 border-indigo-200/50 whitespace-pre-wrap">{entry.answer}</div>
+                                                        </div>
+                                                    ))
+                                                )}
                                             </div>
                                         )}
                                     </BookReader>
