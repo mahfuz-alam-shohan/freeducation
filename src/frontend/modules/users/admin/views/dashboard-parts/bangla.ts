@@ -72,21 +72,12 @@ export const dashboardBangla = `
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [newItemName, setNewItemName] = useState('');
             const [newItemType, setNewItemType] = useState('নাটক');
-            const [starRating, setStarRating] = useState(0);
             const [editingItem, setEditingItem] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
             const [viewMode, setViewMode] = useState('card');
             const typeOptions = ['নাটক', 'উপন্যাস'];
             const subjectLabel = 'Bangla 1st Paper';
-            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
-            const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px]">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
-                    ))}
-                </div>
-            );
-            const resetForm = () => { setNewItemName(''); setNewItemType('নাটক'); setStarRating(0); setEditingItem(null); setThumbnailFile(null); };
+            const resetForm = () => { setNewItemName(''); setNewItemType('নাটক'); setEditingItem(null); setThumbnailFile(null); };
             const viewOptions = [{ key: 'card', label: 'Card' }, { key: 'list', label: 'List' }];
             const handleSave = async () => {
                 const trimmed = newItemName.trim();
@@ -102,12 +93,12 @@ export const dashboardBangla = `
                     if (response.ok && data.success) { setChapterThumbnails((prev) => ({ ...prev, [data.thumbnail.chapterKey]: { url: data.thumbnail.url } })); }
                 };
                 if (editingItem) {
-                    onUpdateItem(editingItem.id, { name: trimmed, type: newItemType, stars: normalizeStars(starRating) });
+                    onUpdateItem(editingItem.id, { name: trimmed, type: newItemType });
                     const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, editingItem.id + '-সহপাঠ');
                     await uploadThumbnail(chapterKey);
                 } else {
                     const nextId = \`\${Date.now()}-\${Math.random().toString(16).slice(2)}\`;
-                    onAddItem({ id: nextId, name: trimmed, type: newItemType, stars: normalizeStars(starRating) });
+                    onAddItem({ id: nextId, name: trimmed, type: newItemType });
                     const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, nextId + '-সহপাঠ');
                     await uploadThumbnail(chapterKey);
                 }
@@ -123,7 +114,7 @@ export const dashboardBangla = `
                                     <button key={option.key} onClick={() => setViewMode(option.key)} className={\`px-3 py-1 rounded-md transition \${viewMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}\`}>{option.label}</button>
                                 ))}
                             </div>
-                            {canManageStructure && <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}
+                            {canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}
                         </div>
                     </div>
                     {viewMode === 'card' ? (
@@ -142,11 +133,10 @@ export const dashboardBangla = `
                                                 <div className="text-xs uppercase tracking-[0.2em] text-gray-300">সহপাঠ</div>
                                                 <div className="text-base font-semibold text-gray-900 mt-1">{item.name}</div>
                                                 <div className="text-xs text-gray-500 mt-1">{item.type}</div>
-                                                {normalizeStars(item.stars) > 0 && <div className="mt-2">{renderStars(normalizeStars(item.stars))}</div>}
                                             </div>
                                             <div className="mt-auto flex flex-wrap items-center gap-2 text-xs font-semibold">
                                                 <button onClick={() => onSelectItem(item)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
-                                                {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setStarRating(normalizeStars(item.stars)); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                                {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
                                                 {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                                 {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
                                             </div>
@@ -165,14 +155,10 @@ export const dashboardBangla = `
                                     <div key={item.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-12 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
-                                            <div className="flex flex-col text-left">
-                                                <span>{item.name}</span>
-                                                <span className="text-xs text-gray-500 mt-1">{item.type}</span>
-                                                {normalizeStars(item.stars) > 0 && <div className="mt-1">{renderStars(normalizeStars(item.stars))}</div>}
-                                            </div>
+                                            <div className="flex flex-col text-left"><span>{item.name}</span><span className="text-xs text-gray-500 mt-1">{item.type}</span></div>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs font-semibold">
-                                            {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setStarRating(normalizeStars(item.stars)); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                            {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
                                             {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                             {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
                                             <button onClick={() => onSelectItem(item)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
@@ -189,17 +175,6 @@ export const dashboardBangla = `
                                 <p className="text-sm text-gray-500 mt-1">পাঠের নাম ও ধরণ নির্বাচন করুন।</p>
                                 <input value={newItemName} onChange={(event) => setNewItemName(event.target.value)} placeholder="উদাহরণ: সিরাজউদ্দৌলা" className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
                                 <div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">ধরণ</label><select value={newItemType} onChange={(event) => setNewItemType(event.target.value)} className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200">{typeOptions.map((option) => (<option key={option} value={option}>{option}</option>))}</select></div>
-                                <div className="mt-4">
-                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গুরুত্ব (স্টার)</label>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <button onClick={() => setStarRating(0)} className={'text-xs px-2 py-1 rounded-md border ' + (starRating === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
-                                        <div className="flex items-center gap-1 text-xs">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <button key={star} onClick={() => setStarRating(star)} className={star <= starRating ? 'text-amber-400' : 'text-slate-200'}>★</button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
                                 {canManageThumbnails && (<div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label><input type="file" accept="image/*" onChange={async (event) => { const selected = event.target.files?.[0]; if (!selected) { setThumbnailFile(null); return; } const resized = await resizeImageFile(selected); setThumbnailFile(resized || null); }} className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" /><p className="text-xs text-gray-400 mt-2">Upload now or edit later with the thumbnail button.</p></div>)}
                                 <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsModalOpen(false); resetForm(); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">{editingItem ? 'Update' : 'Add'}</button></div>
                             </div>
@@ -215,23 +190,12 @@ export const dashboardBangla = `
             const [activeThumbnail, setActiveThumbnail] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [newItem, setNewItem] = useState('');
-            const [starRating, setStarRating] = useState(0);
             const [editingItem, setEditingItem] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
             const [viewMode, setViewMode] = useState('card');
             const baseRoute = baseRouteOverride || (classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto');
             const subjectLabel = 'Bangla 1st Paper';
             const viewOptions = [{ key: 'card', label: 'Card' }, { key: 'list', label: 'List' }];
-            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
-            const resolveItemName = (value) => (typeof value === 'string' ? value : value?.name || '');
-            const resolveItemStars = (value) => normalizeStars(typeof value === 'string' ? 0 : value?.stars);
-            const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px]">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
-                    ))}
-                </div>
-            );
             const handleSave = async () => {
                 const trimmed = newItem.trim();
                 if (!trimmed) return;
@@ -246,15 +210,15 @@ export const dashboardBangla = `
                     if (response.ok && data.success) { setChapterThumbnails((prev) => ({ ...prev, [data.thumbnail.chapterKey]: { url: data.thumbnail.url } })); }
                 };
                 if (editingItem) {
-                    onUpdateItem(editingItem, { name: trimmed, stars: normalizeStars(starRating) });
+                    onUpdateItem(editingItem, trimmed);
                     const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, trimmed + '-' + typeLabel);
                     await uploadThumbnail(chapterKey);
                 } else {
-                    onAddItem({ name: trimmed, stars: normalizeStars(starRating) });
+                    onAddItem(trimmed);
                     const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, trimmed + '-' + typeLabel);
                     await uploadThumbnail(chapterKey);
                 }
-                setNewItem(''); setStarRating(0); setEditingItem(null); setThumbnailFile(null); setIsModalOpen(false);
+                setNewItem(''); setEditingItem(null); setThumbnailFile(null); setIsModalOpen(false);
             };
             return (
                 <AdminShell title={\`\${typeLabel} পাঠ তালিকা\`} subtitle="পাঠের নাম নির্বাচন করুন।" activeTab="classes" onNavigate={onNavigate}>
@@ -266,33 +230,30 @@ export const dashboardBangla = `
                                     <button key={option.key} onClick={() => setViewMode(option.key)} className={\`px-3 py-1 rounded-md transition \${viewMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}\`}>{option.label}</button>
                                 ))}
                             </div>
-                            {showAdd && canManageStructure && <button onClick={() => { setNewItem(''); setStarRating(0); setEditingItem(null); setIsModalOpen(true); }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}
+                            {showAdd && canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}
                         </div>
                     </div>
                     {viewMode === 'card' ? (
                         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 font-bangla">
                             {items.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনও কোনো পাঠ যোগ করা হয়নি।</div>}
                             {items.map((item) => {
-                                const itemName = resolveItemName(item);
-                                const itemStars = resolveItemStars(item);
-                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, itemName + '-' + typeLabel);
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel);
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={itemName} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                                    <div key={item} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
                                         <div className="aspect-[4/5] bg-gray-100 border-b border-gray-200">
-                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={itemName} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
                                         </div>
                                         <div className="p-4 flex-1 flex flex-col gap-3">
                                             <div>
                                                 <div className="text-xs uppercase tracking-[0.2em] text-gray-300">পাঠ</div>
-                                                <div className="text-base font-semibold text-gray-900 mt-1">{itemName}</div>
+                                                <div className="text-base font-semibold text-gray-900 mt-1">{item}</div>
                                                 <div className="text-xs text-gray-500 mt-1">{typeLabel}</div>
-                                                {itemStars > 0 && <div className="mt-2">{renderStars(itemStars)}</div>}
                                             </div>
                                             <div className="mt-auto flex flex-wrap items-center gap-2 text-xs font-semibold">
-                                                <button onClick={() => onSelectItem(itemName)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
-                                                {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(itemName); setStarRating(itemStars); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
-                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: itemName, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                                <button onClick={() => onSelectItem(item)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
+                                                {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(item); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                                 {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
                                             </div>
                                         </div>
@@ -304,24 +265,19 @@ export const dashboardBangla = `
                         <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
                             {items.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো পাঠ যোগ করা হয়নি।</div>}
                             {items.map((item) => {
-                                const itemName = resolveItemName(item);
-                                const itemStars = resolveItemStars(item);
-                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, itemName + '-' + typeLabel);
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel);
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={itemName} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
+                                    <div key={item} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-12 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={itemName} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
-                                            <div className="flex flex-col text-left">
-                                                <span>{itemName}</span>
-                                                {itemStars > 0 && <div className="mt-1">{renderStars(itemStars)}</div>}
-                                            </div>
+                                            <div className="w-10 h-12 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={item} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
+                                            <span>{item}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs font-semibold">
-                                            {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(itemName); setStarRating(itemStars); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
-                                            {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: itemName, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                            {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(item); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                            {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                             {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
-                                            <button onClick={() => onSelectItem(itemName)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
+                                            <button onClick={() => onSelectItem(item)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
                                         </div>
                                     </div>
                                 );
@@ -334,19 +290,8 @@ export const dashboardBangla = `
                                 <h3 className="text-lg font-semibold text-gray-900">{editingItem ? 'Rename entry' : 'নতুন পাঠ যোগ করুন'}</h3>
                                 <p className="text-sm text-gray-500 mt-1">পাঠের নাম লিখুন।</p>
                                 <input value={newItem} onChange={(event) => setNewItem(event.target.value)} placeholder="উদাহরণ: অপরিচিতা" className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
-                                <div className="mt-4">
-                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গুরুত্ব (স্টার)</label>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <button onClick={() => setStarRating(0)} className={'text-xs px-2 py-1 rounded-md border ' + (starRating === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
-                                        <div className="flex items-center gap-1 text-xs">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <button key={star} onClick={() => setStarRating(star)} className={star <= starRating ? 'text-amber-400' : 'text-slate-200'}>★</button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
                                 {canManageThumbnails && (<div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label><input type="file" accept="image/*" onChange={async (event) => { const selected = event.target.files?.[0]; if (!selected) { setThumbnailFile(null); return; } const resized = await resizeImageFile(selected); setThumbnailFile(resized || null); }} className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" /><p className="text-xs text-gray-400 mt-2">Upload now or edit later from the chapter list.</p></div>)}
-                                <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsModalOpen(false); setNewItem(''); setStarRating(0); setEditingItem(null); setThumbnailFile(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">{editingItem ? 'Update' : 'Add'}</button></div>
+                                <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsModalOpen(false); setNewItem(''); setEditingItem(null); setThumbnailFile(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">{editingItem ? 'Update' : 'Add'}</button></div>
                             </div>
                         </div>
                     )}

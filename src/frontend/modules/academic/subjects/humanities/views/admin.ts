@@ -68,97 +68,50 @@ export const humanitiesAdminViews = `
     />
 )}
 {view === 'admin-ssc-bangladesh-global-studies-cq-questions' && (
-    selectedScienceCqType?.key === 'scenario' ? (
-        <SrijonshilScenarioList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey(
-                        'SSC',
-                        'Bangladesh and Global Studies',
-                        activeScienceTopicKey,
-                        selectedScienceCqType?.key
-                    )
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
+    <SrijonshilQuestionList
+        classLabel="SSC"
+        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+        questions={
+            srijonshilQuestions[
                 getQuestionKey(
                     'SSC',
                     'Bangladesh and Global Studies',
                     activeScienceTopicKey,
                     selectedScienceCqType?.key
                 )
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    'Bangladesh and Global Studies',
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    'Bangladesh and Global Studies',
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            typeRoute="admin-ssc-bangladesh-global-studies-cq-types"
-            onNavigate={navigate}
-        />
-    ) : (
-        <SrijonshilQuestionList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey(
-                        'SSC',
-                        'Bangladesh and Global Studies',
-                        activeScienceTopicKey,
-                        selectedScienceCqType?.key
-                    )
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    'Bangladesh and Global Studies',
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    'Bangladesh and Global Studies',
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    'Bangladesh and Global Studies',
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            typeRoute="admin-ssc-bangladesh-global-studies-cq-types"
-            onNavigate={navigate}
-        />
-    )
+            ] || []
+        }
+        onAdd={addQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey(
+                'SSC',
+                'Bangladesh and Global Studies',
+                activeScienceTopicKey,
+                selectedScienceCqType?.key
+            )
+        )}
+        onUpdate={updateQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey(
+                'SSC',
+                'Bangladesh and Global Studies',
+                activeScienceTopicKey,
+                selectedScienceCqType?.key
+            )
+        )}
+        onDelete={removeQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey(
+                'SSC',
+                'Bangladesh and Global Studies',
+                activeScienceTopicKey,
+                selectedScienceCqType?.key
+            )
+        )}
+        typeRoute="admin-ssc-bangladesh-global-studies-cq-types"
+        onNavigate={navigate}
+    />
 )}
 {view === 'admin-ssc-bangladesh-global-studies-mcq' && (
     <McqQuestionList

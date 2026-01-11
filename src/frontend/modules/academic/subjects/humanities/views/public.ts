@@ -69,10 +69,6 @@ export const humanitiesViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'onudhabon')
-                ] || [],
-            scenario:
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -98,10 +94,6 @@ export const humanitiesViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'onudhabon')
-                ] || [],
-            scenario:
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Bangladesh and Global Studies', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-ssc-bangladesh-global-studies-topic')}

@@ -68,57 +68,30 @@ export const scienceSscViews = `
     />
 )}
 {view === 'admin-ssc-physics-cq-questions' && (
-    selectedScienceCqType?.key === 'scenario' ? (
-        <SrijonshilScenarioList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
+    <SrijonshilQuestionList
+        classLabel="SSC"
+        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+        questions={
+            srijonshilQuestions[
                 getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            typeRoute="admin-ssc-physics-cq-types"
-            onNavigate={navigate}
-        />
-    ) : (
-        <SrijonshilQuestionList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            typeRoute="admin-ssc-physics-cq-types"
-            onNavigate={navigate}
-        />
-    )
+            ] || []
+        }
+        onAdd={addQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onUpdate={updateQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onDelete={removeQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Physics', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        typeRoute="admin-ssc-physics-cq-types"
+        onNavigate={navigate}
+    />
 )}
 {view === 'admin-ssc-physics-mcq' && (
     <McqQuestionList
@@ -201,57 +174,30 @@ export const scienceSscViews = `
     />
 )}
 {view === 'admin-ssc-chemistry-cq-questions' && (
-    selectedScienceCqType?.key === 'scenario' ? (
-        <SrijonshilScenarioList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
+    <SrijonshilQuestionList
+        classLabel="SSC"
+        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+        questions={
+            srijonshilQuestions[
                 getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            typeRoute="admin-ssc-chemistry-cq-types"
-            onNavigate={navigate}
-        />
-    ) : (
-        <SrijonshilQuestionList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            typeRoute="admin-ssc-chemistry-cq-types"
-            onNavigate={navigate}
-        />
-    )
+            ] || []
+        }
+        onAdd={addQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onUpdate={updateQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onDelete={removeQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        typeRoute="admin-ssc-chemistry-cq-types"
+        onNavigate={navigate}
+    />
 )}
 {view === 'admin-ssc-chemistry-mcq' && (
     <McqQuestionList
@@ -343,57 +289,30 @@ export const scienceSscViews = `
     />
 )}
 {view === 'admin-ssc-biology-cq-questions' && (
-    selectedScienceCqType?.key === 'scenario' ? (
-        <SrijonshilScenarioList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
+    <SrijonshilQuestionList
+        classLabel="SSC"
+        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+        questions={
+            srijonshilQuestions[
                 getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            typeRoute="admin-ssc-biology-cq-types"
-            onNavigate={navigate}
-        />
-    ) : (
-        <SrijonshilQuestionList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            typeRoute="admin-ssc-biology-cq-types"
-            onNavigate={navigate}
-        />
-    )
+            ] || []
+        }
+        onAdd={addQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onUpdate={updateQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onDelete={removeQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('SSC', 'Biology', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        typeRoute="admin-ssc-biology-cq-types"
+        onNavigate={navigate}
+    />
 )}
 {view === 'admin-ssc-biology-mcq' && (
     <McqQuestionList

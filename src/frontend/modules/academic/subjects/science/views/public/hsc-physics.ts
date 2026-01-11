@@ -68,10 +68,6 @@ export const scienceHscPhysicsViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'onudhabon')
-                ] || [],
-            scenario:
-                srijonshilQuestions[
-                    getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -94,10 +90,6 @@ export const scienceHscPhysicsViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'onudhabon')
-                ] || [],
-            scenario:
-                srijonshilQuestions[
-                    getQuestionKey('HSC', 'Physics 1st Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-hsc-physics-1st-topic')}
@@ -186,10 +178,6 @@ export const scienceHscPhysicsViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'onudhabon')
-                ] || [],
-            scenario:
-                srijonshilQuestions[
-                    getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -212,10 +200,6 @@ export const scienceHscPhysicsViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'onudhabon')
-                ] || [],
-            scenario:
-                srijonshilQuestions[
-                    getQuestionKey('HSC', 'Physics 2nd Paper', activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-hsc-physics-2nd-topic')}
