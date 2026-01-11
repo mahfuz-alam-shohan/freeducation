@@ -56,6 +56,7 @@ registerTableSchema({
     name TEXT,
     avatar_key TEXT,
     avatar_content_type TEXT,
+    dashboard_view TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
@@ -65,6 +66,7 @@ registerTableSchema({
     { name: "name", sql: "TEXT" },
     { name: "avatar_key", sql: "TEXT" },
     { name: "avatar_content_type", sql: "TEXT" },
+    { name: "dashboard_view", sql: "TEXT" },
     { name: "created_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
     { name: "updated_at", sql: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
   ],

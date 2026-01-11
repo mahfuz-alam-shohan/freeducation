@@ -7,6 +7,7 @@ export const dashboardScience = `
             const [chapterStars, setChapterStars] = useState(0);
             const [editingChapter, setEditingChapter] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
+            const { viewMode, setViewMode, viewOptions } = useDashboardViewPreference();
             const resetForm = () => { setChapterName(''); setChapterStars(0); setEditingChapter(null); setThumbnailFile(null); };
             const handleSave = async () => {
                 const trimmed = chapterName.trim();
@@ -35,26 +36,67 @@ export const dashboardScience = `
             };
             return (
                 <AdminShell title={classLabel + ' ICT'} subtitle={classLabel + ' আইসিটি অধ্যায় যোগ করুন এবং MCQ তৈরি করুন।'} activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla"><button onClick={onBack} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>{canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">অধ্যায় যোগ করুন</button>}</div>
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
-                        {chapters.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>}
-                        {chapters.map((chapter) => (
-                            <div key={chapter.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
-                                <div>
-                                    <div>{chapter.name}</div>
-                                    {Number(chapter.stars) > 0 && (
-                                        <div className="mt-1 text-[10px] text-amber-500">{'★'.repeat(Math.min(5, Number(chapter.stars)))}</div>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-semibold">
-                                    {canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
-                                    {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id) })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
-                                    {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
-                                    <button onClick={() => onSelect(chapter)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">MCQ যোগ করুন</button>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button onClick={onBack} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <DashboardViewToggle viewMode={viewMode} onChange={setViewMode} options={viewOptions} />
+                            {canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">অধ্যায় যোগ করুন</button>}
+                        </div>
                     </div>
+                    {viewMode === 'card' ? (
+                        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+                            {chapters.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>}
+                            {chapters.map((chapter) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={chapter.id} className="w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={chapter.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
+                                        </div>
+                                        <div className="p-3 flex flex-col gap-2">
+                                            <div>
+                                                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">অধ্যায়</div>
+                                                <div className="text-sm font-semibold text-gray-900 mt-1">{chapter.name}</div>
+                                                {Number(chapter.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'★'.repeat(Math.min(5, Number(chapter.stars)))}</div>}
+                                            </div>
+                                            <div className="mt-auto flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+                                                <button onClick={() => onSelect(chapter)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
+                                                {canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                                {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                            {chapters.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>}
+                            {chapters.map((chapter) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={chapter.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-11 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={chapter.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
+                                            <div>
+                                                <div>{chapter.name}</div>
+                                                {Number(chapter.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'★'.repeat(Math.min(5, Number(chapter.stars)))}</div>}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[11px] font-semibold">
+                                            {canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                            {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                            {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            <button onClick={() => onSelect(chapter)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
@@ -103,6 +145,7 @@ export const dashboardScience = `
             const [chapterStars, setChapterStars] = useState(0);
             const [editingChapter, setEditingChapter] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
+            const { viewMode, setViewMode, viewOptions } = useDashboardViewPreference();
             const resetForm = () => { setChapterName(''); setChapterStars(0); setEditingChapter(null); setThumbnailFile(null); };
             const handleSave = async () => {
                 const trimmed = chapterName.trim();
@@ -131,29 +174,69 @@ export const dashboardScience = `
             };
             return (
                 <AdminShell title={classLabel + ' ' + subjectLabel} subtitle={subjectLabel + ' অধ্যায় যোগ করুন এবং টপিক সেট করুন।'} activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla"><button onClick={onBack || (() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc'))} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>{canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">অধ্যায় যোগ করুন</button>}</div>
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
-                        {chapters.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>}
-                        {chapters.map((chapter) => (
-                            <div key={chapter.id} className="px-5 py-4">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div>
-                                        <div className="text-sm font-semibold text-gray-900">{chapter.name}</div>
-                                        {Number(chapter.stars) > 0 && (
-                                            <div className="mt-1 text-[10px] text-amber-500">{'★'.repeat(Math.min(5, Number(chapter.stars)))}</div>
-                                        )}
-                                        <div className="text-xs text-gray-400 mt-1">টপিক: {(chapter.topics || []).length}</div>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-semibold">
-                                        {canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>}
-                                        {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id) })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
-                                        {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
-                                        <button onClick={() => onSelect(chapter)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                        <button onClick={onBack || (() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc'))} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <DashboardViewToggle viewMode={viewMode} onChange={setViewMode} options={viewOptions} />
+                            {canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">অধ্যায় যোগ করুন</button>}
+                        </div>
                     </div>
+                    {viewMode === 'card' ? (
+                        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+                            {chapters.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>}
+                            {chapters.map((chapter) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={chapter.id} className="w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={chapter.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
+                                        </div>
+                                        <div className="p-3 flex flex-col gap-2">
+                                            <div>
+                                                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">অধ্যায়</div>
+                                                <div className="text-sm font-semibold text-gray-900 mt-1">{chapter.name}</div>
+                                                {Number(chapter.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'★'.repeat(Math.min(5, Number(chapter.stars)))}</div>}
+                                                <div className="text-xs text-gray-400 mt-1">টপিক: {(chapter.topics || []).length}</div>
+                                            </div>
+                                            <div className="mt-auto flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+                                                <button onClick={() => onSelect(chapter)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
+                                                {canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>}
+                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                                {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                            {chapters.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন অধ্যায় যোগ করা হয়নি।</div>}
+                            {chapters.map((chapter) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={chapter.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-11 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={chapter.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
+                                            <div>
+                                                <div className="text-sm font-semibold text-gray-900">{chapter.name}</div>
+                                                {Number(chapter.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'★'.repeat(Math.min(5, Number(chapter.stars)))}</div>}
+                                                <div className="text-xs text-gray-400 mt-1">টপিক: {(chapter.topics || []).length}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[11px] font-semibold">
+                                            {canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>}
+                                            {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                            {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই অধ্যায়টি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            <button onClick={() => onSelect(chapter)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">

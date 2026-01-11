@@ -24,7 +24,7 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
 
     const userRow = await env.DB
       .prepare(
-        `SELECT users.id, users.email, users.role, user_profiles.username, user_profiles.name
+        `SELECT users.id, users.email, users.role, user_profiles.username, user_profiles.name, user_profiles.dashboard_view
          FROM users
          LEFT JOIN user_profiles ON user_profiles.user_id = users.id
          WHERE users.id = ?`
@@ -71,6 +71,7 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
           name: profileUser.name || profileUser.username,
           email: profileUser.email || null,
           role: profileUser.role || payload.role,
+          dashboardView: profileUser.dashboard_view || null,
           assignment: assignmentRow
             ? {
                 level: assignmentRow.level,
@@ -88,22 +89,57 @@ export const handleProfile = async (request: Request, env: Env, path: string): P
     const payload = await getAuthPayload(request, env);
     if (!payload) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: apiHeaders });
     const body = await request.json().catch(() => ({}));
-    const name = String(body.name || '').trim();
-    if (!name) {
-      return Response.json({ success: false, error: 'Name is required.' }, { status: 400, headers: apiHeaders });
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const dashboardView = typeof body.dashboardView === 'string' ? body.dashboardView.trim() : '';
+    const allowedViews = new Set(['card', 'list']);
+    const shouldUpdateName = Boolean(name);
+    const shouldUpdateView = allowedViews.has(dashboardView);
+
+    if (!shouldUpdateName && !shouldUpdateView) {
+      return Response.json({ success: false, error: 'Profile update payload is required.' }, { status: 400, headers: apiHeaders });
+    }
+
+    if (shouldUpdateName && shouldUpdateView) {
+      const updated = await env.DB
+        .prepare(
+          'INSERT INTO user_profiles (user_id, name, dashboard_view) VALUES (?, ?, ?) ' +
+            'ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, dashboard_view = excluded.dashboard_view, updated_at = CURRENT_TIMESTAMP'
+        )
+        .bind(payload.id, name, dashboardView)
+        .run();
+      if (!updated.success) {
+        return Response.json({ success: false, error: 'Profile update failed.' }, { status: 500, headers: apiHeaders });
+      }
+      await recordEditHistory(env.DB, payload, 'Profile updated', { name, dashboardView });
+      return Response.json({ success: true }, { headers: apiHeaders });
+    }
+
+    if (shouldUpdateName) {
+      const updated = await env.DB
+        .prepare(
+          'INSERT INTO user_profiles (user_id, name) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, updated_at = CURRENT_TIMESTAMP'
+        )
+        .bind(payload.id, name)
+        .run();
+      if (!updated.success) {
+        return Response.json({ success: false, error: 'Profile update failed.' }, { status: 500, headers: apiHeaders });
+      }
+      await recordEditHistory(env.DB, payload, 'Profile updated', { name });
+      return Response.json({ success: true }, { headers: apiHeaders });
     }
 
     const updated = await env.DB
       .prepare(
-        'INSERT INTO user_profiles (user_id, name) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, updated_at = CURRENT_TIMESTAMP'
+        'INSERT INTO user_profiles (user_id, dashboard_view) VALUES (?, ?) ' +
+          'ON CONFLICT(user_id) DO UPDATE SET dashboard_view = excluded.dashboard_view, updated_at = CURRENT_TIMESTAMP'
       )
-      .bind(payload.id, name)
+      .bind(payload.id, dashboardView)
       .run();
     if (!updated.success) {
       return Response.json({ success: false, error: 'Profile update failed.' }, { status: 500, headers: apiHeaders });
     }
 
-    await recordEditHistory(env.DB, payload, 'Profile updated', { name });
+    await recordEditHistory(env.DB, payload, 'Dashboard view updated', { dashboardView });
     return Response.json({ success: true }, { headers: apiHeaders });
   }
 
