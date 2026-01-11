@@ -26,7 +26,9 @@ export const dashboardQuestions = `
 
         const SrijonshilQuestionList = ({ classLabel, itemName, typeLabel, questions, onAdd, onUpdate, onDelete, onNavigate, typeRoute }) => {
             const resolvedTypeRoute = typeRoute || (classLabel === 'SSC' ? 'bangla-ssc-srijonshil-types' : 'bangla-hsc-srijonshil-types');
+            const isScenarioType = typeLabel?.includes('গ') || typeLabel?.includes('ঘ') || typeLabel?.includes('প্রশ্নমালা');
             const [isModalOpen, setIsModalOpen] = useState(false);
+            const [showScenarioForm, setShowScenarioForm] = useState(false);
             const [questionInput, setQuestionInput] = useState('');
             const [answerInput, setAnswerInput] = useState('');
             const [scenarioInput, setScenarioInput] = useState('');
@@ -62,7 +64,7 @@ export const dashboardQuestions = `
                 const trimmedAnswerG = answerGInput.trim();
                 const trimmedQuestionGh = questionGhInput.trim();
                 const trimmedAnswerGh = answerGhInput.trim();
-                if (typeLabel?.includes('গ') || typeLabel?.includes('ঘ') || typeLabel?.includes('প্রশ্নমালা')) {
+                if (isScenarioType) {
                     if (!trimmedScenario || !trimmedQuestionG || !trimmedAnswerG || !trimmedQuestionGh || !trimmedAnswerGh) return;
                     const payload = {
                         scenario: trimmedScenario,
@@ -79,13 +81,69 @@ export const dashboardQuestions = `
                     const payload = { question: trimmedQuestion, answer: trimmedAnswer, stars: normalizeStars(starRating) };
                     if (editingIndex === null) { onAdd(payload); } else { onUpdate(editingIndex, payload); }
                 }
-                resetForm(); setIsModalOpen(false);
+                resetForm();
+                if (isScenarioType) { setShowScenarioForm(false); } else { setIsModalOpen(false); }
             };
+            if (isScenarioType && showScenarioForm) {
+                return (
+                    <AdminShell title={typeLabel} subtitle={\`\${itemName} অধ্যায়ের গ ও ঘ প্রশ্ন যোগ করুন।\`} activeTab="classes" onNavigate={onNavigate}>
+                        <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+                            <button onClick={() => { setShowScenarioForm(false); resetForm(); }} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+                            <button onClick={() => onNavigate(resolvedTypeRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Types</button>
+                        </div>
+                        <div className="mt-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6 font-bangla">
+                            <h3 className="text-lg font-semibold text-gray-900">{editingIndex === null ? 'নতুন প্রশ্ন যোগ করুন' : 'প্রশ্ন সম্পাদনা করুন'}</h3>
+                            <p className="text-sm text-gray-500 mt-1">সিনারিও, গ এবং ঘ প্রশ্ন সম্পূর্ণভাবে লিখুন।</p>
+                            <div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">সিনারিও</label><textarea value={scenarioInput} onChange={(event) => setScenarioInput(event.target.value)} placeholder="সিনারিও লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[140px]" /></div>
+                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গ প্রশ্ন</label>
+                                    <textarea value={questionGInput} onChange={(event) => setQuestionGInput(event.target.value)} placeholder="গ প্রশ্ন লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-3 block">গ উত্তর</label>
+                                    <textarea value={answerGInput} onChange={(event) => setAnswerGInput(event.target.value)} placeholder="গ উত্তর লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+                                    <div className="mt-3">
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গ স্টার</label>
+                                        <div className="mt-2 flex items-center gap-2 text-xs">
+                                            <button onClick={() => setStarRatingG(0)} className={'text-xs px-2 py-1 rounded-md border ' + (starRatingG === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
+                                            <div className="flex items-center gap-1 text-xs">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button key={star} onClick={() => setStarRatingG(star)} className={star <= starRatingG ? 'text-amber-400' : 'text-slate-200'}>★</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">ঘ প্রশ্ন</label>
+                                    <textarea value={questionGhInput} onChange={(event) => setQuestionGhInput(event.target.value)} placeholder="ঘ প্রশ্ন লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-3 block">ঘ উত্তর</label>
+                                    <textarea value={answerGhInput} onChange={(event) => setAnswerGhInput(event.target.value)} placeholder="ঘ উত্তর লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+                                    <div className="mt-3">
+                                        <label className="text-xs uppercase tracking-[0.2em] text-gray-400">ঘ স্টার</label>
+                                        <div className="mt-2 flex items-center gap-2 text-xs">
+                                            <button onClick={() => setStarRatingGh(0)} className={'text-xs px-2 py-1 rounded-md border ' + (starRatingGh === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
+                                            <div className="flex items-center gap-1 text-xs">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button key={star} onClick={() => setStarRatingGh(star)} className={star <= starRatingGh ? 'text-amber-400' : 'text-slate-200'}>★</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-6 flex justify-end gap-2">
+                                <button onClick={() => { setShowScenarioForm(false); resetForm(); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+                                <button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button>
+                            </div>
+                        </div>
+                    </AdminShell>
+                );
+            }
             return (
                 <AdminShell title={typeLabel} subtitle={\`\${itemName} অধ্যায়ের প্রশ্ন যোগ করুন।\`} activeTab="classes" onNavigate={onNavigate}>
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
                         <button onClick={() => onNavigate(resolvedTypeRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
-                        <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">প্রশ্ন যোগ করুন</button>
+                        <button onClick={() => { resetForm(); if (isScenarioType) { setShowScenarioForm(true); } else { setIsModalOpen(true); } }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">প্রশ্ন যোগ করুন</button>
                     </div>
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
                         {questions.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনো কোন প্রশ্ন যোগ করা হয়নি।</div>}
@@ -129,12 +187,13 @@ export const dashboardQuestions = `
                                                 setAnswerGhInput(entry.answerGh || '');
                                                 setStarRatingG(normalizeStars(entry.starsG));
                                                 setStarRatingGh(normalizeStars(entry.starsGh));
+                                                setShowScenarioForm(true);
                                             } else {
                                                 setQuestionInput(entry.question || '');
                                                 setAnswerInput(entry.answer || '');
                                                 setStarRating(normalizeStars(entry.stars));
+                                                setIsModalOpen(true);
                                             }
-                                            setIsModalOpen(true);
                                         }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>
                                         <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই প্রশ্নটি মুছে ফেলতে চান?'); if (shouldRemove) { onDelete(index); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>
                                     </div>
@@ -142,11 +201,11 @@ export const dashboardQuestions = `
                             </div>
                         ))}
                     </div>
-                    {isModalOpen && (
+                    {isModalOpen && !isScenarioType && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 font-bangla">
                                 <h3 className="text-lg font-semibold text-gray-900">{editingIndex === null ? 'নতুন প্রশ্ন যোগ করুন' : 'প্রশ্ন সম্পাদনা করুন'}</h3>
-                                {(typeLabel?.includes('গ') || typeLabel?.includes('ঘ') || typeLabel?.includes('প্রশ্নমালা')) ? (
+                                {isScenarioType ? (
                                     <>
                                         <div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">সিনারিও</label><textarea value={scenarioInput} onChange={(event) => setScenarioInput(event.target.value)} placeholder="সিনারিও লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[120px]" /></div>
                                         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -192,7 +251,7 @@ export const dashboardQuestions = `
                                         <div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">উত্তর</label><textarea value={answerInput} onChange={(event) => setAnswerInput(event.target.value)} placeholder="উত্তর লিখুন" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[100px]" /></div>
                                     </>
                                 )}
-                                {!(typeLabel?.includes('গ') || typeLabel?.includes('ঘ') || typeLabel?.includes('প্রশ্নমালা')) && (
+                                {!isScenarioType && (
                                     <div className="mt-4">
                                         <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গুরুত্ব (স্টার)</label>
                                         <div className="mt-2 flex items-center gap-2">
