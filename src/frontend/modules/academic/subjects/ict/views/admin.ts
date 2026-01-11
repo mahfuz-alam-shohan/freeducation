@@ -101,57 +101,30 @@ export const ictViews = `
     />
 )}
 {view === 'admin-hsc-ict-cq-questions' && (
-    selectedScienceCqType?.key === 'scenario' ? (
-        <SrijonshilScenarioList
-            classLabel="HSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
+    <SrijonshilQuestionList
+        classLabel="HSC"
+        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+        questions={
+            srijonshilQuestions[
                 getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            itemRoute="admin-hsc-ict-cq-types"
-            onNavigate={navigate}
-        />
-    ) : (
-        <SrijonshilQuestionList
-            classLabel="HSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
-            )}
-            itemRoute="admin-hsc-ict-cq-types"
-            onNavigate={navigate}
-        />
-    )
+            ] || []
+        }
+        onAdd={addQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onUpdate={updateQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        onDelete={removeQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey('HSC', 'ICT', activeScienceTopicKey, selectedScienceCqType?.key)
+        )}
+        itemRoute="admin-hsc-ict-cq-types"
+        onNavigate={navigate}
+    />
 )}
 {view === 'admin-hsc-ict-mcq' && (
     <McqQuestionList

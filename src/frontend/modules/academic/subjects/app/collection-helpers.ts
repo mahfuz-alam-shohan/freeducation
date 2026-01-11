@@ -1,36 +1,14 @@
 export const collectionHelpers = `
-            const resolveItemName = (item) => {
-                if (!item) return '';
-                if (typeof item === 'string') return item;
-                return item.name || item.title || '';
-            };
-
-            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
-
-            const mergeItemUpdates = (item, updates) => {
-                if (!updates) return item;
-                if (typeof updates === 'string') {
-                    return { ...(typeof item === 'object' ? item : { name: String(item) }), name: updates };
-                }
-                const base = typeof item === 'object' ? item : { name: resolveItemName(item), stars: 0 };
-                return { ...base, ...updates, stars: normalizeStars(updates.stars ?? base.stars) };
-            };
-
             const addStringItem = (setItems) => (value) => {
-                const resolved = typeof value === 'string' ? { name: value, stars: 0 } : mergeItemUpdates(value, value);
-                setItems((prev) => [...prev, resolved]);
+                setItems((prev) => [...prev, value]);
             };
 
             const updateStringItem = (setItems) => (prevValue, nextValue) => {
-                const prevName = resolveItemName(prevValue);
-                setItems((prev) =>
-                    prev.map((item) => (resolveItemName(item) === prevName ? mergeItemUpdates(item, nextValue) : item))
-                );
+                setItems((prev) => prev.map((item) => (item === prevValue ? nextValue : item)));
             };
 
             const removeStringItem = (setItems) => (value) => {
-                const name = resolveItemName(value);
-                setItems((prev) => prev.filter((item) => resolveItemName(item) !== name));
+                setItems((prev) => prev.filter((item) => item !== value));
             };
 
             const addShohopathItem = (setItems) => (nextItem) => {
@@ -38,13 +16,7 @@ export const collectionHelpers = `
             };
 
             const updateShohopathItem = (setItems) => (itemId, updates) => {
-                setItems((prev) =>
-                    prev.map((item) =>
-                        item.id === itemId
-                            ? { ...item, ...updates, stars: normalizeStars(updates.stars ?? item.stars) }
-                            : item
-                    )
-                );
+                setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, ...updates } : item)));
             };
 
             const removeShohopathItem = (setItems) => (itemId) => {
@@ -56,14 +28,7 @@ export const collectionHelpers = `
             };
 
             const updateChapterItem = (setItems) => (chapterId, name) => {
-                const updates = typeof name === 'string' ? { name } : name;
-                setItems((prev) =>
-                    prev.map((item) =>
-                        item.id === chapterId
-                            ? { ...item, ...updates, stars: normalizeStars(updates?.stars ?? item.stars) }
-                            : item
-                    )
-                );
+                setItems((prev) => prev.map((item) => (item.id === chapterId ? { ...item, name } : item)));
             };
 
             const removeChapterItem = (setItems) => (chapterId) => {
@@ -81,16 +46,13 @@ export const collectionHelpers = `
             };
 
             const updateTopicItem = (setItems) => (chapterId, topicId, name) => {
-                const updates = typeof name === 'string' ? { name } : name;
                 setItems((prev) =>
                     prev.map((chapter) =>
                         chapter.id === chapterId
                             ? {
                                 ...chapter,
                                 topics: (chapter.topics || []).map((topic) =>
-                                    topic.id === topicId
-                                        ? { ...topic, ...updates, stars: normalizeStars(updates?.stars ?? topic.stars) }
-                                        : topic
+                                    topic.id === topicId ? { ...topic, name } : topic
                                 )
                             }
                             : chapter
@@ -116,13 +78,10 @@ export const collectionHelpers = `
             };
 
             const updateReligionChapterItem = (setItems) => (religionKey, chapterId, name) => {
-                const updates = typeof name === 'string' ? { name } : name;
                 setItems((prev) => ({
                     ...prev,
                     [religionKey]: (prev[religionKey] || []).map((chapter) =>
-                        chapter.id === chapterId
-                            ? { ...chapter, ...updates, stars: normalizeStars(updates?.stars ?? chapter.stars) }
-                            : chapter
+                        chapter.id === chapterId ? { ...chapter, name } : chapter
                     )
                 }));
             };
@@ -146,7 +105,6 @@ export const collectionHelpers = `
             };
 
             const updateReligionTopicItem = (setItems) => (religionKey, chapterId, topicId, name) => {
-                const updates = typeof name === 'string' ? { name } : name;
                 setItems((prev) => ({
                     ...prev,
                     [religionKey]: (prev[religionKey] || []).map((chapter) =>
@@ -154,9 +112,7 @@ export const collectionHelpers = `
                             ? {
                                 ...chapter,
                                 topics: (chapter.topics || []).map((topic) =>
-                                    topic.id === topicId
-                                        ? { ...topic, ...updates, stars: normalizeStars(updates?.stars ?? topic.stars) }
-                                        : topic
+                                    topic.id === topicId ? { ...topic, name } : topic
                                 )
                             }
                             : chapter

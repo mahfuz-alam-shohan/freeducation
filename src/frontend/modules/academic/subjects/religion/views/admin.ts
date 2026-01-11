@@ -102,97 +102,50 @@ export const religionViews = `
     />
 )}
 {view === 'admin-ssc-religion-cq-questions' && (
-    selectedScienceCqType?.key === 'scenario' ? (
-        <SrijonshilScenarioList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey(
-                        'SSC',
-                        getReligionSubjectKey(selectedReligion),
-                        activeScienceTopicKey,
-                        selectedScienceCqType?.key
-                    )
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
+    <SrijonshilQuestionList
+        classLabel="SSC"
+        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+        questions={
+            srijonshilQuestions[
                 getQuestionKey(
                     'SSC',
                     getReligionSubjectKey(selectedReligion),
                     activeScienceTopicKey,
                     selectedScienceCqType?.key
                 )
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    getReligionSubjectKey(selectedReligion),
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    getReligionSubjectKey(selectedReligion),
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            typeRoute="admin-ssc-religion-cq-types"
-            onNavigate={navigate}
-        />
-    ) : (
-        <SrijonshilQuestionList
-            classLabel="SSC"
-            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-            questions={
-                srijonshilQuestions[
-                    getQuestionKey(
-                        'SSC',
-                        getReligionSubjectKey(selectedReligion),
-                        activeScienceTopicKey,
-                        selectedScienceCqType?.key
-                    )
-                ] || []
-            }
-            onAdd={addQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    getReligionSubjectKey(selectedReligion),
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            onUpdate={updateQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    getReligionSubjectKey(selectedReligion),
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            onDelete={removeQuestionEntry(
-                setSrijonshilQuestions,
-                getQuestionKey(
-                    'SSC',
-                    getReligionSubjectKey(selectedReligion),
-                    activeScienceTopicKey,
-                    selectedScienceCqType?.key
-                )
-            )}
-            typeRoute="admin-ssc-religion-cq-types"
-            onNavigate={navigate}
-        />
-    )
+            ] || []
+        }
+        onAdd={addQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey(
+                'SSC',
+                getReligionSubjectKey(selectedReligion),
+                activeScienceTopicKey,
+                selectedScienceCqType?.key
+            )
+        )}
+        onUpdate={updateQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey(
+                'SSC',
+                getReligionSubjectKey(selectedReligion),
+                activeScienceTopicKey,
+                selectedScienceCqType?.key
+            )
+        )}
+        onDelete={removeQuestionEntry(
+            setSrijonshilQuestions,
+            getQuestionKey(
+                'SSC',
+                getReligionSubjectKey(selectedReligion),
+                activeScienceTopicKey,
+                selectedScienceCqType?.key
+            )
+        )}
+        typeRoute="admin-ssc-religion-cq-types"
+        onNavigate={navigate}
+    />
 )}
 {view === 'admin-ssc-religion-mcq' && (
     <McqQuestionList
