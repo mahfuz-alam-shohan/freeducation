@@ -69,4 +69,73 @@ export const dashboardUtils = `
             }, [url, keyField]);
             return [thumbnailMap, setThumbnailMap];
         };
+
+        const dashboardViewOptions = [
+            { key: 'card', label: 'Card' },
+            { key: 'list', label: 'List' }
+        ];
+
+        const useDashboardViewPreference = (initial = 'card') => {
+            const [viewMode, setViewMode] = useState(initial);
+            const [profileId, setProfileId] = useState(null);
+
+            useEffect(() => {
+                const cached = localStorage.getItem('dashboard_view');
+                if (cached === 'card' || cached === 'list') {
+                    setViewMode(cached);
+                }
+            }, []);
+
+            useEffect(() => {
+                let isActive = true;
+                const token = localStorage.getItem('auth_token');
+                if (!token) return undefined;
+                const loadPreference = async () => {
+                    try {
+                        const response = await fetch('/api/profile', { headers: { Authorization: 'Bearer ' + token } });
+                        if (!response.ok) return;
+                        const data = await response.json();
+                        if (!isActive) return;
+                        const profile = data.profile || {};
+                        if (profile.id) {
+                            setProfileId(profile.id);
+                            const cached = localStorage.getItem('dashboard_view_' + profile.id);
+                            const resolved = cached || profile.dashboardView;
+                            if (resolved === 'card' || resolved === 'list') {
+                                setViewMode(resolved);
+                            }
+                            if (profile.dashboardView === 'card' || profile.dashboardView === 'list') {
+                                localStorage.setItem('dashboard_view_' + profile.id, profile.dashboardView);
+                                localStorage.setItem('dashboard_view', profile.dashboardView);
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('Failed to load dashboard view preference', error);
+                    }
+                };
+                loadPreference();
+                return () => { isActive = false; };
+            }, []);
+
+            const updateViewMode = async (nextMode) => {
+                if (nextMode !== 'card' && nextMode !== 'list') return;
+                setViewMode(nextMode);
+                const key = profileId ? 'dashboard_view_' + profileId : 'dashboard_view';
+                localStorage.setItem(key, nextMode);
+                localStorage.setItem('dashboard_view', nextMode);
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+                try {
+                    await fetch('/api/profile', {
+                        method: 'PUT',
+                        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ dashboardView: nextMode })
+                    });
+                } catch (error) {
+                    console.warn('Failed to save dashboard view preference', error);
+                }
+            };
+
+            return { viewMode, setViewMode: updateViewMode, viewOptions: dashboardViewOptions };
+        };
 `;
