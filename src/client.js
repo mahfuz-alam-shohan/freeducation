@@ -1,4 +1,5 @@
-var Us=`
+// Generated section exports
+export const Us=`
 const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
 const [isMenuOpen, setIsMenuOpen] = useState(false);
 const [profile, setProfile] = useState(null);
@@ -275,7 +276,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
 </>
 );
 };
-`;var Qs=`
+`;
+export const Qs=`
         const AdminMobileNav = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'classes', label: 'Classes', icon: 'fa-layer-group' },
@@ -305,7 +307,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </nav>
             );
         };
-`;var Os=`
+`;
+export const Os=`
         const AdminPageHeader = ({ title, subtitle }) => (
             <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
@@ -314,7 +317,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </div>
             </header>
         );
-`;var Fs=`
+`;
+export const Fs=`
         const AdminShell = ({ activeTab, onNavigate, children }) => {
             return (
                 <div className="relative flex flex-col lg:flex-row flex-1 bg-[#fdfbf7] overflow-hidden">
@@ -339,7 +343,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </div>
             );
         };
-`;var Gs=`
+`;
+export const Gs=`
         const AdminSidebar = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'classes', label: 'Classes', icon: 'fa-layer-group' },
@@ -369,7 +374,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </aside>
             );
         };
-`;var Vs=`
+`;
+export const Vs=`
         const TeacherMobileNav = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'subject', label: 'Subject', icon: 'fa-book-open' },
@@ -397,7 +403,9 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </nav>
             );
         };
-`;var zs=`
+`;
+// Generated section exports
+export const zs=`
         const TeacherShell = ({ title, subtitle, activeTab, onNavigate, children }) => {
             return (
                 <div className="flex flex-col lg:flex-row flex-1 bg-[#f3f6ff]">
@@ -417,7 +425,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </div>
             );
         };
-`;var Ws=`
+`;
+export const Ws=`
         const TeacherSidebar = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'subject', label: 'Subject', icon: 'fa-book-open' },
@@ -473,7 +482,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </nav>
             );
         };
-`;var Ys=`
+`;
+export const Ys=`
         const StudentShell = ({ title, subtitle, activeTab, onNavigate, children }) => {
             return (
                 <div className="flex flex-col lg:flex-row flex-1 bg-[#f3f6ff]">
@@ -493,7 +503,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </div>
             );
         };
-`;var Xs=`
+`;
+export const Xs=`
         const StudentSidebar = ({ activeTab, onNavigate }) => {
             const navItems = [
                 { id: 'class', label: 'My Class', icon: 'fa-graduation-cap' },
@@ -521,7 +532,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 </aside>
             );
         };
-`;var Ce=`
+`;
+export const Ce=`
         const LogoMark = ({ className = '', textClassName = '', subtitle = 'Learning that feels effortless.', compact = false }) => (
             <div className={\`flex items-center gap-3 \${className}\`}>
                 <div className="relative w-11 h-11 flex items-center justify-center">
@@ -559,7 +571,8 @@ className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg te
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
-`;var Js=`
+`;
+export const Js=`
 const quoteItems = [
 { text: 'Education is the most powerful weapon which you can use to change the world.', author: 'Nelson Mandela' },
 { text: 'The roots of education are bitter, but the fruit is sweet.', author: 'Aristotle' },
@@ -658,6 +671,8 @@ const isHscIct = subject === 'Information and Communication Technology' && class
 const isSscPhysics = subject === 'Physics' && classLabel === 'SSC';
 const isSscChemistry = subject === 'Chemistry' && classLabel === 'SSC';
 const isSscBiology = subject === 'Biology' && classLabel === 'SSC';
+const isSscGeneralMath = subject === 'General Mathematics' && classLabel === 'SSC';
+const isSscHigherMath = subject === 'Higher Mathematics' && classLabel === 'SSC';
 const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
 const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
 const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
@@ -666,6 +681,8 @@ const isHscChemistry1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC
 const isHscChemistry2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
 const isHscBiology1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
 const isHscBiology2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
+const isHscHigherMath1 = subject === 'Higher Mathematics 1st Paper' && classLabel === 'HSC';
+const isHscHigherMath2 = subject === 'Higher Mathematics 2nd Paper' && classLabel === 'HSC';
 subjectMap.set(subject, {
 title: subject,
 subtitle: isBanglaFirst ? '\u09AC\u09BE\u0982\u09B2\u09BE \u09E7\u09AE \u09AA\u09A4\u09CD\u09B0' : '',
@@ -682,6 +699,8 @@ route: isBanglaFirst
 : isSscPhysics ? 'public-ssc-physics'
 : isSscChemistry ? 'public-ssc-chemistry'
 : isSscBiology ? 'public-ssc-biology'
+: isSscGeneralMath ? 'public-ssc-general-math'
+: isSscHigherMath ? 'public-ssc-higher-math'
 : isBangladeshGlobal ? 'public-ssc-bangladesh-global-studies'
 : isReligionMoral ? 'public-ssc-religion'
 : isHscPhysics1 ? 'public-hsc-physics-1st'
@@ -689,7 +708,9 @@ route: isBanglaFirst
 : isHscChemistry1 ? 'public-hsc-chemistry-1st'
 : isHscChemistry2 ? 'public-hsc-chemistry-2nd'
 : isHscBiology1 ? 'public-hsc-biology-1st'
-: isHscBiology2 ? 'public-hsc-biology-2nd' : ''
+: isHscBiology2 ? 'public-hsc-biology-2nd'
+: isHscHigherMath1 ? 'public-hsc-higher-math-1st'
+: isHscHigherMath2 ? 'public-hsc-higher-math-2nd' : ''
 });
 });
 });
@@ -822,7 +843,9 @@ setRecentRead({ label: entry.label, route: entry.route, updatedAt: timestamped.u
 };
 return { readMap, recentRead, markRead };
 };
-`;var Zs=`
+`;
+// Generated section exports
+export const Zs=`
 const FullScreenLoader = () => (
 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
 <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 animate-spin"></div>
@@ -1390,7 +1413,8 @@ return (
 </div>
 );
 };
-`;var ea=`
+`;
+export const ea=`
 const PublicBanglaShell = ({ title, subtitle, onBack, onNavigate, children }) => (
 <PublicSimpleShell 
 title={title} 
@@ -1654,7 +1678,8 @@ return (
 </PublicBanglaShell>
 );
 };
-`;var ta=`
+`;
+export const ta=`
 const PublicIctShell = ({ title, subtitle, classLabel, onBack, onNavigate, children }) => {
 // Reusing the upgraded PublicSimpleShell
 return (
@@ -1932,7 +1957,109 @@ const PublicScienceMcqDetail = ({ subjectLabel, classLabel, chapterName, topicNa
 </div>
 </PublicScienceShell>
 );
-`;var sa=`
+
+const PublicMathChapterList = (props) => <PublicChapterList {...props} />;
+
+const PublicMathChapterDetail = ({ subjectLabel, classLabel, chapterName, noteKey, notesByItem, onBack, backRoute, onNavigateCq, onNavigateMcq, onNavigatePractice, onOpenVideos, onNavigate }) => {
+const notes = (notesByItem || {})[noteKey] || [];
+const banglaDigits = ['\u09E6', '\u09E7', '\u09E8', '\u09E9', '\u09EA', '\u09EB', '\u09EC', '\u09ED', '\u09EE', '\u09EF'];
+const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+const normalizedNote = (note) => {
+if (!note) return { text: '', stars: 0 };
+if (typeof note === 'string') return { text: note, stars: 0 };
+return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
+};
+const renderStars = (value) => (
+<span className="inline-flex items-center gap-1 text-[10px]">
+{[1, 2, 3, 4, 5].map((star) => (
+<span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>\u2605</span>
+))}
+</span>
+);
+const actionCards = [
+{ key: 'cq', label: 'CQ Questions', icon: 'fa-pen-to-square', onClick: onNavigateCq },
+{ key: 'mcq', label: 'MCQ Practice', icon: 'fa-list-check', onClick: onNavigateMcq },
+{ key: 'practice', label: 'Practice', icon: 'fa-pencil', onClick: onNavigatePractice },
+{ key: 'videos', label: 'Video Lessons', icon: 'fa-play', onClick: () => onOpenVideos && onOpenVideos({ noteKey, title: chapterName || '\u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8', subtitle: subjectLabel || '', backRoute }) }
+];
+return (
+<PublicSimpleShell title={chapterName || '\u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8'} subtitle={subjectLabel || ''} onBack={onBack} onNavigate={onNavigate}>
+<div className="space-y-8 font-bangla">
+<div className="grid gap-3 sm:grid-cols-2">
+{actionCards.map((action) => (
+<button key={action.key} onClick={action.onClick} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-indigo-200 hover:bg-indigo-50/40 transition">
+<div className="flex items-center gap-3">
+<div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+<i className={'fa-solid ' + action.icon}></i>
+</div>
+<div>
+<div className="text-sm font-semibold text-slate-900">{action.label}</div>
+<div className="text-xs text-slate-500 mt-1">\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09BF\u09A4 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09C7\u09B0 \u09B8\u09B9\u099C \u098F\u0995\u09B8\u09CD\u09B8\u09C7\u09B8</div>
+</div>
+</div>
+</button>
+))}
+</div>
+<div className="bg-white/70 border border-slate-200 rounded-2xl p-5">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Short Notes</div>
+{notes.length === 0 && <div className="text-sm text-slate-400 mt-3">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 \u09A8\u09CB\u099F \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+<div className="mt-3 space-y-3">
+{notes.map((note, index) => {
+const resolved = normalizedNote(note);
+return (
+<div key={noteKey + '-' + index} className="flex items-start gap-3">
+<span className="text-xs font-semibold text-slate-400">{toBanglaNumber(index + 1)}.</span>
+<div className="text-sm text-slate-700">
+{resolved.text}
+{resolved.stars > 0 && <div className="mt-1">{renderStars(resolved.stars)}</div>}
+</div>
+</div>
+);
+})}
+</div>
+</div>
+</div>
+</PublicSimpleShell>
+);
+};
+
+const PublicMathCqDetail = ({ subjectLabel, classLabel, chapterName, questions, onBack, onNavigate }) => (
+<PublicSimpleShell title="Math CQ" subtitle={(chapterName ? chapterName + ' \u2022 ' : '') + (subjectLabel || '')} onBack={onBack} onNavigate={onNavigate}>
+<div className="space-y-6 font-bangla bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-slate-200/50 shadow-sm">
+{questions.length === 0 && <div className="text-sm text-slate-400">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 CQ \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+{questions.map((entry, index) => (
+<div key={entry.scenario + '-' + index} className="space-y-3">
+<div className="text-xs uppercase tracking-[0.2em] text-slate-400">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993</div>
+<div className="text-sm font-semibold text-slate-900">{entry.scenario}</div>
+<div className="space-y-2 text-sm text-slate-700">
+<div><span className="font-semibold">\u0995.</span> {entry.questionKa}</div>
+{entry.answerKa && <div className="pl-3 border-l border-indigo-200 text-slate-600">{entry.answerKa}</div>}
+<div><span className="font-semibold">\u0996.</span> {entry.questionKha}</div>
+{entry.answerKha && <div className="pl-3 border-l border-indigo-200 text-slate-600">{entry.answerKha}</div>}
+<div><span className="font-semibold">\u0997.</span> {entry.questionGa}</div>
+{entry.answerGa && <div className="pl-3 border-l border-indigo-200 text-slate-600">{entry.answerGa}</div>}
+</div>
+</div>
+))}
+</div>
+</PublicSimpleShell>
+);
+
+const PublicMathPracticeDetail = ({ subjectLabel, classLabel, chapterName, questions, onBack, onNavigate }) => (
+<PublicSimpleShell title="Practice" subtitle={(chapterName ? chapterName + ' \u2022 ' : '') + (subjectLabel || '')} onBack={onBack} onNavigate={onNavigate}>
+<div className="space-y-6 font-bangla bg-white/60 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-slate-200/50 shadow-sm">
+{questions.length === 0 && <div className="text-sm text-slate-400">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 \u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+{questions.map((entry, index) => (
+<div key={entry.question + '-' + index} className="space-y-2 text-sm text-slate-700">
+<div className="font-semibold text-slate-900">{index + 1}. {entry.question}</div>
+<details className="text-xs text-slate-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0</summary><div className="mt-2 border-l border-indigo-200 pl-3 text-slate-600">{entry.answer}</div></details>
+</div>
+))}
+</div>
+</PublicSimpleShell>
+);
+`;
+export const sa=`
         const PublicEnglishShell = ({ title, subtitle, onBack, onNavigate, children }) => (
             <PublicSimpleShell 
                 title={title} 
@@ -2037,7 +2164,8 @@ const PublicScienceMcqDetail = ({ subjectLabel, classLabel, chapterName, topicNa
                 </div>
             );
         };
-`;var aa=`
+`;
+export const aa=`
 const formatDuration = (value) => {
 if (value === null || value === undefined) return '';
 const total = Math.floor(Number(value));
@@ -2199,7 +2327,8 @@ updateVideoProgress({ id: activeVideo.id, title: activeVideo.title, context: res
 </PublicSimpleShell>
 );
 };
-`;var ia=`
+`;
+export const ia=`
 const SubjectIndexPage = ({ classLabel, subjects, onNavigate }) => {
 const [activeGroup, setActiveGroup] = useState('All');
 const [query, setQuery] = useState('');
@@ -2367,7 +2496,9 @@ showGroup
 </div>
 );
 };
-`;var na=`
+`;
+// Generated section exports
+export const na=`
 const StudentLanding = ({ onNavigate }) => {
 const [quoteIndex, setQuoteIndex] = useState(0);
 const [quickQuery, setQuickQuery] = useState('');
@@ -2510,7 +2641,7 @@ const quickResults = normalizedQuickQuery ? buildQuickSearchEntries().filter((en
 const countTopics = (chapters) => (chapters || []).reduce((total, chapter) => total + (chapter?.topics?.length || 0), 0);
 const countEntries = (store) => Object.values(store || {}).reduce((total, value) => total + (Array.isArray(value) ? value.length : 0), 0);
 const religionChapters = Object.values(sscReligionChapters || {}).flat();
-const chapterPools = [sscPhysicsChapters, sscChemistryChapters, sscBiologyChapters, sscBangladeshGlobalChapters, sscIctChapters, hscPhysics1stChapters, hscPhysics2ndChapters, hscChemistry1stChapters, hscChemistry2ndChapters, hscBiology1stChapters, hscBiology2ndChapters, hscIctChapters, religionChapters];
+const chapterPools = [sscPhysicsChapters, sscChemistryChapters, sscBiologyChapters, sscBangladeshGlobalChapters, sscIctChapters, sscGeneralMathChapters, sscHigherMathChapters, hscHigherMath1Chapters, hscHigherMath2Chapters, hscPhysics1stChapters, hscPhysics2ndChapters, hscChemistry1stChapters, hscChemistry2ndChapters, hscBiology1stChapters, hscBiology2ndChapters, hscIctChapters, religionChapters];
 const totalSubjects = scopedSscSubjects.length + scopedHscSubjects.length;
 const totalChapters = chapterPools.reduce((sum, pool) => sum + (pool || []).length, 0);
 const totalTopics = chapterPools.reduce((sum, pool) => sum + countTopics(pool || []), 0);
@@ -2632,7 +2763,8 @@ Academic content for this class level is coming soon. Keep your profile updated 
 </div>
 );
 };
-`;var oa=`
+`;
+export const oa=`
         return {
             StudentLanding,
             StudentRegister, // <--- ADDED THIS
@@ -2653,6 +2785,10 @@ Academic content for this class level is coming soon. Keep your profile updated 
             PublicScienceTopicDetail,
             PublicScienceCqDetail,
             PublicScienceMcqDetail,
+            PublicMathChapterList,
+            PublicMathChapterDetail,
+            PublicMathCqDetail,
+            PublicMathPracticeDetail,
             PublicVideoList,
             PublicVideoDetail,
             PublicReligionOptionList,
@@ -2672,10 +2808,12 @@ Academic content for this class level is coming soon. Keep your profile updated 
             PublicBanglaShohopathList, PublicBanglaItemDetail, PublicBanglaSrijonshilDetail, PublicBanglaMcqDetail,
             PublicIctShell, PublicIctChapterList, PublicIctMcqDetail, PublicScienceShell, PublicScienceChapterList,
             PublicScienceTopicList, PublicScienceTopicDetail, PublicScienceCqDetail, PublicScienceMcqDetail,
+            PublicMathChapterList, PublicMathChapterDetail, PublicMathCqDetail, PublicMathPracticeDetail,
             PublicVideoList, PublicVideoDetail, PublicReligionOptionList, PublicEnglishShell, PublicEnglishCardGrid,
             PublicEnglishTypeList, PublicEnglishQuestionList, sscSubjects, hscSubjects, religionOptions
         } = LandingModule;
-`;var ra=`
+`;
+export const ra=`
 const StudentRegister = ({ onNavigate }) => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', classLabel: 'SSC', groupLabel: 'Science' });
@@ -2816,9 +2954,11 @@ const StudentRegister = ({ onNavigate }) => {
         </div>
     );
 };
-`;var ne=`
+`;
+export const ne=`
         const LandingModule = (() => {
-`+Js+Zs+ea+ta+sa+aa+ia+na+ra+oa;var Ye=`
+`+Js+Zs+ea+ta+sa+aa+ia+na+ra+oa;
+export const Ye=`
         const AuthForm = ({ mode, onSubmit, onNavigate }) => {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
@@ -2918,7 +3058,8 @@ const StudentRegister = ({ onNavigate }) => {
                 </div>
             );
         };
-`;var Xe=`
+`;
+export const Xe=`
 const SetupView = ({ onNavigate }) => {
 const [adminName, setAdminName] = useState('');
 const [email, setEmail] = useState('');
@@ -3068,7 +3209,9 @@ className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-
 };
 `,ca=`
 {view === 'setup' && <SetupView onNavigate={navigate} />}
-`;var la=`
+`;
+// Generated section exports
+export const la=`
         const resizeImageFile = (file, { maxWidth = 400, maxHeight = 500, quality = 0.7 } = {}) =>
             new Promise((resolve) => {
                 if (!file || !(file instanceof File)) { resolve(file); return; }
@@ -3208,7 +3351,8 @@ className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-
 
             return { viewMode, setViewMode: updateViewMode, viewOptions: dashboardViewOptions };
         };
-`;var da=`
+`;
+export const da=`
 const ThumbnailUploadModal = ({ title, description, uploadUrl, keyField, itemKey, existingUrl, onSaved, onClose }) => {
 const [file, setFile] = useState(null);
 const [previewUrl, setPreviewUrl] = useState('');
@@ -3374,7 +3518,67 @@ const DashboardViewToggle = ({ viewMode, onChange, options = dashboardViewOption
 ))}
 </div>
 );
-`;var pa=`
+
+const mathEditorSymbols = ['π', '√', '∑', '∫', '∞', '≈', '≠', '≤', '≥', '±', '×', '÷', '°', 'θ', 'α', 'β', 'γ', 'Δ', 'λ', 'μ', 'σ', 'Ω', '²', '³', '½', '¼', '→', '←', '↔'];
+const editorActions = [
+{ label: 'B', title: 'Bold', command: 'bold' },
+{ label: 'I', title: 'Italic', command: 'italic' },
+{ label: 'U', title: 'Underline', command: 'underline' },
+{ label: 'x²', title: 'Superscript', command: 'superscript' },
+{ label: 'x₂', title: 'Subscript', command: 'subscript' }
+];
+const normalizeEditorHtml = (value) => (value && value.includes('<') ? value : String(value || '').replace(/\\n/g, '<br />'));
+const extractEditorText = (value) =>
+String(value || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+const RichTextEditor = ({ value, onChange, placeholder, minHeight = '120px' }) => {
+const editorRef = useRef(null);
+useEffect(() => {
+if (!editorRef.current) return;
+const normalized = normalizeEditorHtml(value || '');
+if (editorRef.current.innerHTML !== normalized) {
+editorRef.current.innerHTML = normalized;
+}
+}, [value]);
+const emitChange = () => {
+if (!editorRef.current) return;
+const nextValue = editorRef.current.innerHTML;
+onChange?.(nextValue);
+};
+const runCommand = (command, payload) => {
+editorRef.current?.focus();
+document.execCommand(command, false, payload);
+emitChange();
+};
+return (
+<div className="space-y-2">
+<div className="flex flex-wrap gap-1 text-[11px] font-semibold text-slate-500">
+{editorActions.map((action) => (
+<button key={action.command} type="button" onClick={() => runCommand(action.command)} className="px-2 py-1 border border-gray-200 rounded-md hover:bg-gray-50" title={action.title}>{action.label}</button>
+))}
+<div className="flex flex-wrap gap-1">
+{mathEditorSymbols.map((symbol) => (
+<button key={symbol} type="button" onClick={() => runCommand('insertText', symbol)} className="px-2 py-1 border border-gray-200 rounded-md hover:bg-gray-50" title="Insert symbol">{symbol}</button>
+))}
+</div>
+</div>
+<div
+ref={editorRef}
+className="w-full border border-gray-200 rounded-md px-2 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-200"
+style={{ minHeight }}
+contentEditable
+data-placeholder={placeholder}
+onInput={emitChange}
+onBlur={emitChange}
+suppressContentEditableWarning={true}
+></div>
+</div>
+);
+};
+const renderEditorContent = (value) => (
+<div className="editor-content" dangerouslySetInnerHTML={{ __html: normalizeEditorHtml(value || '') }} />
+);
+`;
+export const pa=`
 const SrijonshilTypeList = ({ classLabel, itemName, onSelectType, onNavigate, itemRoute, questionRoute, title, subtitle }) => {
 const resolvedItemRoute = itemRoute || (classLabel === 'SSC' ? 'bangla-ssc-item' : 'bangla-hsc-item');
 const resolvedQuestionRoute = questionRoute || (classLabel === 'SSC' ? 'bangla-ssc-srijonshil-questions' : 'bangla-hsc-srijonshil-questions');
@@ -3433,15 +3637,15 @@ setEditingIndex(null);
 };
 const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
 const handleSave = () => {
-const trimmedQuestion = questionInput.trim();
-const trimmedAnswer = answerInput.trim();
-const trimmedScenario = scenarioInput.trim();
-const trimmedQuestionG = questionGInput.trim();
-const trimmedAnswerG = answerGInput.trim();
-const trimmedQuestionGh = questionGhInput.trim();
-const trimmedAnswerGh = answerGhInput.trim();
+const trimmedQuestion = questionInput;
+const trimmedAnswer = answerInput;
+const trimmedScenario = scenarioInput;
+const trimmedQuestionG = questionGInput;
+const trimmedAnswerG = answerGInput;
+const trimmedQuestionGh = questionGhInput;
+const trimmedAnswerGh = answerGhInput;
 if (isScenarioType) {
-if (!trimmedScenario || !trimmedQuestionG || !trimmedAnswerG || !trimmedQuestionGh || !trimmedAnswerGh) return;
+if (!extractEditorText(trimmedScenario) || !extractEditorText(trimmedQuestionG) || !extractEditorText(trimmedAnswerG) || !extractEditorText(trimmedQuestionGh) || !extractEditorText(trimmedAnswerGh)) return;
 const payload = {
 scenario: trimmedScenario,
 questionG: trimmedQuestionG,
@@ -3453,7 +3657,7 @@ starsGh: normalizeStars(starRatingGh)
 };
 if (editingIndex === null) { onAdd(payload); } else { onUpdate(editingIndex, payload); }
 } else {
-if (!trimmedQuestion || !trimmedAnswer) return;
+if (!extractEditorText(trimmedQuestion) || !extractEditorText(trimmedAnswer)) return;
 const payload = { question: trimmedQuestion, answer: trimmedAnswer, stars: normalizeStars(starRating) };
 if (editingIndex === null) { onAdd(payload); } else { onUpdate(editingIndex, payload); }
 }
@@ -3470,13 +3674,22 @@ return (
 <div className="mt-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6 font-bangla">
 <h3 className="text-lg font-semibold text-gray-900">{editingIndex === null ? '\u09A8\u09A4\u09C1\u09A8 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8' : '\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8'}</h3>
 <p className="text-sm text-gray-500 mt-1">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993, \u0997 \u098F\u09AC\u0982 \u0998 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B8\u09AE\u09CD\u09AA\u09C2\u09B0\u09CD\u09A3\u09AD\u09BE\u09AC\u09C7 \u09B2\u09BF\u0996\u09C1\u09A8\u0964</p>
-<div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993</label><textarea value={scenarioInput} onChange={(event) => setScenarioInput(event.target.value)} placeholder="\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[140px]" /></div>
+<div className="mt-4">
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993</label>
+<div className="mt-2">
+<RichTextEditor value={scenarioInput} onChange={setScenarioInput} placeholder="\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="140px" />
+</div>
+</div>
 <div className="mt-4 grid gap-4 sm:grid-cols-2">
 <div>
 <label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0997 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
-<textarea value={questionGInput} onChange={(event) => setQuestionGInput(event.target.value)} placeholder="\u0997 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+<div className="mt-2">
+<RichTextEditor value={questionGInput} onChange={setQuestionGInput} placeholder="\u0997 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="110px" />
+</div>
 <label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-3 block">\u0997 \u0989\u09A4\u09CD\u09A4\u09B0</label>
-<textarea value={answerGInput} onChange={(event) => setAnswerGInput(event.target.value)} placeholder="\u0997 \u0989\u09A4\u09CD\u09A4\u09B0 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+<div className="mt-2">
+<RichTextEditor value={answerGInput} onChange={setAnswerGInput} placeholder="\u0997 \u0989\u09A4\u09CD\u09A4\u09B0 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="110px" />
+</div>
 <div className="mt-3">
 <label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0997 \u09B8\u09CD\u099F\u09BE\u09B0</label>
 <div className="mt-2 flex items-center gap-2 text-xs">
@@ -3491,9 +3704,13 @@ return (
 </div>
 <div>
 <label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0998 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
-<textarea value={questionGhInput} onChange={(event) => setQuestionGhInput(event.target.value)} placeholder="\u0998 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+<div className="mt-2">
+<RichTextEditor value={questionGhInput} onChange={setQuestionGhInput} placeholder="\u0998 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="110px" />
+</div>
 <label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-3 block">\u0998 \u0989\u09A4\u09CD\u09A4\u09B0</label>
-<textarea value={answerGhInput} onChange={(event) => setAnswerGhInput(event.target.value)} placeholder="\u0998 \u0989\u09A4\u09CD\u09A4\u09B0 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[110px]" />
+<div className="mt-2">
+<RichTextEditor value={answerGhInput} onChange={setAnswerGhInput} placeholder="\u0998 \u0989\u09A4\u09CD\u09A4\u09B0 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="110px" />
+</div>
 <div className="mt-3">
 <label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0998 \u09B8\u09CD\u099F\u09BE\u09B0</label>
 <div className="mt-2 flex items-center gap-2 text-xs">
@@ -3530,25 +3747,25 @@ return (
 {entry.scenario ? (
 <div className="space-y-3 text-sm text-gray-700">
 <div className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993</div>
-<div className="text-sm font-semibold text-gray-800 whitespace-pre-wrap">{entry.scenario}</div>
+<div className="text-sm font-semibold text-gray-800">{renderEditorContent(entry.scenario)}</div>
 <div className="space-y-3">
 <div>
-<div className="font-semibold text-gray-800">\u0997. {entry.questionG}</div>
+<div className="font-semibold text-gray-800">\u0997. {renderEditorContent(entry.questionG)}</div>
 {Number(entry.starsG) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'\u2605'.repeat(Math.min(5, Number(entry.starsG)))}</div>}
-<details className="mt-2 text-sm text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700 whitespace-pre-wrap">{entry.answerG}</div></details>
+<details className="mt-2 text-sm text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answerG)}</div></details>
 </div>
 <div>
-<div className="font-semibold text-gray-800">\u0998. {entry.questionGh}</div>
+<div className="font-semibold text-gray-800">\u0998. {renderEditorContent(entry.questionGh)}</div>
 {Number(entry.starsGh) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'\u2605'.repeat(Math.min(5, Number(entry.starsGh)))}</div>}
-<details className="mt-2 text-sm text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700 whitespace-pre-wrap">{entry.answerGh}</div></details>
+<details className="mt-2 text-sm text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answerGh)}</div></details>
 </div>
 </div>
 </div>
 ) : (
 <>
-<div className="text-sm font-semibold text-gray-800">{toBanglaNumber(index + 1)}. {entry.question}</div>
+<div className="text-sm font-semibold text-gray-800">{toBanglaNumber(index + 1)}. {renderEditorContent(entry.question)}</div>
 {Number(entry.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'\u2605'.repeat(Math.min(5, Number(entry.stars)))}</div>}
-<details className="mt-2 text-sm text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700 whitespace-pre-wrap">{entry.answer}</div></details>
+<details className="mt-2 text-sm text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answer)}</div></details>
 </>
 )}
 </div>
@@ -3623,8 +3840,18 @@ setIsModalOpen(true);
 </>
 ) : (
 <>
-<div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label><textarea value={questionInput} onChange={(event) => setQuestionInput(event.target.value)} placeholder="\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[100px]" /></div>
-<div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0989\u09A4\u09CD\u09A4\u09B0</label><textarea value={answerInput} onChange={(event) => setAnswerInput(event.target.value)} placeholder="\u0989\u09A4\u09CD\u09A4\u09B0 \u09B2\u09BF\u0996\u09C1\u09A8" className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[100px]" /></div>
+<div className="mt-4">
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
+<div className="mt-2">
+<RichTextEditor value={questionInput} onChange={setQuestionInput} placeholder="\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="100px" />
+</div>
+</div>
+<div className="mt-4">
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0989\u09A4\u09CD\u09A4\u09B0</label>
+<div className="mt-2">
+<RichTextEditor value={answerInput} onChange={setAnswerInput} placeholder="\u0989\u09A4\u09CD\u09A4\u09B0 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="100px" />
+</div>
+</div>
 </>
 )}
 {!isScenarioType && (
@@ -3644,6 +3871,351 @@ setIsModalOpen(true);
 </div>
 </div>
 )}
+</AdminShell>
+);
+};
+
+const MathChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onNavigate, canManageStructure, canManageThumbnails }) => {
+const [chapterName, setChapterName] = useState('');
+const [chapterStars, setChapterStars] = useState(0);
+const [editingChapter, setEditingChapter] = useState(null);
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [thumbnailFile, setThumbnailFile] = useState(null);
+const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
+const [activeThumbnail, setActiveThumbnail] = useState(null);
+const { viewMode, setViewMode, viewOptions } = useDashboardViewPreference();
+const resetForm = () => { setChapterName(''); setChapterStars(0); setEditingChapter(null); setThumbnailFile(null); };
+const handleSave = async () => {
+const trimmed = chapterName.trim();
+if (!trimmed) return;
+const token = localStorage.getItem('auth_token');
+const uploadThumbnail = async (chapterKey) => {
+if (!thumbnailFile || !token) return;
+const formData = new FormData();
+formData.append('chapterKey', chapterKey);
+formData.append('file', thumbnailFile);
+const response = await fetch('/api/chapter-thumbnails', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
+const data = await response.json();
+if (response.ok && data.success) { setChapterThumbnails((prev) => ({ ...prev, [data.thumbnail.chapterKey]: { url: data.thumbnail.url } })); }
+};
+if (editingChapter) {
+onUpdate(editingChapter.id, { name: trimmed, stars: Math.max(0, Math.min(5, Number(chapterStars) || 0)) });
+const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, editingChapter.id);
+await uploadThumbnail(chapterKey);
+} else {
+const nextId = Date.now() + '-' + Math.random().toString(16).slice(2);
+onAdd({ id: nextId, name: trimmed, stars: Math.max(0, Math.min(5, Number(chapterStars) || 0)) });
+const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, nextId);
+await uploadThumbnail(chapterKey);
+}
+resetForm(); setIsModalOpen(false);
+};
+return (
+<AdminShell title={classLabel + ' ' + subjectLabel} subtitle={subjectLabel + ' \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u0997\u09C1\u099B\u09BE\u09A8\u0964'} activeTab="classes" onNavigate={onNavigate}>
+<div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+<button onClick={() => onNavigate(classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc')} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+<div className="flex flex-wrap items-center gap-2">
+<DashboardViewToggle viewMode={viewMode} onChange={setViewMode} options={viewOptions} />
+{canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">\u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8</button>}
+</div>
+</div>
+{viewMode === 'card' ? (
+<div className="mt-4 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+{chapters.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+{chapters.map((chapter) => {
+const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+return (
+<div key={chapter.id} className="w-full max-w-[160px] aspect-[1/1.618] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div className="p-2 flex flex-col gap-2">
+<div>
+<div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">\u0985\u09A7\u09CD\u09AF\u09BE\u09DF</div>
+<div className="text-sm font-semibold text-gray-900 mt-1">{chapter.name}</div>
+{Number(chapter.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'\u2605'.repeat(Math.min(5, Number(chapter.stars)))}</div>}
+</div>
+<div className="mt-auto flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+<button onClick={() => onSelect(chapter)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
+{canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>}
+{canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+{canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u098F\u0987 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u099F\u09BF \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09A4\u09C7 \u099A\u09BE\u09A8?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+</div>
+</div>
+<div className="flex-1 bg-gray-100 border-t border-gray-200">
+{thumbnailUrl ? <img src={thumbnailUrl} alt={chapter.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
+</div>
+</div>
+);
+})}
+</div>
+) : (
+<div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+{chapters.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+{chapters.map((chapter) => {
+const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, chapter.id);
+const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+return (
+<div key={chapter.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700">
+<div className="flex items-center gap-3">
+<div className="w-9 h-11 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={chapter.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
+<div>
+<div className="text-sm font-semibold text-gray-900">{chapter.name}</div>
+{Number(chapter.stars) > 0 && <div className="mt-1 text-[10px] text-amber-500">{'\u2605'.repeat(Math.min(5, Number(chapter.stars)))}</div>}
+</div>
+</div>
+<div className="flex items-center gap-2 text-[11px] font-semibold">
+{canManageStructure && <button onClick={() => { setEditingChapter(chapter); setChapterName(chapter.name); setChapterStars(Number(chapter.stars) || 0); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>}
+{canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: chapter.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+{canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u098F\u0987 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u099F\u09BF \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09A4\u09C7 \u099A\u09BE\u09A8?'); if (shouldRemove) { onDelete(chapter.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+<button onClick={() => onSelect(chapter)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
+</div>
+</div>
+);
+})}
+</div>
+)}
+{isModalOpen && canManageStructure && (
+<div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+<div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+<h3 className="text-lg font-semibold text-gray-900">{editingChapter ? '\u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8' : '\u09A8\u09A4\u09C1\u09A8 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8'}</h3>
+<p className="text-sm text-gray-500 mt-1">\u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09C7\u09B0 \u09A8\u09BE\u09AE \u09B2\u09BF\u0996\u09C1\u09A8\u0964</p>
+<input value={chapterName} onChange={(event) => setChapterName(event.target.value)} placeholder="\u0989\u09A6\u09BE\u09B9\u09B0\u09A3: \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09E7" className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+<div className="mt-4">
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09B8\u09CD\u099F\u09BE\u09B0</label>
+<div className="mt-2 flex items-center gap-2 text-xs">
+<button onClick={() => setChapterStars(0)} className={'px-2 py-1 rounded-md border ' + (chapterStars === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
+<div className="flex items-center gap-1 text-sm">
+{[1, 2, 3, 4, 5].map((star) => (
+<button key={star} onClick={() => setChapterStars(star)} className={star <= chapterStars ? 'text-amber-400' : 'text-slate-200'}>\u2605</button>
+))}
+</div>
+</div>
+</div>
+{canManageThumbnails && (<div className="mt-4"><label className="text-xs uppercase tracking-[0.2em] text-gray-400">Thumbnail</label><input type="file" accept="image/*" onChange={async (event) => { const selected = event.target.files?.[0]; if (!selected) { setThumbnailFile(null); return; } const resized = await resizeImageFile(selected); setThumbnailFile(resized || null); }} className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" /><p className="text-xs text-gray-400 mt-2">Upload now or edit later from the chapter list.</p></div>)}
+<div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsModalOpen(false); resetForm(); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
+</div>
+</div>
+)}
+{activeThumbnail && canManageThumbnails && <ThumbnailUploadModal title={activeThumbnail.title} description="Upload a thumbnail for this chapter." uploadUrl="/api/chapter-thumbnails" keyField="chapterKey" itemKey={activeThumbnail.chapterKey} existingUrl={chapterThumbnails[activeThumbnail.chapterKey]?.url} onSaved={(thumbnail) => { setChapterThumbnails((prev) => ({ ...prev, [thumbnail.chapterKey]: { url: thumbnail.url } })); setActiveThumbnail(null); }} onClose={() => setActiveThumbnail(null)} />}
+</AdminShell>
+);
+};
+
+const MathChapterDetail = ({ classLabel, subjectLabel, chapter, notesByItem, videosByItem, onUpdateNotes, onUpdateVideos, onBack, onNavigateCq, onNavigateMcq, onNavigatePractice, onNavigate }) => {
+const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+const [noteInput, setNoteInput] = useState('');
+const [noteStars, setNoteStars] = useState(0);
+const [editingNoteIndex, setEditingNoteIndex] = useState(null);
+const noteKey = [classLabel, subjectLabel, chapter?.id || 'chapter'].join('-');
+const notes = (notesByItem || {})[noteKey] || [];
+const banglaDigits = ['\u09E6', '\u09E7', '\u09E8', '\u09E9', '\u09EA', '\u09EB', '\u09EC', '\u09ED', '\u09EE', '\u09EF'];
+const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+const normalizedNote = (note) => {
+if (!note) return { text: '', stars: 0 };
+if (typeof note === 'string') return { text: note, stars: 0 };
+return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
+};
+const openNoteModal = (index = null) => {
+const resolved = index === null ? { text: '', stars: 0 } : normalizedNote(notes[index]);
+setEditingNoteIndex(index);
+setNoteInput(resolved.text);
+setNoteStars(resolved.stars);
+setIsNoteModalOpen(true);
+};
+const handleNoteSave = () => {
+if (!extractEditorText(noteInput)) return;
+const payload = { text: noteInput, stars: Math.max(0, Math.min(5, Number(noteStars) || 0)) };
+if (onUpdateNotes) { onUpdateNotes((prev) => { const current = prev && prev[noteKey] ? [...prev[noteKey]] : []; if (editingNoteIndex === null) { current.push(payload); } else { current[editingNoteIndex] = payload; } return { ...prev, [noteKey]: current }; }); }
+setIsNoteModalOpen(false); setNoteInput(''); setNoteStars(0); setEditingNoteIndex(null);
+};
+const renderStars = (value) => (
+<div className="flex items-center gap-1 text-[10px]">
+{[1, 2, 3, 4, 5].map((star) => (
+<span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>\u2605</span>
+))}
+</div>
+);
+return (
+<AdminShell title={subjectLabel + ' \u2022 ' + (chapter?.name || '\u0985\u09A7\u09CD\u09AF\u09BE\u09DF')} subtitle={chapter?.name ? '\u0985\u09A7\u09CD\u09AF\u09BE\u09DF: ' + chapter.name : '\u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09C7\u09B0 \u09A4\u09A5\u09CD\u09AF \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964'} activeTab="classes" onNavigate={onNavigate}>
+<div className="flex flex-wrap gap-3 justify-between items-center font-bangla"><button onClick={onBack} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button><button onClick={() => onNavigate('dashboard')} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Dashboard</button></div>
+<div className="mt-4 grid gap-3 sm:grid-cols-3 font-bangla">
+<button onClick={onNavigateCq} className="bg-white border border-gray-200 rounded-xl p-3 text-left hover:bg-gray-50 transition"><div className="text-xs uppercase tracking-[0.2em] text-gray-300">\u09A7\u09B0\u09A3</div><div className="text-base font-semibold text-gray-900 mt-1">CQ \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</div><p className="text-xs text-gray-500 mt-1">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993 \u09AD\u09BF\u09A4\u09CD\u09A4\u09BF\u0995 \u09EA\u099F\u09BF \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8</p></button>
+<button onClick={onNavigateMcq} className="bg-white border border-gray-200 rounded-xl p-3 text-left hover:bg-gray-50 transition"><div className="text-xs uppercase tracking-[0.2em] text-gray-300">\u09A7\u09B0\u09A3</div><div className="text-base font-semibold text-gray-900 mt-1">\u09AC\u09B9\u09C1\u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8\u09C0</div><p className="text-xs text-gray-500 mt-1">\u09AE\u09BE\u09A5 \u098F\u09AE\u09B8\u09BF\u0995\u09BF\u0989 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8</p></button>
+<button onClick={onNavigatePractice} className="bg-white border border-gray-200 rounded-xl p-3 text-left hover:bg-gray-50 transition"><div className="text-xs uppercase tracking-[0.2em] text-gray-300">\u09A7\u09B0\u09A3</div><div className="text-base font-semibold text-gray-900 mt-1">\u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8</div><p className="text-xs text-gray-500 mt-1">\u0985\u09A8\u09C1\u09B6\u09C0\u09B2\u09A8\u09C0 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8</p></button>
+</div>
+<div className="mt-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+<div className="px-4 py-3 flex items-center justify-between border-b border-gray-100"><div><div className="text-xs uppercase tracking-[0.2em] text-gray-300">\u09A8\u09CB\u099F\u09B8</div><div className="text-sm font-semibold text-gray-700 mt-1">\u09B8\u0982\u0995\u09CD\u09B7\u09BF\u09AA\u09CD\u09A4 \u09A8\u09CB\u099F \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8</div></div><button onClick={() => openNoteModal()} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">\u09A8\u09CB\u099F \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8</button></div>
+<ul className="divide-y">{notes.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 \u09A8\u09CB\u099F \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</li>}{notes.map((note, index) => { const resolved = normalizedNote(note); return (<li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3"><span className="text-sm font-semibold text-gray-500">{toBanglaNumber(index + 1)}.</span><div className="flex-1"><div className="text-sm text-gray-700">{renderEditorContent(resolved.text)}</div>{resolved.stars > 0 && <div className="mt-1 text-[10px]">{renderStars(resolved.stars)}</div>}</div><button onClick={() => openNoteModal(index)} className="text-gray-400 hover:text-gray-600 transition" title="\u09A8\u09CB\u099F \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8">\u270E</button></li>); })}</ul>
+</div>
+<VideoManager noteKey={noteKey} videosByItem={videosByItem} onUpdateVideos={onUpdateVideos} />
+{isNoteModalOpen && (
+<div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
+<div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
+<h3 className="text-lg font-semibold text-gray-900">{editingNoteIndex === null ? '\u09A8\u09CB\u099F \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8' : '\u09A8\u09CB\u099F \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8'}</h3>
+<p className="text-sm text-gray-500 mt-1">\u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09C7\u09B0 \u09B8\u0982\u0995\u09CD\u09B7\u09BF\u09AA\u09CD\u09A4 \u09A8\u09CB\u099F \u09B2\u09BF\u0996\u09C1\u09A8\u0964</p>
+<div className="mt-4">
+<RichTextEditor value={noteInput} onChange={setNoteInput} placeholder="\u0989\u09A6\u09BE\u09B9\u09B0\u09A3: \u09A7\u09BE\u09B0\u09BE\u09B0 \u09AE\u09C2\u09B2 \u09B8\u09C2\u09A4\u09CD\u09B0..." minHeight="120px" />
+</div>
+<div className="mt-3">
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0997\u09C1\u09B0\u09C1\u09A4\u09CD\u09AC (\u09B8\u09CD\u099F\u09BE\u09B0)</label>
+<div className="mt-2 flex items-center gap-2">
+<button onClick={() => setNoteStars(0)} className={'text-xs px-2 py-1 rounded-md border ' + (noteStars === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
+<div className="flex items-center gap-1 text-xs">
+{[1, 2, 3, 4, 5].map((star) => (
+<button key={star} onClick={() => setNoteStars(star)} className={star <= noteStars ? 'text-amber-400' : 'text-slate-200'}>\u2605</button>
+))}
+</div>
+</div>
+</div>
+<div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsNoteModalOpen(false); setNoteInput(''); setNoteStars(0); setEditingNoteIndex(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleNoteSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
+</div>
+</div>
+)}
+</AdminShell>
+);
+};
+
+const MathCqQuestionList = ({ title, subtitle, questions, onAdd, onUpdate, onDelete, onBack, onNavigate }) => {
+const [scenarioInput, setScenarioInput] = useState('');
+const [questionKaInput, setQuestionKaInput] = useState('');
+const [answerKaInput, setAnswerKaInput] = useState('');
+const [questionKhaInput, setQuestionKhaInput] = useState('');
+const [answerKhaInput, setAnswerKhaInput] = useState('');
+const [questionGaInput, setQuestionGaInput] = useState('');
+const [answerGaInput, setAnswerGaInput] = useState('');
+const [editingIndex, setEditingIndex] = useState(null);
+const resetForm = () => {
+setScenarioInput('');
+setQuestionKaInput('');
+setAnswerKaInput('');
+setQuestionKhaInput('');
+setAnswerKhaInput('');
+setQuestionGaInput('');
+setAnswerGaInput('');
+setEditingIndex(null);
+};
+const handleSave = () => {
+if (!extractEditorText(scenarioInput) || !extractEditorText(questionKaInput) || !extractEditorText(questionKhaInput) || !extractEditorText(questionGaInput)) return;
+const payload = {
+scenario: scenarioInput,
+questionKa: questionKaInput,
+answerKa: answerKaInput,
+questionKha: questionKhaInput,
+answerKha: answerKhaInput,
+questionGa: questionGaInput,
+answerGa: answerGaInput
+};
+if (editingIndex === null) { onAdd(payload); } else { onUpdate(editingIndex, payload); }
+resetForm();
+};
+return (
+<AdminShell title={title} subtitle={subtitle} activeTab="classes" onNavigate={onNavigate}>
+<div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+<button onClick={onBack} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+</div>
+<div className="mt-4 bg-white border border-gray-200 rounded-xl shadow-sm p-4 font-bangla">
+<h3 className="text-base font-semibold text-gray-900">{editingIndex === null ? '\u09A8\u09A4\u09C1\u09A8 CQ \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8' : '\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8'}</h3>
+<div className="mt-3 space-y-3">
+<div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993</label>
+<div className="mt-2"><RichTextEditor value={scenarioInput} onChange={setScenarioInput} placeholder="\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993 \u09B2\u09BF\u0996\u09C1\u09A8" minHeight="120px" /></div>
+</div>
+<div className="grid gap-3 sm:grid-cols-3">
+<div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0995 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
+<div className="mt-2"><RichTextEditor value={questionKaInput} onChange={setQuestionKaInput} placeholder="\u0995 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8" minHeight="90px" /></div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-2 block">\u0995 \u0989\u09A4\u09CD\u09A4\u09B0</label>
+<div className="mt-2"><RichTextEditor value={answerKaInput} onChange={setAnswerKaInput} placeholder="\u0995 \u0989\u09A4\u09CD\u09A4\u09B0" minHeight="90px" /></div>
+</div>
+<div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0996 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
+<div className="mt-2"><RichTextEditor value={questionKhaInput} onChange={setQuestionKhaInput} placeholder="\u0996 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8" minHeight="90px" /></div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-2 block">\u0996 \u0989\u09A4\u09CD\u09A4\u09B0</label>
+<div className="mt-2"><RichTextEditor value={answerKhaInput} onChange={setAnswerKhaInput} placeholder="\u0996 \u0989\u09A4\u09CD\u09A4\u09B0" minHeight="90px" /></div>
+</div>
+<div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0997 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
+<div className="mt-2"><RichTextEditor value={questionGaInput} onChange={setQuestionGaInput} placeholder="\u0997 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8" minHeight="90px" /></div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400 mt-2 block">\u0997 \u0989\u09A4\u09CD\u09A4\u09B0</label>
+<div className="mt-2"><RichTextEditor value={answerGaInput} onChange={setAnswerGaInput} placeholder="\u0997 \u0989\u09A4\u09CD\u09A4\u09B0" minHeight="90px" /></div>
+</div>
+</div>
+</div>
+<div className="mt-4 flex justify-end gap-2">
+<button onClick={() => { resetForm(); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Clear</button>
+<button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button>
+</div>
+</div>
+<div className="mt-4 bg-white border border-gray-200 rounded-xl shadow-sm divide-y font-bangla">
+{questions.length === 0 && <div className="px-4 py-3 text-sm text-gray-400">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 CQ \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+{questions.map((entry, index) => (
+<div key={\`\${entry.scenario || 'cq'}-\${index}\`} className="px-4 py-3">
+<div className="text-xs uppercase tracking-[0.2em] text-gray-300">\u09B8\u09BF\u09A8\u09BE\u09B0\u09BF\u0993</div>
+<div className="text-sm font-semibold text-gray-800 mt-1">{renderEditorContent(entry.scenario)}</div>
+<div className="mt-3 space-y-2 text-sm text-gray-700">
+<div><span className="font-semibold">\u0995.</span> {renderEditorContent(entry.questionKa)}</div>
+{entry.answerKa && <details className="mt-1 text-xs text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0</summary><div className="mt-1 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answerKa)}</div></details>}
+<div><span className="font-semibold">\u0996.</span> {renderEditorContent(entry.questionKha)}</div>
+{entry.answerKha && <details className="mt-1 text-xs text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0</summary><div className="mt-1 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answerKha)}</div></details>}
+<div><span className="font-semibold">\u0997.</span> {renderEditorContent(entry.questionGa)}</div>
+{entry.answerGa && <details className="mt-1 text-xs text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0</summary><div className="mt-1 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answerGa)}</div></details>}
+</div>
+<div className="mt-3 flex items-center gap-2 text-xs font-semibold">
+<button onClick={() => { setEditingIndex(index); setScenarioInput(entry.scenario || ''); setQuestionKaInput(entry.questionKa || ''); setAnswerKaInput(entry.answerKa || ''); setQuestionKhaInput(entry.questionKha || ''); setAnswerKhaInput(entry.answerKha || ''); setQuestionGaInput(entry.questionGa || ''); setAnswerGaInput(entry.answerGa || ''); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>
+<button onClick={() => { const shouldRemove = window.confirm('\u0986\u09AA\u09A8\u09BF \u0995\u09BF \u098F\u0987 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u0997\u09C1\u09B2\u09CB \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09A4\u09C7 \u099A\u09BE\u09A8?'); if (shouldRemove) { onDelete(index); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>
+</div>
+</div>
+))}
+</div>
+</AdminShell>
+);
+};
+
+const PracticeQuestionList = ({ title, subtitle, questions, onAdd, onUpdate, onDelete, onBack, onNavigate }) => {
+const [questionInput, setQuestionInput] = useState('');
+const [answerInput, setAnswerInput] = useState('');
+const [editingIndex, setEditingIndex] = useState(null);
+const resetForm = () => { setQuestionInput(''); setAnswerInput(''); setEditingIndex(null); };
+const handleSave = () => {
+if (!extractEditorText(questionInput) || !extractEditorText(answerInput)) return;
+const payload = { question: questionInput, answer: answerInput };
+if (editingIndex === null) { onAdd(payload); } else { onUpdate(editingIndex, payload); }
+resetForm();
+};
+return (
+<AdminShell title={title} subtitle={subtitle} activeTab="classes" onNavigate={onNavigate}>
+<div className="flex flex-wrap gap-3 justify-between items-center font-bangla">
+<button onClick={onBack} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+</div>
+<div className="mt-4 bg-white border border-gray-200 rounded-xl shadow-sm p-4 font-bangla">
+<h3 className="text-base font-semibold text-gray-900">{editingIndex === null ? '\u09A8\u09A4\u09C1\u09A8 \u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8 \u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8' : '\u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8 \u09B8\u09AE\u09CD\u09AA\u09BE\u09A6\u09A8\u09BE \u0995\u09B0\u09C1\u09A8'}</h3>
+<div className="mt-3 space-y-3">
+<div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u09AA\u09CD\u09B0\u09B6\u09CD\u09A8</label>
+<div className="mt-2"><RichTextEditor value={questionInput} onChange={setQuestionInput} placeholder="\u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8" minHeight="90px" /></div>
+</div>
+<div>
+<label className="text-xs uppercase tracking-[0.2em] text-gray-400">\u0989\u09A4\u09CD\u09A4\u09B0</label>
+<div className="mt-2"><RichTextEditor value={answerInput} onChange={setAnswerInput} placeholder="\u0989\u09A4\u09CD\u09A4\u09B0" minHeight="90px" /></div>
+</div>
+</div>
+<div className="mt-4 flex justify-end gap-2">
+<button onClick={() => { resetForm(); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Clear</button>
+<button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button>
+</div>
+</div>
+<div className="mt-4 bg-white border border-gray-200 rounded-xl shadow-sm divide-y font-bangla">
+{questions.length === 0 && <div className="px-4 py-3 text-sm text-gray-400">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8 \u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8 \u09AF\u09CB\u0997 \u0995\u09B0\u09BE \u09B9\u09DF\u09A8\u09BF\u0964</div>}
+{questions.map((entry, index) => (
+<div key={\`\${entry.question}-\${index}\`} className="px-4 py-3 text-sm text-gray-700 space-y-2">
+<div className="font-semibold text-gray-900">{toBanglaNumber(index + 1)}. {renderEditorContent(entry.question)}</div>
+<details className="text-xs text-gray-600"><summary className="cursor-pointer text-blue-600">\u0989\u09A4\u09CD\u09A4\u09B0</summary><div className="mt-2 border-l-2 border-blue-100 pl-3 text-gray-700">{renderEditorContent(entry.answer)}</div></details>
+<div className="flex flex-wrap gap-2 text-xs font-semibold">
+<button onClick={() => { setEditingIndex(index); setQuestionInput(entry.question); setAnswerInput(entry.answer); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Edit</button>
+<button onClick={() => { const shouldDelete = window.confirm('\u098F\u0987 \u09AA\u09CD\u09B0\u09BE\u0995\u09CD\u099F\u09BF\u09B8 \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09A4\u09C7 \u099A\u09BE\u09A8?'); if (shouldDelete) { onDelete(index); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>
+</div>
+</div>
+))}
+</div>
 </AdminShell>
 );
 };
@@ -3726,7 +4298,8 @@ return (
 </AdminShell>
 );
 };
-`;var ua=`
+`;
+export const ua=`
         const AdminDashboard = ({ onNavigate }) => {
             const [classes, setClasses] = useState([]);
             const [loading, setLoading] = useState(true);
@@ -3893,7 +4466,8 @@ return (
                 </AdminShell>
             );
         };
-`;var ma=`
+`;
+export const ma=`
 const AdminGroupSelection = ({ classLabel, onNavigate }) => {
 const groups = [
 { title: 'Science', description: 'Physics, Chemistry, Biology' },
@@ -3995,6 +4569,10 @@ const hscChem1Route = classLabel === 'HSC' ? 'admin-hsc-chemistry-1st' : null;
 const hscChem2Route = classLabel === 'HSC' ? 'admin-hsc-chemistry-2nd' : null;
 const hscBio1Route = classLabel === 'HSC' ? 'admin-hsc-biology-1st' : null;
 const hscBio2Route = classLabel === 'HSC' ? 'admin-hsc-biology-2nd' : null;
+const generalMathRoute = classLabel === 'SSC' ? 'admin-ssc-general-math' : null;
+const higherMathRoute = classLabel === 'SSC' ? 'admin-ssc-higher-math' : null;
+const hscHigherMath1Route = classLabel === 'HSC' ? 'admin-hsc-higher-math-1st' : null;
+const hscHigherMath2Route = classLabel === 'HSC' ? 'admin-hsc-higher-math-2nd' : null;
 
 return (
 <AdminShell activeTab="classes" onNavigate={onNavigate}>
@@ -4021,6 +4599,8 @@ const isIct = subject === 'Information and Communication Technology';
 const isPhysics = subject === 'Physics' && classLabel === 'SSC';
 const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
 const isBiology = subject === 'Biology' && classLabel === 'SSC';
+const isGeneralMath = subject === 'General Mathematics' && classLabel === 'SSC';
+const isHigherMath = subject === 'Higher Mathematics' && classLabel === 'SSC';
 const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
 const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
 const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
@@ -4029,9 +4609,11 @@ const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
 const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
 const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
 const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
+const isHscHigherMath1 = subject === 'Higher Mathematics 1st Paper' && classLabel === 'HSC';
+const isHscHigherMath2 = subject === 'Higher Mathematics 2nd Paper' && classLabel === 'HSC';
 
 const displayLabel = isBanglaFirst ? '\u09AC\u09BE\u0982\u09B2\u09BE \u09E7\u09AE \u09AA\u09A4\u09CD\u09B0' : isIct ? '\u0986\u0987\u09B8\u09BF\u099F\u09BF' : subject;
-const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : hscBio2Route;
+const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isGeneralMath ? generalMathRoute : isHigherMath ? higherMathRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : isHscBio2 ? hscBio2Route : isHscHigherMath1 ? hscHigherMath1Route : hscHigherMath2Route;
 const subjectKey = makeThumbnailKey(subject, classLabel);
 const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
 const canOpen = Boolean(route);
@@ -4070,6 +4652,8 @@ const isIct = subject === 'Information and Communication Technology';
 const isPhysics = subject === 'Physics' && classLabel === 'SSC';
 const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
 const isBiology = subject === 'Biology' && classLabel === 'SSC';
+const isGeneralMath = subject === 'General Mathematics' && classLabel === 'SSC';
+const isHigherMath = subject === 'Higher Mathematics' && classLabel === 'SSC';
 const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
 const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
 const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
@@ -4078,8 +4662,10 @@ const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
 const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
 const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
 const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
+const isHscHigherMath1 = subject === 'Higher Mathematics 1st Paper' && classLabel === 'HSC';
+const isHscHigherMath2 = subject === 'Higher Mathematics 2nd Paper' && classLabel === 'HSC';
 const displayLabel = isBanglaFirst ? '\u09AC\u09BE\u0982\u09B2\u09BE \u09E7\u09AE \u09AA\u09A4\u09CD\u09B0' : isIct ? '\u0986\u0987\u09B8\u09BF\u099F\u09BF' : subject;
-const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : hscBio2Route;
+const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isGeneralMath ? generalMathRoute : isHigherMath ? higherMathRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : isHscBio2 ? hscBio2Route : isHscHigherMath1 ? hscHigherMath1Route : hscHigherMath2Route;
 const subjectKey = makeThumbnailKey(subject, classLabel);
 const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
 const canOpen = Boolean(route);
@@ -4110,7 +4696,8 @@ return (
 </AdminShell>
 );
 };
-`;var ha=`
+`;
+export const ha=`
 const BanglaFirstPaperTopics = ({ classLabel, onNavigate, canManageThumbnails }) => {
 const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
 const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
@@ -4546,7 +5133,9 @@ return (
 </AdminShell>
 );
 };
-`;var ga=`
+`;
+// Generated section exports
+export const ga=`
 const IctChapterList = ({ classLabel, subjectLabel, chapters, onAdd, onUpdate, onDelete, onSelect, onBack, onNavigate, canManageStructure, canManageThumbnails }) => {
 const [chapterThumbnails, setChapterThumbnails] = useThumbnailMap('/api/chapter-thumbnails', 'chapterKey');
 const [activeThumbnail, setActiveThumbnail] = useState(null);
@@ -4944,7 +5533,8 @@ return (
 </AdminShell>
 );
 };
-`;var ba=`
+`;
+export const ba=`
         const EnglishFirstPaperHome = ({ classLabel, onNavigate }) => {
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
             const readingRoute = classLabel === 'SSC' ? 'english-ssc-reading' : 'english-hsc-reading';
@@ -5041,7 +5631,8 @@ return (
                 </AdminShell>
             );
         };
-`;var ya=`
+`;
+export const ya=`
         return {
             AdminDashboard,
             AdminGroupSelection,
@@ -5056,6 +5647,10 @@ return (
             SrijonshilTypeList,
             SrijonshilQuestionList,
             McqQuestionList,
+            MathChapterList,
+            MathChapterDetail,
+            MathCqQuestionList,
+            PracticeQuestionList,
             IctChapterList,
             ReligionSelectionList,
             ScienceChapterList,
@@ -5066,7 +5661,8 @@ return (
             EnglishSectionList,
             EnglishQuestionList
         };
-`;var va=`
+`;
+export const va=`
 const AdminStudentProfile = ({ onNavigate }) => {
 const [userId, setUserId] = useState(() => {
 const params = new URLSearchParams(window.location.search);
@@ -5318,7 +5914,8 @@ batchYear: nextClass === 'SSC' || nextClass === 'HSC' ? detailForm.batchYear : '
 </AdminShell>
 );
 };
-`;var fa=`
+`;
+export const fa=`
 const AdminUserList = ({ onNavigate }) => {
 const [users, setUsers] = useState({ admins: [], teachers: [], students: [] });
 const [activeTab, setActiveTab] = useState('students');
@@ -5589,10 +6186,13 @@ groupLabel: nextClass === 'SSC' || nextClass === 'HSC' ? createForm.groupLabel :
 </AdminShell>
 );
 };
-`;var Sa=`
+`;
+export const Sa=`
 ${fa}
 ${va}
-`;var Je=`
+`;
+// Generated section exports
+export const Je=`
     const DashboardModule = (() => {
 `+la+da+pa+ua+ma+ha+ga+ba+Sa+ya+`
     })();
@@ -5621,7 +6221,8 @@ ${va}
         EnglishSectionList,
         EnglishQuestionList
     } = DashboardModule;
-`;var xa=`
+`;
+export const xa=`
         // 4. Main Admin Settings Controller
         const AdminSettings = ({ onNavigate }) => {
             const [activePanel, setActivePanel] = useState('main'); // 'main', 'profile', 'danger'
@@ -5675,7 +6276,8 @@ ${va}
         const TeacherSettings = ({ onNavigate }) => {
             return <ProfileManagement onNavigate={onNavigate} shell="teacher" />;
         };
-`;var Na=`
+`;
+export const Na=`
         // 3. Danger Zone Component
         const DangerZonePanel = ({ onBack, onNavigate }) => {
             const [statusMessage, setStatusMessage] = useState(null);
@@ -5734,7 +6336,8 @@ ${va}
                 </AdminShell>
             );
         };
-`;var Ca=`
+`;
+export const Ca=`
         // --- HELPERS ---
         const resizeImageFile = (file, { maxWidth = 520, maxHeight = 650, quality = 0.82 } = {}) =>
             new Promise((resolve) => {
@@ -5804,7 +6407,8 @@ ${va}
             useEffect(() => { loadProfile(); }, []);
             return { profile, history, isLoading, refreshProfile: loadProfile, setProfile };
         };
-`;var wa=`
+`;
+export const wa=`
         // 2. Change Password Component
         const ChangePasswordPanel = ({ onNavigate, onBack, shell = 'admin' }) => {
             const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -5884,7 +6488,8 @@ ${va}
                 </ShellComponent>
             );
         };
-`;var Ta=`
+`;
+export const Ta=`
         // 1. Profile Editor Component
         const ProfileManagement = ({ onNavigate, onBack, showHistory, shell = 'admin' }) => {
             const { profile, history, refreshProfile, setProfile } = useProfileData();
@@ -6006,7 +6611,9 @@ ${va}
                 </ShellComponent>
             );
         };
-`;var Ea=`
+`;
+// Generated section exports
+export const Ea=`
 const StudentProfilePanel = ({ onNavigate, onBack }) => {
 const { profile, refreshProfile, setProfile } = useProfileData();
 const [statusMessage, setStatusMessage] = useState(null);
@@ -6381,7 +6988,8 @@ className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition
 </StudentShell>
 );
 };
-`;var Ze=`
+`;
+export const Ze=`
         const AdminSettingsModule = (() => {
 ${Ca}
 ${Ta}
@@ -6393,7 +7001,8 @@ ${Ea}
         return { AdminSettings, TeacherSettings, StudentSettings };
         })();
         const { AdminSettings, TeacherSettings, StudentSettings } = AdminSettingsModule;
-`;var et=`
+`;
+export const et=`
 const StudentClassView = ({ user, onNavigate }) => {
 const [profile, setProfile] = useState(null);
 const [pointsSummary, setPointsSummary] = useState({ points: 0, logs: [] });
@@ -6650,7 +7259,8 @@ Remind me later
 </StudentShell>
 );
 };
-`;var tt=`
+`;
+export const tt=`
     const TeacherDashboard = ({ assignment, subjectConfig, onNavigate }) => {
         const hasAssignment = assignment && assignment.level && assignment.subject;
         const [dashboard, setDashboard] = useState(null);
@@ -6690,6 +7300,8 @@ Remind me later
             if (level === 'SSC' && subject === 'physics') { chapterSource = sscPhysicsChapters; questionPrefix = \`\${level}-Physics-\`; }
             if (level === 'SSC' && subject === 'chemistry') { chapterSource = sscChemistryChapters; questionPrefix = \`\${level}-Chemistry-\`; }
             if (level === 'SSC' && subject === 'biology') { chapterSource = sscBiologyChapters; questionPrefix = \`\${level}-Biology-\`; }
+            if (level === 'SSC' && subject === 'general mathematics') { chapterSource = sscGeneralMathChapters; questionPrefix = \`\${level}-General Mathematics-\`; }
+            if (level === 'SSC' && subject === 'higher mathematics') { chapterSource = sscHigherMathChapters; questionPrefix = \`\${level}-Higher Mathematics-\`; }
             if (level === 'SSC' && subject === 'information and communication technology') { chapterSource = sscIctChapters; }
             if (level === 'SSC' && subject === 'bangladesh and global studies') { chapterSource = sscBangladeshGlobalChapters; }
             if (level === 'SSC' && subject === 'religion and moral education') {
@@ -6701,6 +7313,8 @@ Remind me later
             if (level === 'HSC' && subject === 'chemistry 2nd paper') { chapterSource = hscChemistry2ndChapters; questionPrefix = \`\${level}-Chemistry-2-\`; }
             if (level === 'HSC' && subject === 'biology 1st paper') { chapterSource = hscBiology1stChapters; questionPrefix = \`\${level}-Biology-1-\`; }
             if (level === 'HSC' && subject === 'biology 2nd paper') { chapterSource = hscBiology2ndChapters; questionPrefix = \`\${level}-Biology-2-\`; }
+            if (level === 'HSC' && subject === 'higher mathematics 1st paper') { chapterSource = hscHigherMath1Chapters; questionPrefix = \`\${level}-Higher Mathematics 1st Paper-\`; }
+            if (level === 'HSC' && subject === 'higher mathematics 2nd paper') { chapterSource = hscHigherMath2Chapters; questionPrefix = \`\${level}-Higher Mathematics 2nd Paper-\`; }
             if (level === 'HSC' && subject === 'information and communication technology') { chapterSource = hscIctChapters; }
 
             if (subject === 'bangla 1st paper') {
@@ -6717,7 +7331,8 @@ Remind me later
 
             const chapterCount = chapterSource.length;
             const topicCount = countTopics(chapterSource);
-            const creativeCount = countEntries(srijonshilQuestions, questionPrefix);
+            const isMathSubject = subject.includes('mathematics');
+            const creativeCount = isMathSubject ? countEntries(mathCqQuestions, questionPrefix) : countEntries(srijonshilQuestions, questionPrefix);
             const mcqCount = countEntries(mcqQuestions, questionPrefix);
             const englishCount = usesEnglish ? countEntries(englishQuestions, questionPrefix) : 0;
             const notesCount = countEntries(notesByItem, questionPrefix);
@@ -6850,7 +7465,7 @@ Remind me later
             </TeacherShell>
         );
     };
-`;var La=[["/","landing"],["/videos","public-videos"],["/videos/watch","public-video-player"],["/ssc","ssc-subjects"],["/hsc","hsc-subjects"],["/ssc/bangla-1st-paper","public-bangla-ssc-1st-paper"],["/hsc/bangla-1st-paper","public-bangla-hsc-1st-paper"],["/ssc/bangla-1st-paper/shahitto","public-bangla-ssc-shahitto"],["/hsc/bangla-1st-paper/shahitto","public-bangla-hsc-shahitto"],["/ssc/bangla-1st-paper/shohopath","public-bangla-ssc-shohopath"],["/hsc/bangla-1st-paper/shohopath","public-bangla-hsc-shohopath"],["/ssc/bangla-1st-paper/goddo","public-bangla-ssc-goddo"],["/ssc/bangla-1st-paper/poddo","public-bangla-ssc-poddo"],["/hsc/bangla-1st-paper/goddo","public-bangla-hsc-goddo"],["/hsc/bangla-1st-paper/poddo","public-bangla-hsc-poddo"],["/ssc/bangla-1st-paper/item/srijonshil","public-bangla-ssc-srijonshil"],["/hsc/bangla-1st-paper/item/srijonshil","public-bangla-hsc-srijonshil"],["/ssc/bangla-1st-paper/item/mcq","public-bangla-ssc-mcq"],["/hsc/bangla-1st-paper/item/mcq","public-bangla-hsc-mcq"],["/ssc/bangla-1st-paper/item","public-bangla-ssc-item"],["/hsc/bangla-1st-paper/item","public-bangla-hsc-item"],["/ssc/ict","public-ssc-ict"],["/ssc/ict/mcq","public-ssc-ict-mcq"],["/hsc/ict","public-hsc-ict"],["/hsc/ict/topics","public-hsc-ict-topics"],["/hsc/ict/topic","public-hsc-ict-topic"],["/hsc/ict/cq","public-hsc-ict-cq"],["/hsc/ict/mcq","public-hsc-ict-mcq"],["/ssc/physics","public-ssc-physics"],["/ssc/physics/topics","public-ssc-physics-topics"],["/ssc/physics/topic","public-ssc-physics-topic"],["/ssc/physics/cq","public-ssc-physics-cq"],["/ssc/physics/mcq","public-ssc-physics-mcq"],["/ssc/chemistry","public-ssc-chemistry"],["/ssc/chemistry/topics","public-ssc-chemistry-topics"],["/ssc/chemistry/topic","public-ssc-chemistry-topic"],["/ssc/chemistry/cq","public-ssc-chemistry-cq"],["/ssc/chemistry/mcq","public-ssc-chemistry-mcq"],["/ssc/biology","public-ssc-biology"],["/ssc/biology/topics","public-ssc-biology-topics"],["/ssc/biology/topic","public-ssc-biology-topic"],["/ssc/biology/cq","public-ssc-biology-cq"],["/ssc/biology/mcq","public-ssc-biology-mcq"],["/ssc/bangladesh-and-global-studies","public-ssc-bangladesh-global-studies"],["/ssc/bangladesh-and-global-studies/topics","public-ssc-bangladesh-global-studies-topics"],["/ssc/bangladesh-and-global-studies/topic","public-ssc-bangladesh-global-studies-topic"],["/ssc/bangladesh-and-global-studies/cq","public-ssc-bangladesh-global-studies-cq"],["/ssc/bangladesh-and-global-studies/mcq","public-ssc-bangladesh-global-studies-mcq"],["/ssc/religion-and-moral-education","public-ssc-religion"],["/ssc/religion-and-moral-education/chapters","public-ssc-religion-chapters"],["/ssc/religion-and-moral-education/topics","public-ssc-religion-topics"],["/ssc/religion-and-moral-education/topic","public-ssc-religion-topic"],["/ssc/religion-and-moral-education/cq","public-ssc-religion-cq"],["/ssc/religion-and-moral-education/mcq","public-ssc-religion-mcq"],["/hsc/physics-1st-paper","public-hsc-physics-1st"],["/hsc/physics-1st-paper/topics","public-hsc-physics-1st-topics"],["/hsc/physics-1st-paper/topic","public-hsc-physics-1st-topic"],["/hsc/physics-1st-paper/cq","public-hsc-physics-1st-cq"],["/hsc/physics-1st-paper/mcq","public-hsc-physics-1st-mcq"],["/hsc/physics-2nd-paper","public-hsc-physics-2nd"],["/hsc/physics-2nd-paper/topics","public-hsc-physics-2nd-topics"],["/hsc/physics-2nd-paper/topic","public-hsc-physics-2nd-topic"],["/hsc/physics-2nd-paper/cq","public-hsc-physics-2nd-cq"],["/hsc/physics-2nd-paper/mcq","public-hsc-physics-2nd-mcq"],["/hsc/chemistry-1st-paper","public-hsc-chemistry-1st"],["/hsc/chemistry-1st-paper/topics","public-hsc-chemistry-1st-topics"],["/hsc/chemistry-1st-paper/topic","public-hsc-chemistry-1st-topic"],["/hsc/chemistry-1st-paper/cq","public-hsc-chemistry-1st-cq"],["/hsc/chemistry-1st-paper/mcq","public-hsc-chemistry-1st-mcq"],["/hsc/chemistry-2nd-paper","public-hsc-chemistry-2nd"],["/hsc/chemistry-2nd-paper/topics","public-hsc-chemistry-2nd-topics"],["/hsc/chemistry-2nd-paper/topic","public-hsc-chemistry-2nd-topic"],["/hsc/chemistry-2nd-paper/cq","public-hsc-chemistry-2nd-cq"],["/hsc/chemistry-2nd-paper/mcq","public-hsc-chemistry-2nd-mcq"],["/hsc/biology-1st-paper","public-hsc-biology-1st"],["/hsc/biology-1st-paper/topics","public-hsc-biology-1st-topics"],["/hsc/biology-1st-paper/topic","public-hsc-biology-1st-topic"],["/hsc/biology-1st-paper/cq","public-hsc-biology-1st-cq"],["/hsc/biology-1st-paper/mcq","public-hsc-biology-1st-mcq"],["/hsc/biology-2nd-paper","public-hsc-biology-2nd"],["/hsc/biology-2nd-paper/topics","public-hsc-biology-2nd-topics"],["/hsc/biology-2nd-paper/topic","public-hsc-biology-2nd-topic"],["/hsc/biology-2nd-paper/cq","public-hsc-biology-2nd-cq"],["/hsc/biology-2nd-paper/mcq","public-hsc-biology-2nd-mcq"],["/hsc/english-1st-paper","public-english-hsc-1st-paper"],["/hsc/english-1st-paper/reading","public-english-hsc-reading"],["/hsc/english-1st-paper/writing","public-english-hsc-writing"],["/hsc/english-1st-paper/subtypes","public-english-hsc-subtypes"],["/hsc/english-1st-paper/questions","public-english-hsc-questions"],["/login","login"],["/setup","setup"],["/register","register"]];var Pa=[["/dashboard","dashboard"],["/dashboard/ssc","admin-groups-ssc"],["/dashboard/hsc","admin-groups-hsc"],["/dashboard/ssc/science","admin-ssc-science"],["/dashboard/ssc/humanities","admin-ssc-humanities"],["/dashboard/ssc/business-studies","admin-ssc-business-studies"],["/dashboard/ssc/ict","admin-ssc-ict"],["/dashboard/ssc/ict/mcq","admin-ssc-ict-mcq"],["/dashboard/hsc/ict","admin-hsc-ict"],["/dashboard/hsc/ict/topics","admin-hsc-ict-topics"],["/dashboard/hsc/ict/topic","admin-hsc-ict-topic"],["/dashboard/hsc/ict/cq","admin-hsc-ict-cq-types"],["/dashboard/hsc/ict/cq/questions","admin-hsc-ict-cq-questions"],["/dashboard/hsc/ict/mcq","admin-hsc-ict-mcq"],["/dashboard/ssc/physics","admin-ssc-physics"],["/dashboard/ssc/physics/topics","admin-ssc-physics-topics"],["/dashboard/ssc/physics/topic","admin-ssc-physics-topic"],["/dashboard/ssc/physics/cq","admin-ssc-physics-cq-types"],["/dashboard/ssc/physics/cq/questions","admin-ssc-physics-cq-questions"],["/dashboard/ssc/physics/mcq","admin-ssc-physics-mcq"],["/dashboard/ssc/chemistry","admin-ssc-chemistry"],["/dashboard/ssc/chemistry/topics","admin-ssc-chemistry-topics"],["/dashboard/ssc/chemistry/topic","admin-ssc-chemistry-topic"],["/dashboard/ssc/chemistry/cq","admin-ssc-chemistry-cq-types"],["/dashboard/ssc/chemistry/cq/questions","admin-ssc-chemistry-cq-questions"],["/dashboard/ssc/chemistry/mcq","admin-ssc-chemistry-mcq"],["/dashboard/ssc/biology","admin-ssc-biology"],["/dashboard/ssc/biology/topics","admin-ssc-biology-topics"],["/dashboard/ssc/biology/topic","admin-ssc-biology-topic"],["/dashboard/ssc/biology/cq","admin-ssc-biology-cq-types"],["/dashboard/ssc/biology/cq/questions","admin-ssc-biology-cq-questions"],["/dashboard/ssc/biology/mcq","admin-ssc-biology-mcq"],["/dashboard/ssc/bangladesh-and-global-studies","admin-ssc-bangladesh-global-studies"],["/dashboard/ssc/bangladesh-and-global-studies/topics","admin-ssc-bangladesh-global-studies-topics"],["/dashboard/ssc/bangladesh-and-global-studies/topic","admin-ssc-bangladesh-global-studies-topic"],["/dashboard/ssc/bangladesh-and-global-studies/cq","admin-ssc-bangladesh-global-studies-cq-types"],["/dashboard/ssc/bangladesh-and-global-studies/cq/questions","admin-ssc-bangladesh-global-studies-cq-questions"],["/dashboard/ssc/bangladesh-and-global-studies/mcq","admin-ssc-bangladesh-global-studies-mcq"],["/dashboard/ssc/religion-and-moral-education","admin-ssc-religion"],["/dashboard/ssc/religion-and-moral-education/chapters","admin-ssc-religion-chapters"],["/dashboard/ssc/religion-and-moral-education/topics","admin-ssc-religion-topics"],["/dashboard/ssc/religion-and-moral-education/topic","admin-ssc-religion-topic"],["/dashboard/ssc/religion-and-moral-education/cq","admin-ssc-religion-cq-types"],["/dashboard/ssc/religion-and-moral-education/cq/questions","admin-ssc-religion-cq-questions"],["/dashboard/ssc/religion-and-moral-education/mcq","admin-ssc-religion-mcq"],["/dashboard/hsc/physics-1st-paper","admin-hsc-physics-1st"],["/dashboard/hsc/physics-1st-paper/topics","admin-hsc-physics-1st-topics"],["/dashboard/hsc/physics-1st-paper/topic","admin-hsc-physics-1st-topic"],["/dashboard/hsc/physics-1st-paper/cq","admin-hsc-physics-1st-cq-types"],["/dashboard/hsc/physics-1st-paper/cq/questions","admin-hsc-physics-1st-cq-questions"],["/dashboard/hsc/physics-1st-paper/mcq","admin-hsc-physics-1st-mcq"],["/dashboard/hsc/physics-2nd-paper","admin-hsc-physics-2nd"],["/dashboard/hsc/physics-2nd-paper/topics","admin-hsc-physics-2nd-topics"],["/dashboard/hsc/physics-2nd-paper/topic","admin-hsc-physics-2nd-topic"],["/dashboard/hsc/physics-2nd-paper/cq","admin-hsc-physics-2nd-cq-types"],["/dashboard/hsc/physics-2nd-paper/cq/questions","admin-hsc-physics-2nd-cq-questions"],["/dashboard/hsc/physics-2nd-paper/mcq","admin-hsc-physics-2nd-mcq"],["/dashboard/hsc/chemistry-1st-paper","admin-hsc-chemistry-1st"],["/dashboard/hsc/chemistry-1st-paper/topics","admin-hsc-chemistry-1st-topics"],["/dashboard/hsc/chemistry-1st-paper/topic","admin-hsc-chemistry-1st-topic"],["/dashboard/hsc/chemistry-1st-paper/cq","admin-hsc-chemistry-1st-cq-types"],["/dashboard/hsc/chemistry-1st-paper/cq/questions","admin-hsc-chemistry-1st-cq-questions"],["/dashboard/hsc/chemistry-1st-paper/mcq","admin-hsc-chemistry-1st-mcq"],["/dashboard/hsc/chemistry-2nd-paper","admin-hsc-chemistry-2nd"],["/dashboard/hsc/chemistry-2nd-paper/topics","admin-hsc-chemistry-2nd-topics"],["/dashboard/hsc/chemistry-2nd-paper/topic","admin-hsc-chemistry-2nd-topic"],["/dashboard/hsc/chemistry-2nd-paper/cq","admin-hsc-chemistry-2nd-cq-types"],["/dashboard/hsc/chemistry-2nd-paper/cq/questions","admin-hsc-chemistry-2nd-cq-questions"],["/dashboard/hsc/chemistry-2nd-paper/mcq","admin-hsc-chemistry-2nd-mcq"],["/dashboard/hsc/biology-1st-paper","admin-hsc-biology-1st"],["/dashboard/hsc/biology-1st-paper/topics","admin-hsc-biology-1st-topics"],["/dashboard/hsc/biology-1st-paper/topic","admin-hsc-biology-1st-topic"],["/dashboard/hsc/biology-1st-paper/cq","admin-hsc-biology-1st-cq-types"],["/dashboard/hsc/biology-1st-paper/cq/questions","admin-hsc-biology-1st-cq-questions"],["/dashboard/hsc/biology-1st-paper/mcq","admin-hsc-biology-1st-mcq"],["/dashboard/hsc/biology-2nd-paper","admin-hsc-biology-2nd"],["/dashboard/hsc/biology-2nd-paper/topics","admin-hsc-biology-2nd-topics"],["/dashboard/hsc/biology-2nd-paper/topic","admin-hsc-biology-2nd-topic"],["/dashboard/hsc/biology-2nd-paper/cq","admin-hsc-biology-2nd-cq-types"],["/dashboard/hsc/biology-2nd-paper/cq/questions","admin-hsc-biology-2nd-cq-questions"],["/dashboard/hsc/biology-2nd-paper/mcq","admin-hsc-biology-2nd-mcq"],["/dashboard/hsc/science","admin-hsc-science"],["/dashboard/hsc/humanities","admin-hsc-humanities"],["/dashboard/hsc/business-studies","admin-hsc-business-studies"],["/dashboard/users","admin-users"],["/dashboard/users/profile","admin-user-profile"],["/dashboard/settings","admin-settings"],["/dashboard/ssc/bangla-1st-paper","bangla-ssc-1st-paper"],["/dashboard/hsc/bangla-1st-paper","bangla-hsc-1st-paper"],["/dashboard/ssc/bangla-1st-paper/shahitto","bangla-ssc-shahitto"],["/dashboard/hsc/bangla-1st-paper/shahitto","bangla-hsc-shahitto"],["/dashboard/ssc/bangla-1st-paper/shohopath","bangla-ssc-shohopath"],["/dashboard/hsc/bangla-1st-paper/shohopath","bangla-hsc-shohopath"],["/dashboard/ssc/bangla-1st-paper/goddo","bangla-ssc-goddo"],["/dashboard/ssc/bangla-1st-paper/poddo","bangla-ssc-poddo"],["/dashboard/hsc/bangla-1st-paper/goddo","bangla-hsc-goddo"],["/dashboard/hsc/bangla-1st-paper/poddo","bangla-hsc-poddo"],["/dashboard/ssc/bangla-1st-paper/item","bangla-ssc-item"],["/dashboard/hsc/bangla-1st-paper/item","bangla-hsc-item"],["/dashboard/ssc/bangla-1st-paper/item/srijonshil","bangla-ssc-srijonshil-types"],["/dashboard/hsc/bangla-1st-paper/item/srijonshil","bangla-hsc-srijonshil-types"],["/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions","bangla-ssc-srijonshil-questions"],["/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions","bangla-hsc-srijonshil-questions"],["/dashboard/ssc/bangla-1st-paper/item/mcq","bangla-ssc-mcq"],["/dashboard/hsc/bangla-1st-paper/item/mcq","bangla-hsc-mcq"],["/dashboard/hsc/english-1st-paper","english-hsc-1st-paper"],["/dashboard/hsc/english-1st-paper/reading","english-hsc-reading"],["/dashboard/hsc/english-1st-paper/writing","english-hsc-writing"],["/dashboard/hsc/english-1st-paper/subtypes","english-hsc-subtypes"],["/dashboard/hsc/english-1st-paper/questions","english-hsc-questions"]];var ka=[["/admin/dashboard","dashboard"],["/dashboard/ssc/bangla-1st-paper/natok","bangla-ssc-shohopath"],["/dashboard/ssc/bangla-1st-paper/upannyas","bangla-ssc-shohopath"],["/dashboard/hsc/bangla-1st-paper/natok","bangla-hsc-shohopath"],["/dashboard/hsc/bangla-1st-paper/upannyas","bangla-hsc-shohopath"]];var Ia=[["/student","student-class"],["/student/class","student-class"],["/student/settings","student-settings"]];var Ra=[];var ja=[...La,...Pa,...Ia,...Ra],st=[...ka,...ja].sort((e,t)=>t[0].length-e[0].length),Ba=ja.reduce((e,[t,s])=>(e[s]=t,e),{}),Ma=e=>{for(let[t,s]of st)if(e.startsWith(t))return s;return"landing"};var On=JSON.stringify(Ba),Fn=JSON.stringify(st),qa=`
+`;var La=[["/","landing"],["/videos","public-videos"],["/videos/watch","public-video-player"],["/ssc","ssc-subjects"],["/hsc","hsc-subjects"],["/ssc/bangla-1st-paper","public-bangla-ssc-1st-paper"],["/hsc/bangla-1st-paper","public-bangla-hsc-1st-paper"],["/ssc/bangla-1st-paper/shahitto","public-bangla-ssc-shahitto"],["/hsc/bangla-1st-paper/shahitto","public-bangla-hsc-shahitto"],["/ssc/bangla-1st-paper/shohopath","public-bangla-ssc-shohopath"],["/hsc/bangla-1st-paper/shohopath","public-bangla-hsc-shohopath"],["/ssc/bangla-1st-paper/goddo","public-bangla-ssc-goddo"],["/ssc/bangla-1st-paper/poddo","public-bangla-ssc-poddo"],["/hsc/bangla-1st-paper/goddo","public-bangla-hsc-goddo"],["/hsc/bangla-1st-paper/poddo","public-bangla-hsc-poddo"],["/ssc/bangla-1st-paper/item/srijonshil","public-bangla-ssc-srijonshil"],["/hsc/bangla-1st-paper/item/srijonshil","public-bangla-hsc-srijonshil"],["/ssc/bangla-1st-paper/item/mcq","public-bangla-ssc-mcq"],["/hsc/bangla-1st-paper/item/mcq","public-bangla-hsc-mcq"],["/ssc/bangla-1st-paper/item","public-bangla-ssc-item"],["/hsc/bangla-1st-paper/item","public-bangla-hsc-item"],["/ssc/ict","public-ssc-ict"],["/ssc/ict/mcq","public-ssc-ict-mcq"],["/hsc/ict","public-hsc-ict"],["/hsc/ict/topics","public-hsc-ict-topics"],["/hsc/ict/topic","public-hsc-ict-topic"],["/hsc/ict/cq","public-hsc-ict-cq"],["/hsc/ict/mcq","public-hsc-ict-mcq"],["/ssc/physics","public-ssc-physics"],["/ssc/physics/topics","public-ssc-physics-topics"],["/ssc/physics/topic","public-ssc-physics-topic"],["/ssc/physics/cq","public-ssc-physics-cq"],["/ssc/physics/mcq","public-ssc-physics-mcq"],["/ssc/chemistry","public-ssc-chemistry"],["/ssc/chemistry/topics","public-ssc-chemistry-topics"],["/ssc/chemistry/topic","public-ssc-chemistry-topic"],["/ssc/chemistry/cq","public-ssc-chemistry-cq"],["/ssc/chemistry/mcq","public-ssc-chemistry-mcq"],["/ssc/biology","public-ssc-biology"],["/ssc/biology/topics","public-ssc-biology-topics"],["/ssc/biology/topic","public-ssc-biology-topic"],["/ssc/biology/cq","public-ssc-biology-cq"],["/ssc/biology/mcq","public-ssc-biology-mcq"],["/ssc/bangladesh-and-global-studies","public-ssc-bangladesh-global-studies"],["/ssc/bangladesh-and-global-studies/topics","public-ssc-bangladesh-global-studies-topics"],["/ssc/bangladesh-and-global-studies/topic","public-ssc-bangladesh-global-studies-topic"],["/ssc/bangladesh-and-global-studies/cq","public-ssc-bangladesh-global-studies-cq"],["/ssc/bangladesh-and-global-studies/mcq","public-ssc-bangladesh-global-studies-mcq"],["/ssc/religion-and-moral-education","public-ssc-religion"],["/ssc/religion-and-moral-education/chapters","public-ssc-religion-chapters"],["/ssc/religion-and-moral-education/topics","public-ssc-religion-topics"],["/ssc/religion-and-moral-education/topic","public-ssc-religion-topic"],["/ssc/religion-and-moral-education/cq","public-ssc-religion-cq"],["/ssc/religion-and-moral-education/mcq","public-ssc-religion-mcq"],["/hsc/physics-1st-paper","public-hsc-physics-1st"],["/hsc/physics-1st-paper/topics","public-hsc-physics-1st-topics"],["/hsc/physics-1st-paper/topic","public-hsc-physics-1st-topic"],["/hsc/physics-1st-paper/cq","public-hsc-physics-1st-cq"],["/hsc/physics-1st-paper/mcq","public-hsc-physics-1st-mcq"],["/hsc/physics-2nd-paper","public-hsc-physics-2nd"],["/hsc/physics-2nd-paper/topics","public-hsc-physics-2nd-topics"],["/hsc/physics-2nd-paper/topic","public-hsc-physics-2nd-topic"],["/hsc/physics-2nd-paper/cq","public-hsc-physics-2nd-cq"],["/hsc/physics-2nd-paper/mcq","public-hsc-physics-2nd-mcq"],["/hsc/chemistry-1st-paper","public-hsc-chemistry-1st"],["/hsc/chemistry-1st-paper/topics","public-hsc-chemistry-1st-topics"],["/hsc/chemistry-1st-paper/topic","public-hsc-chemistry-1st-topic"],["/hsc/chemistry-1st-paper/cq","public-hsc-chemistry-1st-cq"],["/hsc/chemistry-1st-paper/mcq","public-hsc-chemistry-1st-mcq"],["/hsc/chemistry-2nd-paper","public-hsc-chemistry-2nd"],["/hsc/chemistry-2nd-paper/topics","public-hsc-chemistry-2nd-topics"],["/hsc/chemistry-2nd-paper/topic","public-hsc-chemistry-2nd-topic"],["/hsc/chemistry-2nd-paper/cq","public-hsc-chemistry-2nd-cq"],["/hsc/chemistry-2nd-paper/mcq","public-hsc-chemistry-2nd-mcq"],["/hsc/biology-1st-paper","public-hsc-biology-1st"],["/hsc/biology-1st-paper/topics","public-hsc-biology-1st-topics"],["/hsc/biology-1st-paper/topic","public-hsc-biology-1st-topic"],["/hsc/biology-1st-paper/cq","public-hsc-biology-1st-cq"],["/hsc/biology-1st-paper/mcq","public-hsc-biology-1st-mcq"],["/hsc/biology-2nd-paper","public-hsc-biology-2nd"],["/hsc/biology-2nd-paper/topics","public-hsc-biology-2nd-topics"],["/hsc/biology-2nd-paper/topic","public-hsc-biology-2nd-topic"],["/hsc/biology-2nd-paper/cq","public-hsc-biology-2nd-cq"],["/hsc/biology-2nd-paper/mcq","public-hsc-biology-2nd-mcq"],["/ssc/general-mathematics","public-ssc-general-math"],["/ssc/general-mathematics/chapter","public-ssc-general-math-chapter"],["/ssc/general-mathematics/cq","public-ssc-general-math-cq"],["/ssc/general-mathematics/mcq","public-ssc-general-math-mcq"],["/ssc/general-mathematics/practice","public-ssc-general-math-practice"],["/ssc/higher-mathematics","public-ssc-higher-math"],["/ssc/higher-mathematics/chapter","public-ssc-higher-math-chapter"],["/ssc/higher-mathematics/cq","public-ssc-higher-math-cq"],["/ssc/higher-mathematics/mcq","public-ssc-higher-math-mcq"],["/ssc/higher-mathematics/practice","public-ssc-higher-math-practice"],["/hsc/higher-mathematics-1st-paper","public-hsc-higher-math-1st"],["/hsc/higher-mathematics-1st-paper/chapter","public-hsc-higher-math-1st-chapter"],["/hsc/higher-mathematics-1st-paper/cq","public-hsc-higher-math-1st-cq"],["/hsc/higher-mathematics-1st-paper/mcq","public-hsc-higher-math-1st-mcq"],["/hsc/higher-mathematics-1st-paper/practice","public-hsc-higher-math-1st-practice"],["/hsc/higher-mathematics-2nd-paper","public-hsc-higher-math-2nd"],["/hsc/higher-mathematics-2nd-paper/chapter","public-hsc-higher-math-2nd-chapter"],["/hsc/higher-mathematics-2nd-paper/cq","public-hsc-higher-math-2nd-cq"],["/hsc/higher-mathematics-2nd-paper/mcq","public-hsc-higher-math-2nd-mcq"],["/hsc/higher-mathematics-2nd-paper/practice","public-hsc-higher-math-2nd-practice"],["/hsc/english-1st-paper","public-english-hsc-1st-paper"],["/hsc/english-1st-paper/reading","public-english-hsc-reading"],["/hsc/english-1st-paper/writing","public-english-hsc-writing"],["/hsc/english-1st-paper/subtypes","public-english-hsc-subtypes"],["/hsc/english-1st-paper/questions","public-english-hsc-questions"],["/login","login"],["/setup","setup"],["/register","register"]];var Pa=[["/dashboard","dashboard"],["/dashboard/ssc","admin-groups-ssc"],["/dashboard/hsc","admin-groups-hsc"],["/dashboard/ssc/science","admin-ssc-science"],["/dashboard/ssc/humanities","admin-ssc-humanities"],["/dashboard/ssc/business-studies","admin-ssc-business-studies"],["/dashboard/ssc/ict","admin-ssc-ict"],["/dashboard/ssc/ict/mcq","admin-ssc-ict-mcq"],["/dashboard/hsc/ict","admin-hsc-ict"],["/dashboard/hsc/ict/topics","admin-hsc-ict-topics"],["/dashboard/hsc/ict/topic","admin-hsc-ict-topic"],["/dashboard/hsc/ict/cq","admin-hsc-ict-cq-types"],["/dashboard/hsc/ict/cq/questions","admin-hsc-ict-cq-questions"],["/dashboard/hsc/ict/mcq","admin-hsc-ict-mcq"],["/dashboard/ssc/physics","admin-ssc-physics"],["/dashboard/ssc/physics/topics","admin-ssc-physics-topics"],["/dashboard/ssc/physics/topic","admin-ssc-physics-topic"],["/dashboard/ssc/physics/cq","admin-ssc-physics-cq-types"],["/dashboard/ssc/physics/cq/questions","admin-ssc-physics-cq-questions"],["/dashboard/ssc/physics/mcq","admin-ssc-physics-mcq"],["/dashboard/ssc/chemistry","admin-ssc-chemistry"],["/dashboard/ssc/chemistry/topics","admin-ssc-chemistry-topics"],["/dashboard/ssc/chemistry/topic","admin-ssc-chemistry-topic"],["/dashboard/ssc/chemistry/cq","admin-ssc-chemistry-cq-types"],["/dashboard/ssc/chemistry/cq/questions","admin-ssc-chemistry-cq-questions"],["/dashboard/ssc/chemistry/mcq","admin-ssc-chemistry-mcq"],["/dashboard/ssc/biology","admin-ssc-biology"],["/dashboard/ssc/biology/topics","admin-ssc-biology-topics"],["/dashboard/ssc/biology/topic","admin-ssc-biology-topic"],["/dashboard/ssc/biology/cq","admin-ssc-biology-cq-types"],["/dashboard/ssc/biology/cq/questions","admin-ssc-biology-cq-questions"],["/dashboard/ssc/biology/mcq","admin-ssc-biology-mcq"],["/dashboard/ssc/bangladesh-and-global-studies","admin-ssc-bangladesh-global-studies"],["/dashboard/ssc/bangladesh-and-global-studies/topics","admin-ssc-bangladesh-global-studies-topics"],["/dashboard/ssc/bangladesh-and-global-studies/topic","admin-ssc-bangladesh-global-studies-topic"],["/dashboard/ssc/bangladesh-and-global-studies/cq","admin-ssc-bangladesh-global-studies-cq-types"],["/dashboard/ssc/bangladesh-and-global-studies/cq/questions","admin-ssc-bangladesh-global-studies-cq-questions"],["/dashboard/ssc/bangladesh-and-global-studies/mcq","admin-ssc-bangladesh-global-studies-mcq"],["/dashboard/ssc/religion-and-moral-education","admin-ssc-religion"],["/dashboard/ssc/religion-and-moral-education/chapters","admin-ssc-religion-chapters"],["/dashboard/ssc/religion-and-moral-education/topics","admin-ssc-religion-topics"],["/dashboard/ssc/religion-and-moral-education/topic","admin-ssc-religion-topic"],["/dashboard/ssc/religion-and-moral-education/cq","admin-ssc-religion-cq-types"],["/dashboard/ssc/religion-and-moral-education/cq/questions","admin-ssc-religion-cq-questions"],["/dashboard/ssc/religion-and-moral-education/mcq","admin-ssc-religion-mcq"],["/dashboard/hsc/physics-1st-paper","admin-hsc-physics-1st"],["/dashboard/hsc/physics-1st-paper/topics","admin-hsc-physics-1st-topics"],["/dashboard/hsc/physics-1st-paper/topic","admin-hsc-physics-1st-topic"],["/dashboard/hsc/physics-1st-paper/cq","admin-hsc-physics-1st-cq-types"],["/dashboard/hsc/physics-1st-paper/cq/questions","admin-hsc-physics-1st-cq-questions"],["/dashboard/hsc/physics-1st-paper/mcq","admin-hsc-physics-1st-mcq"],["/dashboard/hsc/physics-2nd-paper","admin-hsc-physics-2nd"],["/dashboard/hsc/physics-2nd-paper/topics","admin-hsc-physics-2nd-topics"],["/dashboard/hsc/physics-2nd-paper/topic","admin-hsc-physics-2nd-topic"],["/dashboard/hsc/physics-2nd-paper/cq","admin-hsc-physics-2nd-cq-types"],["/dashboard/hsc/physics-2nd-paper/cq/questions","admin-hsc-physics-2nd-cq-questions"],["/dashboard/hsc/physics-2nd-paper/mcq","admin-hsc-physics-2nd-mcq"],["/dashboard/hsc/chemistry-1st-paper","admin-hsc-chemistry-1st"],["/dashboard/hsc/chemistry-1st-paper/topics","admin-hsc-chemistry-1st-topics"],["/dashboard/hsc/chemistry-1st-paper/topic","admin-hsc-chemistry-1st-topic"],["/dashboard/hsc/chemistry-1st-paper/cq","admin-hsc-chemistry-1st-cq-types"],["/dashboard/hsc/chemistry-1st-paper/cq/questions","admin-hsc-chemistry-1st-cq-questions"],["/dashboard/hsc/chemistry-1st-paper/mcq","admin-hsc-chemistry-1st-mcq"],["/dashboard/hsc/chemistry-2nd-paper","admin-hsc-chemistry-2nd"],["/dashboard/hsc/chemistry-2nd-paper/topics","admin-hsc-chemistry-2nd-topics"],["/dashboard/hsc/chemistry-2nd-paper/topic","admin-hsc-chemistry-2nd-topic"],["/dashboard/hsc/chemistry-2nd-paper/cq","admin-hsc-chemistry-2nd-cq-types"],["/dashboard/hsc/chemistry-2nd-paper/cq/questions","admin-hsc-chemistry-2nd-cq-questions"],["/dashboard/hsc/chemistry-2nd-paper/mcq","admin-hsc-chemistry-2nd-mcq"],["/dashboard/hsc/biology-1st-paper","admin-hsc-biology-1st"],["/dashboard/hsc/biology-1st-paper/topics","admin-hsc-biology-1st-topics"],["/dashboard/hsc/biology-1st-paper/topic","admin-hsc-biology-1st-topic"],["/dashboard/hsc/biology-1st-paper/cq","admin-hsc-biology-1st-cq-types"],["/dashboard/hsc/biology-1st-paper/cq/questions","admin-hsc-biology-1st-cq-questions"],["/dashboard/hsc/biology-1st-paper/mcq","admin-hsc-biology-1st-mcq"],["/dashboard/hsc/biology-2nd-paper","admin-hsc-biology-2nd"],["/dashboard/hsc/biology-2nd-paper/topics","admin-hsc-biology-2nd-topics"],["/dashboard/hsc/biology-2nd-paper/topic","admin-hsc-biology-2nd-topic"],["/dashboard/hsc/biology-2nd-paper/cq","admin-hsc-biology-2nd-cq-types"],["/dashboard/hsc/biology-2nd-paper/cq/questions","admin-hsc-biology-2nd-cq-questions"],["/dashboard/hsc/biology-2nd-paper/mcq","admin-hsc-biology-2nd-mcq"],["/dashboard/ssc/general-mathematics","admin-ssc-general-math"],["/dashboard/ssc/general-mathematics/chapter","admin-ssc-general-math-chapter"],["/dashboard/ssc/general-mathematics/cq","admin-ssc-general-math-cq"],["/dashboard/ssc/general-mathematics/mcq","admin-ssc-general-math-mcq"],["/dashboard/ssc/general-mathematics/practice","admin-ssc-general-math-practice"],["/dashboard/ssc/higher-mathematics","admin-ssc-higher-math"],["/dashboard/ssc/higher-mathematics/chapter","admin-ssc-higher-math-chapter"],["/dashboard/ssc/higher-mathematics/cq","admin-ssc-higher-math-cq"],["/dashboard/ssc/higher-mathematics/mcq","admin-ssc-higher-math-mcq"],["/dashboard/ssc/higher-mathematics/practice","admin-ssc-higher-math-practice"],["/dashboard/hsc/higher-mathematics-1st-paper","admin-hsc-higher-math-1st"],["/dashboard/hsc/higher-mathematics-1st-paper/chapter","admin-hsc-higher-math-1st-chapter"],["/dashboard/hsc/higher-mathematics-1st-paper/cq","admin-hsc-higher-math-1st-cq"],["/dashboard/hsc/higher-mathematics-1st-paper/mcq","admin-hsc-higher-math-1st-mcq"],["/dashboard/hsc/higher-mathematics-1st-paper/practice","admin-hsc-higher-math-1st-practice"],["/dashboard/hsc/higher-mathematics-2nd-paper","admin-hsc-higher-math-2nd"],["/dashboard/hsc/higher-mathematics-2nd-paper/chapter","admin-hsc-higher-math-2nd-chapter"],["/dashboard/hsc/higher-mathematics-2nd-paper/cq","admin-hsc-higher-math-2nd-cq"],["/dashboard/hsc/higher-mathematics-2nd-paper/mcq","admin-hsc-higher-math-2nd-mcq"],["/dashboard/hsc/higher-mathematics-2nd-paper/practice","admin-hsc-higher-math-2nd-practice"],["/dashboard/hsc/science","admin-hsc-science"],["/dashboard/hsc/humanities","admin-hsc-humanities"],["/dashboard/hsc/business-studies","admin-hsc-business-studies"],["/dashboard/users","admin-users"],["/dashboard/users/profile","admin-user-profile"],["/dashboard/settings","admin-settings"],["/dashboard/ssc/bangla-1st-paper","bangla-ssc-1st-paper"],["/dashboard/hsc/bangla-1st-paper","bangla-hsc-1st-paper"],["/dashboard/ssc/bangla-1st-paper/shahitto","bangla-ssc-shahitto"],["/dashboard/hsc/bangla-1st-paper/shahitto","bangla-hsc-shahitto"],["/dashboard/ssc/bangla-1st-paper/shohopath","bangla-ssc-shohopath"],["/dashboard/hsc/bangla-1st-paper/shohopath","bangla-hsc-shohopath"],["/dashboard/ssc/bangla-1st-paper/goddo","bangla-ssc-goddo"],["/dashboard/ssc/bangla-1st-paper/poddo","bangla-ssc-poddo"],["/dashboard/hsc/bangla-1st-paper/goddo","bangla-hsc-goddo"],["/dashboard/hsc/bangla-1st-paper/poddo","bangla-hsc-poddo"],["/dashboard/ssc/bangla-1st-paper/item","bangla-ssc-item"],["/dashboard/hsc/bangla-1st-paper/item","bangla-hsc-item"],["/dashboard/ssc/bangla-1st-paper/item/srijonshil","bangla-ssc-srijonshil-types"],["/dashboard/hsc/bangla-1st-paper/item/srijonshil","bangla-hsc-srijonshil-types"],["/dashboard/ssc/bangla-1st-paper/item/srijonshil/questions","bangla-ssc-srijonshil-questions"],["/dashboard/hsc/bangla-1st-paper/item/srijonshil/questions","bangla-hsc-srijonshil-questions"],["/dashboard/ssc/bangla-1st-paper/item/mcq","bangla-ssc-mcq"],["/dashboard/hsc/bangla-1st-paper/item/mcq","bangla-hsc-mcq"],["/dashboard/hsc/english-1st-paper","english-hsc-1st-paper"],["/dashboard/hsc/english-1st-paper/reading","english-hsc-reading"],["/dashboard/hsc/english-1st-paper/writing","english-hsc-writing"],["/dashboard/hsc/english-1st-paper/subtypes","english-hsc-subtypes"],["/dashboard/hsc/english-1st-paper/questions","english-hsc-questions"]];var ka=[["/admin/dashboard","dashboard"],["/dashboard/ssc/bangla-1st-paper/natok","bangla-ssc-shohopath"],["/dashboard/ssc/bangla-1st-paper/upannyas","bangla-ssc-shohopath"],["/dashboard/hsc/bangla-1st-paper/natok","bangla-hsc-shohopath"],["/dashboard/hsc/bangla-1st-paper/upannyas","bangla-hsc-shohopath"]];var Ia=[["/student","student-class"],["/student/class","student-class"],["/student/settings","student-settings"]];var Ra=[];var ja=[...La,...Pa,...Ia,...Ra],st=[...ka,...ja].sort((e,t)=>t[0].length-e[0].length),Ba=ja.reduce((e,[t,s])=>(e[s]=t,e),{}),Ma=e=>{for(let[t,s]of st)if(e.startsWith(t))return s;return"landing"};var On=JSON.stringify(Ba),Fn=JSON.stringify(st),qa=`
             const viewToPath = ${On};
             const routeEntries = ${Fn};
             const getViewFromPath = (path) => {
@@ -6861,14 +7476,16 @@ Remind me later
                 }
                 return 'landing';
             };
-`;var Aa=`
+`;
+export const Aa=`
             const initialView = window.__INITIAL_VIEW || getViewFromPath(window.location.pathname);
             const [view, setView] = useState(initialView);
             const [isLoading, setIsLoading] = useState(true);
             const [user, setUser] = useState(null);
             const [hasAdmin, setHasAdmin] = useState(null);
             const [contentLoaded, setContentLoaded] = useState(false);
-`;var Da=`
+`;
+export const Da=`
             const getQuestionKey = (classLabel, categoryName, itemName, extra = '') => {
                 return [classLabel, categoryName || 'general', itemName || 'general', extra].join('-');
             };
@@ -6882,7 +7499,9 @@ Remind me later
                 const label = religion?.label || religion?.key || '';
                 return ['Religion and Moral Education', label].filter(Boolean).join(' - ');
             };
-`;var Ka=`
+`;
+// Generated section exports
+export const Ka=`
             const teacherSubjectRoutes = {
                 SSC: {
                     'bangla 1st paper': {
@@ -6940,6 +7559,28 @@ Remind me later
                             'admin-ssc-biology-mcq'
                         ],
                         description: 'Manage SSC Biology chapters, topics, and questions.'
+                    },
+                    'general mathematics': {
+                        route: 'admin-ssc-general-math',
+                        views: [
+                            'admin-ssc-general-math',
+                            'admin-ssc-general-math-chapter',
+                            'admin-ssc-general-math-cq',
+                            'admin-ssc-general-math-mcq',
+                            'admin-ssc-general-math-practice'
+                        ],
+                        description: 'Manage SSC General Mathematics chapters and question sets.'
+                    },
+                    'higher mathematics': {
+                        route: 'admin-ssc-higher-math',
+                        views: [
+                            'admin-ssc-higher-math',
+                            'admin-ssc-higher-math-chapter',
+                            'admin-ssc-higher-math-cq',
+                            'admin-ssc-higher-math-mcq',
+                            'admin-ssc-higher-math-practice'
+                        ],
+                        description: 'Manage SSC Higher Mathematics chapters and question sets.'
                     },
                     'bangladesh and global studies': {
                         route: 'admin-ssc-bangladesh-global-studies',
@@ -7005,6 +7646,28 @@ Remind me later
                             'admin-hsc-physics-1st-mcq'
                         ],
                         description: 'Manage HSC Physics 1st Paper chapters, topics, and questions.'
+                    },
+                    'higher mathematics 1st paper': {
+                        route: 'admin-hsc-higher-math-1st',
+                        views: [
+                            'admin-hsc-higher-math-1st',
+                            'admin-hsc-higher-math-1st-chapter',
+                            'admin-hsc-higher-math-1st-cq',
+                            'admin-hsc-higher-math-1st-mcq',
+                            'admin-hsc-higher-math-1st-practice'
+                        ],
+                        description: 'Manage HSC Higher Mathematics 1st Paper chapters and question sets.'
+                    },
+                    'higher mathematics 2nd paper': {
+                        route: 'admin-hsc-higher-math-2nd',
+                        views: [
+                            'admin-hsc-higher-math-2nd',
+                            'admin-hsc-higher-math-2nd-chapter',
+                            'admin-hsc-higher-math-2nd-cq',
+                            'admin-hsc-higher-math-2nd-mcq',
+                            'admin-hsc-higher-math-2nd-practice'
+                        ],
+                        description: 'Manage HSC Higher Mathematics 2nd Paper chapters and question sets.'
                     },
                     'physics 2nd paper': {
                         route: 'admin-hsc-physics-2nd',
@@ -7109,6 +7772,8 @@ Remind me later
                 hscShohopathItems: [],
                 sscIctChapters: [],
                 hscIctChapters: [],
+                sscGeneralMathChapters: [],
+                sscHigherMathChapters: [],
                 sscPhysicsChapters: [],
                 sscChemistryChapters: [],
                 sscBiologyChapters: [],
@@ -7119,6 +7784,8 @@ Remind me later
                     Buddhism: [],
                     Christianity: []
                 },
+                hscHigherMath1Chapters: [],
+                hscHigherMath2Chapters: [],
                 hscPhysics1stChapters: [],
                 hscPhysics2ndChapters: [],
                 hscChemistry1stChapters: [],
@@ -7126,10 +7793,12 @@ Remind me later
                 hscBiology1stChapters: [],
                 hscBiology2ndChapters: [],
                 srijonshilQuestions: {},
+                mathCqQuestions: {},
                 mcqQuestions: {},
                 englishQuestions: {},
                 notesByItem: {},
-                videosByItem: {}
+                videosByItem: {},
+                practiceByItem: {}
             };
 
             const applyContentState = (content) => {
@@ -7142,6 +7811,8 @@ Remind me later
                 setHscShohopathItems(Array.isArray(merged.hscShohopathItems) ? merged.hscShohopathItems : []);
                 setSscIctChapters(Array.isArray(merged.sscIctChapters) ? merged.sscIctChapters : []);
                 setHscIctChapters(Array.isArray(merged.hscIctChapters) ? merged.hscIctChapters : []);
+                setSscGeneralMathChapters(Array.isArray(merged.sscGeneralMathChapters) ? merged.sscGeneralMathChapters : []);
+                setSscHigherMathChapters(Array.isArray(merged.sscHigherMathChapters) ? merged.sscHigherMathChapters : []);
                 setSscPhysicsChapters(Array.isArray(merged.sscPhysicsChapters) ? merged.sscPhysicsChapters : []);
                 setSscChemistryChapters(Array.isArray(merged.sscChemistryChapters) ? merged.sscChemistryChapters : []);
                 setSscBiologyChapters(Array.isArray(merged.sscBiologyChapters) ? merged.sscBiologyChapters : []);
@@ -7159,6 +7830,8 @@ Remind me later
                     Christianity: [],
                     ...religionChapters
                 });
+                setHscHigherMath1Chapters(Array.isArray(merged.hscHigherMath1Chapters) ? merged.hscHigherMath1Chapters : []);
+                setHscHigherMath2Chapters(Array.isArray(merged.hscHigherMath2Chapters) ? merged.hscHigherMath2Chapters : []);
                 setHscPhysics1stChapters(Array.isArray(merged.hscPhysics1stChapters) ? merged.hscPhysics1stChapters : []);
                 setHscPhysics2ndChapters(Array.isArray(merged.hscPhysics2ndChapters) ? merged.hscPhysics2ndChapters : []);
                 setHscChemistry1stChapters(Array.isArray(merged.hscChemistry1stChapters) ? merged.hscChemistry1stChapters : []);
@@ -7166,12 +7839,15 @@ Remind me later
                 setHscBiology1stChapters(Array.isArray(merged.hscBiology1stChapters) ? merged.hscBiology1stChapters : []);
                 setHscBiology2ndChapters(Array.isArray(merged.hscBiology2ndChapters) ? merged.hscBiology2ndChapters : []);
                 setSrijonshilQuestions(merged.srijonshilQuestions || {});
+                setMathCqQuestions(merged.mathCqQuestions || {});
                 setMcqQuestions(merged.mcqQuestions || {});
                 setEnglishQuestions(merged.englishQuestions || {});
                 setNotesByItem(merged.notesByItem || {});
                 setVideosByItem(merged.videosByItem || {});
+                setPracticeByItem(merged.practiceByItem || {});
             };
-`;var Ha=`
+`;
+export const Ha=`
             const englishQuestionKey = getEnglishQuestionKey(
                 selectedEnglishSection,
                 selectedEnglishType?.key,
@@ -7186,7 +7862,8 @@ Remind me later
                 : 'English 1st Paper questions';
 
             const activeScienceTopicKey = getScienceTopicKey(selectedScienceChapter?.id, selectedScienceTopic?.id);
-`;var Ua=`
+`;
+export const Ua=`
             const addQuestionEntry = (setter, key) => (entry) => {
                 setter((prev) => {
                     const updated = prev[key] ? [...prev[key]] : [];
@@ -7210,7 +7887,8 @@ Remind me later
                     return { ...prev, [key]: updated };
                 });
             };
-`;var Qa=`
+`;
+export const Qa=`
             const addStringItem = (setItems) => (value) => {
                 setItems((prev) => [...prev, value]);
             };
@@ -7348,7 +8026,8 @@ Remind me later
                     )
                 }));
             };
-`;var Oa=`
+`;
+export const Oa=`
             const syncRoutesFromLocation = () => {
                 const { pathname } = window.location;
                 setView(getViewFromPath(pathname));
@@ -7371,7 +8050,8 @@ Remind me later
                 window.addEventListener('popstate', handlePopState);
                 return () => window.removeEventListener('popstate', handlePopState);
             }, []);
-`;var Fa=`
+`;
+export const Fa=`
             // Ref to track if we are currently fetching data (to prevent auto-save loops)
             const isFetchingRef = useRef(false);
 
@@ -7492,6 +8172,16 @@ Remind me later
                 return null;
             };
 
+            const getMathChapterList = (selection) => {
+                if (!selection) return null;
+                const { classLabel, subjectLabel } = selection;
+                if (classLabel === 'SSC' && subjectLabel === 'General Mathematics') return sscGeneralMathChapters;
+                if (classLabel === 'SSC' && subjectLabel === 'Higher Mathematics') return sscHigherMathChapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Higher Mathematics 1st Paper') return hscHigherMath1Chapters;
+                if (classLabel === 'HSC' && subjectLabel === 'Higher Mathematics 2nd Paper') return hscHigherMath2Chapters;
+                return null;
+            };
+
             useEffect(() => {
                 if (!selectedScienceChapter || !selectedScienceSubject) return;
                 const chapters = getScienceChapterList(selectedScienceSubject);
@@ -7535,6 +8225,27 @@ Remind me later
             ]);
 
             useEffect(() => {
+                if (!selectedMathChapter || !selectedMathSubject) return;
+                const chapters = getMathChapterList(selectedMathSubject);
+                if (!chapters) return;
+                const refreshedChapter = chapters.find((chapter) => chapter.id === selectedMathChapter.id);
+                if (!refreshedChapter) {
+                    setSelectedMathChapter(null);
+                    return;
+                }
+                if (refreshedChapter !== selectedMathChapter) {
+                    setSelectedMathChapter(refreshedChapter);
+                }
+            }, [
+                selectedMathChapter,
+                selectedMathSubject,
+                sscGeneralMathChapters,
+                sscHigherMathChapters,
+                hscHigherMath1Chapters,
+                hscHigherMath2Chapters
+            ]);
+
+            useEffect(() => {
                 if (!contentLoaded) return;
                 if (!user) return;
                 const canEditContent = user.role === 'admin' || (user.role === 'teacher' && user.assignment);
@@ -7555,11 +8266,15 @@ Remind me later
                     hscShohopathItems,
                     sscIctChapters,
                     hscIctChapters,
+                    sscGeneralMathChapters,
+                    sscHigherMathChapters,
                     sscPhysicsChapters,
                     sscChemistryChapters,
                     sscBiologyChapters,
                     sscBangladeshGlobalChapters,
                     sscReligionChapters,
+                    hscHigherMath1Chapters,
+                    hscHigherMath2Chapters,
                     hscPhysics1stChapters,
                     hscPhysics2ndChapters,
                     hscChemistry1stChapters,
@@ -7567,10 +8282,12 @@ Remind me later
                     hscBiology1stChapters,
                     hscBiology2ndChapters,
                     srijonshilQuestions,
+                    mathCqQuestions,
                     mcqQuestions,
                     englishQuestions,
                     notesByItem,
-                    videosByItem
+                    videosByItem,
+                    practiceByItem
                 };
 
                 const timeout = setTimeout(async () => {
@@ -7600,11 +8317,15 @@ Remind me later
                 hscShohopathItems,
                 sscIctChapters,
                 hscIctChapters,
+                sscGeneralMathChapters,
+                sscHigherMathChapters,
                 sscPhysicsChapters,
                 sscChemistryChapters,
                 sscBiologyChapters,
                 sscBangladeshGlobalChapters,
                 sscReligionChapters,
+                hscHigherMath1Chapters,
+                hscHigherMath2Chapters,
                 hscPhysics1stChapters,
                 hscPhysics2ndChapters,
                 hscChemistry1stChapters,
@@ -7612,12 +8333,16 @@ Remind me later
                 hscBiology1stChapters,
                 hscBiology2ndChapters,
                 srijonshilQuestions,
+                mathCqQuestions,
                 mcqQuestions,
                 englishQuestions,
                 notesByItem,
-                videosByItem
+                videosByItem,
+                practiceByItem
             ]);
-`;var Ga=`
+`;
+// Generated section exports
+export const Ga=`
             // FIX: We now accept an object { username, password }
             const handleLogin = async ({ username, password }) => {
                 const res = await fetch('/api/login', {
@@ -7663,7 +8388,8 @@ Remind me later
                     alert(data.error);
                 }
             };
-`;var Va=`
+`;
+export const Va=`
             useEffect(() => {
                 if (!user || user.role !== 'teacher') return;
                 const allowedViews = getTeacherAllowedViews(user.assignment);
@@ -7671,7 +8397,8 @@ Remind me later
                     navigate('dashboard', { replace: true });
                 }
             }, [user, view]);
-`;var za=`
+`;
+export const za=`
             if (isLoading || hasAdmin === null) return <Loading />;
             const teacherSubjectConfig = getTeacherSubjectConfig(user?.assignment);
             const canManageStructure = user?.role === 'admin' || user?.permissions?.includes('structure');
@@ -7682,7 +8409,8 @@ Remind me later
                     <NavBar user={user} hasAdmin={hasAdmin} onNavigate={navigate} onLogout={handleLogout} />
                     <main className="flex-grow bg-gray-50 flex flex-col">
                         <div key={view} className="flex-grow flex flex-col animate-fade-in">
-`;var Wa=`
+`;
+export const Wa=`
 {view === 'login' && <AuthForm mode="login" onSubmit={handleLogin} onNavigate={navigate} />}
 
 {/* Only show Admin Registration if no admin exists */}
@@ -7739,9 +8467,11 @@ Remind me later
 {view === 'hsc-subjects' && (
     <SubjectIndexPage classLabel="HSC" subjects={hscSubjects} onNavigate={navigate} />
 )}
-`;var Ya=`
+`;
+export const Ya=`
 {view === 'student-register' && <StudentRegister onNavigate={navigate} />}
-`;var Xa=`
+`;
+export const Xa=`
             const loadBanglaSelection = () => {
                 try {
                     const raw = localStorage.getItem('freeducation.bangla-selection');
@@ -7761,7 +8491,9 @@ Remind me later
             const [hscPoddoItems, setHscPoddoItems] = useState([]);
             const [sscShohopathItems, setSscShohopathItems] = useState([]);
             const [hscShohopathItems, setHscShohopathItems] = useState([]);
-`;var Ja=`
+`;
+// Generated section exports
+export const Ja=`
             const getBanglaTopics = (classLabel) => [
                 {
                     title: '\u09AC\u09BE\u0982\u09B2\u09BE \u09B8\u09BE\u09B9\u09BF\u09A4\u09CD\u09AF',
@@ -7791,7 +8523,8 @@ Remind me later
                     thumbnailKey: 'poddo'
                 }
             ];
-`;var Za=`
+`;
+export const Za=`
 {view === 'public-bangla-ssc-1st-paper' && (
     <PublicBanglaShell
         title="\u09AC\u09BE\u0982\u09B2\u09BE \u09E7\u09AE \u09AA\u09A4\u09CD\u09B0"
@@ -8046,7 +8779,8 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var ei=`
+`;
+export const ei=`
 {view === 'bangla-ssc-1st-paper' && (
     <BanglaFirstPaperTopics classLabel="SSC" onNavigate={navigate} canManageThumbnails={canManageThumbnails} />
 )}
@@ -8255,12 +8989,14 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var ti={id:"bangla",state:Xa,types:Ja,views:{public:Za,admin:ei}};var si=`
+`;var ti={id:"bangla",state:Xa,types:Ja,views:{public:Za,admin:ei}};
+export const si=`
             const [selectedEnglishSection, setSelectedEnglishSection] = useState('');
             const [selectedEnglishType, setSelectedEnglishType] = useState(null);
             const [selectedEnglishSubtype, setSelectedEnglishSubtype] = useState(null);
             const [englishQuestions, setEnglishQuestions] = useState({});
-`;var ai=`
+`;
+export const ai=`
             const englishReadingTypes = [
                 {
                     key: 'reading-mcq',
@@ -8339,7 +9075,8 @@ Remind me later
                     description: 'Write on a theme or idea.'
                 }
             ];
-`;var ii=`
+`;
+export const ii=`
 {view === 'public-english-hsc-1st-paper' && (
     <PublicEnglishShell
         title="English 1st Paper"
@@ -8450,7 +9187,9 @@ Remind me later
         <PublicEnglishQuestionList questions={englishQuestionEntries} />
     </PublicEnglishShell>
 )}
-`;var ni=`
+`;
+// Generated section exports
+export const ni=`
 {view === 'english-hsc-1st-paper' && (
     <EnglishFirstPaperHome classLabel="HSC" onNavigate={navigate} />
 )}
@@ -8527,9 +9266,11 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var oi={id:"english",state:si,types:ai,views:{public:ii,admin:ni}};var ri=`
+`;var oi={id:"english",state:si,types:ai,views:{public:ii,admin:ni}};
+export const ri=`
             const [sscBangladeshGlobalChapters, setSscBangladeshGlobalChapters] = useState([]);
-`;var ci="";var li=`
+`;var ci="";
+export const li=`
 {view === 'public-ssc-bangladesh-global-studies' && (
     <PublicScienceShell
         subjectLabel="Bangladesh and Global Studies"
@@ -8652,7 +9393,8 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var di=`
+`;
+export const di=`
 {view === 'admin-ssc-bangladesh-global-studies' && (
     <ScienceChapterList
         classLabel="SSC"
@@ -8792,12 +9534,14 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var pi={id:"humanities",state:ri,types:ci,views:{public:li,admin:di}};var ui=`
+`;var pi={id:"humanities",state:ri,types:ci,views:{public:li,admin:di}};
+export const ui=`
             const [selectedIctChapter, setSelectedIctChapter] = useState(null);
             const [selectedIctClass, setSelectedIctClass] = useState('SSC');
             const [sscIctChapters, setSscIctChapters] = useState([]);
             const [hscIctChapters, setHscIctChapters] = useState([]);
-`;var mi="";var hi=`
+`;var mi="";
+export const hi=`
 {view === 'public-ssc-ict' && (
     <PublicIctShell
         title="\u0986\u0987\u09B8\u09BF\u099F\u09BF \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09B8\u09AE\u09C2\u09B9"
@@ -8932,7 +9676,9 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var gi=`
+`;
+// Generated section exports
+export const gi=`
 {view === 'admin-ssc-ict' && (
     <IctChapterList
         classLabel="SSC"
@@ -9072,7 +9818,8 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var bi={id:"ict",state:ui,types:mi,views:{public:hi,admin:gi}};var yi=`
+`;var bi={id:"ict",state:ui,types:mi,views:{public:hi,admin:gi}};
+export const yi=`
             const [selectedReligion, setSelectedReligion] = useState(null);
             const [sscReligionChapters, setSscReligionChapters] = useState({
                 Islam: [],
@@ -9080,7 +9827,8 @@ Remind me later
                 Buddhism: [],
                 Christianity: []
             });
-`;var vi="";var fi=`
+`;var vi="";
+export const fi=`
 {view === 'public-ssc-religion' && (
     <PublicScienceShell
         subjectLabel="Religion and Moral Education"
@@ -9226,7 +9974,8 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var Si=`
+`;
+export const Si=`
 {view === 'admin-ssc-religion' && (
     <ReligionSelectionList
         classLabel="SSC"
@@ -9400,21 +10149,29 @@ Remind me later
         onNavigate={navigate}
     />
 )}
-`;var xi={id:"religion",state:yi,types:vi,views:{public:fi,admin:Si}};var Ni=`
+`;var xi={id:"religion",state:yi,types:vi,views:{public:fi,admin:Si}};
+export const Ni=`
             const [selectedScienceChapter, setSelectedScienceChapter] = useState(null);
             const [selectedScienceTopic, setSelectedScienceTopic] = useState(null);
             const [selectedScienceCqType, setSelectedScienceCqType] = useState(null);
             const [selectedScienceSubject, setSelectedScienceSubject] = useState(null);
+            const [selectedMathChapter, setSelectedMathChapter] = useState(null);
+            const [selectedMathSubject, setSelectedMathSubject] = useState(null);
+            const [sscGeneralMathChapters, setSscGeneralMathChapters] = useState([]);
+            const [sscHigherMathChapters, setSscHigherMathChapters] = useState([]);
             const [sscPhysicsChapters, setSscPhysicsChapters] = useState([]);
             const [sscChemistryChapters, setSscChemistryChapters] = useState([]);
             const [sscBiologyChapters, setSscBiologyChapters] = useState([]);
+            const [hscHigherMath1Chapters, setHscHigherMath1Chapters] = useState([]);
+            const [hscHigherMath2Chapters, setHscHigherMath2Chapters] = useState([]);
             const [hscPhysics1stChapters, setHscPhysics1stChapters] = useState([]);
             const [hscPhysics2ndChapters, setHscPhysics2ndChapters] = useState([]);
             const [hscChemistry1stChapters, setHscChemistry1stChapters] = useState([]);
             const [hscChemistry2ndChapters, setHscChemistry2ndChapters] = useState([]);
             const [hscBiology1stChapters, setHscBiology1stChapters] = useState([]);
             const [hscBiology2ndChapters, setHscBiology2ndChapters] = useState([]);
-`;var Ci="";var wi=`
+`;var Ci="";
+export const wi=`
 {view === 'admin-ssc-physics' && (
 <ScienceChapterList
 classLabel="SSC"
@@ -9751,7 +10508,289 @@ itemRoute="admin-ssc-biology-topic"
 onNavigate={navigate}
 />
 )}
-`;var Ti=`
+{view === 'admin-ssc-general-math' && (
+<MathChapterList
+classLabel="SSC"
+subjectLabel="General Mathematics"
+chapters={sscGeneralMathChapters}
+onAdd={addChapterItem(setSscGeneralMathChapters)}
+onUpdate={updateChapterItem(setSscGeneralMathChapters)}
+onDelete={removeChapterItem(setSscGeneralMathChapters)}
+onSelect={(chapter) => {
+setSelectedMathChapter(chapter);
+setSelectedMathSubject({ classLabel: 'SSC', subjectLabel: 'General Mathematics' });
+navigate('admin-ssc-general-math-chapter');
+}}
+onNavigate={navigate}
+canManageStructure={canManageStructure}
+canManageThumbnails={canManageThumbnails}
+/>
+)}
+{view === 'admin-ssc-general-math-chapter' && (
+<MathChapterDetail
+classLabel="SSC"
+subjectLabel="General Mathematics"
+chapter={selectedMathChapter}
+notesByItem={notesByItem}
+videosByItem={videosByItem}
+onUpdateNotes={setNotesByItem}
+onUpdateVideos={setVideosByItem}
+onBack={() => navigate('admin-ssc-general-math')}
+onNavigateCq={() => navigate('admin-ssc-general-math-cq')}
+onNavigateMcq={() => navigate('admin-ssc-general-math-mcq')}
+onNavigatePractice={() => navigate('admin-ssc-general-math-practice')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-general-math-cq' && (
+<MathCqQuestionList
+title="General Mathematics CQ"
+subtitle={selectedMathChapter?.name || ''}
+questions={mathCqQuestions[getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'cq')] || []}
+onAdd={addQuestionEntry(setMathCqQuestions, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'cq'))}
+onUpdate={updateQuestionEntry(setMathCqQuestions, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'cq'))}
+onDelete={removeQuestionEntry(setMathCqQuestions, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'cq'))}
+onBack={() => navigate('admin-ssc-general-math-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-general-math-mcq' && (
+<McqQuestionList
+classLabel="SSC"
+itemName={selectedMathChapter?.name || 'General Mathematics'}
+questions={mcqQuestions[getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'mcq')] || []}
+onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'mcq'))}
+onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'mcq'))}
+onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'mcq'))}
+itemRoute="admin-ssc-general-math-chapter"
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-general-math-practice' && (
+<PracticeQuestionList
+title="General Mathematics Practice"
+subtitle={selectedMathChapter?.name || ''}
+questions={practiceByItem[getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'practice')] || []}
+onAdd={addQuestionEntry(setPracticeByItem, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'practice'))}
+onUpdate={updateQuestionEntry(setPracticeByItem, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'practice'))}
+onDelete={removeQuestionEntry(setPracticeByItem, getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'practice'))}
+onBack={() => navigate('admin-ssc-general-math-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-higher-math' && (
+<MathChapterList
+classLabel="SSC"
+subjectLabel="Higher Mathematics"
+chapters={sscHigherMathChapters}
+onAdd={addChapterItem(setSscHigherMathChapters)}
+onUpdate={updateChapterItem(setSscHigherMathChapters)}
+onDelete={removeChapterItem(setSscHigherMathChapters)}
+onSelect={(chapter) => {
+setSelectedMathChapter(chapter);
+setSelectedMathSubject({ classLabel: 'SSC', subjectLabel: 'Higher Mathematics' });
+navigate('admin-ssc-higher-math-chapter');
+}}
+onNavigate={navigate}
+canManageStructure={canManageStructure}
+canManageThumbnails={canManageThumbnails}
+/>
+)}
+{view === 'admin-ssc-higher-math-chapter' && (
+<MathChapterDetail
+classLabel="SSC"
+subjectLabel="Higher Mathematics"
+chapter={selectedMathChapter}
+notesByItem={notesByItem}
+videosByItem={videosByItem}
+onUpdateNotes={setNotesByItem}
+onUpdateVideos={setVideosByItem}
+onBack={() => navigate('admin-ssc-higher-math')}
+onNavigateCq={() => navigate('admin-ssc-higher-math-cq')}
+onNavigateMcq={() => navigate('admin-ssc-higher-math-mcq')}
+onNavigatePractice={() => navigate('admin-ssc-higher-math-practice')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-higher-math-cq' && (
+<MathCqQuestionList
+title="Higher Mathematics CQ"
+subtitle={selectedMathChapter?.name || ''}
+questions={mathCqQuestions[getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'cq')] || []}
+onAdd={addQuestionEntry(setMathCqQuestions, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'cq'))}
+onUpdate={updateQuestionEntry(setMathCqQuestions, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'cq'))}
+onDelete={removeQuestionEntry(setMathCqQuestions, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'cq'))}
+onBack={() => navigate('admin-ssc-higher-math-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-higher-math-mcq' && (
+<McqQuestionList
+classLabel="SSC"
+itemName={selectedMathChapter?.name || 'Higher Mathematics'}
+questions={mcqQuestions[getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'mcq')] || []}
+onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'mcq'))}
+onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'mcq'))}
+onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'mcq'))}
+itemRoute="admin-ssc-higher-math-chapter"
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-ssc-higher-math-practice' && (
+<PracticeQuestionList
+title="Higher Mathematics Practice"
+subtitle={selectedMathChapter?.name || ''}
+questions={practiceByItem[getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'practice')] || []}
+onAdd={addQuestionEntry(setPracticeByItem, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'practice'))}
+onUpdate={updateQuestionEntry(setPracticeByItem, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'practice'))}
+onDelete={removeQuestionEntry(setPracticeByItem, getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'practice'))}
+onBack={() => navigate('admin-ssc-higher-math-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-1st' && (
+<MathChapterList
+classLabel="HSC"
+subjectLabel="Higher Mathematics 1st Paper"
+chapters={hscHigherMath1Chapters}
+onAdd={addChapterItem(setHscHigherMath1Chapters)}
+onUpdate={updateChapterItem(setHscHigherMath1Chapters)}
+onDelete={removeChapterItem(setHscHigherMath1Chapters)}
+onSelect={(chapter) => {
+setSelectedMathChapter(chapter);
+setSelectedMathSubject({ classLabel: 'HSC', subjectLabel: 'Higher Mathematics 1st Paper' });
+navigate('admin-hsc-higher-math-1st-chapter');
+}}
+onNavigate={navigate}
+canManageStructure={canManageStructure}
+canManageThumbnails={canManageThumbnails}
+/>
+)}
+{view === 'admin-hsc-higher-math-1st-chapter' && (
+<MathChapterDetail
+classLabel="HSC"
+subjectLabel="Higher Mathematics 1st Paper"
+chapter={selectedMathChapter}
+notesByItem={notesByItem}
+videosByItem={videosByItem}
+onUpdateNotes={setNotesByItem}
+onUpdateVideos={setVideosByItem}
+onBack={() => navigate('admin-hsc-higher-math-1st')}
+onNavigateCq={() => navigate('admin-hsc-higher-math-1st-cq')}
+onNavigateMcq={() => navigate('admin-hsc-higher-math-1st-mcq')}
+onNavigatePractice={() => navigate('admin-hsc-higher-math-1st-practice')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-1st-cq' && (
+<MathCqQuestionList
+title="Higher Mathematics 1st Paper CQ"
+subtitle={selectedMathChapter?.name || ''}
+questions={mathCqQuestions[getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'cq')] || []}
+onAdd={addQuestionEntry(setMathCqQuestions, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'cq'))}
+onUpdate={updateQuestionEntry(setMathCqQuestions, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'cq'))}
+onDelete={removeQuestionEntry(setMathCqQuestions, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'cq'))}
+onBack={() => navigate('admin-hsc-higher-math-1st-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-1st-mcq' && (
+<McqQuestionList
+classLabel="HSC"
+itemName={selectedMathChapter?.name || 'Higher Mathematics 1st Paper'}
+questions={mcqQuestions[getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'mcq')] || []}
+onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'mcq'))}
+onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'mcq'))}
+onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'mcq'))}
+itemRoute="admin-hsc-higher-math-1st-chapter"
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-1st-practice' && (
+<PracticeQuestionList
+title="Higher Mathematics 1st Paper Practice"
+subtitle={selectedMathChapter?.name || ''}
+questions={practiceByItem[getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'practice')] || []}
+onAdd={addQuestionEntry(setPracticeByItem, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'practice'))}
+onUpdate={updateQuestionEntry(setPracticeByItem, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'practice'))}
+onDelete={removeQuestionEntry(setPracticeByItem, getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'practice'))}
+onBack={() => navigate('admin-hsc-higher-math-1st-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-2nd' && (
+<MathChapterList
+classLabel="HSC"
+subjectLabel="Higher Mathematics 2nd Paper"
+chapters={hscHigherMath2Chapters}
+onAdd={addChapterItem(setHscHigherMath2Chapters)}
+onUpdate={updateChapterItem(setHscHigherMath2Chapters)}
+onDelete={removeChapterItem(setHscHigherMath2Chapters)}
+onSelect={(chapter) => {
+setSelectedMathChapter(chapter);
+setSelectedMathSubject({ classLabel: 'HSC', subjectLabel: 'Higher Mathematics 2nd Paper' });
+navigate('admin-hsc-higher-math-2nd-chapter');
+}}
+onNavigate={navigate}
+canManageStructure={canManageStructure}
+canManageThumbnails={canManageThumbnails}
+/>
+)}
+{view === 'admin-hsc-higher-math-2nd-chapter' && (
+<MathChapterDetail
+classLabel="HSC"
+subjectLabel="Higher Mathematics 2nd Paper"
+chapter={selectedMathChapter}
+notesByItem={notesByItem}
+videosByItem={videosByItem}
+onUpdateNotes={setNotesByItem}
+onUpdateVideos={setVideosByItem}
+onBack={() => navigate('admin-hsc-higher-math-2nd')}
+onNavigateCq={() => navigate('admin-hsc-higher-math-2nd-cq')}
+onNavigateMcq={() => navigate('admin-hsc-higher-math-2nd-mcq')}
+onNavigatePractice={() => navigate('admin-hsc-higher-math-2nd-practice')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-2nd-cq' && (
+<MathCqQuestionList
+title="Higher Mathematics 2nd Paper CQ"
+subtitle={selectedMathChapter?.name || ''}
+questions={mathCqQuestions[getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'cq')] || []}
+onAdd={addQuestionEntry(setMathCqQuestions, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'cq'))}
+onUpdate={updateQuestionEntry(setMathCqQuestions, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'cq'))}
+onDelete={removeQuestionEntry(setMathCqQuestions, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'cq'))}
+onBack={() => navigate('admin-hsc-higher-math-2nd-chapter')}
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-2nd-mcq' && (
+<McqQuestionList
+classLabel="HSC"
+itemName={selectedMathChapter?.name || 'Higher Mathematics 2nd Paper'}
+questions={mcqQuestions[getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'mcq')] || []}
+onAdd={addQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'mcq'))}
+onUpdate={updateQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'mcq'))}
+onDelete={removeQuestionEntry(setMcqQuestions, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'mcq'))}
+itemRoute="admin-hsc-higher-math-2nd-chapter"
+onNavigate={navigate}
+/>
+)}
+{view === 'admin-hsc-higher-math-2nd-practice' && (
+<PracticeQuestionList
+title="Higher Mathematics 2nd Paper Practice"
+subtitle={selectedMathChapter?.name || ''}
+questions={practiceByItem[getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'practice')] || []}
+onAdd={addQuestionEntry(setPracticeByItem, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'practice'))}
+onUpdate={updateQuestionEntry(setPracticeByItem, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'practice'))}
+onDelete={removeQuestionEntry(setPracticeByItem, getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'practice'))}
+onBack={() => navigate('admin-hsc-higher-math-2nd-chapter')}
+onNavigate={navigate}
+/>
+)}
+`;
+// Generated section exports
+export const Ti=`
 {view === 'admin-hsc-biology-1st' && (
     <ScienceChapterList
         classLabel="HSC"
@@ -9986,7 +11025,8 @@ onNavigate={navigate}
         onNavigate={navigate}
     />
 )}
-`;var Ei=`
+`;
+export const Ei=`
 {view === 'admin-hsc-chemistry-1st' && (
     <ScienceChapterList
         classLabel="HSC"
@@ -10221,7 +11261,8 @@ onNavigate={navigate}
         onNavigate={navigate}
     />
 )}
-`;var Li=`
+`;
+export const Li=`
 {view === 'admin-hsc-physics-1st' && (
     <ScienceChapterList
         classLabel="HSC"
@@ -10456,7 +11497,9 @@ onNavigate={navigate}
         onNavigate={navigate}
     />
 )}
-`;var Pi=`${Li}${Ei}${Ti}`;var ki=`
+`;
+export const Pi=`${Li}${Ei}${Ti}`;
+export const ki=`
 {view === 'public-ssc-physics' && (
 <PublicScienceShell
 subjectLabel="Physics"
@@ -10763,7 +11806,8 @@ onBack={() => navigate('public-ssc-biology-topic')}
 onNavigate={navigate}
 />
 )}
-`;var Ii=`
+`;
+export const Ii=`
 {view === 'public-hsc-physics-1st' && (
     <PublicScienceShell
         subjectLabel="Physics 1st Paper"
@@ -11000,7 +12044,301 @@ onNavigate={navigate}
         onNavigate={navigate}
     />
 )}
-`;var Ri=`
+{view === 'public-ssc-general-math' && (
+    <PublicSimpleShell
+        title="\u09B8\u09BE\u09A7\u09BE\u09B0\u09A3 \u0997\u09A3\u09BF\u09A4 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09B8\u09AE\u09C2\u09B9"
+        subtitle="SSC General Mathematics \u098F\u09B0 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8\u0964"
+        onBack={() => navigate('ssc-subjects')}
+        onNavigate={navigate}
+    >
+        <PublicMathChapterList
+            classLabel="SSC"
+            subjectLabel="General Mathematics"
+            chapters={sscGeneralMathChapters}
+            recentRoute="public-ssc-general-math"
+            onSelectChapter={(chapter) => {
+                setSelectedMathChapter(chapter);
+                setSelectedMathSubject({ classLabel: 'SSC', subjectLabel: 'General Mathematics' });
+                navigate('public-ssc-general-math-chapter');
+            }}
+        />
+    </PublicSimpleShell>
+)}
+{view === 'public-ssc-general-math-chapter' && (
+    <PublicMathChapterDetail
+        subjectLabel="General Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        noteKey={['SSC', 'General Mathematics', selectedMathChapter?.id].join('-')}
+        notesByItem={notesByItem}
+        onNavigateCq={() => navigate('public-ssc-general-math-cq')}
+        onNavigateMcq={() => navigate('public-ssc-general-math-mcq')}
+        onNavigatePractice={() => navigate('public-ssc-general-math-practice')}
+        onOpenVideos={(context) => {
+            setSelectedVideoContext({
+                ...context,
+                backgroundClass: 'bg-[#ecfdf3]'
+            });
+            navigate('public-videos');
+        }}
+        backRoute="public-ssc-general-math-chapter"
+        onBack={() => navigate('public-ssc-general-math')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-general-math-cq' && (
+    <PublicMathCqDetail
+        subjectLabel="General Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        questions={mathCqQuestions[getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'cq')] || []}
+        onBack={() => navigate('public-ssc-general-math-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-general-math-mcq' && (
+    <PublicScienceMcqDetail
+        subjectLabel="General Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        topicName=""
+        mcqList={mcqQuestions[getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'mcq')] || []}
+        onBack={() => navigate('public-ssc-general-math-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-general-math-practice' && (
+    <PublicMathPracticeDetail
+        subjectLabel="General Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        questions={practiceByItem[getQuestionKey('SSC', 'General Mathematics', selectedMathChapter?.id, 'practice')] || []}
+        onBack={() => navigate('public-ssc-general-math-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-higher-math' && (
+    <PublicSimpleShell
+        title="\u0989\u099A\u09CD\u099A\u09A4\u09B0 \u0997\u09A3\u09BF\u09A4 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09B8\u09AE\u09C2\u09B9"
+        subtitle="SSC Higher Mathematics \u098F\u09B0 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8\u0964"
+        onBack={() => navigate('ssc-subjects')}
+        onNavigate={navigate}
+    >
+        <PublicMathChapterList
+            classLabel="SSC"
+            subjectLabel="Higher Mathematics"
+            chapters={sscHigherMathChapters}
+            recentRoute="public-ssc-higher-math"
+            onSelectChapter={(chapter) => {
+                setSelectedMathChapter(chapter);
+                setSelectedMathSubject({ classLabel: 'SSC', subjectLabel: 'Higher Mathematics' });
+                navigate('public-ssc-higher-math-chapter');
+            }}
+        />
+    </PublicSimpleShell>
+)}
+{view === 'public-ssc-higher-math-chapter' && (
+    <PublicMathChapterDetail
+        subjectLabel="Higher Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        noteKey={['SSC', 'Higher Mathematics', selectedMathChapter?.id].join('-')}
+        notesByItem={notesByItem}
+        onNavigateCq={() => navigate('public-ssc-higher-math-cq')}
+        onNavigateMcq={() => navigate('public-ssc-higher-math-mcq')}
+        onNavigatePractice={() => navigate('public-ssc-higher-math-practice')}
+        onOpenVideos={(context) => {
+            setSelectedVideoContext({
+                ...context,
+                backgroundClass: 'bg-[#ecfdf3]'
+            });
+            navigate('public-videos');
+        }}
+        backRoute="public-ssc-higher-math-chapter"
+        onBack={() => navigate('public-ssc-higher-math')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-higher-math-cq' && (
+    <PublicMathCqDetail
+        subjectLabel="Higher Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        questions={mathCqQuestions[getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'cq')] || []}
+        onBack={() => navigate('public-ssc-higher-math-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-higher-math-mcq' && (
+    <PublicScienceMcqDetail
+        subjectLabel="Higher Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        topicName=""
+        mcqList={mcqQuestions[getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'mcq')] || []}
+        onBack={() => navigate('public-ssc-higher-math-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-ssc-higher-math-practice' && (
+    <PublicMathPracticeDetail
+        subjectLabel="Higher Mathematics"
+        classLabel="SSC"
+        chapterName={selectedMathChapter?.name}
+        questions={practiceByItem[getQuestionKey('SSC', 'Higher Mathematics', selectedMathChapter?.id, 'practice')] || []}
+        onBack={() => navigate('public-ssc-higher-math-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-1st' && (
+    <PublicSimpleShell
+        title="\u0989\u099A\u09CD\u099A\u09A4\u09B0 \u0997\u09A3\u09BF\u09A4 1\u09AE \u09AA\u09A4\u09CD\u09B0 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09B8\u09AE\u09C2\u09B9"
+        subtitle="HSC Higher Mathematics 1st Paper \u098F\u09B0 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8\u0964"
+        onBack={() => navigate('hsc-subjects')}
+        onNavigate={navigate}
+    >
+        <PublicMathChapterList
+            classLabel="HSC"
+            subjectLabel="Higher Mathematics 1st Paper"
+            chapters={hscHigherMath1Chapters}
+            recentRoute="public-hsc-higher-math-1st"
+            onSelectChapter={(chapter) => {
+                setSelectedMathChapter(chapter);
+                setSelectedMathSubject({ classLabel: 'HSC', subjectLabel: 'Higher Mathematics 1st Paper' });
+                navigate('public-hsc-higher-math-1st-chapter');
+            }}
+        />
+    </PublicSimpleShell>
+)}
+{view === 'public-hsc-higher-math-1st-chapter' && (
+    <PublicMathChapterDetail
+        subjectLabel="Higher Mathematics 1st Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        noteKey={['HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id].join('-')}
+        notesByItem={notesByItem}
+        onNavigateCq={() => navigate('public-hsc-higher-math-1st-cq')}
+        onNavigateMcq={() => navigate('public-hsc-higher-math-1st-mcq')}
+        onNavigatePractice={() => navigate('public-hsc-higher-math-1st-practice')}
+        onOpenVideos={(context) => {
+            setSelectedVideoContext({
+                ...context,
+                backgroundClass: 'bg-[#ecfdf3]'
+            });
+            navigate('public-videos');
+        }}
+        backRoute="public-hsc-higher-math-1st-chapter"
+        onBack={() => navigate('public-hsc-higher-math-1st')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-1st-cq' && (
+    <PublicMathCqDetail
+        subjectLabel="Higher Mathematics 1st Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        questions={mathCqQuestions[getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'cq')] || []}
+        onBack={() => navigate('public-hsc-higher-math-1st-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-1st-mcq' && (
+    <PublicScienceMcqDetail
+        subjectLabel="Higher Mathematics 1st Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        topicName=""
+        mcqList={mcqQuestions[getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'mcq')] || []}
+        onBack={() => navigate('public-hsc-higher-math-1st-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-1st-practice' && (
+    <PublicMathPracticeDetail
+        subjectLabel="Higher Mathematics 1st Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        questions={practiceByItem[getQuestionKey('HSC', 'Higher Mathematics 1st Paper', selectedMathChapter?.id, 'practice')] || []}
+        onBack={() => navigate('public-hsc-higher-math-1st-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-2nd' && (
+    <PublicSimpleShell
+        title="\u0989\u099A\u09CD\u099A\u09A4\u09B0 \u0997\u09A3\u09BF\u09A4 2\u09DF \u09AA\u09A4\u09CD\u09B0 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF\u09B8\u09AE\u09C2\u09B9"
+        subtitle="HSC Higher Mathematics 2nd Paper \u098F\u09B0 \u0985\u09A7\u09CD\u09AF\u09BE\u09DF \u09AC\u09C7\u099B\u09C7 \u09A8\u09BF\u09A8\u0964"
+        onBack={() => navigate('hsc-subjects')}
+        onNavigate={navigate}
+    >
+        <PublicMathChapterList
+            classLabel="HSC"
+            subjectLabel="Higher Mathematics 2nd Paper"
+            chapters={hscHigherMath2Chapters}
+            recentRoute="public-hsc-higher-math-2nd"
+            onSelectChapter={(chapter) => {
+                setSelectedMathChapter(chapter);
+                setSelectedMathSubject({ classLabel: 'HSC', subjectLabel: 'Higher Mathematics 2nd Paper' });
+                navigate('public-hsc-higher-math-2nd-chapter');
+            }}
+        />
+    </PublicSimpleShell>
+)}
+{view === 'public-hsc-higher-math-2nd-chapter' && (
+    <PublicMathChapterDetail
+        subjectLabel="Higher Mathematics 2nd Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        noteKey={['HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id].join('-')}
+        notesByItem={notesByItem}
+        onNavigateCq={() => navigate('public-hsc-higher-math-2nd-cq')}
+        onNavigateMcq={() => navigate('public-hsc-higher-math-2nd-mcq')}
+        onNavigatePractice={() => navigate('public-hsc-higher-math-2nd-practice')}
+        onOpenVideos={(context) => {
+            setSelectedVideoContext({
+                ...context,
+                backgroundClass: 'bg-[#ecfdf3]'
+            });
+            navigate('public-videos');
+        }}
+        backRoute="public-hsc-higher-math-2nd-chapter"
+        onBack={() => navigate('public-hsc-higher-math-2nd')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-2nd-cq' && (
+    <PublicMathCqDetail
+        subjectLabel="Higher Mathematics 2nd Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        questions={mathCqQuestions[getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'cq')] || []}
+        onBack={() => navigate('public-hsc-higher-math-2nd-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-2nd-mcq' && (
+    <PublicScienceMcqDetail
+        subjectLabel="Higher Mathematics 2nd Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        topicName=""
+        mcqList={mcqQuestions[getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'mcq')] || []}
+        onBack={() => navigate('public-hsc-higher-math-2nd-chapter')}
+        onNavigate={navigate}
+    />
+)}
+{view === 'public-hsc-higher-math-2nd-practice' && (
+    <PublicMathPracticeDetail
+        subjectLabel="Higher Mathematics 2nd Paper"
+        classLabel="HSC"
+        chapterName={selectedMathChapter?.name}
+        questions={practiceByItem[getQuestionKey('HSC', 'Higher Mathematics 2nd Paper', selectedMathChapter?.id, 'practice')] || []}
+        onBack={() => navigate('public-hsc-higher-math-2nd-chapter')}
+        onNavigate={navigate}
+    />
+)}
+`;
+// Generated section exports
+export const Ri=`
 {view === 'public-hsc-chemistry-1st' && (
     <PublicScienceShell
         subjectLabel="Chemistry 1st Paper"
@@ -11241,7 +12579,8 @@ onNavigate={navigate}
         onNavigate={navigate}
     />
 )}
-`;var ji=`
+`;
+export const ji=`
 {view === 'public-hsc-biology-1st' && (
     <PublicScienceShell
         subjectLabel="Biology 1st Paper"
@@ -11482,12 +12821,16 @@ onNavigate={navigate}
         onNavigate={navigate}
     />
 )}
-`;var Gn=ki+Ii+Ri+ji,Vn=wi+Pi,Bi={id:"science",state:Ni,types:Ci,views:{public:Gn,admin:Vn}};var Mi=`
+`;var Gn=ki+Ii+Ri+ji,Vn=wi+Pi,Bi={id:"science",state:Ni,types:Ci,views:{public:Gn,admin:Vn}};
+export const Mi=`
             const [srijonshilQuestions, setSrijonshilQuestions] = useState({});
+            const [mathCqQuestions, setMathCqQuestions] = useState({});
             const [mcqQuestions, setMcqQuestions] = useState({});
             const [notesByItem, setNotesByItem] = useState({});
             const [videosByItem, setVideosByItem] = useState({});
-`;var qi={id:"shared",state:Mi};var we=[ti,oi,pi,bi,xi,Bi,qi].sort((e,t)=>e.id.localeCompare(t.id)),Ai=we.map(e=>e.state).filter(e=>!!e),Di=we.map(e=>e.types).filter(e=>!!e),Ki=we.map(e=>e.views?.public).filter(e=>!!e).join(""),_i=we.map(e=>e.views?.admin).filter(e=>!!e).join("");var Hi=Wa+$a+ca+Ki+Ya;var Ui=`
+            const [practiceByItem, setPracticeByItem] = useState({});
+`;var qi={id:"shared",state:Mi};var we=[ti,oi,pi,bi,xi,Bi,qi].sort((e,t)=>e.id.localeCompare(t.id)),Ai=we.map(e=>e.state).filter(e=>!!e),Di=we.map(e=>e.types).filter(e=>!!e),Ki=we.map(e=>e.views?.public).filter(e=>!!e).join(""),_i=we.map(e=>e.views?.admin).filter(e=>!!e).join("");var Hi=Wa+$a+ca+Ki+Ya;
+export const Ui=`
 {view === 'dashboard' && (!user || (user.role !== 'teacher' && user.role !== 'student')) && (
     <AdminDashboard onNavigate={navigate} />
 )}
@@ -11522,7 +12865,8 @@ onNavigate={navigate}
 {view === 'admin-user-profile' && (
     <AdminStudentProfile onNavigate={navigate} />
 )}
-`;var Qi=`
+`;
+export const Qi=`
 {view === 'dashboard' && user?.role === 'student' && (
     <StudentClassView user={user} onNavigate={navigate} />
 )}
@@ -11532,32 +12876,40 @@ onNavigate={navigate}
 {view === 'student-settings' && user?.role === 'student' && (
     <StudentSettings onNavigate={navigate} />
 )}
-`;var Oi=`
+`;
+export const Oi=`
 {view === 'dashboard' && user?.role === 'teacher' && (
     <TeacherDashboard assignment={user.assignment} subjectConfig={teacherSubjectConfig} onNavigate={navigate} />
 )}
 {view === 'admin-settings' && user?.role === 'teacher' && <TeacherSettings onNavigate={navigate} />}
-`;var Fi=Oi+Qi+Ui+_i;var Gi=`
+`;var Fi=Oi+Qi+Ui+_i;
+// Generated section exports
+export const Gi=`
                         </div>
                     </main>
                 </div>
             );
-`;var Vi=`${za}${Hi}${Fi}${Gi}`;var zi=`
+`;
+export const Vi=`${za}${Hi}${Fi}${Gi}`;
+export const zi=`
             const [selectedVideoContext, setSelectedVideoContext] = useState(null);
             const [selectedVideoId, setSelectedVideoId] = useState(null);
-`;var Wi=`
+`;
+export const Wi=`
             const [teacherAssignment, setTeacherAssignment] = useState(null);
             const [teacherPermissions, setTeacherPermissions] = useState([]);
 `;var $i=`
             const [studentPoints, setStudentPoints] = useState(0);
             const [studentPointLogs, setStudentPointLogs] = useState([]);
-`;var Yi=[qa,Aa,zi,...Ai,_a,Wi,$i,...Di,Da,Ka,Ha,Ua,Qa,Oa,Fa,Ga,Va,Ce,ne,Xe,Vi];var Xi=`
+`;var Yi=[qa,Aa,zi,...Ai,_a,Wi,$i,...Di,Da,Ka,Ha,Ua,Qa,Oa,Fa,Ga,Va,Ce,ne,Xe,Vi];
+export const Xi=`
         function App() {
             const statusEndpoint = '/api/system/status';
 ${Yi.join(`
 `)}
         }
-`;function Ji(e){return`
+`;
+function Ji(e){return`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11679,7 +13031,7 @@ ${Yi.join(`
         ${Vs}
         ${zs}
         ${Xs}
-        ${$s}
+        ${Js}
         ${Ys}
 
         ${Ye}
