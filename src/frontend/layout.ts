@@ -96,7 +96,18 @@ export function renderAppHtml(initialView: string) {
     <style id="custom-fonts"></style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="padding:24px;font-family:Inter, sans-serif;">
+            <h2 style="margin:0 0 8px;">Loading Freeducation…</h2>
+            <p style="margin:0;color:#475569;">If this takes too long, please refresh the page.</p>
+        </div>
+    </div>
+    <noscript>
+        <div style="padding:24px;font-family:Inter, sans-serif;">
+            <h2 style="margin:0 0 8px;">JavaScript is required</h2>
+            <p style="margin:0;color:#475569;">Please enable JavaScript to use Freeducation.</p>
+        </div>
+    </noscript>
 
     <script>
         const loadCustomFonts = async () => {
@@ -124,6 +135,14 @@ export function renderAppHtml(initialView: string) {
 
     <script>
         window.__INITIAL_VIEW = ${JSON.stringify(initialView)};
+    </script>
+    <script>
+        if (!window.React || !window.ReactDOM) {
+            const rootEl = document.getElementById('root');
+            if (rootEl) {
+                rootEl.innerHTML = '<div style="padding:24px;font-family:Inter, sans-serif;"><h2 style="margin:0 0 8px;">We\\'re having trouble loading the app.</h2><p style="margin:0;color:#475569;">Please refresh the page or try again later.</p></div>';
+            }
+        }
     </script>
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
