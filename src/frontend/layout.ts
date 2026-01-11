@@ -25,10 +25,10 @@ export function renderAppHtml(initialView: string) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeducation - Learning Platform</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com" data-cfasync="false"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" data-cfasync="false"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" data-cfasync="false"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-cfasync="false"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
@@ -96,9 +96,20 @@ export function renderAppHtml(initialView: string) {
     <style id="custom-fonts"></style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="padding:24px;font-family:Inter, sans-serif;">
+            <h2 style="margin:0 0 8px;">Loading Freeducation…</h2>
+            <p style="margin:0;color:#475569;">If this takes too long, please refresh the page.</p>
+        </div>
+    </div>
+    <noscript>
+        <div style="padding:24px;font-family:Inter, sans-serif;">
+            <h2 style="margin:0 0 8px;">JavaScript is required</h2>
+            <p style="margin:0;color:#475569;">Please enable JavaScript to use Freeducation.</p>
+        </div>
+    </noscript>
 
-    <script>
+    <script data-cfasync="false">
         const loadCustomFonts = async () => {
             try {
                 const response = await fetch('/api/fonts');
@@ -122,10 +133,30 @@ export function renderAppHtml(initialView: string) {
         loadCustomFonts();
     </script>
 
-    <script>
+    <script data-cfasync="false">
         window.__INITIAL_VIEW = ${JSON.stringify(initialView)};
     </script>
-    <script type="text/babel">
+    <script data-cfasync="false">
+        const showAppLoadError = () => {
+            const rootEl = document.getElementById('root');
+            if (rootEl) {
+                rootEl.innerHTML = '<div style="padding:24px;font-family:Inter, sans-serif;"><h2 style="margin:0 0 8px;">We\\'re having trouble loading the app.</h2><p style="margin:0;color:#475569;">Please refresh the page or try again later.</p></div>';
+            }
+        };
+        if (!window.React || !window.ReactDOM) {
+            showAppLoadError();
+        }
+        const appLoadTimeout = setTimeout(() => {
+            if (!window.__APP_RENDERED__) {
+                showAppLoadError();
+            }
+        }, 5000);
+        window.__markAppRendered = () => {
+            window.__APP_RENDERED__ = true;
+            clearTimeout(appLoadTimeout);
+        };
+    </script>
+    <script type="text/babel" data-cfasync="false">
         const { useState, useEffect, useRef } = React;
 
         ${uiComponents}
@@ -154,6 +185,9 @@ export function renderAppHtml(initialView: string) {
         const root = ReactDOM.createRoot(document.getElementById('root'));
         try {
             root.render(<App />);
+            if (window.__markAppRendered) {
+                window.__markAppRendered();
+            }
         } catch (error) {
             console.error('Failed to render app', error);
             const rootEl = document.getElementById('root');
