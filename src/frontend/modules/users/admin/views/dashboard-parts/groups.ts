@@ -82,6 +82,7 @@ export const dashboardGroups = `
             };
             const [subjectThumbnails, setSubjectThumbnails] = useThumbnailMap('/api/thumbnails', 'subjectKey');
             const [activeThumbnail, setActiveThumbnail] = useState(null);
+            const { viewMode, setViewMode, viewOptions } = useDashboardViewPreference();
             const subjects = subjectMap[classLabel]?.[groupLabel] || [];
             const groupRoute = classLabel === 'SSC' ? 'admin-groups-ssc' : 'admin-groups-hsc';
             const banglaRoute = classLabel === 'SSC' ? 'bangla-ssc-1st-paper' : 'bangla-hsc-1st-paper';
@@ -103,63 +104,109 @@ export const dashboardGroups = `
             return (
                 <AdminShell activeTab="classes" onNavigate={onNavigate}>
                     <div className="flex flex-col items-center justify-center py-4 fade-in">
-                        <div className="w-full max-w-6xl flex justify-between items-center mb-8">
+                        <div className="w-full max-w-6xl flex flex-wrap gap-3 justify-between items-center mb-8">
                             <button onClick={() => onNavigate(groupRoute)} className="text-stone-500 hover:text-stone-800 font-serif italic flex items-center gap-2 transition-colors">
                                 <i className="fa-solid fa-arrow-left text-xs"></i> Back to Groups
                             </button>
-                            <div className="text-stone-400 font-serif italic text-sm">{classLabel} • {groupLabel}</div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="text-stone-400 font-serif italic text-sm">{classLabel} • {groupLabel}</div>
+                                <DashboardViewToggle viewMode={viewMode} onChange={setViewMode} options={viewOptions} />
+                            </div>
                         </div>
 
                         {subjects.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">No subjects configured.</div>}
                         
                         {subjects.length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full max-w-6xl">
-                                {subjects.map((subject) => {
-                                    const isBanglaFirst = subject === 'Bangla 1st Paper';
-                                    const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
-                                    const isIct = subject === 'Information and Communication Technology';
-                                    const isPhysics = subject === 'Physics' && classLabel === 'SSC';
-                                    const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
-                                    const isBiology = subject === 'Biology' && classLabel === 'SSC';
-                                    const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
-                                    const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
-                                    const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
-                                    const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
-                                    const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
-                                    const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
-                                    const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
-                                    const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
-                                    
-                                    const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
-                                    const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : hscBio2Route;
-                                    const subjectKey = makeThumbnailKey(subject, classLabel);
-                                    const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
-                                    const canOpen = Boolean(route);
+                            viewMode === 'card' ? (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 w-full max-w-6xl justify-items-center">
+                                    {subjects.map((subject) => {
+                                        const isBanglaFirst = subject === 'Bangla 1st Paper';
+                                        const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
+                                        const isIct = subject === 'Information and Communication Technology';
+                                        const isPhysics = subject === 'Physics' && classLabel === 'SSC';
+                                        const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
+                                        const isBiology = subject === 'Biology' && classLabel === 'SSC';
+                                        const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
+                                        const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
+                                        const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
+                                        const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
+                                        const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
+                                        const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
+                                        const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
+                                        const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
+                                        
+                                        const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
+                                        const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : hscBio2Route;
+                                        const subjectKey = makeThumbnailKey(subject, classLabel);
+                                        const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
+                                        const canOpen = Boolean(route);
 
-                                    return (
-                                        <div key={subject} className="group relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-stone-200 bg-stone-900">
-                                            {thumbnailUrl ? (
-                                                <img src={thumbnailUrl} alt={subject} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90" />
-                                            ) : (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-stone-800">
-                                                    <i className="fa-solid fa-book text-stone-700 text-4xl"></i>
-                                                </div>
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                                            <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-end">
-                                                <div className="mb-3">
-                                                    <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest mb-1">Subject</div>
-                                                    <h3 className={\`text-white font-bold leading-tight \${isBanglaFirst ? 'font-bangla text-base' : 'text-sm sm:text-base'}\`}>{displayLabel}</h3>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => route && onNavigate(route)} disabled={!canOpen} className={\`flex-1 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded text-center transition-colors backdrop-blur-md \${canOpen ? 'bg-white/90 text-stone-900 hover:bg-white' : 'bg-white/10 text-stone-400 cursor-not-allowed'}\`}>{canOpen ? 'Open' : 'Locked'}</button>
-                                                    {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: subject, subjectKey })} className="w-8 h-8 sm:w-auto sm:px-3 sm:h-auto flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded backdrop-blur-md border border-white/10 transition-colors"><i className="fa-solid fa-camera text-xs"></i></button>}
+                                        return (
+                                            <div key={subject} className="group relative w-full max-w-[150px] aspect-[3/4] rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-stone-200 bg-stone-900">
+                                                {thumbnailUrl ? (
+                                                    <img src={thumbnailUrl} alt={subject} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90" />
+                                                ) : (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-stone-800">
+                                                        <i className="fa-solid fa-book text-stone-700 text-3xl"></i>
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                                                <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                                                    <div className="mb-2">
+                                                        <div className="text-[9px] font-bold text-stone-300 uppercase tracking-widest mb-1">Subject</div>
+                                                        <h3 className={\`text-white font-semibold leading-tight \${isBanglaFirst ? 'font-bangla text-sm' : 'text-[11px]'}\`}>{displayLabel}</h3>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => route && onNavigate(route)} disabled={!canOpen} className={\`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded text-center transition-colors backdrop-blur-md \${canOpen ? 'bg-white/90 text-stone-900 hover:bg-white' : 'bg-white/10 text-stone-400 cursor-not-allowed'}\`}>{canOpen ? 'Open' : 'Locked'}</button>
+                                                        {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: subject, subjectKey })} className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded backdrop-blur-md border border-white/10 transition-colors"><i className="fa-solid fa-camera text-[10px]"></i></button>}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="w-full max-w-6xl bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                                    {subjects.map((subject) => {
+                                        const isBanglaFirst = subject === 'Bangla 1st Paper';
+                                        const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
+                                        const isIct = subject === 'Information and Communication Technology';
+                                        const isPhysics = subject === 'Physics' && classLabel === 'SSC';
+                                        const isChemistry = subject === 'Chemistry' && classLabel === 'SSC';
+                                        const isBiology = subject === 'Biology' && classLabel === 'SSC';
+                                        const isBangladeshGlobal = subject === 'Bangladesh and Global Studies' && classLabel === 'SSC';
+                                        const isReligionMoral = subject === 'Religion and Moral Education' && classLabel === 'SSC';
+                                        const isHscPhysics1 = subject === 'Physics 1st Paper' && classLabel === 'HSC';
+                                        const isHscPhysics2 = subject === 'Physics 2nd Paper' && classLabel === 'HSC';
+                                        const isHscChem1 = subject === 'Chemistry 1st Paper' && classLabel === 'HSC';
+                                        const isHscChem2 = subject === 'Chemistry 2nd Paper' && classLabel === 'HSC';
+                                        const isHscBio1 = subject === 'Biology 1st Paper' && classLabel === 'HSC';
+                                        const isHscBio2 = subject === 'Biology 2nd Paper' && classLabel === 'HSC';
+                                        const displayLabel = isBanglaFirst ? 'বাংলা ১ম পত্র' : isIct ? 'আইসিটি' : subject;
+                                        const route = isBanglaFirst ? banglaRoute : isEnglishFirst ? englishRoute : isIct ? (classLabel === 'SSC' ? ictRoute : hscIctRoute) : isBangladeshGlobal ? bangladeshGlobalRoute : isReligionMoral ? religionRoute : isPhysics ? physicsRoute : isChemistry ? chemistryRoute : isBiology ? biologyRoute : isHscPhysics1 ? hscPhysics1Route : isHscPhysics2 ? hscPhysics2Route : isHscChem1 ? hscChem1Route : isHscChem2 ? hscChem2Route : isHscBio1 ? hscBio1Route : hscBio2Route;
+                                        const subjectKey = makeThumbnailKey(subject, classLabel);
+                                        const thumbnailUrl = subjectThumbnails[subjectKey]?.url;
+                                        const canOpen = Boolean(route);
+                                        return (
+                                            <div key={subject} className="w-full flex flex-wrap gap-3 items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-11 rounded-md overflow-hidden border border-gray-200 bg-gray-100">
+                                                        {thumbnailUrl ? <img src={thumbnailUrl} alt={subject} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}
+                                                    </div>
+                                                    <div className="text-left">
+                                                        <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">Subject</div>
+                                                        <div className={\`text-sm font-semibold text-gray-900 mt-1 \${isBanglaFirst ? 'font-bangla' : ''}\`}>{displayLabel}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[11px] font-semibold">
+                                                    <button onClick={() => route && onNavigate(route)} disabled={!canOpen} className={\`px-2 py-1 rounded-md border border-gray-200 transition \${canOpen ? 'text-gray-600 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed'}\`}>{canOpen ? 'Open' : 'Locked'}</button>
+                                                    {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: subject, subjectKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )
                         )}
 
                         {activeThumbnail && canManageThumbnails && <ThumbnailUploadModal title={activeThumbnail.title} description="Upload a subject thumbnail for public cards." uploadUrl="/api/thumbnails" keyField="subjectKey" itemKey={activeThumbnail.subjectKey} existingUrl={subjectThumbnails[activeThumbnail.subjectKey]?.url} onSaved={(thumbnail) => { setSubjectThumbnails((prev) => ({ ...prev, [thumbnail.subjectKey]: { url: thumbnail.url } })); setActiveThumbnail(null); }} onClose={() => setActiveThumbnail(null)} />}
