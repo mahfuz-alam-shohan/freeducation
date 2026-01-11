@@ -105,6 +105,18 @@ export const landingScience = `
             const notes = (notesByItem || {})[noteKey] || [];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
+            const normalizedNote = (note) => {
+                if (!note) return { text: '', stars: 0 };
+                if (typeof note === 'string') return { text: note, stars: 0 };
+                return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
+            };
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
             const actionCards = [
                 { key: 'cq', label: 'CQ Questions', icon: 'fa-pen-to-square', onClick: onNavigateCq },
                 { key: 'mcq', label: 'MCQ Practice', icon: 'fa-list-check', onClick: onNavigateMcq },
@@ -137,14 +149,20 @@ export const landingScience = `
                             <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Study Notes</div>
                             <div className="space-y-6 text-base text-slate-700 leading-relaxed">
                                 {notes.length === 0 && <div className="text-center py-8 text-slate-400 italic">এখনো কোন নোট যোগ করা হয়নি।</div>}
-                                {notes.map((note, index) => (
-                                    <div key={noteKey + '-' + index} className="flex gap-4">
-                                        <div className="flex-none w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs flex items-center justify-center mt-1">
-                                            {toBanglaNumber(index + 1)}
+                                {notes.map((note, index) => {
+                                    const resolved = normalizedNote(note);
+                                    return (
+                                        <div key={noteKey + '-' + index} className="flex gap-4">
+                                            <div className="flex-none w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs flex items-center justify-center mt-1">
+                                                {toBanglaNumber(index + 1)}
+                                            </div>
+                                            <div>
+                                                <div>{resolved.text}</div>
+                                                {resolved.stars > 0 && <div className="mt-2">{renderStars(resolved.stars)}</div>}
+                                            </div>
                                         </div>
-                                        <div>{note}</div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
