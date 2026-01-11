@@ -74,9 +74,11 @@ export const dashboardBangla = `
             const [newItemType, setNewItemType] = useState('নাটক');
             const [editingItem, setEditingItem] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
+            const [viewMode, setViewMode] = useState('card');
             const typeOptions = ['নাটক', 'উপন্যাস'];
             const subjectLabel = 'Bangla 1st Paper';
             const resetForm = () => { setNewItemName(''); setNewItemType('নাটক'); setEditingItem(null); setThumbnailFile(null); };
+            const viewOptions = [{ key: 'card', label: 'Card' }, { key: 'list', label: 'List' }];
             const handleSave = async () => {
                 const trimmed = newItemName.trim();
                 if (!trimmed) return;
@@ -104,21 +106,68 @@ export const dashboardBangla = `
             };
             return (
                 <AdminShell title="সহপাঠ" subtitle="নাটক ও উপন্যাসের পাঠ যোগ করুন।" activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex flex-wrap gap-3 justify-between items-center"><button onClick={() => onNavigate(baseRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>{canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}</div>
-                    <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
-                        {items.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো সহপাঠ যোগ করা হয়নি।</div>}
-                        {items.map((item) => (
-                            <div key={item.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
-                                <div className="flex flex-col text-left"><span>{item.name}</span><span className="text-xs text-gray-500 mt-1">{item.type}</span></div>
-                                <div className="flex items-center gap-2 text-xs font-semibold">
-                                    {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
-                                    {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item.name, chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ') })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
-                                    {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
-                                    <button onClick={() => onSelectItem(item)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
-                                </div>
+                    <div className="flex flex-wrap gap-3 justify-between items-center">
+                        <button onClick={() => onNavigate(baseRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 text-xs font-semibold">
+                                {viewOptions.map((option) => (
+                                    <button key={option.key} onClick={() => setViewMode(option.key)} className={\`px-3 py-1 rounded-md transition \${viewMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}\`}>{option.label}</button>
+                                ))}
                             </div>
-                        ))}
+                            {canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}
+                        </div>
                     </div>
+                    {viewMode === 'card' ? (
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 font-bangla">
+                            {items.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনও কোনো সহপাঠ যোগ করা হয়নি।</div>}
+                            {items.map((item) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ');
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={item.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="aspect-[4/5] bg-gray-100 border-b border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
+                                        </div>
+                                        <div className="p-4 flex-1 flex flex-col gap-3">
+                                            <div>
+                                                <div className="text-xs uppercase tracking-[0.2em] text-gray-300">সহপাঠ</div>
+                                                <div className="text-base font-semibold text-gray-900 mt-1">{item.name}</div>
+                                                <div className="text-xs text-gray-500 mt-1">{item.type}</div>
+                                            </div>
+                                            <div className="mt-auto flex flex-wrap items-center gap-2 text-xs font-semibold">
+                                                <button onClick={() => onSelectItem(item)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
+                                                {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                                {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                            {items.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো সহপাঠ যোগ করা হয়নি।</div>}
+                            {items.map((item) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ');
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={item.id} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-12 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
+                                            <div className="flex flex-col text-left"><span>{item.name}</span><span className="text-xs text-gray-500 mt-1">{item.type}</span></div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs font-semibold">
+                                            {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItemName(item.name); setNewItemType(item.type); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                            {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                            {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            <button onClick={() => onSelectItem(item)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
@@ -143,8 +192,10 @@ export const dashboardBangla = `
             const [newItem, setNewItem] = useState('');
             const [editingItem, setEditingItem] = useState(null);
             const [thumbnailFile, setThumbnailFile] = useState(null);
+            const [viewMode, setViewMode] = useState('card');
             const baseRoute = baseRouteOverride || (classLabel === 'SSC' ? 'bangla-ssc-shahitto' : 'bangla-hsc-shahitto');
             const subjectLabel = 'Bangla 1st Paper';
+            const viewOptions = [{ key: 'card', label: 'Card' }, { key: 'list', label: 'List' }];
             const handleSave = async () => {
                 const trimmed = newItem.trim();
                 if (!trimmed) return;
@@ -171,21 +222,68 @@ export const dashboardBangla = `
             };
             return (
                 <AdminShell title={\`\${typeLabel} পাঠ তালিকা\`} subtitle="পাঠের নাম নির্বাচন করুন।" activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex flex-wrap gap-3 justify-between items-center"><button onClick={() => onNavigate(baseRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>{showAdd && canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}</div>
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
-                        {items.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো পাঠ যোগ করা হয়নি।</div>}
-                        {items.map((item) => (
-                            <div key={item} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
-                                <span>{item}</span>
-                                <div className="flex items-center gap-2 text-xs font-semibold">
-                                    {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(item); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
-                                    {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item, chapterKey: makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel) })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
-                                    {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
-                                    <button onClick={() => onSelectItem(item)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
-                                </div>
+                    <div className="flex flex-wrap gap-3 justify-between items-center">
+                        <button onClick={() => onNavigate(baseRoute)} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 text-xs font-semibold">
+                                {viewOptions.map((option) => (
+                                    <button key={option.key} onClick={() => setViewMode(option.key)} className={\`px-3 py-1 rounded-md transition \${viewMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}\`}>{option.label}</button>
+                                ))}
                             </div>
-                        ))}
+                            {showAdd && canManageStructure && <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Add</button>}
+                        </div>
                     </div>
+                    {viewMode === 'card' ? (
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 font-bangla">
+                            {items.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনও কোনো পাঠ যোগ করা হয়নি।</div>}
+                            {items.map((item) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel);
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={item} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="aspect-[4/5] bg-gray-100 border-b border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
+                                        </div>
+                                        <div className="p-4 flex-1 flex flex-col gap-3">
+                                            <div>
+                                                <div className="text-xs uppercase tracking-[0.2em] text-gray-300">পাঠ</div>
+                                                <div className="text-base font-semibold text-gray-900 mt-1">{item}</div>
+                                                <div className="text-xs text-gray-500 mt-1">{typeLabel}</div>
+                                            </div>
+                                            <div className="mt-auto flex flex-wrap items-center gap-2 text-xs font-semibold">
+                                                <button onClick={() => onSelectItem(item)} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Open</button>
+                                                {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(item); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                                {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                                {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm divide-y font-bangla">
+                            {items.length === 0 && <div className="px-5 py-4 text-sm text-gray-400">এখনও কোনো পাঠ যোগ করা হয়নি।</div>}
+                            {items.map((item) => {
+                                const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel);
+                                const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
+                                return (
+                                    <div key={item} className="w-full flex flex-wrap gap-3 items-center justify-between px-5 py-4 text-sm font-semibold text-gray-700">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-12 rounded-md overflow-hidden border border-gray-200 bg-gray-100">{thumbnailUrl ? <img src={thumbnailUrl} alt={item} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-gray-300">No image</div>}</div>
+                                            <span>{item}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs font-semibold">
+                                            {canManageStructure && <button onClick={() => { setEditingItem(item); setNewItem(item); setIsModalOpen(true); }} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Rename</button>}
+                                            {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
+                                            {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
+                                            <button onClick={() => onSelectItem(item)} className="text-xs uppercase tracking-[0.2em] text-blue-600 hover:text-blue-500 transition">Open</button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     {isModalOpen && canManageStructure && (
                         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center px-4 py-6 z-50">
                             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 font-bangla">
@@ -210,18 +308,38 @@ export const dashboardBangla = `
             const optionList = [{ label: 'সৃজনশীল', description: 'জ্ঞান ও অনুধাবন প্রশ্ন যোগ করুন', route: srijonshilRoute }, { label: 'বহুনির্বাচনী', description: 'MCQ প্রশ্ন তৈরি করুন', route: mcqRoute }];
             const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
             const [noteInput, setNoteInput] = useState('');
+            const [noteStars, setNoteStars] = useState(0);
             const [editingNoteIndex, setEditingNoteIndex] = useState(null);
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
             const notes = (notesByItem || {})[noteKey] || [];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
-            const openNoteModal = (index = null) => { setEditingNoteIndex(index); setNoteInput(index === null ? '' : notes[index] || ''); setIsNoteModalOpen(true); };
+            const normalizedNote = (note) => {
+                if (!note) return { text: '', stars: 0 };
+                if (typeof note === 'string') return { text: note, stars: 0 };
+                return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
+            };
+            const openNoteModal = (index = null) => {
+                const resolved = index === null ? { text: '', stars: 0 } : normalizedNote(notes[index]);
+                setEditingNoteIndex(index);
+                setNoteInput(resolved.text);
+                setNoteStars(resolved.stars);
+                setIsNoteModalOpen(true);
+            };
             const handleNoteSave = () => {
                 const trimmed = noteInput.trim();
                 if (!trimmed) return;
-                if (onUpdateNotes) { onUpdateNotes((prev) => { const current = prev && prev[noteKey] ? [...prev[noteKey]] : []; if (editingNoteIndex === null) { current.push(trimmed); } else { current[editingNoteIndex] = trimmed; } return { ...prev, [noteKey]: current }; }); }
-                setIsNoteModalOpen(false); setNoteInput(''); setEditingNoteIndex(null);
+                const payload = { text: trimmed, stars: Math.max(0, Math.min(5, Number(noteStars) || 0)) };
+                if (onUpdateNotes) { onUpdateNotes((prev) => { const current = prev && prev[noteKey] ? [...prev[noteKey]] : []; if (editingNoteIndex === null) { current.push(payload); } else { current[editingNoteIndex] = payload; } return { ...prev, [noteKey]: current }; }); }
+                setIsNoteModalOpen(false); setNoteInput(''); setNoteStars(0); setEditingNoteIndex(null);
             };
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
             return (
                 <AdminShell title={null} subtitle={null} activeTab="classes" onNavigate={onNavigate}>
                     <div className="flex flex-col gap-2 font-bangla">
@@ -230,7 +348,7 @@ export const dashboardBangla = `
                         <div className="grid card-grid-gap sm:grid-cols-2">{optionList.map((option) => (<button key={option.label} onClick={() => option.route && onNavigate(option.route)} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 text-left hover:bg-gray-50 transition"><div className="text-xs uppercase tracking-[0.2em] text-gray-300">ধরণ</div><div className="text-lg font-semibold text-gray-900 mt-2">{option.label}</div><p className="text-sm text-gray-500 mt-2">{option.description}</p></button>))}</div>
                         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
                             <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100"><div><div className="text-xs uppercase tracking-[0.2em] text-gray-300">নোটস</div><div className="text-sm font-semibold text-gray-700 mt-1">গুরুত্বপূর্ণ লাইন সংযুক্ত করুন</div></div><button onClick={() => openNoteModal()} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">নোট যোগ করুন</button></div>
-                            <ul className="divide-y">{notes.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যুক্ত হয়নি।</li>}{notes.map((note, index) => (<li key={\`\${noteKey}-\${index}\`} className="px-4 py-3 flex items-start gap-3"><span className="text-sm font-semibold text-gray-500">{toBanglaNumber(index + 1)}.</span><div className="flex-1 text-sm text-gray-700">{note}</div><button onClick={() => openNoteModal(index)} className="text-gray-400 hover:text-gray-600 transition" title="নোট সম্পাদনা করুন">✎</button></li>))}</ul>
+                            <ul className="divide-y">{notes.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যুক্ত হয়নি।</li>}{notes.map((note, index) => { const resolved = normalizedNote(note); return (<li key={\`\${noteKey}-\${index}\`} className="px-4 py-3 flex items-start gap-3"><span className="text-sm font-semibold text-gray-500">{toBanglaNumber(index + 1)}.</span><div className="flex-1"><div className="text-sm text-gray-700">{resolved.text}</div>{resolved.stars > 0 && <div className="mt-1 text-[10px]">{renderStars(resolved.stars)}</div>}</div><button onClick={() => openNoteModal(index)} className="text-gray-400 hover:text-gray-600 transition" title="নোট সম্পাদনা করুন">✎</button></li>); })}</ul>
                         </div>
                         <VideoManager noteKey={noteKey} videosByItem={videosByItem} onUpdateVideos={onUpdateVideos} />
                     </div>
@@ -240,7 +358,18 @@ export const dashboardBangla = `
                                 <h3 className="text-lg font-semibold text-gray-900">{editingNoteIndex === null ? 'নোট যোগ করুন' : 'নোট সম্পাদনা করুন'}</h3>
                                 <p className="text-sm text-gray-500 mt-1">গুরুত্বপূর্ণ লাইন লিখুন।</p>
                                 <textarea value={noteInput} onChange={(event) => setNoteInput(event.target.value)} placeholder="উদাহরণ: পাঠের মূল বক্তব্য..." className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[120px]" />
-                                <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsNoteModalOpen(false); setNoteInput(''); setEditingNoteIndex(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleNoteSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
+                                <div className="mt-3">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গুরুত্ব (স্টার)</label>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <button onClick={() => setNoteStars(0)} className={'text-xs px-2 py-1 rounded-md border ' + (noteStars === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
+                                        <div className="flex items-center gap-1 text-xs">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button key={star} onClick={() => setNoteStars(star)} className={star <= noteStars ? 'text-amber-400' : 'text-slate-200'}>★</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsNoteModalOpen(false); setNoteInput(''); setNoteStars(0); setEditingNoteIndex(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleNoteSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
                             </div>
                         </div>
                     )}

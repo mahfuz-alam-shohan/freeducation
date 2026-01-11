@@ -193,17 +193,37 @@ export const dashboardScience = `
         const ScienceTopicDetail = ({ classLabel, subjectLabel, chapter, topic, noteKey, notesByItem, videosByItem, onUpdateNotes, onUpdateVideos, onBack, onNavigateCq, onNavigateMcq, onNavigate }) => {
             const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
             const [noteInput, setNoteInput] = useState('');
+            const [noteStars, setNoteStars] = useState(0);
             const [editingNoteIndex, setEditingNoteIndex] = useState(null);
             const notes = (notesByItem || {})[noteKey] || [];
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
-            const openNoteModal = (index = null) => { setEditingNoteIndex(index); setNoteInput(index === null ? '' : notes[index] || ''); setIsNoteModalOpen(true); };
+            const normalizedNote = (note) => {
+                if (!note) return { text: '', stars: 0 };
+                if (typeof note === 'string') return { text: note, stars: 0 };
+                return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
+            };
+            const openNoteModal = (index = null) => {
+                const resolved = index === null ? { text: '', stars: 0 } : normalizedNote(notes[index]);
+                setEditingNoteIndex(index);
+                setNoteInput(resolved.text);
+                setNoteStars(resolved.stars);
+                setIsNoteModalOpen(true);
+            };
             const handleNoteSave = () => {
                 const trimmed = noteInput.trim();
                 if (!trimmed) return;
-                if (onUpdateNotes) { onUpdateNotes((prev) => { const current = prev && prev[noteKey] ? [...prev[noteKey]] : []; if (editingNoteIndex === null) { current.push(trimmed); } else { current[editingNoteIndex] = trimmed; } return { ...prev, [noteKey]: current }; }); }
-                setIsNoteModalOpen(false); setNoteInput(''); setEditingNoteIndex(null);
+                const payload = { text: trimmed, stars: Math.max(0, Math.min(5, Number(noteStars) || 0)) };
+                if (onUpdateNotes) { onUpdateNotes((prev) => { const current = prev && prev[noteKey] ? [...prev[noteKey]] : []; if (editingNoteIndex === null) { current.push(payload); } else { current[editingNoteIndex] = payload; } return { ...prev, [noteKey]: current }; }); }
+                setIsNoteModalOpen(false); setNoteInput(''); setNoteStars(0); setEditingNoteIndex(null);
             };
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
             return (
                 <AdminShell title={subjectLabel + ' • ' + (topic?.name || 'টপিক')} subtitle={chapter?.name ? 'অধ্যায়: ' + chapter.name : 'টপিকের তথ্য যোগ করুন।'} activeTab="classes" onNavigate={onNavigate}>
                     <div className="flex flex-wrap gap-3 justify-between items-center font-bangla"><button onClick={onBack} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Back</button><button onClick={() => onNavigate('dashboard')} className="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Dashboard</button></div>
@@ -213,7 +233,7 @@ export const dashboardScience = `
                     </div>
                     <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
                         <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100"><div><div className="text-xs uppercase tracking-[0.2em] text-gray-300">নোটস</div><div className="text-sm font-semibold text-gray-700 mt-1">টপিকের মূল তথ্য যোগ করুন</div></div><button onClick={() => openNoteModal()} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">নোট যোগ করুন</button></div>
-                        <ul className="divide-y">{notes.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যোগ করা হয়নি।</li>}{notes.map((note, index) => (<li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3"><span className="text-sm font-semibold text-gray-500">{toBanglaNumber(index + 1)}.</span><div className="flex-1 text-sm text-gray-700">{note}</div><button onClick={() => openNoteModal(index)} className="text-gray-400 hover:text-gray-600 transition" title="নোট সম্পাদনা করুন">✎</button></li>))}</ul>
+                        <ul className="divide-y">{notes.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">এখনো কোন নোট যোগ করা হয়নি।</li>}{notes.map((note, index) => { const resolved = normalizedNote(note); return (<li key={noteKey + '-' + index} className="px-4 py-3 flex items-start gap-3"><span className="text-sm font-semibold text-gray-500">{toBanglaNumber(index + 1)}.</span><div className="flex-1"><div className="text-sm text-gray-700">{resolved.text}</div>{resolved.stars > 0 && <div className="mt-1 text-[10px]">{renderStars(resolved.stars)}</div>}</div><button onClick={() => openNoteModal(index)} className="text-gray-400 hover:text-gray-600 transition" title="নোট সম্পাদনা করুন">✎</button></li>); })}</ul>
                     </div>
                     <VideoManager noteKey={noteKey} videosByItem={videosByItem} onUpdateVideos={onUpdateVideos} />
                     {isNoteModalOpen && (
@@ -222,7 +242,18 @@ export const dashboardScience = `
                                 <h3 className="text-lg font-semibold text-gray-900">{editingNoteIndex === null ? 'নোট যোগ করুন' : 'নোট সম্পাদনা করুন'}</h3>
                                 <p className="text-sm text-gray-500 mt-1">গুরুত্বপূর্ণ তথ্য লিখুন।</p>
                                 <textarea value={noteInput} onChange={(event) => setNoteInput(event.target.value)} placeholder="উদাহরণ: অধ্যায়ের মূল সূত্র..." className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 min-h-[120px]" />
-                                <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsNoteModalOpen(false); setNoteInput(''); setEditingNoteIndex(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleNoteSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
+                                <div className="mt-3">
+                                    <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গুরুত্ব (স্টার)</label>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <button onClick={() => setNoteStars(0)} className={\`text-xs px-2 py-1 rounded-md border \${noteStars === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500'}\`}>No Star</button>
+                                        <div className="flex items-center gap-1 text-xs">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button key={star} onClick={() => setNoteStars(star)} className={star <= noteStars ? 'text-amber-400' : 'text-slate-200'}>★</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2"><button onClick={() => { setIsNoteModalOpen(false); setNoteInput(''); setNoteStars(0); setEditingNoteIndex(null); }} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button><button onClick={handleNoteSave} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">Save</button></div>
                             </div>
                         </div>
                     )}

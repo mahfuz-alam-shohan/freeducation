@@ -111,6 +111,18 @@ export const landingBangla = `
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
             const noteKey = [classLabel, categoryName || 'general', itemName || ''].join('-');
             const notes = (notesByItem || {})[noteKey] || [];
+            const normalizedNote = (note) => {
+                if (!note) return { text: '', stars: 0 };
+                if (typeof note === 'string') return { text: note, stars: 0 };
+                return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
+            };
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px] text-amber-400">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
             
             const actionCards = [
                 { key: 'cq', label: 'CQ Questions', icon: 'fa-pen-to-square', onClick: () => onNavigate(srijonshilRoute) },
@@ -134,12 +146,16 @@ export const landingBangla = `
 
                         <BookReader>
                             {notes.length === 0 && <div className="text-center py-8 text-slate-400 italic">এখনো কোন নোট যোগ করা হয়নি।</div>}
-                            {notes.map((note, index) => (
-                                <div key={noteKey + '-' + index} className="relative pl-8">
-                                    <span className="absolute left-0 top-0 font-bold text-indigo-900/40 select-none">{toBanglaNumber(index + 1)}.</span>
-                                    <p className="text-slate-900 font-bangla leading-loose text-lg">{note}</p>
-                                </div>
-                            ))}
+                            {notes.map((note, index) => {
+                                const resolved = normalizedNote(note);
+                                return (
+                                    <div key={noteKey + '-' + index} className="relative pl-8">
+                                        <span className="absolute left-0 top-0 font-bold text-indigo-900/40 select-none">{toBanglaNumber(index + 1)}.</span>
+                                        <p className="text-slate-900 font-bangla leading-loose text-lg">{resolved.text}</p>
+                                        {resolved.stars > 0 && <div className="mt-2">{renderStars(resolved.stars)}</div>}
+                                    </div>
+                                );
+                            })}
                         </BookReader>
 
                     </div>

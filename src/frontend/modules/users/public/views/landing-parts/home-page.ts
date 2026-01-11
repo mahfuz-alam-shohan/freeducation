@@ -32,8 +32,11 @@ export const landingHome = `
                 const addEntry = (entry) => entries.push(entry);
                 const addContentEntries = ({ noteKey, parentLabel, onSelect, videoContext }) => {
                     const notes = (notesByItem || {})[noteKey] || [];
+                    const normalizeNoteText = (note) => typeof note === 'string' ? note : (note?.text || note?.note || '');
                     notes.forEach((note, index) => {
-                        addEntry({ type: 'Content', title: note, subtitle: parentLabel + ' • Note ' + (index + 1), keywords: [note, parentLabel, 'note', 'content'].join(' '), onSelect });
+                        const noteText = normalizeNoteText(note);
+                        if (!noteText) return;
+                        addEntry({ type: 'Content', title: noteText, subtitle: parentLabel + ' • Note ' + (index + 1), keywords: [noteText, parentLabel, 'note', 'content'].join(' '), onSelect });
                     });
                     const videos = (videosByItem || {})[noteKey] || [];
                     videos.forEach((video) => {
