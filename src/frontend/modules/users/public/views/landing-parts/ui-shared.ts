@@ -292,13 +292,20 @@ export const landingUi = `
             );
         };
 
-        const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '', isRead = false }) => (
+        const ChapterCard = ({ title, subtitle, thumbnailUrl, onClick, className = '', isRead = false, stars = 0 }) => (
             <button onClick={onClick} className={className + ' block text-left transition-all duration-300 group'}>
                 <div className="space-y-2 h-full text-center">
                     <div className={cardSurfaceClass + (isRead ? ' ring-2 ring-emerald-400' : '')}>
                         {isRead && (
                             <div className="absolute top-2 right-2 inline-flex items-center gap-1 bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm z-10 border border-emerald-600">
                                 <i className="fa-solid fa-check text-[10px]"></i>Read
+                            </div>
+                        )}
+                        {stars > 0 && (
+                            <div className="absolute top-2 left-2 inline-flex items-center gap-1 bg-white/90 px-2 py-1 text-[10px] font-semibold text-amber-500 shadow-sm z-10 border border-amber-100">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <span key={star} className={star <= stars ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                                ))}
                             </div>
                         )}
                         {thumbnailUrl ? (
@@ -332,6 +339,7 @@ export const landingUi = `
                                 title={chapter.name}
                                 subtitle={subjectLabel}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                stars={Math.max(0, Math.min(5, Number(chapter.stars) || 0))}
                                 isRead={Boolean(readMap[chapterKey])}
                                 onClick={() => {
                                     markRead({ key: chapterKey, label: chapter.name, subjectLabel, route: recentRoute });

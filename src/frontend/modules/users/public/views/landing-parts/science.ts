@@ -76,30 +76,41 @@ export const landingScience = `
             </ArtPanelGrid>
         );
 
-        const PublicScienceTopicList = ({ topics, onSelectTopic }) => (
-            <div className={'grid justify-items-center ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3'}>
-                {topics.map((topic) => (
-                    <button 
-                        key={topic.id} 
-                        onClick={() => onSelectTopic(topic)} 
-                        className="w-full relative group bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-50/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden font-bangla"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="relative z-10">
-                            <div className="inline-block px-2 py-0.5 rounded text-[9px] uppercase tracking-[0.25em] text-slate-400 bg-slate-50 mb-3 font-bold group-hover:bg-white transition-colors">Topic</div>
-                            <div className="text-lg font-bold text-slate-800 group-hover:text-indigo-700 transition-colors mb-2">{topic.name}</div>
-                            <p className="text-xs text-slate-500">View Notes, CQ & MCQ</p>
+        const PublicScienceTopicList = ({ topics, onSelectTopic }) => {
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
+            const renderStars = (value) => (
+                <div className="flex items-center justify-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
+            return (
+                <div className={'grid justify-items-center ' + cardGridGapClass + ' sm:grid-cols-2 lg:grid-cols-3'}>
+                    {topics.map((topic) => (
+                        <button 
+                            key={topic.id} 
+                            onClick={() => onSelectTopic(topic)} 
+                            className="w-full relative group bg-white border border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-50/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden font-bangla"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div className="relative z-10 space-y-2">
+                                <div className="inline-block px-2 py-0.5 rounded text-[9px] uppercase tracking-[0.25em] text-slate-400 bg-slate-50 font-bold group-hover:bg-white transition-colors">Topic</div>
+                                <div className="text-lg font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{topic.name}</div>
+                                {normalizeStars(topic.stars) > 0 && renderStars(normalizeStars(topic.stars))}
+                                <p className="text-xs text-slate-500">View Notes, CQ & MCQ</p>
+                            </div>
+                        </button>
+                    ))}
+                    {topics.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-slate-400 font-bangla">
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-3"><i className="fa-regular fa-folder-open text-xl"></i></div>
+                            <p>এখনো কোনো টপিক যোগ করা হয়নি।</p>
                         </div>
-                    </button>
-                ))}
-                {topics.length === 0 && (
-                    <div className="col-span-full py-12 text-center text-slate-400 font-bangla">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-3"><i className="fa-regular fa-folder-open text-xl"></i></div>
-                        <p>এখনো কোনো টপিক যোগ করা হয়নি।</p>
-                    </div>
-                )}
-            </div>
-        );
+                    )}
+                </div>
+            );
+        };
 
         const PublicScienceTopicDetail = ({ subjectLabel, classLabel, chapterName, topicName, noteKey, notesByItem, cqQuestions, mcqList, onBack, backRoute, onNavigateCq, onNavigateMcq, onOpenVideos, onNavigate }) => {
             const notes = (notesByItem || {})[noteKey] || [];
@@ -173,12 +184,38 @@ export const landingScience = `
         const PublicScienceCqDetail = ({ subjectLabel, classLabel, chapterName, topicName, questions, onBack, onNavigate }) => {
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const toBanglaNumber = (value) => String(value).split('').map((digit) => banglaDigits[Number(digit)] ?? digit).join('');
-            const cqTypes = [{ key: 'gyan', label: 'জ্ঞানমূলক (ক)' }, { key: 'onudhabon', label: 'অনুধাবনমূলক (খ)' }];
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
+            const scenarioEntries = questions?.scenario || [];
+            const gList = scenarioEntries.map((entry) => ({
+                scenario: entry.scenario,
+                question: entry.gQuestion,
+                answer: entry.gAnswer,
+                stars: entry.gStars
+            }));
+            const ghList = scenarioEntries.map((entry) => ({
+                scenario: entry.scenario,
+                question: entry.ghQuestion,
+                answer: entry.ghAnswer,
+                stars: entry.ghStars
+            }));
+            const cqTypes = [
+                { key: 'gyan', label: 'জ্ঞানমূলক (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবনমূলক (খ)' },
+                { key: 'g', label: 'প্রয়োগমূলক (গ)' },
+                { key: 'gh', label: 'উচ্চতর দক্ষতা (ঘ)' }
+            ];
             return (
                 <PublicScienceShell subjectLabel={subjectLabel} classLabel={classLabel} title="সৃজনশীল প্রশ্ন" subtitle={chapterName ? chapterName + ' • ' + (topicName || '') : topicName || ''} onBack={onBack} onNavigate={onNavigate}>
                     <div className="space-y-6 font-bangla">
                         {cqTypes.map((type) => {
-                            const list = questions[type.key] || [];
+                            const list = type.key === 'g' ? gList : type.key === 'gh' ? ghList : (questions[type.key] || []);
                             return (
                                 <div key={type.key} className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 shadow-sm">
                                     <div className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">{type.label}</div>
@@ -186,10 +223,17 @@ export const landingScience = `
                                         <div className="space-y-6">
                                             {list.map((entry, index) => (
                                                 <div key={entry.question + '-' + index} className="space-y-3">
+                                                    {entry.scenario && (
+                                                        <div className="text-sm text-slate-600 bg-slate-50/60 p-4 rounded-xl border border-slate-100">
+                                                            <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2">Scenario</div>
+                                                            <div>{entry.scenario}</div>
+                                                        </div>
+                                                    )}
                                                     <div className="flex gap-3">
                                                         <span className="font-bold text-indigo-600">{toBanglaNumber(index + 1)}.</span>
                                                         <div className="font-semibold text-slate-800">{entry.question}</div>
                                                     </div>
+                                                    {normalizeStars(entry.stars) > 0 && <div>{renderStars(normalizeStars(entry.stars))}</div>}
                                                     <div className="text-sm text-slate-600 bg-slate-50/50 p-4 rounded-xl border border-slate-100 leading-relaxed">
                                                         {entry.answer}
                                                     </div>

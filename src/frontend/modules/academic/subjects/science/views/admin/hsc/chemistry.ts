@@ -68,30 +68,57 @@ export const scienceHscChemistryViews = `
     />
 )}
 {view === 'admin-hsc-chemistry-1st-cq-questions' && (
-    <SrijonshilQuestionList
-        classLabel="HSC"
-        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-        questions={
-            srijonshilQuestions[
+    selectedScienceCqType?.key === 'scenario' ? (
+        <SrijonshilScenarioList
+            classLabel="HSC"
+            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+            questions={
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+                ] || []
+            }
+            onAdd={addQuestionEntry(
+                setSrijonshilQuestions,
                 getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-            ] || []
-        }
-        onAdd={addQuestionEntry(
-            setSrijonshilQuestions,
-            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-        )}
-        onUpdate={updateQuestionEntry(
-            setSrijonshilQuestions,
-            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-        )}
-        onDelete={removeQuestionEntry(
-            setSrijonshilQuestions,
-            getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-        )}
-        typeRoute="admin-hsc-chemistry-1st-cq-types"
-        onNavigate={navigate}
-    />
+            )}
+            onUpdate={updateQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            onDelete={removeQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            typeRoute="admin-hsc-chemistry-1st-cq-types"
+            onNavigate={navigate}
+        />
+    ) : (
+        <SrijonshilQuestionList
+            classLabel="HSC"
+            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+            questions={
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+                ] || []
+            }
+            onAdd={addQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            onUpdate={updateQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            onDelete={removeQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 1st Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            typeRoute="admin-hsc-chemistry-1st-cq-types"
+            onNavigate={navigate}
+        />
+    )
 )}
 {view === 'admin-hsc-chemistry-1st-mcq' && (
     <McqQuestionList
@@ -185,30 +212,57 @@ export const scienceHscChemistryViews = `
     />
 )}
 {view === 'admin-hsc-chemistry-2nd-cq-questions' && (
-    <SrijonshilQuestionList
-        classLabel="HSC"
-        itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
-        typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
-        questions={
-            srijonshilQuestions[
+    selectedScienceCqType?.key === 'scenario' ? (
+        <SrijonshilScenarioList
+            classLabel="HSC"
+            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+            questions={
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+                ] || []
+            }
+            onAdd={addQuestionEntry(
+                setSrijonshilQuestions,
                 getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-            ] || []
-        }
-        onAdd={addQuestionEntry(
-            setSrijonshilQuestions,
-            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-        )}
-        onUpdate={updateQuestionEntry(
-            setSrijonshilQuestions,
-            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-        )}
-        onDelete={removeQuestionEntry(
-            setSrijonshilQuestions,
-            getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
-        )}
-        typeRoute="admin-hsc-chemistry-2nd-cq-types"
-        onNavigate={navigate}
-    />
+            )}
+            onUpdate={updateQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            onDelete={removeQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            typeRoute="admin-hsc-chemistry-2nd-cq-types"
+            onNavigate={navigate}
+        />
+    ) : (
+        <SrijonshilQuestionList
+            classLabel="HSC"
+            itemName={selectedScienceTopic?.name || 'নির্বাচিত টপিক'}
+            typeLabel={selectedScienceCqType?.label || 'CQ প্রশ্ন'}
+            questions={
+                srijonshilQuestions[
+                    getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+                ] || []
+            }
+            onAdd={addQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            onUpdate={updateQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            onDelete={removeQuestionEntry(
+                setSrijonshilQuestions,
+                getQuestionKey('HSC', 'Chemistry 2nd Paper', activeScienceTopicKey, selectedScienceCqType?.key)
+            )}
+            typeRoute="admin-hsc-chemistry-2nd-cq-types"
+            onNavigate={navigate}
+        />
+    )
 )}
 {view === 'admin-hsc-chemistry-2nd-mcq' && (
     <McqQuestionList

@@ -21,19 +21,22 @@ export const landingBangla = `
         const PublicBanglaTopicGrid = ({ classLabel, subjectLabel, topics, onNavigate }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
             const { readMap, markRead } = useReadingProgress();
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
                     {topics.map((topic) => {
-                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, topic.thumbnailKey || topic.title);
+                        const topicTitle = topic.title || topic.name || '';
+                        const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, topic.thumbnailKey || topicTitle);
                         return (
                             <ChapterCard
-                                key={topic.title}
-                                title={topic.title}
+                                key={topicTitle}
+                                title={topicTitle}
                                 subtitle={topic.description}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                stars={normalizeStars(topic.stars)}
                                 isRead={Boolean(readMap[chapterKey])}
                                 onClick={() => {
-                                    markRead({ key: chapterKey, label: topic.title, subjectLabel, route: topic.route });
+                                    markRead({ key: chapterKey, label: topicTitle, subjectLabel, route: topic.route });
                                     topic.route && onNavigate(topic.route);
                                 }}
                                 className={cardWidthClass}
@@ -47,23 +50,29 @@ export const landingBangla = `
         const PublicBanglaTextList = ({ classLabel, subjectLabel, categoryLabel, subtitle, items, onSelectItem }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
             const { readMap, markRead } = useReadingProgress();
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
+            const resolveItemName = (value) => (typeof value === 'string' ? value : value?.name || '');
+            const resolveItemStars = (value) => normalizeStars(typeof value === 'string' ? 0 : value?.stars);
             return (
                 <div className="space-y-4 font-bangla">
                     <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                         {items.length === 0 && <div className="col-span-full py-12 text-center text-slate-400 italic">এই অংশে এখনও কোন পাঠ যোগ করা হয়নি।</div>}
                         {items.map((item) => {
-                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + categoryLabel);
+                            const itemName = resolveItemName(item);
+                            const itemStars = resolveItemStars(item);
+                            const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, itemName + '-' + categoryLabel);
                             return (
                                 <ChapterCard
-                                    key={item}
-                                    title={item}
+                                    key={itemName}
+                                    title={itemName}
                                     subtitle={categoryLabel}
                                     thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                    stars={itemStars}
                                     isRead={Boolean(readMap[chapterKey])}
                                     onClick={() => {
-                                        storeBanglaSelection({ classLabel, categoryName: categoryLabel, itemName: item });
-                                        markRead({ key: chapterKey, label: item, subjectLabel, route: classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item' });
-                                        onSelectItem(item);
+                                        storeBanglaSelection({ classLabel, categoryName: categoryLabel, itemName: itemName });
+                                        markRead({ key: chapterKey, label: itemName, subjectLabel, route: classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item' });
+                                        onSelectItem(itemName);
                                     }}
                                     className={cardWidthClass}
                                 />
@@ -77,6 +86,7 @@ export const landingBangla = `
         const PublicBanglaShohopathList = ({ classLabel, subjectLabel, items, onSelectItem }) => {
             const chapterThumbnails = useThumbnails('/api/chapter-thumbnails', 'chapterKey');
             const { readMap, markRead } = useReadingProgress();
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
             return (
                 <ArtPanelGrid className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 font-bangla">
                     {items.length === 0 && <div className="col-span-full py-12 text-center text-slate-400 italic">এই অংশে এখনও কোন সহপাঠ যোগ করা হয়নি।</div>}
@@ -88,6 +98,7 @@ export const landingBangla = `
                                 title={item.name}
                                 subtitle={item.type}
                                 thumbnailUrl={chapterThumbnails[chapterKey]?.url}
+                                stars={normalizeStars(item.stars)}
                                 isRead={Boolean(readMap[chapterKey])}
                                 onClick={() => {
                                     storeBanglaSelection({ classLabel, categoryName: item.type, itemName: item.name });
@@ -165,12 +176,42 @@ export const landingBangla = `
 
         const PublicBanglaSrijonshilDetail = ({ classLabel, itemName, categoryName, srijonshilQuestions, getQuestionKey, onNavigate }) => {
             const itemRoute = classLabel === 'SSC' ? 'public-bangla-ssc-item' : 'public-bangla-hsc-item';
-            const srijonshilTypes = [{ key: 'gyan', label: 'জ্ঞানমূলক (ক)' }, { key: 'onudhabon', label: 'অনুধাবনমূলক (খ)' }];
+            const normalizeStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
+            const renderStars = (value) => (
+                <div className="flex items-center gap-1 text-[10px]">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
+                    ))}
+                </div>
+            );
+            const scenarioEntries = srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, 'scenario')] || [];
+            const gList = scenarioEntries.map((entry) => ({
+                scenario: entry.scenario,
+                question: entry.gQuestion,
+                answer: entry.gAnswer,
+                stars: entry.gStars
+            }));
+            const ghList = scenarioEntries.map((entry) => ({
+                scenario: entry.scenario,
+                question: entry.ghQuestion,
+                answer: entry.ghAnswer,
+                stars: entry.ghStars
+            }));
+            const srijonshilTypes = [
+                { key: 'gyan', label: 'জ্ঞানমূলক (ক)' },
+                { key: 'onudhabon', label: 'অনুধাবনমূলক (খ)' },
+                { key: 'g', label: 'প্রয়োগমূলক (গ)' },
+                { key: 'gh', label: 'উচ্চতর দক্ষতা (ঘ)' }
+            ];
             return (
                 <PublicBanglaShell title="সৃজনশীল প্রশ্ন" subtitle={itemName ? itemName : ''} onBack={() => onNavigate(itemRoute)} onNavigate={onNavigate}>
                     <div className="space-y-12 font-bangla text-left max-w-4xl mx-auto">
                         {srijonshilTypes.map((type) => {
-                            const list = srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, type.key)] || [];
+                            const list = type.key === 'g'
+                                ? gList
+                                : type.key === 'gh'
+                                    ? ghList
+                                    : (srijonshilQuestions[getQuestionKey(classLabel, categoryName, itemName, type.key)] || []);
                             return (
                                 <div key={type.key}>
                                     <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
@@ -183,7 +224,14 @@ export const landingBangla = `
                                             <div className="space-y-8">
                                                 {list.map((entry, index) => (
                                                     <div key={entry.question + '-' + index} className="space-y-3">
+                                                        {entry.scenario && (
+                                                            <div className="text-sm text-slate-600 bg-slate-50 p-4 border border-slate-200 rounded-lg">
+                                                                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2">Scenario</div>
+                                                                <div>{entry.scenario}</div>
+                                                            </div>
+                                                        )}
                                                         <div className="font-bold text-slate-900">{index + 1}. {entry.question}</div>
+                                                        {normalizeStars(entry.stars) > 0 && <div>{renderStars(normalizeStars(entry.stars))}</div>}
                                                         <div className="text-slate-800 leading-relaxed pl-4 border-l-2 border-indigo-200/50">{entry.answer}</div>
                                                     </div>
                                                 ))}
