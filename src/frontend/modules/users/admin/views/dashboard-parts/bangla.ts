@@ -21,7 +21,7 @@ export const dashboardBangla = `
                                 const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, topic.thumbnailKey);
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={topic.title} className={`w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col ${topic.active ? 'text-gray-700' : 'text-gray-300'}`}>
+                                    <div key={topic.title} className={'w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col ' + (topic.active ? 'text-gray-700' : 'text-gray-300')}>
                                         <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
                                             {thumbnailUrl ? <img src={thumbnailUrl} alt={topic.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
                                         </div>

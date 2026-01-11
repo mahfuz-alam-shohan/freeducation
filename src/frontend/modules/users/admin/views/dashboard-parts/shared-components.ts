@@ -160,7 +160,7 @@ export const dashboardShared = `
         const DashboardViewToggle = ({ viewMode, onChange, options = dashboardViewOptions }) => (
             <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 text-xs font-semibold">
                 {options.map((option) => (
-                    <button key={option.key} onClick={() => onChange(option.key)} className={`px-3 py-1 rounded-md transition ${viewMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>{option.label}</button>
+                    <button key={option.key} onClick={() => onChange(option.key)} className={'px-3 py-1 rounded-md transition ' + (viewMode === option.key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}>{option.label}</button>
                 ))}
             </div>
         );
