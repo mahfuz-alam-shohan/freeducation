@@ -65,7 +65,9 @@ export const scienceSscViews = `
             gyan: srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
                 srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'onudhabon')] ||
-                []
+                [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'scenario')] || []
         }}
         mcqList={mcqQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'mcq')] || []}
         onBack={() => navigate('public-ssc-physics-topics')}
@@ -82,7 +84,9 @@ export const scienceSscViews = `
             gyan: srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
                 srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'onudhabon')] ||
-                []
+                [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('SSC', 'Physics', activeScienceTopicKey, 'scenario')] || []
         }}
         onBack={() => navigate('public-ssc-physics-topic')}
         onNavigate={navigate}
@@ -165,7 +169,9 @@ export const scienceSscViews = `
             gyan: srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
                 srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'onudhabon')] ||
-                []
+                [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'scenario')] || []
         }}
         mcqList={mcqQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'mcq')] || []}
         onBack={() => navigate('public-ssc-chemistry-topics')}
@@ -182,7 +188,9 @@ export const scienceSscViews = `
             gyan: srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
                 srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'onudhabon')] ||
-                []
+                [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('SSC', 'Chemistry', activeScienceTopicKey, 'scenario')] || []
         }}
         onBack={() => navigate('public-ssc-chemistry-topic')}
         onNavigate={navigate}
@@ -265,7 +273,9 @@ export const scienceSscViews = `
             gyan: srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
                 srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'onudhabon')] ||
-                []
+                [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'scenario')] || []
         }}
         mcqList={mcqQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'mcq')] || []}
         onBack={() => navigate('public-ssc-biology-topics')}
@@ -282,7 +292,9 @@ export const scienceSscViews = `
             gyan: srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
                 srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'onudhabon')] ||
-                []
+                [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('SSC', 'Biology', activeScienceTopicKey, 'scenario')] || []
         }}
         onBack={() => navigate('public-ssc-biology-topic')}
         onNavigate={navigate}

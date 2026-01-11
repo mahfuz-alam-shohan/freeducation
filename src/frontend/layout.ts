@@ -41,7 +41,7 @@ export function renderAppHtml(initialView: string) {
             --ui-muted: #e2e8f0;
         }
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--ui-soft); color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; font-size: 15px; background-color: var(--ui-soft); color: #0f172a; -webkit-text-size-adjust: 100%; min-height: 100vh; }
         input, select, textarea { font-size: 16px !important; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .font-bangla { font-family: 'Noto Sans Bengali', 'Inter', sans-serif; }

@@ -90,6 +90,10 @@ export const religionViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         mcqList={
@@ -115,6 +119,10 @@ export const religionViews = `
             onudhabon:
                 srijonshilQuestions[
                     getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'onudhabon')
+                ] || [],
+            scenario:
+                srijonshilQuestions[
+                    getQuestionKey('SSC', getReligionSubjectKey(selectedReligion), activeScienceTopicKey, 'scenario')
                 ] || []
         }}
         onBack={() => navigate('public-ssc-religion-topic')}

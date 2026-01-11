@@ -96,7 +96,9 @@ export const ictViews = `
         cqQuestions={{
             gyan: srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'gyan')] || [],
             onudhabon:
-                srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'onudhabon')] || []
+                srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'onudhabon')] || [],
+            scenario:
+                srijonshilQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'scenario')] || []
         }}
         mcqList={mcqQuestions[getQuestionKey('HSC', 'ICT', activeScienceTopicKey, 'mcq')] || []}
         onBack={() => navigate('public-hsc-ict-topics')}

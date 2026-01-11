@@ -162,28 +162,54 @@ export const banglaViews = `
     />
 )}
 {view === 'bangla-ssc-srijonshil-questions' && (
-    <SrijonshilQuestionList
-        classLabel="SSC"
-        itemName={selectedBanglaItem}
-        typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
-        questions={srijonshilQuestions[getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
-        onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
-        onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
-        onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
-        onNavigate={navigate}
-    />
+    selectedSrijonshilType?.key === 'scenario' ? (
+        <SrijonshilScenarioList
+            classLabel="SSC"
+            itemName={selectedBanglaItem}
+            typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
+            questions={srijonshilQuestions[getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
+            onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onNavigate={navigate}
+        />
+    ) : (
+        <SrijonshilQuestionList
+            classLabel="SSC"
+            itemName={selectedBanglaItem}
+            typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
+            questions={srijonshilQuestions[getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
+            onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('SSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onNavigate={navigate}
+        />
+    )
 )}
 {view === 'bangla-hsc-srijonshil-questions' && (
-    <SrijonshilQuestionList
-        classLabel="HSC"
-        itemName={selectedBanglaItem}
-        typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
-        questions={srijonshilQuestions[getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
-        onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
-        onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
-        onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
-        onNavigate={navigate}
-    />
+    selectedSrijonshilType?.key === 'scenario' ? (
+        <SrijonshilScenarioList
+            classLabel="HSC"
+            itemName={selectedBanglaItem}
+            typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
+            questions={srijonshilQuestions[getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
+            onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onNavigate={navigate}
+        />
+    ) : (
+        <SrijonshilQuestionList
+            classLabel="HSC"
+            itemName={selectedBanglaItem}
+            typeLabel={selectedSrijonshilType?.label || 'সৃজনশীল'}
+            questions={srijonshilQuestions[getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key)] || []}
+            onAdd={addQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onUpdate={updateQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onDelete={removeQuestionEntry(setSrijonshilQuestions, getQuestionKey('HSC', selectedBanglaCategory, selectedBanglaItem, selectedSrijonshilType?.key))}
+            onNavigate={navigate}
+        />
+    )
 )}
 {view === 'bangla-ssc-mcq' && (
     <McqQuestionList
