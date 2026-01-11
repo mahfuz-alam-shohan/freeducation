@@ -27,8 +27,11 @@ export const collectionHelpers = `
                 setItems((prev) => [...prev, entry]);
             };
 
-            const updateChapterItem = (setItems) => (chapterId, name) => {
-                setItems((prev) => prev.map((item) => (item.id === chapterId ? { ...item, name } : item)));
+            const updateChapterItem = (setItems) => (chapterId, updates) => {
+                const resolved = typeof updates === 'string' ? { name: updates } : (updates || {});
+                setItems((prev) =>
+                    prev.map((item) => (item.id === chapterId ? { ...item, ...resolved } : item))
+                );
             };
 
             const removeChapterItem = (setItems) => (chapterId) => {
@@ -45,14 +48,15 @@ export const collectionHelpers = `
                 );
             };
 
-            const updateTopicItem = (setItems) => (chapterId, topicId, name) => {
+            const updateTopicItem = (setItems) => (chapterId, topicId, updates) => {
+                const resolved = typeof updates === 'string' ? { name: updates } : (updates || {});
                 setItems((prev) =>
                     prev.map((chapter) =>
                         chapter.id === chapterId
                             ? {
                                 ...chapter,
                                 topics: (chapter.topics || []).map((topic) =>
-                                    topic.id === topicId ? { ...topic, name } : topic
+                                    topic.id === topicId ? { ...topic, ...resolved } : topic
                                 )
                             }
                             : chapter
@@ -77,11 +81,12 @@ export const collectionHelpers = `
                 }));
             };
 
-            const updateReligionChapterItem = (setItems) => (religionKey, chapterId, name) => {
+            const updateReligionChapterItem = (setItems) => (religionKey, chapterId, updates) => {
+                const resolved = typeof updates === 'string' ? { name: updates } : (updates || {});
                 setItems((prev) => ({
                     ...prev,
                     [religionKey]: (prev[religionKey] || []).map((chapter) =>
-                        chapter.id === chapterId ? { ...chapter, name } : chapter
+                        chapter.id === chapterId ? { ...chapter, ...resolved } : chapter
                     )
                 }));
             };
@@ -104,7 +109,8 @@ export const collectionHelpers = `
                 }));
             };
 
-            const updateReligionTopicItem = (setItems) => (religionKey, chapterId, topicId, name) => {
+            const updateReligionTopicItem = (setItems) => (religionKey, chapterId, topicId, updates) => {
+                const resolved = typeof updates === 'string' ? { name: updates } : (updates || {});
                 setItems((prev) => ({
                     ...prev,
                     [religionKey]: (prev[religionKey] || []).map((chapter) =>
@@ -112,7 +118,7 @@ export const collectionHelpers = `
                             ? {
                                 ...chapter,
                                 topics: (chapter.topics || []).map((topic) =>
-                                    topic.id === topicId ? { ...topic, name } : topic
+                                    topic.id === topicId ? { ...topic, ...resolved } : topic
                                 )
                             }
                             : chapter
