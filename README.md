@@ -65,3 +65,7 @@ wrangler dev
 
 This repo is intentionally minimal. Build on top of the role/platform separation as the product grows.
 The public landing highlights the first 8 subjects for SSC and HSC in the horizontal rows (see `src/frontend/modules/users/public/landing.ts`).
+
+### Database migrations for content data
+
+Star ratings for MCQ questions and notes are stored inside the existing `content_store.data` JSON payload, so no new tables or columns are required for this update. If a future change needs schema updates, add the migration via `registerTableSchema` in `src/backend/domains/academic/shared/schema.ts`, which is responsible for creating and evolving tables through code.

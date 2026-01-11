@@ -136,7 +136,7 @@ export const dashboardQuestions = `
                                 <div className="mt-3">
                                     <label className="text-xs uppercase tracking-[0.2em] text-gray-400">গুরুত্ব (স্টার)</label>
                                     <div className="mt-2 flex items-center gap-2">
-                                        <button onClick={() => setStarRating(0)} className={`text-xs px-2 py-1 rounded-md border ${starRating === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500'}`}>No Star</button>
+                                        <button onClick={() => setStarRating(0)} className={'text-xs px-2 py-1 rounded-md border ' + (starRating === 0 ? 'border-amber-400 text-amber-600' : 'border-gray-200 text-gray-500')}>No Star</button>
                                         <div className="flex items-center gap-1 text-xs">
                                             {[1, 2, 3, 4, 5].map((star) => (
                                                 <button key={star} onClick={() => setStarRating(star)} className={star <= starRating ? 'text-amber-400' : 'text-slate-200'}>★</button>
