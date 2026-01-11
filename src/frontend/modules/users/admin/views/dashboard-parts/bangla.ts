@@ -16,16 +16,13 @@ export const dashboardBangla = `
                         <DashboardViewToggle viewMode={viewMode} onChange={setViewMode} options={viewOptions} />
                     </div>
                     {viewMode === 'card' ? (
-                        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+                        <div className="mt-4 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
                             {topics.map((topic) => {
                                 const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, topic.thumbnailKey);
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={topic.title} className={'w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col ' + (topic.active ? 'text-gray-700' : 'text-gray-300')}>
-                                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
-                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={topic.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
-                                        </div>
-                                        <div className="p-3 flex flex-col gap-2">
+                                    <div key={topic.title} className={'w-full max-w-[160px] aspect-[1/1.618] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col ' + (topic.active ? 'text-gray-700' : 'text-gray-300')}>
+                                        <div className="p-2 flex flex-col gap-2">
                                             <div>
                                                 <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">বিষয়</div>
                                                 <div className="text-sm font-semibold text-gray-900 mt-1">{topic.title}</div>
@@ -35,6 +32,9 @@ export const dashboardBangla = `
                                                 <button onClick={() => topic.active && topic.route && onNavigate(topic.route)} className={'px-2 py-1 rounded-md border border-gray-200 transition ' + (topic.active ? 'text-gray-600 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed')} disabled={!topic.active}>Open</button>
                                                 {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: topic.title, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                             </div>
+                                        </div>
+                                        <div className="flex-1 bg-gray-100 border-t border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={topic.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
                                         </div>
                                     </div>
                                 );
@@ -84,16 +84,13 @@ export const dashboardBangla = `
                         <DashboardViewToggle viewMode={viewMode} onChange={setViewMode} options={viewOptions} />
                     </div>
                     {viewMode === 'card' ? (
-                        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+                        <div className="mt-4 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
                             {categoryCards.map((card) => {
                                 const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, card.thumbnailKey);
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={card.title} className="w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
-                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={card.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
-                                        </div>
-                                        <div className="p-3 flex flex-col gap-2">
+                                    <div key={card.title} className="w-full max-w-[160px] aspect-[1/1.618] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="p-2 flex flex-col gap-2">
                                             <div>
                                                 <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">ধারা</div>
                                                 <div className="text-sm font-semibold text-gray-900 mt-1">{card.title}</div>
@@ -103,6 +100,9 @@ export const dashboardBangla = `
                                                 <button onClick={() => onNavigate(card.route)} className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Open</button>
                                                 {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: card.title, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                             </div>
+                                        </div>
+                                        <div className="flex-1 bg-gray-100 border-t border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={card.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
                                         </div>
                                     </div>
                                 );
@@ -181,17 +181,14 @@ export const dashboardBangla = `
                         </div>
                     </div>
                     {viewMode === 'card' ? (
-                        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+                        <div className="mt-4 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
                             {items.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনও কোনো সহপাঠ যোগ করা হয়নি।</div>}
                             {items.map((item) => {
                                 const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item.id + '-সহপাঠ');
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={item.id} className="w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
-                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
-                                        </div>
-                                        <div className="p-3 flex-1 flex flex-col gap-2">
+                                    <div key={item.id} className="w-full max-w-[160px] aspect-[1/1.618] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="p-2 flex-1 flex flex-col gap-2">
                                             <div>
                                                 <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">সহপাঠ</div>
                                                 <div className="text-sm font-semibold text-gray-900 mt-1">{item.name}</div>
@@ -203,6 +200,9 @@ export const dashboardBangla = `
                                                 {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item.name, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                                 {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item.id); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
                                             </div>
+                                        </div>
+                                        <div className="flex-1 bg-gray-100 border-t border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
                                         </div>
                                     </div>
                                 );
@@ -292,17 +292,14 @@ export const dashboardBangla = `
                         </div>
                     </div>
                     {viewMode === 'card' ? (
-                        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
+                        <div className="mt-4 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center font-bangla">
                             {items.length === 0 && <div className="col-span-full px-5 py-4 text-sm text-gray-400 text-center bg-white border border-dashed border-gray-200 rounded-2xl">এখনও কোনো পাঠ যোগ করা হয়নি।</div>}
                             {items.map((item) => {
                                 const chapterKey = makeChapterThumbnailKey(classLabel, subjectLabel, item + '-' + typeLabel);
                                 const thumbnailUrl = chapterThumbnails[chapterKey]?.url;
                                 return (
-                                    <div key={item} className="w-full max-w-[170px] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200">
-                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
-                                        </div>
-                                        <div className="p-3 flex-1 flex flex-col gap-2">
+                                    <div key={item} className="w-full max-w-[160px] aspect-[1/1.618] bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                                        <div className="p-2 flex-1 flex flex-col gap-2">
                                             <div>
                                                 <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300">পাঠ</div>
                                                 <div className="text-sm font-semibold text-gray-900 mt-1">{item}</div>
@@ -314,6 +311,9 @@ export const dashboardBangla = `
                                                 {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: item, chapterKey })} className="px-2 py-1 rounded-md border border-blue-100 text-blue-600 hover:bg-blue-50 transition">Thumbnail</button>}
                                                 {canManageStructure && <button onClick={() => { const shouldRemove = window.confirm('আপনি কি এই পাঠটি মুছে ফেলতে চান?'); if (shouldRemove) { onRemoveItem(item); } }} className="px-2 py-1 rounded-md border border-red-100 text-red-500 hover:bg-red-50 transition">Delete</button>}
                                             </div>
+                                        </div>
+                                        <div className="flex-1 bg-gray-100 border-t border-gray-200">
+                                            {thumbnailUrl ? <img src={thumbnailUrl} alt={item} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-gray-300">No image</div>}
                                         </div>
                                     </div>
                                 );

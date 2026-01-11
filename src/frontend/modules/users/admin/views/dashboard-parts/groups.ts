@@ -118,7 +118,7 @@ export const dashboardGroups = `
                         
                         {subjects.length > 0 && (
                             viewMode === 'card' ? (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 w-full max-w-6xl justify-items-center">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full max-w-6xl justify-items-center">
                                     {subjects.map((subject) => {
                                         const isBanglaFirst = subject === 'Bangla 1st Paper';
                                         const isEnglishFirst = subject === 'English 1st Paper' && classLabel === 'HSC';
@@ -142,24 +142,25 @@ export const dashboardGroups = `
                                         const canOpen = Boolean(route);
 
                                         return (
-                                            <div key={subject} className="group relative w-full max-w-[150px] aspect-[3/4] rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-stone-200 bg-stone-900">
-                                                {thumbnailUrl ? (
-                                                    <img src={thumbnailUrl} alt={subject} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90" />
-                                                ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-stone-800">
-                                                        <i className="fa-solid fa-book text-stone-700 text-3xl"></i>
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                                                <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                                                    <div className="mb-2">
-                                                        <div className="text-[9px] font-bold text-stone-300 uppercase tracking-widest mb-1">Subject</div>
-                                                        <h3 className={\`text-white font-semibold leading-tight \${isBanglaFirst ? 'font-bangla text-sm' : 'text-[11px]'}\`}>{displayLabel}</h3>
+                                            <div key={subject} className="group w-full max-w-[150px] aspect-[1/1.618] rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-stone-200 bg-stone-900 flex flex-col">
+                                                <div className="p-2 flex flex-col gap-2">
+                                                    <div>
+                                                        <div className="text-[9px] font-bold text-stone-300 uppercase tracking-widest">Subject</div>
+                                                        <h3 className={\`text-white font-semibold leading-tight mt-1 \${isBanglaFirst ? 'font-bangla text-sm' : 'text-[11px]'}\`}>{displayLabel}</h3>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <button onClick={() => route && onNavigate(route)} disabled={!canOpen} className={\`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded text-center transition-colors backdrop-blur-md \${canOpen ? 'bg-white/90 text-stone-900 hover:bg-white' : 'bg-white/10 text-stone-400 cursor-not-allowed'}\`}>{canOpen ? 'Open' : 'Locked'}</button>
-                                                        {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: subject, subjectKey })} className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded backdrop-blur-md border border-white/10 transition-colors"><i className="fa-solid fa-camera text-[10px]"></i></button>}
+                                                        <button onClick={() => route && onNavigate(route)} disabled={!canOpen} className={\`flex-1 py-1 text-[9px] font-bold uppercase tracking-wider rounded text-center transition-colors \${canOpen ? 'bg-white/90 text-stone-900 hover:bg-white' : 'bg-white/10 text-stone-400 cursor-not-allowed'}\`}>{canOpen ? 'Open' : 'Locked'}</button>
+                                                        {canManageThumbnails && <button onClick={() => setActiveThumbnail({ title: subject, subjectKey })} className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded border border-white/10 transition-colors"><i className="fa-solid fa-camera text-[10px]"></i></button>}
                                                     </div>
+                                                </div>
+                                                <div className="relative flex-1 bg-stone-800 border-t border-stone-700">
+                                                    {thumbnailUrl ? (
+                                                        <img src={thumbnailUrl} alt={subject} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
+                                                    ) : (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-stone-800">
+                                                            <i className="fa-solid fa-book text-stone-700 text-3xl"></i>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
