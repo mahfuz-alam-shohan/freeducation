@@ -153,7 +153,20 @@ var Te=(e,t,s)=>(a,i)=>{let n=-1;return o(0);async function o(r){if(r<=n)throw n
 `),u=btoa(unescape(encodeURIComponent(l))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""),m=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{method:"POST",headers:{Authorization:`Bearer ${i.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({raw:u})});return m.ok?!0:(console.error("Gmail Send Error:",await m.text()),!1)}catch(a){return console.error("Network Error:",a),!1}};var He=new P;He.post("/register-request",async e=>{try{let{name:t,email:s,password:a,classLabel:i,groupLabel:n}=await e.req.json(),o=String(t||"").trim(),r=E(String(s||"")),c=String(a||"");if(!r||!c||!o)return e.json({success:!1,error:"Missing fields"},400);if(c.length<8)return e.json({success:!1,error:"Password must be at least 8 characters."},400);if(await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first())return e.json({success:!1,error:"User already exists. Please login."},400);let u=Math.floor(1e5+Math.random()*9e5).toString(),m=Date.now()+10*60*1e3;return await e.env.DB.prepare(`
       INSERT INTO email_verifications (email, code, expires_at) VALUES (?, ?, ?)
       ON CONFLICT(email) DO UPDATE SET code = ?, expires_at = ?, attempts = 0
-    `).bind(r,u,m,u,m).run(),await $t(r,u,e.env)?e.json({success:!0,message:"OTP sent"}):e.json({success:!1,error:"Failed to send email. Please try again later."},500)}catch(t){return console.error("Register Error:",t),e.json({success:!1,error:"Server error"},500)}});He.post("/register-verify",async e=>{try{let{email:t,code:s,name:a,password:i,classLabel:n,groupLabel:o}=await e.req.json(),r=E(String(t||"")),c=String(a||"").trim(),l=String(i||"");if(!r||!c||!l)return e.json({success:!1,error:"Missing fields"},400);if(l.length<8)return e.json({success:!1,error:"Password must be at least 8 characters."},400);let u=await e.env.DB.prepare("SELECT * FROM email_verifications WHERE email = ?").bind(r).first();if(!u)return e.json({success:!1,error:"No verification request found"},400);if(Date.now()>u.expires_at)return e.json({success:!1,error:"Code expired. Try again."},400);if(String(u.code)!==String(s))return e.json({success:!1,error:"Invalid code"},400);if(await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first())return e.json({success:!1,error:"User already exists. Please login."},400);let{passwordHash:p}=await I(l);await e.env.DB.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)").bind(r,p,"student").run();let h=await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first();return h?.id?(await e.env.DB.batch([e.env.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)").bind(h.id,r,c),e.env.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label) VALUES (?, ?, ?)").bind(h.id,n||null,o||null)]),await e.env.DB.prepare("DELETE FROM email_verifications WHERE email = ?").bind(r).run(),e.json({success:!0,message:"Account created"})):e.json({success:!1,error:"Account creation failed"},500)}catch(t){return e.json({success:!1,error:"Database error: "+(t instanceof Error?t.message:String(t))},500)}});var Yt=He;var Xt=e=>{let t=e.classLabel?String(e.classLabel).trim():"",s=e.religion?String(e.religion).trim():"",a=e.dateOfBirth?String(e.dateOfBirth).trim():"",i=e.batchYear?String(e.batchYear).trim():"",n=e.groupLabel?String(e.groupLabel).trim():"",o=t==="SSC"||t==="HSC",r=t==="SSC"||t==="HSC";return!(!s||!t||!a||o&&!n||r&&!i)},jn=async(e,t)=>((await e.prepare("SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC").bind(t).all()).results||[]).map(a=>({points:a.points,reason:a.reason,createdAt:a.created_at})),fe=async(e,t,s)=>{if(s==="/api/student/profile"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await q(t.DB,a.id),n=await t.DB.prepare("SELECT class_label, group_label, religion, date_of_birth, batch_year, points FROM academic_profiles WHERE user_id = ?").bind(a.id).first();return i?Response.json({success:!0,profile:{id:i.id,name:i.name||i.email,email:i.email,classLabel:n?.class_label||null,groupLabel:n?.group_label||null,religion:n?.religion||null,dateOfBirth:n?.date_of_birth||null,batchYear:n?.batch_year||null,points:n?.points||0}},{headers:d}):Response.json({success:!1,error:"User not found"},{status:404,headers:d})}if(s==="/api/student/profile"&&e.method==="PUT"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!await q(t.DB,a.id))return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let n=await e.json().catch(()=>({})),o=n.classLabel?String(n.classLabel).trim():null,r=n.groupLabel?String(n.groupLabel).trim():null,c=n.religion?String(n.religion).trim():null,l=n.dateOfBirth?String(n.dateOfBirth).trim():null,u=n.batchYear?String(n.batchYear).trim():null,m=await t.DB.prepare("SELECT class_label, group_label, religion, date_of_birth, batch_year, points FROM academic_profiles WHERE user_id = ?").bind(a.id).first(),p={religion:c,classLabel:o,groupLabel:r,dateOfBirth:l,batchYear:u},h=Number(m?.points||0);await t.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label, religion, date_of_birth, batch_year, points) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET class_label = excluded.class_label, group_label = excluded.group_label, religion = excluded.religion, date_of_birth = excluded.date_of_birth, batch_year = excluded.batch_year, points = excluded.points, updated_at = CURRENT_TIMESTAMP").bind(a.id,o,r,c,l,u,h).run();let g=Xt({religion:m?.religion||null,classLabel:m?.class_label||null,groupLabel:m?.group_label||null,dateOfBirth:m?.date_of_birth||null,batchYear:m?.batch_year||null}),y=Xt(p),v=0;if(!g&&y&&!await t.DB.prepare("SELECT id FROM user_points_log WHERE user_id = ? AND reason = ? LIMIT 1").bind(a.id,"profile_complete").first()){v=10;let j=h+v;await t.DB.batch([t.DB.prepare("UPDATE academic_profiles SET points = ? WHERE user_id = ?").bind(j,a.id),t.DB.prepare("INSERT INTO user_points_log (user_id, points, reason) VALUES (?, ?, ?)").bind(a.id,v,"profile_complete")])}return await T(t.DB,a,"Student profile updated",{classLabel:o,groupLabel:r,religion:c,dateOfBirth:l,batchYear:u}),Response.json({success:!0,pointsAwarded:v},{headers:d})}if(s==="/api/points"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT points FROM academic_profiles WHERE user_id = ?").bind(a.id).first();if(!i)return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let n=await jn(t.DB,a.id);return Response.json({success:!0,points:i.points||0,logs:n},{headers:d})}return null};var G=new P;G.use("/api/*",ve());G.route("/api/student",Yt);G.get("/api/student/profile",async e=>fe(e.req.raw,e.env,"/api/student/profile"));G.put("/api/student/profile",async e=>fe(e.req.raw,e.env,"/api/student/profile"));G.get("/api/points",async e=>fe(e.req.raw,e.env,"/api/points"));var Jt=()=>({id:"student-auth",match:e=>e.startsWith("/api/student"),handle:(e,t)=>G.fetch(e,t)});var X=new P;X.get("/profile",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await q(e.env.DB,t.id);if(!s)return e.json({success:!1,error:"User not found."},404,d);let a=await e.env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(t.id).first(),i=await e.env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(t.id).first();return e.json({success:!0,profile:{id:s.id,name:s.name||s.email,email:s.email,assignment:a?{level:a.level,subject:a.subject}:null,permissions:i?.permissions?JSON.parse(i.permissions):[]}},200,d)});X.put("/profile",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.req.json().catch(()=>({})),a=s.name?String(s.name).trim():null,i=s.email?E(String(s.email)):null,n=await q(e.env.DB,t.id);return n?i&&i!==n.email&&await e.env.DB.prepare("SELECT id FROM users WHERE email = ? AND id != ?").bind(i,t.id).first()?e.json({success:!1,error:"Email already in use."},400,d):(await e.env.DB.batch([e.env.DB.prepare("UPDATE users SET email = ? WHERE id = ?").bind(i||n.email,t.id),e.env.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, name = excluded.name, updated_at = CURRENT_TIMESTAMP").bind(t.id,i||n.email,a||n.name)]),e.json({success:!0},200,d)):e.json({success:!1,error:"User not found."},404,d)});X.get("/assignments",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(t.id).first(),a=await e.env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(t.id).first();return e.json({success:!0,assignment:s?{level:s.level,subject:s.subject}:null,permissions:a?.permissions?JSON.parse(a.permissions):[]},200,d)});X.put("/assignments",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.req.json().catch(()=>({})),a=U(String(s.level||"")),i=_(String(s.subject||""));if(!O(a)||!Q(i))return e.json({success:!1,error:"Invalid teacher level or subject."},400,d);let n=s.permissions||[],o=Array.isArray(n)?n:[];return await e.env.DB.batch([e.env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject").bind(t.id,a,i),e.env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions").bind(t.id,JSON.stringify(o))]),e.json({success:!0},200,d)});var Zt=X;var Ue=new P;Ue.use("/api/*",ve());Ue.route("/api/teacher",Zt);var es=()=>({id:"teacher-profile",match:e=>e.startsWith("/api/teacher"),handle:(e,t)=>Ue.fetch(e,t)});var ts="app-content",Qe=async e=>{let t=await e.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind(ts).first();return t?.data?kt(t.data):{}},Oe=async(e,t)=>{await e.DB.prepare("INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP").bind(ts,JSON.stringify(t)).run()};var ss="bangla",J=["sscGoddoItems","sscPoddoItems","hscGoddoItems","hscPoddoItems","sscShohopathItems","hscShohopathItems"];var as=e=>Object.fromEntries(J.map(t=>[t,e[t]])),is=(e,t)=>{let s={...e};for(let a of J)a in t&&(s[a]=t[a]);return s},Se=class{getLessons(){return[{id:"bangla-prose-01",title:"\u0997\u09A6\u09CD\u09AF: \u09AD\u09BE\u09B7\u09BE\u09B0 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0",focus:["\u0985\u09A8\u09C1\u099A\u09CD\u099B\u09C7\u09A6 \u09AC\u09BF\u09B6\u09CD\u09B2\u09C7\u09B7\u09A3","\u09AE\u09C2\u09B2\u09AD\u09BE\u09AC \u09A8\u09BF\u09B0\u09CD\u09A3\u09DF","\u09B6\u09AC\u09CD\u09A6\u09BE\u09B0\u09CD\u09A5"]},{id:"bangla-poetry-02",title:"\u09AA\u09A6\u09CD\u09AF: \u0995\u09BE\u09AC\u09CD\u09AF\u09B0\u09C2\u09AA",focus:["\u099A\u09BF\u09A4\u09CD\u09B0\u0995\u09B2\u09CD\u09AA","\u0995\u09AC\u09BF\u09B0 \u09AD\u09BE\u09AC","\u0985\u09A8\u09C1\u09A7\u09BE\u09AC\u09A8"]},{id:"bangla-grammar-03",title:"\u09AC\u09CD\u09AF\u09BE\u0995\u09B0\u09A3: \u09B0\u099A\u09A8\u09BE \u0993 \u09AC\u09BE\u0995\u09CD\u09AF",focus:["\u09AC\u09BE\u0995\u09CD\u09AF\u09B0\u09C2\u09AA\u09BE\u09A8\u09CD\u09A4\u09B0","\u09AA\u09CD\u09B0\u09DF\u09CB\u0997","\u09AA\u09B0\u09BF\u09AD\u09BE\u09B7\u09BE"]}]}async generateQuestions(t){return{topicId:t,format:"creative",label:"\u09B8\u09C3\u099C\u09A8\u09B6\u09C0\u09B2",questions:[{id:`${t}-cq-1`,stem:"\u09A8\u09BF\u099A\u09C7\u09B0 \u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u099F\u09BF \u09AA\u09DC\u09C7 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u0997\u09C1\u09B2\u09CB\u09B0 \u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09BE\u0993\u0964",passage:"\u09AE\u09BE\u09A8\u09C1\u09B7\u09C7\u09B0 \u099A\u09BF\u09A8\u09CD\u09A4\u09BE \u0993 \u099A\u09B0\u09CD\u099A\u09BE\u09B0 \u09AE\u09A7\u09CD\u09AF \u09A6\u09BF\u09DF\u09C7 \u09AD\u09BE\u09B7\u09BE \u09AA\u09B0\u09BF\u09B6\u09C0\u09B2\u09BF\u09A4 \u09B9\u09DF\u0964 \u09AD\u09BE\u09B7\u09BE\u09B0 \u09AF\u09A5\u09BE\u09AF\u09A5 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0\u0987 \u099A\u09BF\u09A8\u09CD\u09A4\u09BE\u09B0 \u0997\u09AD\u09C0\u09B0\u09A4\u09BE\u0995\u09C7 \u09AA\u09CD\u09B0\u0995\u09BE\u09B6 \u0995\u09B0\u09C7\u0964",parts:[{type:"\u0995",prompt:"\u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u09C7\u09B0 \u09AE\u09C2\u09B2\u09AD\u09BE\u09AC \u09B2\u09BF\u0996\u0964"},{type:"\u0996",prompt:"\u09AD\u09BE\u09B7\u09BE\u09B0 \u09AF\u09A5\u09BE\u09AF\u09A5 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09C7\u09A8 \u099C\u09B0\u09C1\u09B0\u09BF?"},{type:"\u0997",prompt:"\u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u099F\u09BF \u09A6\u09C8\u09A8\u09A8\u09CD\u09A6\u09BF\u09A8 \u099C\u09C0\u09AC\u09A8\u09C7\u09B0 \u09B8\u0999\u09CD\u0997\u09C7 \u0995\u09C0\u09AD\u09BE\u09AC\u09C7 \u09B8\u09AE\u09CD\u09AA\u09B0\u09CD\u0995\u09BF\u09A4?"},{type:"\u0998",prompt:"\u09A8\u09BF\u099C\u09C7\u09B0 \u0985\u09AD\u09BF\u099C\u09CD\u099E\u09A4\u09BE\u09B0 \u0986\u09B2\u09CB\u0995\u09C7 \u098F\u0995\u099F\u09BF \u0989\u09A6\u09BE\u09B9\u09B0\u09A3 \u09A6\u09BE\u0993\u0964"}]},{id:`${t}-cq-2`,stem:"\u098F\u0995\u099C\u09A8 \u09B6\u09BF\u0995\u09CD\u09B7\u09BE\u09B0\u09CD\u09A5\u09C0 \u09A4\u09BE\u09B0 \u09AA\u09BE\u09A0 \u09A5\u09C7\u0995\u09C7 \u09AF\u09BE \u09B6\u09BF\u0996\u09C7\u099B\u09C7 \u09A4\u09BE \u09AA\u09CD\u09B0\u09DF\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u09AA\u09BE\u09B0\u099B\u09C7 \u09A8\u09BE\u0964",parts:[{type:"\u0995",prompt:"\u09B8\u09C3\u099C\u09A8\u09B6\u09C0\u09B2 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u09C7\u09B0 \u0989\u09A6\u09CD\u09A6\u09C7\u09B6\u09CD\u09AF \u0995\u09C0?"},{type:"\u0996",prompt:"\u09AA\u09CD\u09B0\u09DF\u09CB\u0997\u09C7\u09B0 \u0985\u09AD\u09BE\u09AC\u09C7 \u0995\u09C0 \u09B8\u09AE\u09B8\u09CD\u09AF\u09BE \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7?"},{type:"\u0997",prompt:"\u09AA\u09BE\u09A0\u09CD\u09AF\u099C\u09CD\u099E\u09BE\u09A8 \u09AC\u09BE\u09B8\u09CD\u09A4\u09AC\u09C7 \u09AA\u09CD\u09B0\u09DF\u09CB\u0997\u09C7\u09B0 \u098F\u0995\u099F\u09BF \u0989\u09AA\u09BE\u09DF \u09AC\u09CD\u09AF\u09BE\u0996\u09CD\u09AF\u09BE \u0995\u09B0\u0964"},{type:"\u0998",prompt:"\u098F\u0987 \u09AA\u09B0\u09BF\u09B8\u09CD\u09A5\u09BF\u09A4\u09BF \u09AC\u09A6\u09B2\u09BE\u09A4\u09C7 \u09B6\u09BF\u0995\u09CD\u09B7\u0995\u09C7\u09B0 \u0995\u09B0\u09A3\u09C0\u09DF \u0989\u09B2\u09CD\u09B2\u09C7\u0996 \u0995\u09B0\u0964"}]}]}}validateAnswer(t,s){return 0}renderExamUI(){return'<div data-exam="bangla"></div>'}};var Fe={id:ss,contentKeys:J,pickContentSlice:as,applyContentSlice:is};var ns="english",Z=["englishQuestions"];var os=e=>Object.fromEntries(Z.map(t=>[t,e[t]])),rs=(e,t)=>{let s={...e};for(let a of Z)a in t&&(s[a]=t[a]);return s};var cs={id:ns,contentKeys:Z,pickContentSlice:os,applyContentSlice:rs};var ls="humanities",ee=["sscBangladeshGlobalChapters"];var ds=e=>Object.fromEntries(ee.map(t=>[t,e[t]])),ps=(e,t)=>{let s={...e};for(let a of ee)a in t&&(s[a]=t[a]);return s};var us={id:ls,contentKeys:ee,pickContentSlice:ds,applyContentSlice:ps};var ms="ict",te=["sscIctChapters","hscIctChapters"];var hs=e=>Object.fromEntries(te.map(t=>[t,e[t]])),gs=(e,t)=>{let s={...e};for(let a of te)a in t&&(s[a]=t[a]);return s};var bs={id:ms,contentKeys:te,pickContentSlice:hs,applyContentSlice:gs};var ys="religion",se=["sscReligionChapters"];var vs=e=>Object.fromEntries(se.map(t=>[t,e[t]])),fs=(e,t)=>{let s={...e};for(let a of se)a in t&&(s[a]=t[a]);return s};var Ss={id:ys,contentKeys:se,pickContentSlice:vs,applyContentSlice:fs};var xs="science",ae=["sscPhysicsChapters","sscChemistryChapters","sscBiologyChapters","hscPhysics1stChapters","hscPhysics2ndChapters","hscChemistry1stChapters","hscChemistry2ndChapters","hscBiology1stChapters","hscBiology2ndChapters"];var Ns=e=>Object.fromEntries(ae.map(t=>[t,e[t]])),Cs=(e,t)=>{let s={...e};for(let a of ae)a in t&&(s[a]=t[a]);return s},xe=class{async generateQuestions(t){return{topicId:t,questions:[]}}validateAnswer(t,s){return 0}renderExamUI(){return'<div data-exam="science"></div>'}};var Ge={id:xs,contentKeys:ae,pickContentSlice:Ns,applyContentSlice:Cs};var ws="shared",ie=["srijonshilQuestions","mcqQuestions","notesByItem","videosByItem"];var Ts=e=>Object.fromEntries(ie.map(t=>[t,e[t]])),Es=(e,t)=>{let s={...e};for(let a of ie)a in t&&(s[a]=t[a]);return s};var Ls={id:ws,contentKeys:ie,pickContentSlice:Ts,applyContentSlice:Es};var Ve=[Fe,cs,us,bs,Ss,Ge,Ls].sort((e,t)=>e.id.localeCompare(t.id)),Vl={[Fe.id]:()=>new Se,[Ge.id]:()=>new xe};var Ps="videos",Bn=e=>Ve.reduce((t,s)=>({...t,...s.pickContentSlice(e)}),{}),Mn=e=>Ve.reduce((t,s)=>s.applyContentSlice(t,e),{}),qn=async(e,t)=>{let s=await b(e,t);if(!s)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!C(s)&&s?.role!=="teacher")return Response.json({success:!1,error:"Admin or teacher access required."},{status:403,headers:d});let i=(await e.formData()).get("file");if(!(i instanceof File))return Response.json({success:!1,error:"Video file is required."},{status:400,headers:d});let n=await i.arrayBuffer(),o=`${Ps}/${crypto.randomUUID()}-${i.name}`,r=i.type||"application/octet-stream";return await t.BUCKET.put(o,n,{httpMetadata:{contentType:r}}),Response.json({success:!0,fileKey:o,url:`/api/videos/${encodeURIComponent(o)}`},{headers:d})},An=async(e,t)=>{let s=decodeURIComponent(t);if(!s||!s.startsWith(`${Ps}/`))return Response.json({success:!1,error:"Invalid video key."},{status:400,headers:d});let a=await e.BUCKET.get(s);if(!a)return Response.json({success:!1,error:"Video not found."},{status:404,headers:d});let i=new Headers(d);return i.set("Content-Type",a.httpMetadata?.contentType||"application/octet-stream"),i.set("Cache-Control","public, max-age=3600"),new Response(a.body,{headers:i})},ks=async(e,t,s)=>{if(s!=="/api/content")return null;if(e.method==="GET"){let a=await Qe(t),i=Bn(a);return Response.json({success:!0,content:i},{headers:d})}if(e.method==="PUT"){let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await e.json().catch(()=>({}));if(!i||typeof i!="object")return Response.json({success:!1,error:"Invalid content payload."},{status:400,headers:d});let n=Mn(i);if(C(a))return await Oe(t,n),await T(t.DB,a,"Content updated",{scope:"admin"}),Response.json({success:!0},{headers:d});if(a.role==="teacher"){if(!a.assignment)return Response.json({success:!1,error:"Assignment missing."},{status:400,headers:d});let o=Array.isArray(a.permissions)&&a.permissions.includes("structure"),r=await Qe(t),c=It(r,n,a.assignment,o);return c?(await Oe(t,c),await T(t.DB,a,"Content updated",{scope:"teacher",level:a.assignment.level,subject:a.assignment.subject}),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Subject is not configured for updates."},{status:400,headers:d})}return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d})}return null},Is=async(e,t,s)=>s==="/api/videos"&&e.method==="POST"?qn(e,t):s.startsWith("/api/videos/")&&e.method==="GET"?An(t,s.replace("/api/videos/","")):null;var Rs=async(e,t,s)=>{if(s!=="/api/classes")return null;if(e.method==="GET"){if(!await b(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT id, name, created_at FROM classes ORDER BY created_at DESC").all();return Response.json({success:!0,classes:i.results||[]},{headers:d})}if(e.method==="POST"){if(!await b(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let{name:i}=await e.json(),n=String(i||"").trim();if(!n)return Response.json({success:!1,error:"Class name is required"},{status:400,headers:d});await t.DB.prepare("INSERT INTO classes (name) VALUES (?)").bind(n).run();let o=await t.DB.prepare("SELECT id, name, created_at FROM classes WHERE name = ?").bind(n).first();return Response.json({success:!0,class:o},{headers:d})}return null};var ze={table:"subject_thumbnails",keyColumn:"subject_key",keyField:"subjectKey",urlPrefix:"/api/thumbnails",bucketPrefix:"thumbnails",includeZoom:!0},We={table:"chapter_thumbnails",keyColumn:"chapter_key",keyField:"chapterKey",urlPrefix:"/api/chapter-thumbnails",bucketPrefix:"chapter-thumbnails",includeZoom:!1},Dn=e=>e?.updated_at?new Date(e.updated_at).getTime():Date.now(),js=async(e,t)=>{let s=t.includeZoom?`${t.keyColumn}, zoom, updated_at`:`${t.keyColumn}, updated_at`,i=((await e.DB.prepare(`SELECT ${s} FROM ${t.table} ORDER BY updated_at DESC`).all()).results||[]).map(n=>{let o=Dn(n),r=n[t.keyColumn];return{[t.keyField]:r,...t.includeZoom?{zoom:typeof n.zoom=="number"?n.zoom:1}:{},url:`${t.urlPrefix}/${r}?v=${o}`}});return Response.json({thumbnails:i},{headers:d})},Bs=async(e,t,s)=>{let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!C(a))return Response.json({success:!1,error:"Admin access required."},{status:403,headers:d});let i=await e.formData(),n=String(i.get(s.keyField)||"").trim().toLowerCase();if(!n||!De(n))return Response.json({success:!1,error:`Invalid ${s.keyField.replace("Key"," key")}.`},{status:400,headers:d});let o=s.includeZoom?Pt(Number(i.get("zoom"))):null,r=i.get("file"),c=await t.DB.prepare(`SELECT file_key, content_type${s.includeZoom?", zoom":""} FROM ${s.table} WHERE ${s.keyColumn} = ?`).bind(n).first();if(!(r instanceof File)&&!c)return Response.json({success:!1,error:"Thumbnail file is required."},{status:400,headers:d});let l=c?.file_key,u=c?.content_type;if(r instanceof File){let x=await r.arrayBuffer();l=`${s.bucketPrefix}/${n}-${crypto.randomUUID()}-${r.name}`,u=r.type||"application/octet-stream",await t.BUCKET.put(l,x,{httpMetadata:{contentType:u}}),c?.file_key&&await t.BUCKET.delete(c.file_key)}let m=s.includeZoom?`${s.keyColumn}, file_key, content_type, zoom, updated_at`:`${s.keyColumn}, file_key, content_type, updated_at`,p=s.includeZoom?"?, ?, ?, ?, CURRENT_TIMESTAMP":"?, ?, ?, CURRENT_TIMESTAMP",h=s.includeZoom?"file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP":"file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP",g=t.DB.prepare(`INSERT INTO ${s.table} (${m}) VALUES (${p}) ON CONFLICT(${s.keyColumn}) DO UPDATE SET ${h}`),y=s.includeZoom?[n,l,u,o]:[n,l,u];await g.bind(...y).run(),await T(t.DB,a,"Thumbnail updated",{key:n,type:s.table});let v=Date.now();return Response.json({success:!0,thumbnail:{[s.keyField]:n,...s.includeZoom?{zoom:o}:{},url:`${s.urlPrefix}/${n}?v=${v}`}},{headers:d})},Ms=async(e,t,s)=>{let a=decodeURIComponent(s).toLowerCase();if(!a||!De(a))return Response.json({success:!1,error:`Invalid ${t.keyField.replace("Key"," key")}.`},{status:400,headers:d});let i=await e.DB.prepare(`SELECT file_key, content_type FROM ${t.table} WHERE ${t.keyColumn} = ?`).bind(a).first();if(!i)return Response.json({success:!1,error:"Thumbnail not found."},{status:404,headers:d});let n=await e.BUCKET.get(i.file_key);if(!n)return Response.json({success:!1,error:"Thumbnail file missing."},{status:404,headers:d});let o=new Headers(d);return o.set("Content-Type",i.content_type||"application/octet-stream"),o.set("Cache-Control","public, max-age=86400"),new Response(n.body,{headers:o})},qs=async(e,t,s)=>{if(s.startsWith("/api/thumbnails")){if(s==="/api/thumbnails"&&e.method==="GET")return js(t,ze);if(s==="/api/thumbnails"&&e.method==="POST")return Bs(e,t,ze);if(s.startsWith("/api/thumbnails/")&&e.method==="GET")return Ms(t,ze,s.replace("/api/thumbnails/",""))}if(s.startsWith("/api/chapter-thumbnails")){if(s==="/api/chapter-thumbnails"&&e.method==="GET")return js(t,We);if(s==="/api/chapter-thumbnails"&&e.method==="POST")return Bs(e,t,We);if(s.startsWith("/api/chapter-thumbnails/")&&e.method==="GET")return Ms(t,We,s.replace("/api/chapter-thumbnails/",""))}return null};var Kn=[{format:"woff2",contentHints:["woff2"],extensions:[".woff2"]},{format:"woff",contentHints:["woff"],extensions:[".woff"]},{format:"opentype",contentHints:["opentype"],extensions:[".otf"]},{format:"truetype",contentHints:["truetype"],extensions:[".ttf"]}],_n=(e,t)=>{let s=(e||"").toLowerCase(),a=(t||"").toLowerCase();for(let i of Kn)if(i.contentHints.some(n=>s.includes(n))||i.extensions.some(n=>a.endsWith(n)))return i.format;return"truetype"},As=async(e,t,s)=>{if(!s.startsWith("/api/fonts"))return null;if(s==="/api/fonts"&&e.method==="GET"){let i=((await t.DB.prepare("SELECT id, name, content_type, original_name FROM fonts ORDER BY created_at DESC").all()).results||[]).map(n=>({id:n.id,name:n.name,original_name:n.original_name,content_type:n.content_type,format:_n(n.content_type,n.original_name),url:`/api/fonts/file/${n.id}`}));return Response.json(i,{headers:d})}if(s.startsWith("/api/fonts/file/")&&e.method==="GET"){let a=s.split("/").pop();if(!a)return Response.json({success:!1,error:"Font ID is required."},{status:400,headers:d});let i=await t.DB.prepare("SELECT file_key, content_type FROM fonts WHERE id = ?").bind(a).first();if(!i)return Response.json({success:!1,error:"Font not found."},{status:404,headers:d});let n=await t.BUCKET.get(i.file_key);if(!n)return Response.json({success:!1,error:"Font file missing."},{status:404,headers:d});let o=new Headers(d);return o.set("Content-Type",i.content_type||"application/octet-stream"),o.set("Cache-Control","public, max-age=31536000"),new Response(n.body,{headers:o})}if(s==="/api/fonts/bulk"&&e.method==="POST"){let i=(await e.formData()).getAll("files").filter(o=>o instanceof File);if(i.length===0)return Response.json({success:!1,error:"No font files provided."},{status:400,headers:d});let n=[];for(let o of i){let r=await o.arrayBuffer(),c=`fonts/${crypto.randomUUID()}-${o.name}`;await t.BUCKET.put(c,r,{httpMetadata:{contentType:o.type||"application/octet-stream"}});let l=o.name.replace(/\.[^/.]+$/,"")||o.name;n.push(t.DB.prepare("INSERT INTO fonts (name, file_key, content_type, original_name) VALUES (?, ?, ?, ?)").bind(l,c,o.type||"application/octet-stream",o.name))}return await t.DB.batch(n),Response.json({success:!0,inserted:n.length},{headers:d})}return null};var Hn=[ks,Is,Rs,qs,As],Ds=()=>({id:"academic-subjects",match:e=>e.startsWith("/api/content")||e.startsWith("/api/videos")||e.startsWith("/api/classes")||e.startsWith("/api/thumbnails")||e.startsWith("/api/chapter-thumbnails")||e.startsWith("/api/fonts"),handle:async(e,t)=>{let a=new URL(e.url).pathname;for(let i of Hn){let n=await i(e,t,a);if(n)return n}return null}});var $e=null,Ks=async e=>{$e||($e=F(e).then(()=>{})),await $e};var S=new P,Un=(e,t)=>{let s=new URL(e.url);return s.pathname=t,new Request(s,e)},f=async(e,t,s,a)=>await e.handle(Un(t,a),s)??null,A=Kt(),_s=Wt(),Ne=Jt(),Qn=es(),L=Ds();S.all("/api/system",async e=>await f(A,e.req.raw,e.env,"/api/system")??e.notFound());S.all("/api/system/*",async e=>{let t=e.req.path.replace("/api/system","");return await f(A,e.req.raw,e.env,`/api/system${t}`)??e.notFound()});S.all("/api/login",async e=>await f(A,e.req.raw,e.env,"/api/login")??e.notFound());S.all("/api/register-admin",async e=>await f(A,e.req.raw,e.env,"/api/register-admin")??e.notFound());S.all("/api/me",async e=>await f(A,e.req.raw,e.env,"/api/me")??e.notFound());S.all("/api/change-password",async e=>await f(A,e.req.raw,e.env,"/api/change-password")??e.notFound());S.all("/api/profile",async e=>await f(A,e.req.raw,e.env,"/api/profile")??e.notFound());S.all("/api/profile/*",async e=>{let t=e.req.path.replace("/api/profile","");return await f(A,e.req.raw,e.env,`/api/profile${t}`)??e.notFound()});S.all("/api/users",async e=>await f(_s,e.req.raw,e.env,"/api/users")??e.notFound());S.all("/api/users/*",async e=>{let t=e.req.path.replace("/api/users","");if(t.startsWith("/student")){let a=`/api/student${t.slice(8)}`||"/api/student";return await f(Ne,e.req.raw,e.env,a)??e.notFound()}if(t.startsWith("/teacher")){let a=`/api/teacher${t.slice(8)}`||"/api/teacher";return await f(Qn,e.req.raw,e.env,a)??e.notFound()}return await f(_s,e.req.raw,e.env,`/api/users${t}`)??e.notFound()});S.all("/api/student",async e=>await f(Ne,e.req.raw,e.env,"/api/student")??e.notFound());S.all("/api/student/*",async e=>{let s=`/api/student${e.req.path.replace("/api/student","")}`||"/api/student";return await f(Ne,e.req.raw,e.env,s)??e.notFound()});S.all("/api/points",async e=>await f(Ne,e.req.raw,e.env,"/api/points")??e.notFound());S.all("/api/classes",async e=>await f(L,e.req.raw,e.env,"/api/classes")??e.notFound());S.all("/api/content",async e=>await f(L,e.req.raw,e.env,"/api/content")??e.notFound());S.all("/api/content/*",async e=>{let t=e.req.path.replace("/api/content","");return await f(L,e.req.raw,e.env,`/api/content${t}`)??e.notFound()});S.all("/api/videos",async e=>await f(L,e.req.raw,e.env,"/api/videos")??e.notFound());S.all("/api/videos/*",async e=>{let t=e.req.path.replace("/api/videos","");return await f(L,e.req.raw,e.env,`/api/videos${t}`)??e.notFound()});S.all("/api/thumbnails",async e=>await f(L,e.req.raw,e.env,"/api/thumbnails")??e.notFound());S.all("/api/thumbnails/*",async e=>{let t=e.req.path.replace("/api/thumbnails","");return await f(L,e.req.raw,e.env,`/api/thumbnails${t}`)??e.notFound()});S.all("/api/chapter-thumbnails",async e=>await f(L,e.req.raw,e.env,"/api/chapter-thumbnails")??e.notFound());S.all("/api/chapter-thumbnails/*",async e=>{let t=e.req.path.replace("/api/chapter-thumbnails","");return await f(L,e.req.raw,e.env,`/api/chapter-thumbnails${t}`)??e.notFound()});S.all("/api/fonts",async e=>await f(L,e.req.raw,e.env,"/api/fonts")??e.notFound());S.all("/api/academic",async e=>await f(L,e.req.raw,e.env,"/api")??e.notFound());S.all("/api/academic/*",async e=>{let t=e.req.path.replace("/api/academic","");return await f(L,e.req.raw,e.env,`/api${t}`)??e.notFound()});var Hs=async(e,t)=>{if(!new URL(e.url).pathname.startsWith("/api"))return null;await Ks(t);let a=await S.fetch(e,t);return a.status!==404?a:Response.json({success:!1,error:"API route not found."},{status:404,headers:d})};var Us=`
+    `).bind(r,u,m,u,m).run(),await $t(r,u,e.env)?e.json({success:!0,message:"OTP sent"}):e.json({success:!1,error:"Failed to send email. Please try again later."},500)}catch(t){return console.error("Register Error:",t),e.json({success:!1,error:"Server error"},500)}});He.post("/register-verify",async e=>{try{let{email:t,code:s,name:a,password:i,classLabel:n,groupLabel:o}=await e.req.json(),r=E(String(t||"")),c=String(a||"").trim(),l=String(i||"");if(!r||!c||!l)return e.json({success:!1,error:"Missing fields"},400);if(l.length<8)return e.json({success:!1,error:"Password must be at least 8 characters."},400);let u=await e.env.DB.prepare("SELECT * FROM email_verifications WHERE email = ?").bind(r).first();if(!u)return e.json({success:!1,error:"No verification request found"},400);if(Date.now()>u.expires_at)return e.json({success:!1,error:"Code expired. Try again."},400);if(String(u.code)!==String(s))return e.json({success:!1,error:"Invalid code"},400);if(await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first())return e.json({success:!1,error:"User already exists. Please login."},400);let{passwordHash:p}=await I(l);await e.env.DB.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)").bind(r,p,"student").run();let h=await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first();return h?.id?(await e.env.DB.batch([e.env.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)").bind(h.id,r,c),e.env.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label) VALUES (?, ?, ?)").bind(h.id,n||null,o||null)]),await e.env.DB.prepare("DELETE FROM email_verifications WHERE email = ?").bind(r).run(),e.json({success:!0,message:"Account created"})):e.json({success:!1,error:"Account creation failed"},500)}catch(t){return e.json({success:!1,error:"Database error: "+(t instanceof Error?t.message:String(t))},500)}});var Yt=He;var Xt=e=>{let t=e.classLabel?String(e.classLabel).trim():"",s=e.religion?String(e.religion).trim():"",a=e.dateOfBirth?String(e.dateOfBirth).trim():"",i=e.batchYear?String(e.batchYear).trim():"",n=e.groupLabel?String(e.groupLabel).trim():"",o=t==="SSC"||t==="HSC",r=t==="SSC"||t==="HSC";return!(!s||!t||!a||o&&!n||r&&!i)},jn=async(e,t)=>((await e.prepare("SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC").bind(t).all()).results||[]).map(a=>({points:a.points,reason:a.reason,createdAt:a.created_at})),fe=async(e,t,s)=>{if(s==="/api/student/profile"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await q(t.DB,a.id),n=await t.DB.prepare("SELECT class_label, group_label, religion, date_of_birth, batch_year, points FROM academic_profiles WHERE user_id = ?").bind(a.id).first();return i?Response.json({success:!0,profile:{id:i.id,name:i.name||i.email,email:i.email,classLabel:n?.class_label||null,groupLabel:n?.group_label||null,religion:n?.religion||null,dateOfBirth:n?.date_of_birth||null,batchYear:n?.batch_year||null,points:n?.points||0}},{headers:d}):Response.json({success:!1,error:"User not found"},{status:404,headers:d})}if(s==="/api/student/profile"&&e.method==="PUT"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!await q(t.DB,a.id))return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let n=await e.json().catch(()=>({})),o=n.classLabel?String(n.classLabel).trim():null,r=n.groupLabel?String(n.groupLabel).trim():null,c=n.religion?String(n.religion).trim():null,l=n.dateOfBirth?String(n.dateOfBirth).trim():null,u=n.batchYear?String(n.batchYear).trim():null,m=await t.DB.prepare("SELECT class_label, group_label, religion, date_of_birth, batch_year, points FROM academic_profiles WHERE user_id = ?").bind(a.id).first(),p={religion:c,classLabel:o,groupLabel:r,dateOfBirth:l,batchYear:u},h=Number(m?.points||0);await t.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label, religion, date_of_birth, batch_year, points) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET class_label = excluded.class_label, group_label = excluded.group_label, religion = excluded.religion, date_of_birth = excluded.date_of_birth, batch_year = excluded.batch_year, points = excluded.points, updated_at = CURRENT_TIMESTAMP").bind(a.id,o,r,c,l,u,h).run();let g=Xt({religion:m?.religion||null,classLabel:m?.class_label||null,groupLabel:m?.group_label||null,dateOfBirth:m?.date_of_birth||null,batchYear:m?.batch_year||null}),y=Xt(p),v=0;if(!g&&y&&!await t.DB.prepare("SELECT id FROM user_points_log WHERE user_id = ? AND reason = ? LIMIT 1").bind(a.id,"profile_complete").first()){v=10;let j=h+v;await t.DB.batch([t.DB.prepare("UPDATE academic_profiles SET points = ? WHERE user_id = ?").bind(j,a.id),t.DB.prepare("INSERT INTO user_points_log (user_id, points, reason) VALUES (?, ?, ?)").bind(a.id,v,"profile_complete")])}return await T(t.DB,a,"Student profile updated",{classLabel:o,groupLabel:r,religion:c,dateOfBirth:l,batchYear:u}),Response.json({success:!0,pointsAwarded:v},{headers:d})}if(s==="/api/points"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT points FROM academic_profiles WHERE user_id = ?").bind(a.id).first();if(!i)return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let n=await jn(t.DB,a.id);return Response.json({success:!0,points:i.points||0,logs:n},{headers:d})}return null};var G=new P;G.use("/api/*",ve());G.route("/api/student",Yt);G.get("/api/student/profile",async e=>fe(e.req.raw,e.env,"/api/student/profile"));G.put("/api/student/profile",async e=>fe(e.req.raw,e.env,"/api/student/profile"));G.get("/api/points",async e=>fe(e.req.raw,e.env,"/api/points"));var Jt=()=>({id:"student-auth",match:e=>e.startsWith("/api/student"),handle:(e,t)=>G.fetch(e,t)});var X=new P;X.get("/profile",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await q(e.env.DB,t.id);if(!s)return e.json({success:!1,error:"User not found."},404,d);let a=await e.env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(t.id).first(),i=await e.env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(t.id).first();return e.json({success:!0,profile:{id:s.id,name:s.name||s.email,email:s.email,assignment:a?{level:a.level,subject:a.subject}:null,permissions:i?.permissions?JSON.parse(i.permissions):[]}},200,d)});X.put("/profile",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.req.json().catch(()=>({})),a=s.name?String(s.name).trim():null,i=s.email?E(String(s.email)):null,n=await q(e.env.DB,t.id);return n?i&&i!==n.email&&await e.env.DB.prepare("SELECT id FROM users WHERE email = ? AND id != ?").bind(i,t.id).first()?e.json({success:!1,error:"Email already in use."},400,d):(await e.env.DB.batch([e.env.DB.prepare("UPDATE users SET email = ? WHERE id = ?").bind(i||n.email,t.id),e.env.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, name = excluded.name, updated_at = CURRENT_TIMESTAMP").bind(t.id,i||n.email,a||n.name)]),e.json({success:!0},200,d)):e.json({success:!1,error:"User not found."},404,d)});X.get("/assignments",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(t.id).first(),a=await e.env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(t.id).first();return e.json({success:!0,assignment:s?{level:s.level,subject:s.subject}:null,permissions:a?.permissions?JSON.parse(a.permissions):[]},200,d)});X.put("/assignments",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.req.json().catch(()=>({})),a=U(String(s.level||"")),i=_(String(s.subject||""));if(!O(a)||!Q(i))return e.json({success:!1,error:"Invalid teacher level or subject."},400,d);let n=s.permissions||[],o=Array.isArray(n)?n:[];return await e.env.DB.batch([e.env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject").bind(t.id,a,i),e.env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions").bind(t.id,JSON.stringify(o))]),e.json({success:!0},200,d)});var Zt=X;var Ue=new P;Ue.use("/api/*",ve());Ue.route("/api/teacher",Zt);var es=()=>({id:"teacher-profile",match:e=>e.startsWith("/api/teacher"),handle:(e,t)=>Ue.fetch(e,t)});var dashboardApiModule=()=>({id:"dashboard",match:e=>e.startsWith("/api/dashboard"),handle:async(e,t)=>{let s=new URL(e.url).pathname;if(s==="/api/dashboard/admin"&&e.method==="GET"){let a=await b(e,t);if(!C(a))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=(await t.DB.prepare("SELECT role, COUNT(*) as count FROM users GROUP BY role").all()).results||[],n=i.reduce((p,h)=>{let g=String(h.role||"");return p[g]=Number(h.count||0),p},{admin:0,teacher:0,student:0}),o=n.admin+n.teacher+n.student,r=await t.DB.prepare("SELECT COUNT(*) as count FROM classes").first(),c=await t.DB.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'teacher' AND id NOT IN (SELECT user_id FROM teacher_assignments)").first(),l=await t.DB.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'student' AND id NOT IN (SELECT user_id FROM academic_profiles)").first(),u=await t.DB.prepare("SELECT COUNT(*) as count FROM academic_profiles WHERE class_label IS NULL OR group_label IS NULL OR religion IS NULL OR date_of_birth IS NULL OR batch_year IS NULL").first(),m=await t.DB.prepare("SELECT COUNT(*) as count FROM edit_history WHERE created_at >= datetime('now', '-7 days')").first(),p=await t.DB.prepare("SELECT updated_at FROM content_store WHERE key = ?").bind(ts).first(),h=(await t.DB.prepare(`SELECT edit_history.user_id, edit_history.action, edit_history.details, edit_history.created_at, users.role, user_profiles.name, user_profiles.username, users.email
+      FROM edit_history
+      LEFT JOIN users ON users.id = edit_history.user_id
+      LEFT JOIN user_profiles ON user_profiles.user_id = edit_history.user_id
+      ORDER BY edit_history.created_at DESC
+      LIMIT 12`).all()).results||[],g=(await t.DB.prepare(`SELECT users.id, users.role, users.email, user_profiles.name, user_profiles.created_at
+      FROM users
+      LEFT JOIN user_profiles ON user_profiles.user_id = users.id
+      ORDER BY user_profiles.created_at DESC
+      LIMIT 6`).all()).results||[],y=(await t.DB.prepare("SELECT COUNT(*) as count FROM subject_thumbnails").first())?.count||0,v=(await t.DB.prepare("SELECT COUNT(*) as count FROM chapter_thumbnails").first())?.count||0,x=(await t.DB.prepare("SELECT COUNT(*) as count FROM fonts").first())?.count||0,j=t=>{if(!t)return null;try{return JSON.parse(t)}catch{return t}},M=h.map(t=>({action:t.action,createdAt:t.created_at,user:{id:t.user_id,name:t.name||t.username||t.email||"Unknown",role:t.role||"unknown"},details:j(t.details)})),B=g.map(t=>({id:t.id,name:t.name||t.email||"Unknown",role:t.role||"unknown",createdAt:t.created_at}));return Response.json({success:!0,stats:{totalUsers:o,admins:n.admin,teachers:n.teacher,students:n.student,classes:Number(r?.count||0),recentEdits:Number(m?.count||0),contentUpdatedAt:p?.updated_at||null,thumbnails:Number(y||0)+Number(v||0),fonts:Number(x||0)},onboarding:{teachersWithoutAssignment:Number(c?.count||0),studentsWithoutProfiles:Number(l?.count||0),studentsMissingDetails:Number(u?.count||0)},recentEdits:M,recentUsers:B},{headers:d})}if(s==="/api/dashboard/teacher"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="teacher")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT level, subject, created_at FROM teacher_assignments WHERE user_id = ?").bind(a.id).first(),n=i?await t.DB.prepare("SELECT COUNT(*) as count FROM academic_profiles WHERE class_label = ?").bind(i.level).first():null,o=await t.DB.prepare("SELECT updated_at FROM content_store WHERE key = ?").bind(ts).first(),r=(await t.DB.prepare(`SELECT edit_history.action, edit_history.details, edit_history.created_at, user_profiles.name, user_profiles.username
+      FROM edit_history
+      LEFT JOIN user_profiles ON user_profiles.user_id = edit_history.user_id
+      ORDER BY edit_history.created_at DESC
+      LIMIT 30`).all()).results||[],c=t=>{if(!t)return null;try{return JSON.parse(t)}catch{return null}},l=String(i?.level||"").toUpperCase(),u=String(i?.subject||"").toLowerCase(),m=r.map(t=>{let p=c(t.details);return{action:t.action,createdAt:t.created_at,user:t.name||t.username||"Staff",details:p}}).filter(t=>{let p=t.details;if(!p||typeof p!="object")return!1;let h=String(p.level||"").toUpperCase(),g=String(p.subject||"").toLowerCase();return l?h===l&&(!u||g.includes(u)):!1}).slice(0,8);return Response.json({success:!0,assignment:i?{level:i.level,subject:i.subject,createdAt:i.created_at}:null,studentCount:Number(n?.count||0),contentUpdatedAt:o?.updated_at||null,recentUpdates:m},{headers:d})}return null}});var ts="app-content",Qe=async e=>{let t=await e.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind(ts).first();return t?.data?kt(t.data):{}},Oe=async(e,t)=>{await e.DB.prepare("INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP").bind(ts,JSON.stringify(t)).run()};var ss="bangla",J=["sscGoddoItems","sscPoddoItems","hscGoddoItems","hscPoddoItems","sscShohopathItems","hscShohopathItems"];var as=e=>Object.fromEntries(J.map(t=>[t,e[t]])),is=(e,t)=>{let s={...e};for(let a of J)a in t&&(s[a]=t[a]);return s},Se=class{getLessons(){return[{id:"bangla-prose-01",title:"\u0997\u09A6\u09CD\u09AF: \u09AD\u09BE\u09B7\u09BE\u09B0 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0",focus:["\u0985\u09A8\u09C1\u099A\u09CD\u099B\u09C7\u09A6 \u09AC\u09BF\u09B6\u09CD\u09B2\u09C7\u09B7\u09A3","\u09AE\u09C2\u09B2\u09AD\u09BE\u09AC \u09A8\u09BF\u09B0\u09CD\u09A3\u09DF","\u09B6\u09AC\u09CD\u09A6\u09BE\u09B0\u09CD\u09A5"]},{id:"bangla-poetry-02",title:"\u09AA\u09A6\u09CD\u09AF: \u0995\u09BE\u09AC\u09CD\u09AF\u09B0\u09C2\u09AA",focus:["\u099A\u09BF\u09A4\u09CD\u09B0\u0995\u09B2\u09CD\u09AA","\u0995\u09AC\u09BF\u09B0 \u09AD\u09BE\u09AC","\u0985\u09A8\u09C1\u09A7\u09BE\u09AC\u09A8"]},{id:"bangla-grammar-03",title:"\u09AC\u09CD\u09AF\u09BE\u0995\u09B0\u09A3: \u09B0\u099A\u09A8\u09BE \u0993 \u09AC\u09BE\u0995\u09CD\u09AF",focus:["\u09AC\u09BE\u0995\u09CD\u09AF\u09B0\u09C2\u09AA\u09BE\u09A8\u09CD\u09A4\u09B0","\u09AA\u09CD\u09B0\u09DF\u09CB\u0997","\u09AA\u09B0\u09BF\u09AD\u09BE\u09B7\u09BE"]}]}async generateQuestions(t){return{topicId:t,format:"creative",label:"\u09B8\u09C3\u099C\u09A8\u09B6\u09C0\u09B2",questions:[{id:`${t}-cq-1`,stem:"\u09A8\u09BF\u099A\u09C7\u09B0 \u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u099F\u09BF \u09AA\u09DC\u09C7 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u0997\u09C1\u09B2\u09CB\u09B0 \u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09BE\u0993\u0964",passage:"\u09AE\u09BE\u09A8\u09C1\u09B7\u09C7\u09B0 \u099A\u09BF\u09A8\u09CD\u09A4\u09BE \u0993 \u099A\u09B0\u09CD\u099A\u09BE\u09B0 \u09AE\u09A7\u09CD\u09AF \u09A6\u09BF\u09DF\u09C7 \u09AD\u09BE\u09B7\u09BE \u09AA\u09B0\u09BF\u09B6\u09C0\u09B2\u09BF\u09A4 \u09B9\u09DF\u0964 \u09AD\u09BE\u09B7\u09BE\u09B0 \u09AF\u09A5\u09BE\u09AF\u09A5 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0\u0987 \u099A\u09BF\u09A8\u09CD\u09A4\u09BE\u09B0 \u0997\u09AD\u09C0\u09B0\u09A4\u09BE\u0995\u09C7 \u09AA\u09CD\u09B0\u0995\u09BE\u09B6 \u0995\u09B0\u09C7\u0964",parts:[{type:"\u0995",prompt:"\u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u09C7\u09B0 \u09AE\u09C2\u09B2\u09AD\u09BE\u09AC \u09B2\u09BF\u0996\u0964"},{type:"\u0996",prompt:"\u09AD\u09BE\u09B7\u09BE\u09B0 \u09AF\u09A5\u09BE\u09AF\u09A5 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09C7\u09A8 \u099C\u09B0\u09C1\u09B0\u09BF?"},{type:"\u0997",prompt:"\u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u099F\u09BF \u09A6\u09C8\u09A8\u09A8\u09CD\u09A6\u09BF\u09A8 \u099C\u09C0\u09AC\u09A8\u09C7\u09B0 \u09B8\u0999\u09CD\u0997\u09C7 \u0995\u09C0\u09AD\u09BE\u09AC\u09C7 \u09B8\u09AE\u09CD\u09AA\u09B0\u09CD\u0995\u09BF\u09A4?"},{type:"\u0998",prompt:"\u09A8\u09BF\u099C\u09C7\u09B0 \u0985\u09AD\u09BF\u099C\u09CD\u099E\u09A4\u09BE\u09B0 \u0986\u09B2\u09CB\u0995\u09C7 \u098F\u0995\u099F\u09BF \u0989\u09A6\u09BE\u09B9\u09B0\u09A3 \u09A6\u09BE\u0993\u0964"}]},{id:`${t}-cq-2`,stem:"\u098F\u0995\u099C\u09A8 \u09B6\u09BF\u0995\u09CD\u09B7\u09BE\u09B0\u09CD\u09A5\u09C0 \u09A4\u09BE\u09B0 \u09AA\u09BE\u09A0 \u09A5\u09C7\u0995\u09C7 \u09AF\u09BE \u09B6\u09BF\u0996\u09C7\u099B\u09C7 \u09A4\u09BE \u09AA\u09CD\u09B0\u09DF\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u09AA\u09BE\u09B0\u099B\u09C7 \u09A8\u09BE\u0964",parts:[{type:"\u0995",prompt:"\u09B8\u09C3\u099C\u09A8\u09B6\u09C0\u09B2 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u09C7\u09B0 \u0989\u09A6\u09CD\u09A6\u09C7\u09B6\u09CD\u09AF \u0995\u09C0?"},{type:"\u0996",prompt:"\u09AA\u09CD\u09B0\u09DF\u09CB\u0997\u09C7\u09B0 \u0985\u09AD\u09BE\u09AC\u09C7 \u0995\u09C0 \u09B8\u09AE\u09B8\u09CD\u09AF\u09BE \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7?"},{type:"\u0997",prompt:"\u09AA\u09BE\u09A0\u09CD\u09AF\u099C\u09CD\u099E\u09BE\u09A8 \u09AC\u09BE\u09B8\u09CD\u09A4\u09AC\u09C7 \u09AA\u09CD\u09B0\u09DF\u09CB\u0997\u09C7\u09B0 \u098F\u0995\u099F\u09BF \u0989\u09AA\u09BE\u09DF \u09AC\u09CD\u09AF\u09BE\u0996\u09CD\u09AF\u09BE \u0995\u09B0\u0964"},{type:"\u0998",prompt:"\u098F\u0987 \u09AA\u09B0\u09BF\u09B8\u09CD\u09A5\u09BF\u09A4\u09BF \u09AC\u09A6\u09B2\u09BE\u09A4\u09C7 \u09B6\u09BF\u0995\u09CD\u09B7\u0995\u09C7\u09B0 \u0995\u09B0\u09A3\u09C0\u09DF \u0989\u09B2\u09CD\u09B2\u09C7\u0996 \u0995\u09B0\u0964"}]}]}}validateAnswer(t,s){return 0}renderExamUI(){return'<div data-exam="bangla"></div>'}};var Fe={id:ss,contentKeys:J,pickContentSlice:as,applyContentSlice:is};var ns="english",Z=["englishQuestions"];var os=e=>Object.fromEntries(Z.map(t=>[t,e[t]])),rs=(e,t)=>{let s={...e};for(let a of Z)a in t&&(s[a]=t[a]);return s};var cs={id:ns,contentKeys:Z,pickContentSlice:os,applyContentSlice:rs};var ls="humanities",ee=["sscBangladeshGlobalChapters"];var ds=e=>Object.fromEntries(ee.map(t=>[t,e[t]])),ps=(e,t)=>{let s={...e};for(let a of ee)a in t&&(s[a]=t[a]);return s};var us={id:ls,contentKeys:ee,pickContentSlice:ds,applyContentSlice:ps};var ms="ict",te=["sscIctChapters","hscIctChapters"];var hs=e=>Object.fromEntries(te.map(t=>[t,e[t]])),gs=(e,t)=>{let s={...e};for(let a of te)a in t&&(s[a]=t[a]);return s};var bs={id:ms,contentKeys:te,pickContentSlice:hs,applyContentSlice:gs};var ys="religion",se=["sscReligionChapters"];var vs=e=>Object.fromEntries(se.map(t=>[t,e[t]])),fs=(e,t)=>{let s={...e};for(let a of se)a in t&&(s[a]=t[a]);return s};var Ss={id:ys,contentKeys:se,pickContentSlice:vs,applyContentSlice:fs};var xs="science",ae=["sscPhysicsChapters","sscChemistryChapters","sscBiologyChapters","hscPhysics1stChapters","hscPhysics2ndChapters","hscChemistry1stChapters","hscChemistry2ndChapters","hscBiology1stChapters","hscBiology2ndChapters"];var Ns=e=>Object.fromEntries(ae.map(t=>[t,e[t]])),Cs=(e,t)=>{let s={...e};for(let a of ae)a in t&&(s[a]=t[a]);return s},xe=class{async generateQuestions(t){return{topicId:t,questions:[]}}validateAnswer(t,s){return 0}renderExamUI(){return'<div data-exam="science"></div>'}};var Ge={id:xs,contentKeys:ae,pickContentSlice:Ns,applyContentSlice:Cs};var ws="shared",ie=["srijonshilQuestions","mcqQuestions","notesByItem","videosByItem"];var Ts=e=>Object.fromEntries(ie.map(t=>[t,e[t]])),Es=(e,t)=>{let s={...e};for(let a of ie)a in t&&(s[a]=t[a]);return s};var Ls={id:ws,contentKeys:ie,pickContentSlice:Ts,applyContentSlice:Es};var Ve=[Fe,cs,us,bs,Ss,Ge,Ls].sort((e,t)=>e.id.localeCompare(t.id)),Vl={[Fe.id]:()=>new Se,[Ge.id]:()=>new xe};var Ps="videos",Bn=e=>Ve.reduce((t,s)=>({...t,...s.pickContentSlice(e)}),{}),Mn=e=>Ve.reduce((t,s)=>s.applyContentSlice(t,e),{}),qn=async(e,t)=>{let s=await b(e,t);if(!s)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!C(s)&&s?.role!=="teacher")return Response.json({success:!1,error:"Admin or teacher access required."},{status:403,headers:d});let i=(await e.formData()).get("file");if(!(i instanceof File))return Response.json({success:!1,error:"Video file is required."},{status:400,headers:d});let n=await i.arrayBuffer(),o=`${Ps}/${crypto.randomUUID()}-${i.name}`,r=i.type||"application/octet-stream";return await t.BUCKET.put(o,n,{httpMetadata:{contentType:r}}),Response.json({success:!0,fileKey:o,url:`/api/videos/${encodeURIComponent(o)}`},{headers:d})},An=async(e,t)=>{let s=decodeURIComponent(t);if(!s||!s.startsWith(`${Ps}/`))return Response.json({success:!1,error:"Invalid video key."},{status:400,headers:d});let a=await e.BUCKET.get(s);if(!a)return Response.json({success:!1,error:"Video not found."},{status:404,headers:d});let i=new Headers(d);return i.set("Content-Type",a.httpMetadata?.contentType||"application/octet-stream"),i.set("Cache-Control","public, max-age=3600"),new Response(a.body,{headers:i})},ks=async(e,t,s)=>{if(s!=="/api/content")return null;if(e.method==="GET"){let a=await Qe(t),i=Bn(a);return Response.json({success:!0,content:i},{headers:d})}if(e.method==="PUT"){let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await e.json().catch(()=>({}));if(!i||typeof i!="object")return Response.json({success:!1,error:"Invalid content payload."},{status:400,headers:d});let n=Mn(i);if(C(a))return await Oe(t,n),await T(t.DB,a,"Content updated",{scope:"admin"}),Response.json({success:!0},{headers:d});if(a.role==="teacher"){if(!a.assignment)return Response.json({success:!1,error:"Assignment missing."},{status:400,headers:d});let o=Array.isArray(a.permissions)&&a.permissions.includes("structure"),r=await Qe(t),c=It(r,n,a.assignment,o);return c?(await Oe(t,c),await T(t.DB,a,"Content updated",{scope:"teacher",level:a.assignment.level,subject:a.assignment.subject}),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Subject is not configured for updates."},{status:400,headers:d})}return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d})}return null},Is=async(e,t,s)=>s==="/api/videos"&&e.method==="POST"?qn(e,t):s.startsWith("/api/videos/")&&e.method==="GET"?An(t,s.replace("/api/videos/","")):null;var Rs=async(e,t,s)=>{if(s!=="/api/classes")return null;if(e.method==="GET"){if(!await b(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT id, name, created_at FROM classes ORDER BY created_at DESC").all();return Response.json({success:!0,classes:i.results||[]},{headers:d})}if(e.method==="POST"){if(!await b(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let{name:i}=await e.json(),n=String(i||"").trim();if(!n)return Response.json({success:!1,error:"Class name is required"},{status:400,headers:d});await t.DB.prepare("INSERT INTO classes (name) VALUES (?)").bind(n).run();let o=await t.DB.prepare("SELECT id, name, created_at FROM classes WHERE name = ?").bind(n).first();return Response.json({success:!0,class:o},{headers:d})}return null};var ze={table:"subject_thumbnails",keyColumn:"subject_key",keyField:"subjectKey",urlPrefix:"/api/thumbnails",bucketPrefix:"thumbnails",includeZoom:!0},We={table:"chapter_thumbnails",keyColumn:"chapter_key",keyField:"chapterKey",urlPrefix:"/api/chapter-thumbnails",bucketPrefix:"chapter-thumbnails",includeZoom:!1},Dn=e=>e?.updated_at?new Date(e.updated_at).getTime():Date.now(),js=async(e,t)=>{let s=t.includeZoom?`${t.keyColumn}, zoom, updated_at`:`${t.keyColumn}, updated_at`,i=((await e.DB.prepare(`SELECT ${s} FROM ${t.table} ORDER BY updated_at DESC`).all()).results||[]).map(n=>{let o=Dn(n),r=n[t.keyColumn];return{[t.keyField]:r,...t.includeZoom?{zoom:typeof n.zoom=="number"?n.zoom:1}:{},url:`${t.urlPrefix}/${r}?v=${o}`}});return Response.json({thumbnails:i},{headers:d})},Bs=async(e,t,s)=>{let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!C(a))return Response.json({success:!1,error:"Admin access required."},{status:403,headers:d});let i=await e.formData(),n=String(i.get(s.keyField)||"").trim().toLowerCase();if(!n||!De(n))return Response.json({success:!1,error:`Invalid ${s.keyField.replace("Key"," key")}.`},{status:400,headers:d});let o=s.includeZoom?Pt(Number(i.get("zoom"))):null,r=i.get("file"),c=await t.DB.prepare(`SELECT file_key, content_type${s.includeZoom?", zoom":""} FROM ${s.table} WHERE ${s.keyColumn} = ?`).bind(n).first();if(!(r instanceof File)&&!c)return Response.json({success:!1,error:"Thumbnail file is required."},{status:400,headers:d});let l=c?.file_key,u=c?.content_type;if(r instanceof File){let x=await r.arrayBuffer();l=`${s.bucketPrefix}/${n}-${crypto.randomUUID()}-${r.name}`,u=r.type||"application/octet-stream",await t.BUCKET.put(l,x,{httpMetadata:{contentType:u}}),c?.file_key&&await t.BUCKET.delete(c.file_key)}let m=s.includeZoom?`${s.keyColumn}, file_key, content_type, zoom, updated_at`:`${s.keyColumn}, file_key, content_type, updated_at`,p=s.includeZoom?"?, ?, ?, ?, CURRENT_TIMESTAMP":"?, ?, ?, CURRENT_TIMESTAMP",h=s.includeZoom?"file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP":"file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP",g=t.DB.prepare(`INSERT INTO ${s.table} (${m}) VALUES (${p}) ON CONFLICT(${s.keyColumn}) DO UPDATE SET ${h}`),y=s.includeZoom?[n,l,u,o]:[n,l,u];await g.bind(...y).run(),await T(t.DB,a,"Thumbnail updated",{key:n,type:s.table});let v=Date.now();return Response.json({success:!0,thumbnail:{[s.keyField]:n,...s.includeZoom?{zoom:o}:{},url:`${s.urlPrefix}/${n}?v=${v}`}},{headers:d})},Ms=async(e,t,s)=>{let a=decodeURIComponent(s).toLowerCase();if(!a||!De(a))return Response.json({success:!1,error:`Invalid ${t.keyField.replace("Key"," key")}.`},{status:400,headers:d});let i=await e.DB.prepare(`SELECT file_key, content_type FROM ${t.table} WHERE ${t.keyColumn} = ?`).bind(a).first();if(!i)return Response.json({success:!1,error:"Thumbnail not found."},{status:404,headers:d});let n=await e.BUCKET.get(i.file_key);if(!n)return Response.json({success:!1,error:"Thumbnail file missing."},{status:404,headers:d});let o=new Headers(d);return o.set("Content-Type",i.content_type||"application/octet-stream"),o.set("Cache-Control","public, max-age=86400"),new Response(n.body,{headers:o})},qs=async(e,t,s)=>{if(s.startsWith("/api/thumbnails")){if(s==="/api/thumbnails"&&e.method==="GET")return js(t,ze);if(s==="/api/thumbnails"&&e.method==="POST")return Bs(e,t,ze);if(s.startsWith("/api/thumbnails/")&&e.method==="GET")return Ms(t,ze,s.replace("/api/thumbnails/",""))}if(s.startsWith("/api/chapter-thumbnails")){if(s==="/api/chapter-thumbnails"&&e.method==="GET")return js(t,We);if(s==="/api/chapter-thumbnails"&&e.method==="POST")return Bs(e,t,We);if(s.startsWith("/api/chapter-thumbnails/")&&e.method==="GET")return Ms(t,We,s.replace("/api/chapter-thumbnails/",""))}return null};var Kn=[{format:"woff2",contentHints:["woff2"],extensions:[".woff2"]},{format:"woff",contentHints:["woff"],extensions:[".woff"]},{format:"opentype",contentHints:["opentype"],extensions:[".otf"]},{format:"truetype",contentHints:["truetype"],extensions:[".ttf"]}],_n=(e,t)=>{let s=(e||"").toLowerCase(),a=(t||"").toLowerCase();for(let i of Kn)if(i.contentHints.some(n=>s.includes(n))||i.extensions.some(n=>a.endsWith(n)))return i.format;return"truetype"},As=async(e,t,s)=>{if(!s.startsWith("/api/fonts"))return null;if(s==="/api/fonts"&&e.method==="GET"){let i=((await t.DB.prepare("SELECT id, name, content_type, original_name FROM fonts ORDER BY created_at DESC").all()).results||[]).map(n=>({id:n.id,name:n.name,original_name:n.original_name,content_type:n.content_type,format:_n(n.content_type,n.original_name),url:`/api/fonts/file/${n.id}`}));return Response.json(i,{headers:d})}if(s.startsWith("/api/fonts/file/")&&e.method==="GET"){let a=s.split("/").pop();if(!a)return Response.json({success:!1,error:"Font ID is required."},{status:400,headers:d});let i=await t.DB.prepare("SELECT file_key, content_type FROM fonts WHERE id = ?").bind(a).first();if(!i)return Response.json({success:!1,error:"Font not found."},{status:404,headers:d});let n=await t.BUCKET.get(i.file_key);if(!n)return Response.json({success:!1,error:"Font file missing."},{status:404,headers:d});let o=new Headers(d);return o.set("Content-Type",i.content_type||"application/octet-stream"),o.set("Cache-Control","public, max-age=31536000"),new Response(n.body,{headers:o})}if(s==="/api/fonts/bulk"&&e.method==="POST"){let i=(await e.formData()).getAll("files").filter(o=>o instanceof File);if(i.length===0)return Response.json({success:!1,error:"No font files provided."},{status:400,headers:d});let n=[];for(let o of i){let r=await o.arrayBuffer(),c=`fonts/${crypto.randomUUID()}-${o.name}`;await t.BUCKET.put(c,r,{httpMetadata:{contentType:o.type||"application/octet-stream"}});let l=o.name.replace(/\.[^/.]+$/,"")||o.name;n.push(t.DB.prepare("INSERT INTO fonts (name, file_key, content_type, original_name) VALUES (?, ?, ?, ?)").bind(l,c,o.type||"application/octet-stream",o.name))}return await t.DB.batch(n),Response.json({success:!0,inserted:n.length},{headers:d})}return null};var Hn=[ks,Is,Rs,qs,As],Ds=()=>({id:"academic-subjects",match:e=>e.startsWith("/api/content")||e.startsWith("/api/videos")||e.startsWith("/api/classes")||e.startsWith("/api/thumbnails")||e.startsWith("/api/chapter-thumbnails")||e.startsWith("/api/fonts"),handle:async(e,t)=>{let a=new URL(e.url).pathname;for(let i of Hn){let n=await i(e,t,a);if(n)return n}return null}});var $e=null,Ks=async e=>{$e||($e=F(e).then(()=>{})),await $e};var S=new P,Un=(e,t)=>{let s=new URL(e.url);return s.pathname=t,new Request(s,e)},f=async(e,t,s,a)=>await e.handle(Un(t,a),s)??null,A=Kt(),_s=Wt(),Ne=Jt(),Qn=es(),dashboardModule=dashboardApiModule(),L=Ds();S.all("/api/system",async e=>await f(A,e.req.raw,e.env,"/api/system")??e.notFound());S.all("/api/system/*",async e=>{let t=e.req.path.replace("/api/system","");return await f(A,e.req.raw,e.env,`/api/system${t}`)??e.notFound()});S.all("/api/login",async e=>await f(A,e.req.raw,e.env,"/api/login")??e.notFound());S.all("/api/register-admin",async e=>await f(A,e.req.raw,e.env,"/api/register-admin")??e.notFound());S.all("/api/me",async e=>await f(A,e.req.raw,e.env,"/api/me")??e.notFound());S.all("/api/change-password",async e=>await f(A,e.req.raw,e.env,"/api/change-password")??e.notFound());S.all("/api/profile",async e=>await f(A,e.req.raw,e.env,"/api/profile")??e.notFound());S.all("/api/profile/*",async e=>{let t=e.req.path.replace("/api/profile","");return await f(A,e.req.raw,e.env,`/api/profile${t}`)??e.notFound()});S.all("/api/users",async e=>await f(_s,e.req.raw,e.env,"/api/users")??e.notFound());S.all("/api/users/*",async e=>{let t=e.req.path.replace("/api/users","");if(t.startsWith("/student")){let a=`/api/student${t.slice(8)}`||"/api/student";return await f(Ne,e.req.raw,e.env,a)??e.notFound()}if(t.startsWith("/teacher")){let a=`/api/teacher${t.slice(8)}`||"/api/teacher";return await f(Qn,e.req.raw,e.env,a)??e.notFound()}return await f(_s,e.req.raw,e.env,`/api/users${t}`)??e.notFound()});S.all("/api/student",async e=>await f(Ne,e.req.raw,e.env,"/api/student")??e.notFound());S.all("/api/student/*",async e=>{let s=`/api/student${e.req.path.replace("/api/student","")}`||"/api/student";return await f(Ne,e.req.raw,e.env,s)??e.notFound()});S.all("/api/points",async e=>await f(Ne,e.req.raw,e.env,"/api/points")??e.notFound());S.all("/api/dashboard",async e=>await f(dashboardModule,e.req.raw,e.env,"/api/dashboard")??e.notFound());S.all("/api/dashboard/*",async e=>{let t=e.req.path.replace("/api/dashboard","");return await f(dashboardModule,e.req.raw,e.env,`/api/dashboard${t}`)??e.notFound()});S.all("/api/classes",async e=>await f(L,e.req.raw,e.env,"/api/classes")??e.notFound());S.all("/api/content",async e=>await f(L,e.req.raw,e.env,"/api/content")??e.notFound());S.all("/api/content/*",async e=>{let t=e.req.path.replace("/api/content","");return await f(L,e.req.raw,e.env,`/api/content${t}`)??e.notFound()});S.all("/api/videos",async e=>await f(L,e.req.raw,e.env,"/api/videos")??e.notFound());S.all("/api/videos/*",async e=>{let t=e.req.path.replace("/api/videos","");return await f(L,e.req.raw,e.env,`/api/videos${t}`)??e.notFound()});S.all("/api/thumbnails",async e=>await f(L,e.req.raw,e.env,"/api/thumbnails")??e.notFound());S.all("/api/thumbnails/*",async e=>{let t=e.req.path.replace("/api/thumbnails","");return await f(L,e.req.raw,e.env,`/api/thumbnails${t}`)??e.notFound()});S.all("/api/chapter-thumbnails",async e=>await f(L,e.req.raw,e.env,"/api/chapter-thumbnails")??e.notFound());S.all("/api/chapter-thumbnails/*",async e=>{let t=e.req.path.replace("/api/chapter-thumbnails","");return await f(L,e.req.raw,e.env,`/api/chapter-thumbnails${t}`)??e.notFound()});S.all("/api/fonts",async e=>await f(L,e.req.raw,e.env,"/api/fonts")??e.notFound());S.all("/api/academic",async e=>await f(L,e.req.raw,e.env,"/api")??e.notFound());S.all("/api/academic/*",async e=>{let t=e.req.path.replace("/api/academic","");return await f(L,e.req.raw,e.env,`/api${t}`)??e.notFound()});var Hs=async(e,t)=>{if(!new URL(e.url).pathname.startsWith("/api"))return null;await Ks(t);let a=await S.fetch(e,t);return a.status!==404?a:Response.json({success:!1,error:"API route not found."},{status:404,headers:d})};var Us=`
 const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
 const [isMenuOpen, setIsMenuOpen] = useState(false);
 const [profile, setProfile] = useState(null);
@@ -1248,7 +1261,7 @@ className={className + ' block text-left transition-all duration-300 group ' + (
 )}
 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 {subject.lastRead && (
-<div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/95 backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 border border-emerald-100">
+<div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 border border-emerald-100">
 <i className="fa-solid fa-check-circle"></i>
 Read
 </div>
@@ -2662,6 +2675,16 @@ return entries;
 };
 
 const quickResults = normalizedQuickQuery ? buildQuickSearchEntries().filter((entry) => { const haystack = (entry.keywords || entry.title || '').toLowerCase(); return haystack.includes(normalizedQuickQuery); }).slice(0, 10) : [];
+const countTopics = (chapters) => (chapters || []).reduce((total, chapter) => total + (chapter?.topics?.length || 0), 0);
+const countEntries = (store) => Object.values(store || {}).reduce((total, value) => total + (Array.isArray(value) ? value.length : 0), 0);
+const religionChapters = Object.values(sscReligionChapters || {}).flat();
+const chapterPools = [sscPhysicsChapters, sscChemistryChapters, sscBiologyChapters, sscBangladeshGlobalChapters, sscIctChapters, hscPhysics1stChapters, hscPhysics2ndChapters, hscChemistry1stChapters, hscChemistry2ndChapters, hscBiology1stChapters, hscBiology2ndChapters, hscIctChapters, religionChapters];
+const totalSubjects = scopedSscSubjects.length + scopedHscSubjects.length;
+const totalChapters = chapterPools.reduce((sum, pool) => sum + (pool || []).length, 0);
+const totalTopics = chapterPools.reduce((sum, pool) => sum + countTopics(pool || []), 0);
+const totalNotes = countEntries(notesByItem);
+const totalVideos = countEntries(videosByItem);
+const totalQuestions = countEntries(mcqQuestions) + countEntries(srijonshilQuestions) + countEntries(englishQuestions);
 const handleQuickSelect = (entry) => { if (!entry?.onSelect) return; entry.onSelect(); };
 
 if (!isReady) return <FullScreenLoader />;
@@ -2674,31 +2697,27 @@ return (
 .hide-scrollbars * { -ms-overflow-style: none; scrollbar-width: none; }
 \`}</style>
 
-<section className="relative bg-indigo-700">
-<div className="absolute inset-0 overflow-hidden pointer-events-none">
-<div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-indigo-600/60"></div>
-<div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/40"></div>
-</div>
+<section className="border-b border-slate-200 bg-white">
 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative z-10">
 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
 <div className="flex items-center gap-4">
-<div className="w-14 h-14 rounded-md bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
+<div className="w-14 h-14 rounded-md bg-white border border-slate-200 flex items-center justify-center">
 <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" /><path d="M6.5 11.2V16c0 .7.4 1.4 1.1 1.7C9 18.4 10.4 19 12 19s3-.6 4.4-1.3c.7-.3 1.1-1 1.1-1.7v-4.8" /><path d="M20.5 9.7V14" /><path d="M21.5 14h-2" /></svg>
 </div>
-<div><div className="text-3xl sm:text-4xl font-semibold text-white">Freeducation</div><div className="text-sm text-white/80 uppercase tracking-[0.2em] mt-1">Serve education with clarity</div></div>
+<div><div className="text-3xl sm:text-4xl font-semibold text-slate-900">Freeducation</div><div className="text-sm text-slate-500 uppercase tracking-[0.2em] mt-1">Serve education with clarity</div></div>
 </div>
-<div className="max-w-xl text-white">
+<div className="max-w-xl text-slate-700">
 <p className="text-base sm:text-lg font-serif italic leading-relaxed opacity-90">\u201C{activeQuote.text}\u201D</p>
 <p className="text-sm font-semibold opacity-80 mt-2">\u2014 {activeQuote.author}</p>
 </div>
 </div>
 <div className="mt-8">
 <div className="relative">
-<label className="text-[11px] uppercase tracking-[0.3em] text-white/70">Quick Search</label>
-<input value={quickQuery} onChange={(event) => setQuickQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && quickResults[0]) { handleQuickSelect(quickResults[0]); } }} placeholder="Search subjects, chapters, topics, notes, videos..." className="mt-2 w-full rounded-lg border border-white/30 bg-white/95 py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-white" />
+<label className="text-[11px] uppercase tracking-[0.3em] text-slate-500">Quick Search</label>
+<input value={quickQuery} onChange={(event) => setQuickQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && quickResults[0]) { handleQuickSelect(quickResults[0]); } }} placeholder="Search subjects, chapters, topics, notes, videos..." className="mt-2 w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200" />
 <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
 {normalizedQuickQuery && (
-<div className="absolute left-0 right-0 mt-2 z-[100] rounded-lg border border-white/40 bg-white/95 text-slate-700 max-h-72 overflow-y-auto shadow-2xl">
+<div className="absolute left-0 right-0 mt-2 z-[100] rounded-lg border border-slate-200 bg-white text-slate-700 max-h-72 overflow-y-auto shadow-2xl">
 {quickResults.length === 0 && <div className="px-4 py-3 text-sm text-slate-400 text-left">No matches found.</div>}
 {quickResults.map((entry, index) => (
 <button key={entry.title + '-' + entry.type + '-' + index} onClick={() => handleQuickSelect(entry)} className="w-full text-left px-4 py-3 hover:bg-slate-50 transition">
@@ -2714,23 +2733,40 @@ return (
 </div>
 </section>
 
-{/* Academic Section with Styled Background & No Scrollbars */}
-<section className="relative w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-16 space-y-10 bg-slate-50 z-0 hide-scrollbars overflow-hidden">
-
-{/* Abstract Background Art */}
-<div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-30">
-{/* Circle 1 */}
-<svg className="absolute -top-20 -left-20 w-96 h-96 text-slate-200" fill="currentColor" viewBox="0 0 200 200">
-<path fillOpacity="0.5" d="M44.5,-73.2C58.9,-68.7,72.6,-61.4,82.4,-50.3C92.2,-39.2,98.1,-24.3,95.8,-10.1C93.5,4.1,83,17.6,73.4,30.2C63.8,42.8,55.1,54.6,44.1,63.9C33.1,73.2,19.9,80,6.1,80.9C-7.7,81.8,-22,76.8,-34.5,69.5C-47,62.2,-57.6,52.6,-66.1,41.4C-74.6,30.2,-81,17.4,-80.7,5C-80.4,-7.4,-73.4,-19.4,-64.3,-29.4C-55.2,-39.4,-44,-47.4,-32.2,-53.4C-20.4,-59.4,-8,-63.3,4,-69.5C16.1,-75.7,30.1,-69.1,44.5,-73.2Z" transform="translate(100 100)" />
-</svg>
-{/* Circle 2 */}
-<svg className="absolute bottom-0 right-0 w-[500px] h-[500px] text-slate-200" fill="currentColor" viewBox="0 0 200 200">
-<path fillOpacity="0.5" d="M39.9,-65.7C50.8,-57.5,58.3,-45.3,64.6,-33.4C70.9,-21.5,76,-9.9,74.9,1.1C73.8,12.1,66.5,22.5,58.8,32.3C51.1,42.1,43,51.3,33.3,58.3C23.6,65.3,12.3,70.1,0.6,69.1C-11.1,68.1,-22.8,61.3,-33.4,54.5C-44,47.7,-53.5,40.9,-60.7,31.7C-67.9,22.5,-72.8,10.9,-70.9,0.5C-69,-9.9,-60.3,-19.1,-52.1,-27.6C-43.9,-36.1,-36.2,-43.9,-27.3,-53.6C-18.4,-63.3,-8.2,-74.9,3.3,-80.6C14.8,-86.3,29,-86,39.9,-65.7Z" transform="translate(100 100)" />
-</svg>
-{/* Dots Pattern */}
-<div className="absolute top-20 right-20 w-32 h-32 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px'}}></div>
-<div className="absolute bottom-20 left-20 w-48 h-48 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px'}}></div>
+<section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-6">
+<div className="border border-slate-200 p-4">
+<div className="text-xs uppercase tracking-[0.2em] text-slate-500">Learning overview</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Subjects</div>
+<div className="text-lg font-semibold text-slate-900">{totalSubjects}</div>
 </div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Chapters</div>
+<div className="text-lg font-semibold text-slate-900">{totalChapters}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Topics</div>
+<div className="text-lg font-semibold text-slate-900">{totalTopics}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Questions</div>
+<div className="text-lg font-semibold text-slate-900">{totalQuestions}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Notes</div>
+<div className="text-lg font-semibold text-slate-900">{totalNotes}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Videos</div>
+<div className="text-lg font-semibold text-slate-900">{totalVideos}</div>
+</div>
+</div>
+</div>
+</section>
+
+{/* Academic Section with Styled Background & No Scrollbars */}
+<section className="relative w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-6 bg-white z-0 hide-scrollbars overflow-hidden">
 
 {/* Styled Header Section */}
 <div className="relative z-10 mb-12 text-center">
@@ -3862,18 +3898,35 @@ return (
         const AdminDashboard = ({ onNavigate }) => {
             const [classes, setClasses] = useState([]);
             const [loading, setLoading] = useState(true);
+            const [dashboard, setDashboard] = useState(null);
             const allowedClasses = ['SSC', 'HSC'];
+
+            const fetchDashboard = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setLoading(false); return; }
+                try {
+                    const response = await fetch('/api/dashboard/admin', { headers: { Authorization: 'Bearer ' + token } });
+                    const data = await response.json();
+                    if (data.success) {
+                        setDashboard(data);
+                    }
+                } catch (error) {
+                } finally {
+                    setLoading(false);
+                }
+            };
 
             const fetchClasses = async () => {
                 const token = localStorage.getItem('auth_token');
-                if (!token) { setLoading(false); return; }
-                const response = await fetch('/api/classes', { headers: { 'Authorization': 'Bearer ' + token } });
-                const data = await response.json();
-                if (data.success) { setClasses(data.classes || []); }
-                setLoading(false);
+                if (!token) { return; }
+                try {
+                    const response = await fetch('/api/classes', { headers: { 'Authorization': 'Bearer ' + token } });
+                    const data = await response.json();
+                    if (data.success) { setClasses(data.classes || []); }
+                } catch (error) {}
             };
 
-            useEffect(() => { fetchClasses(); }, []);
+            useEffect(() => { fetchDashboard(); fetchClasses(); }, []);
 
             const allowedLookup = new Set(allowedClasses.map((name) => name.toUpperCase()));
             const filteredClasses = classes.filter((item) => allowedLookup.has(String(item.name || '').toUpperCase()));
@@ -3885,62 +3938,125 @@ return (
                 return null;
             };
 
+            const stats = dashboard?.stats || { totalUsers: 0, admins: 0, teachers: 0, students: 0, classes: 0, recentEdits: 0, thumbnails: 0, fonts: 0 };
+            const onboarding = dashboard?.onboarding || { teachersWithoutAssignment: 0, studentsWithoutProfiles: 0, studentsMissingDetails: 0 };
+            const formatDate = (value) => {
+                if (!value) return 'N/A';
+                const parsed = new Date(value);
+                return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+            };
+
             return (
                 <AdminShell activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex flex-col items-center justify-center py-12 animate-in fade-in slide-in-from-bottom-4">
-                        
-                        {/* Legacy Headline */}
-                        <div className="text-center mb-12">
-                            <h2 className="text-4xl sm:text-5xl font-black text-stone-800 font-serif tracking-tight uppercase mb-3">Academic Programs</h2>
-                            <div className="h-1 w-24 bg-stone-800 mx-auto opacity-20"></div>
-                            <p className="mt-4 text-stone-500 font-serif italic text-lg">Select a curriculum level to proceed</p>
+                    <div className="space-y-6">
+                        <section className="border border-slate-200 p-4">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Overview</div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Total users</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.totalUsers}</div>
+                                    <div className="text-[11px] text-slate-500">Admins {stats.admins} • Teachers {stats.teachers} • Students {stats.students}</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Active classes</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.classes}</div>
+                                    <div className="text-[11px] text-slate-500">Curriculum panels available</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Content edits (7 days)</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.recentEdits}</div>
+                                    <div className="text-[11px] text-slate-500">Latest change log</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Media library</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.thumbnails + stats.fonts}</div>
+                                    <div className="text-[11px] text-slate-500">Thumbnails {stats.thumbnails} • Fonts {stats.fonts}</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="border border-slate-200 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Onboarding watchlist</div>
+                                <button onClick={() => onNavigate('admin-users')} className="text-xs font-semibold text-indigo-600">Manage users</button>
+                            </div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Teachers without assignments</div>
+                                    <div className="text-lg font-semibold text-slate-900">{onboarding.teachersWithoutAssignment}</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Students without profiles</div>
+                                    <div className="text-lg font-semibold text-slate-900">{onboarding.studentsWithoutProfiles}</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Students missing details</div>
+                                    <div className="text-lg font-semibold text-slate-900">{onboarding.studentsMissingDetails}</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <section className="border border-slate-200 p-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Recent activity</div>
+                                {loading && <div className="mt-3 text-sm text-slate-400">Loading activity...</div>}
+                                {!loading && (dashboard?.recentEdits || []).length === 0 && (
+                                    <div className="mt-3 text-sm text-slate-500">No edits logged yet.</div>
+                                )}
+                                <div className="mt-3 space-y-3">
+                                    {(dashboard?.recentEdits || []).map((entry, index) => (
+                                        <div key={entry.action + '-' + index} className="border border-slate-200 p-3 text-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="font-semibold text-slate-800">{entry.action}</div>
+                                                <div className="text-xs text-slate-500">{formatDate(entry.createdAt)}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">{entry.user?.name} • {entry.user?.role}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section className="border border-slate-200 p-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">New accounts</div>
+                                {loading && <div className="mt-3 text-sm text-slate-400">Loading users...</div>}
+                                {!loading && (dashboard?.recentUsers || []).length === 0 && (
+                                    <div className="mt-3 text-sm text-slate-500">No user registrations yet.</div>
+                                )}
+                                <div className="mt-3 space-y-3">
+                                    {(dashboard?.recentUsers || []).map((entry, index) => (
+                                        <div key={entry.id || index} className="border border-slate-200 p-3 text-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="font-semibold text-slate-800">{entry.name}</div>
+                                                <div className="text-xs text-slate-500">{formatDate(entry.createdAt)}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">{entry.role}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
                         </div>
 
-                        {/* Content Area */}
-                        {loading && (
-                            <div className="flex justify-center py-12">
-                                <i className="fa-solid fa-circle-notch fa-spin text-stone-400 text-2xl"></i>
-                            </div>
-                        )}
-
-                        {!loading && filteredClasses.length > 0 && (
-                            <div className="grid grid-cols-2 gap-6 w-full max-w-2xl">
+                        <section className="border border-slate-200 p-4">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Class panels</div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 {filteredClasses.map((item) => {
                                     const route = getClassRoute(item.name);
-                                    const isActive = Boolean(route);
-                                    const isSSC = item.name === 'SSC';
-                                    // Deep academic colors
-                                    const bgClass = isSSC ? 'bg-[#0f766e]' : 'bg-[#1e3a8a]'; // Teal-700 vs Blue-900
-                                    
                                     return (
-                                        <button 
-                                            key={item.id} 
-                                            onClick={() => route && onNavigate(route)} 
-                                            disabled={!route}
-                                            className={\`relative group overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl \${bgClass} \${isActive ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'}\`}
+                                        <button
+                                            key={item.id}
+                                            onClick={() => route && onNavigate(route)}
+                                            className="border border-slate-200 p-3 text-left text-sm hover:border-indigo-200 hover:text-indigo-600 transition"
                                         >
-                                            {/* Decorative Corner */}
-                                            <div className="absolute top-0 right-0 p-3 opacity-20">
-                                                <i className="fa-solid fa-graduation-cap text-4xl text-white"></i>
-                                            </div>
-
-                                            <div className="relative p-6 sm:p-8 flex flex-col items-center justify-center text-center h-full min-h-[160px]">
-                                                <div className="font-serif italic text-white/70 text-xs tracking-[0.2em] mb-2 border-b border-white/20 pb-1">PROGRAM</div>
-                                                <div className="text-4xl sm:text-5xl font-black text-white font-serif">{item.name}</div>
-                                                
-                                                {isActive ? (
-                                                     <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold bg-white text-slate-900 px-3 py-1 rounded uppercase tracking-wider">
-                                                        Enter Panel
-                                                     </div>
-                                                ) : (
-                                                    <div className="mt-4 text-white/40 text-xs"><i className="fa-solid fa-lock"></i></div>
-                                                )}
-                                            </div>
+                                            <div className="font-semibold text-slate-900">{item.name}</div>
+                                            <div className="text-xs text-slate-500">Open curriculum and subject management.</div>
                                         </button>
                                     );
                                 })}
+                                {filteredClasses.length === 0 && !loading && (
+                                    <div className="text-sm text-slate-500">No classes configured yet.</div>
+                                )}
                             </div>
-                        )}
+                        </section>
                     </div>
                 </AdminShell>
             );
@@ -4000,10 +4116,10 @@ className={\`relative group overflow-hidden rounded-lg shadow-md transition-all 
 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
 
 <div className="relative p-6 flex flex-col items-center justify-center text-center h-full min-h-[140px]">
-<div className="font-serif italic text-white/70 text-[10px] uppercase tracking-[0.2em] mb-2">DIVISION</div>
+<div className="font-serif italic text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-2">DIVISION</div>
 <div className="text-2xl font-bold text-white font-serif mb-1">{group.title}</div>
 <div className="h-px w-8 bg-white/30 my-3"></div>
-<p className="text-white/80 text-xs font-serif italic opacity-80">{group.description}</p>
+<p className="text-slate-500 text-xs font-serif italic opacity-80">{group.description}</p>
 </div>
 </button>
 );
@@ -6448,8 +6564,10 @@ ${Ea}
 `;var et=`
 const StudentClassView = ({ user, onNavigate }) => {
 const [profile, setProfile] = useState(null);
+const [pointsSummary, setPointsSummary] = useState({ points: 0, logs: [] });
 const [showPrompt, setShowPrompt] = useState(false);
 const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+const [isLoadingPoints, setIsLoadingPoints] = useState(true);
 
 const classLabel = profile?.classLabel || user?.classLabel || user?.class_label || '';
 const groupLabel = profile?.groupLabel || user?.groupLabel || user?.group_label || '';
@@ -6488,14 +6606,54 @@ setShowPrompt(true);
 loadProfile();
 }, []);
 
+useEffect(() => {
+const loadPoints = async () => {
+const token = localStorage.getItem('auth_token');
+if (!token) { setIsLoadingPoints(false); return; }
+try {
+const res = await fetch('/api/points', { headers: { Authorization: 'Bearer ' + token } });
+const data = await res.json();
+if (data.success) {
+setPointsSummary({ points: data.points || 0, logs: data.logs || [] });
+}
+} catch (e) {} finally { setIsLoadingPoints(false); }
+};
+loadPoints();
+}, []);
+
+const countEntriesForClass = (store) => {
+if (!hasClass) return 0;
+const prefix = classLabel + '-';
+return Object.entries(store || {}).reduce((total, [key, value]) => {
+if (!String(key).startsWith(prefix)) return total;
+return total + (Array.isArray(value) ? value.length : 0);
+}, 0);
+};
+
+const notesCount = countEntriesForClass(notesByItem);
+const videosCount = countEntriesForClass(videosByItem);
+const mcqCount = countEntriesForClass(mcqQuestions);
+const srijonshilCount = countEntriesForClass(srijonshilQuestions);
+const englishCount = countEntriesForClass(englishQuestions);
+const totalQuestions = mcqCount + srijonshilCount + englishCount;
+
+const checklist = [
+{ label: 'Class', complete: Boolean(classLabel) },
+{ label: 'Group', complete: !isAcademicClass || Boolean(groupLabel) },
+{ label: 'Batch year', complete: !isAcademicClass || Boolean(profile?.batchYear) },
+{ label: 'Religion', complete: Boolean(profile?.religion) },
+{ label: 'Date of birth', complete: Boolean(profile?.dateOfBirth) }
+];
+
 return (
 <StudentShell
 title="My Class"
-subtitle={hasClass ? classLabel + (groupLabel ? ' \u2022 ' + groupLabel : '') + ' learning space' : 'Complete your profile to see content'}
+subtitle={hasClass ? classLabel + (groupLabel ? ' • ' + groupLabel : '') + ' learning space' : 'Complete your profile to see content'}
 activeTab="class"
 onNavigate={onNavigate}
 >
-<div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+<div className="space-y-6">
+<div className="border border-slate-200 p-4">
 <div className="flex flex-wrap items-center justify-between gap-4">
 <div>
 <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Your Class</div>
@@ -6511,7 +6669,7 @@ onNavigate={onNavigate}
 {hasClass && isAcademicClass && (
 <button
 onClick={() => onNavigate(classRoute)}
-className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition"
+className="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition"
 >
 View full library
 </button>
@@ -6529,6 +6687,76 @@ Content for this class level is on the way. Keep your profile updated for new re
 )}
 </div>
 
+<div className="grid gap-4 lg:grid-cols-2">
+<div className="border border-slate-200 p-4">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Learning summary</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Subjects available</div>
+<div className="text-lg font-semibold text-slate-900">{filteredSubjects.length}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Notes</div>
+<div className="text-lg font-semibold text-slate-900">{notesCount}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Videos</div>
+<div className="text-lg font-semibold text-slate-900">{videosCount}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Questions</div>
+<div className="text-lg font-semibold text-slate-900">{totalQuestions}</div>
+</div>
+</div>
+</div>
+
+<div className="border border-slate-200 p-4">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Profile checklist</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+{checklist.map((item) => (
+<div key={item.label} className="border border-slate-200 p-3 text-sm flex items-center justify-between">
+<span className="text-slate-700">{item.label}</span>
+<span className={item.complete ? 'text-emerald-600 font-semibold' : 'text-amber-500 font-semibold'}>
+{item.complete ? 'Complete' : 'Missing'}
+</span>
+</div>
+))}
+</div>
+</div>
+</div>
+
+<div className="border border-slate-200 p-4">
+<div className="flex items-center justify-between">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Points activity</div>
+<button onClick={() => onNavigate('student-settings')} className="text-xs font-semibold text-indigo-600">Update profile</button>
+</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Total points</div>
+<div className="text-lg font-semibold text-slate-900">{pointsSummary.points}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Recent rewards</div>
+<div className="text-lg font-semibold text-slate-900">{pointsSummary.logs.length}</div>
+</div>
+</div>
+<div className="mt-3 space-y-3">
+{isLoadingPoints && <div className="text-sm text-slate-400">Loading points...</div>}
+{!isLoadingPoints && pointsSummary.logs.length === 0 && (
+<div className="text-sm text-slate-500">No points earned yet.</div>
+)}
+{pointsSummary.logs.map((log, index) => (
+<div key={log.reason + '-' + index} className="border border-slate-200 p-3 text-sm">
+<div className="flex items-center justify-between">
+<div className="font-semibold text-slate-800">{log.reason}</div>
+<div className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleDateString()}</div>
+</div>
+<div className="text-xs text-slate-500 mt-1">Points {log.points}</div>
+</div>
+))}
+</div>
+</div>
+
 {hasClass && isAcademicClass && (
 <div className="space-y-3">
 <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Subjects</div>
@@ -6537,10 +6765,10 @@ Content for this class level is on the way. Keep your profile updated for new re
 <button
 key={subject.subjectKey}
 onClick={() => subject.route && onNavigate(subject.route)}
-className="group w-full text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
+className="group w-full text-left border border-slate-200 p-4 transition"
 >
 <div className="flex items-start gap-4">
-<div className={'w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-sm ' + subject.accent}>
+<div className={'w-10 h-10 rounded-md text-white flex items-center justify-center ' + subject.accent}>
 <i className={'fa-solid ' + subject.icon}></i>
 </div>
 <div className="flex-1">
@@ -6551,11 +6779,11 @@ className="group w-full text-left bg-white border border-slate-200 rounded-2xl p
 </div>
 </div>
 </div>
-<div className="mt-4 text-xs font-semibold text-indigo-600">Open subject</div>
+<div className="mt-3 text-xs font-semibold text-indigo-600">Open subject</div>
 </button>
 ))}
 {filteredSubjects.length === 0 && (
-<div className="col-span-full bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-center text-sm text-slate-500">
+<div className="col-span-full border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">
 Select your group in settings to see your subjects.
 </div>
 )}
@@ -6586,55 +6814,205 @@ Remind me later
 </div>
 </div>
 )}
+</div>
 </StudentShell>
 );
 };
 `;var tt=`
     const TeacherDashboard = ({ assignment, subjectConfig, onNavigate }) => {
         const hasAssignment = assignment && assignment.level && assignment.subject;
+        const [dashboard, setDashboard] = useState(null);
+        const [isLoading, setIsLoading] = useState(true);
+
+        useEffect(() => {
+            const loadDashboard = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setIsLoading(false); return; }
+                try {
+                    const response = await fetch('/api/dashboard/teacher', { headers: { Authorization: 'Bearer ' + token } });
+                    const data = await response.json();
+                    if (data.success) { setDashboard(data); }
+                } catch (error) {} finally { setIsLoading(false); }
+            };
+            loadDashboard();
+        }, []);
+
+        const countTopics = (chapters) => (chapters || []).reduce((total, chapter) => total + (chapter?.topics?.length || 0), 0);
+        const countEntries = (store, prefix) => {
+            if (!prefix) return 0;
+            return Object.entries(store || {}).reduce((total, [key, value]) => {
+                if (!String(key).startsWith(prefix)) return total;
+                return total + (Array.isArray(value) ? value.length : 0);
+            }, 0);
+        };
+
+        const getSubjectStats = () => {
+            if (!hasAssignment) return null;
+            const level = assignment.level;
+            const subject = String(assignment.subject || '').toLowerCase();
+            let chapterSource = [];
+            let itemCount = 0;
+            let questionPrefix = null;
+            let usesEnglish = false;
+
+            if (level === 'SSC' && subject === 'physics') { chapterSource = sscPhysicsChapters; questionPrefix = \`\${level}-Physics-\`; }
+            if (level === 'SSC' && subject === 'chemistry') { chapterSource = sscChemistryChapters; questionPrefix = \`\${level}-Chemistry-\`; }
+            if (level === 'SSC' && subject === 'biology') { chapterSource = sscBiologyChapters; questionPrefix = \`\${level}-Biology-\`; }
+            if (level === 'SSC' && subject === 'information and communication technology') { chapterSource = sscIctChapters; }
+            if (level === 'SSC' && subject === 'bangladesh and global studies') { chapterSource = sscBangladeshGlobalChapters; }
+            if (level === 'SSC' && subject === 'religion and moral education') {
+                chapterSource = Object.values(sscReligionChapters || {}).flat();
+            }
+            if (level === 'HSC' && subject === 'physics 1st paper') { chapterSource = hscPhysics1stChapters; questionPrefix = \`\${level}-Physics-1-\`; }
+            if (level === 'HSC' && subject === 'physics 2nd paper') { chapterSource = hscPhysics2ndChapters; questionPrefix = \`\${level}-Physics-2-\`; }
+            if (level === 'HSC' && subject === 'chemistry 1st paper') { chapterSource = hscChemistry1stChapters; questionPrefix = \`\${level}-Chemistry-1-\`; }
+            if (level === 'HSC' && subject === 'chemistry 2nd paper') { chapterSource = hscChemistry2ndChapters; questionPrefix = \`\${level}-Chemistry-2-\`; }
+            if (level === 'HSC' && subject === 'biology 1st paper') { chapterSource = hscBiology1stChapters; questionPrefix = \`\${level}-Biology-1-\`; }
+            if (level === 'HSC' && subject === 'biology 2nd paper') { chapterSource = hscBiology2ndChapters; questionPrefix = \`\${level}-Biology-2-\`; }
+            if (level === 'HSC' && subject === 'information and communication technology') { chapterSource = hscIctChapters; }
+
+            if (subject === 'bangla 1st paper') {
+                itemCount = level === 'SSC'
+                    ? (sscGoddoItems.length + sscPoddoItems.length + sscShohopathItems.length)
+                    : (hscGoddoItems.length + hscPoddoItems.length + hscShohopathItems.length);
+                questionPrefix = \`\${level}-\`;
+            }
+
+            if (subject === 'english 1st paper') {
+                usesEnglish = true;
+                questionPrefix = \`\${level}-\`;
+            }
+
+            const chapterCount = chapterSource.length;
+            const topicCount = countTopics(chapterSource);
+            const creativeCount = countEntries(srijonshilQuestions, questionPrefix);
+            const mcqCount = countEntries(mcqQuestions, questionPrefix);
+            const englishCount = usesEnglish ? countEntries(englishQuestions, questionPrefix) : 0;
+            const notesCount = countEntries(notesByItem, questionPrefix);
+            const videosCount = countEntries(videosByItem, questionPrefix);
+
+            return {
+                itemCount,
+                chapterCount,
+                topicCount,
+                creativeCount,
+                mcqCount,
+                englishCount,
+                notesCount,
+                videosCount,
+                label: itemCount > 0 ? 'Items' : 'Chapters'
+            };
+        };
+
+        const stats = getSubjectStats();
+
         return (
-            <TeacherShell title="Teacher Portal" subtitle="Manage your assigned subject content." activeTab="subject" onNavigate={onNavigate}>
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            <TeacherShell title="Teacher Portal" subtitle="Track your subject work and class needs." activeTab="subject" onNavigate={onNavigate}>
+                <div className="space-y-6">
                     {!hasAssignment && (
-                        <div className="bg-white p-8 border border-slate-300 text-center shadow-sm">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 text-slate-400 mb-4">
-                                <i className="fa-solid fa-chalkboard-user text-2xl"></i>
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-800">No Assignment</h3>
-                            <p className="text-slate-600 mt-2 text-sm">Contact an admin to assign a subject to your account.</p>
+                        <div className="border border-slate-200 p-6 text-center">
+                            <div className="text-sm font-semibold text-slate-800">No assignment</div>
+                            <p className="text-sm text-slate-600 mt-2">Contact an admin to assign a subject to your account.</p>
                         </div>
                     )}
 
                     {hasAssignment && (
-                        <div className="bg-white shadow-sm border border-slate-200">
-                            <div className="bg-white border-b border-slate-200 p-6 sm:p-8 flex flex-col gap-2">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-600">
-                                    <span className="w-2 h-2 bg-indigo-600"></span>
-                                    Current Assignment
-                                </div>
-                                <h2 className="text-3xl font-bold text-slate-900">{assignment.subject}</h2>
-                                <div className="self-start px-3 py-1 bg-slate-100 text-slate-700 text-sm font-bold border border-slate-300">
-                                    Class: {assignment.level}
-                                </div>
-                            </div>
-
-                            <div className="p-6 sm:p-8 bg-slate-50/50">
-                                <p className="text-slate-600 mb-8 leading-relaxed max-w-2xl">
-                                    {subjectConfig?.description || 'Manage chapters, videos, and quizzes for this subject.'}
-                                </p>
-
-                                {subjectConfig?.route ? (
-                                    <button onClick={() => onNavigate(subjectConfig.route)} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-sm flex items-center justify-center gap-3">
-                                        <span>MANAGE CONTENT</span>
-                                        <i className="fa-solid fa-arrow-right"></i>
-                                    </button>
-                                ) : (
-                                    <div className="p-4 bg-slate-100 text-slate-500 text-sm border border-slate-200 italic flex items-center gap-2">
-                                        <i className="fa-solid fa-lock"></i> Content tools unavailable.
-                                    </div>
+                        <>
+                            <div className="border border-slate-200 p-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Current assignment</div>
+                                <div className="mt-2 text-2xl font-semibold text-slate-900">{assignment.subject}</div>
+                                <div className="mt-1 text-sm text-slate-500">Class {assignment.level}</div>
+                                {dashboard?.contentUpdatedAt && (
+                                    <div className="text-xs text-slate-400 mt-2">Content updated {new Date(dashboard.contentUpdatedAt).toLocaleDateString()}</div>
                                 )}
                             </div>
-                        </div>
+
+                            <div className="grid gap-4 lg:grid-cols-2">
+                                <div className="border border-slate-200 p-4">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Class snapshot</div>
+                                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                        <div className="border border-slate-200 p-3">
+                                            <div className="text-xs text-slate-500">Students in class</div>
+                                            <div className="text-lg font-semibold text-slate-900">{dashboard?.studentCount ?? 0}</div>
+                                        </div>
+                                        <div className="border border-slate-200 p-3">
+                                            <div className="text-xs text-slate-500">Recent updates</div>
+                                            <div className="text-lg font-semibold text-slate-900">{(dashboard?.recentUpdates || []).length}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="border border-slate-200 p-4">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Content coverage</div>
+                                    {stats ? (
+                                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">{stats.label}</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.itemCount || stats.chapterCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Topics</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.topicCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Creative questions</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.creativeCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">MCQ questions</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.mcqCount}</div>
+                                            </div>
+                                            {stats.englishCount > 0 && (
+                                                <div className="border border-slate-200 p-3">
+                                                    <div className="text-xs text-slate-500">English questions</div>
+                                                    <div className="text-lg font-semibold text-slate-900">{stats.englishCount}</div>
+                                                </div>
+                                            )}
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Notes</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.notesCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Videos</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.videosCount}</div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-3 text-sm text-slate-500">Assignment stats will appear once content is loaded.</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="border border-slate-200 p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Recent updates</div>
+                                    <button onClick={() => onNavigate('profile')} className="text-xs font-semibold text-indigo-600">Profile</button>
+                                </div>
+                                {isLoading && <div className="mt-3 text-sm text-slate-400">Loading updates...</div>}
+                                {!isLoading && (dashboard?.recentUpdates || []).length === 0 && (
+                                    <div className="mt-3 text-sm text-slate-500">No updates matched your assignment yet.</div>
+                                )}
+                                <div className="mt-3 space-y-3">
+                                    {(dashboard?.recentUpdates || []).map((entry, index) => (
+                                        <div key={entry.action + '-' + index} className="border border-slate-200 p-3 text-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="font-semibold text-slate-800">{entry.action}</div>
+                                                <div className="text-xs text-slate-500">{new Date(entry.createdAt).toLocaleDateString()}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">{entry.user}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {subjectConfig?.route ? (
+                                <button onClick={() => onNavigate(subjectConfig.route)} className="w-full px-4 py-2 border border-slate-200 text-sm font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-600 transition">
+                                    Open content manager
+                                </button>
+                            ) : (
+                                <div className="border border-slate-200 p-3 text-sm text-slate-500">Content tools unavailable for this subject.</div>
+                            )}
+                        </>
                     )}
                 </div>
             </TeacherShell>
