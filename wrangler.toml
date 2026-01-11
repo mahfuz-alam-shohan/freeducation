@@ -1,5 +1,5 @@
 name = "freeducation"
-main = "worker.js"
+main = "src/worker.js"
 compatibility_date = "2025-12-29"
 
 # D1 Database Binding

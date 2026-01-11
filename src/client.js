@@ -1,159 +1,4 @@
-var Te=(e,t,s)=>(a,i)=>{let n=-1;return o(0);async function o(r){if(r<=n)throw new Error("next() called multiple times");n=r;let c,l=!1,u;if(e[r]?(u=e[r][0][0],a.req.routeIndex=r):u=r===e.length&&i||void 0,u)try{c=await u(a,()=>o(r+1))}catch(m){if(m instanceof Error&&t)a.error=m,c=await t(m,a),l=!0;else throw m}else a.finalized===!1&&s&&(c=await s(a));return c&&(a.finalized===!1||l)&&(a.res=c),a}};var it=Symbol();var nt=async(e,t=Object.create(null))=>{let{all:s=!1,dot:a=!1}=t,n=(e instanceof re?e.raw.headers:e.headers).get("Content-Type");return n?.startsWith("multipart/form-data")||n?.startsWith("application/x-www-form-urlencoded")?an(e,{all:s,dot:a}):{}};async function an(e,t){let s=await e.formData();return s?nn(s,t):{}}function nn(e,t){let s=Object.create(null);return e.forEach((a,i)=>{t.all||i.endsWith("[]")?on(s,i,a):s[i]=a}),t.dot&&Object.entries(s).forEach(([a,i])=>{a.includes(".")&&(rn(s,a,i),delete s[a])}),s}var on=(e,t,s)=>{e[t]!==void 0?Array.isArray(e[t])?e[t].push(s):e[t]=[e[t],s]:t.endsWith("[]")?e[t]=[s]:e[t]=s},rn=(e,t,s)=>{let a=e,i=t.split(".");i.forEach((n,o)=>{o===i.length-1?a[n]=s:((!a[n]||typeof a[n]!="object"||Array.isArray(a[n])||a[n]instanceof File)&&(a[n]=Object.create(null)),a=a[n])})};var Le=e=>{let t=e.split("/");return t[0]===""&&t.shift(),t},ot=e=>{let{groups:t,path:s}=cn(e),a=Le(s);return ln(a,t)},cn=e=>{let t=[];return e=e.replace(/\{[^}]+\}/g,(s,a)=>{let i=`@${a}`;return t.push([i,s]),i}),{groups:t,path:e}},ln=(e,t)=>{for(let s=t.length-1;s>=0;s--){let[a]=t[s];for(let i=e.length-1;i>=0;i--)if(e[i].includes(a)){e[i]=e[i].replace(a,t[s][1]);break}}return e},ce={},rt=(e,t)=>{if(e==="*")return"*";let s=e.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);if(s){let a=`${e}#${t}`;return ce[a]||(s[2]?ce[a]=t&&t[0]!==":"&&t[0]!=="*"?[a,s[1],new RegExp(`^${s[2]}(?=/${t})`)]:[e,s[1],new RegExp(`^${s[2]}$`)]:ce[a]=[e,s[1],!0]),ce[a]}return null},le=(e,t)=>{try{return t(e)}catch{return e.replace(/(?:%[0-9A-Fa-f]{2})+/g,s=>{try{return t(s)}catch{return s}})}},dn=e=>le(e,decodeURI),Pe=e=>{let t=e.url,s=t.indexOf("/",t.indexOf(":")+4),a=s;for(;a<t.length;a++){let i=t.charCodeAt(a);if(i===37){let n=t.indexOf("?",a),o=t.slice(s,n===-1?void 0:n);return dn(o.includes("%25")?o.replace(/%25/g,"%2525"):o)}else if(i===63)break}return t.slice(s,a)};var ct=e=>{let t=Pe(e);return t.length>1&&t.at(-1)==="/"?t.slice(0,-1):t},D=(e,t,...s)=>(s.length&&(t=D(t,...s)),`${e?.[0]==="/"?"":"/"}${e}${t==="/"?"":`${e?.at(-1)==="/"?"":"/"}${t?.[0]==="/"?t.slice(1):t}`}`),de=e=>{if(e.charCodeAt(e.length-1)!==63||!e.includes(":"))return null;let t=e.split("/"),s=[],a="";return t.forEach(i=>{if(i!==""&&!/\:/.test(i))a+="/"+i;else if(/\:/.test(i))if(/\?/.test(i)){s.length===0&&a===""?s.push("/"):s.push(a);let n=i.replace("?","");a+="/"+n,s.push(a)}else a+="/"+i}),s.filter((i,n,o)=>o.indexOf(i)===n)},Ee=e=>/[%+]/.test(e)?(e.indexOf("+")!==-1&&(e=e.replace(/\+/g," ")),e.indexOf("%")!==-1?le(e,ke):e):e,lt=(e,t,s)=>{let a;if(!s&&t&&!/[%+]/.test(t)){let o=e.indexOf("?",8);if(o===-1)return;for(e.startsWith(t,o+1)||(o=e.indexOf(`&${t}`,o+1));o!==-1;){let r=e.charCodeAt(o+t.length+1);if(r===61){let c=o+t.length+2,l=e.indexOf("&",c);return Ee(e.slice(c,l===-1?void 0:l))}else if(r==38||isNaN(r))return"";o=e.indexOf(`&${t}`,o+1)}if(a=/[%+]/.test(e),!a)return}let i={};a??=/[%+]/.test(e);let n=e.indexOf("?",8);for(;n!==-1;){let o=e.indexOf("&",n+1),r=e.indexOf("=",n);r>o&&o!==-1&&(r=-1);let c=e.slice(n+1,r===-1?o===-1?void 0:o:r);if(a&&(c=Ee(c)),n=o,c==="")continue;let l;r===-1?l="":(l=e.slice(r+1,o===-1?void 0:o),a&&(l=Ee(l))),s?(i[c]&&Array.isArray(i[c])||(i[c]=[]),i[c].push(l)):i[c]??=l}return t?i[t]:i},dt=lt,pt=(e,t)=>lt(e,t,!0),ke=decodeURIComponent;var ut=e=>le(e,ke),re=class{raw;#t;#e;routeIndex=0;path;bodyCache={};constructor(e,t="/",s=[[]]){this.raw=e,this.path=t,this.#e=s,this.#t={}}param(e){return e?this.#s(e):this.#n()}#s(e){let t=this.#e[0][this.routeIndex][1][e],s=this.#i(t);return s&&/\%/.test(s)?ut(s):s}#n(){let e={},t=Object.keys(this.#e[0][this.routeIndex][1]);for(let s of t){let a=this.#i(this.#e[0][this.routeIndex][1][s]);a!==void 0&&(e[s]=/\%/.test(a)?ut(a):a)}return e}#i(e){return this.#e[1]?this.#e[1][e]:e}query(e){return dt(this.url,e)}queries(e){return pt(this.url,e)}header(e){if(e)return this.raw.headers.get(e)??void 0;let t={};return this.raw.headers.forEach((s,a)=>{t[a]=s}),t}async parseBody(e){return this.bodyCache.parsedBody??=await nt(this,e)}#a=e=>{let{bodyCache:t,raw:s}=this,a=t[e];if(a)return a;let i=Object.keys(t)[0];return i?t[i].then(n=>(i==="json"&&(n=JSON.stringify(n)),new Response(n)[e]())):t[e]=s[e]()};json(){return this.#a("text").then(e=>JSON.parse(e))}text(){return this.#a("text")}arrayBuffer(){return this.#a("arrayBuffer")}blob(){return this.#a("blob")}formData(){return this.#a("formData")}addValidatedData(e,t){this.#t[e]=t}valid(e){return this.#t[e]}get url(){return this.raw.url}get method(){return this.raw.method}get[it](){return this.#e}get matchedRoutes(){return this.#e[0].map(([[,e]])=>e)}get routePath(){return this.#e[0].map(([[,e]])=>e)[this.routeIndex].path}};var mt={Stringify:1,BeforeStream:2,Stream:3},pn=(e,t)=>{let s=new String(e);return s.isEscaped=!0,s.callbacks=t,s};var Ie=async(e,t,s,a,i)=>{typeof e=="object"&&!(e instanceof String)&&(e instanceof Promise||(e=e.toString()),e instanceof Promise&&(e=await e));let n=e.callbacks;if(!n?.length)return Promise.resolve(e);i?i[0]+=e:i=[e];let o=Promise.all(n.map(r=>r({phase:t,buffer:i,context:a}))).then(r=>Promise.all(r.filter(Boolean).map(c=>Ie(c,t,!1,a,i))).then(()=>i[0]));return s?pn(await o,n):o};var un="text/plain; charset=UTF-8",Re=(e,t)=>({"Content-Type":e,...t}),ht=class{#t;#e;env={};#s;finalized=!1;error;#n;#i;#a;#d;#c;#l;#r;#p;#u;constructor(e,t){this.#t=e,t&&(this.#i=t.executionCtx,this.env=t.env,this.#l=t.notFoundHandler,this.#u=t.path,this.#p=t.matchResult)}get req(){return this.#e??=new re(this.#t,this.#u,this.#p),this.#e}get event(){if(this.#i&&"respondWith"in this.#i)return this.#i;throw Error("This context has no FetchEvent")}get executionCtx(){if(this.#i)return this.#i;throw Error("This context has no ExecutionContext")}get res(){return this.#a||=new Response(null,{headers:this.#r??=new Headers})}set res(e){if(this.#a&&e){e=new Response(e.body,e);for(let[t,s]of this.#a.headers.entries())if(t!=="content-type")if(t==="set-cookie"){let a=this.#a.headers.getSetCookie();e.headers.delete("set-cookie");for(let i of a)e.headers.append("set-cookie",i)}else e.headers.set(t,s)}this.#a=e,this.finalized=!0}render=(...e)=>(this.#c??=t=>this.html(t),this.#c(...e));setLayout=e=>this.#d=e;getLayout=()=>this.#d;setRenderer=e=>{this.#c=e};header=(e,t,s)=>{this.finalized&&(this.#a=new Response(this.#a.body,this.#a));let a=this.#a?this.#a.headers:this.#r??=new Headers;t===void 0?a.delete(e):s?.append?a.append(e,t):a.set(e,t)};status=e=>{this.#n=e};set=(e,t)=>{this.#s??=new Map,this.#s.set(e,t)};get=e=>this.#s?this.#s.get(e):void 0;get var(){return this.#s?Object.fromEntries(this.#s):{}}#o(e,t,s){let a=this.#a?new Headers(this.#a.headers):this.#r??new Headers;if(typeof t=="object"&&"headers"in t){let n=t.headers instanceof Headers?t.headers:new Headers(t.headers);for(let[o,r]of n)o.toLowerCase()==="set-cookie"?a.append(o,r):a.set(o,r)}if(s)for(let[n,o]of Object.entries(s))if(typeof o=="string")a.set(n,o);else{a.delete(n);for(let r of o)a.append(n,r)}let i=typeof t=="number"?t:t?.status??this.#n;return new Response(e,{status:i,headers:a})}newResponse=(...e)=>this.#o(...e);body=(e,t,s)=>this.#o(e,t,s);text=(e,t,s)=>!this.#r&&!this.#n&&!t&&!s&&!this.finalized?new Response(e):this.#o(e,t,Re(un,s));json=(e,t,s)=>this.#o(JSON.stringify(e),t,Re("application/json",s));html=(e,t,s)=>{let a=i=>this.#o(i,t,Re("text/html; charset=UTF-8",s));return typeof e=="object"?Ie(e,mt.Stringify,!1,{}).then(a):a(e)};redirect=(e,t)=>{let s=String(e);return this.header("Location",/[^\x00-\xFF]/.test(s)?encodeURI(s):s),this.newResponse(null,t??302)};notFound=()=>(this.#l??=()=>new Response,this.#l(this))};var N="ALL",gt="all",bt=["get","post","put","delete","options","patch"],pe="Can not add a route since the matcher is already built.",ue=class extends Error{};var yt="__COMPOSED_HANDLER";var mn=e=>e.text("404 Not Found",404),vt=(e,t)=>{if("getResponse"in e){let s=e.getResponse();return t.newResponse(s.body,s)}return console.error(e),t.text("Internal Server Error",500)},ft=class St{get;post;put;delete;options;patch;all;on;use;router;getPath;_basePath="/";#t="/";routes=[];constructor(t={}){[...bt,gt].forEach(n=>{this[n]=(o,...r)=>(typeof o=="string"?this.#t=o:this.#n(n,this.#t,o),r.forEach(c=>{this.#n(n,this.#t,c)}),this)}),this.on=(n,o,...r)=>{for(let c of[o].flat()){this.#t=c;for(let l of[n].flat())r.map(u=>{this.#n(l.toUpperCase(),this.#t,u)})}return this},this.use=(n,...o)=>(typeof n=="string"?this.#t=n:(this.#t="*",o.unshift(n)),o.forEach(r=>{this.#n(N,this.#t,r)}),this);let{strict:a,...i}=t;Object.assign(this,i),this.getPath=a??!0?t.getPath??Pe:ct}#e(){let t=new St({router:this.router,getPath:this.getPath});return t.errorHandler=this.errorHandler,t.#s=this.#s,t.routes=this.routes,t}#s=mn;errorHandler=vt;route(t,s){let a=this.basePath(t);return s.routes.map(i=>{let n;s.errorHandler===vt?n=i.handler:(n=async(o,r)=>(await Te([],s.errorHandler)(o,()=>i.handler(o,r))).res,n[yt]=i.handler),a.#n(i.method,i.path,n)}),this}basePath(t){let s=this.#e();return s._basePath=D(this._basePath,t),s}onError=t=>(this.errorHandler=t,this);notFound=t=>(this.#s=t,this);mount(t,s,a){let i,n;a&&(typeof a=="function"?n=a:(n=a.optionHandler,a.replaceRequest===!1?i=c=>c:i=a.replaceRequest));let o=n?c=>{let l=n(c);return Array.isArray(l)?l:[l]}:c=>{let l;try{l=c.executionCtx}catch{}return[c.env,l]};i||=(()=>{let c=D(this._basePath,t),l=c==="/"?0:c.length;return u=>{let m=new URL(u.url);return m.pathname=m.pathname.slice(l)||"/",new Request(m,u)}})();let r=async(c,l)=>{let u=await s(i(c.req.raw),...o(c));if(u)return u;await l()};return this.#n(N,D(t,"*"),r),this}#n(t,s,a){t=t.toUpperCase(),s=D(this._basePath,s);let i={basePath:this._basePath,path:s,method:t,handler:a};this.router.add(t,s,[a,i]),this.routes.push(i)}#i(t,s){if(t instanceof Error)return this.errorHandler(t,s);throw t}#a(t,s,a,i){if(i==="HEAD")return(async()=>new Response(null,await this.#a(t,s,a,"GET")))();let n=this.getPath(t,{env:a}),o=this.router.match(i,n),r=new ht(t,{path:n,matchResult:o,env:a,executionCtx:s,notFoundHandler:this.#s});if(o[0].length===1){let l;try{l=o[0][0][0][0](r,async()=>{r.res=await this.#s(r)})}catch(u){return this.#i(u,r)}return l instanceof Promise?l.then(u=>u||(r.finalized?r.res:this.#s(r))).catch(u=>this.#i(u,r)):l??this.#s(r)}let c=Te(o[0],this.errorHandler,this.#s);return(async()=>{try{let l=await c(r);if(!l.finalized)throw new Error("Context is not finalized. Did you forget to return a Response object or `await next()`?");return l.res}catch(l){return this.#i(l,r)}})()}fetch=(t,...s)=>this.#a(t,s[1],s[0],t.method);request=(t,s,a,i)=>t instanceof Request?this.fetch(s?new Request(t,s):t,a,i):(t=t.toString(),this.fetch(new Request(/^https?:\/\//.test(t)?t:`http://localhost${D("/",t)}`,s),a,i));fire=()=>{addEventListener("fetch",t=>{t.respondWith(this.#a(t.request,t,void 0,t.request.method))})}};var me=[];function je(e,t){let s=this.buildAllMatchers(),a=(i,n)=>{let o=s[i]||s[N],r=o[2][n];if(r)return r;let c=n.match(o[0]);if(!c)return[[],me];let l=c.indexOf("",1);return[o[1][l],c]};return this.match=a,a(e,t)}var he="[^/]+",z=".*",W="(?:|/.*)",K=Symbol(),hn=new Set(".\\+*[^]$()");function gn(e,t){return e.length===1?t.length===1?e<t?-1:1:-1:t.length===1||e===z||e===W?1:t===z||t===W?-1:e===he?1:t===he?-1:e.length===t.length?e<t?-1:1:t.length-e.length}var xt=class Be{#t;#e;#s=Object.create(null);insert(t,s,a,i,n){if(t.length===0){if(this.#t!==void 0)throw K;if(n)return;this.#t=s;return}let[o,...r]=t,c=o==="*"?r.length===0?["","",z]:["","",he]:o==="/*"?["","",W]:o.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/),l;if(c){let u=c[1],m=c[2]||he;if(u&&c[2]&&(m===".*"||(m=m.replace(/^\((?!\?:)(?=[^)]+\)$)/,"(?:"),/\((?!\?:)/.test(m))))throw K;if(l=this.#s[m],!l){if(Object.keys(this.#s).some(p=>p!==z&&p!==W))throw K;if(n)return;l=this.#s[m]=new Be,u!==""&&(l.#e=i.varIndex++)}!n&&u!==""&&a.push([u,l.#e])}else if(l=this.#s[o],!l){if(Object.keys(this.#s).some(u=>u.length>1&&u!==z&&u!==W))throw K;if(n)return;l=this.#s[o]=new Be}l.insert(r,s,a,i,n)}buildRegExpStr(){let s=Object.keys(this.#s).sort(gn).map(a=>{let i=this.#s[a];return(typeof i.#e=="number"?`(${a})@${i.#e}`:hn.has(a)?`\\${a}`:a)+i.buildRegExpStr()});return typeof this.#t=="number"&&s.unshift(`#${this.#t}`),s.length===0?"":s.length===1?s[0]:"(?:"+s.join("|")+")"}};var Nt=class{#t={varIndex:0};#e=new xt;insert(e,t,s){let a=[],i=[];for(let o=0;;){let r=!1;if(e=e.replace(/\{[^}]+\}/g,c=>{let l=`@\\${o}`;return i[o]=[l,c],o++,r=!0,l}),!r)break}let n=e.match(/(?::[^\/]+)|(?:\/\*$)|./g)||[];for(let o=i.length-1;o>=0;o--){let[r]=i[o];for(let c=n.length-1;c>=0;c--)if(n[c].indexOf(r)!==-1){n[c]=n[c].replace(r,i[o][1]);break}}return this.#e.insert(n,t,a,this.#t,s),a}buildRegExp(){let e=this.#e.buildRegExpStr();if(e==="")return[/^$/,[],[]];let t=0,s=[],a=[];return e=e.replace(/#(\d+)|@(\d+)|\.\*\$/g,(i,n,o)=>n!==void 0?(s[++t]=Number(n),"$()"):(o!==void 0&&(a[Number(o)]=++t),"")),[new RegExp(`^${e}`),s,a]}};var bn=[/^$/,[],Object.create(null)],Ct=Object.create(null);function wt(e){return Ct[e]??=new RegExp(e==="*"?"":`^${e.replace(/\/\*$|([.\\+*[^\]$()])/g,(t,s)=>s?`\\${s}`:"(?:|/.*)")}$`)}function yn(){Ct=Object.create(null)}function vn(e){let t=new Nt,s=[];if(e.length===0)return bn;let a=e.map(l=>[!/\*|\/:/.test(l[0]),...l]).sort(([l,u],[m,p])=>l?1:m?-1:u.length-p.length),i=Object.create(null);for(let l=0,u=-1,m=a.length;l<m;l++){let[p,h,g]=a[l];p?i[h]=[g.map(([v])=>[v,Object.create(null)]),me]:u++;let y;try{y=t.insert(h,u,p)}catch(v){throw v===K?new ue(h):v}p||(s[u]=g.map(([v,x])=>{let j=Object.create(null);for(x-=1;x>=0;x--){let[oe,R]=y[x];j[oe]=R}return[v,j]}))}let[n,o,r]=t.buildRegExp();for(let l=0,u=s.length;l<u;l++)for(let m=0,p=s[l].length;m<p;m++){let h=s[l][m]?.[1];if(!h)continue;let g=Object.keys(h);for(let y=0,v=g.length;y<v;y++)h[g[y]]=r[h[g[y]]]}let c=[];for(let l in o)c[l]=s[o[l]];return[n,c,i]}function H(e,t){if(e){for(let s of Object.keys(e).sort((a,i)=>i.length-a.length))if(wt(s).test(t))return[...e[s]]}}var ge=class{name="RegExpRouter";#t;#e;constructor(){this.#t={[N]:Object.create(null)},this.#e={[N]:Object.create(null)}}add(e,t,s){let a=this.#t,i=this.#e;if(!a||!i)throw new Error(pe);a[e]||[a,i].forEach(r=>{r[e]=Object.create(null),Object.keys(r[N]).forEach(c=>{r[e][c]=[...r[N][c]]})}),t==="/*"&&(t="*");let n=(t.match(/\/:/g)||[]).length;if(/\*$/.test(t)){let r=wt(t);e===N?Object.keys(a).forEach(c=>{a[c][t]||=H(a[c],t)||H(a[N],t)||[]}):a[e][t]||=H(a[e],t)||H(a[N],t)||[],Object.keys(a).forEach(c=>{(e===N||e===c)&&Object.keys(a[c]).forEach(l=>{r.test(l)&&a[c][l].push([s,n])})}),Object.keys(i).forEach(c=>{(e===N||e===c)&&Object.keys(i[c]).forEach(l=>r.test(l)&&i[c][l].push([s,n]))});return}let o=de(t)||[t];for(let r=0,c=o.length;r<c;r++){let l=o[r];Object.keys(i).forEach(u=>{(e===N||e===u)&&(i[u][l]||=[...H(a[u],l)||H(a[N],l)||[]],i[u][l].push([s,n-c+r+1]))})}}match=je;buildAllMatchers(){let e=Object.create(null);return Object.keys(this.#e).concat(Object.keys(this.#t)).forEach(t=>{e[t]||=this.#s(t)}),this.#t=this.#e=void 0,yn(),e}#s(e){let t=[],s=e===N;return[this.#t,this.#e].forEach(a=>{let i=a[e]?Object.keys(a[e]).map(n=>[n,a[e][n]]):[];i.length!==0?(s||=!0,t.push(...i)):e!==N&&t.push(...Object.keys(a[N]).map(n=>[n,a[N][n]]))}),s?vn(t):null}};var Me=class{name="SmartRouter";#t=[];#e=[];constructor(e){this.#t=e.routers}add(e,t,s){if(!this.#e)throw new Error(pe);this.#e.push([e,t,s])}match(e,t){if(!this.#e)throw new Error("Fatal error");let s=this.#t,a=this.#e,i=s.length,n=0,o;for(;n<i;n++){let r=s[n];try{for(let c=0,l=a.length;c<l;c++)r.add(...a[c]);o=r.match(e,t)}catch(c){if(c instanceof ue)continue;throw c}this.match=r.match.bind(r),this.#t=[r],this.#e=void 0;break}if(n===i)throw new Error("Fatal error");return this.name=`SmartRouter + ${this.activeRouter.name}`,o}get activeRouter(){if(this.#e||this.#t.length!==1)throw new Error("No active router has been determined yet.");return this.#t[0]}};var $=Object.create(null),Tt=class Et{#t;#e;#s;#n=0;#i=$;constructor(t,s,a){if(this.#e=a||Object.create(null),this.#t=[],t&&s){let i=Object.create(null);i[t]={handler:s,possibleKeys:[],score:0},this.#t=[i]}this.#s=[]}insert(t,s,a){this.#n=++this.#n;let i=this,n=ot(s),o=[];for(let r=0,c=n.length;r<c;r++){let l=n[r],u=n[r+1],m=rt(l,u),p=Array.isArray(m)?m[0]:l;if(p in i.#e){i=i.#e[p],m&&o.push(m[1]);continue}i.#e[p]=new Et,m&&(i.#s.push(m),o.push(m[1])),i=i.#e[p]}return i.#t.push({[t]:{handler:a,possibleKeys:o.filter((r,c,l)=>l.indexOf(r)===c),score:this.#n}}),i}#a(t,s,a,i){let n=[];for(let o=0,r=t.#t.length;o<r;o++){let c=t.#t[o],l=c[s]||c[N],u={};if(l!==void 0&&(l.params=Object.create(null),n.push(l),a!==$||i&&i!==$))for(let m=0,p=l.possibleKeys.length;m<p;m++){let h=l.possibleKeys[m],g=u[l.score];l.params[h]=i?.[h]&&!g?i[h]:a[h]??i?.[h],u[l.score]=!0}}return n}search(t,s){let a=[];this.#i=$;let n=[this],o=Le(s),r=[];for(let c=0,l=o.length;c<l;c++){let u=o[c],m=c===l-1,p=[];for(let h=0,g=n.length;h<g;h++){let y=n[h],v=y.#e[u];v&&(v.#i=y.#i,m?(v.#e["*"]&&a.push(...this.#a(v.#e["*"],t,y.#i)),a.push(...this.#a(v,t,y.#i))):p.push(v));for(let x=0,j=y.#s.length;x<j;x++){let oe=y.#s[x],R=y.#i===$?{}:{...y.#i};if(oe==="*"){let M=y.#e["*"];M&&(a.push(...this.#a(M,t,y.#i)),M.#i=R,p.push(M));continue}let[en,at,V]=oe;if(!u&&!(V instanceof RegExp))continue;let B=y.#e[en],tn=o.slice(c).join("/");if(V instanceof RegExp){let M=V.exec(tn);if(M){if(R[at]=M[0],a.push(...this.#a(B,t,y.#i,R)),Object.keys(B.#e).length){B.#i=R;let sn=M[0].match(/\//)?.length??0;(r[sn]||=[]).push(B)}continue}}(V===!0||V.test(u))&&(R[at]=u,m?(a.push(...this.#a(B,t,R,y.#i)),B.#e["*"]&&a.push(...this.#a(B.#e["*"],t,R,y.#i))):(B.#i=R,p.push(B)))}}n=p.concat(r.shift()??[])}return a.length>1&&a.sort((c,l)=>c.score-l.score),[a.map(({handler:c,params:l})=>[c,l])]}};var qe=class{name="TrieRouter";#t;constructor(){this.#t=new Tt}add(e,t,s){let a=de(t);if(a){for(let i=0,n=a.length;i<n;i++)this.#t.insert(e,a[i],s);return}this.#t.insert(e,t,s)}match(e,t){return this.#t.search(e,t)}};var P=class extends ft{constructor(e={}){super(e),this.router=e.router??new Me({routers:[new ge,new qe]})}};async function Lt(e,t){let a=btoa(JSON.stringify({alg:"HS256",typ:"JWT"})),i=btoa(JSON.stringify({...e,exp:Date.now()+7*24*60*60*1e3})),n=`${a}.${i}`,o=await crypto.subtle.importKey("raw",new TextEncoder().encode(t),{name:"HMAC",hash:"SHA-256"},!1,["sign"]),r=await crypto.subtle.sign("HMAC",o,new TextEncoder().encode(n)),c=btoa(String.fromCharCode(...new Uint8Array(r)));return`${n}.${c}`}async function be(e,t){try{let[s,a,i]=e.split(".");if(!s||!a||!i)return null;let n=`${s}.${a}`,o=await crypto.subtle.importKey("raw",new TextEncoder().encode(t),{name:"HMAC",hash:"SHA-256"},!1,["verify"]),r=Uint8Array.from(atob(i),u=>u.charCodeAt(0));if(!await crypto.subtle.verify("HMAC",o,r,new TextEncoder().encode(n)))return null;let l=JSON.parse(atob(a));return l.exp<Date.now()?null:l}catch{return null}}async function k(e,t){let s=new TextEncoder,a=await crypto.subtle.importKey("raw",s.encode(e),{name:"PBKDF2"},!1,["deriveBits"]),i=await crypto.subtle.deriveBits({name:"PBKDF2",salt:s.encode(t),iterations:1e5,hash:"SHA-256"},a,256);return Array.from(new Uint8Array(i)).map(n=>n.toString(16).padStart(2,"0")).join("")}async function Ae(e,t){if(!e)return!1;let[s,a]=e.split(":");return!s||!a?!1:await k(t,s)===a}var fn={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"GET, HEAD, POST, OPTIONS, PUT, DELETE","Access-Control-Allow-Headers":"Content-Type, Authorization"},Sn={"Referrer-Policy":"strict-origin-when-cross-origin","X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY","Permissions-Policy":"camera=(), microphone=(), geolocation=()"},d={...fn,...Sn},Pt=e=>!e||Number.isNaN(e)?1:Math.min(1,Math.max(.8,e)),Y=e=>{let t=e.JWT_SECRET;if(!t)throw new Error("JWT secret is not configured.");return t},b=async(e,t)=>{let s=e.headers.get("Authorization");if(!s||!s.startsWith("Bearer "))return null;let a=Y(t);return await be(s.split(" ")[1],a)},E=e=>e.trim().toLowerCase(),C=e=>!(!e||e.role!=="admin"),_=e=>e.trim().toLowerCase(),U=e=>e.trim().toUpperCase(),De=e=>/^[a-z0-9-]+$/.test(e),Q=e=>/^[a-z0-9\s-]+$/.test(e),O=e=>["SSC","HSC"].includes(e),I=async e=>{let t=crypto.getRandomValues(new Uint8Array(16)),s=Array.from(t).map(i=>i.toString(16).padStart(2,"0")).join(""),a=await k(e,s);return{saltHex:s,passwordHash:`${s}:${a}`}},kt=e=>{if(typeof e!="string")return{};try{return JSON.parse(e)}catch{return{}}},xn=(e,t)=>!e||typeof e!="object"?{}:Object.fromEntries(Object.entries(e).filter(([s])=>t(s))),Nn=(e,t)=>!e||typeof e!="object"?{...t||{}}:{...e,...t||{}},It=(e,t,s,a)=>{let i=String(s.level||"").toUpperCase(),n=_(String(s.subject||"")),o={...e},r=`${i}-`,c=p=>{Array.isArray(t?.[p])&&(o[p]=t[p])},l=(p,h)=>{if(t?.[p]&&typeof t[p]=="object"){let g=xn(t[p],h);o[p]=Nn(e?.[p],g)}};if(n==="bangla 1st paper")return a&&c("content"),l("banglaQuestions",p=>p.startsWith(r)),l("mcqQuestions",p=>p.startsWith(r)),l("notesByItem",p=>p.startsWith(r)),l("videosByItem",p=>p.startsWith(r)),o;if(n==="english 2nd paper")return a&&c("content"),l("englishSecondQuestions",p=>p.startsWith(r)),l("mcqQuestions",p=>p.startsWith(r)),l("notesByItem",p=>p.startsWith(r)),l("videosByItem",p=>p.startsWith(r)),o;if(n==="english 1st paper"&&i==="SSC")return a&&c("content"),l("englishQuestions",p=>p.startsWith(r)),o;let u={physics:"Physics",chemistry:"Chemistry",biology:"Biology"};if(i==="SSC"&&u[n]){let p=u[n],h=`${r}${p}-`;return a&&c(p.toLowerCase()),l("srijonshilQuestions",g=>g.startsWith(h)),l("mcqQuestions",g=>g.startsWith(h)),l("notesByItem",g=>g.startsWith(h)),l("videosByItem",g=>g.startsWith(h)),o}let m={"physics 1st paper":{label:"Physics-1",key:"physics1"},"physics 2nd paper":{label:"Physics-2",key:"physics2"},"chemistry 1st paper":{label:"Chemistry-1",key:"chemistry1"},"chemistry 2nd paper":{label:"Chemistry-2",key:"chemistry2"},"biology 1st paper":{label:"Biology-1",key:"biology1"},"biology 2nd paper":{label:"Biology-2",key:"biology2"},"higher mathematics 1st paper":{label:"HigherMathematics-1",key:"higherMath1"},"higher mathematics 2nd paper":{label:"HigherMathematics-2",key:"higherMath2"}};if(i==="HSC"&&m[n]){let p=m[n],h=`${r}${p.label}-`;return a&&c(p.key),l("srijonshilQuestions",g=>g.startsWith(h)),l("mcqQuestions",g=>g.startsWith(h)),l("notesByItem",g=>g.startsWith(h)),l("videosByItem",g=>g.startsWith(h)),o}return n==="english 1st paper"&&i==="HSC"?(l("englishQuestions",p=>p.startsWith(r)),o):null},T=async(e,t,s,a)=>{if(!t?.id)return;let i=typeof a=="string"||a==null?a:JSON.stringify(a);await e.prepare("INSERT INTO edit_history (user_id, action, details) VALUES (?, ?, ?)").bind(t.id,s,i??null).run()},q=async(e,t)=>!t||Number.isNaN(t)?null:await e.prepare(`SELECT users.id, users.email, users.role, user_profiles.username, user_profiles.name
-       FROM users
-       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-       WHERE users.id = ?`).bind(t).first()||null;var Rt=async(e,t,s)=>{if(s==="/api/register-admin"&&e.method==="POST"){let{username:a,password:i}=await e.json(),n=await t.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first(),o=await t.DB.prepare("SELECT count(*) as count FROM admins").first();if(n?.count>0||o?.count>0)return Response.json({success:!1,error:"User already exists"},{status:403,headers:d});let r=String(a||"").trim(),c=String(i||"");if(r.length<3)return Response.json({success:!1,error:"Username must be at least 3 characters."},{status:400,headers:d});if(c.length<8)return Response.json({success:!1,error:"Password must be at least 8 characters."},{status:400,headers:d});let{passwordHash:l}=await I(c);await t.DB.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)").bind(null,l,"admin").run();let u=await t.DB.prepare("SELECT id FROM users WHERE role = 'admin' ORDER BY id DESC LIMIT 1").first();return u?.id?(await t.DB.batch([t.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)").bind(u.id,r,r),t.DB.prepare("INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)").bind(u.id,JSON.stringify(["dashboard","classes","settings","thumbnails","userManagement"])),t.DB.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").bind(r,l)]),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Admin creation failed."},{status:500,headers:d})}if(s==="/api/login"&&e.method==="POST"){let{username:a,password:i}=await e.json(),n=String(a||"").trim(),o=String(i||"");if(!n||!o)return Response.json({success:!1,error:"Username and password are required."},{status:400,headers:d});let r=E(n),c=await t.DB.prepare(`SELECT users.id, users.email, users.password_hash, users.role, user_profiles.username, user_profiles.name
-         FROM users
-         LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-         WHERE users.email = ? OR user_profiles.username = ?`).bind(r,n).first(),l=c?.role,u=[],m=null,p=null,h=null;if(c){if(!await Ae(c.password_hash,o))return Response.json({success:!1,error:"Invalid credentials"},{status:401,headers:d});if(l==="admin"){let x=await t.DB.prepare("SELECT permissions FROM admin_permissions WHERE user_id = ?").bind(c.id).first();u=x?.permissions?JSON.parse(x.permissions):[]}if(l==="teacher"){let x=await t.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(c.id).first();m=x?{level:x.level,subject:x.subject}:null;let j=await t.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(c.id).first();u=j?.permissions?JSON.parse(j.permissions):[]}if(l==="student"){let x=await t.DB.prepare("SELECT class_label, group_label FROM academic_profiles WHERE user_id = ?").bind(c.id).first();p=x?.class_label||null,h=x?.group_label||null}}else{let v=await t.DB.prepare("SELECT * FROM admins WHERE username = ?").bind(n).first();if(!v)return Response.json({success:!1,error:"Invalid credentials"},{status:401,headers:d});if(c=v,l="admin",!await Ae(v.password_hash,o))return Response.json({success:!1,error:"Invalid credentials"},{status:401,headers:d});u=["dashboard","classes","settings","thumbnails","userManagement"]}let g=Y(t),y=await Lt({username:c.username||c.email||c.name,id:c.id,role:l,permissions:u,assignment:m,classLabel:p,groupLabel:h},g);return Response.json({success:!0,username:c.username||c.email||c.name,role:l,permissions:u,assignment:m,classLabel:p,groupLabel:h,token:y},{headers:d})}if(s==="/api/me"&&e.method==="GET"){let a=await b(e,t),i=a?await t.DB.prepare(`SELECT users.role, user_profiles.username
-             FROM users
-             LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-             WHERE users.id = ?`).bind(a.id).first():null,n=a?await t.DB.prepare("SELECT class_label, group_label FROM academic_profiles WHERE user_id = ?").bind(a.id).first():null;return Response.json({user:a?{username:i?.username||a.username,role:i?.role||a.role,permissions:a.permissions||[],assignment:a.assignment||null,classLabel:n?.class_label||a.classLabel||null,groupLabel:n?.group_label||a.groupLabel||null}:null},{headers:d})}if(s==="/api/change-password"&&e.method==="POST"){let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await e.json().catch(()=>({})),n=String(i.currentPassword||""),o=String(i.newPassword||""),r=String(i.confirmPassword||"");if(!n||!o||!r)return Response.json({success:!1,error:"All password fields are required."},{status:400,headers:d});if(o.length<8)return Response.json({success:!1,error:"New password must be at least 8 characters."},{status:400,headers:d});if(o!==r)return Response.json({success:!1,error:"New passwords do not match."},{status:400,headers:d});let c=await t.DB.prepare(`SELECT users.id, users.password_hash, user_profiles.username
-         FROM users
-         LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-         WHERE users.id = ?`).bind(a.id).first(),l=c?.password_hash,u=null;if(!l&&a.role==="admin"){let v=await t.DB.prepare("SELECT id, username, password_hash FROM admins WHERE id = ?").bind(a.id).first();v?.password_hash&&(u=v,l=v.password_hash)}if(!l)return Response.json({success:!1,error:"User not found."},{status:404,headers:d});let[m,p]=l.split(":");if(await k(n,m)!==p)return Response.json({success:!1,error:"Current password is incorrect."},{status:401,headers:d});let{passwordHash:g}=await I(o),y=[];return c?.id&&(y.push(t.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(g,c.id)),c.username&&y.push(t.DB.prepare("UPDATE admins SET password_hash = ? WHERE username = ?").bind(g,c.username))),u?.id&&y.push(t.DB.prepare("UPDATE admins SET password_hash = ? WHERE id = ?").bind(g,u.id)),y.length&&await t.DB.batch(y),Response.json({success:!0},{headers:d})}return null};var Ke=new Map,w=e=>{Ke.has(e.name)||Ke.set(e.name,e)},ye=()=>Array.from(Ke.values());async function _e(e){let t=ye(),s=t.map(i=>e.prepare(i.createSql)),a=t.flatMap(i=>(i.seeds||[]).map(n=>e.prepare(n)));(s.length||a.length)&&await e.batch([...s,...a]),await Cn(e,t)}var Cn=async(e,t)=>{for(let s of t)try{let a=await e.prepare(`PRAGMA table_info(${s.name})`).all(),i=new Set((a.results||[]).map(n=>String(n.name)));for(let n of s.columns)i.has(n.name)||await e.prepare(`ALTER TABLE ${s.name} ADD COLUMN ${n.name} ${n.sql}`).run()}catch(a){console.warn(`Skipping column check for ${s.name}.`,a)}};var jt=async(e,t,s)=>{if(s==="/api/settings/reset"&&e.method==="POST"){let a=await b(e,t);if(!C(a))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await e.json().catch(()=>({}));if(!i||i.confirm!==!0)return Response.json({success:!1,error:"Confirmation required."},{status:400,headers:d});let o=((await t.DB.prepare("SELECT file_key FROM fonts").all()).results||[]).map(m=>m.file_key).filter(m=>typeof m=="string"&&m.length>0),c=((await t.DB.prepare("SELECT file_key FROM subject_thumbnails").all()).results||[]).map(m=>m.file_key).filter(m=>typeof m=="string"&&m.length>0),u=((await t.DB.prepare("SELECT file_key FROM chapter_thumbnails").all()).results||[]).map(m=>m.file_key).filter(m=>typeof m=="string"&&m.length>0);return o.length>0&&await t.BUCKET.delete(o),c.length>0&&await t.BUCKET.delete(c),u.length>0&&await t.BUCKET.delete(u),await t.DB.batch([t.DB.prepare("DELETE FROM fonts"),t.DB.prepare("DELETE FROM subject_thumbnails"),t.DB.prepare("DELETE FROM chapter_thumbnails"),t.DB.prepare("DELETE FROM content_store WHERE key = 'app-content'"),t.DB.prepare("DELETE FROM class_groups"),t.DB.prepare("DELETE FROM classes")]),await _e(t.DB),await T(t.DB,a,"Settings reset",{scope:"soft"}),Response.json({success:!0},{headers:d})}if(s==="/api/settings/hard-reset"&&e.method==="POST"){let a=await b(e,t);if(!C(a))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await e.json().catch(()=>({})),n=String(i.password||"");if(!n)return Response.json({success:!1,error:"Password is required."},{status:400,headers:d});let r=(await t.DB.prepare("SELECT id, password_hash FROM users WHERE id = ?").bind(a.id).first())?.password_hash;if(!r&&a.role==="admin"){let p=await t.DB.prepare("SELECT id, password_hash FROM admins WHERE id = ?").bind(a.id).first();p?.password_hash&&(r=p.password_hash)}if(!r)return Response.json({success:!1,error:"User not found."},{status:404,headers:d});let[c,l]=r.split(":");if(await k(n,c)!==l)return Response.json({success:!1,error:"Password is incorrect."},{status:401,headers:d});let m;do{let p=await t.BUCKET.list({cursor:m}),h=p.objects.map(g=>g.key);h.length&&await t.BUCKET.delete(h),m=p.truncated?p.cursor:void 0}while(m);return await t.DB.batch([t.DB.prepare("DROP TABLE IF EXISTS edit_history"),t.DB.prepare("DROP TABLE IF EXISTS user_profiles"),t.DB.prepare("DROP TABLE IF EXISTS admin_permissions"),t.DB.prepare("DROP TABLE IF EXISTS teacher_assignments"),t.DB.prepare("DROP TABLE IF EXISTS teacher_permissions"),t.DB.prepare("DROP TABLE IF EXISTS content_store"),t.DB.prepare("DROP TABLE IF EXISTS class_groups"),t.DB.prepare("DROP TABLE IF EXISTS classes"),t.DB.prepare("DROP TABLE IF EXISTS fonts"),t.DB.prepare("DROP TABLE IF EXISTS subject_thumbnails"),t.DB.prepare("DROP TABLE IF EXISTS chapter_thumbnails"),t.DB.prepare("DROP TABLE IF EXISTS users"),t.DB.prepare("DROP TABLE IF EXISTS admins")]),await _e(t.DB),Response.json({success:!0},{headers:d})}return null};w({name:"email_verifications",createSql:`CREATE TABLE IF NOT EXISTS email_verifications (
-    email TEXT PRIMARY KEY,
-    code TEXT NOT NULL,
-    expires_at INTEGER NOT NULL,
-    attempts INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"email",sql:"TEXT PRIMARY KEY"},{name:"code",sql:"TEXT NOT NULL"},{name:"expires_at",sql:"INTEGER NOT NULL"},{name:"attempts",sql:"INTEGER DEFAULT 0"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"admins",createSql:`CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password_hash TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"username",sql:"TEXT UNIQUE"},{name:"password_hash",sql:"TEXT"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"users",createSql:`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE,
-    password_hash TEXT,
-    role TEXT NOT NULL
-  )`,columns:[{name:"email",sql:"TEXT UNIQUE"},{name:"password_hash",sql:"TEXT"},{name:"role",sql:"TEXT NOT NULL"}]});w({name:"user_profiles",createSql:`CREATE TABLE IF NOT EXISTS user_profiles (
-    user_id INTEGER PRIMARY KEY,
-    username TEXT UNIQUE,
-    name TEXT,
-    avatar_key TEXT,
-    avatar_content_type TEXT,
-    dashboard_view TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER PRIMARY KEY"},{name:"username",sql:"TEXT UNIQUE"},{name:"name",sql:"TEXT"},{name:"avatar_key",sql:"TEXT"},{name:"avatar_content_type",sql:"TEXT"},{name:"dashboard_view",sql:"TEXT"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"},{name:"updated_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"admin_permissions",createSql:`CREATE TABLE IF NOT EXISTS admin_permissions (
-    user_id INTEGER PRIMARY KEY,
-    permissions TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER PRIMARY KEY"},{name:"permissions",sql:"TEXT NOT NULL"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"teacher_assignments",createSql:`CREATE TABLE IF NOT EXISTS teacher_assignments (
-    user_id INTEGER PRIMARY KEY,
-    level TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER PRIMARY KEY"},{name:"level",sql:"TEXT NOT NULL"},{name:"subject",sql:"TEXT NOT NULL"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"teacher_permissions",createSql:`CREATE TABLE IF NOT EXISTS teacher_permissions (
-    user_id INTEGER PRIMARY KEY,
-    permissions TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER PRIMARY KEY"},{name:"permissions",sql:"TEXT NOT NULL"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"edit_history",createSql:`CREATE TABLE IF NOT EXISTS edit_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    action TEXT NOT NULL,
-    details TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER NOT NULL"},{name:"action",sql:"TEXT NOT NULL"},{name:"details",sql:"TEXT"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"content_store",createSql:`CREATE TABLE IF NOT EXISTS content_store (
-    key TEXT PRIMARY KEY,
-    data TEXT NOT NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"key",sql:"TEXT PRIMARY KEY"},{name:"data",sql:"TEXT NOT NULL"},{name:"updated_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"classes",createSql:`CREATE TABLE IF NOT EXISTS classes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"name",sql:"TEXT UNIQUE"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}],seeds:["INSERT OR IGNORE INTO classes (name) VALUES ('SSC'), ('HSC')",`INSERT OR IGNORE INTO class_groups (class_id, name)
-      SELECT classes.id, group_names.name
-      FROM classes
-      JOIN (SELECT 'Science' AS name UNION ALL SELECT 'Humanities' UNION ALL SELECT 'Business Studies') AS group_names
-      WHERE classes.name IN ('SSC', 'HSC')`]});w({name:"class_groups",createSql:`CREATE TABLE IF NOT EXISTS class_groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    class_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(class_id, name)
-  )`,columns:[{name:"class_id",sql:"INTEGER NOT NULL"},{name:"name",sql:"TEXT NOT NULL"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"fonts",createSql:`CREATE TABLE IF NOT EXISTS fonts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    file_key TEXT,
-    content_type TEXT,
-    original_name TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"name",sql:"TEXT"},{name:"file_key",sql:"TEXT"},{name:"content_type",sql:"TEXT"},{name:"original_name",sql:"TEXT"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"subject_thumbnails",createSql:`CREATE TABLE IF NOT EXISTS subject_thumbnails (
-    subject_key TEXT PRIMARY KEY,
-    file_key TEXT,
-    content_type TEXT,
-    zoom REAL DEFAULT 1,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"file_key",sql:"TEXT"},{name:"content_type",sql:"TEXT"},{name:"zoom",sql:"REAL DEFAULT 1"},{name:"updated_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"chapter_thumbnails",createSql:`CREATE TABLE IF NOT EXISTS chapter_thumbnails (
-    chapter_key TEXT PRIMARY KEY,
-    file_key TEXT,
-    content_type TEXT,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"file_key",sql:"TEXT"},{name:"content_type",sql:"TEXT"},{name:"updated_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"academic_profiles",createSql:`CREATE TABLE IF NOT EXISTS academic_profiles (
-    user_id INTEGER PRIMARY KEY,
-    class_label TEXT,
-    group_label TEXT,
-    religion TEXT,
-    date_of_birth TEXT,
-    batch_year TEXT,
-    points INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER PRIMARY KEY"},{name:"class_label",sql:"TEXT"},{name:"group_label",sql:"TEXT"},{name:"religion",sql:"TEXT"},{name:"date_of_birth",sql:"TEXT"},{name:"batch_year",sql:"TEXT"},{name:"points",sql:"INTEGER DEFAULT 0"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"},{name:"updated_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"user_points_log",createSql:`CREATE TABLE IF NOT EXISTS user_points_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    points INTEGER NOT NULL,
-    reason TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER NOT NULL"},{name:"points",sql:"INTEGER NOT NULL"},{name:"reason",sql:"TEXT NOT NULL"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});w({name:"social_profiles",createSql:`CREATE TABLE IF NOT EXISTS social_profiles (
-    user_id INTEGER PRIMARY KEY,
-    bio TEXT,
-    followers_count INTEGER DEFAULT 0,
-    following_count INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`,columns:[{name:"user_id",sql:"INTEGER PRIMARY KEY"},{name:"bio",sql:"TEXT"},{name:"followers_count",sql:"INTEGER DEFAULT 0"},{name:"following_count",sql:"INTEGER DEFAULT 0"},{name:"created_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"},{name:"updated_at",sql:"DATETIME DEFAULT CURRENT_TIMESTAMP"}]});var wn=async(e,t)=>(await e.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").bind(t.name).first())?.name?!0:(await e.prepare(t.createSql).run(),!1),Bt=async(e,t)=>{let s=await e.prepare(`PRAGMA table_info(${t})`).all();return new Set((s.results||[]).map(a=>String(a.name)))},Tn=async e=>{let t=await Bt(e,"users");if(t.has("username")||t.has("name")||t.has("class_label")||t.has("group_label")){let i=t.has("username")?"username":"email",n=t.has("name")?"name":i;await e.prepare(`INSERT INTO user_profiles (user_id, username, name)
-       SELECT id, ${i}, ${n}
-       FROM users
-       WHERE id NOT IN (SELECT user_id FROM user_profiles)`).run()}if(t.has("class_label")||t.has("group_label")||t.has("religion")||t.has("date_of_birth")||t.has("batch_year")||t.has("points")){let i=t.has("class_label")?"class_label":"NULL",n=t.has("group_label")?"group_label":"NULL",o=t.has("religion")?"religion":"NULL",r=t.has("date_of_birth")?"date_of_birth":"NULL",c=t.has("batch_year")?"batch_year":"NULL",l=t.has("points")?"points":"0";await e.prepare(`INSERT INTO academic_profiles (user_id, class_label, group_label, religion, date_of_birth, batch_year, points)
-       SELECT id, ${i}, ${n}, ${o}, ${r}, ${c}, ${l}
-       FROM users
-       WHERE role = 'student' AND id NOT IN (SELECT user_id FROM academic_profiles)`).run()}},En=async e=>((await e.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results||[]).map(s=>String(s.name)),Ln=e=>e.startsWith("sqlite_")||e==="d1_migrations",F=async e=>{let t=ye(),s=new Set(t.map(n=>n.name)),a={createdTables:[],addedColumns:[],droppedTables:[],errors:[]},i=await En(e.DB);for(let n of i)if(!Ln(n)&&!s.has(n))try{let o=n.replace(/"/g,'""');await e.DB.prepare(`DROP TABLE IF EXISTS "${o}"`).run(),a.droppedTables.push(n)}catch(o){a.errors.push({table:n,error:o instanceof Error?o.message:String(o)})}for(let n of t)try{if(!await wn(e.DB,n)){if(a.createdTables.push(n.name),n.seeds&&n.seeds.length){let c=n.seeds.map(l=>e.DB.prepare(l));await e.DB.batch(c)}continue}let r=await Bt(e.DB,n.name);for(let c of n.columns)r.has(c.name)||(await e.DB.prepare(`ALTER TABLE ${n.name} ADD COLUMN ${c.name} ${c.sql}`).run(),a.addedColumns.push({table:n.name,column:c.name,sql:c.sql}))}catch(o){a.errors.push({table:n.name,error:o instanceof Error?o.message:String(o)})}return await Tn(e.DB),a};var Pn=["dashboard","classes","settings","thumbnails","userManagement"],Mt=async(e,t,s)=>{if(s==="/api/system/status"&&e.method==="GET"){let p=await t.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first(),h=await t.DB.prepare("SELECT count(*) as count FROM admins").first(),g=Number(p?.count||0)>0||Number(h?.count||0)>0;return Response.json({initialized:g},{headers:d})}if(s!=="/api/system/init"||e.method!=="POST")return null;await F(t);let a=await t.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first();if(Number(a?.count||0)>0)return Response.json({success:!1,error:"System already initialized"},{status:403,headers:d});let n=await e.json().catch(()=>({})),o=String(n.adminName||"").trim(),r=E(String(n.email||"")),c=String(n.password||""),l=String(n.confirmPassword||"");if(!o||!r||!c||!l)return Response.json({success:!1,error:"Admin name, email, and password are required."},{status:400,headers:d});if(c.length<8)return Response.json({success:!1,error:"Password must be at least 8 characters."},{status:400,headers:d});if(c!==l)return Response.json({success:!1,error:"Passwords do not match."},{status:400,headers:d});let{passwordHash:u}=await I(c);await t.DB.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)").bind(r,u,"admin").run();let m=await t.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first();return m?.id?(await t.DB.batch([t.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)").bind(m.id,o,o),t.DB.prepare("INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)").bind(m.id,JSON.stringify(Pn)),t.DB.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").bind(o,u)]),Response.json({success:!0,message:"System Initialized & Admin Created"},{headers:d})):Response.json({success:!1,error:"Admin creation failed."},{status:500,headers:d})};var kn=(e,t)=>{let s=t.ADMIN_KEY;return s?e.headers.get("x-admin-key")===s:!1},qt=async(e,t,s)=>{if(s!=="/api/system/migrate"||e.method!=="GET")return null;if(!kn(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=await F(t);return Response.json({success:!0,report:a},{headers:d})};var At=e=>`/api/profile/avatar?v=${e?new Date(e).getTime():Date.now()}`,Dt=async(e,t,s)=>{if(!s.startsWith("/api/profile"))return null;let a=async()=>{let i=await b(e,t);if(i)return i;let o=new URL(e.url).searchParams.get("token");if(!o)return null;let r=Y(t);return await be(o,r)};if(s==="/api/profile"&&e.method==="GET"){let i=await b(e,t);if(!i)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let o=await t.DB.prepare(`SELECT users.id, users.email, users.role, user_profiles.username, user_profiles.name, user_profiles.dashboard_view
-         FROM users
-         LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-         WHERE users.id = ?`).bind(i.id).first();if(!o&&i.role==="admin"){let l=await t.DB.prepare("SELECT id, username FROM admins WHERE id = ?").bind(i.id).first(),u=await t.DB.prepare("SELECT username, name FROM user_profiles WHERE user_id = ?").bind(i.id).first();o=l?{id:l.id,username:u?.username||l.username,name:u?.name||u?.username||l.username,email:null,role:"admin"}:null}if(!o)return Response.json({success:!1,error:"User not found."},{status:404,headers:d});let r=i.role==="teacher"?await t.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(i.id).first():null,c=await t.DB.prepare("SELECT avatar_key, avatar_content_type, updated_at FROM user_profiles WHERE user_id = ?").bind(i.id).first();return Response.json({success:!0,profile:{id:o.id,username:o.username||o.email,name:o.name||o.username,email:o.email||null,role:o.role||i.role,dashboardView:o.dashboard_view||null,assignment:r?{level:r.level,subject:r.subject}:null,avatarUrl:c?.avatar_key?At(c.updated_at):null}},{headers:d})}if(s==="/api/profile"&&e.method==="PUT"){let i=await b(e,t);if(!i)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let n=await e.json().catch(()=>({})),o=typeof n.name=="string"?n.name.trim():"",r=typeof n.dashboardView=="string"?n.dashboardView.trim():"",c=new Set(["card","list"]),l=!!o,u=c.has(r);return!l&&!u?Response.json({success:!1,error:"Profile update payload is required."},{status:400,headers:d}):l&&u?(await t.DB.prepare("INSERT INTO user_profiles (user_id, name, dashboard_view) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, dashboard_view = excluded.dashboard_view, updated_at = CURRENT_TIMESTAMP").bind(i.id,o,r).run()).success?(await T(t.DB,i,"Profile updated",{name:o,dashboardView:r}),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Profile update failed."},{status:500,headers:d}):l?(await t.DB.prepare("INSERT INTO user_profiles (user_id, name) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, updated_at = CURRENT_TIMESTAMP").bind(i.id,o).run()).success?(await T(t.DB,i,"Profile updated",{name:o}),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Profile update failed."},{status:500,headers:d}):(await t.DB.prepare("INSERT INTO user_profiles (user_id, dashboard_view) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET dashboard_view = excluded.dashboard_view, updated_at = CURRENT_TIMESTAMP").bind(i.id,r).run()).success?(await T(t.DB,i,"Dashboard view updated",{dashboardView:r}),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Profile update failed."},{status:500,headers:d})}if(s==="/api/profile/avatar"&&e.method==="GET"){let i=await a();if(!i)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let n=await t.DB.prepare("SELECT avatar_key, avatar_content_type FROM user_profiles WHERE user_id = ?").bind(i.id).first();if(!n?.avatar_key)return Response.json({success:!1,error:"Avatar not found."},{status:404,headers:d});let o=await t.BUCKET.get(n.avatar_key);if(!o)return Response.json({success:!1,error:"Avatar file missing."},{status:404,headers:d});let r=new Headers(d);return r.set("Content-Type",n.avatar_content_type||"application/octet-stream"),r.set("Cache-Control","public, max-age=3600"),new Response(o.body,{headers:r})}if(s==="/api/profile/avatar"&&e.method==="POST"){let i=await b(e,t);if(!i)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let o=(await e.formData()).get("file");if(!(o instanceof File))return Response.json({success:!1,error:"Avatar file is required."},{status:400,headers:d});let r=await o.arrayBuffer(),c=`avatars/${i.id}-${crypto.randomUUID()}-${o.name}`,l=o.type||"application/octet-stream";await t.BUCKET.put(c,r,{httpMetadata:{contentType:l}});let u=await t.DB.prepare("SELECT avatar_key FROM user_profiles WHERE user_id = ?").bind(i.id).first();return await t.DB.prepare("INSERT INTO user_profiles (user_id, avatar_key, avatar_content_type) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET avatar_key = excluded.avatar_key, avatar_content_type = excluded.avatar_content_type, updated_at = CURRENT_TIMESTAMP").bind(i.id,c,l).run(),u?.avatar_key&&await t.BUCKET.delete(u.avatar_key),await T(t.DB,i,"Avatar updated",{fileKey:c}),Response.json({success:!0,avatarUrl:At(new Date().toISOString())},{headers:d})}if(s==="/api/profile/history"&&e.method==="GET"){let i=await b(e,t);if(!i)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let o=((await t.DB.prepare("SELECT action, details, created_at FROM edit_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 20").bind(i.id).all()).results||[]).map(r=>({action:r.action,details:r.details,createdAt:r.created_at}));return Response.json({success:!0,entries:o},{headers:d})}return null};var In=[Rt,jt,Mt,Dt,qt],Kt=()=>({id:"system",match:e=>e.startsWith("/api"),handle:async(e,t)=>{let a=new URL(e.url).pathname;for(let i of In){let n=await i(e,t,a);if(n)return n}return null}});var _t=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=await e.json(),i=String(a.role||"").trim().toLowerCase(),n=String(a.name||"").trim(),o=E(String(a.email||"")),r=String(a.password||"");if(!n||!o||!r)return Response.json({success:!1,error:"Name, email, and password are required."},{status:400,headers:d});if(r.length<8)return Response.json({success:!1,error:"Password must be at least 8 characters."},{status:400,headers:d});if(!["admin","teacher","student"].includes(i))return Response.json({success:!1,error:"Invalid role."},{status:400,headers:d});if(await t.DB.prepare("SELECT id FROM users WHERE email = ?").bind(o).first())return Response.json({success:!1,error:"User with this email already exists."},{status:400,headers:d});let{passwordHash:l}=await I(r),u=o,m=a.classLabel||null,p=a.groupLabel||null;await t.DB.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)").bind(o,l,i).run();let h=await t.DB.prepare("SELECT id FROM users WHERE email = ?").bind(o).first();if(!h?.id)return Response.json({success:!1,error:"User creation failed."},{status:500,headers:d});if(await t.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)").bind(h.id,u,n).run(),i==="student"&&await t.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label) VALUES (?, ?, ?)").bind(h.id,m,p).run(),i==="teacher"){let g=U(String(a.level||"")),y=_(String(a.subject||""));if(!O(g)||!Q(y))return await t.DB.batch([t.DB.prepare("DELETE FROM academic_profiles WHERE user_id = ?").bind(h.id),t.DB.prepare("DELETE FROM user_profiles WHERE user_id = ?").bind(h.id),t.DB.prepare("DELETE FROM users WHERE id = ?").bind(h.id)]),Response.json({success:!1,error:"Invalid teacher level or subject."},{status:400,headers:d});let v=a.permissions||[],x=Array.isArray(v)?v:[];await t.DB.batch([t.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?)").bind(h.id,g,y),t.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?)").bind(h.id,JSON.stringify(x))])}if(i==="admin"){let g=a.permissions||[],y=Array.isArray(g)?g:[];await t.DB.prepare("INSERT INTO admin_permissions (user_id, permissions) VALUES (?, ?)").bind(h.id,JSON.stringify(y)).run()}return Response.json({success:!0},{headers:d})};var Ht=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=await e.json(),i=Number(a.id);if(!i)return Response.json({success:!1,error:"User ID is required"},{status:400,headers:d});let n=await t.DB.prepare("SELECT role FROM users WHERE id = ?").bind(i).first();if(!n)return Response.json({success:!1,error:"User not found"},{status:404,headers:d});if(n.role!=="student")return Response.json({success:!1,error:"Only student accounts can be deleted here."},{status:400,headers:d});let o=await t.DB.prepare("SELECT avatar_key FROM user_profiles WHERE user_id = ?").bind(i).first();return await t.DB.batch([t.DB.prepare("DELETE FROM academic_profiles WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM social_profiles WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM user_profiles WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM admin_permissions WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM teacher_assignments WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM teacher_permissions WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM edit_history WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM user_points_log WHERE user_id = ?").bind(i),t.DB.prepare("DELETE FROM users WHERE id = ?").bind(i)]),o?.avatar_key&&await t.BUCKET.delete(o.avatar_key),Response.json({success:!0},{headers:d})};var Ut=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=await t.DB.prepare(`SELECT users.id, users.email, user_profiles.name
-       FROM users
-       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-       WHERE users.role = 'admin'
-       ORDER BY user_profiles.created_at DESC`).all(),i=await t.DB.prepare(`SELECT users.id, users.email, user_profiles.name
-       FROM users
-       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-       WHERE users.role = 'teacher'
-       ORDER BY user_profiles.created_at DESC`).all(),n=await t.DB.prepare(`SELECT users.id, users.email, user_profiles.name, academic_profiles.class_label, academic_profiles.group_label
-       FROM users
-       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-       LEFT JOIN academic_profiles ON academic_profiles.user_id = users.id
-       WHERE users.role = 'student'
-       ORDER BY user_profiles.created_at DESC`).all(),o=await t.DB.prepare("SELECT user_id, permissions FROM admin_permissions").all(),r=await t.DB.prepare("SELECT user_id, permissions FROM teacher_permissions").all(),c=await t.DB.prepare("SELECT user_id, level, subject FROM teacher_assignments").all(),l=new Map;(o.results||[]).forEach(p=>{p?.user_id&&l.set(p.user_id,p.permissions?JSON.parse(p.permissions):[])});let u=new Map;(c.results||[]).forEach(p=>{p?.user_id&&u.set(p.user_id,{level:p.level,subject:p.subject})});let m=new Map;return(r.results||[]).forEach(p=>{p?.user_id&&m.set(p.user_id,p.permissions?JSON.parse(p.permissions):[])}),Response.json({success:!0,admins:(a.results||[]).map(p=>({id:p.id,name:p.name||p.email,email:p.email,permissions:l.get(p.id)||[]})),teachers:(i.results||[]).map(p=>({id:p.id,name:p.name||p.email,email:p.email,level:u.get(p.id)?.level||"",subject:u.get(p.id)?.subject||"",permissions:m.get(p.id)||[]})),students:(n.results||[]).map(p=>({id:p.id,name:p.name||p.email,email:p.email,classLabel:p.class_label,groupLabel:p.group_label}))},{headers:d})};var Qt=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let{adminPassword:a,targetId:i}=await e.json(),n=await t.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(s.id).first();if(!n)return Response.json({success:!1,error:"Admin not found"},{status:401,headers:d});let[o,r]=n.password_hash.split(":");if(await k(a,o)!==r)return Response.json({success:!1,error:"Incorrect Admin Password"},{status:401,headers:d});let l=await t.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(i).first();return l?Response.json({success:!0,hash:l.password_hash},{headers:d}):Response.json({success:!1,error:"User not found"},{status:404,headers:d})};var Ot=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let{adminPassword:a,targetId:i,newPassword:n}=await e.json(),o=await t.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(s.id).first();if(!o)return Response.json({success:!1,error:"Admin not found"},{status:401,headers:d});let[r,c]=o.password_hash.split(":");if(await k(a,r)!==c)return Response.json({success:!1,error:"Incorrect Admin Password"},{status:401,headers:d});if(n.length<8)return Response.json({success:!1,error:"New password too short"},{status:400,headers:d});let{passwordHash:u}=await I(n);return await t.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(u,i).run(),Response.json({success:!0},{headers:d})};var Ft=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=await e.json(),i=Number(a.id);if(!i)return Response.json({success:!1,error:"User ID is required"},{status:400,headers:d});if(String(a.role||"").trim().toLowerCase()==="teacher"){let o=U(String(a.level||"")),r=_(String(a.subject||""));if(!O(o)||!Q(r))return Response.json({success:!1,error:"Invalid teacher level or subject."},{status:400,headers:d});let c=a.permissions||[];await t.DB.batch([t.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET level=excluded.level, subject=excluded.subject").bind(i,o,r),t.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET permissions=excluded.permissions").bind(i,JSON.stringify(c))])}return Response.json({success:!0},{headers:d})};var Gt=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=new URL(e.url),i=Number(a.searchParams.get("id"));if(!i)return Response.json({success:!1,error:"User ID is required"},{status:400,headers:d});let n=await t.DB.prepare(`SELECT users.id, users.email, users.role, user_profiles.name, user_profiles.created_at,
-              academic_profiles.class_label, academic_profiles.group_label, academic_profiles.religion,
-              academic_profiles.date_of_birth, academic_profiles.batch_year, academic_profiles.points
-       FROM users
-       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-       LEFT JOIN academic_profiles ON academic_profiles.user_id = users.id
-       WHERE users.id = ?`).bind(i).first();if(!n)return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let o=await t.DB.prepare("SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC").bind(i).all();return Response.json({success:!0,user:{id:n.id,name:n.name||n.email,email:n.email,role:n.role,classLabel:n.class_label,groupLabel:n.group_label,religion:n.religion,dateOfBirth:n.date_of_birth,batchYear:n.batch_year,points:n.points||0,createdAt:n.created_at,pointLogs:(o.results||[]).map(r=>({points:r.points,reason:r.reason,createdAt:r.created_at}))}},{headers:d})},Vt=async(e,t)=>{let s=await b(e,t);if(!C(s))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let a=await e.json(),i=Number(a.id);if(!i)return Response.json({success:!1,error:"User ID is required"},{status:400,headers:d});let n=await q(t.DB,i);if(!n)return Response.json({success:!1,error:"User not found"},{status:404,headers:d});if(n.role!=="student")return Response.json({success:!1,error:"Only student accounts can be edited here."},{status:400,headers:d});let o=a.name?String(a.name).trim():null,r=a.email?E(String(a.email)):null,c=a.classLabel?String(a.classLabel).trim():null,l=a.groupLabel?String(a.groupLabel).trim():null,u=a.religion?String(a.religion).trim():null,m=a.dateOfBirth?String(a.dateOfBirth).trim():null,p=a.batchYear?String(a.batchYear).trim():null,h=r||n.email;return r&&r!==n.email&&await t.DB.prepare("SELECT id FROM users WHERE email = ? AND id != ?").bind(r,i).first()?Response.json({success:!1,error:"Email already in use."},{status:400,headers:d}):(await t.DB.batch([t.DB.prepare("UPDATE users SET email = ? WHERE id = ?").bind(h,i),t.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, name = excluded.name, updated_at = CURRENT_TIMESTAMP").bind(i,h,o),t.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label, religion, date_of_birth, batch_year) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET class_label = excluded.class_label, group_label = excluded.group_label, religion = excluded.religion, date_of_birth = excluded.date_of_birth, batch_year = excluded.batch_year, updated_at = CURRENT_TIMESTAMP").bind(i,c,l,u,m,p)]),Response.json({success:!0},{headers:d}))};var zt=async(e,t,s)=>s==="/api/users"&&e.method==="GET"?Ut(e,t):s==="/api/users"&&e.method==="POST"?_t(e,t):s==="/api/users"&&e.method==="PUT"?Ft(e,t):s==="/api/users/reveal"&&e.method==="POST"?Qt(e,t):s==="/api/users/reset"&&e.method==="POST"?Ot(e,t):s==="/api/users/details"&&e.method==="GET"?Gt(e,t):s==="/api/users/details"&&e.method==="PUT"?Vt(e,t):s==="/api/users/delete"&&e.method==="POST"?Ht(e,t):null;var Rn=[zt],Wt=()=>({id:"admin-users",match:e=>e.startsWith("/api/users"),handle:async(e,t)=>{let a=new URL(e.url).pathname;for(let i of Rn){let n=await i(e,t,a);if(n)return n}return null}});var ve=e=>{let s={...{origin:"*",allowMethods:["GET","HEAD","PUT","POST","DELETE","PATCH"],allowHeaders:[],exposeHeaders:[]},...e},a=(n=>typeof n=="string"?n==="*"?()=>n:o=>n===o?o:null:typeof n=="function"?n:o=>n.includes(o)?o:null)(s.origin),i=(n=>typeof n=="function"?n:Array.isArray(n)?()=>n:()=>[])(s.allowMethods);return async function(o,r){function c(u,m){o.res.headers.set(u,m)}let l=await a(o.req.header("origin")||"",o);if(l&&c("Access-Control-Allow-Origin",l),s.credentials&&c("Access-Control-Allow-Credentials","true"),s.exposeHeaders?.length&&c("Access-Control-Expose-Headers",s.exposeHeaders.join(",")),o.req.method==="OPTIONS"){s.origin!=="*"&&c("Vary","Origin"),s.maxAge!=null&&c("Access-Control-Max-Age",s.maxAge.toString());let u=await i(o.req.header("origin")||"",o);u.length&&c("Access-Control-Allow-Methods",u.join(","));let m=s.allowHeaders;if(!m?.length){let p=o.req.header("Access-Control-Request-Headers");p&&(m=p.split(/\s*,\s*/))}return m?.length&&(c("Access-Control-Allow-Headers",m.join(",")),o.res.headers.append("Vary","Access-Control-Request-Headers")),o.res.headers.delete("Content-Length"),o.res.headers.delete("Content-Type"),new Response(null,{headers:o.res.headers,status:204,statusText:"No Content"})}await r(),s.origin!=="*"&&o.header("Vary","Origin",{append:!0})}};var $t=async(e,t,s)=>{try{let i=await(await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:s.GMAIL_CLIENT_ID,client_secret:s.GMAIL_CLIENT_SECRET,refresh_token:s.GMAIL_REFRESH_TOKEN,grant_type:"refresh_token"})})).json();if(!i.access_token)return console.error("Failed to refresh Gmail token:",i),!1;let n="Your Verification Code",o=`
-<div style="font-family: sans-serif; padding: 20px; text-align: center; border: 1px solid #eee; border-radius: 8px;">
-    <h2>Welcome to Freeducation!</h2>
-    <p>Please enter the following code to verify your account:</p>
-    <h1 style="color: #4F46E5; letter-spacing: 5px; margin: 20px 0;">${t}</h1>
-    <p>This code will expire in 10 minutes.</p>
-    <p style="font-size: 12px; color: #888; margin-top: 20px;">If you didn't request this, you can safely ignore this email.</p>
-</div>
-`,r=`=?utf-8?B?${btoa(n)}?=`,l=["From: Freeducation <mahfuz.alam.shohan@gmail.com>",`To: ${e}`,`Subject: ${r}`,"MIME-Version: 1.0","Content-Type: text/html; charset=utf-8","",o].join(`
-`),u=btoa(unescape(encodeURIComponent(l))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""),m=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{method:"POST",headers:{Authorization:`Bearer ${i.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({raw:u})});return m.ok?!0:(console.error("Gmail Send Error:",await m.text()),!1)}catch(a){return console.error("Network Error:",a),!1}};var He=new P;He.post("/register-request",async e=>{try{let{name:t,email:s,password:a,classLabel:i,groupLabel:n}=await e.req.json(),o=String(t||"").trim(),r=E(String(s||"")),c=String(a||"");if(!r||!c||!o)return e.json({success:!1,error:"Missing fields"},400);if(c.length<8)return e.json({success:!1,error:"Password must be at least 8 characters."},400);if(await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first())return e.json({success:!1,error:"User already exists. Please login."},400);let u=Math.floor(1e5+Math.random()*9e5).toString(),m=Date.now()+10*60*1e3;return await e.env.DB.prepare(`
-      INSERT INTO email_verifications (email, code, expires_at) VALUES (?, ?, ?)
-      ON CONFLICT(email) DO UPDATE SET code = ?, expires_at = ?, attempts = 0
-    `).bind(r,u,m,u,m).run(),await $t(r,u,e.env)?e.json({success:!0,message:"OTP sent"}):e.json({success:!1,error:"Failed to send email. Please try again later."},500)}catch(t){return console.error("Register Error:",t),e.json({success:!1,error:"Server error"},500)}});He.post("/register-verify",async e=>{try{let{email:t,code:s,name:a,password:i,classLabel:n,groupLabel:o}=await e.req.json(),r=E(String(t||"")),c=String(a||"").trim(),l=String(i||"");if(!r||!c||!l)return e.json({success:!1,error:"Missing fields"},400);if(l.length<8)return e.json({success:!1,error:"Password must be at least 8 characters."},400);let u=await e.env.DB.prepare("SELECT * FROM email_verifications WHERE email = ?").bind(r).first();if(!u)return e.json({success:!1,error:"No verification request found"},400);if(Date.now()>u.expires_at)return e.json({success:!1,error:"Code expired. Try again."},400);if(String(u.code)!==String(s))return e.json({success:!1,error:"Invalid code"},400);if(await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first())return e.json({success:!1,error:"User already exists. Please login."},400);let{passwordHash:p}=await I(l);await e.env.DB.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)").bind(r,p,"student").run();let h=await e.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(r).first();return h?.id?(await e.env.DB.batch([e.env.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?)").bind(h.id,r,c),e.env.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label) VALUES (?, ?, ?)").bind(h.id,n||null,o||null)]),await e.env.DB.prepare("DELETE FROM email_verifications WHERE email = ?").bind(r).run(),e.json({success:!0,message:"Account created"})):e.json({success:!1,error:"Account creation failed"},500)}catch(t){return e.json({success:!1,error:"Database error: "+(t instanceof Error?t.message:String(t))},500)}});var Yt=He;var Xt=e=>{let t=e.classLabel?String(e.classLabel).trim():"",s=e.religion?String(e.religion).trim():"",a=e.dateOfBirth?String(e.dateOfBirth).trim():"",i=e.batchYear?String(e.batchYear).trim():"",n=e.groupLabel?String(e.groupLabel).trim():"",o=t==="SSC"||t==="HSC",r=t==="SSC"||t==="HSC";return!(!s||!t||!a||o&&!n||r&&!i)},jn=async(e,t)=>((await e.prepare("SELECT points, reason, created_at FROM user_points_log WHERE user_id = ? ORDER BY created_at DESC").bind(t).all()).results||[]).map(a=>({points:a.points,reason:a.reason,createdAt:a.created_at})),fe=async(e,t,s)=>{if(s==="/api/student/profile"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await q(t.DB,a.id),n=await t.DB.prepare("SELECT class_label, group_label, religion, date_of_birth, batch_year, points FROM academic_profiles WHERE user_id = ?").bind(a.id).first();return i?Response.json({success:!0,profile:{id:i.id,name:i.name||i.email,email:i.email,classLabel:n?.class_label||null,groupLabel:n?.group_label||null,religion:n?.religion||null,dateOfBirth:n?.date_of_birth||null,batchYear:n?.batch_year||null,points:n?.points||0}},{headers:d}):Response.json({success:!1,error:"User not found"},{status:404,headers:d})}if(s==="/api/student/profile"&&e.method==="PUT"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!await q(t.DB,a.id))return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let n=await e.json().catch(()=>({})),o=n.classLabel?String(n.classLabel).trim():null,r=n.groupLabel?String(n.groupLabel).trim():null,c=n.religion?String(n.religion).trim():null,l=n.dateOfBirth?String(n.dateOfBirth).trim():null,u=n.batchYear?String(n.batchYear).trim():null,m=await t.DB.prepare("SELECT class_label, group_label, religion, date_of_birth, batch_year, points FROM academic_profiles WHERE user_id = ?").bind(a.id).first(),p={religion:c,classLabel:o,groupLabel:r,dateOfBirth:l,batchYear:u},h=Number(m?.points||0);await t.DB.prepare("INSERT INTO academic_profiles (user_id, class_label, group_label, religion, date_of_birth, batch_year, points) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET class_label = excluded.class_label, group_label = excluded.group_label, religion = excluded.religion, date_of_birth = excluded.date_of_birth, batch_year = excluded.batch_year, points = excluded.points, updated_at = CURRENT_TIMESTAMP").bind(a.id,o,r,c,l,u,h).run();let g=Xt({religion:m?.religion||null,classLabel:m?.class_label||null,groupLabel:m?.group_label||null,dateOfBirth:m?.date_of_birth||null,batchYear:m?.batch_year||null}),y=Xt(p),v=0;if(!g&&y&&!await t.DB.prepare("SELECT id FROM user_points_log WHERE user_id = ? AND reason = ? LIMIT 1").bind(a.id,"profile_complete").first()){v=10;let j=h+v;await t.DB.batch([t.DB.prepare("UPDATE academic_profiles SET points = ? WHERE user_id = ?").bind(j,a.id),t.DB.prepare("INSERT INTO user_points_log (user_id, points, reason) VALUES (?, ?, ?)").bind(a.id,v,"profile_complete")])}return await T(t.DB,a,"Student profile updated",{classLabel:o,groupLabel:r,religion:c,dateOfBirth:l,batchYear:u}),Response.json({success:!0,pointsAwarded:v},{headers:d})}if(s==="/api/points"&&e.method==="GET"){let a=await b(e,t);if(!a||a.role!=="student")return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT points FROM academic_profiles WHERE user_id = ?").bind(a.id).first();if(!i)return Response.json({success:!1,error:"User not found"},{status:404,headers:d});let n=await jn(t.DB,a.id);return Response.json({success:!0,points:i.points||0,logs:n},{headers:d})}return null};var G=new P;G.use("/api/*",ve());G.route("/api/student",Yt);G.get("/api/student/profile",async e=>fe(e.req.raw,e.env,"/api/student/profile"));G.put("/api/student/profile",async e=>fe(e.req.raw,e.env,"/api/student/profile"));G.get("/api/points",async e=>fe(e.req.raw,e.env,"/api/points"));var Jt=()=>({id:"student-auth",match:e=>e.startsWith("/api/student"),handle:(e,t)=>G.fetch(e,t)});var X=new P;X.get("/profile",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await q(e.env.DB,t.id);if(!s)return e.json({success:!1,error:"User not found."},404,d);let a=await e.env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(t.id).first(),i=await e.env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(t.id).first();return e.json({success:!0,profile:{id:s.id,name:s.name||s.email,email:s.email,assignment:a?{level:a.level,subject:a.subject}:null,permissions:i?.permissions?JSON.parse(i.permissions):[]}},200,d)});X.put("/profile",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.req.json().catch(()=>({})),a=s.name?String(s.name).trim():null,i=s.email?E(String(s.email)):null,n=await q(e.env.DB,t.id);return n?i&&i!==n.email&&await e.env.DB.prepare("SELECT id FROM users WHERE email = ? AND id != ?").bind(i,t.id).first()?e.json({success:!1,error:"Email already in use."},400,d):(await e.env.DB.batch([e.env.DB.prepare("UPDATE users SET email = ? WHERE id = ?").bind(i||n.email,t.id),e.env.DB.prepare("INSERT INTO user_profiles (user_id, username, name) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, name = excluded.name, updated_at = CURRENT_TIMESTAMP").bind(t.id,i||n.email,a||n.name)]),e.json({success:!0},200,d)):e.json({success:!1,error:"User not found."},404,d)});X.get("/assignments",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.env.DB.prepare("SELECT level, subject FROM teacher_assignments WHERE user_id = ?").bind(t.id).first(),a=await e.env.DB.prepare("SELECT permissions FROM teacher_permissions WHERE user_id = ?").bind(t.id).first();return e.json({success:!0,assignment:s?{level:s.level,subject:s.subject}:null,permissions:a?.permissions?JSON.parse(a.permissions):[]},200,d)});X.put("/assignments",async e=>{let t=await b(e.req.raw,e.env);if(!t||t.role!=="teacher")return e.json({success:!1,error:"Unauthorized"},401,d);let s=await e.req.json().catch(()=>({})),a=U(String(s.level||"")),i=_(String(s.subject||""));if(!O(a)||!Q(i))return e.json({success:!1,error:"Invalid teacher level or subject."},400,d);let n=s.permissions||[],o=Array.isArray(n)?n:[];return await e.env.DB.batch([e.env.DB.prepare("INSERT INTO teacher_assignments (user_id, level, subject) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, subject = excluded.subject").bind(t.id,a,i),e.env.DB.prepare("INSERT INTO teacher_permissions (user_id, permissions) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET permissions = excluded.permissions").bind(t.id,JSON.stringify(o))]),e.json({success:!0},200,d)});var Zt=X;var Ue=new P;Ue.use("/api/*",ve());Ue.route("/api/teacher",Zt);var es=()=>({id:"teacher-profile",match:e=>e.startsWith("/api/teacher"),handle:(e,t)=>Ue.fetch(e,t)});var ts="app-content",Qe=async e=>{let t=await e.DB.prepare("SELECT data FROM content_store WHERE key = ?").bind(ts).first();return t?.data?kt(t.data):{}},Oe=async(e,t)=>{await e.DB.prepare("INSERT INTO content_store (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP").bind(ts,JSON.stringify(t)).run()};var ss="bangla",J=["sscGoddoItems","sscPoddoItems","hscGoddoItems","hscPoddoItems","sscShohopathItems","hscShohopathItems"];var as=e=>Object.fromEntries(J.map(t=>[t,e[t]])),is=(e,t)=>{let s={...e};for(let a of J)a in t&&(s[a]=t[a]);return s},Se=class{getLessons(){return[{id:"bangla-prose-01",title:"\u0997\u09A6\u09CD\u09AF: \u09AD\u09BE\u09B7\u09BE\u09B0 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0",focus:["\u0985\u09A8\u09C1\u099A\u09CD\u099B\u09C7\u09A6 \u09AC\u09BF\u09B6\u09CD\u09B2\u09C7\u09B7\u09A3","\u09AE\u09C2\u09B2\u09AD\u09BE\u09AC \u09A8\u09BF\u09B0\u09CD\u09A3\u09DF","\u09B6\u09AC\u09CD\u09A6\u09BE\u09B0\u09CD\u09A5"]},{id:"bangla-poetry-02",title:"\u09AA\u09A6\u09CD\u09AF: \u0995\u09BE\u09AC\u09CD\u09AF\u09B0\u09C2\u09AA",focus:["\u099A\u09BF\u09A4\u09CD\u09B0\u0995\u09B2\u09CD\u09AA","\u0995\u09AC\u09BF\u09B0 \u09AD\u09BE\u09AC","\u0985\u09A8\u09C1\u09A7\u09BE\u09AC\u09A8"]},{id:"bangla-grammar-03",title:"\u09AC\u09CD\u09AF\u09BE\u0995\u09B0\u09A3: \u09B0\u099A\u09A8\u09BE \u0993 \u09AC\u09BE\u0995\u09CD\u09AF",focus:["\u09AC\u09BE\u0995\u09CD\u09AF\u09B0\u09C2\u09AA\u09BE\u09A8\u09CD\u09A4\u09B0","\u09AA\u09CD\u09B0\u09DF\u09CB\u0997","\u09AA\u09B0\u09BF\u09AD\u09BE\u09B7\u09BE"]}]}async generateQuestions(t){return{topicId:t,format:"creative",label:"\u09B8\u09C3\u099C\u09A8\u09B6\u09C0\u09B2",questions:[{id:`${t}-cq-1`,stem:"\u09A8\u09BF\u099A\u09C7\u09B0 \u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u099F\u09BF \u09AA\u09DC\u09C7 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u0997\u09C1\u09B2\u09CB\u09B0 \u0989\u09A4\u09CD\u09A4\u09B0 \u09A6\u09BE\u0993\u0964",passage:"\u09AE\u09BE\u09A8\u09C1\u09B7\u09C7\u09B0 \u099A\u09BF\u09A8\u09CD\u09A4\u09BE \u0993 \u099A\u09B0\u09CD\u099A\u09BE\u09B0 \u09AE\u09A7\u09CD\u09AF \u09A6\u09BF\u09DF\u09C7 \u09AD\u09BE\u09B7\u09BE \u09AA\u09B0\u09BF\u09B6\u09C0\u09B2\u09BF\u09A4 \u09B9\u09DF\u0964 \u09AD\u09BE\u09B7\u09BE\u09B0 \u09AF\u09A5\u09BE\u09AF\u09A5 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0\u0987 \u099A\u09BF\u09A8\u09CD\u09A4\u09BE\u09B0 \u0997\u09AD\u09C0\u09B0\u09A4\u09BE\u0995\u09C7 \u09AA\u09CD\u09B0\u0995\u09BE\u09B6 \u0995\u09B0\u09C7\u0964",parts:[{type:"\u0995",prompt:"\u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u09C7\u09B0 \u09AE\u09C2\u09B2\u09AD\u09BE\u09AC \u09B2\u09BF\u0996\u0964"},{type:"\u0996",prompt:"\u09AD\u09BE\u09B7\u09BE\u09B0 \u09AF\u09A5\u09BE\u09AF\u09A5 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09C7\u09A8 \u099C\u09B0\u09C1\u09B0\u09BF?"},{type:"\u0997",prompt:"\u0989\u09A6\u09CD\u09A7\u09C3\u09A4\u09BE\u0982\u09B6\u099F\u09BF \u09A6\u09C8\u09A8\u09A8\u09CD\u09A6\u09BF\u09A8 \u099C\u09C0\u09AC\u09A8\u09C7\u09B0 \u09B8\u0999\u09CD\u0997\u09C7 \u0995\u09C0\u09AD\u09BE\u09AC\u09C7 \u09B8\u09AE\u09CD\u09AA\u09B0\u09CD\u0995\u09BF\u09A4?"},{type:"\u0998",prompt:"\u09A8\u09BF\u099C\u09C7\u09B0 \u0985\u09AD\u09BF\u099C\u09CD\u099E\u09A4\u09BE\u09B0 \u0986\u09B2\u09CB\u0995\u09C7 \u098F\u0995\u099F\u09BF \u0989\u09A6\u09BE\u09B9\u09B0\u09A3 \u09A6\u09BE\u0993\u0964"}]},{id:`${t}-cq-2`,stem:"\u098F\u0995\u099C\u09A8 \u09B6\u09BF\u0995\u09CD\u09B7\u09BE\u09B0\u09CD\u09A5\u09C0 \u09A4\u09BE\u09B0 \u09AA\u09BE\u09A0 \u09A5\u09C7\u0995\u09C7 \u09AF\u09BE \u09B6\u09BF\u0996\u09C7\u099B\u09C7 \u09A4\u09BE \u09AA\u09CD\u09B0\u09DF\u09CB\u0997 \u0995\u09B0\u09A4\u09C7 \u09AA\u09BE\u09B0\u099B\u09C7 \u09A8\u09BE\u0964",parts:[{type:"\u0995",prompt:"\u09B8\u09C3\u099C\u09A8\u09B6\u09C0\u09B2 \u09AA\u09CD\u09B0\u09B6\u09CD\u09A8\u09C7\u09B0 \u0989\u09A6\u09CD\u09A6\u09C7\u09B6\u09CD\u09AF \u0995\u09C0?"},{type:"\u0996",prompt:"\u09AA\u09CD\u09B0\u09DF\u09CB\u0997\u09C7\u09B0 \u0985\u09AD\u09BE\u09AC\u09C7 \u0995\u09C0 \u09B8\u09AE\u09B8\u09CD\u09AF\u09BE \u09B9\u09A4\u09C7 \u09AA\u09BE\u09B0\u09C7?"},{type:"\u0997",prompt:"\u09AA\u09BE\u09A0\u09CD\u09AF\u099C\u09CD\u099E\u09BE\u09A8 \u09AC\u09BE\u09B8\u09CD\u09A4\u09AC\u09C7 \u09AA\u09CD\u09B0\u09DF\u09CB\u0997\u09C7\u09B0 \u098F\u0995\u099F\u09BF \u0989\u09AA\u09BE\u09DF \u09AC\u09CD\u09AF\u09BE\u0996\u09CD\u09AF\u09BE \u0995\u09B0\u0964"},{type:"\u0998",prompt:"\u098F\u0987 \u09AA\u09B0\u09BF\u09B8\u09CD\u09A5\u09BF\u09A4\u09BF \u09AC\u09A6\u09B2\u09BE\u09A4\u09C7 \u09B6\u09BF\u0995\u09CD\u09B7\u0995\u09C7\u09B0 \u0995\u09B0\u09A3\u09C0\u09DF \u0989\u09B2\u09CD\u09B2\u09C7\u0996 \u0995\u09B0\u0964"}]}]}}validateAnswer(t,s){return 0}renderExamUI(){return'<div data-exam="bangla"></div>'}};var Fe={id:ss,contentKeys:J,pickContentSlice:as,applyContentSlice:is};var ns="english",Z=["englishQuestions"];var os=e=>Object.fromEntries(Z.map(t=>[t,e[t]])),rs=(e,t)=>{let s={...e};for(let a of Z)a in t&&(s[a]=t[a]);return s};var cs={id:ns,contentKeys:Z,pickContentSlice:os,applyContentSlice:rs};var ls="humanities",ee=["sscBangladeshGlobalChapters"];var ds=e=>Object.fromEntries(ee.map(t=>[t,e[t]])),ps=(e,t)=>{let s={...e};for(let a of ee)a in t&&(s[a]=t[a]);return s};var us={id:ls,contentKeys:ee,pickContentSlice:ds,applyContentSlice:ps};var ms="ict",te=["sscIctChapters","hscIctChapters"];var hs=e=>Object.fromEntries(te.map(t=>[t,e[t]])),gs=(e,t)=>{let s={...e};for(let a of te)a in t&&(s[a]=t[a]);return s};var bs={id:ms,contentKeys:te,pickContentSlice:hs,applyContentSlice:gs};var ys="religion",se=["sscReligionChapters"];var vs=e=>Object.fromEntries(se.map(t=>[t,e[t]])),fs=(e,t)=>{let s={...e};for(let a of se)a in t&&(s[a]=t[a]);return s};var Ss={id:ys,contentKeys:se,pickContentSlice:vs,applyContentSlice:fs};var xs="science",ae=["sscPhysicsChapters","sscChemistryChapters","sscBiologyChapters","hscPhysics1stChapters","hscPhysics2ndChapters","hscChemistry1stChapters","hscChemistry2ndChapters","hscBiology1stChapters","hscBiology2ndChapters"];var Ns=e=>Object.fromEntries(ae.map(t=>[t,e[t]])),Cs=(e,t)=>{let s={...e};for(let a of ae)a in t&&(s[a]=t[a]);return s},xe=class{async generateQuestions(t){return{topicId:t,questions:[]}}validateAnswer(t,s){return 0}renderExamUI(){return'<div data-exam="science"></div>'}};var Ge={id:xs,contentKeys:ae,pickContentSlice:Ns,applyContentSlice:Cs};var ws="shared",ie=["srijonshilQuestions","mcqQuestions","notesByItem","videosByItem"];var Ts=e=>Object.fromEntries(ie.map(t=>[t,e[t]])),Es=(e,t)=>{let s={...e};for(let a of ie)a in t&&(s[a]=t[a]);return s};var Ls={id:ws,contentKeys:ie,pickContentSlice:Ts,applyContentSlice:Es};var Ve=[Fe,cs,us,bs,Ss,Ge,Ls].sort((e,t)=>e.id.localeCompare(t.id)),Vl={[Fe.id]:()=>new Se,[Ge.id]:()=>new xe};var Ps="videos",Bn=e=>Ve.reduce((t,s)=>({...t,...s.pickContentSlice(e)}),{}),Mn=e=>Ve.reduce((t,s)=>s.applyContentSlice(t,e),{}),qn=async(e,t)=>{let s=await b(e,t);if(!s)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!C(s)&&s?.role!=="teacher")return Response.json({success:!1,error:"Admin or teacher access required."},{status:403,headers:d});let i=(await e.formData()).get("file");if(!(i instanceof File))return Response.json({success:!1,error:"Video file is required."},{status:400,headers:d});let n=await i.arrayBuffer(),o=`${Ps}/${crypto.randomUUID()}-${i.name}`,r=i.type||"application/octet-stream";return await t.BUCKET.put(o,n,{httpMetadata:{contentType:r}}),Response.json({success:!0,fileKey:o,url:`/api/videos/${encodeURIComponent(o)}`},{headers:d})},An=async(e,t)=>{let s=decodeURIComponent(t);if(!s||!s.startsWith(`${Ps}/`))return Response.json({success:!1,error:"Invalid video key."},{status:400,headers:d});let a=await e.BUCKET.get(s);if(!a)return Response.json({success:!1,error:"Video not found."},{status:404,headers:d});let i=new Headers(d);return i.set("Content-Type",a.httpMetadata?.contentType||"application/octet-stream"),i.set("Cache-Control","public, max-age=3600"),new Response(a.body,{headers:i})},ks=async(e,t,s)=>{if(s!=="/api/content")return null;if(e.method==="GET"){let a=await Qe(t),i=Bn(a);return Response.json({success:!0,content:i},{headers:d})}if(e.method==="PUT"){let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await e.json().catch(()=>({}));if(!i||typeof i!="object")return Response.json({success:!1,error:"Invalid content payload."},{status:400,headers:d});let n=Mn(i);if(C(a))return await Oe(t,n),await T(t.DB,a,"Content updated",{scope:"admin"}),Response.json({success:!0},{headers:d});if(a.role==="teacher"){if(!a.assignment)return Response.json({success:!1,error:"Assignment missing."},{status:400,headers:d});let o=Array.isArray(a.permissions)&&a.permissions.includes("structure"),r=await Qe(t),c=It(r,n,a.assignment,o);return c?(await Oe(t,c),await T(t.DB,a,"Content updated",{scope:"teacher",level:a.assignment.level,subject:a.assignment.subject}),Response.json({success:!0},{headers:d})):Response.json({success:!1,error:"Subject is not configured for updates."},{status:400,headers:d})}return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d})}return null},Is=async(e,t,s)=>s==="/api/videos"&&e.method==="POST"?qn(e,t):s.startsWith("/api/videos/")&&e.method==="GET"?An(t,s.replace("/api/videos/","")):null;var Rs=async(e,t,s)=>{if(s!=="/api/classes")return null;if(e.method==="GET"){if(!await b(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let i=await t.DB.prepare("SELECT id, name, created_at FROM classes ORDER BY created_at DESC").all();return Response.json({success:!0,classes:i.results||[]},{headers:d})}if(e.method==="POST"){if(!await b(e,t))return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});let{name:i}=await e.json(),n=String(i||"").trim();if(!n)return Response.json({success:!1,error:"Class name is required"},{status:400,headers:d});await t.DB.prepare("INSERT INTO classes (name) VALUES (?)").bind(n).run();let o=await t.DB.prepare("SELECT id, name, created_at FROM classes WHERE name = ?").bind(n).first();return Response.json({success:!0,class:o},{headers:d})}return null};var ze={table:"subject_thumbnails",keyColumn:"subject_key",keyField:"subjectKey",urlPrefix:"/api/thumbnails",bucketPrefix:"thumbnails",includeZoom:!0},We={table:"chapter_thumbnails",keyColumn:"chapter_key",keyField:"chapterKey",urlPrefix:"/api/chapter-thumbnails",bucketPrefix:"chapter-thumbnails",includeZoom:!1},Dn=e=>e?.updated_at?new Date(e.updated_at).getTime():Date.now(),js=async(e,t)=>{let s=t.includeZoom?`${t.keyColumn}, zoom, updated_at`:`${t.keyColumn}, updated_at`,i=((await e.DB.prepare(`SELECT ${s} FROM ${t.table} ORDER BY updated_at DESC`).all()).results||[]).map(n=>{let o=Dn(n),r=n[t.keyColumn];return{[t.keyField]:r,...t.includeZoom?{zoom:typeof n.zoom=="number"?n.zoom:1}:{},url:`${t.urlPrefix}/${r}?v=${o}`}});return Response.json({thumbnails:i},{headers:d})},Bs=async(e,t,s)=>{let a=await b(e,t);if(!a)return Response.json({success:!1,error:"Unauthorized"},{status:401,headers:d});if(!C(a))return Response.json({success:!1,error:"Admin access required."},{status:403,headers:d});let i=await e.formData(),n=String(i.get(s.keyField)||"").trim().toLowerCase();if(!n||!De(n))return Response.json({success:!1,error:`Invalid ${s.keyField.replace("Key"," key")}.`},{status:400,headers:d});let o=s.includeZoom?Pt(Number(i.get("zoom"))):null,r=i.get("file"),c=await t.DB.prepare(`SELECT file_key, content_type${s.includeZoom?", zoom":""} FROM ${s.table} WHERE ${s.keyColumn} = ?`).bind(n).first();if(!(r instanceof File)&&!c)return Response.json({success:!1,error:"Thumbnail file is required."},{status:400,headers:d});let l=c?.file_key,u=c?.content_type;if(r instanceof File){let x=await r.arrayBuffer();l=`${s.bucketPrefix}/${n}-${crypto.randomUUID()}-${r.name}`,u=r.type||"application/octet-stream",await t.BUCKET.put(l,x,{httpMetadata:{contentType:u}}),c?.file_key&&await t.BUCKET.delete(c.file_key)}let m=s.includeZoom?`${s.keyColumn}, file_key, content_type, zoom, updated_at`:`${s.keyColumn}, file_key, content_type, updated_at`,p=s.includeZoom?"?, ?, ?, ?, CURRENT_TIMESTAMP":"?, ?, ?, CURRENT_TIMESTAMP",h=s.includeZoom?"file_key = excluded.file_key, content_type = excluded.content_type, zoom = excluded.zoom, updated_at = CURRENT_TIMESTAMP":"file_key = excluded.file_key, content_type = excluded.content_type, updated_at = CURRENT_TIMESTAMP",g=t.DB.prepare(`INSERT INTO ${s.table} (${m}) VALUES (${p}) ON CONFLICT(${s.keyColumn}) DO UPDATE SET ${h}`),y=s.includeZoom?[n,l,u,o]:[n,l,u];await g.bind(...y).run(),await T(t.DB,a,"Thumbnail updated",{key:n,type:s.table});let v=Date.now();return Response.json({success:!0,thumbnail:{[s.keyField]:n,...s.includeZoom?{zoom:o}:{},url:`${s.urlPrefix}/${n}?v=${v}`}},{headers:d})},Ms=async(e,t,s)=>{let a=decodeURIComponent(s).toLowerCase();if(!a||!De(a))return Response.json({success:!1,error:`Invalid ${t.keyField.replace("Key"," key")}.`},{status:400,headers:d});let i=await e.DB.prepare(`SELECT file_key, content_type FROM ${t.table} WHERE ${t.keyColumn} = ?`).bind(a).first();if(!i)return Response.json({success:!1,error:"Thumbnail not found."},{status:404,headers:d});let n=await e.BUCKET.get(i.file_key);if(!n)return Response.json({success:!1,error:"Thumbnail file missing."},{status:404,headers:d});let o=new Headers(d);return o.set("Content-Type",i.content_type||"application/octet-stream"),o.set("Cache-Control","public, max-age=86400"),new Response(n.body,{headers:o})},qs=async(e,t,s)=>{if(s.startsWith("/api/thumbnails")){if(s==="/api/thumbnails"&&e.method==="GET")return js(t,ze);if(s==="/api/thumbnails"&&e.method==="POST")return Bs(e,t,ze);if(s.startsWith("/api/thumbnails/")&&e.method==="GET")return Ms(t,ze,s.replace("/api/thumbnails/",""))}if(s.startsWith("/api/chapter-thumbnails")){if(s==="/api/chapter-thumbnails"&&e.method==="GET")return js(t,We);if(s==="/api/chapter-thumbnails"&&e.method==="POST")return Bs(e,t,We);if(s.startsWith("/api/chapter-thumbnails/")&&e.method==="GET")return Ms(t,We,s.replace("/api/chapter-thumbnails/",""))}return null};var Kn=[{format:"woff2",contentHints:["woff2"],extensions:[".woff2"]},{format:"woff",contentHints:["woff"],extensions:[".woff"]},{format:"opentype",contentHints:["opentype"],extensions:[".otf"]},{format:"truetype",contentHints:["truetype"],extensions:[".ttf"]}],_n=(e,t)=>{let s=(e||"").toLowerCase(),a=(t||"").toLowerCase();for(let i of Kn)if(i.contentHints.some(n=>s.includes(n))||i.extensions.some(n=>a.endsWith(n)))return i.format;return"truetype"},As=async(e,t,s)=>{if(!s.startsWith("/api/fonts"))return null;if(s==="/api/fonts"&&e.method==="GET"){let i=((await t.DB.prepare("SELECT id, name, content_type, original_name FROM fonts ORDER BY created_at DESC").all()).results||[]).map(n=>({id:n.id,name:n.name,original_name:n.original_name,content_type:n.content_type,format:_n(n.content_type,n.original_name),url:`/api/fonts/file/${n.id}`}));return Response.json(i,{headers:d})}if(s.startsWith("/api/fonts/file/")&&e.method==="GET"){let a=s.split("/").pop();if(!a)return Response.json({success:!1,error:"Font ID is required."},{status:400,headers:d});let i=await t.DB.prepare("SELECT file_key, content_type FROM fonts WHERE id = ?").bind(a).first();if(!i)return Response.json({success:!1,error:"Font not found."},{status:404,headers:d});let n=await t.BUCKET.get(i.file_key);if(!n)return Response.json({success:!1,error:"Font file missing."},{status:404,headers:d});let o=new Headers(d);return o.set("Content-Type",i.content_type||"application/octet-stream"),o.set("Cache-Control","public, max-age=31536000"),new Response(n.body,{headers:o})}if(s==="/api/fonts/bulk"&&e.method==="POST"){let i=(await e.formData()).getAll("files").filter(o=>o instanceof File);if(i.length===0)return Response.json({success:!1,error:"No font files provided."},{status:400,headers:d});let n=[];for(let o of i){let r=await o.arrayBuffer(),c=`fonts/${crypto.randomUUID()}-${o.name}`;await t.BUCKET.put(c,r,{httpMetadata:{contentType:o.type||"application/octet-stream"}});let l=o.name.replace(/\.[^/.]+$/,"")||o.name;n.push(t.DB.prepare("INSERT INTO fonts (name, file_key, content_type, original_name) VALUES (?, ?, ?, ?)").bind(l,c,o.type||"application/octet-stream",o.name))}return await t.DB.batch(n),Response.json({success:!0,inserted:n.length},{headers:d})}return null};var Hn=[ks,Is,Rs,qs,As],Ds=()=>({id:"academic-subjects",match:e=>e.startsWith("/api/content")||e.startsWith("/api/videos")||e.startsWith("/api/classes")||e.startsWith("/api/thumbnails")||e.startsWith("/api/chapter-thumbnails")||e.startsWith("/api/fonts"),handle:async(e,t)=>{let a=new URL(e.url).pathname;for(let i of Hn){let n=await i(e,t,a);if(n)return n}return null}});var $e=null,Ks=async e=>{$e||($e=F(e).then(()=>{})),await $e};var S=new P,Un=(e,t)=>{let s=new URL(e.url);return s.pathname=t,new Request(s,e)},f=async(e,t,s,a)=>await e.handle(Un(t,a),s)??null,A=Kt(),_s=Wt(),Ne=Jt(),Qn=es(),L=Ds();S.all("/api/system",async e=>await f(A,e.req.raw,e.env,"/api/system")??e.notFound());S.all("/api/system/*",async e=>{let t=e.req.path.replace("/api/system","");return await f(A,e.req.raw,e.env,`/api/system${t}`)??e.notFound()});S.all("/api/login",async e=>await f(A,e.req.raw,e.env,"/api/login")??e.notFound());S.all("/api/register-admin",async e=>await f(A,e.req.raw,e.env,"/api/register-admin")??e.notFound());S.all("/api/me",async e=>await f(A,e.req.raw,e.env,"/api/me")??e.notFound());S.all("/api/change-password",async e=>await f(A,e.req.raw,e.env,"/api/change-password")??e.notFound());S.all("/api/profile",async e=>await f(A,e.req.raw,e.env,"/api/profile")??e.notFound());S.all("/api/profile/*",async e=>{let t=e.req.path.replace("/api/profile","");return await f(A,e.req.raw,e.env,`/api/profile${t}`)??e.notFound()});S.all("/api/users",async e=>await f(_s,e.req.raw,e.env,"/api/users")??e.notFound());S.all("/api/users/*",async e=>{let t=e.req.path.replace("/api/users","");if(t.startsWith("/student")){let a=`/api/student${t.slice(8)}`||"/api/student";return await f(Ne,e.req.raw,e.env,a)??e.notFound()}if(t.startsWith("/teacher")){let a=`/api/teacher${t.slice(8)}`||"/api/teacher";return await f(Qn,e.req.raw,e.env,a)??e.notFound()}return await f(_s,e.req.raw,e.env,`/api/users${t}`)??e.notFound()});S.all("/api/student",async e=>await f(Ne,e.req.raw,e.env,"/api/student")??e.notFound());S.all("/api/student/*",async e=>{let s=`/api/student${e.req.path.replace("/api/student","")}`||"/api/student";return await f(Ne,e.req.raw,e.env,s)??e.notFound()});S.all("/api/points",async e=>await f(Ne,e.req.raw,e.env,"/api/points")??e.notFound());S.all("/api/classes",async e=>await f(L,e.req.raw,e.env,"/api/classes")??e.notFound());S.all("/api/content",async e=>await f(L,e.req.raw,e.env,"/api/content")??e.notFound());S.all("/api/content/*",async e=>{let t=e.req.path.replace("/api/content","");return await f(L,e.req.raw,e.env,`/api/content${t}`)??e.notFound()});S.all("/api/videos",async e=>await f(L,e.req.raw,e.env,"/api/videos")??e.notFound());S.all("/api/videos/*",async e=>{let t=e.req.path.replace("/api/videos","");return await f(L,e.req.raw,e.env,`/api/videos${t}`)??e.notFound()});S.all("/api/thumbnails",async e=>await f(L,e.req.raw,e.env,"/api/thumbnails")??e.notFound());S.all("/api/thumbnails/*",async e=>{let t=e.req.path.replace("/api/thumbnails","");return await f(L,e.req.raw,e.env,`/api/thumbnails${t}`)??e.notFound()});S.all("/api/chapter-thumbnails",async e=>await f(L,e.req.raw,e.env,"/api/chapter-thumbnails")??e.notFound());S.all("/api/chapter-thumbnails/*",async e=>{let t=e.req.path.replace("/api/chapter-thumbnails","");return await f(L,e.req.raw,e.env,`/api/chapter-thumbnails${t}`)??e.notFound()});S.all("/api/fonts",async e=>await f(L,e.req.raw,e.env,"/api/fonts")??e.notFound());S.all("/api/academic",async e=>await f(L,e.req.raw,e.env,"/api")??e.notFound());S.all("/api/academic/*",async e=>{let t=e.req.path.replace("/api/academic","");return await f(L,e.req.raw,e.env,`/api${t}`)??e.notFound()});var Hs=async(e,t)=>{if(!new URL(e.url).pathname.startsWith("/api"))return null;await Ks(t);let a=await S.fetch(e,t);return a.status!==404?a:Response.json({success:!1,error:"API route not found."},{status:404,headers:d})};var Us=`
+var Us=`
 const NavBar = ({ user, hasAdmin, onNavigate, onLogout }) => {
 const [isMenuOpen, setIsMenuOpen] = useState(false);
 const [profile, setProfile] = useState(null);
@@ -1248,7 +1093,7 @@ className={className + ' block text-left transition-all duration-300 group ' + (
 )}
 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 {subject.lastRead && (
-<div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white/95 backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 border border-emerald-100">
+<div className="absolute top-2 right-2 px-1.5 py-0.5 bg-white backdrop-blur-sm text-emerald-600 text-[9px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 z-10 border border-emerald-100">
 <i className="fa-solid fa-check-circle"></i>
 Read
 </div>
@@ -2662,6 +2507,16 @@ return entries;
 };
 
 const quickResults = normalizedQuickQuery ? buildQuickSearchEntries().filter((entry) => { const haystack = (entry.keywords || entry.title || '').toLowerCase(); return haystack.includes(normalizedQuickQuery); }).slice(0, 10) : [];
+const countTopics = (chapters) => (chapters || []).reduce((total, chapter) => total + (chapter?.topics?.length || 0), 0);
+const countEntries = (store) => Object.values(store || {}).reduce((total, value) => total + (Array.isArray(value) ? value.length : 0), 0);
+const religionChapters = Object.values(sscReligionChapters || {}).flat();
+const chapterPools = [sscPhysicsChapters, sscChemistryChapters, sscBiologyChapters, sscBangladeshGlobalChapters, sscIctChapters, hscPhysics1stChapters, hscPhysics2ndChapters, hscChemistry1stChapters, hscChemistry2ndChapters, hscBiology1stChapters, hscBiology2ndChapters, hscIctChapters, religionChapters];
+const totalSubjects = scopedSscSubjects.length + scopedHscSubjects.length;
+const totalChapters = chapterPools.reduce((sum, pool) => sum + (pool || []).length, 0);
+const totalTopics = chapterPools.reduce((sum, pool) => sum + countTopics(pool || []), 0);
+const totalNotes = countEntries(notesByItem);
+const totalVideos = countEntries(videosByItem);
+const totalQuestions = countEntries(mcqQuestions) + countEntries(srijonshilQuestions) + countEntries(englishQuestions);
 const handleQuickSelect = (entry) => { if (!entry?.onSelect) return; entry.onSelect(); };
 
 if (!isReady) return <FullScreenLoader />;
@@ -2674,31 +2529,27 @@ return (
 .hide-scrollbars * { -ms-overflow-style: none; scrollbar-width: none; }
 \`}</style>
 
-<section className="relative bg-indigo-700">
-<div className="absolute inset-0 overflow-hidden pointer-events-none">
-<div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-indigo-600/60"></div>
-<div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/40"></div>
-</div>
+<section className="border-b border-slate-200 bg-white">
 <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 relative z-10">
 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
 <div className="flex items-center gap-4">
-<div className="w-14 h-14 rounded-md bg-white/90 border border-white/60 flex items-center justify-center shadow-lg">
+<div className="w-14 h-14 rounded-md bg-white border border-slate-200 flex items-center justify-center">
 <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 9.5L12 5l8.5 4.5L12 14 3.5 9.5z" /><path d="M6.5 11.2V16c0 .7.4 1.4 1.1 1.7C9 18.4 10.4 19 12 19s3-.6 4.4-1.3c.7-.3 1.1-1 1.1-1.7v-4.8" /><path d="M20.5 9.7V14" /><path d="M21.5 14h-2" /></svg>
 </div>
-<div><div className="text-3xl sm:text-4xl font-semibold text-white">Freeducation</div><div className="text-sm text-white/80 uppercase tracking-[0.2em] mt-1">Serve education with clarity</div></div>
+<div><div className="text-3xl sm:text-4xl font-semibold text-slate-900">Freeducation</div><div className="text-sm text-slate-500 uppercase tracking-[0.2em] mt-1">Serve education with clarity</div></div>
 </div>
-<div className="max-w-xl text-white">
+<div className="max-w-xl text-slate-700">
 <p className="text-base sm:text-lg font-serif italic leading-relaxed opacity-90">\u201C{activeQuote.text}\u201D</p>
 <p className="text-sm font-semibold opacity-80 mt-2">\u2014 {activeQuote.author}</p>
 </div>
 </div>
 <div className="mt-8">
 <div className="relative">
-<label className="text-[11px] uppercase tracking-[0.3em] text-white/70">Quick Search</label>
-<input value={quickQuery} onChange={(event) => setQuickQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && quickResults[0]) { handleQuickSelect(quickResults[0]); } }} placeholder="Search subjects, chapters, topics, notes, videos..." className="mt-2 w-full rounded-lg border border-white/30 bg-white/95 py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-white" />
+<label className="text-[11px] uppercase tracking-[0.3em] text-slate-500">Quick Search</label>
+<input value={quickQuery} onChange={(event) => setQuickQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && quickResults[0]) { handleQuickSelect(quickResults[0]); } }} placeholder="Search subjects, chapters, topics, notes, videos..." className="mt-2 w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200" />
 <i className="fa-solid fa-magnifying-glass absolute left-4 top-[calc(50%+12px)] -translate-y-1/2 text-slate-400"></i>
 {normalizedQuickQuery && (
-<div className="absolute left-0 right-0 mt-2 z-[100] rounded-lg border border-white/40 bg-white/95 text-slate-700 max-h-72 overflow-y-auto shadow-2xl">
+<div className="absolute left-0 right-0 mt-2 z-[100] rounded-lg border border-slate-200 bg-white text-slate-700 max-h-72 overflow-y-auto shadow-2xl">
 {quickResults.length === 0 && <div className="px-4 py-3 text-sm text-slate-400 text-left">No matches found.</div>}
 {quickResults.map((entry, index) => (
 <button key={entry.title + '-' + entry.type + '-' + index} onClick={() => handleQuickSelect(entry)} className="w-full text-left px-4 py-3 hover:bg-slate-50 transition">
@@ -2714,23 +2565,40 @@ return (
 </div>
 </section>
 
-{/* Academic Section with Styled Background & No Scrollbars */}
-<section className="relative w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-16 space-y-10 bg-slate-50 z-0 hide-scrollbars overflow-hidden">
-
-{/* Abstract Background Art */}
-<div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-30">
-{/* Circle 1 */}
-<svg className="absolute -top-20 -left-20 w-96 h-96 text-slate-200" fill="currentColor" viewBox="0 0 200 200">
-<path fillOpacity="0.5" d="M44.5,-73.2C58.9,-68.7,72.6,-61.4,82.4,-50.3C92.2,-39.2,98.1,-24.3,95.8,-10.1C93.5,4.1,83,17.6,73.4,30.2C63.8,42.8,55.1,54.6,44.1,63.9C33.1,73.2,19.9,80,6.1,80.9C-7.7,81.8,-22,76.8,-34.5,69.5C-47,62.2,-57.6,52.6,-66.1,41.4C-74.6,30.2,-81,17.4,-80.7,5C-80.4,-7.4,-73.4,-19.4,-64.3,-29.4C-55.2,-39.4,-44,-47.4,-32.2,-53.4C-20.4,-59.4,-8,-63.3,4,-69.5C16.1,-75.7,30.1,-69.1,44.5,-73.2Z" transform="translate(100 100)" />
-</svg>
-{/* Circle 2 */}
-<svg className="absolute bottom-0 right-0 w-[500px] h-[500px] text-slate-200" fill="currentColor" viewBox="0 0 200 200">
-<path fillOpacity="0.5" d="M39.9,-65.7C50.8,-57.5,58.3,-45.3,64.6,-33.4C70.9,-21.5,76,-9.9,74.9,1.1C73.8,12.1,66.5,22.5,58.8,32.3C51.1,42.1,43,51.3,33.3,58.3C23.6,65.3,12.3,70.1,0.6,69.1C-11.1,68.1,-22.8,61.3,-33.4,54.5C-44,47.7,-53.5,40.9,-60.7,31.7C-67.9,22.5,-72.8,10.9,-70.9,0.5C-69,-9.9,-60.3,-19.1,-52.1,-27.6C-43.9,-36.1,-36.2,-43.9,-27.3,-53.6C-18.4,-63.3,-8.2,-74.9,3.3,-80.6C14.8,-86.3,29,-86,39.9,-65.7Z" transform="translate(100 100)" />
-</svg>
-{/* Dots Pattern */}
-<div className="absolute top-20 right-20 w-32 h-32 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px'}}></div>
-<div className="absolute bottom-20 left-20 w-48 h-48 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px'}}></div>
+<section className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-6">
+<div className="border border-slate-200 p-4">
+<div className="text-xs uppercase tracking-[0.2em] text-slate-500">Learning overview</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Subjects</div>
+<div className="text-lg font-semibold text-slate-900">{totalSubjects}</div>
 </div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Chapters</div>
+<div className="text-lg font-semibold text-slate-900">{totalChapters}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Topics</div>
+<div className="text-lg font-semibold text-slate-900">{totalTopics}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Questions</div>
+<div className="text-lg font-semibold text-slate-900">{totalQuestions}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Notes</div>
+<div className="text-lg font-semibold text-slate-900">{totalNotes}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Videos</div>
+<div className="text-lg font-semibold text-slate-900">{totalVideos}</div>
+</div>
+</div>
+</div>
+</section>
+
+{/* Academic Section with Styled Background & No Scrollbars */}
+<section className="relative w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-6 bg-white z-0 hide-scrollbars overflow-hidden">
 
 {/* Styled Header Section */}
 <div className="relative z-10 mb-12 text-center">
@@ -3862,18 +3730,35 @@ return (
         const AdminDashboard = ({ onNavigate }) => {
             const [classes, setClasses] = useState([]);
             const [loading, setLoading] = useState(true);
+            const [dashboard, setDashboard] = useState(null);
             const allowedClasses = ['SSC', 'HSC'];
+
+            const fetchDashboard = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setLoading(false); return; }
+                try {
+                    const response = await fetch('/api/dashboard/admin', { headers: { Authorization: 'Bearer ' + token } });
+                    const data = await response.json();
+                    if (data.success) {
+                        setDashboard(data);
+                    }
+                } catch (error) {
+                } finally {
+                    setLoading(false);
+                }
+            };
 
             const fetchClasses = async () => {
                 const token = localStorage.getItem('auth_token');
-                if (!token) { setLoading(false); return; }
-                const response = await fetch('/api/classes', { headers: { 'Authorization': 'Bearer ' + token } });
-                const data = await response.json();
-                if (data.success) { setClasses(data.classes || []); }
-                setLoading(false);
+                if (!token) { return; }
+                try {
+                    const response = await fetch('/api/classes', { headers: { 'Authorization': 'Bearer ' + token } });
+                    const data = await response.json();
+                    if (data.success) { setClasses(data.classes || []); }
+                } catch (error) {}
             };
 
-            useEffect(() => { fetchClasses(); }, []);
+            useEffect(() => { fetchDashboard(); fetchClasses(); }, []);
 
             const allowedLookup = new Set(allowedClasses.map((name) => name.toUpperCase()));
             const filteredClasses = classes.filter((item) => allowedLookup.has(String(item.name || '').toUpperCase()));
@@ -3885,62 +3770,125 @@ return (
                 return null;
             };
 
+            const stats = dashboard?.stats || { totalUsers: 0, admins: 0, teachers: 0, students: 0, classes: 0, recentEdits: 0, thumbnails: 0, fonts: 0 };
+            const onboarding = dashboard?.onboarding || { teachersWithoutAssignment: 0, studentsWithoutProfiles: 0, studentsMissingDetails: 0 };
+            const formatDate = (value) => {
+                if (!value) return 'N/A';
+                const parsed = new Date(value);
+                return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+            };
+
             return (
                 <AdminShell activeTab="classes" onNavigate={onNavigate}>
-                    <div className="flex flex-col items-center justify-center py-12 animate-in fade-in slide-in-from-bottom-4">
-                        
-                        {/* Legacy Headline */}
-                        <div className="text-center mb-12">
-                            <h2 className="text-4xl sm:text-5xl font-black text-stone-800 font-serif tracking-tight uppercase mb-3">Academic Programs</h2>
-                            <div className="h-1 w-24 bg-stone-800 mx-auto opacity-20"></div>
-                            <p className="mt-4 text-stone-500 font-serif italic text-lg">Select a curriculum level to proceed</p>
+                    <div className="space-y-6">
+                        <section className="border border-slate-200 p-4">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Overview</div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Total users</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.totalUsers}</div>
+                                    <div className="text-[11px] text-slate-500">Admins {stats.admins} • Teachers {stats.teachers} • Students {stats.students}</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Active classes</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.classes}</div>
+                                    <div className="text-[11px] text-slate-500">Curriculum panels available</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Content edits (7 days)</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.recentEdits}</div>
+                                    <div className="text-[11px] text-slate-500">Latest change log</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Media library</div>
+                                    <div className="text-lg font-semibold text-slate-900">{stats.thumbnails + stats.fonts}</div>
+                                    <div className="text-[11px] text-slate-500">Thumbnails {stats.thumbnails} • Fonts {stats.fonts}</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="border border-slate-200 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Onboarding watchlist</div>
+                                <button onClick={() => onNavigate('admin-users')} className="text-xs font-semibold text-indigo-600">Manage users</button>
+                            </div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Teachers without assignments</div>
+                                    <div className="text-lg font-semibold text-slate-900">{onboarding.teachersWithoutAssignment}</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Students without profiles</div>
+                                    <div className="text-lg font-semibold text-slate-900">{onboarding.studentsWithoutProfiles}</div>
+                                </div>
+                                <div className="border border-slate-200 p-3">
+                                    <div className="text-xs text-slate-500">Students missing details</div>
+                                    <div className="text-lg font-semibold text-slate-900">{onboarding.studentsMissingDetails}</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <section className="border border-slate-200 p-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Recent activity</div>
+                                {loading && <div className="mt-3 text-sm text-slate-400">Loading activity...</div>}
+                                {!loading && (dashboard?.recentEdits || []).length === 0 && (
+                                    <div className="mt-3 text-sm text-slate-500">No edits logged yet.</div>
+                                )}
+                                <div className="mt-3 space-y-3">
+                                    {(dashboard?.recentEdits || []).map((entry, index) => (
+                                        <div key={entry.action + '-' + index} className="border border-slate-200 p-3 text-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="font-semibold text-slate-800">{entry.action}</div>
+                                                <div className="text-xs text-slate-500">{formatDate(entry.createdAt)}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">{entry.user?.name} • {entry.user?.role}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section className="border border-slate-200 p-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">New accounts</div>
+                                {loading && <div className="mt-3 text-sm text-slate-400">Loading users...</div>}
+                                {!loading && (dashboard?.recentUsers || []).length === 0 && (
+                                    <div className="mt-3 text-sm text-slate-500">No user registrations yet.</div>
+                                )}
+                                <div className="mt-3 space-y-3">
+                                    {(dashboard?.recentUsers || []).map((entry, index) => (
+                                        <div key={entry.id || index} className="border border-slate-200 p-3 text-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="font-semibold text-slate-800">{entry.name}</div>
+                                                <div className="text-xs text-slate-500">{formatDate(entry.createdAt)}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">{entry.role}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
                         </div>
 
-                        {/* Content Area */}
-                        {loading && (
-                            <div className="flex justify-center py-12">
-                                <i className="fa-solid fa-circle-notch fa-spin text-stone-400 text-2xl"></i>
-                            </div>
-                        )}
-
-                        {!loading && filteredClasses.length > 0 && (
-                            <div className="grid grid-cols-2 gap-6 w-full max-w-2xl">
+                        <section className="border border-slate-200 p-4">
+                            <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Class panels</div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 {filteredClasses.map((item) => {
                                     const route = getClassRoute(item.name);
-                                    const isActive = Boolean(route);
-                                    const isSSC = item.name === 'SSC';
-                                    // Deep academic colors
-                                    const bgClass = isSSC ? 'bg-[#0f766e]' : 'bg-[#1e3a8a]'; // Teal-700 vs Blue-900
-                                    
                                     return (
-                                        <button 
-                                            key={item.id} 
-                                            onClick={() => route && onNavigate(route)} 
-                                            disabled={!route}
-                                            className={\`relative group overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl \${bgClass} \${isActive ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'}\`}
+                                        <button
+                                            key={item.id}
+                                            onClick={() => route && onNavigate(route)}
+                                            className="border border-slate-200 p-3 text-left text-sm hover:border-indigo-200 hover:text-indigo-600 transition"
                                         >
-                                            {/* Decorative Corner */}
-                                            <div className="absolute top-0 right-0 p-3 opacity-20">
-                                                <i className="fa-solid fa-graduation-cap text-4xl text-white"></i>
-                                            </div>
-
-                                            <div className="relative p-6 sm:p-8 flex flex-col items-center justify-center text-center h-full min-h-[160px]">
-                                                <div className="font-serif italic text-white/70 text-xs tracking-[0.2em] mb-2 border-b border-white/20 pb-1">PROGRAM</div>
-                                                <div className="text-4xl sm:text-5xl font-black text-white font-serif">{item.name}</div>
-                                                
-                                                {isActive ? (
-                                                     <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold bg-white text-slate-900 px-3 py-1 rounded uppercase tracking-wider">
-                                                        Enter Panel
-                                                     </div>
-                                                ) : (
-                                                    <div className="mt-4 text-white/40 text-xs"><i className="fa-solid fa-lock"></i></div>
-                                                )}
-                                            </div>
+                                            <div className="font-semibold text-slate-900">{item.name}</div>
+                                            <div className="text-xs text-slate-500">Open curriculum and subject management.</div>
                                         </button>
                                     );
                                 })}
+                                {filteredClasses.length === 0 && !loading && (
+                                    <div className="text-sm text-slate-500">No classes configured yet.</div>
+                                )}
                             </div>
-                        )}
+                        </section>
                     </div>
                 </AdminShell>
             );
@@ -4000,10 +3948,10 @@ className={\`relative group overflow-hidden rounded-lg shadow-md transition-all 
 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
 
 <div className="relative p-6 flex flex-col items-center justify-center text-center h-full min-h-[140px]">
-<div className="font-serif italic text-white/70 text-[10px] uppercase tracking-[0.2em] mb-2">DIVISION</div>
+<div className="font-serif italic text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-2">DIVISION</div>
 <div className="text-2xl font-bold text-white font-serif mb-1">{group.title}</div>
 <div className="h-px w-8 bg-white/30 my-3"></div>
-<p className="text-white/80 text-xs font-serif italic opacity-80">{group.description}</p>
+<p className="text-slate-500 text-xs font-serif italic opacity-80">{group.description}</p>
 </div>
 </button>
 );
@@ -6448,8 +6396,10 @@ ${Ea}
 `;var et=`
 const StudentClassView = ({ user, onNavigate }) => {
 const [profile, setProfile] = useState(null);
+const [pointsSummary, setPointsSummary] = useState({ points: 0, logs: [] });
 const [showPrompt, setShowPrompt] = useState(false);
 const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+const [isLoadingPoints, setIsLoadingPoints] = useState(true);
 
 const classLabel = profile?.classLabel || user?.classLabel || user?.class_label || '';
 const groupLabel = profile?.groupLabel || user?.groupLabel || user?.group_label || '';
@@ -6488,14 +6438,54 @@ setShowPrompt(true);
 loadProfile();
 }, []);
 
+useEffect(() => {
+const loadPoints = async () => {
+const token = localStorage.getItem('auth_token');
+if (!token) { setIsLoadingPoints(false); return; }
+try {
+const res = await fetch('/api/points', { headers: { Authorization: 'Bearer ' + token } });
+const data = await res.json();
+if (data.success) {
+setPointsSummary({ points: data.points || 0, logs: data.logs || [] });
+}
+} catch (e) {} finally { setIsLoadingPoints(false); }
+};
+loadPoints();
+}, []);
+
+const countEntriesForClass = (store) => {
+if (!hasClass) return 0;
+const prefix = classLabel + '-';
+return Object.entries(store || {}).reduce((total, [key, value]) => {
+if (!String(key).startsWith(prefix)) return total;
+return total + (Array.isArray(value) ? value.length : 0);
+}, 0);
+};
+
+const notesCount = countEntriesForClass(notesByItem);
+const videosCount = countEntriesForClass(videosByItem);
+const mcqCount = countEntriesForClass(mcqQuestions);
+const srijonshilCount = countEntriesForClass(srijonshilQuestions);
+const englishCount = countEntriesForClass(englishQuestions);
+const totalQuestions = mcqCount + srijonshilCount + englishCount;
+
+const checklist = [
+{ label: 'Class', complete: Boolean(classLabel) },
+{ label: 'Group', complete: !isAcademicClass || Boolean(groupLabel) },
+{ label: 'Batch year', complete: !isAcademicClass || Boolean(profile?.batchYear) },
+{ label: 'Religion', complete: Boolean(profile?.religion) },
+{ label: 'Date of birth', complete: Boolean(profile?.dateOfBirth) }
+];
+
 return (
 <StudentShell
 title="My Class"
-subtitle={hasClass ? classLabel + (groupLabel ? ' \u2022 ' + groupLabel : '') + ' learning space' : 'Complete your profile to see content'}
+subtitle={hasClass ? classLabel + (groupLabel ? ' • ' + groupLabel : '') + ' learning space' : 'Complete your profile to see content'}
 activeTab="class"
 onNavigate={onNavigate}
 >
-<div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+<div className="space-y-6">
+<div className="border border-slate-200 p-4">
 <div className="flex flex-wrap items-center justify-between gap-4">
 <div>
 <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Your Class</div>
@@ -6511,7 +6501,7 @@ onNavigate={onNavigate}
 {hasClass && isAcademicClass && (
 <button
 onClick={() => onNavigate(classRoute)}
-className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] border border-slate-200 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition"
+className="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition"
 >
 View full library
 </button>
@@ -6529,6 +6519,76 @@ Content for this class level is on the way. Keep your profile updated for new re
 )}
 </div>
 
+<div className="grid gap-4 lg:grid-cols-2">
+<div className="border border-slate-200 p-4">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Learning summary</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Subjects available</div>
+<div className="text-lg font-semibold text-slate-900">{filteredSubjects.length}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Notes</div>
+<div className="text-lg font-semibold text-slate-900">{notesCount}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Videos</div>
+<div className="text-lg font-semibold text-slate-900">{videosCount}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Questions</div>
+<div className="text-lg font-semibold text-slate-900">{totalQuestions}</div>
+</div>
+</div>
+</div>
+
+<div className="border border-slate-200 p-4">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Profile checklist</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+{checklist.map((item) => (
+<div key={item.label} className="border border-slate-200 p-3 text-sm flex items-center justify-between">
+<span className="text-slate-700">{item.label}</span>
+<span className={item.complete ? 'text-emerald-600 font-semibold' : 'text-amber-500 font-semibold'}>
+{item.complete ? 'Complete' : 'Missing'}
+</span>
+</div>
+))}
+</div>
+</div>
+</div>
+
+<div className="border border-slate-200 p-4">
+<div className="flex items-center justify-between">
+<div className="text-xs uppercase tracking-[0.25em] text-slate-400">Points activity</div>
+<button onClick={() => onNavigate('student-settings')} className="text-xs font-semibold text-indigo-600">Update profile</button>
+</div>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Total points</div>
+<div className="text-lg font-semibold text-slate-900">{pointsSummary.points}</div>
+</div>
+<div className="border border-slate-200 p-3">
+<div className="text-xs text-slate-500">Recent rewards</div>
+<div className="text-lg font-semibold text-slate-900">{pointsSummary.logs.length}</div>
+</div>
+</div>
+<div className="mt-3 space-y-3">
+{isLoadingPoints && <div className="text-sm text-slate-400">Loading points...</div>}
+{!isLoadingPoints && pointsSummary.logs.length === 0 && (
+<div className="text-sm text-slate-500">No points earned yet.</div>
+)}
+{pointsSummary.logs.map((log, index) => (
+<div key={log.reason + '-' + index} className="border border-slate-200 p-3 text-sm">
+<div className="flex items-center justify-between">
+<div className="font-semibold text-slate-800">{log.reason}</div>
+<div className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleDateString()}</div>
+</div>
+<div className="text-xs text-slate-500 mt-1">Points {log.points}</div>
+</div>
+))}
+</div>
+</div>
+
 {hasClass && isAcademicClass && (
 <div className="space-y-3">
 <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Subjects</div>
@@ -6537,10 +6597,10 @@ Content for this class level is on the way. Keep your profile updated for new re
 <button
 key={subject.subjectKey}
 onClick={() => subject.route && onNavigate(subject.route)}
-className="group w-full text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
+className="group w-full text-left border border-slate-200 p-4 transition"
 >
 <div className="flex items-start gap-4">
-<div className={'w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-sm ' + subject.accent}>
+<div className={'w-10 h-10 rounded-md text-white flex items-center justify-center ' + subject.accent}>
 <i className={'fa-solid ' + subject.icon}></i>
 </div>
 <div className="flex-1">
@@ -6551,11 +6611,11 @@ className="group w-full text-left bg-white border border-slate-200 rounded-2xl p
 </div>
 </div>
 </div>
-<div className="mt-4 text-xs font-semibold text-indigo-600">Open subject</div>
+<div className="mt-3 text-xs font-semibold text-indigo-600">Open subject</div>
 </button>
 ))}
 {filteredSubjects.length === 0 && (
-<div className="col-span-full bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-center text-sm text-slate-500">
+<div className="col-span-full border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">
 Select your group in settings to see your subjects.
 </div>
 )}
@@ -6586,55 +6646,205 @@ Remind me later
 </div>
 </div>
 )}
+</div>
 </StudentShell>
 );
 };
 `;var tt=`
     const TeacherDashboard = ({ assignment, subjectConfig, onNavigate }) => {
         const hasAssignment = assignment && assignment.level && assignment.subject;
+        const [dashboard, setDashboard] = useState(null);
+        const [isLoading, setIsLoading] = useState(true);
+
+        useEffect(() => {
+            const loadDashboard = async () => {
+                const token = localStorage.getItem('auth_token');
+                if (!token) { setIsLoading(false); return; }
+                try {
+                    const response = await fetch('/api/dashboard/teacher', { headers: { Authorization: 'Bearer ' + token } });
+                    const data = await response.json();
+                    if (data.success) { setDashboard(data); }
+                } catch (error) {} finally { setIsLoading(false); }
+            };
+            loadDashboard();
+        }, []);
+
+        const countTopics = (chapters) => (chapters || []).reduce((total, chapter) => total + (chapter?.topics?.length || 0), 0);
+        const countEntries = (store, prefix) => {
+            if (!prefix) return 0;
+            return Object.entries(store || {}).reduce((total, [key, value]) => {
+                if (!String(key).startsWith(prefix)) return total;
+                return total + (Array.isArray(value) ? value.length : 0);
+            }, 0);
+        };
+
+        const getSubjectStats = () => {
+            if (!hasAssignment) return null;
+            const level = assignment.level;
+            const subject = String(assignment.subject || '').toLowerCase();
+            let chapterSource = [];
+            let itemCount = 0;
+            let questionPrefix = null;
+            let usesEnglish = false;
+
+            if (level === 'SSC' && subject === 'physics') { chapterSource = sscPhysicsChapters; questionPrefix = \`\${level}-Physics-\`; }
+            if (level === 'SSC' && subject === 'chemistry') { chapterSource = sscChemistryChapters; questionPrefix = \`\${level}-Chemistry-\`; }
+            if (level === 'SSC' && subject === 'biology') { chapterSource = sscBiologyChapters; questionPrefix = \`\${level}-Biology-\`; }
+            if (level === 'SSC' && subject === 'information and communication technology') { chapterSource = sscIctChapters; }
+            if (level === 'SSC' && subject === 'bangladesh and global studies') { chapterSource = sscBangladeshGlobalChapters; }
+            if (level === 'SSC' && subject === 'religion and moral education') {
+                chapterSource = Object.values(sscReligionChapters || {}).flat();
+            }
+            if (level === 'HSC' && subject === 'physics 1st paper') { chapterSource = hscPhysics1stChapters; questionPrefix = \`\${level}-Physics-1-\`; }
+            if (level === 'HSC' && subject === 'physics 2nd paper') { chapterSource = hscPhysics2ndChapters; questionPrefix = \`\${level}-Physics-2-\`; }
+            if (level === 'HSC' && subject === 'chemistry 1st paper') { chapterSource = hscChemistry1stChapters; questionPrefix = \`\${level}-Chemistry-1-\`; }
+            if (level === 'HSC' && subject === 'chemistry 2nd paper') { chapterSource = hscChemistry2ndChapters; questionPrefix = \`\${level}-Chemistry-2-\`; }
+            if (level === 'HSC' && subject === 'biology 1st paper') { chapterSource = hscBiology1stChapters; questionPrefix = \`\${level}-Biology-1-\`; }
+            if (level === 'HSC' && subject === 'biology 2nd paper') { chapterSource = hscBiology2ndChapters; questionPrefix = \`\${level}-Biology-2-\`; }
+            if (level === 'HSC' && subject === 'information and communication technology') { chapterSource = hscIctChapters; }
+
+            if (subject === 'bangla 1st paper') {
+                itemCount = level === 'SSC'
+                    ? (sscGoddoItems.length + sscPoddoItems.length + sscShohopathItems.length)
+                    : (hscGoddoItems.length + hscPoddoItems.length + hscShohopathItems.length);
+                questionPrefix = \`\${level}-\`;
+            }
+
+            if (subject === 'english 1st paper') {
+                usesEnglish = true;
+                questionPrefix = \`\${level}-\`;
+            }
+
+            const chapterCount = chapterSource.length;
+            const topicCount = countTopics(chapterSource);
+            const creativeCount = countEntries(srijonshilQuestions, questionPrefix);
+            const mcqCount = countEntries(mcqQuestions, questionPrefix);
+            const englishCount = usesEnglish ? countEntries(englishQuestions, questionPrefix) : 0;
+            const notesCount = countEntries(notesByItem, questionPrefix);
+            const videosCount = countEntries(videosByItem, questionPrefix);
+
+            return {
+                itemCount,
+                chapterCount,
+                topicCount,
+                creativeCount,
+                mcqCount,
+                englishCount,
+                notesCount,
+                videosCount,
+                label: itemCount > 0 ? 'Items' : 'Chapters'
+            };
+        };
+
+        const stats = getSubjectStats();
+
         return (
-            <TeacherShell title="Teacher Portal" subtitle="Manage your assigned subject content." activeTab="subject" onNavigate={onNavigate}>
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            <TeacherShell title="Teacher Portal" subtitle="Track your subject work and class needs." activeTab="subject" onNavigate={onNavigate}>
+                <div className="space-y-6">
                     {!hasAssignment && (
-                        <div className="bg-white p-8 border border-slate-300 text-center shadow-sm">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 text-slate-400 mb-4">
-                                <i className="fa-solid fa-chalkboard-user text-2xl"></i>
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-800">No Assignment</h3>
-                            <p className="text-slate-600 mt-2 text-sm">Contact an admin to assign a subject to your account.</p>
+                        <div className="border border-slate-200 p-6 text-center">
+                            <div className="text-sm font-semibold text-slate-800">No assignment</div>
+                            <p className="text-sm text-slate-600 mt-2">Contact an admin to assign a subject to your account.</p>
                         </div>
                     )}
 
                     {hasAssignment && (
-                        <div className="bg-white shadow-sm border border-slate-200">
-                            <div className="bg-white border-b border-slate-200 p-6 sm:p-8 flex flex-col gap-2">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-600">
-                                    <span className="w-2 h-2 bg-indigo-600"></span>
-                                    Current Assignment
-                                </div>
-                                <h2 className="text-3xl font-bold text-slate-900">{assignment.subject}</h2>
-                                <div className="self-start px-3 py-1 bg-slate-100 text-slate-700 text-sm font-bold border border-slate-300">
-                                    Class: {assignment.level}
-                                </div>
-                            </div>
-
-                            <div className="p-6 sm:p-8 bg-slate-50/50">
-                                <p className="text-slate-600 mb-8 leading-relaxed max-w-2xl">
-                                    {subjectConfig?.description || 'Manage chapters, videos, and quizzes for this subject.'}
-                                </p>
-
-                                {subjectConfig?.route ? (
-                                    <button onClick={() => onNavigate(subjectConfig.route)} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-sm flex items-center justify-center gap-3">
-                                        <span>MANAGE CONTENT</span>
-                                        <i className="fa-solid fa-arrow-right"></i>
-                                    </button>
-                                ) : (
-                                    <div className="p-4 bg-slate-100 text-slate-500 text-sm border border-slate-200 italic flex items-center gap-2">
-                                        <i className="fa-solid fa-lock"></i> Content tools unavailable.
-                                    </div>
+                        <>
+                            <div className="border border-slate-200 p-4">
+                                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Current assignment</div>
+                                <div className="mt-2 text-2xl font-semibold text-slate-900">{assignment.subject}</div>
+                                <div className="mt-1 text-sm text-slate-500">Class {assignment.level}</div>
+                                {dashboard?.contentUpdatedAt && (
+                                    <div className="text-xs text-slate-400 mt-2">Content updated {new Date(dashboard.contentUpdatedAt).toLocaleDateString()}</div>
                                 )}
                             </div>
-                        </div>
+
+                            <div className="grid gap-4 lg:grid-cols-2">
+                                <div className="border border-slate-200 p-4">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Class snapshot</div>
+                                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                        <div className="border border-slate-200 p-3">
+                                            <div className="text-xs text-slate-500">Students in class</div>
+                                            <div className="text-lg font-semibold text-slate-900">{dashboard?.studentCount ?? 0}</div>
+                                        </div>
+                                        <div className="border border-slate-200 p-3">
+                                            <div className="text-xs text-slate-500">Recent updates</div>
+                                            <div className="text-lg font-semibold text-slate-900">{(dashboard?.recentUpdates || []).length}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="border border-slate-200 p-4">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Content coverage</div>
+                                    {stats ? (
+                                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">{stats.label}</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.itemCount || stats.chapterCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Topics</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.topicCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Creative questions</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.creativeCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">MCQ questions</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.mcqCount}</div>
+                                            </div>
+                                            {stats.englishCount > 0 && (
+                                                <div className="border border-slate-200 p-3">
+                                                    <div className="text-xs text-slate-500">English questions</div>
+                                                    <div className="text-lg font-semibold text-slate-900">{stats.englishCount}</div>
+                                                </div>
+                                            )}
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Notes</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.notesCount}</div>
+                                            </div>
+                                            <div className="border border-slate-200 p-3">
+                                                <div className="text-xs text-slate-500">Videos</div>
+                                                <div className="text-lg font-semibold text-slate-900">{stats.videosCount}</div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-3 text-sm text-slate-500">Assignment stats will appear once content is loaded.</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="border border-slate-200 p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Recent updates</div>
+                                    <button onClick={() => onNavigate('profile')} className="text-xs font-semibold text-indigo-600">Profile</button>
+                                </div>
+                                {isLoading && <div className="mt-3 text-sm text-slate-400">Loading updates...</div>}
+                                {!isLoading && (dashboard?.recentUpdates || []).length === 0 && (
+                                    <div className="mt-3 text-sm text-slate-500">No updates matched your assignment yet.</div>
+                                )}
+                                <div className="mt-3 space-y-3">
+                                    {(dashboard?.recentUpdates || []).map((entry, index) => (
+                                        <div key={entry.action + '-' + index} className="border border-slate-200 p-3 text-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="font-semibold text-slate-800">{entry.action}</div>
+                                                <div className="text-xs text-slate-500">{new Date(entry.createdAt).toLocaleDateString()}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">{entry.user}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {subjectConfig?.route ? (
+                                <button onClick={() => onNavigate(subjectConfig.route)} className="w-full px-4 py-2 border border-slate-200 text-sm font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-600 transition">
+                                    Open content manager
+                                </button>
+                            ) : (
+                                <div className="border border-slate-200 p-3 text-sm text-slate-500">Content tools unavailable for this subject.</div>
+                            )}
+                        </>
                     )}
                 </div>
             </TeacherShell>
@@ -11494,4 +11704,6 @@ ${Yi.join(`
     </script>
 </body>
 </html>
-  `}function Zi(e){let t=Ma(e);return Ji(t)}var pg={async fetch(e,t){let s=await Hs(e,t);if(s)return s;let a=new URL(e.url),i={"Content-Type":"text/html","Referrer-Policy":"strict-origin-when-cross-origin","X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY","Permissions-Policy":"camera=(), microphone=(), geolocation=()"};return new Response(Zi(a.pathname),{headers:i})}};export{pg as default};
+  `}function Zi(e){let t=Ma(e);return Ji(t)}
+
+export const renderApp = (pathname)=>Zi(pathname);
