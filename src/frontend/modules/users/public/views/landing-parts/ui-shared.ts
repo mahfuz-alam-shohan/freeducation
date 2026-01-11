@@ -483,11 +483,11 @@ export const landingUi = `
             const [openMap, setOpenMap] = useState({});
             const toggleAnswer = (sectionKey, index) => { setOpenMap((prev) => ({ ...prev, [sectionKey + '-' + index]: !prev[sectionKey + '-' + index] })); };
             const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px]">
+                <span className="inline-flex items-center gap-1 text-[10px]">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
                     ))}
-                </div>
+                </span>
             );
             if (!sections.length) return <div className="text-sm text-slate-400 font-serif italic">No questions added yet.</div>;
             return (
@@ -502,8 +502,10 @@ export const landingUi = `
                                         const isOpen = Boolean(openMap[openKey]);
                                         return (
                                             <div key={entry.question + '-' + index} className="space-y-3">
-                                                <div className="font-medium text-slate-800 leading-relaxed font-serif">{section.prefix(index)}. {entry.question}</div>
-                                                {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
+                                                <div className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium text-slate-800 leading-snug font-serif">
+                                                    <span>{section.prefix(index)}. {entry.question}</span>
+                                                    {Number(entry.stars) > 0 && renderStars(Math.min(5, Number(entry.stars)))}
+                                                </div>
                                                 <button onClick={() => toggleAnswer(section.key, index)} className="text-xs font-bold text-indigo-600 hover:text-indigo-500 transition uppercase tracking-wider">{isOpen ? 'Hide Answer' : 'Show Answer'}</button>
                                                 {isOpen && <div className="text-sm text-slate-700 bg-slate-50 p-4 border-l-4 border-indigo-200 leading-relaxed font-serif text-justify">{entry.answer}</div>}
                                             </div>
@@ -529,11 +531,11 @@ export const landingUi = `
             const hideAll = () => { setGlobalOpen(false); setOpenOverrides({}); };
             const normalizedStars = (value) => Math.max(0, Math.min(5, Number(value) || 0));
             const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px]">
+                <span className="inline-flex items-center gap-1 text-[10px]">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
                     ))}
-                </div>
+                </span>
             );
             if (mcqList.length === 0) return <div className="text-sm text-slate-400 italic font-serif">এখনো কোন MCQ প্রশ্ন যোগ করা হয়নি।</div>;
             return (
@@ -549,8 +551,10 @@ export const landingUi = `
                     <div className="divide-y divide-slate-100">
                         {mcqList.map((entry, index) => (
                             <div key={entry.question + '-' + index} className="py-6">
-                                <div className="text-base font-semibold text-slate-900 font-bangla mb-1">{toBanglaNumber(index + 1)}. {entry.question}</div>
-                                {normalizedStars(entry.stars) > 0 && <div className="mb-3">{renderStars(normalizedStars(entry.stars))}</div>}
+                                <div className="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-slate-900 font-bangla mb-1">
+                                    <span>{toBanglaNumber(index + 1)}. {entry.question}</span>
+                                    {normalizedStars(entry.stars) > 0 && renderStars(normalizedStars(entry.stars))}
+                                </div>
                                 <div className="grid gap-2 text-sm text-slate-600 font-bangla ml-4">{(entry.options || []).map((option, optionIndex) => <div key={entry.question + '-' + optionIndex}>{optionLabels[optionIndex]}. {option}</div>)}</div>
                                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
                                     <button onClick={() => toggleAnswer(index)} className="font-bold text-indigo-600 hover:text-indigo-500 uppercase tracking-wider">{isOpen(index) ? 'Hide Answer' : 'Show Answer'}</button>

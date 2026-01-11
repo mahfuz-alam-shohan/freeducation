@@ -117,11 +117,11 @@ export const landingBangla = `
                 return { text: note.text || note.note || '', stars: Math.max(0, Math.min(5, Number(note.stars) || 0)) };
             };
             const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px] text-amber-400">
+                <span className="inline-flex items-center gap-1 text-[10px] text-amber-400">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
                     ))}
-                </div>
+                </span>
             );
             
             const actionCards = [
@@ -149,10 +149,14 @@ export const landingBangla = `
                             {notes.map((note, index) => {
                                 const resolved = normalizedNote(note);
                                 return (
-                                    <div key={noteKey + '-' + index} className="relative pl-8">
-                                        <span className="absolute left-0 top-0 font-bold text-indigo-900/40 select-none">{toBanglaNumber(index + 1)}.</span>
-                                        <p className="text-slate-900 font-bangla leading-loose text-lg">{resolved.text}</p>
-                                        {resolved.stars > 0 && <div className="mt-2">{renderStars(resolved.stars)}</div>}
+                                    <div key={noteKey + '-' + index} className="flex items-start gap-3">
+                                        <span className="mt-0.5 font-bold text-indigo-900/40 select-none">{toBanglaNumber(index + 1)}.</span>
+                                        <div className="flex-1">
+                                            <div className="flex flex-wrap items-baseline gap-x-2 text-slate-900 font-bangla text-base leading-snug whitespace-pre-wrap">
+                                                <span>{resolved.text}</span>
+                                                {resolved.stars > 0 && renderStars(resolved.stars)}
+                                            </div>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -171,11 +175,11 @@ export const landingBangla = `
                 { key: 'scenario', label: 'গ ও ঘ (সিনারিও)' }
             ];
             const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px]">
+                <span className="inline-flex items-center gap-1 text-[10px]">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
                     ))}
-                </div>
+                </span>
             );
             return (
                 <PublicBanglaShell title="সৃজনশীল প্রশ্ন" subtitle={itemName ? itemName : ''} onBack={() => onNavigate(itemRoute)} onNavigate={onNavigate}>
@@ -215,19 +219,23 @@ export const landingBangla = `
                                                 {type.key === 'scenario' ? (
                                                     scenarioEntries.map((entry, index) => (
                                                         <div key={entry.id} className="space-y-3">
-                                                            <div className="font-bold text-slate-900">{index + 1}. <span className="text-xs uppercase tracking-[0.2em] text-slate-400 ml-2">সিনারিও</span></div>
-                                                            <div className="text-slate-800 leading-relaxed whitespace-pre-wrap">{entry.scenario}</div>
-                                                            <div className="font-semibold text-slate-900">{entry.label}. {entry.question}</div>
-                                                            {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
-                                                            <div className="text-slate-800 leading-relaxed pl-4 border-l-2 border-indigo-200/50 whitespace-pre-wrap">{entry.answer}</div>
+                                                            <div className="font-bold text-slate-900 text-sm">{index + 1}. <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400 ml-2">সিনারিও</span></div>
+                                                            <div className="text-slate-800 text-sm leading-snug whitespace-pre-wrap">{entry.scenario}</div>
+                                                            <div className="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-slate-900">
+                                                                <span>{entry.label}. {entry.question}</span>
+                                                                {Number(entry.stars) > 0 && renderStars(Math.min(5, Number(entry.stars)))}
+                                                            </div>
+                                                            <div className="text-slate-800 text-sm leading-snug pl-4 border-l-2 border-indigo-200/50 whitespace-pre-wrap">{entry.answer}</div>
                                                         </div>
                                                     ))
                                                 ) : (
                                                     list.map((entry, index) => (
                                                         <div key={entry.question + '-' + index} className="space-y-3">
-                                                            <div className="font-bold text-slate-900">{index + 1}. {entry.question}</div>
-                                                            {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
-                                                            <div className="text-slate-800 leading-relaxed pl-4 border-l-2 border-indigo-200/50 whitespace-pre-wrap">{entry.answer}</div>
+                                                            <div className="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-slate-900">
+                                                                <span>{index + 1}. {entry.question}</span>
+                                                                {Number(entry.stars) > 0 && renderStars(Math.min(5, Number(entry.stars)))}
+                                                            </div>
+                                                            <div className="text-slate-800 text-sm leading-snug pl-4 border-l-2 border-indigo-200/50 whitespace-pre-wrap">{entry.answer}</div>
                                                         </div>
                                                     ))
                                                 )}

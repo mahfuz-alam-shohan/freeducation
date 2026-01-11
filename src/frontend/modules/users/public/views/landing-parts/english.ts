@@ -71,11 +71,11 @@ export const landingEnglish = `
 
         const PublicEnglishQuestionList = ({ questions }) => {
             const renderStars = (value) => (
-                <div className="flex items-center gap-1 text-[10px]">
+                <span className="inline-flex items-center gap-1 text-[10px]">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <span key={star} className={star <= value ? 'text-amber-400' : 'text-slate-200'}>★</span>
                     ))}
-                </div>
+                </span>
             );
             return (
                 <div className="max-w-4xl mx-auto space-y-8">
@@ -87,9 +87,11 @@ export const landingEnglish = `
                                 <div className="flex-none w-8 h-8 bg-indigo-100 text-indigo-700 font-bold font-serif flex items-center justify-center -mt-1">
                                     Q{index + 1}
                                 </div>
-                                <div className="space-y-4 w-full">
-                                    <div className="text-lg font-semibold text-slate-900 font-serif">{entry.question}</div>
-                                    {Number(entry.stars) > 0 && <div>{renderStars(Math.min(5, Number(entry.stars)))}</div>}
+                                <div className="space-y-3 w-full">
+                                    <div className="flex flex-wrap items-baseline gap-x-2 text-base font-semibold text-slate-900 font-serif">
+                                        <span>{entry.question}</span>
+                                        {Number(entry.stars) > 0 && renderStars(Math.min(5, Number(entry.stars)))}
+                                    </div>
                                     <div className="bg-white/50 border-l-4 border-emerald-400 pl-4 py-2">
                                         <span className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Answer</span>
                                         <div className="text-slate-800">{entry.answer}</div>
