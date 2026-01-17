@@ -1,3 +1,80 @@
+const iconMap = {
+  home: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />
+    </svg>
+  `,
+  users: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7.5 12a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+      <path d="M3.5 20v-1.2c0-2.1 1.9-3.8 4.2-3.8h0.4c2.3 0 4.2 1.7 4.2 3.8V20" />
+      <path d="M15 11.5a2.8 2.8 0 1 0-2.7-3.5" />
+      <path d="M20.5 20v-1c0-1.8-1.3-3.3-3-3.7" />
+    </svg>
+  `,
+  content: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 5h10a4 4 0 0 1 4 4v10H9a4 4 0 0 0-4 4z" />
+      <path d="M9 5v14" />
+    </svg>
+  `,
+  classes: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 6h16v9H4z" />
+      <path d="M8 18h8" />
+      <path d="M12 15v3" />
+    </svg>
+  `,
+  assignments: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 4h7l3 3v13H7z" />
+      <path d="M10 12h5" />
+      <path d="M10 16h5" />
+      <path d="M14 4v3h3" />
+    </svg>
+  `,
+  tasks: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 12l2.2 2.2L13 9.5" />
+      <path d="M6 18l2.2 2.2L13 15.5" />
+      <path d="M15 6h3" />
+      <path d="M15 12h3" />
+      <path d="M15 18h3" />
+    </svg>
+  `,
+  lessons: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 6h6c1.7 0 3 1.3 3 3v10H7a3 3 0 0 0-3 3z" />
+      <path d="M20 6h-6c-1.7 0-3 1.3-3 3v10h6a3 3 0 0 1 3 3z" />
+    </svg>
+  `,
+  progress: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 19V5" />
+      <path d="M4 19h16" />
+      <path d="M8 15l3-4 3 2 4-6" />
+    </svg>
+  `,
+  browse: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v4l3 3" />
+    </svg>
+  `,
+};
+
+const toneMap = {
+  home: "sun",
+  users: "mint",
+  content: "sky",
+  classes: "sun",
+  assignments: "coral",
+  tasks: "mint",
+  lessons: "sky",
+  progress: "coral",
+  browse: "sun",
+};
+
 const roleNavConfig = {
   admin: {
     contextLabel: "Admin",
@@ -6,7 +83,7 @@ const roleNavConfig = {
     navItems: [
       { label: "Dashboard", href: "/admin", key: "home" },
       { label: "User Management", href: "/admin/users", key: "users" },
-      { label: "Content (soon)", href: "#", key: "content" },
+      { label: "Content", href: "#", key: "content" },
     ],
     bottomNavItems: [
       { label: "Home", href: "/admin", key: "home" },
@@ -58,6 +135,8 @@ function buildNavItems(items, activeKey) {
     label: item.label,
     href: item.href,
     active: item.key === activeKey,
+    icon: iconMap[item.key],
+    tone: toneMap[item.key] ?? "sun",
   }));
 }
 

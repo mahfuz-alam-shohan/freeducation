@@ -1,6 +1,4 @@
-function topbar({ siteName, pageTitle, contextLabel, userProfile, authAction }) {
-  const subtitle = contextLabel ? `${pageTitle} • ${contextLabel}` : pageTitle;
-  const siteInitial = siteName ? siteName[0].toUpperCase() : "F";
+function topbar({ siteName, userProfile, authAction }) {
   const initials = userProfile?.name
     ? userProfile.name
         .split(" ")
@@ -35,10 +33,8 @@ function topbar({ siteName, pageTitle, contextLabel, userProfile, authAction }) 
         <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" title="Toggle sidebar">
           ☰
         </button>
-        <div class="site-logo">${siteInitial}</div>
         <div class="pc-topbar-titles">
           <div class="site-name">${siteName}</div>
-          <div class="small">${subtitle}</div>
         </div>
       </div>
       ${authSlot}

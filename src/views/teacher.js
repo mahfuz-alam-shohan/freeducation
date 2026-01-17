@@ -6,7 +6,6 @@ function teacherDashboardPage(userProfile) {
 
   return dashboardShell({
     title: "Teacher Dashboard",
-    contextLabel: navigation.contextLabel,
     sidebarTitle: navigation.sidebarTitle,
     userProfile,
     navItems: navigation.navItems,

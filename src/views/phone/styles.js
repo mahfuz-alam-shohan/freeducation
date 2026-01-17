@@ -15,11 +15,11 @@ const phoneStyles = `
 
   .phone-auth-card {
     width: min(360px, 100%);
-    background: var(--panel);
+    background: linear-gradient(160deg, #ffffff 0%, #fff1e6 100%);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 10px 22px rgba(249, 115, 22, 0.12);
   }
 
   .phone-auth-card h1 {
@@ -46,13 +46,13 @@ const phoneStyles = `
   .phone-topbar {
     height: 52px;
     border-bottom: 1px solid var(--border);
-    background: #ffffff;
+    background: linear-gradient(90deg, #fff7ed 0%, #fff1f2 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     font-size: 14px;
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 6px 16px rgba(249, 115, 22, 0.08);
   }
 
   .phone-topbar-left {
@@ -104,6 +104,7 @@ const phoneStyles = `
     padding: 12px 12px 72px;
     display: grid;
     gap: 12px;
+    background: linear-gradient(180deg, #fff7ed 0%, #fef3c7 100%);
   }
 
   .phone-bottom-nav {
@@ -112,19 +113,22 @@ const phoneStyles = `
     left: 0;
     right: 0;
     height: 56px;
-    background: #ffffff;
+    background: linear-gradient(90deg, #fff7ed 0%, #ffffff 100%);
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 -6px 18px rgba(249, 115, 22, 0.08);
     z-index: 20;
   }
 
-  .phone-bottom-nav a {
+  .phone-bottom-link {
     font-size: 11px;
     color: var(--muted);
     transition: color 160ms ease;
+    display: grid;
+    gap: 4px;
+    justify-items: center;
   }
 
   .phone-topbar .button-link {
@@ -133,8 +137,48 @@ const phoneStyles = `
     border-radius: 999px;
   }
 
-  .phone-bottom-nav a.active {
-    color: var(--primary);
+  .phone-nav-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
+  .phone-nav-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .phone-nav-icon.tone-sun {
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
+  .phone-nav-icon.tone-mint {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .phone-nav-icon.tone-coral {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .phone-nav-icon.tone-sky {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .phone-bottom-link.active {
+    color: #c2410c;
     font-weight: 600;
   }
 `;

@@ -6,7 +6,6 @@ function studentDashboardPage(userProfile) {
 
   return dashboardShell({
     title: "Student Dashboard",
-    contextLabel: navigation.contextLabel,
     sidebarTitle: navigation.sidebarTitle,
     userProfile,
     navItems: navigation.navItems,
