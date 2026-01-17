@@ -1,5 +1,9 @@
 
 
+name = "freeducation"
+main = "src/index.js"
+compatibility_date = "2024-09-20"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "freeducation"
@@ -16,4 +20,3 @@ GMAIL_CLIENT_ID = "151296843802-ansdm59387uk2r0lfaebvkr5566beq3g.apps.googleuser
 GMAIL_CLIENT_SECRET = "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"
 GMAIL_REFRESH_TOKEN = "1//047Rxk_CAUUvpCgYIARAAGAQSNwF-L9Iro5UdL91EkNaDDzfXpc9_7i4ZiA4bqe2YxK7gtZ76sC36W16yYkylDysJGKcn9fnWRaM"
 JWT_SECRET = "some-random-secret-text-for-security"
-
