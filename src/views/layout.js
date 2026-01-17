@@ -63,7 +63,8 @@ function dashboardShell({
   navItems,
   bottomNavItems,
   sidebarTitle,
-  userProfile,
+  sidebarSubtitle,
+  actionSlot,
   content,
 }) {
   return renderPage({
@@ -73,16 +74,16 @@ function dashboardShell({
         title,
         contextLabel,
         navItems,
-        siteName: sidebarTitle,
-        userProfile,
+        sidebarTitle,
+        sidebarSubtitle,
+        actionSlot,
         content,
       }),
       phone: dashboardShellPhone({
         title,
         contextLabel,
-        siteName: sidebarTitle,
-        userProfile,
         bottomNavItems,
+        actionSlot,
         content,
       }),
     }),
@@ -98,7 +99,12 @@ function adminShell({ title, active, content }) {
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
     sidebarTitle: navigation.sidebarTitle,
-    userProfile: navigation.userProfile,
+    sidebarSubtitle: navigation.sidebarSubtitle,
+    actionSlot: `
+      <form method="post" action="/logout">
+        <button class="secondary" type="submit">Log out</button>
+      </form>
+    `,
     content,
   });
 }

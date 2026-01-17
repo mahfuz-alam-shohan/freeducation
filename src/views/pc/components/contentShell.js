@@ -1,7 +1,10 @@
-function contentShell({ content }) {
+function contentShell({ content, topbarSlot = "" }) {
   return `
-    <main class="pc-content">
-      ${content}
+    <main>
+      ${topbarSlot}
+      <div class="pc-content">
+        ${content}
+      </div>
     </main>
   `;
 }

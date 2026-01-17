@@ -87,21 +87,6 @@ const baseStyles = `
     font-size: 12px;
     color: var(--muted);
   }
-
-  .site-logo,
-  .user-avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--primary-soft);
-    color: var(--primary);
-    font-weight: 700;
-    font-size: 12px;
-    flex-shrink: 0;
-  }
 `;
 
 export { baseStyles };

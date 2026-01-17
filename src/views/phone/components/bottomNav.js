@@ -1,4 +1,4 @@
-function bottomNav({ items }) {
+function bottomNav({ items, actionSlot = "" }) {
   const links = items
     .map(
       (item) => `
@@ -10,6 +10,7 @@ function bottomNav({ items }) {
   return `
     <nav class="phone-bottom-nav">
       ${links}
+      ${actionSlot}
     </nav>
   `;
 }
