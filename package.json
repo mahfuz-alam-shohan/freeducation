@@ -1,14 +1,36 @@
 {
   "name": "freeducation",
   "version": "1.0.0",
-  "type": "module",
-  "private": true,
+  "description": "freeducation - Ed-tech platform with social media features",
+  "main": "src/index.js",
   "scripts": {
-    "deploy": "wrangler deploy",
     "dev": "wrangler dev",
-    "start": "wrangler dev"
+    "deploy": "wrangler deploy",
+    "build": "npm run build:client && npm run build:worker",
+    "build:client": "cd client && npm run build",
+    "build:worker": "esbuild src/index.js --bundle --format=esm --outfile=dist/index.js",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "hono": "^3.12.0"
   },
   "devDependencies": {
-    "wrangler": "^3.99.0"
-  }
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "esbuild": "^0.19.11",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.22.1"
+  },
+  "keywords": [
+    "education",
+    "ed-tech",
+    "social-media",
+    "cloudflare-workers",
+    "bangladesh"
+  ],
+  "author": "freeducation team",
+  "license": "MIT"
 }
