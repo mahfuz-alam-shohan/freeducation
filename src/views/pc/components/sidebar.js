@@ -1,4 +1,4 @@
-function sidebar({ title, subtitle, navItems, actionSlot = "" }) {
+function sidebar({ navItems }) {
   const navLinks = navItems
     .map(
       (item) => `
@@ -9,14 +9,9 @@ function sidebar({ title, subtitle, navItems, actionSlot = "" }) {
 
   return `
     <aside class="pc-sidebar">
-      <div>
-        <h2>${title}</h2>
-        ${subtitle ? `<div class="small">${subtitle}</div>` : ""}
-      </div>
       <nav class="pc-nav-group">
         ${navLinks}
       </nav>
-      ${actionSlot}
     </aside>
   `;
 }
