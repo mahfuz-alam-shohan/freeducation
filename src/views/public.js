@@ -93,6 +93,20 @@ function frontPage({ navigation, userProfile, authAction, primaryAction }) {
             </div>
           </div>
         </section>
+        <section class="info-grid">
+          <div class="info-card">
+            <strong>Today’s reading guide</strong>
+            <p class="small">Explore a curated set of essays on leadership, ethics, and civic responsibility.</p>
+          </div>
+          <div class="info-card">
+            <strong>Library hours</strong>
+            <p class="small">Digital shelves remain open 24/7, with staff notes updated every weekday.</p>
+          </div>
+          <div class="info-card">
+            <strong>Member focus</strong>
+            <p class="small">Teachers and students keep shared annotations synced across devices.</p>
+          </div>
+        </section>
         <section class="frontpage-panels">
           <div class="frontpage-panel">
             <div class="frontpage-panel-title">Public Library</div>
@@ -105,6 +119,19 @@ function frontPage({ navigation, userProfile, authAction, primaryAction }) {
           <div class="frontpage-panel">
             <div class="frontpage-panel-title">Member Collections</div>
             <div class="small">Personal shelves for teachers, students, and administrators.</div>
+          </div>
+        </section>
+        <section class="accent-band">
+          <div>
+            <h3 class="section-title">Library highlights</h3>
+            <p class="small">Weekly notes are hand-edited to keep reading lists clear and accessible.</p>
+          </div>
+          <div class="chip-group">
+            <span class="chip">Civic literacy</span>
+            <span class="chip">Science history</span>
+            <span class="chip">Ethics &amp; debate</span>
+            <span class="chip">Teaching practice</span>
+            <span class="chip">Student essays</span>
           </div>
         </section>
         <section class="frontpage-strip">

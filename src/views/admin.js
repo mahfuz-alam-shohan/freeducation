@@ -8,14 +8,28 @@ function dashboardPage(userProfile) {
     content: `
       <div class="card">
         <h3 class="section-title">Welcome back</h3>
-        <p class="small">Use the menu to manage users and build new learning modules. The layout stays consistent on desktop and mobile.</p>
+        <p class="small">Use the menu to manage users and guide new learning collections across the library.</p>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <strong>Admin priorities</strong>
+          <p class="small">Review new member requests and confirm assigned roles.</p>
+        </div>
+        <div class="info-card">
+          <strong>Library checklist</strong>
+          <p class="small">Confirm reading sets, update citations, and refresh staff notes.</p>
+        </div>
+        <div class="info-card">
+          <strong>Support queue</strong>
+          <p class="small">Answer questions from teachers and students within 24 hours.</p>
+        </div>
       </div>
       <div class="card">
         <h3 class="section-title">Next steps</h3>
-        <ul class="small">
-          <li>Add more admins in the User Management page.</li>
-          <li>Prepare subject modules using the content folders.</li>
-          <li>Teachers and students dashboards will follow.</li>
+        <ul class="timeline">
+          <li>Invite additional admins using the User Management page.</li>
+          <li>Upload new modules to the content folders for review.</li>
+          <li>Share weekly highlights with the teaching staff.</li>
         </ul>
       </div>
     `,
@@ -65,7 +79,6 @@ function userManagementPage({ users, role, search }, userProfile) {
               id="search"
               name="search"
               type="search"
-              placeholder="Search by name or email"
               value="${search || ""}"
             />
           </div>

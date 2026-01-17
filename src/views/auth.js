@@ -1,6 +1,14 @@
 import { renderPage, renderViewports } from "./layout.js";
 import { authCardPc } from "./pc/auth.js";
 import { authCardPhone } from "./phone/auth.js";
+import { topbar as pcTopbar } from "./pc/components/topbar.js";
+import { topbar as phoneTopbar } from "./phone/components/topbar.js";
+
+const authTopbarConfig = {
+  siteName: "Freeducation",
+  contextLabel: "Access",
+  authAction: { href: "/", label: "Front page" },
+};
 
 function setupPage() {
   const body = `
@@ -28,11 +36,21 @@ function setupPage() {
         title: "Create the first admin",
         description: "This setup appears only once. After you create the first admin, this form is disabled.",
         body,
+        topbarSlot: pcTopbar({
+          siteName: authTopbarConfig.siteName,
+          pageTitle: "Create Admin",
+          contextLabel: authTopbarConfig.contextLabel,
+          authAction: authTopbarConfig.authAction,
+        }),
       }),
       phone: authCardPhone({
         title: "Create the first admin",
         description: "This setup appears only once. After you create the first admin, this form is disabled.",
         body,
+        topbarSlot: phoneTopbar({
+          siteName: authTopbarConfig.siteName,
+          authAction: authTopbarConfig.authAction,
+        }),
       }),
     }),
   });
@@ -60,11 +78,21 @@ function loginPage() {
         title: "Admin login",
         description: "Use your admin credentials to access the control center.",
         body,
+        topbarSlot: pcTopbar({
+          siteName: authTopbarConfig.siteName,
+          pageTitle: "Admin Login",
+          contextLabel: authTopbarConfig.contextLabel,
+          authAction: authTopbarConfig.authAction,
+        }),
       }),
       phone: authCardPhone({
         title: "Admin login",
         description: "Use your admin credentials to access the control center.",
         body,
+        topbarSlot: phoneTopbar({
+          siteName: authTopbarConfig.siteName,
+          authAction: authTopbarConfig.authAction,
+        }),
       }),
     }),
   });
@@ -76,8 +104,26 @@ function messagePage({ title, message, linkLabel, linkHref }) {
   return renderPage({
     title,
     body: renderViewports({
-      pc: authCardPc({ title, description: message, body }),
-      phone: authCardPhone({ title, description: message, body }),
+      pc: authCardPc({
+        title,
+        description: message,
+        body,
+        topbarSlot: pcTopbar({
+          siteName: authTopbarConfig.siteName,
+          pageTitle: title,
+          contextLabel: authTopbarConfig.contextLabel,
+          authAction: authTopbarConfig.authAction,
+        }),
+      }),
+      phone: authCardPhone({
+        title,
+        description: message,
+        body,
+        topbarSlot: phoneTopbar({
+          siteName: authTopbarConfig.siteName,
+          authAction: authTopbarConfig.authAction,
+        }),
+      }),
     }),
   });
 }
