@@ -6,28 +6,24 @@ function dashboardShellPc({
   title,
   contextLabel,
   navItems,
-  siteName,
-  userProfile,
+  sidebarTitle,
+  sidebarSubtitle,
+  actionSlot,
   content,
 }) {
   const sidebarSlot = sidebar({
+    title: sidebarTitle,
+    subtitle: sidebarSubtitle,
     navItems,
+    actionSlot,
   });
-  const topbarSlot = topbar({
-    siteName,
-    pageTitle: title,
-    contextLabel,
-    userProfile,
-  });
-  const mainContent = contentShell({ content });
+  const topbarSlot = topbar({ title, contextLabel });
+  const mainContent = contentShell({ content, topbarSlot });
 
   return `
     <div class="pc-admin-layout">
-      ${topbarSlot}
-      <div class="pc-admin-body">
-        ${sidebarSlot}
-        ${mainContent}
-      </div>
+      ${sidebarSlot}
+      ${mainContent}
     </div>
   `;
 }

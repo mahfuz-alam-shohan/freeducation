@@ -29,14 +29,8 @@ const pcStyles = `
 
   .pc-admin-layout {
     display: grid;
-    grid-template-rows: auto 1fr;
-    min-height: 100vh;
-  }
-
-  .pc-admin-body {
-    display: grid;
     grid-template-columns: 220px 1fr;
-    min-height: 0;
+    min-height: 100vh;
   }
 
   .pc-sidebar {
@@ -46,6 +40,11 @@ const pcStyles = `
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+
+  .pc-sidebar h2 {
+    font-size: 15px;
+    margin: 0 0 4px;
   }
 
   .pc-nav-group {
@@ -75,37 +74,6 @@ const pcStyles = `
     justify-content: space-between;
     padding: 0 16px;
     font-size: 14px;
-  }
-
-  .pc-topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .pc-topbar-titles {
-    display: grid;
-    gap: 2px;
-  }
-
-  .site-name {
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  .pc-user-area {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .pc-user-area form {
-    margin: 0;
-  }
-
-  .pc-user-name {
-    font-size: 13px;
-    font-weight: 600;
   }
 
   .pc-content {
