@@ -8,14 +8,9 @@ function studentDashboardPage() {
     title: "Student Dashboard",
     contextLabel: navigation.contextLabel,
     sidebarTitle: navigation.sidebarTitle,
-    sidebarSubtitle: navigation.sidebarSubtitle,
+    userProfile: navigation.userProfile,
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
-    actionSlot: `
-      <form method="post" action="/logout">
-        <button class="secondary" type="submit">Log out</button>
-      </form>
-    `,
     content: `
       <div class="card">
         <h3 class="section-title">Student space</h3>

@@ -3,6 +3,10 @@ const roleNavConfig = {
     contextLabel: "Admin",
     sidebarTitle: "Freeducation",
     sidebarSubtitle: "Admin",
+    userProfile: {
+      name: "Admin User",
+      email: "admin@freeducation.org",
+    },
     navItems: [
       { label: "Dashboard", href: "/admin", key: "home" },
       { label: "User Management", href: "/admin/users", key: "users" },
@@ -20,6 +24,10 @@ const roleNavConfig = {
     contextLabel: "Teacher",
     sidebarTitle: "Freeducation",
     sidebarSubtitle: "Teacher",
+    userProfile: {
+      name: "Teacher User",
+      email: "teacher@freeducation.org",
+    },
     navItems: [
       { label: "Overview", href: "/teacher", key: "home" },
       { label: "Classes", href: "#", key: "classes" },
@@ -35,6 +43,10 @@ const roleNavConfig = {
     contextLabel: "Student",
     sidebarTitle: "Freeducation",
     sidebarSubtitle: "Student",
+    userProfile: {
+      name: "Student User",
+      email: "student@freeducation.org",
+    },
     navItems: [
       { label: "Overview", href: "/student", key: "home" },
       { label: "Lessons", href: "#", key: "lessons" },
@@ -66,6 +78,7 @@ function getRoleNavigation(role, activeKey) {
     contextLabel: config.contextLabel,
     sidebarTitle: config.sidebarTitle,
     sidebarSubtitle: config.sidebarSubtitle,
+    userProfile: config.userProfile,
     navItems: buildNavItems(config.navItems, activeKey),
     bottomNavItems: buildNavItems(config.bottomNavItems, activeKey),
   };
