@@ -1,5 +1,4 @@
 function topbar({ siteName, userProfile, authAction }) {
-  const siteInitial = siteName ? siteName[0].toUpperCase() : "F";
   const initials = userProfile?.name
     ? userProfile.name
         .split(" ")
@@ -34,7 +33,6 @@ function topbar({ siteName, userProfile, authAction }) {
   return `
     <header class="phone-topbar">
       <div class="phone-topbar-left">
-        <div class="site-logo">${siteInitial}</div>
         <div class="site-name">${siteName}</div>
       </div>
       ${authSlot}

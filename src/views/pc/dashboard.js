@@ -3,8 +3,6 @@ import { topbar } from "./components/topbar.js";
 import { contentShell } from "./components/contentShell.js";
 
 function dashboardShellPc({
-  title,
-  contextLabel,
   navItems,
   siteName,
   userProfile,
@@ -16,8 +14,6 @@ function dashboardShellPc({
   });
   const topbarSlot = topbar({
     siteName,
-    pageTitle: title,
-    contextLabel,
     userProfile,
     authAction,
   });

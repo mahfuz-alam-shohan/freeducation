@@ -3,7 +3,7 @@ function sidebar({ navItems }) {
     .map(
       (item) => `
         <a class="pc-nav-link ${item.active ? "active" : ""}" href="${item.href}">
-          <span class="pc-nav-icon">${item.label.slice(0, 1).toUpperCase()}</span>
+          <span class="pc-nav-icon tone-${item.tone ?? "sun"}">${item.icon ?? ""}</span>
           <span class="pc-nav-text">${item.label}</span>
         </a>
       `

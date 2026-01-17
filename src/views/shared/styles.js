@@ -1,20 +1,21 @@
 const baseStyles = `
   :root {
     color-scheme: light;
-    --bg: #f4f5f8;
+    --bg: #fff7ed;
     --panel: #ffffff;
-    --border: #d7dbe5;
-    --border-strong: #c1c7d6;
-    --text: #182230;
-    --muted: #5f6c7b;
-    --primary: #2155cd;
-    --primary-soft: #e8efff;
-    --accent: #7c3aed;
-    --accent-soft: #f1eafe;
-    --accent-strong: #1d4ed8;
-    --sunrise: #fef3c7;
-    --mint: #e1f3ed;
-    --coral: #fee2e2;
+    --border: #f1d5b8;
+    --border-strong: #e7c39f;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --primary: #f97316;
+    --primary-soft: #fff1e6;
+    --accent: #2563eb;
+    --accent-soft: #e0f2fe;
+    --accent-strong: #db2777;
+    --sunrise: #fde68a;
+    --mint: #d1fae5;
+    --coral: #fecaca;
+    --sky: #e0f2fe;
   }
 
   * {
@@ -25,7 +26,7 @@ const baseStyles = `
     margin: 0;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     color: var(--text);
-    background: var(--bg);
+    background: linear-gradient(180deg, var(--bg) 0%, #fef3c7 100%);
     opacity: 0;
     transform: translateY(4px);
     transition: opacity 220ms ease, transform 220ms ease;
@@ -69,7 +70,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 14px;
-    background: #fff;
+    background: #fff7ed;
   }
 
   select {
@@ -78,7 +79,14 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 14px;
-    background: #fff;
+    background: #fff7ed;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
   }
 
   button {
@@ -112,13 +120,13 @@ const baseStyles = `
   }
 
   .card {
-    background: var(--panel);
+    background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px;
     margin-bottom: 12px;
-    border-left: 3px solid var(--accent);
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    border-left: 3px solid var(--primary);
+    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.1);
   }
 
   .section-title {
@@ -144,6 +152,14 @@ const baseStyles = `
     font-weight: 700;
     font-size: 12px;
     flex-shrink: 0;
+  }
+
+  .site-name {
+    font-family: "Playfair Display", "Georgia", serif;
+    font-size: 16px;
+    letter-spacing: 0.03em;
+    font-weight: 700;
+    color: #7c2d12;
   }
 
   .section-header {
@@ -353,7 +369,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px;
-    background: var(--panel);
+    background: linear-gradient(160deg, #ffffff 0%, #fff7ed 100%);
     display: grid;
     gap: 6px;
   }
@@ -372,7 +388,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     display: grid;
     gap: 8px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
   }
 
   .chip-group {
@@ -387,7 +403,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     font-size: 11px;
     color: var(--muted);
-    background: #fff;
+    background: #fff7ed;
   }
 
   .timeline {

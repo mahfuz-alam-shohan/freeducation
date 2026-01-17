@@ -28,7 +28,6 @@ async function handlePublicRoutes(request, env) {
         frontPage({
           navigation,
           userProfile,
-          primaryAction: { label: "Go to workspace", href: roleHomePath(session.role) },
         })
       );
     }
@@ -38,7 +37,6 @@ async function handlePublicRoutes(request, env) {
         navigation,
         userProfile: null,
         authAction: { label: "Log in", href: "/login" },
-        primaryAction: { label: "Member access", href: "/login" },
       })
     );
   }

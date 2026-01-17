@@ -152,7 +152,6 @@ function renderViewports({ pc, phone }) {
 
 function dashboardShell({
   title,
-  contextLabel,
   navItems,
   bottomNavItems,
   sidebarTitle,
@@ -165,7 +164,6 @@ function dashboardShell({
     body: renderViewports({
       pc: dashboardShellPc({
         title,
-        contextLabel,
         navItems,
         siteName: sidebarTitle,
         userProfile,
@@ -174,7 +172,6 @@ function dashboardShell({
       }),
       phone: dashboardShellPhone({
         title,
-        contextLabel,
         siteName: sidebarTitle,
         userProfile,
         authAction,
@@ -190,7 +187,6 @@ function adminShell({ title, active, userProfile, content }) {
 
   return dashboardShell({
     title,
-    contextLabel: navigation.contextLabel,
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
     sidebarTitle: navigation.sidebarTitle,

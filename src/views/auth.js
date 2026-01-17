@@ -3,12 +3,16 @@ import { authCardPc } from "./pc/auth.js";
 import { authCardPhone } from "./phone/auth.js";
 import { topbar as pcTopbar } from "./pc/components/topbar.js";
 import { topbar as phoneTopbar } from "./phone/components/topbar.js";
+import { sidebar } from "./pc/components/sidebar.js";
+import { getRoleNavigation } from "../lib/navigation.js";
 
 const authTopbarConfig = {
   siteName: "Freeducation",
-  contextLabel: "Access",
   authAction: { href: "/", label: "Front page" },
 };
+
+const authNavigation = getRoleNavigation("public", "browse");
+const authSidebar = authNavigation ? sidebar({ navItems: authNavigation.navItems }) : "";
 
 function setupPage() {
   const body = `
@@ -38,10 +42,9 @@ function setupPage() {
         body,
         topbarSlot: pcTopbar({
           siteName: authTopbarConfig.siteName,
-          pageTitle: "Create Admin",
-          contextLabel: authTopbarConfig.contextLabel,
           authAction: authTopbarConfig.authAction,
         }),
+        sidebarSlot: authSidebar,
       }),
       phone: authCardPhone({
         title: "Create the first admin",
@@ -72,22 +75,21 @@ function loginPage() {
   `;
 
   return renderPage({
-    title: "Admin Login",
+    title: "Login",
     body: renderViewports({
       pc: authCardPc({
-        title: "Admin login",
-        description: "Use your admin credentials to access the control center.",
+        title: "Login header",
+        description: "Use your credentials to continue.",
         body,
         topbarSlot: pcTopbar({
           siteName: authTopbarConfig.siteName,
-          pageTitle: "Admin Login",
-          contextLabel: authTopbarConfig.contextLabel,
           authAction: authTopbarConfig.authAction,
         }),
+        sidebarSlot: authSidebar,
       }),
       phone: authCardPhone({
-        title: "Admin login",
-        description: "Use your admin credentials to access the control center.",
+        title: "Login header",
+        description: "Use your credentials to continue.",
         body,
         topbarSlot: phoneTopbar({
           siteName: authTopbarConfig.siteName,
@@ -110,10 +112,9 @@ function messagePage({ title, message, linkLabel, linkHref }) {
         body,
         topbarSlot: pcTopbar({
           siteName: authTopbarConfig.siteName,
-          pageTitle: title,
-          contextLabel: authTopbarConfig.contextLabel,
           authAction: authTopbarConfig.authAction,
         }),
+        sidebarSlot: authSidebar,
       }),
       phone: authCardPhone({
         title,
