@@ -1,13 +1,35 @@
 import { Hono } from 'hono';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { migrateDatabase } from '../../database/migrate.js';
 
 const authRoutes = new Hono();
 const JWT_SECRET = 'your-secret-key-change-in-production';
 
+// Auto-migration check - runs on first API call
+const ensureDatabaseSetup = async (db) => {
+  try {
+    // Check if database is already set up
+    const config = await db.prepare('SELECT value FROM system_config WHERE key = ?')
+      .bind('db_schema_version')
+      .first();
+    
+    if (!config) {
+      console.log('Running automatic database migration...');
+      const migrationResult = await migrateDatabase({ prepare: (stmt) => db.prepare(stmt) });
+      console.log('Migration result:', migrationResult);
+    }
+  } catch (error) {
+    console.error('Auto-migration failed:', error);
+  }
+};
+
 // Check if admin is initialized
 authRoutes.get('/check-init', async (c) => {
   try {
+    // Ensure database is set up
+    await ensureDatabaseSetup(c.env.DB);
+    
     const result = await c.env.DB.prepare('SELECT value FROM system_config WHERE key = ?')
       .bind('admin_initialized')
       .first();
@@ -26,6 +48,9 @@ authRoutes.get('/check-init', async (c) => {
 // First admin registration
 authRoutes.post('/register-first-admin', async (c) => {
   try {
+    // Ensure database is set up
+    await ensureDatabaseSetup(c.env.DB);
+    
     const { name, email, password, date_of_birth } = await c.req.json();
     
     // Validation
@@ -90,6 +115,9 @@ authRoutes.post('/register-first-admin', async (c) => {
 // Admin login
 authRoutes.post('/login', async (c) => {
   try {
+    // Ensure database is set up
+    await ensureDatabaseSetup(c.env.DB);
+    
     const { email, password } = await c.req.json();
     
     if (!email || !password) {

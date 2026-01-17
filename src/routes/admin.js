@@ -1,9 +1,28 @@
 import { Hono } from 'hono';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { migrateDatabase } from '../../database/migrate.js';
 
 const adminRoutes = new Hono();
 const JWT_SECRET = 'your-secret-key-change-in-production';
+
+// Auto-migration check - runs on first API call
+const ensureDatabaseSetup = async (db) => {
+  try {
+    // Check if database is already set up
+    const config = await db.prepare('SELECT value FROM system_config WHERE key = ?')
+      .bind('db_schema_version')
+      .first();
+    
+    if (!config) {
+      console.log('Running automatic database migration...');
+      const migrationResult = await migrateDatabase({ prepare: (stmt) => db.prepare(stmt) });
+      console.log('Migration result:', migrationResult);
+    }
+  } catch (error) {
+    console.error('Auto-migration failed:', error);
+  }
+};
 
 // Authentication middleware
 const authenticate = async (c, next) => {
@@ -27,6 +46,9 @@ const authenticate = async (c, next) => {
 // Get current admin profile
 adminRoutes.get('/profile', authenticate, async (c) => {
   try {
+    // Ensure database is set up
+    await ensureDatabaseSetup(c.env.DB);
+    
     const user = c.get('user');
     
     const admin = await c.env.DB.prepare('SELECT id, name, email, date_of_birth, created_at FROM admins WHERE id = ?')
@@ -49,6 +71,9 @@ adminRoutes.get('/profile', authenticate, async (c) => {
 // Create new admin (only existing admin can create)
 adminRoutes.post('/create', authenticate, async (c) => {
   try {
+    // Ensure database is set up
+    await ensureDatabaseSetup(c.env.DB);
+    
     const { name, email, password, date_of_birth } = await c.req.json();
     
     // Validation
@@ -96,6 +121,9 @@ adminRoutes.post('/create', authenticate, async (c) => {
 // Get all admins
 adminRoutes.get('/list', authenticate, async (c) => {
   try {
+    // Ensure database is set up
+    await ensureDatabaseSetup(c.env.DB);
+    
     const adminsList = await c.env.DB.prepare(`
       SELECT id, name, email, date_of_birth, is_active, created_at 
       FROM admins 
