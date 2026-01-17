@@ -14,6 +14,9 @@ function topbar({ siteName, pageTitle, contextLabel, userProfile }) {
   return `
     <header class="pc-topbar">
       <div class="pc-topbar-left">
+        <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" title="Toggle sidebar">
+          ☰
+        </button>
         <div class="site-logo">${siteInitial}</div>
         <div class="pc-topbar-titles">
           <div class="site-name">${siteName}</div>

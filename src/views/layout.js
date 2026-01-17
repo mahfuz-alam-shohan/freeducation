@@ -96,6 +96,23 @@ const liveUiScript = `
       };
 
       window.setInterval(refreshPage, refreshIntervalMs);
+
+      const applySidebarState = (collapsed) => {
+        body.classList.toggle("sidebar-collapsed", collapsed);
+      };
+
+      const storedSidebar = window.localStorage?.getItem("sidebar-collapsed");
+      if (storedSidebar !== null) {
+        applySidebarState(storedSidebar === "true");
+      }
+
+      const toggleButton = document.querySelector(".sidebar-toggle");
+      if (toggleButton) {
+        toggleButton.addEventListener("click", () => {
+          const isCollapsed = body.classList.toggle("sidebar-collapsed");
+          window.localStorage?.setItem("sidebar-collapsed", String(isCollapsed));
+        });
+      }
     })();
   </script>
 `;
