@@ -51,6 +51,13 @@ async function findUserByEmail(db, email) {
     .first();
 }
 
+async function findUserById(db, id) {
+  return db
+    .prepare("SELECT id, display_name, email, role FROM users WHERE id = ?")
+    .bind(id)
+    .first();
+}
+
 async function listAdmins(db) {
   return db
     .prepare("SELECT id, display_name, email, created_at FROM users WHERE role = 'admin' ORDER BY id DESC")
@@ -61,4 +68,4 @@ async function findUserIdByEmail(db, email) {
   return db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
 }
 
-export { ensureSchema, findUserByEmail, findUserIdByEmail, hasAdmin, insertAdmin, listAdmins };
+export { ensureSchema, findUserByEmail, findUserById, findUserIdByEmail, hasAdmin, insertAdmin, listAdmins };

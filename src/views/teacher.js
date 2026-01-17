@@ -1,21 +1,16 @@
 import { dashboardShell } from "./layout.js";
 import { getRoleNavigation } from "../lib/navigation.js";
 
-function teacherDashboardPage() {
+function teacherDashboardPage(userProfile) {
   const navigation = getRoleNavigation("teacher", "home");
 
   return dashboardShell({
     title: "Teacher Dashboard",
     contextLabel: navigation.contextLabel,
     sidebarTitle: navigation.sidebarTitle,
-    sidebarSubtitle: navigation.sidebarSubtitle,
+    userProfile,
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
-    actionSlot: `
-      <form method="post" action="/logout">
-        <button class="secondary" type="submit">Log out</button>
-      </form>
-    `,
     content: `
       <div class="card">
         <h3 class="section-title">Teacher space</h3>

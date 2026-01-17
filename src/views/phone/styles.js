@@ -44,6 +44,49 @@ const phoneStyles = `
     font-size: 14px;
   }
 
+  .phone-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .phone-user-menu {
+    position: relative;
+  }
+
+  .phone-user-summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .phone-user-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .phone-user-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    display: grid;
+    gap: 6px;
+    min-width: 180px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+    z-index: 10;
+  }
+
+  .phone-user-panel form {
+    margin: 0;
+  }
+
+  .phone-user-name {
+    font-weight: 600;
+    font-size: 13px;
+  }
+
   .phone-content {
     padding: 12px 14px 72px;
   }

@@ -1,4 +1,5 @@
 import { readSessionCookie } from "../lib/auth.js";
+import { findUserById } from "../lib/db.js";
 import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
 import { teacherDashboardPage } from "../views/teacher.js";
@@ -19,8 +20,14 @@ async function handleTeacherRoutes(request, env) {
     return redirect(roleHomePath(session.role));
   }
 
+  const currentUser = await findUserById(env.DB, session.sub);
+  const userProfile = {
+    name: currentUser?.display_name || session.name || "User",
+    email: currentUser?.email || "",
+  };
+
   if (url.pathname === "/teacher") {
-    return htmlResponse(teacherDashboardPage());
+    return htmlResponse(teacherDashboardPage(userProfile));
   }
 
   return htmlResponse("Not found", 404);
