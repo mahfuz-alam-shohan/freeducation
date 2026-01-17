@@ -157,6 +157,7 @@ function dashboardShell({
   bottomNavItems,
   sidebarTitle,
   userProfile,
+  authAction,
   content,
 }) {
   return renderPage({
@@ -168,6 +169,7 @@ function dashboardShell({
         navItems,
         siteName: sidebarTitle,
         userProfile,
+        authAction,
         content,
       }),
       phone: dashboardShellPhone({
@@ -175,6 +177,7 @@ function dashboardShell({
         contextLabel,
         siteName: sidebarTitle,
         userProfile,
+        authAction,
         bottomNavItems,
         content,
       }),

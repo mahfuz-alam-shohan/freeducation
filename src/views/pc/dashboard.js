@@ -8,6 +8,7 @@ function dashboardShellPc({
   navItems,
   siteName,
   userProfile,
+  authAction,
   content,
 }) {
   const sidebarSlot = sidebar({
@@ -18,6 +19,7 @@ function dashboardShellPc({
     pageTitle: title,
     contextLabel,
     userProfile,
+    authAction,
   });
   const mainContent = contentShell({ content });
 
