@@ -1,6 +1,7 @@
 import { readSessionCookie } from "../lib/auth.js";
 import { hashPassword, generateSalt } from "../lib/crypto.js";
 import { findUserIdByEmail, insertAdmin, listAdmins } from "../lib/db.js";
+import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
 import { dashboardPage, userManagementPage } from "../views/admin.js";
 
@@ -17,13 +18,17 @@ async function handleAdminRoutes(request, env) {
     return redirect("/login");
   }
 
+  if (session.role !== "admin") {
+    return redirect(roleHomePath(session.role));
+  }
+
   if (url.pathname === "/admin") {
-    return htmlResponse(dashboardPage(session));
+    return htmlResponse(dashboardPage());
   }
 
   if (url.pathname === "/admin/users" && method === "GET") {
     const admins = await listAdmins(env.DB);
-    return htmlResponse(userManagementPage(session, admins));
+    return htmlResponse(userManagementPage(admins));
   }
 
   if (url.pathname === "/admin/users" && method === "POST") {

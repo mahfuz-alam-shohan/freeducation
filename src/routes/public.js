@@ -1,6 +1,7 @@
 import { createSessionCookie } from "../lib/auth.js";
 import { hashPassword, generateSalt } from "../lib/crypto.js";
 import { findUserByEmail, hasAdmin, insertAdmin } from "../lib/db.js";
+import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
 import { loginPage, messagePage, setupPage } from "../views/auth.js";
 
@@ -81,7 +82,7 @@ async function handlePublicRoutes(request, env) {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/admin",
+        Location: roleHomePath(user.role),
         "Set-Cookie": `session=${session}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=28800`,
       },
     });

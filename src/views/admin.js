@@ -1,9 +1,8 @@
 import { adminShell } from "./layout.js";
 
-function dashboardPage(session) {
+function dashboardPage() {
   return adminShell({
     title: "Dashboard",
-    userName: session.name || "Admin",
     active: "home",
     content: `
       <div class="card">
@@ -22,7 +21,7 @@ function dashboardPage(session) {
   });
 }
 
-function userManagementPage(session, admins) {
+function userManagementPage(admins) {
   const rows = admins.results
     .map(
       (admin) => `
@@ -37,7 +36,6 @@ function userManagementPage(session, admins) {
 
   return adminShell({
     title: "User Management",
-    userName: session.name || "Admin",
     active: "users",
     content: `
       <div class="card">
