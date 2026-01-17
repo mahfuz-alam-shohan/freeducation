@@ -1,7 +1,8 @@
 import { readSessionCookie } from "../lib/auth.js";
-import { findUserById } from "../lib/db.js";
+import { findUserById, getSiteSettings } from "../lib/db.js";
 import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
+import { getThemePalette } from "../lib/site-settings.js";
 import { studentDashboardPage } from "../views/student.js";
 
 async function handleStudentRoutes(request, env) {
@@ -25,9 +26,11 @@ async function handleStudentRoutes(request, env) {
     name: currentUser?.display_name || session.name || "User",
     email: currentUser?.email || "",
   };
+  const siteSettings = await getSiteSettings(env.DB);
+  const theme = getThemePalette(siteSettings?.theme_id);
 
   if (url.pathname === "/student") {
-    return htmlResponse(studentDashboardPage(userProfile));
+    return htmlResponse(studentDashboardPage(userProfile, siteSettings, theme));
   }
 
   return htmlResponse("Not found", 404);

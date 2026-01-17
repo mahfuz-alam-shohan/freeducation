@@ -14,7 +14,8 @@ const authTopbarConfig = {
 const authNavigation = getRoleNavigation("public", "browse");
 const authSidebar = authNavigation ? sidebar({ navItems: authNavigation.navItems }) : "";
 
-function setupPage() {
+function setupPage({ siteSettings, theme } = {}) {
+  const siteName = siteSettings?.site_name || authTopbarConfig.siteName;
   const body = `
     <form class="form-grid" method="post" action="/setup">
       <div>
@@ -41,7 +42,7 @@ function setupPage() {
         description: "This setup appears only once. After you create the first admin, this form is disabled.",
         body,
         topbarSlot: pcTopbar({
-          siteName: authTopbarConfig.siteName,
+          siteName,
           authAction: authTopbarConfig.authAction,
         }),
         sidebarSlot: authSidebar,
@@ -51,15 +52,18 @@ function setupPage() {
         description: "This setup appears only once. After you create the first admin, this form is disabled.",
         body,
         topbarSlot: phoneTopbar({
-          siteName: authTopbarConfig.siteName,
+          siteName,
           authAction: authTopbarConfig.authAction,
         }),
       }),
     }),
+    theme,
+    siteNameFont: siteSettings?.site_name_font,
   });
 }
 
-function loginPage() {
+function loginPage({ siteSettings, theme } = {}) {
+  const siteName = siteSettings?.site_name || authTopbarConfig.siteName;
   const body = `
     <form class="form-grid" method="post" action="/login">
       <div>
@@ -82,7 +86,7 @@ function loginPage() {
         description: "Use your credentials to continue.",
         body,
         topbarSlot: pcTopbar({
-          siteName: authTopbarConfig.siteName,
+          siteName,
           authAction: authTopbarConfig.authAction,
         }),
         sidebarSlot: authSidebar,
@@ -92,15 +96,18 @@ function loginPage() {
         description: "Use your credentials to continue.",
         body,
         topbarSlot: phoneTopbar({
-          siteName: authTopbarConfig.siteName,
+          siteName,
           authAction: authTopbarConfig.authAction,
         }),
       }),
     }),
+    theme,
+    siteNameFont: siteSettings?.site_name_font,
   });
 }
 
-function messagePage({ title, message, linkLabel, linkHref }) {
+function messagePage({ title, message, linkLabel, linkHref }, { siteSettings, theme } = {}) {
+  const siteName = siteSettings?.site_name || authTopbarConfig.siteName;
   const body = `<a class="message" href="${linkHref}">${linkLabel}</a>`;
 
   return renderPage({
@@ -111,7 +118,7 @@ function messagePage({ title, message, linkLabel, linkHref }) {
         description: message,
         body,
         topbarSlot: pcTopbar({
-          siteName: authTopbarConfig.siteName,
+          siteName,
           authAction: authTopbarConfig.authAction,
         }),
         sidebarSlot: authSidebar,
@@ -121,11 +128,13 @@ function messagePage({ title, message, linkLabel, linkHref }) {
         description: message,
         body,
         topbarSlot: phoneTopbar({
-          siteName: authTopbarConfig.siteName,
+          siteName,
           authAction: authTopbarConfig.authAction,
         }),
       }),
     }),
+    theme,
+    siteNameFont: siteSettings?.site_name_font,
   });
 }
 

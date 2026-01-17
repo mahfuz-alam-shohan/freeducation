@@ -61,6 +61,19 @@ const iconMap = {
       <path d="M12 8v4l3 3" />
     </svg>
   `,
+  settings: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2v3" />
+      <path d="M12 19v3" />
+      <path d="M4.2 4.2l2.1 2.1" />
+      <path d="M17.7 17.7l2.1 2.1" />
+      <path d="M2 12h3" />
+      <path d="M19 12h3" />
+      <path d="M4.2 19.8l2.1-2.1" />
+      <path d="M17.7 6.3l2.1-2.1" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  `,
 };
 
 const toneMap = {
@@ -73,6 +86,7 @@ const toneMap = {
   lessons: "sky",
   progress: "coral",
   browse: "sun",
+  settings: "coral",
 };
 
 const roleNavConfig = {
@@ -83,11 +97,13 @@ const roleNavConfig = {
     navItems: [
       { label: "Dashboard", href: "/admin", key: "home" },
       { label: "User Management", href: "/admin/users", key: "users" },
+      { label: "Site Settings", href: "/admin/settings", key: "settings" },
       { label: "Content", href: "#", key: "content" },
     ],
     bottomNavItems: [
       { label: "Home", href: "/admin", key: "home" },
       { label: "Users", href: "/admin/users", key: "users" },
+      { label: "Settings", href: "/admin/settings", key: "settings" },
       { label: "Content", href: "#", key: "content" },
     ],
   },

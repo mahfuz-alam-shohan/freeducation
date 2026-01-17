@@ -16,6 +16,7 @@ const baseStyles = `
     --mint: #d1fae5;
     --coral: #fecaca;
     --sky: #e0f2fe;
+    --site-name-font: "Playfair Display";
   }
 
   * {
@@ -155,7 +156,7 @@ const baseStyles = `
   }
 
   .site-name {
-    font-family: "Playfair Display", "Georgia", serif;
+    font-family: var(--site-name-font, "Playfair Display"), "Georgia", serif;
     font-size: 16px;
     letter-spacing: 0.03em;
     font-weight: 700;
@@ -437,6 +438,213 @@ const baseStyles = `
     flex-wrap: wrap;
   }
 
+  .settings-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .settings-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .settings-meta {
+    display: grid;
+    gap: 4px;
+  }
+
+  .settings-meta h4 {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .settings-meta p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .theme-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .theme-option {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+    display: grid;
+    gap: 8px;
+  }
+
+  .theme-option label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .theme-swatches {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .theme-swatch {
+    height: 20px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .theme-preview {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--bg);
+    display: grid;
+    gap: 8px;
+  }
+
+  .theme-preview-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    background: var(--panel);
+    display: grid;
+    gap: 4px;
+  }
+
+  .theme-preview .preview-title {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .theme-preview .preview-text {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .theme-preview .preview-button {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+  }
+
+  .identity-preview {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+    background: var(--panel);
+  }
+
+  .identity-site-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .identity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .logo-preview {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-strong);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 16px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    text-align: center;
+    padding: 6px;
+  }
+
+  .logo-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+  }
+
+  .logo-style-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .logo-style-option {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+    font-size: 12px;
+    display: grid;
+    gap: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .logo-style-option input {
+    margin: 0 auto;
+  }
+
+  .logo-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .logo-style-badge {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .logo-style-stamp {
+    background: var(--accent-soft);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .logo-style-block {
+    border-radius: 6px;
+    background: #1f2933;
+    color: #fff;
+  }
+
+  .logo-style-script {
+    background: #fff7ed;
+    color: #7c2d12;
+    font-family: "Playfair Display", "Georgia", serif;
+  }
+
   @media (max-width: 600px) {
     .filters-bar {
       align-items: stretch;
@@ -452,6 +660,11 @@ const baseStyles = `
 
     .button-link {
       width: 100%;
+    }
+
+    .settings-item {
+      align-items: flex-start;
+      flex-direction: column;
     }
   }
 `;
