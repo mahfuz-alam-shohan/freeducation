@@ -6,8 +6,6 @@ const roleNavConfig = {
     navItems: [
       { label: "Dashboard", href: "/admin", key: "home" },
       { label: "User Management", href: "/admin/users", key: "users" },
-      { label: "Teachers (soon)", href: "#", key: "teachers" },
-      { label: "Students (soon)", href: "#", key: "students" },
       { label: "Content (soon)", href: "#", key: "content" },
     ],
     bottomNavItems: [
