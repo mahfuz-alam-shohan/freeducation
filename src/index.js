@@ -3,12 +3,27 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { authRoutes } from './routes/auth.js';
 import { adminRoutes } from './routes/admin.js';
+import { migrateDatabase } from '../database/migrate.js';
 
 const app = new Hono();
 
 // Middleware
 app.use('*', cors());
 app.use('*', logger());
+
+// Database migration endpoint (for first setup)
+app.post('/api/migrate', async (c) => {
+  try {
+    const result = await migrateDatabase(c.env.DB);
+    return c.json(result);
+  } catch (error) {
+    console.error('Migration error:', error);
+    return c.json({ 
+      success: false, 
+      error: error.message 
+    }, 500);
+  }
+});
 
 // Health check
 app.get('/', (c) => {

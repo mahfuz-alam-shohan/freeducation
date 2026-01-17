@@ -1,22 +1,18 @@
 import { Hono } from 'hono';
-import { eq } from 'drizzle-orm';
-import { db } from '../db/index.js';
-import { admins, system_config, sessions } from '../db/schema.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const authRoutes = new Hono();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = 'your-secret-key-change-in-production';
 
 // Check if admin is initialized
 authRoutes.get('/check-init', async (c) => {
   try {
-    const config = await db.select()
-      .from(system_config)
-      .where(eq(system_config.key, 'admin_initialized'))
-      .limit(1);
+    const result = await c.env.DB.prepare('SELECT value FROM system_config WHERE key = ?')
+      .bind('admin_initialized')
+      .first();
     
-    const isInitialized = config.length > 0 && config[0].value === 'true';
+    const isInitialized = result && result.value === 'true';
     
     return c.json({ 
       initialized: isInitialized 
@@ -42,12 +38,11 @@ authRoutes.post('/register-first-admin', async (c) => {
     }
     
     // Check if already initialized
-    const config = await db.select()
-      .from(system_config)
-      .where(eq(system_config.key, 'admin_initialized'))
-      .limit(1);
+    const result = await c.env.DB.prepare('SELECT value FROM system_config WHERE key = ?')
+      .bind('admin_initialized')
+      .first();
     
-    if (config.length > 0 && config[0].value === 'true') {
+    if (result && result.value === 'true') {
       return c.json({ error: 'Admin already registered' }, 400);
     }
     
@@ -55,23 +50,22 @@ authRoutes.post('/register-first-admin', async (c) => {
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Create admin
-    const result = await db.insert(admins).values({
-      name,
-      email,
-      password_hash: passwordHash,
-      date_of_birth
-    }).returning();
+    const adminResult = await c.env.DB.prepare(`
+      INSERT INTO admins (name, email, password_hash, date_of_birth) 
+      VALUES (?, ?, ?, ?)
+    `).bind(name, email, passwordHash, date_of_birth).run();
     
     // Mark as initialized
-    await db.update(system_config)
-      .set({ value: 'true' })
-      .where(eq(system_config.key, 'admin_initialized'));
+    await c.env.DB.prepare(`
+      INSERT OR REPLACE INTO system_config (key, value) 
+      VALUES ('admin_initialized', 'true')
+    `).run();
     
     // Generate JWT token
     const token = jwt.sign(
       { 
-        userId: result[0].id, 
-        email: result[0].email,
+        userId: adminResult.meta.last_row_id, 
+        email: email,
         userType: 'admin'
       },
       JWT_SECRET,
@@ -81,9 +75,9 @@ authRoutes.post('/register-first-admin', async (c) => {
     return c.json({
       message: 'First admin registered successfully',
       admin: {
-        id: result[0].id,
-        name: result[0].name,
-        email: result[0].email
+        id: adminResult.meta.last_row_id,
+        name,
+        email
       },
       token
     });
@@ -103,32 +97,31 @@ authRoutes.post('/login', async (c) => {
     }
     
     // Find admin
-    const admin = await db.select()
-      .from(admins)
-      .where(eq(admins.email, email))
-      .limit(1);
+    const admin = await c.env.DB.prepare('SELECT * FROM admins WHERE email = ?')
+      .bind(email)
+      .first();
     
-    if (admin.length === 0) {
+    if (!admin) {
       return c.json({ error: 'Invalid credentials' }, 401);
     }
     
     // Check password
-    const isValidPassword = await bcrypt.compare(password, admin[0].password_hash);
+    const isValidPassword = await bcrypt.compare(password, admin.password_hash);
     
     if (!isValidPassword) {
       return c.json({ error: 'Invalid credentials' }, 401);
     }
     
     // Check if active
-    if (!admin[0].is_active) {
+    if (!admin.is_active) {
       return c.json({ error: 'Account is deactivated' }, 401);
     }
     
     // Generate JWT token
     const token = jwt.sign(
       { 
-        userId: admin[0].id, 
-        email: admin[0].email,
+        userId: admin.id, 
+        email: admin.email,
         userType: 'admin'
       },
       JWT_SECRET,
@@ -138,9 +131,9 @@ authRoutes.post('/login', async (c) => {
     return c.json({
       message: 'Login successful',
       admin: {
-        id: admin[0].id,
-        name: admin[0].name,
-        email: admin[0].email
+        id: admin.id,
+        name: admin.name,
+        email: admin.email
       },
       token
     });

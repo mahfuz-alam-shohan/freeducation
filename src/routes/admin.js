@@ -1,12 +1,9 @@
 import { Hono } from 'hono';
-import { eq } from 'drizzle-orm';
-import { db } from '../db/index.js';
-import { admins } from '../db/schema.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const adminRoutes = new Hono();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = 'your-secret-key-change-in-production';
 
 // Authentication middleware
 const authenticate = async (c, next) => {
@@ -32,23 +29,16 @@ adminRoutes.get('/profile', authenticate, async (c) => {
   try {
     const user = c.get('user');
     
-    const admin = await db.select()
-      .from(admins)
-      .where(eq(admins.id, user.userId))
-      .limit(1);
+    const admin = await c.env.DB.prepare('SELECT id, name, email, date_of_birth, created_at FROM admins WHERE id = ?')
+      .bind(user.userId)
+      .first();
     
-    if (admin.length === 0) {
+    if (!admin) {
       return c.json({ error: 'Admin not found' }, 404);
     }
     
     return c.json({
-      admin: {
-        id: admin[0].id,
-        name: admin[0].name,
-        email: admin[0].email,
-        date_of_birth: admin[0].date_of_birth,
-        created_at: admin[0].created_at
-      }
+      admin: admin
     });
   } catch (error) {
     console.error('Error getting admin profile:', error);
@@ -71,12 +61,11 @@ adminRoutes.post('/create', authenticate, async (c) => {
     }
     
     // Check if email already exists
-    const existingAdmin = await db.select()
-      .from(admins)
-      .where(eq(admins.email, email))
-      .limit(1);
+    const existingAdmin = await c.env.DB.prepare('SELECT id FROM admins WHERE email = ?')
+      .bind(email)
+      .first();
     
-    if (existingAdmin.length > 0) {
+    if (existingAdmin) {
       return c.json({ error: 'Email already exists' }, 400);
     }
     
@@ -84,20 +73,18 @@ adminRoutes.post('/create', authenticate, async (c) => {
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Create admin
-    const result = await db.insert(admins).values({
-      name,
-      email,
-      password_hash: passwordHash,
-      date_of_birth
-    }).returning();
+    const result = await c.env.DB.prepare(`
+      INSERT INTO admins (name, email, password_hash, date_of_birth) 
+      VALUES (?, ?, ?, ?)
+    `).bind(name, email, passwordHash, date_of_birth).run();
     
     return c.json({
       message: 'Admin created successfully',
       admin: {
-        id: result[0].id,
-        name: result[0].name,
-        email: result[0].email,
-        created_at: result[0].created_at
+        id: result.meta.last_row_id,
+        name,
+        email,
+        created_at: new Date().toISOString()
       }
     });
   } catch (error) {
@@ -109,17 +96,14 @@ adminRoutes.post('/create', authenticate, async (c) => {
 // Get all admins
 adminRoutes.get('/list', authenticate, async (c) => {
   try {
-    const adminsList = await db.select({
-      id: admins.id,
-      name: admins.name,
-      email: admins.email,
-      date_of_birth: admins.date_of_birth,
-      is_active: admins.is_active,
-      created_at: admins.created_at
-    }).from(admins).orderBy(admins.created_at);
+    const adminsList = await c.env.DB.prepare(`
+      SELECT id, name, email, date_of_birth, is_active, created_at 
+      FROM admins 
+      ORDER BY created_at DESC
+    `).all();
     
     return c.json({
-      admins: adminsList
+      admins: adminsList.results || adminsList
     });
   } catch (error) {
     console.error('Error getting admins list:', error);

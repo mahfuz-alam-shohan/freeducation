@@ -1,14 +1,30 @@
-import { drizzle } from 'drizzle-orm/d1';
-import * as schema from './schema.js';
+// Database utilities for Cloudflare D1
+export class Database {
+  constructor(db) {
+    this.db = db;
+  }
 
-export function createDB(d1Database) {
-  return drizzle(d1Database, { schema });
+  async prepare(stmt) {
+    return this.db.prepare(stmt);
+  }
+
+  async run(stmt, params = []) {
+    return await this.db.prepare(stmt).bind(...params).run();
+  }
+
+  async get(stmt, params = []) {
+    return await this.db.prepare(stmt).bind(...params).first();
+  }
+
+  async all(stmt, params = []) {
+    return await this.db.prepare(stmt).bind(...params).all();
+  }
+
+  async batch(queries) {
+    return await this.db.batch(queries);
+  }
 }
 
-// This will be initialized in the worker
-export let db;
-
 export function initializeDB(d1Database) {
-  db = createDB(d1Database);
-  return db;
+  return new Database(d1Database);
 }

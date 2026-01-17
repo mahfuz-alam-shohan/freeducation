@@ -27,6 +27,7 @@ An innovative ed-tech platform with integrated social media features, built enti
 - ✅ **Modern UI/UX**: Professional, compact interface
 - ✅ **Secure Authentication**: Industry-standard security practices
 - ✅ **Code-based Database**: All schema managed through code
+- ✅ **Auto Database Repair**: Self-cleaning and migration system
 
 ## 📁 Project Structure
 
@@ -39,7 +40,7 @@ freeducation/
 │   │   └── admin.js             # Admin management
 │   └── db/                      # Database layer
 │       ├── index.js             # Database connection
-│       └── schema.js            # Database schema
+│       └── schema.js            # Database schema (deprecated)
 ├── client/                       # Frontend (React)
 │   ├── src/
 │   │   ├── components/          # React components
@@ -52,11 +53,12 @@ freeducation/
 │   │   └── App.jsx             # Main App component
 │   ├── package.json
 │   └── vite.config.js
-├── database/
-│   └── schema.sql              # Database schema
+├── database/                     # Database management
+│   ├── schema.sql              # Database schema (with cleanup)
+│   └── migrate.js             # Auto migration script
 ├── package.json                 # Root package.json
 ├── wrangler.toml               # Cloudflare Workers config
-└── README.md
+└── README.md                  # This file
 ```
 
 ## 🚀 Getting Started
@@ -92,7 +94,7 @@ freeducation/
    
    # Update database_id in wrangler.toml
    
-   # Run migrations
+   # Run auto-migration (cleans and rebuilds)
    wrangler d1 execute freeducation --file=./database/schema.sql
    ```
 
@@ -112,6 +114,34 @@ freeducation/
    npm run dev
    ```
 
+## 🔄 Database Auto-Repair System
+
+The platform includes an **automatic database cleaning and repair system**:
+
+### What it does:
+- **Drops all existing tables** on first run
+- **Removes unwanted columns** automatically
+- **Fixes mismatched schemas** completely
+- **Creates clean table structure** 
+- **Adds proper indexes** for performance
+- **Inserts fresh configuration** data
+
+### How to use:
+```bash
+# Method 1: SQL Schema (Recommended for first setup)
+wrangler d1 execute freeducation --file=./database/schema.sql
+
+# Method 2: API Migration (For runtime repairs)
+curl -X POST https://your-worker.your-subdomain.workers.dev/api/migrate
+```
+
+### Migration Features:
+- ✅ **Complete Table Cleanup**: Removes all old/mismatched tables
+- ✅ **Schema Standardization**: Ensures correct column structure
+- ✅ **Data Integrity**: Maintains foreign key constraints
+- ✅ **Performance Optimization**: Creates proper indexes
+- ✅ **Version Tracking**: Tracks schema version and cleanup history
+
 ## 📱 Responsive Design
 
 The platform features **separate mobile and desktop components**:
@@ -128,6 +158,8 @@ The platform features **separate mobile and desktop components**:
 - **First-time Setup**: One-time admin registration with form disable
 - **Environment Variables**: Secure configuration management
 - **Input Validation**: Comprehensive form validation
+- **SQL Injection Protection**: Parameterized queries
+- **Auto Database Repair**: Prevents schema corruption
 
 ## 📊 Database Schema
 
@@ -140,6 +172,7 @@ The platform features **separate mobile and desktop components**:
 ### Key Features
 - **Code-based Schema**: All database changes through SQL files
 - **Migration Ready**: Structured for future migrations
+- **Self-Repairing**: Automatic cleanup and repair system
 - **Secure Design**: Proper indexing and constraints
 
 ## 🎨 UI/UX Principles
@@ -166,6 +199,9 @@ npm run preview          # Preview production build
 # Database operations
 wrangler d1 execute freeducation --file=./database/schema.sql
 wrangler d1 execute freeducation --command="SELECT * FROM admins"
+
+# Migration (runtime)
+curl -X POST https://your-domain.workers.dev/api/migrate
 ```
 
 ## 🌐 Deployment
@@ -177,6 +213,9 @@ cd client && npm run build
 
 # Deploy to Cloudflare Workers
 cd .. && npm run deploy
+
+# Run database migration (first time only)
+wrangler d1 execute freeducation --file=./database/schema.sql
 ```
 
 ### Environment Configuration
@@ -191,6 +230,7 @@ cd .. && npm run deploy
 - ✅ First-time setup flow
 - ✅ Responsive design
 - ✅ Basic dashboard
+- ✅ Auto database repair system
 
 ### Phase 2 (Next)
 - 🔄 User management system
@@ -203,6 +243,26 @@ cd .. && npm run deploy
 - 📚 Advanced content types
 - 🎓 Gamification elements
 - 📊 Analytics dashboard
+
+## 🛠️ Database Maintenance
+
+The platform includes automatic database maintenance:
+
+### Auto-Repair Features:
+- **Schema Validation**: Checks table structure on startup
+- **Column Cleanup**: Removes unwanted columns
+- **Index Optimization**: Creates missing indexes
+- **Data Integrity**: Ensures foreign key constraints
+- **Version Management**: Tracks schema versions
+
+### Manual Repair:
+```bash
+# Force complete database rebuild
+wrangler d1 execute freeducation --file=./database/schema.sql
+
+# Or use API endpoint
+POST /api/migrate
+```
 
 ## 🤝 Contributing
 
