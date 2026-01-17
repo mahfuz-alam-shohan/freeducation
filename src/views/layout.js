@@ -117,7 +117,29 @@ const liveUiScript = `
   </script>
 `;
 
-function renderPage({ title, body, extraHead = "" }) {
+function buildThemeStyles({ theme, siteNameFont }) {
+  const vars = {};
+  if (theme) {
+    Object.entries(theme).forEach(([key, value]) => {
+      if (value) {
+        vars[key] = value;
+      }
+    });
+  }
+  if (siteNameFont) {
+    vars["site-name-font"] = `"${siteNameFont}"`;
+  }
+  const entries = Object.entries(vars);
+  if (!entries.length) {
+    return "";
+  }
+  const cssVars = entries.map(([key, value]) => `--${key}: ${value};`).join(" ");
+  return `:root { ${cssVars} }`;
+}
+
+function renderPage({ title, body, extraHead = "", theme, siteNameFont }) {
+  const themeStyles = buildThemeStyles({ theme, siteNameFont });
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -126,6 +148,7 @@ function renderPage({ title, body, extraHead = "" }) {
     <title>${title}</title>
     <style>
       ${baseStyles}
+      ${themeStyles}
       ${pcStyles}
       ${phoneStyles}
       ${viewportStyles}
@@ -158,6 +181,8 @@ function dashboardShell({
   userProfile,
   authAction,
   content,
+  theme,
+  siteNameFont,
 }) {
   return renderPage({
     title,
@@ -179,19 +204,24 @@ function dashboardShell({
         content,
       }),
     }),
+    theme,
+    siteNameFont,
   });
 }
 
-function adminShell({ title, active, userProfile, content }) {
+function adminShell({ title, active, userProfile, content, siteName, theme, siteNameFont }) {
   const navigation = getRoleNavigation("admin", active);
+  const sidebarTitle = siteName || navigation.sidebarTitle;
 
   return dashboardShell({
     title,
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
-    sidebarTitle: navigation.sidebarTitle,
+    sidebarTitle,
     userProfile,
     content,
+    theme,
+    siteNameFont,
   });
 }
 

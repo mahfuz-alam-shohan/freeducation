@@ -1,15 +1,17 @@
 import { dashboardShell } from "./layout.js";
 import { getRoleNavigation } from "../lib/navigation.js";
 
-function teacherDashboardPage(userProfile) {
+function teacherDashboardPage(userProfile, siteSettings, theme) {
   const navigation = getRoleNavigation("teacher", "home");
 
   return dashboardShell({
     title: "Teacher Dashboard",
-    sidebarTitle: navigation.sidebarTitle,
+    sidebarTitle: siteSettings?.site_name || navigation.sidebarTitle,
     userProfile,
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
+    theme,
+    siteNameFont: siteSettings?.site_name_font,
     content: `
       <div class="card">
         <h3 class="section-title">Teacher space</h3>

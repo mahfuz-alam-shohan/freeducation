@@ -1,20 +1,23 @@
 import { createSessionCookie, readSessionCookie } from "../lib/auth.js";
 import { hashPassword, generateSalt } from "../lib/crypto.js";
-import { findUserByEmail, findUserById, hasAdmin, insertUser } from "../lib/db.js";
+import { findUserByEmail, findUserById, getSiteSettings, hasAdmin, insertUser } from "../lib/db.js";
 import { getRoleNavigation } from "../lib/navigation.js";
 import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
+import { getThemePalette } from "../lib/site-settings.js";
 import { loginPage, messagePage, setupPage } from "../views/auth.js";
 import { frontPage } from "../views/public.js";
 
 async function handlePublicRoutes(request, env) {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
+  const siteSettings = await getSiteSettings(env.DB);
+  const theme = getThemePalette(siteSettings?.theme_id);
 
   if (url.pathname === "/") {
     const adminExists = await hasAdmin(env.DB);
     if (!adminExists) {
-      return htmlResponse(setupPage());
+      return htmlResponse(setupPage({ siteSettings, theme }));
     }
     const session = await readSessionCookie(request, env.JWT_SECRET);
     if (session) {
@@ -28,6 +31,8 @@ async function handlePublicRoutes(request, env) {
         frontPage({
           navigation,
           userProfile,
+          siteSettings,
+          theme,
         })
       );
     }
@@ -37,6 +42,8 @@ async function handlePublicRoutes(request, env) {
         navigation,
         userProfile: null,
         authAction: { label: "Log in", href: "/login" },
+        siteSettings,
+        theme,
       })
     );
   }
@@ -52,12 +59,15 @@ async function handlePublicRoutes(request, env) {
     const password = String(form.get("password") || "");
     if (!name || !email || !password) {
       return htmlResponse(
-        messagePage({
-          title: "Missing details",
-          message: "Please complete all fields to continue.",
-          linkLabel: "Return to setup",
-          linkHref: "/",
-        }),
+        messagePage(
+          {
+            title: "Missing details",
+            message: "Please complete all fields to continue.",
+            linkLabel: "Return to setup",
+            linkHref: "/",
+          },
+          { siteSettings, theme }
+        ),
         400
       );
     }
@@ -68,7 +78,7 @@ async function handlePublicRoutes(request, env) {
   }
 
   if (url.pathname === "/login" && method === "GET") {
-    return htmlResponse(loginPage());
+    return htmlResponse(loginPage({ siteSettings, theme }));
   }
 
   if (url.pathname === "/login" && method === "POST") {
@@ -79,12 +89,15 @@ async function handlePublicRoutes(request, env) {
 
     if (!user) {
       return htmlResponse(
-        messagePage({
-          title: "Login failed",
-          message: "We could not find that account. Try again.",
-          linkLabel: "Return to login",
-          linkHref: "/login",
-        }),
+        messagePage(
+          {
+            title: "Login failed",
+            message: "We could not find that account. Try again.",
+            linkLabel: "Return to login",
+            linkHref: "/login",
+          },
+          { siteSettings, theme }
+        ),
         401
       );
     }
@@ -92,12 +105,15 @@ async function handlePublicRoutes(request, env) {
     const expected = await hashPassword(password, user.password_salt);
     if (expected !== user.password_hash) {
       return htmlResponse(
-        messagePage({
-          title: "Login failed",
-          message: "The password does not match. Try again.",
-          linkLabel: "Return to login",
-          linkHref: "/login",
-        }),
+        messagePage(
+          {
+            title: "Login failed",
+            message: "The password does not match. Try again.",
+            linkLabel: "Return to login",
+            linkHref: "/login",
+          },
+          { siteSettings, theme }
+        ),
         401
       );
     }
