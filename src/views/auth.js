@@ -1,71 +1,84 @@
-import { renderPage } from "./layout.js";
+import { renderPage, renderViewports } from "./layout.js";
+import { authCardPc } from "./pc/auth.js";
+import { authCardPhone } from "./phone/auth.js";
 
 function setupPage() {
+  const body = `
+    <form class="form-grid" method="post" action="/setup">
+      <div>
+        <label for="name">Full name</label>
+        <input id="name" name="name" required />
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required />
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required minlength="8" />
+      </div>
+      <button type="submit">Create admin</button>
+    </form>
+  `;
+
   return renderPage({
     title: "Create Admin",
-    body: `
-      <div class="auth-wrapper">
-        <div class="auth-card">
-          <h1>Create the first admin</h1>
-          <p>This setup appears only once. After you create the first admin, this form is disabled.</p>
-          <form class="form-grid" method="post" action="/setup">
-            <div>
-              <label for="name">Full name</label>
-              <input id="name" name="name" required />
-            </div>
-            <div>
-              <label for="email">Email</label>
-              <input id="email" name="email" type="email" required />
-            </div>
-            <div>
-              <label for="password">Password</label>
-              <input id="password" name="password" type="password" required minlength="8" />
-            </div>
-            <button type="submit">Create admin</button>
-          </form>
-        </div>
-      </div>
-    `,
+    body: renderViewports({
+      pc: authCardPc({
+        title: "Create the first admin",
+        description: "This setup appears only once. After you create the first admin, this form is disabled.",
+        body,
+      }),
+      phone: authCardPhone({
+        title: "Create the first admin",
+        description: "This setup appears only once. After you create the first admin, this form is disabled.",
+        body,
+      }),
+    }),
   });
 }
 
 function loginPage() {
+  const body = `
+    <form class="form-grid" method="post" action="/login">
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required />
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+      </div>
+      <button type="submit">Sign in</button>
+    </form>
+  `;
+
   return renderPage({
     title: "Admin Login",
-    body: `
-      <div class="auth-wrapper">
-        <div class="auth-card">
-          <h1>Admin login</h1>
-          <p>Use your admin credentials to access the control center.</p>
-          <form class="form-grid" method="post" action="/login">
-            <div>
-              <label for="email">Email</label>
-              <input id="email" name="email" type="email" required />
-            </div>
-            <div>
-              <label for="password">Password</label>
-              <input id="password" name="password" type="password" required />
-            </div>
-            <button type="submit">Sign in</button>
-          </form>
-        </div>
-      </div>
-    `,
+    body: renderViewports({
+      pc: authCardPc({
+        title: "Admin login",
+        description: "Use your admin credentials to access the control center.",
+        body,
+      }),
+      phone: authCardPhone({
+        title: "Admin login",
+        description: "Use your admin credentials to access the control center.",
+        body,
+      }),
+    }),
   });
 }
 
 function messagePage({ title, message, linkLabel, linkHref }) {
+  const body = `<a class="message" href="${linkHref}">${linkLabel}</a>`;
+
   return renderPage({
     title,
-    body: `
-      <div class="auth-wrapper">
-        <div class="auth-card">
-          <h1>${title}</h1>
-          <p>${message}</p>
-          <a class="message" href="${linkHref}">${linkLabel}</a>
-        </div>
-      </div>
-    `,
+    body: renderViewports({
+      pc: authCardPc({ title, description: message, body }),
+      phone: authCardPhone({ title, description: message, body }),
+    }),
   });
 }
 
