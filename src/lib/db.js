@@ -34,13 +34,13 @@ async function hasAdmin(db) {
   return row?.count > 0;
 }
 
-async function insertAdmin(db, { email, passwordHash, salt, name }) {
+async function insertUser(db, { email, passwordHash, salt, name, role }) {
   const now = new Date().toISOString();
   await db
     .prepare(
-      "INSERT INTO users (email, password_hash, password_salt, display_name, role, created_at) VALUES (?, ?, ?, ?, 'admin', ?)"
+      "INSERT INTO users (email, password_hash, password_salt, display_name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
     )
-    .bind(email, passwordHash, salt, name, now)
+    .bind(email, passwordHash, salt, name, role, now)
     .run();
 }
 
@@ -58,9 +58,22 @@ async function findUserById(db, id) {
     .first();
 }
 
-async function listAdmins(db) {
+async function listUsers(db, { role, search }) {
+  const clauses = [];
+  const params = [];
+  if (role && role !== "all") {
+    clauses.push("role = ?");
+    params.push(role);
+  }
+  if (search) {
+    const needle = `%${search.toLowerCase()}%`;
+    clauses.push("(LOWER(display_name) LIKE ? OR LOWER(email) LIKE ?)");
+    params.push(needle, needle);
+  }
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   return db
-    .prepare("SELECT id, display_name, email, created_at FROM users WHERE role = 'admin' ORDER BY id DESC")
+    .prepare(`SELECT id, display_name, email, role, created_at FROM users ${where} ORDER BY id DESC`)
+    .bind(...params)
     .all();
 }
 
@@ -68,4 +81,12 @@ async function findUserIdByEmail(db, email) {
   return db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
 }
 
-export { ensureSchema, findUserByEmail, findUserById, findUserIdByEmail, hasAdmin, insertAdmin, listAdmins };
+export {
+  ensureSchema,
+  findUserByEmail,
+  findUserById,
+  findUserIdByEmail,
+  hasAdmin,
+  insertUser,
+  listUsers,
+};

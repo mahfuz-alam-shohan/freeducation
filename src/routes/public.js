@@ -1,6 +1,6 @@
 import { createSessionCookie } from "../lib/auth.js";
 import { hashPassword, generateSalt } from "../lib/crypto.js";
-import { findUserByEmail, hasAdmin, insertAdmin } from "../lib/db.js";
+import { findUserByEmail, hasAdmin, insertUser } from "../lib/db.js";
 import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
 import { loginPage, messagePage, setupPage } from "../views/auth.js";
@@ -39,7 +39,7 @@ async function handlePublicRoutes(request, env) {
     }
     const salt = generateSalt();
     const passwordHash = await hashPassword(password, salt);
-    await insertAdmin(env.DB, { email, passwordHash, salt, name });
+    await insertUser(env.DB, { email, passwordHash, salt, name, role: "admin" });
     return redirect("/login");
   }
 

@@ -22,14 +22,15 @@ function dashboardPage(userProfile) {
   });
 }
 
-function userManagementPage(admins, userProfile) {
-  const rows = admins.results
+function userManagementPage({ users, role, search }, userProfile) {
+  const rows = users.results
     .map(
-      (admin) => `
+      (user) => `
         <tr>
-          <td>${admin.display_name}</td>
-          <td>${admin.email}</td>
-          <td>${new Date(admin.created_at).toLocaleDateString()}</td>
+          <td>${user.display_name}</td>
+          <td>${user.email}</td>
+          <td>${user.role}</td>
+          <td>${new Date(user.created_at).toLocaleDateString()}</td>
         </tr>
       `
     )
@@ -41,9 +42,73 @@ function userManagementPage(admins, userProfile) {
     userProfile,
     content: `
       <div class="card">
-        <h3 class="section-title">Add a new admin</h3>
-        <p class="small">Only admins can be created right now. Teachers and students will be added later.</p>
+        <div class="section-header">
+          <div>
+            <h3 class="section-title">User list</h3>
+            <p class="small">Filter by role and search by name or email. Create users in a dedicated form.</p>
+          </div>
+          <a class="button-link" href="/admin/users/new">Create user</a>
+        </div>
+        <form class="filters-bar" method="get" action="/admin/users">
+          <div class="field">
+            <label for="role">User type</label>
+            <select id="role" name="role">
+              <option value="all" ${role === "all" ? "selected" : ""}>All types</option>
+              <option value="admin" ${role === "admin" ? "selected" : ""}>Admin</option>
+              <option value="teacher" ${role === "teacher" ? "selected" : ""}>Teacher</option>
+              <option value="student" ${role === "student" ? "selected" : ""}>Student</option>
+            </select>
+          </div>
+          <div class="field grow">
+            <label for="search">Search</label>
+            <input
+              id="search"
+              name="search"
+              type="search"
+              placeholder="Search by name or email"
+              value="${search || ""}"
+            />
+          </div>
+          <button type="submit">Filter</button>
+        </form>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Added</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="4">No users found.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `,
+  });
+}
+
+function createUserPage(userProfile) {
+  return adminShell({
+    title: "Create User",
+    active: "users",
+    userProfile,
+    content: `
+      <div class="card">
+        <h3 class="section-title">Create user</h3>
+        <p class="small">Select a role, then provide the basic account details.</p>
         <form class="form-grid" method="post" action="/admin/users">
+          <div>
+            <label for="role">User type</label>
+            <select id="role" name="role" required>
+              <option value="admin">Admin</option>
+              <option value="teacher">Teacher</option>
+              <option value="student">Student</option>
+            </select>
+          </div>
           <div>
             <label for="name">Full name</label>
             <input id="name" name="name" required />
@@ -56,26 +121,14 @@ function userManagementPage(admins, userProfile) {
             <label for="password">Temporary password</label>
             <input id="password" name="password" type="password" required minlength="8" />
           </div>
-          <button type="submit">Create admin</button>
+          <div class="form-actions">
+            <button type="submit">Create user</button>
+            <a class="button-link secondary" href="/admin/users">Back to users</a>
+          </div>
         </form>
-      </div>
-      <div class="card">
-        <h3 class="section-title">Existing admins</h3>
-        <table class="small" style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="text-align: left;">
-              <th>Name</th>
-              <th>Email</th>
-              <th>Added</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="3">No admins yet.</td></tr>`}
-          </tbody>
-        </table>
       </div>
     `,
   });
 }
 
-export { dashboardPage, userManagementPage };
+export { createUserPage, dashboardPage, userManagementPage };
