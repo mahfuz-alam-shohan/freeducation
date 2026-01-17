@@ -1,4 +1,4 @@
-function topbar({ siteName, pageTitle, contextLabel, userProfile }) {
+function topbar({ siteName, pageTitle, contextLabel, userProfile, authAction }) {
   const subtitle = contextLabel ? `${pageTitle} • ${contextLabel}` : pageTitle;
   const siteInitial = siteName ? siteName[0].toUpperCase() : "F";
   const initials = userProfile?.name
@@ -10,6 +10,24 @@ function topbar({ siteName, pageTitle, contextLabel, userProfile }) {
         .join("")
         .toUpperCase()
     : "U";
+
+  const authSlot = userProfile
+    ? `
+        <div class="pc-user-area">
+          <div class="user-avatar">${initials}</div>
+          <div class="pc-user-name">${userProfile?.name ?? "User"}</div>
+          <form method="post" action="/logout">
+            <button class="secondary" type="submit">Log out</button>
+          </form>
+        </div>
+      `
+    : `
+        <div class="pc-user-area">
+          <a class="button-link secondary" href="${authAction?.href ?? "/login"}">${
+            authAction?.label ?? "Log in"
+          }</a>
+        </div>
+      `;
 
   return `
     <header class="pc-topbar">
@@ -23,13 +41,7 @@ function topbar({ siteName, pageTitle, contextLabel, userProfile }) {
           <div class="small">${subtitle}</div>
         </div>
       </div>
-      <div class="pc-user-area">
-        <div class="user-avatar">${initials}</div>
-        <div class="pc-user-name">${userProfile?.name ?? "User"}</div>
-        <form method="post" action="/logout">
-          <button class="secondary" type="submit">Log out</button>
-        </form>
-      </div>
+      ${authSlot}
     </header>
   `;
 }

@@ -1,9 +1,11 @@
-import { createSessionCookie } from "../lib/auth.js";
+import { createSessionCookie, readSessionCookie } from "../lib/auth.js";
 import { hashPassword, generateSalt } from "../lib/crypto.js";
-import { findUserByEmail, hasAdmin, insertUser } from "../lib/db.js";
+import { findUserByEmail, findUserById, hasAdmin, insertUser } from "../lib/db.js";
+import { getRoleNavigation } from "../lib/navigation.js";
 import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
 import { loginPage, messagePage, setupPage } from "../views/auth.js";
+import { frontPage } from "../views/public.js";
 
 async function handlePublicRoutes(request, env) {
   const url = new URL(request.url);
@@ -14,7 +16,31 @@ async function handlePublicRoutes(request, env) {
     if (!adminExists) {
       return htmlResponse(setupPage());
     }
-    return redirect("/login");
+    const session = await readSessionCookie(request, env.JWT_SECRET);
+    if (session) {
+      const currentUser = await findUserById(env.DB, session.sub);
+      const userProfile = {
+        name: currentUser?.display_name || session.name || "User",
+        email: currentUser?.email || "",
+      };
+      const navigation = getRoleNavigation(session.role, null) || getRoleNavigation("public", "browse");
+      return htmlResponse(
+        frontPage({
+          navigation,
+          userProfile,
+          primaryAction: { label: "Go to workspace", href: roleHomePath(session.role) },
+        })
+      );
+    }
+    const navigation = getRoleNavigation("public", "browse");
+    return htmlResponse(
+      frontPage({
+        navigation,
+        userProfile: null,
+        authAction: { label: "Log in", href: "/login" },
+        primaryAction: { label: "Member access", href: "/login" },
+      })
+    );
   }
 
   if (url.pathname === "/setup" && method === "POST") {

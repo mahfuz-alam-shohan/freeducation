@@ -36,13 +36,12 @@ const phoneStyles = `
   .phone-topbar {
     height: 52px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, #ffffff 0%, #eef2ff 100%);
+    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 14px;
     font-size: 14px;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
   }
 
   .phone-topbar-left {
@@ -89,7 +88,7 @@ const phoneStyles = `
   }
 
   .phone-content {
-    padding: 12px 14px 72px;
+    padding: 10px 12px 72px;
   }
 
   .phone-bottom-nav {
@@ -98,7 +97,7 @@ const phoneStyles = `
     left: 0;
     right: 0;
     height: 56px;
-    background: linear-gradient(180deg, #ffffff 0%, #f2f5ff 100%);
+    background: #ffffff;
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-around;

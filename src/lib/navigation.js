@@ -44,6 +44,13 @@ const roleNavConfig = {
       { label: "Progress", href: "#", key: "progress" },
     ],
   },
+  public: {
+    contextLabel: "Public Library",
+    sidebarTitle: "Freeducation",
+    sidebarSubtitle: "Public",
+    navItems: [{ label: "Browse", href: "/", key: "browse" }],
+    bottomNavItems: [{ label: "Browse", href: "/", key: "browse" }],
+  },
 };
 
 function buildNavItems(items, activeKey) {

@@ -44,9 +44,9 @@ const pcStyles = `
   }
 
   .pc-sidebar {
-    background: linear-gradient(180deg, #ffffff 0%, #f4f6ff 100%);
+    background: #ffffff;
     border-right: 1px solid var(--border);
-    padding: 14px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -107,13 +107,12 @@ const pcStyles = `
   .pc-topbar {
     height: 52px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, #ffffff 0%, #eef2ff 100%);
+    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 12px;
     font-size: 14px;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
   }
 
   .pc-topbar-left {
@@ -162,7 +161,7 @@ const pcStyles = `
   }
 
   .pc-content {
-    padding: 12px 16px 72px;
+    padding: 10px 12px 72px;
   }
 `;
 
