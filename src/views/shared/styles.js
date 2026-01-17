@@ -2,12 +2,16 @@ const baseStyles = `
   :root {
     color-scheme: light;
     --bg: #f7f8fb;
+    --bg-glow: #eef2ff;
     --panel: #ffffff;
     --border: #d7dbe5;
     --text: #182230;
     --muted: #5f6c7b;
     --primary: #2155cd;
     --primary-soft: #e8efff;
+    --accent: #7c3aed;
+    --accent-soft: #f1eafe;
+    --accent-strong: #1d4ed8;
   }
 
   * {
@@ -18,12 +22,26 @@ const baseStyles = `
     margin: 0;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     color: var(--text);
-    background: var(--bg);
+    background: linear-gradient(180deg, var(--bg-glow) 0%, var(--bg) 35%, var(--bg) 100%);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+
+  body.page-ready {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  body.page-leave {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 
   a {
     color: inherit;
     text-decoration: none;
+    transition: color 160ms ease;
   }
 
   .form-grid {
@@ -56,12 +74,18 @@ const baseStyles = `
 
   button {
     border: none;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-strong) 100%);
     color: #fff;
     padding: 8px 12px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  button:hover {
+    box-shadow: 0 8px 16px rgba(33, 85, 205, 0.2);
+    transform: translateY(-1px);
   }
 
   .secondary {
@@ -73,7 +97,7 @@ const baseStyles = `
   .message {
     padding: 8px 10px;
     border-radius: 8px;
-    background: var(--primary-soft);
+    background: var(--accent-soft);
     color: var(--primary);
     font-size: 12px;
     display: inline-block;
@@ -85,6 +109,14 @@ const baseStyles = `
     border-radius: 12px;
     padding: 12px;
     margin-bottom: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    border-left: 3px solid var(--accent);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
   }
 
   .section-title {
@@ -129,7 +161,7 @@ const baseStyles = `
     border-radius: 8px;
     font-weight: 600;
     border: 1px solid var(--primary);
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-strong) 100%);
     color: #fff;
     font-size: 13px;
     line-height: 1;
@@ -184,6 +216,22 @@ const baseStyles = `
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--muted);
+  }
+
+  .data-table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.06);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body {
+      transition: none;
+      transform: none;
+    }
+
+    .card,
+    button {
+      transition: none;
+    }
   }
 
   .form-actions {

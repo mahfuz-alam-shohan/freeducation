@@ -25,6 +25,81 @@ const viewportStyles = `
   }
 `;
 
+const liveUiScript = `
+  <script>
+    (() => {
+      const body = document.body;
+      const readyClass = () => body.classList.add("page-ready");
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", readyClass);
+      } else {
+        readyClass();
+      }
+
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("a");
+        if (
+          !link ||
+          link.target === "_blank" ||
+          link.hasAttribute("download") ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        const url = new URL(link.href, window.location.href);
+        if (url.origin !== window.location.origin) {
+          return;
+        }
+        body.classList.add("page-leave");
+      });
+
+      const refreshTargets = () =>
+        Array.from(document.querySelectorAll(".pc-content, .phone-content"));
+
+      const refreshIntervalMs = 60000;
+
+      const refreshPage = async () => {
+        const targets = refreshTargets();
+        if (!targets.length) {
+          return;
+        }
+
+        try {
+          const response = await fetch(window.location.href, {
+            headers: { "x-live-refresh": "1" },
+          });
+
+          if (!response.ok) {
+            return;
+          }
+
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+
+          targets.forEach((target) => {
+            const selector = target.classList.contains("pc-content")
+              ? ".pc-content"
+              : ".phone-content";
+            const updated = doc.querySelector(selector);
+            if (!updated) {
+              return;
+            }
+            target.innerHTML = updated.innerHTML;
+          });
+        } catch (error) {
+          console.warn("Live refresh skipped.", error);
+        }
+      };
+
+      window.setInterval(refreshPage, refreshIntervalMs);
+    })();
+  </script>
+`;
+
 function renderPage({ title, body, extraHead = "" }) {
   return `<!doctype html>
 <html lang="en">
@@ -42,6 +117,7 @@ function renderPage({ title, body, extraHead = "" }) {
   </head>
   <body>
     ${body}
+    ${liveUiScript}
   </body>
 </html>`;
 }
