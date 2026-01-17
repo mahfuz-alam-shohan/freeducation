@@ -40,7 +40,7 @@ const pcStyles = `
   }
 
   .pc-sidebar {
-    background: var(--panel);
+    background: linear-gradient(180deg, #ffffff 0%, #f4f6ff 100%);
     border-right: 1px solid var(--border);
     padding: 14px;
     display: flex;
@@ -58,6 +58,12 @@ const pcStyles = `
     border-radius: 8px;
     color: var(--muted);
     font-size: 13px;
+    transition: background 160ms ease, color 160ms ease;
+  }
+
+  .pc-nav-link:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
   }
 
   .pc-nav-link.active {
@@ -69,12 +75,13 @@ const pcStyles = `
   .pc-topbar {
     height: 52px;
     border-bottom: 1px solid var(--border);
-    background: var(--panel);
+    background: linear-gradient(90deg, #ffffff 0%, #eef2ff 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
     font-size: 14px;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
   }
 
   .pc-topbar-left {
