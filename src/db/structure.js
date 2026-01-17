@@ -35,13 +35,17 @@ const REQUIRED_TABLES = {
   },
 };
 
+const DROP_ORDER = ["sessions", "users"];
+const CREATE_ORDER = ["users", "sessions"];
+
 export async function syncSchema(env) {
   const existingTables = await listTables(env);
   const requiredNames = new Set(Object.keys(REQUIRED_TABLES));
+  const tablesToDrop = new Set();
 
   for (const tableName of existingTables) {
     if (!requiredNames.has(tableName)) {
-      await env.DB.exec(`DROP TABLE IF EXISTS ${tableName}`);
+      tablesToDrop.add(tableName);
     }
   }
 
@@ -50,7 +54,6 @@ export async function syncSchema(env) {
     const requiredColumns = new Set(config.columns);
 
     if (existingColumns.length === 0) {
-      await env.DB.exec(config.createSql);
       continue;
     }
 
@@ -62,9 +65,27 @@ export async function syncSchema(env) {
     );
 
     if (hasUnexpectedColumn || isMissingColumn) {
-      await env.DB.exec(`DROP TABLE IF EXISTS ${tableName}`);
-      await env.DB.exec(config.createSql);
+      tablesToDrop.add(tableName);
     }
+  }
+
+  if (tablesToDrop.size > 0) {
+    await env.DB.exec("PRAGMA foreign_keys = OFF");
+    for (const tableName of DROP_ORDER) {
+      if (tablesToDrop.has(tableName)) {
+        await env.DB.exec(`DROP TABLE IF EXISTS ${tableName}`);
+        tablesToDrop.delete(tableName);
+      }
+    }
+    for (const tableName of tablesToDrop) {
+      await env.DB.exec(`DROP TABLE IF EXISTS ${tableName}`);
+    }
+    await env.DB.exec("PRAGMA foreign_keys = ON");
+  }
+
+  for (const tableName of CREATE_ORDER) {
+    const config = REQUIRED_TABLES[tableName];
+    await env.DB.exec(config.createSql);
   }
 }
 
