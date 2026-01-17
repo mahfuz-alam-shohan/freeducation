@@ -1,6 +1,6 @@
 import { readSessionCookie } from "../lib/auth.js";
 import { hashPassword, generateSalt } from "../lib/crypto.js";
-import { findUserIdByEmail, insertAdmin, listAdmins } from "../lib/db.js";
+import { findUserById, findUserIdByEmail, insertAdmin, listAdmins } from "../lib/db.js";
 import { roleHomePath } from "../lib/roles.js";
 import { htmlResponse, redirect } from "../lib/http.js";
 import { dashboardPage, userManagementPage } from "../views/admin.js";
@@ -22,13 +22,19 @@ async function handleAdminRoutes(request, env) {
     return redirect(roleHomePath(session.role));
   }
 
+  const currentUser = await findUserById(env.DB, session.sub);
+  const userProfile = {
+    name: currentUser?.display_name || session.name || "User",
+    email: currentUser?.email || "",
+  };
+
   if (url.pathname === "/admin") {
-    return htmlResponse(dashboardPage());
+    return htmlResponse(dashboardPage(userProfile));
   }
 
   if (url.pathname === "/admin/users" && method === "GET") {
     const admins = await listAdmins(env.DB);
-    return htmlResponse(userManagementPage(admins));
+    return htmlResponse(userManagementPage(admins, userProfile));
   }
 
   if (url.pathname === "/admin/users" && method === "POST") {

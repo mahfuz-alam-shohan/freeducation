@@ -63,8 +63,7 @@ function dashboardShell({
   navItems,
   bottomNavItems,
   sidebarTitle,
-  sidebarSubtitle,
-  actionSlot,
+  userProfile,
   content,
 }) {
   return renderPage({
@@ -74,23 +73,23 @@ function dashboardShell({
         title,
         contextLabel,
         navItems,
-        sidebarTitle,
-        sidebarSubtitle,
-        actionSlot,
+        siteName: sidebarTitle,
+        userProfile,
         content,
       }),
       phone: dashboardShellPhone({
         title,
         contextLabel,
+        siteName: sidebarTitle,
+        userProfile,
         bottomNavItems,
-        actionSlot,
         content,
       }),
     }),
   });
 }
 
-function adminShell({ title, active, content }) {
+function adminShell({ title, active, userProfile, content }) {
   const navigation = getRoleNavigation("admin", active);
 
   return dashboardShell({
@@ -99,12 +98,7 @@ function adminShell({ title, active, content }) {
     navItems: navigation.navItems,
     bottomNavItems: navigation.bottomNavItems,
     sidebarTitle: navigation.sidebarTitle,
-    sidebarSubtitle: navigation.sidebarSubtitle,
-    actionSlot: `
-      <form method="post" action="/logout">
-        <button class="secondary" type="submit">Log out</button>
-      </form>
-    `,
+    userProfile,
     content,
   });
 }
