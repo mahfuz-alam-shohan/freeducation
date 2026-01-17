@@ -4,6 +4,7 @@ const baseStyles = `
     --bg: #f4f5f8;
     --panel: #ffffff;
     --border: #d7dbe5;
+    --border-strong: #c1c7d6;
     --text: #182230;
     --muted: #5f6c7b;
     --primary: #2155cd;
@@ -11,6 +12,9 @@ const baseStyles = `
     --accent: #7c3aed;
     --accent-soft: #f1eafe;
     --accent-strong: #1d4ed8;
+    --sunrise: #fef3c7;
+    --mint: #e1f3ed;
+    --coral: #fee2e2;
   }
 
   * {
@@ -41,6 +45,12 @@ const baseStyles = `
     color: inherit;
     text-decoration: none;
     transition: color 160ms ease;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
   }
 
   .form-grid {
@@ -108,6 +118,7 @@ const baseStyles = `
     padding: 10px;
     margin-bottom: 12px;
     border-left: 3px solid var(--accent);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   }
 
   .section-title {
@@ -237,6 +248,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 12px;
+    box-shadow: 0 10px 30px rgba(24, 34, 48, 0.05);
   }
 
   .frontpage-intro {
@@ -283,6 +295,7 @@ const baseStyles = `
     background: var(--panel);
     display: grid;
     gap: 6px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
   }
 
   .frontpage-panel-title {
@@ -328,6 +341,74 @@ const baseStyles = `
     gap: 8px 14px;
     font-size: 12px;
     color: var(--muted);
+  }
+
+  .info-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .info-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--panel);
+    display: grid;
+    gap: 6px;
+  }
+
+  .info-card strong {
+    font-size: 13px;
+  }
+
+  .info-card .small {
+    margin: 0;
+  }
+
+  .accent-band {
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    display: grid;
+    gap: 8px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    background: #fff;
+  }
+
+  .timeline {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  .timeline li {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .highlight-surface {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--mint);
+    display: grid;
+    gap: 6px;
   }
 
   .frontpage-strip strong {
