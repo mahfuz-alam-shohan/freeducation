@@ -211,6 +211,15 @@ app.get('/force-migration', async (c) => {
   }
 });
 
+// Simple test route that bypasses all middleware
+app.get('/simple-test', (c) => {
+  return c.json({
+    message: 'Simple test working',
+    timestamp: new Date().toISOString(),
+    env: Object.keys(c.env)
+  });
+});
+
 // Initialize database and setup routes
 app.use('*', async (c, next) => {
   try {
@@ -233,10 +242,12 @@ app.use('*', async (c, next) => {
   } catch (error) {
     console.error('Database initialization failed:', error);
     console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Full error:', error);
     return c.json({ 
       error: 'Database initialization failed',
       details: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
+      fullError: String(error)
     }, 500);
   }
 });
