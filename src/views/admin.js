@@ -307,7 +307,7 @@ function siteThemePage(settings, userProfile, theme, { saved } = {}) {
             const selected = themes.find((theme) => theme.id === themeId);
             if (!selected || !preview) return;
             Object.entries(selected.palette).forEach(([key, value]) => {
-              preview.style.setProperty(`--${key}`, value);
+              preview.style.setProperty(\`--\${key}\`, value);
             });
           };
 
