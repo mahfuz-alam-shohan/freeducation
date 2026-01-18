@@ -183,6 +183,7 @@ function dashboardShell({
   content,
   theme,
   siteNameFont,
+  siteIdentity,
 }) {
   return renderPage({
     title,
@@ -194,6 +195,7 @@ function dashboardShell({
         userProfile,
         authAction,
         content,
+        siteIdentity,
       }),
       phone: dashboardShellPhone({
         title,
@@ -202,6 +204,7 @@ function dashboardShell({
         authAction,
         bottomNavItems,
         content,
+        siteIdentity,
       }),
     }),
     theme,
@@ -209,9 +212,31 @@ function dashboardShell({
   });
 }
 
-function adminShell({ title, active, userProfile, content, siteName, theme, siteNameFont }) {
+function buildSiteIdentity(settings) {
+  if (!settings) {
+    return null;
+  }
+  return {
+    name: settings.site_name,
+    logoSource: settings.logo_source,
+    logoText: settings.logo_text,
+    logoStyle: settings.logo_style,
+    logoUrl: settings.logo_url,
+  };
+}
+
+function adminShell({
+  title,
+  active,
+  userProfile,
+  content,
+  siteName,
+  siteIdentity,
+  theme,
+  siteNameFont,
+}) {
   const navigation = getRoleNavigation("admin", active);
-  const sidebarTitle = siteName || navigation.sidebarTitle;
+  const sidebarTitle = siteIdentity?.name || siteName || navigation.sidebarTitle;
 
   return dashboardShell({
     title,
@@ -222,7 +247,8 @@ function adminShell({ title, active, userProfile, content, siteName, theme, site
     content,
     theme,
     siteNameFont,
+    siteIdentity,
   });
 }
 
-export { adminShell, dashboardShell, renderPage, renderViewports };
+export { adminShell, buildSiteIdentity, dashboardShell, renderPage, renderViewports };

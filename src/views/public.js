@@ -1,4 +1,4 @@
-import { dashboardShell } from "./layout.js";
+import { buildSiteIdentity, dashboardShell } from "./layout.js";
 
 function frontPage({ navigation, userProfile, authAction, siteSettings, theme }) {
   return dashboardShell({
@@ -10,6 +10,7 @@ function frontPage({ navigation, userProfile, authAction, siteSettings, theme })
     authAction,
     theme,
     siteNameFont: siteSettings?.site_name_font,
+    siteIdentity: buildSiteIdentity(siteSettings),
     content: "",
   });
 }

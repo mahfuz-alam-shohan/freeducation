@@ -27,7 +27,7 @@ const baseStyles = `
     margin: 0;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     color: var(--text);
-    background: linear-gradient(180deg, var(--bg) 0%, #fef3c7 100%);
+    background: linear-gradient(180deg, var(--bg) 0%, var(--primary-soft) 100%);
     opacity: 0;
     transform: translateY(4px);
     transition: opacity 220ms ease, transform 220ms ease;
@@ -71,7 +71,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 14px;
-    background: #fff7ed;
+    background: var(--primary-soft);
   }
 
   select {
@@ -80,7 +80,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 14px;
-    background: #fff7ed;
+    background: var(--primary-soft);
   }
 
   input:focus,
@@ -121,13 +121,13 @@ const baseStyles = `
   }
 
   .card {
-    background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+    background: linear-gradient(180deg, var(--panel) 0%, var(--primary-soft) 100%);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px;
     margin-bottom: 12px;
     border-left: 3px solid var(--primary);
-    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.1);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
   }
 
   .section-title {
@@ -153,6 +153,13 @@ const baseStyles = `
     font-weight: 700;
     font-size: 12px;
     flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .site-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .site-name {
@@ -160,7 +167,15 @@ const baseStyles = `
     font-size: 16px;
     letter-spacing: 0.03em;
     font-weight: 700;
-    color: #7c2d12;
+    color: var(--text);
+    word-break: break-word;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .section-header {
@@ -370,7 +385,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px;
-    background: linear-gradient(160deg, #ffffff 0%, #fff7ed 100%);
+    background: linear-gradient(160deg, var(--panel) 0%, var(--primary-soft) 100%);
     display: grid;
     gap: 6px;
   }
@@ -389,7 +404,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     display: grid;
     gap: 8px;
-    background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
+    background: linear-gradient(135deg, var(--panel) 0%, var(--accent-soft) 100%);
   }
 
   .chip-group {
@@ -404,7 +419,7 @@ const baseStyles = `
     border: 1px solid var(--border);
     font-size: 11px;
     color: var(--muted);
-    background: #fff7ed;
+    background: var(--primary-soft);
   }
 
   .timeline {
@@ -452,6 +467,28 @@ const baseStyles = `
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 160ms ease, background 160ms ease;
+  }
+
+  .settings-item:hover {
+    background: var(--primary-soft);
+    border-color: var(--border-strong);
+  }
+
+  .settings-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .settings-chevron {
+    font-size: 16px;
+    line-height: 1;
   }
 
   .settings-meta {
@@ -473,7 +510,7 @@ const baseStyles = `
   .theme-grid {
     display: grid;
     gap: 10px;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 
   .theme-option {
@@ -491,6 +528,7 @@ const baseStyles = `
     gap: 6px;
     font-weight: 600;
     color: var(--text);
+    flex-wrap: wrap;
   }
 
   .theme-swatches {
@@ -512,6 +550,7 @@ const baseStyles = `
     background: var(--bg);
     display: grid;
     gap: 8px;
+    overflow: hidden;
   }
 
   .theme-preview-card {
@@ -552,6 +591,7 @@ const baseStyles = `
     display: grid;
     gap: 8px;
     background: var(--panel);
+    overflow: hidden;
   }
 
   .identity-site-name {
@@ -591,7 +631,7 @@ const baseStyles = `
   .logo-style-grid {
     display: grid;
     gap: 8px;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
 
   .logo-style-option {
@@ -635,13 +675,13 @@ const baseStyles = `
 
   .logo-style-block {
     border-radius: 6px;
-    background: #1f2933;
-    color: #fff;
+    background: var(--text);
+    color: var(--panel);
   }
 
   .logo-style-script {
-    background: #fff7ed;
-    color: #7c2d12;
+    background: var(--primary-soft);
+    color: var(--text);
     font-family: "Playfair Display", "Georgia", serif;
   }
 
@@ -665,6 +705,14 @@ const baseStyles = `
     .settings-item {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    .theme-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .logo-style-grid {
+      grid-template-columns: 1fr 1fr;
     }
   }
 `;

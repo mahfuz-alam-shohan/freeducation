@@ -8,12 +8,14 @@ function dashboardShellPc({
   userProfile,
   authAction,
   content,
+  siteIdentity,
 }) {
   const sidebarSlot = sidebar({
     navItems,
   });
   const topbarSlot = topbar({
     siteName,
+    siteIdentity,
     userProfile,
     authAction,
   });
