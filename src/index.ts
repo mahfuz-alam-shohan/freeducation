@@ -590,13 +590,55 @@ app.get('/login', async (c) => {
   // Read base template
   const baseTemplate = fs.readFileSync('./src/web/templates/base.html', 'utf8');
   
-  // Read login page component
-  const loginPageJS = fs.readFileSync('./src/web/pages/Auth/LoginPage.tsx', 'utf8');
-  
   // Generate the login page HTML
   const loginPageHTML = `
-    <div class="min-h-screen">
-      ${LoginPage.render()}
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md w-full space-y-8">
+        <div>
+          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+          <p class="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <a href="/register" class="font-medium text-primary hover:text-blue-600">
+              create a new account
+            </a>
+          </p>
+        </div>
+        <form class="mt-8 space-y-6" action="/api/v1/auth/login" method="POST">
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label for="email" class="sr-only">Email address</label>
+              <input id="email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Email address">
+            </div>
+            <div>
+              <label for="password" class="sr-only">Password</label>
+              <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Password">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input id="remember-me" name="rememberMe" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+              <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+
+            <div class="text-sm">
+              <a href="#" class="font-medium text-primary hover:text-blue-600">
+                Forgot your password?
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Sign in
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   `;
   
@@ -634,15 +676,6 @@ app.get('/login', async (c) => {
     .replace('{{content}}', loginPageHTML)
     .replace('{{scripts}}', `
       <script src="/static/js/main.js"></script>
-      <script src="/static/js/pages/login.js"></script>
-      <script>
-        // Initialize login page
-        document.addEventListener('DOMContentLoaded', () => {
-          if (typeof LoginPage !== 'undefined') {
-            LoginPage.init();
-          }
-        });
-      </script>
     `);
   
   return c.html(finalHTML);
@@ -655,13 +688,80 @@ app.get('/register', async (c) => {
   // Read base template
   const baseTemplate = fs.readFileSync('./src/web/templates/base.html', 'utf8');
   
-  // Read register page component
-  const registerPageJS = fs.readFileSync('./src/web/pages/Auth/RegisterPage.tsx', 'utf8');
-  
   // Generate the register page HTML
   const registerPageHTML = `
-    <div class="min-h-screen">
-      ${RegisterPage.render()}
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md w-full space-y-8">
+        <div>
+          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
+          <p class="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <a href="/login" class="font-medium text-primary hover:text-blue-600">
+              sign in to your existing account
+            </a>
+          </p>
+        </div>
+        <form class="mt-8 space-y-6" action="/api/v1/auth/register" method="POST">
+          <div class="space-y-4">
+            <div>
+              <label for="role" class="block text-sm font-medium text-gray-700">Account Type</label>
+              <select id="role" name="role" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="writer">Writer</option>
+                <option value="publisher">Publisher</option>
+              </select>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                <input id="firstName" name="firstName" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="First name">
+              </div>
+              <div>
+                <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                <input id="lastName" name="lastName" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Last name">
+              </div>
+            </div>
+            
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+              <input id="email" name="email" type="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Email address">
+            </div>
+            
+            <div>
+              <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+              <input id="username" name="username" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Username">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input id="password" name="password" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Password">
+              </div>
+              <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <input id="confirmPassword" name="confirmPassword" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Confirm password">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+            <label for="terms" class="ml-2 block text-sm text-gray-900">
+              I agree to the Terms of Service and Privacy Policy
+            </label>
+          </div>
+
+          <div>
+            <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Create account
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   `;
   
@@ -699,15 +799,6 @@ app.get('/register', async (c) => {
     .replace('{{content}}', registerPageHTML)
     .replace('{{scripts}}', `
       <script src="/static/js/main.js"></script>
-      <script src="/static/js/pages/register.js"></script>
-      <script>
-        // Initialize register page
-        document.addEventListener('DOMContentLoaded', () => {
-          if (typeof RegisterPage !== 'undefined') {
-            RegisterPage.init();
-          }
-        });
-      </script>
     `);
   
   return c.html(finalHTML);
