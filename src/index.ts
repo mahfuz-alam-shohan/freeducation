@@ -42,9 +42,24 @@ app.get('/health', (c) => {
   });
 });
 
+// Database debug endpoint
+app.get('/debug', (c) => {
+  return c.json({
+    hasDB: !!c.env.DB,
+    envKeys: Object.keys(c.env),
+    DBType: typeof c.env.DB
+  });
+});
+
 // Initialize database and setup routes
 app.use('*', async (c, next) => {
   try {
+    // Check if D1 database is available
+    if (!c.env.DB) {
+      console.error('D1 database not found in environment');
+      return c.json({ error: 'D1 database not available' }, 500);
+    }
+    
     // Initialize database connection
     const db = createDatabase(c.env);
     
@@ -57,7 +72,11 @@ app.use('*', async (c, next) => {
     await next();
   } catch (error) {
     console.error('Database initialization failed:', error);
-    return c.json({ error: 'Database initialization failed' }, 500);
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+    return c.json({ 
+      error: 'Database initialization failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
   }
 });
 
