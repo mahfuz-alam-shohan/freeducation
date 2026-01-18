@@ -47,7 +47,18 @@ app.get('/debug', (c) => {
   return c.json({
     hasDB: !!c.env.DB,
     envKeys: Object.keys(c.env),
-    DBType: typeof c.env.DB
+    DBType: typeof c.env.DB,
+    DBString: String(c.env.DB),
+    allEnv: c.env
+  });
+});
+
+// Simple test endpoint without database
+app.get('/test', (c) => {
+  return c.json({
+    message: 'FreeEducation Platform',
+    status: 'Working',
+    timestamp: new Date().toISOString()
   });
 });
 
