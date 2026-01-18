@@ -69,11 +69,11 @@ app.get('/db-test', async (c) => {
       return c.json({ error: 'No DB found' });
     }
     
-    const db = createDatabase(c.env);
+    const database = createDatabase(c.env);
     return c.json({ 
       success: true,
       message: 'Database connection created',
-      dbType: typeof db.db
+      dbType: typeof database.db
     });
   } catch (error) {
     return c.json({ 
@@ -90,8 +90,8 @@ app.get('/migration-test', async (c) => {
       return c.json({ error: 'No DB found' });
     }
     
-    const db = createDatabase(c.env);
-    await runMigrations(db.db);
+    const database = createDatabase(c.env);
+    await runMigrations(database);
     
     return c.json({ 
       success: true,
@@ -116,13 +116,13 @@ app.use('*', async (c, next) => {
     }
     
     // Initialize database connection
-    const db = createDatabase(c.env);
+    const database = createDatabase(c.env);
     
     // Run auto-migrations
-    await runMigrations(db.db);
+    await runMigrations(database);
     
     // Store database in context for use in routes
-    c.set('db', db.db);
+    c.set('db', database.db);
     
     await next();
   } catch (error) {

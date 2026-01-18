@@ -3,29 +3,33 @@ import * as schema from './schema';
 
 export interface Database {
   db: ReturnType<typeof drizzle<typeof schema>>;
+  rawDB: D1Database;
 }
 
 export function createDatabase(env: any): Database {
   return {
-    db: drizzle(env.DB, { schema })
+    db: drizzle(env.DB, { schema }),
+    rawDB: env.DB
   };
 }
 
 // Auto-migration function
-export async function runMigrations(db: Database['db']) {
+export async function runMigrations(database: Database) {
   try {
-    // Check if system_settings table exists
-    const tableCheck = await db.prepare(`
+    const { db, rawDB } = database;
+    
+    // Check if system_settings table exists using raw D1
+    const tableCheck = await rawDB.prepare(`
       SELECT name FROM sqlite_master 
       WHERE type='table' AND name='system_settings'
     `).first();
 
     if (!tableCheck) {
       // First time setup - create all tables
-      await createInitialTables(db);
+      await createInitialTables(rawDB);
     } else {
       // Check for schema updates
-      await updateSchema(db);
+      await updateSchema(rawDB);
     }
 
     console.log('Database migrations completed successfully');
@@ -35,7 +39,7 @@ export async function runMigrations(db: Database['db']) {
   }
 }
 
-async function createInitialTables(db: Database['db']) {
+async function createInitialTables(rawDB: D1Database) {
   // Create all tables using the schema
   const createTablesSQL = `
     CREATE TABLE IF NOT EXISTS users (
@@ -282,10 +286,10 @@ async function createInitialTables(db: Database['db']) {
     CREATE INDEX IF NOT EXISTS idx_social_comments_post_id ON social_comments(post_id);
   `;
 
-  await db.batch(createTablesSQL.split(';').filter(sql => sql.trim()).map(sql => db.prepare(sql.trim())));
+  await rawDB.batch(createTablesSQL.split(';').filter(sql => sql.trim()).map(sql => rawDB.prepare(sql.trim())));
 }
 
-async function updateSchema(db: Database['db']) {
+async function updateSchema(rawDB: D1Database) {
   // Future schema updates will go here
   // This function will handle adding new columns, tables, or modifying existing ones
   console.log('Schema update check completed');
