@@ -62,6 +62,50 @@ app.get('/test', (c) => {
   });
 });
 
+// Database connection test endpoint
+app.get('/db-test', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json({ error: 'No DB found' });
+    }
+    
+    const db = createDatabase(c.env);
+    return c.json({ 
+      success: true,
+      message: 'Database connection created',
+      dbType: typeof db.db
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Database connection failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Migration test endpoint
+app.get('/migration-test', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json({ error: 'No DB found' });
+    }
+    
+    const db = createDatabase(c.env);
+    await runMigrations(db.db);
+    
+    return c.json({ 
+      success: true,
+      message: 'Migrations completed'
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Migration failed',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+  }
+});
+
 // Initialize database and setup routes
 app.use('*', async (c, next) => {
   try {
@@ -86,7 +130,8 @@ app.use('*', async (c, next) => {
     console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
     return c.json({ 
       error: 'Database initialization failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     }, 500);
   }
 });
