@@ -106,6 +106,78 @@ app.get('/migration-test', async (c) => {
   }
 });
 
+// Check existing tables endpoint
+app.get('/check-tables', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json({ error: 'No DB found' });
+    }
+    
+    const rawDB = c.env.DB;
+    
+    // Get all table names
+    const tablesResult = await rawDB.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table'
+    `).all();
+    
+    const tables = tablesResult.results || [];
+    
+    // Get users table schema if it exists
+    let usersSchema = null;
+    const usersTableExists = tables.some((t: any) => t.name === 'users');
+    
+    if (usersTableExists) {
+      const schemaResult = await rawDB.prepare(`
+        PRAGMA table_info(users)
+      `).all();
+      usersSchema = schemaResult.results || [];
+    }
+    
+    return c.json({ 
+      tables: tables.map((t: any) => t.name),
+      usersTableExists,
+      usersSchema
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Table check failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Reset database endpoint (DANGEROUS - only for development)
+app.get('/reset-db', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json({ error: 'No DB found' });
+    }
+    
+    const rawDB = c.env.DB;
+    
+    // Drop all tables
+    const tables = ['users', 'user_profiles', 'subjects', 'chapters', 'lessons', 
+                   'assessments', 'questions', 'user_assessments', 'credit_transactions',
+                   'study_sessions', 'social_posts', 'social_likes', 'social_comments',
+                   'system_settings', 'audit_logs'];
+    
+    for (const table of tables) {
+      await rawDB.prepare(`DROP TABLE IF EXISTS ${table}`).run();
+    }
+    
+    return c.json({ 
+      success: true,
+      message: 'Database reset - all tables dropped'
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Database reset failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Initialize database and setup routes
 app.use('*', async (c, next) => {
   try {
