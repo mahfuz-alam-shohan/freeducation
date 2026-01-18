@@ -4,6 +4,9 @@ import { logger } from 'hono/logger';
 import { createDatabase, runMigrations } from '@/core/database/connection';
 import { setupRoutes } from '@/api/routes';
 import { errorHandler } from '@/core/middleware/errorHandler';
+import baseTemplate from '@/web/templates/base.html';
+import mainJs from '@/web/static/js/main.js';
+import componentsJs from '@/web/static/js/components.js';
 
 type Bindings = {
   DB: D1Database;
@@ -289,14 +292,10 @@ app.get('/static/*', async (c) => {
     // In a real implementation, you'd serve from R2 or build process
     // For now, we'll return the JS content directly
     if (path.includes('main.js')) {
-      const fs = await import('fs');
-      const content = fs.readFileSync('./src/web/static/js/main.js', 'utf8');
-      return c.text(content, 200, { 'Content-Type': 'application/javascript' });
+      return c.text(mainJs, 200, { 'Content-Type': 'application/javascript' });
     }
     if (path.includes('components.js')) {
-      const fs = await import('fs');
-      const content = fs.readFileSync('./src/web/static/js/components.js', 'utf8');
-      return c.text(content, 200, { 'Content-Type': 'application/javascript' });
+      return c.text(componentsJs, 200, { 'Content-Type': 'application/javascript' });
     }
   }
   
@@ -305,14 +304,6 @@ app.get('/static/*', async (c) => {
 
 // Homepage route
 app.get('/', async (c) => {
-  const fs = await import('fs');
-  
-  // Read base template
-  const baseTemplate = fs.readFileSync('./src/web/templates/base.html', 'utf8');
-  
-  // Read homepage components
-  const homePageJS = fs.readFileSync('./src/web/pages/HomePage/HomePage.tsx', 'utf8');
-  
   // Create the homepage HTML
   const homepageHTML = `
     <div class="pt-16">
@@ -610,11 +601,6 @@ app.get('/', async (c) => {
 
 // Login page route
 app.get('/login', async (c) => {
-  const fs = await import('fs');
-  
-  // Read base template
-  const baseTemplate = fs.readFileSync('./src/web/templates/base.html', 'utf8');
-  
   // Generate the login page HTML
   const loginPageHTML = `
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -708,11 +694,6 @@ app.get('/login', async (c) => {
 
 // Register page route
 app.get('/register', async (c) => {
-  const fs = await import('fs');
-  
-  // Read base template
-  const baseTemplate = fs.readFileSync('./src/web/templates/base.html', 'utf8');
-  
   // Generate the register page HTML
   const registerPageHTML = `
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
