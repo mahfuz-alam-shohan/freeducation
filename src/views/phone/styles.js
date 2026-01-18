@@ -15,11 +15,11 @@ const phoneStyles = `
 
   .phone-auth-card {
     width: min(360px, 100%);
-    background: linear-gradient(160deg, #ffffff 0%, #fff1e6 100%);
+    background: linear-gradient(160deg, var(--panel) 0%, var(--primary-soft) 100%);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px;
-    box-shadow: 0 10px 22px rgba(249, 115, 22, 0.12);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
   }
 
   .phone-auth-card h1 {
@@ -46,13 +46,13 @@ const phoneStyles = `
   .phone-topbar {
     height: 52px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, #fff7ed 0%, #fff1f2 100%);
+    background: linear-gradient(90deg, var(--primary-soft) 0%, var(--accent-soft) 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     font-size: 14px;
-    box-shadow: 0 6px 16px rgba(249, 115, 22, 0.08);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
   }
 
   .phone-topbar-left {
@@ -104,7 +104,7 @@ const phoneStyles = `
     padding: 12px 12px 72px;
     display: grid;
     gap: 12px;
-    background: linear-gradient(180deg, #fff7ed 0%, #fef3c7 100%);
+    background: linear-gradient(180deg, var(--bg) 0%, var(--primary-soft) 100%);
   }
 
   .phone-bottom-nav {
@@ -113,12 +113,12 @@ const phoneStyles = `
     left: 0;
     right: 0;
     height: 56px;
-    background: linear-gradient(90deg, #fff7ed 0%, #ffffff 100%);
+    background: linear-gradient(90deg, var(--primary-soft) 0%, var(--panel) 100%);
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    box-shadow: 0 -6px 18px rgba(249, 115, 22, 0.08);
+    box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
     z-index: 20;
   }
 
@@ -143,8 +143,8 @@ const phoneStyles = `
     border-radius: 7px;
     display: grid;
     place-items: center;
-    background: #ffedd5;
-    color: #c2410c;
+    background: var(--primary-soft);
+    color: var(--primary);
   }
 
   .phone-nav-icon svg {
@@ -158,27 +158,27 @@ const phoneStyles = `
   }
 
   .phone-nav-icon.tone-sun {
-    background: #ffedd5;
-    color: #c2410c;
+    background: var(--sunrise);
+    color: var(--primary);
   }
 
   .phone-nav-icon.tone-mint {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--mint);
+    color: var(--text);
   }
 
   .phone-nav-icon.tone-coral {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: var(--coral);
+    color: var(--text);
   }
 
   .phone-nav-icon.tone-sky {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: var(--sky);
+    color: var(--text);
   }
 
   .phone-bottom-link.active {
-    color: #c2410c;
+    color: var(--primary);
     font-weight: 600;
   }
 `;

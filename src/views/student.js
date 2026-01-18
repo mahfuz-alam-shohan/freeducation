@@ -1,4 +1,4 @@
-import { dashboardShell } from "./layout.js";
+import { buildSiteIdentity, dashboardShell } from "./layout.js";
 import { getRoleNavigation } from "../lib/navigation.js";
 
 function studentDashboardPage(userProfile, siteSettings, theme) {
@@ -12,6 +12,7 @@ function studentDashboardPage(userProfile, siteSettings, theme) {
     bottomNavItems: navigation.bottomNavItems,
     theme,
     siteNameFont: siteSettings?.site_name_font,
+    siteIdentity: buildSiteIdentity(siteSettings),
     content: `
       <div class="card">
         <h3 class="section-title">Student space</h3>

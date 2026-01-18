@@ -1,4 +1,4 @@
-import { renderPage, renderViewports } from "./layout.js";
+import { buildSiteIdentity, renderPage, renderViewports } from "./layout.js";
 import { authCardPc } from "./pc/auth.js";
 import { authCardPhone } from "./phone/auth.js";
 import { topbar as pcTopbar } from "./pc/components/topbar.js";
@@ -16,6 +16,7 @@ const authSidebar = authNavigation ? sidebar({ navItems: authNavigation.navItems
 
 function setupPage({ siteSettings, theme } = {}) {
   const siteName = siteSettings?.site_name || authTopbarConfig.siteName;
+  const siteIdentity = buildSiteIdentity(siteSettings) || { name: siteName };
   const body = `
     <form class="form-grid" method="post" action="/setup">
       <div>
@@ -43,6 +44,7 @@ function setupPage({ siteSettings, theme } = {}) {
         body,
         topbarSlot: pcTopbar({
           siteName,
+          siteIdentity,
           authAction: authTopbarConfig.authAction,
         }),
         sidebarSlot: authSidebar,
@@ -53,6 +55,7 @@ function setupPage({ siteSettings, theme } = {}) {
         body,
         topbarSlot: phoneTopbar({
           siteName,
+          siteIdentity,
           authAction: authTopbarConfig.authAction,
         }),
       }),
@@ -64,6 +67,7 @@ function setupPage({ siteSettings, theme } = {}) {
 
 function loginPage({ siteSettings, theme } = {}) {
   const siteName = siteSettings?.site_name || authTopbarConfig.siteName;
+  const siteIdentity = buildSiteIdentity(siteSettings) || { name: siteName };
   const body = `
     <form class="form-grid" method="post" action="/login">
       <div>
@@ -87,6 +91,7 @@ function loginPage({ siteSettings, theme } = {}) {
         body,
         topbarSlot: pcTopbar({
           siteName,
+          siteIdentity,
           authAction: authTopbarConfig.authAction,
         }),
         sidebarSlot: authSidebar,
@@ -97,6 +102,7 @@ function loginPage({ siteSettings, theme } = {}) {
         body,
         topbarSlot: phoneTopbar({
           siteName,
+          siteIdentity,
           authAction: authTopbarConfig.authAction,
         }),
       }),
@@ -108,6 +114,7 @@ function loginPage({ siteSettings, theme } = {}) {
 
 function messagePage({ title, message, linkLabel, linkHref }, { siteSettings, theme } = {}) {
   const siteName = siteSettings?.site_name || authTopbarConfig.siteName;
+  const siteIdentity = buildSiteIdentity(siteSettings) || { name: siteName };
   const body = `<a class="message" href="${linkHref}">${linkLabel}</a>`;
 
   return renderPage({
@@ -119,6 +126,7 @@ function messagePage({ title, message, linkLabel, linkHref }, { siteSettings, th
         body,
         topbarSlot: pcTopbar({
           siteName,
+          siteIdentity,
           authAction: authTopbarConfig.authAction,
         }),
         sidebarSlot: authSidebar,
@@ -129,6 +137,7 @@ function messagePage({ title, message, linkLabel, linkHref }, { siteSettings, th
         body,
         topbarSlot: phoneTopbar({
           siteName,
+          siteIdentity,
           authAction: authTopbarConfig.authAction,
         }),
       }),

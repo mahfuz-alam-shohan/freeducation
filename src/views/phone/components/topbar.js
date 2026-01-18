@@ -1,4 +1,21 @@
-function topbar({ siteName, userProfile, authAction }) {
+function topbar({ siteName, siteIdentity, userProfile, authAction }) {
+  const brandName = siteIdentity?.name || siteName;
+  const logoSource = siteIdentity?.logoSource || "text";
+  const logoStyle = siteIdentity?.logoStyle || "badge";
+  const logoText = siteIdentity?.logoText || brandName || "Site";
+  const logoUrl = siteIdentity?.logoUrl || "";
+  const logoLabel = (logoText || brandName || "Site").trim();
+  const shortLogo = logoLabel
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  const showImage = logoSource === "upload" && logoUrl;
+  const logoMarkup = showImage
+    ? `<img src="${logoUrl}" alt="${brandName || "Site"} logo" />`
+    : shortLogo || "S";
   const initials = userProfile?.name
     ? userProfile.name
         .split(" ")
@@ -33,7 +50,10 @@ function topbar({ siteName, userProfile, authAction }) {
   return `
     <header class="phone-topbar">
       <div class="phone-topbar-left">
-        <div class="site-name">${siteName}</div>
+        <div class="site-brand">
+          <span class="site-logo logo-style-${logoStyle}">${logoMarkup}</span>
+          <div class="site-name">${brandName}</div>
+        </div>
       </div>
       ${authSlot}
     </header>

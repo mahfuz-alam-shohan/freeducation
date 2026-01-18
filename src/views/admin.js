@@ -1,4 +1,4 @@
-import { adminShell } from "./layout.js";
+import { adminShell, buildSiteIdentity } from "./layout.js";
 import { themeOptions } from "../lib/site-settings.js";
 
 function dashboardPage(userProfile, siteSettings, theme) {
@@ -7,6 +7,7 @@ function dashboardPage(userProfile, siteSettings, theme) {
     active: "home",
     userProfile,
     siteName: siteSettings?.site_name,
+    siteIdentity: buildSiteIdentity(siteSettings),
     theme,
     siteNameFont: siteSettings?.site_name_font,
     content: `
@@ -59,6 +60,7 @@ function userManagementPage({ users, role, search }, userProfile, siteSettings, 
     active: "users",
     userProfile,
     siteName: siteSettings?.site_name,
+    siteIdentity: buildSiteIdentity(siteSettings),
     theme,
     siteNameFont: siteSettings?.site_name_font,
     content: `
@@ -117,6 +119,7 @@ function createUserPage(userProfile, siteSettings, theme) {
     active: "users",
     userProfile,
     siteName: siteSettings?.site_name,
+    siteIdentity: buildSiteIdentity(siteSettings),
     theme,
     siteNameFont: siteSettings?.site_name_font,
     content: `
@@ -160,6 +163,7 @@ function siteSettingsPage(settings, userProfile, theme) {
     active: "settings",
     userProfile,
     siteName: settings?.site_name,
+    siteIdentity: buildSiteIdentity(settings),
     theme,
     siteNameFont: settings?.site_name_font,
     content: `
@@ -167,20 +171,26 @@ function siteSettingsPage(settings, userProfile, theme) {
         <h3 class="section-title">Site settings</h3>
         <p class="small">Manage the global theme, identity, and brand options for every page.</p>
         <div class="settings-list">
-          <div class="settings-item">
+          <a class="settings-item" href="/admin/settings/theme">
             <div class="settings-meta">
               <h4>Site theme</h4>
               <p>Choose a site-wide theme and preview updates before saving.</p>
             </div>
-            <a class="button-link" href="/admin/settings/theme">Open</a>
-          </div>
-          <div class="settings-item">
+            <div class="settings-action">
+              <span>Open</span>
+              <span class="settings-chevron">›</span>
+            </div>
+          </a>
+          <a class="settings-item" href="/admin/settings/identity">
             <div class="settings-meta">
               <h4>Site identity</h4>
               <p>Set the site name, typography, and logo presentation.</p>
             </div>
-            <a class="button-link" href="/admin/settings/identity">Open</a>
-          </div>
+            <div class="settings-action">
+              <span>Open</span>
+              <span class="settings-chevron">›</span>
+            </div>
+          </a>
         </div>
       </div>
       <div class="info-card">
@@ -223,6 +233,7 @@ function siteThemePage(settings, userProfile, theme, { saved } = {}) {
     active: "settings",
     userProfile,
     siteName: settings?.site_name,
+    siteIdentity: buildSiteIdentity(settings),
     theme,
     siteNameFont: settings?.site_name_font,
     content: `
@@ -324,6 +335,7 @@ function siteIdentityPage(settings, userProfile, theme, { saved } = {}) {
     active: "settings",
     userProfile,
     siteName: settings?.site_name,
+    siteIdentity: buildSiteIdentity(settings),
     theme,
     siteNameFont: settings?.site_name_font,
     content: `
