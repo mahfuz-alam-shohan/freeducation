@@ -1,9 +1,13 @@
 
 
+name = "freeducation"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "freeducation"
-database_id = "1b2afa74-f89e-4459-adac-ba616668de37"
+database_id = "028f3ce8-db15-4962-9d04-b744591d35d5"
 
 # R2 Bucket Binding
 [[r2_buckets]]
