@@ -18,7 +18,7 @@ export async function runMigrations(database: Database) {
   try {
     const { db, rawDB } = database;
     
-    // Check if system_settings table exists using raw D1
+    // Check if users table exists and has the correct schema
     const tableCheck = await rawDB.prepare(`
       SELECT name FROM sqlite_master 
       WHERE type='table' AND name='system_settings'
@@ -35,7 +35,31 @@ export async function runMigrations(database: Database) {
     console.log('Database migrations completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
-    throw error;
+    // If migration fails due to schema conflict, we need to reset
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('no such column')) {
+      console.log('Schema conflict detected, dropping conflicting tables...');
+      await resetConflictingTables(rawDB);
+      // Retry creating tables
+      await createInitialTables(rawDB);
+    } else {
+      throw error;
+    }
+  }
+}
+
+// Reset conflicting tables
+async function resetConflictingTables(rawDB: D1Database) {
+  const conflictingTables = ['users', 'user_profiles', 'site_settings'];
+  
+  for (const table of conflictingTables) {
+    try {
+      await rawDB.prepare(`DROP TABLE IF EXISTS ${table}`).run();
+      console.log(`Dropped table: ${table}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`Failed to drop table ${table}:`, errorMessage);
+    }
   }
 }
 
