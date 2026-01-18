@@ -178,6 +178,39 @@ app.get('/reset-db', async (c) => {
   }
 });
 
+// Force migration endpoint
+app.get('/force-migration', async (c) => {
+  try {
+    if (!c.env.DB) {
+      return c.json({ error: 'No DB found' });
+    }
+    
+    const database = createDatabase(c.env);
+    
+    // First drop conflicting tables
+    const rawDB = database.rawDB;
+    const conflictingTables = ['users', 'user_profiles', 'site_settings'];
+    
+    for (const table of conflictingTables) {
+      await rawDB.prepare(`DROP TABLE IF EXISTS ${table}`).run();
+    }
+    
+    // Then run migrations
+    await runMigrations(database);
+    
+    return c.json({ 
+      success: true,
+      message: 'Force migration completed'
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Force migration failed',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+  }
+});
+
 // Initialize database and setup routes
 app.use('*', async (c, next) => {
   try {
