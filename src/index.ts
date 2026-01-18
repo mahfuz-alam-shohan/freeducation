@@ -220,8 +220,33 @@ app.get('/simple-test', (c) => {
   });
 });
 
-// Initialize database and setup routes
-app.use('*', async (c, next) => {
+// Test home page without middleware
+app.get('/test-home', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Test Home</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-gray-900 mb-4">FreeEducation Platform</h1>
+          <p class="text-gray-600 mb-8">Test page - working!</p>
+          <div class="space-x-4">
+            <a href="/login" class="bg-blue-600 text-white px-4 py-2 rounded">Login</a>
+            <a href="/register" class="bg-green-600 text-white px-4 py-2 rounded">Register</a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Initialize database and setup routes (only for API routes)
+app.use('/api/*', async (c, next) => {
   try {
     // Check if D1 database is available
     if (!c.env.DB) {
