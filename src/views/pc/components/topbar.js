@@ -30,7 +30,10 @@ function topbar({ siteName, siteIdentity, userProfile, authAction }) {
     ? `
         <div class="pc-user-area">
           <div class="user-avatar">${initials}</div>
-          <div class="pc-user-name">${userProfile?.name ?? "User"}</div>
+          <div class="pc-user-meta">
+            <div class="pc-user-name">${userProfile?.name ?? "User"}</div>
+            <div class="pc-user-email">${userProfile?.email ?? ""}</div>
+          </div>
           <form method="post" action="/logout">
             <button class="secondary" type="submit">Log out</button>
           </form>

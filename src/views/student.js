@@ -14,32 +14,45 @@ function studentDashboardPage(userProfile, siteSettings, theme) {
     siteNameFont: siteSettings?.site_name_font,
     siteIdentity: buildSiteIdentity(siteSettings),
     content: `
-      <div class="card">
-        <h3 class="section-title">Student space</h3>
-        <p class="small">Continue lessons, review notes, and track reading progress.</p>
-      </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <strong>Today’s reading</strong>
-          <p class="small">Finish the assigned chapter and add two reflections.</p>
+      <section class="panel">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow">Student dashboard</div>
+            <h1 class="page-title">Your reading plan and reflections.</h1>
+            <p class="page-subtitle">Stay focused on today’s reading and keep notes organized.</p>
+          </div>
         </div>
-        <div class="info-card">
-          <strong>Assignments</strong>
-          <p class="small">Submit your response essay by Friday afternoon.</p>
+      </section>
+      <section class="panel-grid">
+        <div class="panel compact">
+          <h2 class="section-title">Today’s reading</h2>
+          <p class="small">Complete the assigned chapter and add two reflections in your notes.</p>
+          <div class="chip-group">
+            <span class="chip">Chapter 4</span>
+            <span class="chip">Reflections</span>
+          </div>
         </div>
-        <div class="info-card">
-          <strong>Progress</strong>
+        <div class="panel compact">
+          <h2 class="section-title">Assignments</h2>
+          <ul class="list">
+            <li>Submit the response essay by Friday.</li>
+            <li>Review teacher feedback in the notes tab.</li>
+          </ul>
+        </div>
+        <div class="panel compact">
+          <h2 class="section-title">Progress</h2>
           <p class="small">You have completed 3 of 5 readings this week.</p>
+          <div class="note">Aim to finish one reading per day for steady progress.</div>
         </div>
-      </div>
-      <div class="accent-band">
-        <h3 class="section-title">Study checklist</h3>
-        <ul class="timeline">
-          <li>Review annotation highlights from the teacher.</li>
-          <li>Mark key definitions in your notes.</li>
-          <li>Prepare one discussion question.</li>
+      </section>
+      <section class="panel">
+        <h2 class="section-title">Study checklist</h2>
+        <ul class="list">
+          <li>Review highlighted passages from the teacher.</li>
+          <li>Mark definitions that are new to you.</li>
+          <li>Prepare one discussion question for class.</li>
         </ul>
-      </div>
+      </section>
     `,
   });
 }

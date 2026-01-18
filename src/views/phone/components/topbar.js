@@ -34,7 +34,7 @@ function topbar({ siteName, siteIdentity, userProfile, authAction }) {
           </summary>
           <div class="phone-user-panel">
             <div class="phone-user-name">${userProfile?.name ?? "User"}</div>
-            <div class="small">${userProfile?.email ?? ""}</div>
+            <div class="phone-user-email">${userProfile?.email ?? ""}</div>
             <form method="post" action="/logout">
               <button class="secondary" type="submit">Log out</button>
             </form>

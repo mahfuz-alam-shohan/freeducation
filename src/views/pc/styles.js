@@ -10,28 +10,29 @@ const pcStyles = `
     flex: 1;
     display: grid;
     place-items: center;
-    padding: 16px;
+    padding: 20px 16px;
   }
 
   .pc-auth-card {
-    width: min(420px, 100%);
-    background: linear-gradient(160deg, var(--panel) 0%, var(--primary-soft) 100%);
+    width: min(440px, 100%);
+    background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 16px;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    display: grid;
+    gap: 12px;
   }
 
   .pc-auth-card h1 {
-    margin: 0 0 6px;
-    font-size: 18px;
+    margin: 0;
+    font-size: 20px;
   }
 
   .pc-auth-card p {
-    margin: 0 0 12px;
+    margin: 0;
     color: var(--muted);
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.5;
   }
 
   .pc-admin-layout {
@@ -51,17 +52,23 @@ const pcStyles = `
   }
 
   .pc-sidebar {
-    background: linear-gradient(180deg, var(--primary-soft) 0%, var(--panel) 70%);
+    background: var(--panel);
     border-right: 1px solid var(--border);
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    box-shadow: inset -1px 0 0 rgba(15, 23, 42, 0.08);
+    gap: 12px;
   }
 
   .sidebar-collapsed .pc-sidebar {
     padding: 10px;
+  }
+
+  .pc-nav-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
   }
 
   .pc-nav-group {
@@ -70,8 +77,8 @@ const pcStyles = `
   }
 
   .pc-nav-link {
-    padding: 8px 10px;
-    border-radius: 10px;
+    padding: 7px 8px;
+    border-radius: 6px;
     color: var(--muted);
     font-size: 13px;
     display: flex;
@@ -81,9 +88,9 @@ const pcStyles = `
   }
 
   .pc-nav-icon {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
     display: grid;
     place-items: center;
     background: var(--primary-soft);
@@ -91,8 +98,8 @@ const pcStyles = `
   }
 
   .pc-nav-icon svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     stroke: currentColor;
     fill: none;
     stroke-width: 1.6;
@@ -131,26 +138,25 @@ const pcStyles = `
 
   .pc-nav-link:hover {
     background: var(--primary-soft);
-    color: var(--primary);
+    color: var(--text);
     transform: translateX(2px);
   }
 
   .pc-nav-link.active {
     background: var(--primary-soft);
-    color: var(--primary);
+    color: var(--text);
     font-weight: 600;
   }
 
   .pc-topbar {
-    height: 52px;
+    height: 48px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, var(--primary-soft) 0%, var(--accent-soft) 100%);
+    background: var(--panel);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     font-size: 14px;
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
   }
 
   .pc-topbar-left {
@@ -161,15 +167,15 @@ const pcStyles = `
 
   .sidebar-toggle {
     border: 1px solid var(--border);
-    background: var(--primary-soft);
-    border-radius: 8px;
+    background: #fff;
+    border-radius: 6px;
     width: 32px;
     height: 32px;
     display: grid;
     place-items: center;
     cursor: pointer;
     font-size: 16px;
-    color: var(--primary);
+    color: var(--text);
     padding: 0;
   }
 
@@ -188,16 +194,32 @@ const pcStyles = `
     margin: 0;
   }
 
+  .pc-user-meta {
+    display: grid;
+    gap: 2px;
+  }
+
   .pc-user-name {
     font-size: 13px;
     font-weight: 600;
   }
 
+  .pc-user-email {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
   .pc-content {
-    padding: 12px;
+    padding: 12px 14px;
+    display: grid;
+    background: var(--bg);
+  }
+
+  .content-frame {
+    max-width: 1100px;
+    width: 100%;
     display: grid;
     gap: 12px;
-    background: linear-gradient(180deg, var(--bg) 0%, var(--primary-soft) 100%);
   }
 `;
 

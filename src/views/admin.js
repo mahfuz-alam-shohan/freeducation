@@ -11,32 +11,41 @@ function dashboardPage(userProfile, siteSettings, theme) {
     theme,
     siteNameFont: siteSettings?.site_name_font,
     content: `
-      <div class="card">
-        <h3 class="section-title">Welcome back</h3>
-        <p class="small">Use the menu to manage users and guide new learning collections across the library.</p>
-      </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <strong>Admin priorities</strong>
-          <p class="small">Review new member requests and confirm assigned roles.</p>
+      <section class="panel">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow">Admin overview</div>
+            <h1 class="page-title">Manage users, learning content, and updates.</h1>
+            <p class="page-subtitle">
+              Keep the reading library organized and make sure every class has clear guidance.
+            </p>
+          </div>
         </div>
-        <div class="info-card">
-          <strong>Library checklist</strong>
-          <p class="small">Confirm reading sets, update citations, and refresh staff notes.</p>
+      </section>
+      <section class="panel-grid">
+        <div class="panel compact">
+          <h2 class="section-title">Today’s priorities</h2>
+          <ul class="list">
+            <li>Approve new accounts and confirm class assignments.</li>
+            <li>Review lesson updates before they go live.</li>
+            <li>Scan the support queue for urgent questions.</li>
+          </ul>
         </div>
-        <div class="info-card">
-          <strong>Support queue</strong>
-          <p class="small">Answer questions from teachers and students within 24 hours.</p>
+        <div class="panel compact">
+          <h2 class="section-title">Library hygiene</h2>
+          <p class="small">Ensure readings include citations, author names, and clean file naming.</p>
+          <div class="chip-group">
+            <span class="chip">Citations</span>
+            <span class="chip">Tags</span>
+            <span class="chip">Version notes</span>
+          </div>
         </div>
-      </div>
-      <div class="card">
-        <h3 class="section-title">Next steps</h3>
-        <ul class="timeline">
-          <li>Invite additional admins using the User Management page.</li>
-          <li>Upload new modules to the content folders for review.</li>
-          <li>Share weekly highlights with the teaching staff.</li>
-        </ul>
-      </div>
+        <div class="panel compact">
+          <h2 class="section-title">Support coverage</h2>
+          <p class="small">Keep response time under 24 hours for teachers and students.</p>
+          <div class="note">Coordinate with teachers when a student needs extra reading support.</div>
+        </div>
+      </section>
     `,
   });
 }
@@ -64,13 +73,16 @@ function userManagementPage({ users, role, search }, userProfile, siteSettings, 
     theme,
     siteNameFont: siteSettings?.site_name_font,
     content: `
-      <div class="card">
-        <div class="section-header">
+      <section class="panel">
+        <div class="page-header">
           <div>
-            <h3 class="section-title">User list</h3>
-            <p class="small">Filter by role and search by name or email. Create users in a dedicated form.</p>
+            <div class="eyebrow">Users</div>
+            <h1 class="page-title">Manage access for admins, teachers, and students.</h1>
+            <p class="page-subtitle">Create accounts with the right role and keep the list clean.</p>
           </div>
-          <a class="button-link" href="/admin/users/new">Create user</a>
+          <div class="page-actions">
+            <a class="button-link" href="/admin/users/new">Create user</a>
+          </div>
         </div>
         <form class="filters-bar" method="get" action="/admin/users">
           <div class="field">
@@ -93,6 +105,9 @@ function userManagementPage({ users, role, search }, userProfile, siteSettings, 
           </div>
           <button type="submit">Filter</button>
         </form>
+      </section>
+      <section class="panel">
+        <h2 class="section-title">Current users</h2>
         <div class="table-wrap">
           <table class="data-table">
             <thead>
@@ -108,7 +123,7 @@ function userManagementPage({ users, role, search }, userProfile, siteSettings, 
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     `,
   });
 }
@@ -123,9 +138,17 @@ function createUserPage(userProfile, siteSettings, theme) {
     theme,
     siteNameFont: siteSettings?.site_name_font,
     content: `
-      <div class="card">
-        <h3 class="section-title">Create user</h3>
-        <p class="small">Select a role, then provide the basic account details.</p>
+      <section class="panel">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow">New account</div>
+            <h1 class="page-title">Create a new user</h1>
+            <p class="page-subtitle">Assign a role and share a temporary password.</p>
+          </div>
+          <div class="page-actions">
+            <a class="button-link secondary" href="/admin/users">Back to users</a>
+          </div>
+        </div>
         <form class="form-grid" method="post" action="/admin/users">
           <div>
             <label for="role">User type</label>
@@ -149,10 +172,10 @@ function createUserPage(userProfile, siteSettings, theme) {
           </div>
           <div class="form-actions">
             <button type="submit">Create user</button>
-            <a class="button-link secondary" href="/admin/users">Back to users</a>
+            <span class="note">Share credentials through a secure channel.</span>
           </div>
         </form>
-      </div>
+      </section>
     `,
   });
 }
@@ -167,14 +190,19 @@ function siteSettingsPage(settings, userProfile, theme) {
     theme,
     siteNameFont: settings?.site_name_font,
     content: `
-      <div class="card">
-        <h3 class="section-title">Site settings</h3>
-        <p class="small">Manage the global theme, identity, and brand options for every page.</p>
+      <section class="panel">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow">Site settings</div>
+            <h1 class="page-title">Maintain the global identity and theme.</h1>
+            <p class="page-subtitle">Changes here update every page in the platform.</p>
+          </div>
+        </div>
         <div class="settings-list">
           <a class="settings-item" href="/admin/settings/theme">
             <div class="settings-meta">
               <h4>Site theme</h4>
-              <p>Choose a site-wide theme and preview updates before saving.</p>
+              <p>Pick the palette for background, accents, and surfaces.</p>
             </div>
             <div class="settings-action">
               <span>Open</span>
@@ -184,7 +212,7 @@ function siteSettingsPage(settings, userProfile, theme) {
           <a class="settings-item" href="/admin/settings/identity">
             <div class="settings-meta">
               <h4>Site identity</h4>
-              <p>Set the site name, typography, and logo presentation.</p>
+              <p>Update the name, logo, and display font.</p>
             </div>
             <div class="settings-action">
               <span>Open</span>
@@ -192,12 +220,12 @@ function siteSettingsPage(settings, userProfile, theme) {
             </div>
           </a>
         </div>
-      </div>
-      <div class="info-card">
-        <strong>Current summary</strong>
+      </section>
+      <section class="panel compact">
+        <h2 class="section-title">Current settings</h2>
         <p class="small">Theme: ${settings.theme_id}</p>
         <p class="small">Site name: ${settings.site_name}</p>
-      </div>
+      </section>
     `,
   });
 }
@@ -237,13 +265,16 @@ function siteThemePage(settings, userProfile, theme, { saved } = {}) {
     theme,
     siteNameFont: settings?.site_name_font,
     content: `
-      <div class="card">
-        <div class="section-header">
+      <section class="panel">
+        <div class="page-header">
           <div>
-            <h3 class="section-title">Site theme</h3>
-            <p class="small">Choose a theme and preview it live before saving for the whole site.</p>
+            <div class="eyebrow">Theme</div>
+            <h1 class="page-title">Choose a palette for the whole site.</h1>
+            <p class="page-subtitle">Preview colors before you save changes.</p>
           </div>
-          <a class="button-link secondary" href="/admin/settings">Back to settings</a>
+          <div class="page-actions">
+            <a class="button-link secondary" href="/admin/settings">Back to settings</a>
+          </div>
         </div>
         ${saved ? `<span class="message">Theme saved.</span>` : ""}
         <form class="form-grid" method="post" action="/admin/settings/theme">
@@ -252,20 +283,20 @@ function siteThemePage(settings, userProfile, theme, { saved } = {}) {
           </div>
           <button type="submit">Save theme</button>
         </form>
-      </div>
-      <div class="card">
-        <h3 class="section-title">Live preview</h3>
+      </section>
+      <section class="panel compact">
+        <h2 class="section-title">Live preview</h2>
         <div class="theme-preview" data-theme-preview>
           <div class="theme-preview-card">
-            <h4 class="preview-title">Freeducation</h4>
-            <p class="preview-text">Preview how headings, buttons, and panels feel.</p>
+            <h4 class="preview-title">Reading dashboard</h4>
+            <p class="preview-text">Cards, buttons, and text update instantly.</p>
             <button class="preview-button" type="button">Action</button>
           </div>
           <div class="theme-preview-card">
-            <p class="preview-text">Buttons and cards update before you save.</p>
+            <p class="preview-text">Use calm, readable palettes for long sessions.</p>
           </div>
         </div>
-      </div>
+      </section>
       <script>
         (() => {
           const themes = ${JSON.stringify(themeOptions)};
@@ -276,7 +307,7 @@ function siteThemePage(settings, userProfile, theme, { saved } = {}) {
             const selected = themes.find((theme) => theme.id === themeId);
             if (!selected || !preview) return;
             Object.entries(selected.palette).forEach(([key, value]) => {
-              preview.style.setProperty(\`--\${key}\`, value);
+              preview.style.setProperty(`--${key}`, value);
             });
           };
 
@@ -339,13 +370,16 @@ function siteIdentityPage(settings, userProfile, theme, { saved } = {}) {
     theme,
     siteNameFont: settings?.site_name_font,
     content: `
-      <div class="card">
-        <div class="section-header">
+      <section class="panel">
+        <div class="page-header">
           <div>
-            <h3 class="section-title">Site identity</h3>
-            <p class="small">Update the site name, typography, and logo presentation with live updates.</p>
+            <div class="eyebrow">Identity</div>
+            <h1 class="page-title">Set the name and logo students will recognize.</h1>
+            <p class="page-subtitle">Keep the logo simple so it stays readable on every device.</p>
           </div>
-          <a class="button-link secondary" href="/admin/settings">Back to settings</a>
+          <div class="page-actions">
+            <a class="button-link secondary" href="/admin/settings">Back to settings</a>
+          </div>
         </div>
         ${saved ? `<span class="message">Identity saved.</span>` : ""}
         <form class="form-grid" method="post" action="/admin/settings/identity">
@@ -382,9 +416,9 @@ function siteIdentityPage(settings, userProfile, theme, { saved } = {}) {
           </div>
           <button type="submit">Save identity</button>
         </form>
-      </div>
-      <div class="card">
-        <h3 class="section-title">Live preview</h3>
+      </section>
+      <section class="panel compact">
+        <h2 class="section-title">Live preview</h2>
         <div class="identity-preview">
           <div class="identity-row">
             <div class="logo-preview" data-logo-preview></div>
@@ -394,7 +428,7 @@ function siteIdentityPage(settings, userProfile, theme, { saved } = {}) {
             </div>
           </div>
         </div>
-      </div>
+      </section>
       <script>
         (() => {
           const siteNameInput = document.querySelector("#siteName");
@@ -413,7 +447,7 @@ function siteIdentityPage(settings, userProfile, theme, { saved } = {}) {
             const name = siteNameInput.value.trim() || "Site";
             previewName.textContent = name;
             previewName.style.fontFamily = siteFontInput.value;
-            previewFont.textContent = \`Font: \${siteFontInput.value}\`;
+            previewFont.textContent = `Font: ${siteFontInput.value}`;
           };
 
           const updateLogo = () => {
@@ -432,7 +466,7 @@ function siteIdentityPage(settings, userProfile, theme, { saved } = {}) {
               previewLogo.appendChild(img);
             } else {
               previewLogo.textContent = text;
-              previewLogo.classList.add(\`logo-style-\${style}\`);
+              previewLogo.classList.add(`logo-style-${style}`);
             }
           };
 

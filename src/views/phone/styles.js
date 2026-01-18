@@ -10,28 +10,29 @@ const phoneStyles = `
     flex: 1;
     display: grid;
     place-items: center;
-    padding: 12px;
+    padding: 18px 12px;
   }
 
   .phone-auth-card {
     width: min(360px, 100%);
-    background: linear-gradient(160deg, var(--panel) 0%, var(--primary-soft) 100%);
+    background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 14px;
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    display: grid;
+    gap: 10px;
   }
 
   .phone-auth-card h1 {
-    margin: 0 0 6px;
-    font-size: 17px;
+    margin: 0;
+    font-size: 18px;
   }
 
   .phone-auth-card p {
-    margin: 0 0 12px;
+    margin: 0;
     color: var(--muted);
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.5;
   }
 
   .phone-shell {
@@ -44,15 +45,14 @@ const phoneStyles = `
   }
 
   .phone-topbar {
-    height: 52px;
+    height: 48px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, var(--primary-soft) 0%, var(--accent-soft) 100%);
+    background: var(--panel);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     font-size: 14px;
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
   }
 
   .phone-topbar-left {
@@ -80,12 +80,11 @@ const phoneStyles = `
     right: 0;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 10px;
     display: grid;
     gap: 6px;
     min-width: 180px;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
     z-index: 10;
   }
 
@@ -98,13 +97,17 @@ const phoneStyles = `
     font-size: 13px;
   }
 
+  .phone-user-email {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
   .phone-content {
     flex: 1;
     overflow-y: auto;
     padding: 12px 12px 72px;
     display: grid;
-    gap: 12px;
-    background: linear-gradient(180deg, var(--bg) 0%, var(--primary-soft) 100%);
+    background: var(--bg);
   }
 
   .phone-bottom-nav {
@@ -113,12 +116,11 @@ const phoneStyles = `
     left: 0;
     right: 0;
     height: 56px;
-    background: linear-gradient(90deg, var(--primary-soft) 0%, var(--panel) 100%);
+    background: var(--panel);
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
     z-index: 20;
   }
 
@@ -140,7 +142,7 @@ const phoneStyles = `
   .phone-nav-icon {
     width: 22px;
     height: 22px;
-    border-radius: 7px;
+    border-radius: 6px;
     display: grid;
     place-items: center;
     background: var(--primary-soft);
@@ -178,8 +180,13 @@ const phoneStyles = `
   }
 
   .phone-bottom-link.active {
-    color: var(--primary);
+    color: var(--text);
     font-weight: 600;
+  }
+
+  .content-frame {
+    display: grid;
+    gap: 12px;
   }
 `;
 

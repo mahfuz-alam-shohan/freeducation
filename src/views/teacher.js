@@ -14,29 +14,45 @@ function teacherDashboardPage(userProfile, siteSettings, theme) {
     siteNameFont: siteSettings?.site_name_font,
     siteIdentity: buildSiteIdentity(siteSettings),
     content: `
-      <div class="card">
-        <h3 class="section-title">Teacher space</h3>
-        <p class="small">Review lesson plans, track student notes, and prepare weekly reading guidance.</p>
-      </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <strong>Upcoming sessions</strong>
-          <p class="small">Mon • Socratic discussion on civic responsibility.</p>
-          <p class="small">Wed • Essay workshop and peer review.</p>
+      <section class="panel">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow">Teacher dashboard</div>
+            <h1 class="page-title">Plan readings and support your class.</h1>
+            <p class="page-subtitle">Keep lesson notes clear and easy for students to follow.</p>
+          </div>
         </div>
-        <div class="info-card">
-          <strong>Reading focus</strong>
-          <p class="small">Highlight the primary texts and share annotations with your class.</p>
+      </section>
+      <section class="panel-grid">
+        <div class="panel compact">
+          <h2 class="section-title">Upcoming sessions</h2>
+          <ul class="list">
+            <li>Monday: Socratic discussion on civic responsibility.</li>
+            <li>Wednesday: Essay workshop and peer review.</li>
+          </ul>
         </div>
-        <div class="info-card">
-          <strong>Quick actions</strong>
-          <p class="small">Assign reading, publish notes, and open classroom feedback.</p>
+        <div class="panel compact">
+          <h2 class="section-title">Reading focus</h2>
+          <p class="small">Highlight primary texts and share notes before class.</p>
+          <div class="chip-group">
+            <span class="chip">Primary text</span>
+            <span class="chip">Annotations</span>
+            <span class="chip">Guiding questions</span>
+          </div>
         </div>
-      </div>
-      <div class="highlight-surface">
-        <h3 class="section-title">Teacher notes</h3>
-        <p class="small">Keep feedback concise and direct so students can read with clarity and confidence.</p>
-      </div>
+        <div class="panel compact">
+          <h2 class="section-title">Quick actions</h2>
+          <ul class="list">
+            <li>Assign this week’s reading.</li>
+            <li>Publish lesson notes.</li>
+            <li>Open classroom feedback.</li>
+          </ul>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 class="section-title">Teacher notes</h2>
+        <p class="small">Keep feedback concise so students can read with clarity and confidence.</p>
+      </section>
     `,
   });
 }

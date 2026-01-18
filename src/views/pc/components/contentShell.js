@@ -1,7 +1,9 @@
 function contentShell({ content }) {
   return `
     <main class="pc-content">
-      ${content}
+      <div class="content-frame">
+        ${content}
+      </div>
     </main>
   `;
 }

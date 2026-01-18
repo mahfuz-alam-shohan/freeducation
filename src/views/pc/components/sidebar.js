@@ -12,6 +12,7 @@ function sidebar({ navItems }) {
 
   return `
     <aside class="pc-sidebar">
+      <div class="pc-nav-title">Sections</div>
       <nav class="pc-nav-group">
         ${navLinks}
       </nav>

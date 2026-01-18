@@ -40,7 +40,7 @@ function setupPage({ siteSettings, theme } = {}) {
     body: renderViewports({
       pc: authCardPc({
         title: "Create the first admin",
-        description: "This setup appears only once. After you create the first admin, this form is disabled.",
+        description: "Set the first administrator so you can invite teachers and students.",
         body,
         topbarSlot: pcTopbar({
           siteName,
@@ -51,7 +51,7 @@ function setupPage({ siteSettings, theme } = {}) {
       }),
       phone: authCardPhone({
         title: "Create the first admin",
-        description: "This setup appears only once. After you create the first admin, this form is disabled.",
+        description: "Set the first administrator so you can invite teachers and students.",
         body,
         topbarSlot: phoneTopbar({
           siteName,
@@ -86,8 +86,8 @@ function loginPage({ siteSettings, theme } = {}) {
     title: "Login",
     body: renderViewports({
       pc: authCardPc({
-        title: "Login header",
-        description: "Use your credentials to continue.",
+        title: "Sign in",
+        description: "Use your account email and password to continue to the learning workspace.",
         body,
         topbarSlot: pcTopbar({
           siteName,
@@ -97,8 +97,8 @@ function loginPage({ siteSettings, theme } = {}) {
         sidebarSlot: authSidebar,
       }),
       phone: authCardPhone({
-        title: "Login header",
-        description: "Use your credentials to continue.",
+        title: "Sign in",
+        description: "Use your account email and password to continue to the learning workspace.",
         body,
         topbarSlot: phoneTopbar({
           siteName,

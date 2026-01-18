@@ -3,7 +3,9 @@ function contentShell({ content, topbarSlot = "" }) {
     <div class="phone-shell">
       ${topbarSlot}
       <div class="phone-content">
-        ${content}
+        <div class="content-frame">
+          ${content}
+        </div>
       </div>
     </div>
   `;
