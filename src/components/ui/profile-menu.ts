@@ -1,4 +1,5 @@
 import type { AdminSession } from "../../services/security/session";
+import { renderUserIcon } from "./icons";
 
 const getInitials = (name: string): string =>
   name
@@ -15,18 +16,17 @@ export type ProfileMenuProps = {
 export const renderProfileMenu = ({ session }: ProfileMenuProps): string => {
   const trigger = session
     ? `<span class="avatar" aria-label="Profile">${getInitials(session.name)}</span>`
-    : `<span class="icon-button" aria-label="Profile">👤</span>`;
+    : `<span class="icon-button" aria-label="Profile">${renderUserIcon()}</span>`;
 
   const profileContent = session
     ? `
       <p><strong>${session.name}</strong></p>
       <p>${session.email}</p>
-      <a href="/logout">Logout</a>
+      <a class="button-link" href="/logout">Logout</a>
     `
     : `
-      <p>Sign in or create account.</p>
-      <button disabled>Sign in</button>
-      <button disabled>Sign up</button>
+      <p>Sign in to continue.</p>
+      <a class="button-link button-link--primary" href="/login">Sign in</a>
     `;
 
   const notificationContent = `
