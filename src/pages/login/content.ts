@@ -22,6 +22,7 @@ export const renderLoginContent = ({ errorMessage }: LoginContentProps = {}): st
         <button type="submit" class="button-link button-link--primary">Login</button>
       </div>
       <p class="helper-text">We currently support Gmail-only access for the admin account.</p>
+      <p class="helper-text">New student? <a href="/signup">Create your account</a>.</p>
     </form>
   </section>
 `;

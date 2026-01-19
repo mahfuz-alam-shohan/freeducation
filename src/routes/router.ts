@@ -1,6 +1,7 @@
 import { adminExists } from "../features/auth/adminSetup";
 import { handleAdminRoutes, getAdminSession } from "./admin";
 import { handlePublicRoutes } from "./public";
+import { handleStudentRoutes } from "./student";
 import { getDeviceType, redirectResponse, serviceError, type Env } from "./utils";
 
 export const handleRequest = async (request: Request, env: Env): Promise<Response> => {
@@ -15,6 +16,11 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
   const adminReady = await adminExists(env.DB);
   const device = getDeviceType(request.headers.get("user-agent"));
   const session = await getAdminSession(request, env);
+
+  const studentResponse = await handleStudentRoutes(request, env, { device, session });
+  if (studentResponse) {
+    return studentResponse;
+  }
 
   const publicResponse = handlePublicRoutes(request, { adminReady, device, session });
   if (publicResponse) {
