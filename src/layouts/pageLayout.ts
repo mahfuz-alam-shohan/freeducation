@@ -54,6 +54,7 @@ const baseStyles = `
   .page-title { margin: 0; font-size: 28px; }
   .page-subtitle { margin: 0; color: var(--color-text-muted); }
   .page-section { display: grid; gap: 8px; }
+  .page-actions { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
   .section-title { margin: 0; font-size: 20px; }
   .form-card {
     display: grid;
@@ -67,6 +68,29 @@ const baseStyles = `
   .form-field { display: grid; gap: 6px; }
   .form-actions { display: flex; justify-content: flex-start; }
   .helper-text { margin: 0; font-size: 14px; color: var(--color-text-muted); }
+  .filter-bar {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+  .filter-fields { display: grid; gap: 10px; }
+  .filter-field { display: grid; gap: 6px; }
+  .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .data-table th,
+  .data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
+  .data-table th { font-size: 14px; color: var(--color-text-muted); background: var(--color-surface-muted); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
   .alert {
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border);
@@ -197,7 +221,11 @@ export const renderPageLayout = ({ device, content, session }: PageLayoutProps):
       ? renderHeaderTablet({ siteName: "freeducation", profileMenu, notificationMenu })
       : renderHeaderDesktop({ siteName: "freeducation", profileMenu, notificationMenu });
 
-  const sidebar = device === "mobile" ? renderSidebarMobile() : device === "tablet" ? renderSidebarTablet() : renderSidebarDesktop();
+  const sidebar = device === "mobile"
+    ? renderSidebarMobile({ session })
+    : device === "tablet"
+      ? renderSidebarTablet({ session })
+      : renderSidebarDesktop({ session });
   const footer = device === "mobile" ? renderFooterMobile() : device === "tablet" ? renderFooterTablet() : renderFooterDesktop();
   const body = renderShell(device, header, sidebar, content, footer);
   const styles = `${baseStyles}\n${renderShellStyles(device)}`;

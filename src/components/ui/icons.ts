@@ -24,6 +24,11 @@ export const renderUserIcon = (): string =>
     '<path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm7 8a7 7 0 0 0-14 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />',
   );
 
+export const renderUsersIcon = (): string =>
+  renderIcon(
+    '<path d="M8 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm-8 2c-2.8 0-5 1.8-5 4v2m13-6c2.8 0 5 1.8 5 4v2M8 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',
+  );
+
 export const renderBellIcon = (): string =>
   renderIcon(
     '<path d="M18 9a6 6 0 1 0-12 0c0 4-2 5-2 5h16s-2-1-2-5Zm-5 9a2 2 0 0 1-4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',

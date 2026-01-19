@@ -1,6 +1,11 @@
-import { renderCloseIcon, renderHomeIcon } from "../../ui/icons";
+import type { AdminSession } from "../../../services/security/session";
+import { renderCloseIcon, renderHomeIcon, renderUsersIcon } from "../../ui/icons";
 
-export const renderSidebarMobile = (): string => `
+type SidebarProps = {
+  session: AdminSession | null;
+};
+
+export const renderSidebarMobile = ({ session }: SidebarProps): string => `
   <aside class="app-sidebar app-sidebar--mobile">
     <div class="sidebar-header">
       <span>Menu</span>
@@ -8,10 +13,22 @@ export const renderSidebarMobile = (): string => `
     </div>
     <nav>
       <ul class="menu">
-        <li class="menu-item">
-          <span class="menu-icon">${renderHomeIcon()}</span>
-          <span class="menu-label">Home</span>
+        <li>
+          <a class="menu-item" href="/">
+            <span class="menu-icon">${renderHomeIcon()}</span>
+            <span class="menu-label">Home</span>
+          </a>
         </li>
+        ${
+          session
+            ? `<li>
+          <a class="menu-item" href="/admin/users">
+            <span class="menu-icon">${renderUsersIcon()}</span>
+            <span class="menu-label">User management</span>
+          </a>
+        </li>`
+            : ""
+        }
       </ul>
     </nav>
   </aside>
