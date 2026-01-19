@@ -13,7 +13,6 @@ import { renderSidebarTablet } from "../components/sidebar/tablet/sidebar";
 import { renderNotificationMenu } from "../components/ui/notification-menu";
 import { renderProfileMenu } from "../components/ui/profile-menu";
 import type { AdminSession } from "../services/security/session";
-import { themeStyles } from "../styles/theme";
 
 export type DeviceType = "mobile" | "tablet" | "desktop";
 
@@ -24,13 +23,11 @@ export type PageLayoutProps = {
 };
 
 const baseStyles = `
-  ${themeStyles}
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body { margin: 0; overflow: hidden; }
-  a { color: var(--color-link); text-decoration: none; }
-  a:hover { color: var(--color-link-hover); }
-  hr { border: none; border-top: 1px solid var(--color-border); margin: 12px 0; }
+  a { color: #1d1d1d; text-decoration: none; }
+  hr { border: none; border-top: 1px solid #e3e3e3; margin: 12px 0; }
 `;
 
 const renderShell = (device: DeviceType, header: string, sidebar: string, content: string, footer: string): string => {
