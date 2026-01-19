@@ -4,6 +4,20 @@ type GmailEnv = {
   GMAIL_REFRESH_TOKEN: string;
 };
 
+const assertGmailConfig = (env: GmailEnv): void => {
+  const missing = [
+    ["GMAIL_CLIENT_ID", env.GMAIL_CLIENT_ID],
+    ["GMAIL_CLIENT_SECRET", env.GMAIL_CLIENT_SECRET],
+    ["GMAIL_REFRESH_TOKEN", env.GMAIL_REFRESH_TOKEN],
+  ]
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing Gmail configuration: ${missing.join(", ")}.`);
+  }
+};
+
 const buildRawEmail = (to: string, subject: string, body: string): string => {
   const headers = [
     `To: ${to}`,
@@ -20,6 +34,7 @@ const toBase64Url = (value: string): string =>
   btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 
 const fetchAccessToken = async (env: GmailEnv): Promise<string> => {
+  assertGmailConfig(env);
   const payload = new URLSearchParams({
     client_id: env.GMAIL_CLIENT_ID,
     client_secret: env.GMAIL_CLIENT_SECRET,
@@ -34,7 +49,14 @@ const fetchAccessToken = async (env: GmailEnv): Promise<string> => {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to refresh Gmail access token.");
+    let errorDetail = response.statusText;
+    try {
+      const data = (await response.json()) as { error_description?: string; error?: string };
+      errorDetail = data.error_description || data.error || errorDetail;
+    } catch {
+      // Ignore JSON parse errors, fall back to status text.
+    }
+    throw new Error(`Unable to refresh Gmail access token: ${errorDetail}.`);
   }
 
   const data = (await response.json()) as { access_token?: string };
@@ -78,6 +100,13 @@ If you did not request this, you can ignore this email.`;
   });
 
   if (!response.ok) {
-    throw new Error("Unable to send verification email.");
+    let errorDetail = response.statusText;
+    try {
+      const data = (await response.json()) as { error?: { message?: string } };
+      errorDetail = data.error?.message || errorDetail;
+    } catch {
+      // Ignore JSON parse errors, fall back to status text.
+    }
+    throw new Error(`Unable to send verification email: ${errorDetail}.`);
   }
 };
