@@ -50,7 +50,24 @@ export const studentVerificationTableSchema: TableSchema = {
   ],
 };
 
-export const expectedSchema: TableSchema[] = [adminTableSchema, studentTableSchema, studentVerificationTableSchema];
+export const teacherTableSchema: TableSchema = {
+  name: "teachers",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "name", type: "TEXT", notNull: true },
+    { name: "email", type: "TEXT", notNull: true, unique: true },
+    { name: "password_hash", type: "TEXT", notNull: true },
+    { name: "date_of_birth", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+  ],
+};
+
+export const expectedSchema: TableSchema[] = [
+  adminTableSchema,
+  studentTableSchema,
+  studentVerificationTableSchema,
+  teacherTableSchema,
+];
 
 export const buildColumnSql = (column: ColumnDefinition): string => {
   const parts = [column.name, column.type];
