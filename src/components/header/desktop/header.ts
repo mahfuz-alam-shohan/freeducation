@@ -1,3 +1,5 @@
+import { renderMenuIcon } from "../../ui/icons";
+
 export type HeaderProps = {
   siteName: string;
   profileMenu: string;
@@ -7,7 +9,7 @@ export type HeaderProps = {
 export const renderHeaderDesktop = ({ siteName, profileMenu, notificationMenu }: HeaderProps): string => `
   <header class="app-header app-header--desktop">
     <div class="app-header__left">
-      <label class="icon-button" for="sidebar-toggle" aria-label="Toggle sidebar">☰</label>
+      <label class="icon-button" for="sidebar-toggle" aria-label="Toggle sidebar">${renderMenuIcon()}</label>
     </div>
     <div class="app-header__center">
       <div class="logo">${siteName}</div>

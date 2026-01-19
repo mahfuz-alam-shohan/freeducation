@@ -1,7 +1,9 @@
+import { verifyAdminLogin } from "../features/auth/adminLogin";
 import { adminExists, createAdmin } from "../features/auth/adminSetup";
 import { renderPageLayout, type DeviceType } from "../layouts/pageLayout";
 import { renderAdminSetupPage } from "../pages/admin-setup/content";
 import { renderHomeContent } from "../pages/home/content";
+import { renderLoginContent } from "../pages/login/content";
 import {
   clearAdminSessionCookie,
   createAdminSessionToken,
@@ -106,6 +108,15 @@ const renderHome = (device: DeviceType, session: { name: string; email: string }
   return htmlResponse(renderPageLayout({ device, content, session }));
 };
 
+const renderLogin = (
+  device: DeviceType,
+  session: { name: string; email: string } | null,
+  errorMessage?: string,
+): Response => {
+  const content = renderLoginContent({ errorMessage });
+  return htmlResponse(renderPageLayout({ device, content, session }));
+};
+
 export const handleRequest = async (request: Request, env: Env): Promise<Response> => {
   if (!env.DB) {
     return serviceError("Database binding is missing.");
@@ -146,6 +157,40 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
   const device = getDeviceType(request.headers.get("user-agent"));
   const cookieValue = getCookieValue(request.headers.get("cookie"), "admin_session");
   const session = cookieValue ? await readAdminSessionToken(cookieValue, env.JWT_SECRET) : null;
+
+  if (url.pathname === "/login") {
+    if (request.method === "GET") {
+      if (session) {
+        return redirectResponse("/");
+      }
+      return renderLogin(device, session);
+    }
+
+    if (request.method === "POST") {
+      const formData = await request.formData();
+      const email = formData.get("email");
+      const password = formData.get("password");
+
+      if (typeof email !== "string" || typeof password !== "string") {
+        return renderLogin(device, session, "Please enter your email and password.");
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail.endsWith("@gmail.com")) {
+        return renderLogin(device, session, "Please use a Gmail address to sign in.");
+      }
+
+      const adminSession = await verifyAdminLogin(env.DB, normalizedEmail, password);
+      if (!adminSession) {
+        return renderLogin(device, session, "The email or password you entered is incorrect.");
+      }
+
+      const token = await createAdminSessionToken(adminSession, env.JWT_SECRET);
+      return redirectResponse("/", { "Set-Cookie": serializeAdminSessionCookie(token) });
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
 
   if (url.pathname === "/" || url.pathname === "/home") {
     return renderHome(device, session);
