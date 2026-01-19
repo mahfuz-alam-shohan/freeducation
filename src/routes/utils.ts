@@ -9,6 +9,9 @@ export type Env = {
     };
   };
   JWT_SECRET: string;
+  GMAIL_CLIENT_ID: string;
+  GMAIL_CLIENT_SECRET: string;
+  GMAIL_REFRESH_TOKEN: string;
 };
 
 export const jsonResponse = (body: Record<string, unknown>, status = 200): Response =>

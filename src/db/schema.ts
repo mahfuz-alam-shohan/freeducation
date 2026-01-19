@@ -24,7 +24,33 @@ export const adminTableSchema: TableSchema = {
   ],
 };
 
-export const expectedSchema: TableSchema[] = [adminTableSchema];
+export const studentTableSchema: TableSchema = {
+  name: "students",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "name", type: "TEXT", notNull: true },
+    { name: "email", type: "TEXT", notNull: true, unique: true },
+    { name: "password_hash", type: "TEXT", notNull: true },
+    { name: "date_of_birth", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+    { name: "verified_at", type: "TEXT" },
+  ],
+};
+
+export const studentVerificationTableSchema: TableSchema = {
+  name: "student_verifications",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "student_id", type: "INTEGER", notNull: true },
+    { name: "code_hash", type: "TEXT", notNull: true },
+    { name: "attempts", type: "INTEGER", notNull: true, defaultValue: "0" },
+    { name: "expires_at", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+    { name: "used_at", type: "TEXT" },
+  ],
+};
+
+export const expectedSchema: TableSchema[] = [adminTableSchema, studentTableSchema, studentVerificationTableSchema];
 
 export const buildColumnSql = (column: ColumnDefinition): string => {
   const parts = [column.name, column.type];
