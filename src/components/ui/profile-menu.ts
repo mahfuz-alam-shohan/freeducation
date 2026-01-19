@@ -10,10 +10,9 @@ const getInitials = (name: string): string =>
 
 export type ProfileMenuProps = {
   session: AdminSession | null;
-  includeNotifications: boolean;
 };
 
-export const renderProfileMenu = ({ session, includeNotifications }: ProfileMenuProps): string => {
+export const renderProfileMenu = ({ session }: ProfileMenuProps): string => {
   const trigger = session
     ? `<span class="avatar" aria-label="Profile">${getInitials(session.name)}</span>`
     : `<span class="icon-button" aria-label="Profile">👤</span>`;
@@ -30,20 +29,20 @@ export const renderProfileMenu = ({ session, includeNotifications }: ProfileMenu
       <button disabled>Sign up</button>
     `;
 
-  const notificationContent = includeNotifications
-    ? `
+  const notificationContent = `
       <hr />
       <p><strong>Notifications</strong></p>
       <p>No notifications yet.</p>
-    `
-    : "";
+    `;
 
   return `
     <details class="profile-menu">
       <summary>${trigger}</summary>
       <div class="dropdown">
         ${profileContent}
-        ${notificationContent}
+        <div class="profile-notifications">
+          ${notificationContent}
+        </div>
       </div>
     </details>
   `;

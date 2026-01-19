@@ -24,7 +24,8 @@ export type PageLayoutProps = {
 
 const baseStyles = `
   * { box-sizing: border-box; }
-  body { margin: 0; }
+  html, body { height: 100%; }
+  body { margin: 0; overflow: hidden; }
   a { color: #1d1d1d; text-decoration: none; }
   hr { border: none; border-top: 1px solid #e3e3e3; margin: 12px 0; }
 `;
@@ -54,7 +55,7 @@ const renderShellStyles = (device: DeviceType): string => {
 };
 
 export const renderPageLayout = ({ device, content, session }: PageLayoutProps): string => {
-  const profileMenu = renderProfileMenu({ session, includeNotifications: device === "mobile" });
+  const profileMenu = renderProfileMenu({ session });
   const notificationMenu = renderNotificationMenu({ session });
 
   const header = device === "mobile"
