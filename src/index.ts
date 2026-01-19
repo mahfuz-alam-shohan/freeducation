@@ -1,5 +1,6 @@
 import { ensureSchema } from "./db/manager";
-import { handleRequest, type Env } from "./routes/router";
+import { handleRequest } from "./routes/router";
+import type { Env } from "./routes/utils";
 
 let schemaReady: Promise<void> | null = null;
 
