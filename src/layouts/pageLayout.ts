@@ -31,6 +31,49 @@ const baseStyles = `
   a { color: var(--color-link); text-decoration: none; }
   a:hover { color: var(--color-link-hover); }
   hr { border: none; border-top: 1px solid var(--color-border); margin: 12px 0; }
+  .icon { width: 18px; height: 18px; display: inline-block; }
+  .button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .button-link--primary {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: transparent;
+  }
+  .page { max-width: 640px; margin: 0 auto; display: grid; gap: 12px; }
+  .page-header { display: grid; gap: 6px; }
+  .page-title { margin: 0; font-size: 28px; }
+  .page-subtitle { margin: 0; color: var(--color-text-muted); }
+  .page-section { display: grid; gap: 8px; }
+  .section-title { margin: 0; font-size: 20px; }
+  .form-card {
+    display: grid;
+    gap: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--color-surface);
+  }
+  .form-grid { display: grid; gap: 10px; }
+  .form-field { display: grid; gap: 6px; }
+  .form-actions { display: flex; justify-content: flex-start; }
+  .helper-text { margin: 0; font-size: 14px; color: var(--color-text-muted); }
+  .alert {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    padding: 8px 10px;
+    background: var(--color-surface-muted);
+  }
+  .alert--error { border-color: #d98989; color: #8a1f1f; background: #fdecec; }
 `;
 
 const renderShell = (device: DeviceType, header: string, sidebar: string, content: string, footer: string): string => {
