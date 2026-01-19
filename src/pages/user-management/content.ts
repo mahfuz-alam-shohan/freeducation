@@ -35,12 +35,19 @@ export const renderUserManagementContent = ({ users, filters, successMessage }: 
           <td>${escapeValue(user.name)}</td>
           <td>${escapeValue(user.email)}</td>
           <td>${escapeValue(new Date(user.createdAt).toLocaleDateString())}</td>
+          <td>
+            <form method="post" action="/admin/users/delete">
+              <input type="hidden" name="role" value="${escapeValue(user.role)}" />
+              <input type="hidden" name="email" value="${escapeValue(user.email)}" />
+              <button type="submit" class="button-link">Delete</button>
+            </form>
+          </td>
         </tr>`,
         )
         .join("")
     : `
         <tr>
-          <td colspan="4">No users found for this filter.</td>
+          <td colspan="5">No users found for this filter.</td>
         </tr>`;
 
   return `
@@ -84,6 +91,7 @@ export const renderUserManagementContent = ({ users, filters, successMessage }: 
             <th>Name</th>
             <th>Email</th>
             <th>Created</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>

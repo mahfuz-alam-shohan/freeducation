@@ -125,3 +125,24 @@ export const createUserAccount = async (
     .bind(payload.name, payload.email, passwordHash, payload.dateOfBirth, createdAt)
     .run();
 };
+
+export const deleteUserAccount = async (
+  db: D1Database,
+  payload: { role: UserRole; email: string },
+): Promise<void> => {
+  if (payload.role === "student") {
+    await db
+      .prepare("DELETE FROM student_verifications WHERE student_id IN (SELECT id FROM students WHERE email = ?)")
+      .bind(payload.email)
+      .run();
+    await db.prepare("DELETE FROM students WHERE email = ?").bind(payload.email).run();
+    return;
+  }
+
+  if (payload.role === "teacher") {
+    await db.prepare("DELETE FROM teachers WHERE email = ?").bind(payload.email).run();
+    return;
+  }
+
+  await db.prepare("DELETE FROM admins WHERE email = ?").bind(payload.email).run();
+};
