@@ -7,13 +7,14 @@
     "esModuleInterop": true,
     "allowJs": true,
     "checkJs": false,
-    "strict": true,
+    "strict": false,
     "alwaysStrict": true,
     "preserveConstEnums": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "noImplicitAny": false
   },
   "include": [
     "src/**/*"

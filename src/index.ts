@@ -1,64 +1,182 @@
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
-import { authRoutes } from './routes/auth.js';
-import { adminRoutes } from './routes/admin.js';
-import { setupRoutes } from './routes/setup.js';
-import { initDatabase } from './db/init.js';
-import { DatabaseManager } from './db/database.js';
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // CORS headers
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
 
-type Bindings = {
-  DB: D1Database;
-  BUCKET: R2Bucket;
-  JWT_SECRET: string;
-  GMAIL_CLIENT_ID: string;
-  GMAIL_CLIENT_SECRET: string;
-  GMAIL_REFRESH_TOKEN: string;
-};
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-type Variables = {
-  db: DatabaseManager;
-};
+    try {
+      if (url.pathname === '/' && request.method === 'GET') {
+        return new Response(getAdminSetupPage(), {
+          headers: { 'Content-Type': 'text/html', ...corsHeaders }
+        });
+      }
 
-const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+      if (url.pathname === '/api/setup/admin' && request.method === 'POST') {
+        const body = await request.json();
+        const result = await createAdminAccount(env.DB, env.JWT_SECRET, body);
+        return new Response(JSON.stringify(result), {
+          status: result.success ? 200 : 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
 
-// Middleware
-app.use('*', cors());
-app.use('*', logger());
+      return new Response('Not Found', { status: 404 });
 
-// Database initialization middleware
-app.use('*', async (c, next) => {
-  const db = new DatabaseManager(c.env.DB);
-  
-  // Initialize database if needed
-  try {
-    await initDatabase(c.env.DB);
-  } catch (error) {
-    console.error('Database initialization failed:', error);
+    } catch (error) {
+      console.error('Error:', error);
+      return new Response(JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
   }
+};
+
+async function createAdminAccount(db, jwtSecret, body) {
+  try {
+    const { fullName, email, username, password } = body;
+
+    // Validation
+    if (!fullName || !email || !username || !password) {
+      return { error: 'All fields are required' };
+    }
+
+    if (password.length < 8) {
+      return { error: 'Password must be at least 8 characters long' };
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      return { error: 'Username must be 3-20 characters and contain only letters, numbers, and underscores' };
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { error: 'Invalid email format' };
+    }
+
+    // Create users table if it doesn't exist
+    try {
+      await db.prepare(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        full_name VARCHAR(255) NOT NULL,
+        user_type VARCHAR(20) NOT NULL DEFAULT 'student',
+        is_active BOOLEAN DEFAULT 1,
+        email_verified BOOLEAN DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        last_login DATETIME
+      )`).run();
+    } catch (error) {
+      console.log('Table might already exist:', error.message);
+    }
+
+    // Check if user already exists
+    const existingUser = await db.prepare(`
+      SELECT id FROM users WHERE email = ? OR username = ?
+    `).bind(email, username).first();
+
+    if (existingUser) {
+      return { error: 'User with this email or username already exists' };
+    }
+
+    // Hash password
+    const passwordHash = await hashPassword(password);
+
+    // Create admin user
+    const result = await db.prepare(`
+      INSERT INTO users (username, email, password_hash, full_name, user_type, is_active, email_verified)
+      VALUES (?, ?, ?, ?, 'admin', 1, 1)
+    `).bind(username, email, passwordHash, fullName).run();
+
+    if (!result.success) {
+      return { error: 'Failed to create admin account' };
+    }
+
+    const adminId = result.meta.last_row_id;
+
+    // Create JWT token
+    const token = await createToken(adminId, username, jwtSecret);
+
+    return {
+      success: true,
+      message: 'Admin account created successfully',
+      admin: {
+        id: adminId,
+        username,
+        email,
+        fullName,
+        userType: 'admin'
+      },
+      token
+    };
+
+  } catch (error) {
+    console.error('Admin setup failed:', error);
+    return { error: 'Internal server error during admin setup' };
+  }
+}
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+async function createToken(userId, username, secret) {
+  const header = {
+    alg: 'HS256',
+    typ: 'JWT'
+  };
+
+  const payload = {
+    sub: userId.toString(),
+    username: username,
+    userType: 'admin',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+  };
+
+  const headerBase64 = btoa(JSON.stringify(header));
+  const payloadBase64 = btoa(JSON.stringify(payload));
   
-  c.set('db', db);
-  await next();
-});
+  const signature = await signData(`${headerBase64}.${payloadBase64}`, secret);
+  
+  return `${headerBase64}.${payloadBase64}.${signature}`;
+}
 
-// Static routes
-app.get('/', (c) => {
-  return c.html(getAdminSetupPage());
-});
+async function signData(data, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
 
-// API Routes
-app.route('/api/auth', authRoutes);
-app.route('/api/admin', adminRoutes);
-app.route('/api/setup', setupRoutes);
-
-// Health check
-app.get('/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-export default app;
-
-function getAdminSetupPage(): string {
+function getAdminSetupPage() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,18 +249,6 @@ function getAdminSetupPage(): string {
                            placeholder="Confirm your password">
                 </div>
 
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-blue-800 mb-2">
-                        <i class="fas fa-info-circle mr-2"></i>Admin Account Information
-                    </h3>
-                    <ul class="text-sm text-blue-700 space-y-1">
-                        <li>• Full system access and control</li>
-                        <li>• User management capabilities</li>
-                        <li>• Content moderation permissions</li>
-                        <li>• Platform configuration access</li>
-                    </ul>
-                </div>
-
                 <button type="submit" id="submitBtn"
                         class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 flex items-center justify-center">
                     <i class="fas fa-user-shield mr-2"></i>
@@ -156,7 +262,6 @@ function getAdminSetupPage(): string {
     </div>
 
     <script>
-        // Password toggle functionality
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const icon = this.querySelector('i');
@@ -172,7 +277,6 @@ function getAdminSetupPage(): string {
             }
         });
 
-        // Form validation and submission
         document.getElementById('adminSetupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -186,11 +290,9 @@ function getAdminSetupPage(): string {
             const successDiv = document.getElementById('successMessage');
             const submitBtn = document.getElementById('submitBtn');
             
-            // Reset messages
             errorDiv.classList.add('hidden');
             successDiv.classList.add('hidden');
             
-            // Validation
             if (password.length < 8) {
                 showError('Password must be at least 8 characters long');
                 return;
@@ -206,7 +308,6 @@ function getAdminSetupPage(): string {
                 return;
             }
             
-            // Show loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Account...';
             
@@ -226,17 +327,16 @@ function getAdminSetupPage(): string {
                 
                 const data = await response.json();
                 
-                if (response.ok) {
-                    showSuccess('Admin account created successfully! Redirecting to dashboard...');
-                    setTimeout(() => {
-                        window.location.href = '/admin/dashboard';
-                    }, 2000);
+                if (response.ok && data.success) {
+                    showSuccess('Admin account created successfully!');
+                    submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Account Created';
                 } else {
                     showError(data.error || 'Failed to create admin account');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-user-shield mr-2"></i>Create Admin Account';
                 }
             } catch (error) {
                 showError('Network error. Please try again.');
-            } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-user-shield mr-2"></i>Create Admin Account';
             }
