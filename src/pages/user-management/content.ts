@@ -20,9 +20,15 @@ type UserManagementContentProps = {
     query?: string;
   };
   successMessage?: string;
+  errorMessage?: string;
 };
 
-export const renderUserManagementContent = ({ users, filters, successMessage }: UserManagementContentProps): string => {
+export const renderUserManagementContent = ({
+  users,
+  filters,
+  successMessage,
+  errorMessage,
+}: UserManagementContentProps): string => {
   const queryValue = filters.query ? escapeValue(filters.query) : "";
   const roleValue = filters.role ?? "";
 
@@ -36,11 +42,18 @@ export const renderUserManagementContent = ({ users, filters, successMessage }: 
           <td>${escapeValue(user.email)}</td>
           <td>${escapeValue(new Date(user.createdAt).toLocaleDateString())}</td>
           <td>
-            <form method="post" action="/admin/users/delete">
-              <input type="hidden" name="role" value="${escapeValue(user.role)}" />
-              <input type="hidden" name="email" value="${escapeValue(user.email)}" />
-              <button type="submit" class="button-link">Delete</button>
-            </form>
+            <details class="confirm-delete">
+              <summary class="button-link button-link--danger">Delete</summary>
+              <form class="confirm-delete__form" method="post" action="/admin/users/delete">
+                <input type="hidden" name="role" value="${escapeValue(user.role)}" />
+                <input type="hidden" name="email" value="${escapeValue(user.email)}" />
+                <label class="confirm-delete__field">
+                  <span>Admin password</span>
+                  <input type="password" name="adminPassword" required />
+                </label>
+                <button type="submit" class="button-link button-link--danger">Confirm delete</button>
+              </form>
+            </details>
           </td>
         </tr>`,
         )
@@ -60,6 +73,7 @@ export const renderUserManagementContent = ({ users, filters, successMessage }: 
       </div>
     </header>
     ${successMessage ? `<div class="alert">${escapeValue(successMessage)}</div>` : ""}
+    ${errorMessage ? `<div class="alert alert--error">${escapeValue(errorMessage)}</div>` : ""}
     <section class="page-section">
       <form class="filter-bar" method="get" action="/admin/users">
         <div class="filter-fields">
@@ -84,20 +98,22 @@ export const renderUserManagementContent = ({ users, filters, successMessage }: 
       </form>
     </section>
     <section class="page-section">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Role</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Created</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
     </section>
   </section>
 `;

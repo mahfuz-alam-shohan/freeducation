@@ -91,12 +91,14 @@ const renderUserList = async (
   role: UserRole | null,
   query: string | null,
   successMessage?: string,
+  errorMessage?: string,
 ): Promise<Response> => {
   const users = await listUsers(env.DB, { role, query: query ?? undefined });
   const content = renderUserManagementContent({
     users,
     filters: { role, query: query ?? undefined },
     successMessage,
+    errorMessage,
   });
   return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
 };
@@ -195,7 +197,13 @@ export const handleAdminRoutes = async (
           : url.searchParams.get("deleted") === "1"
             ? "User account deleted."
             : undefined;
-      return renderUserList(env, context, role, query, successMessage);
+      const errorMessage =
+        url.searchParams.get("error") === "invalid-password"
+          ? "Admin password did not match. Please try again."
+          : url.searchParams.get("error") === "missing-password"
+            ? "Enter your admin password to delete a user."
+            : undefined;
+      return renderUserList(env, context, role, query, successMessage, errorMessage);
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -303,6 +311,7 @@ export const handleAdminRoutes = async (
       const formData = await request.formData();
       const role = normalizeUserRole(formData.get("role")?.toString() ?? null);
       const email = formData.get("email");
+      const adminPassword = formData.get("adminPassword");
 
       if (!role || typeof email !== "string") {
         return redirectResponse("/admin/users");
@@ -311,6 +320,15 @@ export const handleAdminRoutes = async (
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) {
         return redirectResponse("/admin/users");
+      }
+
+      if (typeof adminPassword !== "string" || !adminPassword.trim()) {
+        return redirectResponse("/admin/users?error=missing-password");
+      }
+
+      const adminSession = await verifyAdminLogin(env.DB, context.session.email, adminPassword);
+      if (!adminSession) {
+        return redirectResponse("/admin/users?error=invalid-password");
       }
 
       try {

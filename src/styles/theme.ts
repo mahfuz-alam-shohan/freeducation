@@ -37,12 +37,16 @@ export const themeStyles = `
     border-radius: var(--radius-sm);
     padding: 8px 12px;
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
 
   button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  button:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  button:active { transform: translateY(0); box-shadow: none; }
 
   input,
   select,
