@@ -1,24 +1,17 @@
-import { themeStyles } from "../../styles/theme";
-
-const adminSetupStyles = `
-  ${themeStyles}
-  * { box-sizing: border-box; }
-  body { margin: 0; padding: 20px; }
-  main { max-width: 520px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px; }
-  h1 { margin-top: 0; }
-  label { display: block; margin-top: 16px; color: var(--color-text); }
-  input { width: 100%; margin-top: 6px; }
-  button { margin-top: 20px; }
-  .note { margin-top: 12px; font-size: 14px; color: var(--color-text-muted); }
-`;
-
 export const renderAdminSetupPage = (): string => `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Setup</title>
-    <style>${adminSetupStyles}</style>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #1f1f1f; }
+      main { max-width: 520px; }
+      label { display: block; margin-top: 16px; }
+      input { width: 100%; padding: 8px; font-size: 16px; margin-top: 6px; }
+      button { margin-top: 24px; padding: 10px 16px; font-size: 16px; cursor: pointer; }
+      .note { margin-top: 12px; font-size: 14px; color: #444; }
+    </style>
   </head>
   <body>
     <main>
@@ -54,7 +47,6 @@ export const renderSetupDisabledPage = (): string => `<!DOCTYPE html>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Setup Complete</title>
-    <style>${adminSetupStyles}</style>
   </head>
   <body>
     <main>
