@@ -27,6 +27,7 @@ export const renderProfileMenu = ({ session }: ProfileMenuProps): string => {
     : `
       <p>Sign in to continue.</p>
       <a class="button-link button-link--primary" href="/login">Sign in</a>
+      <a class="button-link" href="/signup">Sign up</a>
     `;
 
   const notificationContent = `
