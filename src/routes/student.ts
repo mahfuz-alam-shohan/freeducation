@@ -1,4 +1,5 @@
-import { createOrRefreshStudentSignup, verifyStudentSignup } from "../features/auth/studentSignup";
+import { findUserRoleByEmail } from "../features/admin/userManagement";
+import { createOrRefreshStudentSignup, deleteStudentSignup, verifyStudentSignup } from "../features/auth/studentSignup";
 import { renderPageLayout, type DeviceType } from "../layouts/pageLayout";
 import {
   renderSignupConfirmationContent,
@@ -95,12 +96,26 @@ export const handleStudentRoutes = async (
         );
       }
 
+      const existingRole = await findUserRoleByEmail(env.DB, normalizedEmail);
+      if (existingRole) {
+        return renderSignup(
+          context.device,
+          context.session,
+          `This email already belongs to a ${existingRole} account. Please log in instead.`,
+          {
+            name: trimmedName,
+            email: normalizedEmail,
+            dateOfBirth: trimmedDob,
+          },
+        );
+      }
+
       const code = createVerificationCode();
       const codeHash = await hashVerificationCode(code);
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
       try {
-        await createOrRefreshStudentSignup(env.DB, {
+        const { student } = await createOrRefreshStudentSignup(env.DB, {
           name: trimmedName,
           email: normalizedEmail,
           password,
@@ -108,7 +123,12 @@ export const handleStudentRoutes = async (
           codeHash,
           expiresAt,
         });
-        await sendStudentVerificationEmail(env, { to: normalizedEmail, name: trimmedName, code });
+        try {
+          await sendStudentVerificationEmail(env, { to: normalizedEmail, name: trimmedName, code });
+        } catch (error) {
+          await deleteStudentSignup(env.DB, student.id);
+          throw error;
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to start signup.";
         return renderSignup(context.device, context.session, message, {

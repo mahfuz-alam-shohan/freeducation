@@ -2,6 +2,7 @@ import { verifyAdminLogin } from "../features/auth/adminLogin";
 import { adminExists, createAdmin } from "../features/auth/adminSetup";
 import {
   createUserAccount,
+  deleteUserAccount,
   findUserRoleByEmail,
   listUsers,
   normalizeUserRole,
@@ -188,7 +189,12 @@ export const handleAdminRoutes = async (
     if (request.method === "GET") {
       const role = normalizeUserRole(url.searchParams.get("role"));
       const query = url.searchParams.get("q")?.trim() ?? null;
-      const successMessage = url.searchParams.get("created") === "1" ? "User account created." : undefined;
+      const successMessage =
+        url.searchParams.get("created") === "1"
+          ? "User account created."
+          : url.searchParams.get("deleted") === "1"
+            ? "User account deleted."
+            : undefined;
       return renderUserList(env, context, role, query, successMessage);
     }
 
@@ -283,6 +289,37 @@ export const handleAdminRoutes = async (
       }
 
       return redirectResponse("/admin/users?created=1");
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  if (url.pathname === "/admin/users/delete") {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    if (request.method === "POST") {
+      const formData = await request.formData();
+      const role = normalizeUserRole(formData.get("role")?.toString() ?? null);
+      const email = formData.get("email");
+
+      if (!role || typeof email !== "string") {
+        return redirectResponse("/admin/users");
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail) {
+        return redirectResponse("/admin/users");
+      }
+
+      try {
+        await deleteUserAccount(env.DB, { role, email: normalizedEmail });
+      } catch {
+        return redirectResponse("/admin/users");
+      }
+
+      return redirectResponse("/admin/users?deleted=1");
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);

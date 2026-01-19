@@ -160,6 +160,11 @@ export const createOrRefreshStudentSignup = async (
   return { student };
 };
 
+export const deleteStudentSignup = async (db: D1Database, studentId: number): Promise<void> => {
+  await clearStudentVerifications(db, studentId);
+  await db.prepare("DELETE FROM students WHERE id = ?").bind(studentId).run();
+};
+
 export const verifyStudentSignup = async (
   db: D1Database,
   payload: { email: string; code: string },
