@@ -1,26 +1,18 @@
 
-
 name = "freeducation"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-
-[[rules]]
-type = "Text"
-globs = ["**/web/templates/**/*.html", "**/web/static/js/*.js"]
-fallthrough = true
 
 [[d1_databases]]
 binding = "DB"
 database_name = "freeducation"
 database_id = "028f3ce8-db15-4962-9d04-b744591d35d5"
 
-# R2 Bucket Binding
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "freeducation"
 
-# Environment Variables
 [vars]
 GMAIL_CLIENT_ID = "151296843802-ansdm59387uk2r0lfaebvkr5566beq3g.apps.googleusercontent.com"
 GMAIL_CLIENT_SECRET = "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"
