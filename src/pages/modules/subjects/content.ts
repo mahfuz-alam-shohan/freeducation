@@ -1,29 +1,35 @@
-import type { SubjectListItem } from "../../../features/admin/modules";
+export type SubjectTemplateRow = {
+  name: string;
+  slug: string;
+  structure: string;
+  classGroups: string;
+  streams: string;
+  manageUrl: string;
+  manageLabel: string;
+};
 
 const escapeValue = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const renderSubjectRows = (subjects: SubjectListItem[]): string => {
+const renderSubjectRows = (subjects: SubjectTemplateRow[]): string => {
   if (!subjects.length) {
     return `
       <tr>
-        <td colspan="6">No subjects yet. Add the first subject using the form below.</td>
+        <td colspan="6">No subject templates have been registered yet.</td>
       </tr>`;
   }
 
   return subjects
     .map((subject) => {
-      const groups = subject.classGroups.length ? subject.classGroups.join(", ") : "-";
-      const streams = subject.streams.length ? subject.streams.join(", ") : "-";
       return `
         <tr>
           <td>${escapeValue(subject.name)}</td>
           <td>${escapeValue(subject.slug)}</td>
-          <td>${escapeValue(subject.templateSlug ?? "-")}</td>
-          <td>${escapeValue(groups)}</td>
-          <td>${escapeValue(streams)}</td>
+          <td>${escapeValue(subject.structure)}</td>
+          <td>${escapeValue(subject.classGroups)}</td>
+          <td>${escapeValue(subject.streams)}</td>
           <td>
-            <a class="button-link" href="/admin/modules/subjects/${subject.id}">Manage</a>
+            <a class="button-link" href="${escapeValue(subject.manageUrl)}">${escapeValue(subject.manageLabel)}</a>
           </td>
         </tr>`;
     })
@@ -31,7 +37,7 @@ const renderSubjectRows = (subjects: SubjectListItem[]): string => {
 };
 
 type SubjectsModuleContentProps = {
-  subjects: SubjectListItem[];
+  subjects: SubjectTemplateRow[];
   successMessage?: string;
   errorMessage?: string;
 };
@@ -44,7 +50,7 @@ export const renderSubjectsModuleContent = ({
   <section class="page">
     <header class="page-header">
       <h1 class="page-title">Subjects module</h1>
-      <p class="page-subtitle">Subjects are defined in code. Use this area to manage chapters, topics, and content.</p>
+      <p class="page-subtitle">Select a subject template to manage classes, chapters, and content.</p>
     </header>
     ${successMessage ? `<div class="alert">${escapeValue(successMessage)}</div>` : ""}
     ${errorMessage ? `<div class="alert alert--error">${escapeValue(errorMessage)}</div>` : ""}
@@ -55,7 +61,7 @@ export const renderSubjectsModuleContent = ({
             <tr>
               <th>Subject</th>
               <th>Slug</th>
-              <th>Template</th>
+              <th>Structure</th>
               <th>Class groups</th>
               <th>Streams</th>
               <th>Action</th>

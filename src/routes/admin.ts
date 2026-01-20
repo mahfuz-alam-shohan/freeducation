@@ -150,8 +150,6 @@ const renderModules = async (env: Env, context: AdminRouteContext): Promise<Resp
   await ensureDefaultClassGroups(env.DB);
   await syncSubjectTemplates(env.DB, listSubjectTemplates());
   let modules = await listModules(env.DB);
-  const subjects = await listSubjects(env.DB);
-
   if (!modules.length) {
     modules = [
       {
@@ -165,8 +163,21 @@ const renderModules = async (env: Env, context: AdminRouteContext): Promise<Resp
     ];
   }
 
+  const content = renderModulesContent({ modules });
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
+};
+
+const renderSubjectsModule = async (
+  env: Env,
+  context: AdminRouteContext,
+  successMessage?: string,
+  errorMessage?: string,
+): Promise<Response> => {
+  await ensureDefaultClassGroups(env.DB);
+  await syncSubjectTemplates(env.DB, listSubjectTemplates());
+  const subjects = await listSubjects(env.DB);
   const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
-  const subjectModules = listSubjectTemplates().map((template) => {
+  const subjectTemplates = listSubjectTemplates().map((template) => {
     const subject = subjectBySlug.get(template.slug);
     const classGroups = template.classGroups.map((group) => group.slug).join(", ") || "-";
     const streams = template.classGroups.map((group) => group.stream).join(", ") || "-";
@@ -182,24 +193,10 @@ const renderModules = async (env: Env, context: AdminRouteContext): Promise<Resp
       classGroups,
       streams,
       manageUrl: subject ? `/admin/modules/subjects/${subject.id}` : "/admin/modules/subjects",
-      manageLabel: subject ? "Manage" : "Open subjects",
+      manageLabel: subject ? "Manage" : "Sync pending",
     };
   });
-
-  const content = renderModulesContent({ modules, subjectModules });
-  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
-};
-
-const renderSubjectsModule = async (
-  env: Env,
-  context: AdminRouteContext,
-  successMessage?: string,
-  errorMessage?: string,
-): Promise<Response> => {
-  await ensureDefaultClassGroups(env.DB);
-  await syncSubjectTemplates(env.DB, listSubjectTemplates());
-  const subjects = await listSubjects(env.DB);
-  const content = renderSubjectsModuleContent({ subjects, successMessage, errorMessage });
+  const content = renderSubjectsModuleContent({ subjects: subjectTemplates, successMessage, errorMessage });
   return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
 };
 
