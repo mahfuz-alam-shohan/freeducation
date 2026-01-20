@@ -5,19 +5,8 @@ const escapeValue = (value: string): string =>
 
 type ModulesContentProps = {
   modules: ModuleListItem[];
-  subjectModules: SubjectModuleRow[];
   successMessage?: string;
   errorMessage?: string;
-};
-
-type SubjectModuleRow = {
-  name: string;
-  slug: string;
-  structure: string;
-  classGroups: string;
-  streams: string;
-  manageUrl: string;
-  manageLabel: string;
 };
 
 const renderModuleRows = (modules: ModuleListItem[]): string => {
@@ -48,32 +37,7 @@ const renderModuleRows = (modules: ModuleListItem[]): string => {
     .join("");
 };
 
-const renderSubjectModuleRows = (subjectModules: SubjectModuleRow[]): string => {
-  if (!subjectModules.length) {
-    return `
-      <tr>
-        <td colspan="6">No subject templates have been registered yet.</td>
-      </tr>`;
-  }
-
-  return subjectModules
-    .map(
-      (module) => `
-      <tr>
-        <td>${escapeValue(module.name)}</td>
-        <td>${escapeValue(module.slug)}</td>
-        <td>${escapeValue(module.structure)}</td>
-        <td>${escapeValue(module.classGroups)}</td>
-        <td>${escapeValue(module.streams)}</td>
-        <td>
-          <a class="button-link" href="${escapeValue(module.manageUrl)}">${escapeValue(module.manageLabel)}</a>
-        </td>
-      </tr>`,
-    )
-    .join("");
-};
-
-export const renderModulesContent = ({ modules, subjectModules, successMessage, errorMessage }: ModulesContentProps): string => `
+export const renderModulesContent = ({ modules, successMessage, errorMessage }: ModulesContentProps): string => `
   <section class="page">
     <header class="page-header">
       <h1 class="page-title">Modules</h1>
@@ -95,26 +59,6 @@ export const renderModulesContent = ({ modules, subjectModules, successMessage, 
           </thead>
           <tbody>
             ${renderModuleRows(modules)}
-          </tbody>
-        </table>
-      </div>
-    </section>
-    <section class="page-section">
-      <h2 class="section-title">Subject templates</h2>
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th>Slug</th>
-              <th>Structure</th>
-              <th>Class groups</th>
-              <th>Streams</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${renderSubjectModuleRows(subjectModules)}
           </tbody>
         </table>
       </div>

@@ -20,7 +20,7 @@ export const renderContentShellMobile = ({ header, sidebar, main, footer }: Cont
 export const mobileShellStyles = `
   .app { min-height: 100vh; min-height: 100dvh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
   .sidebar-toggle { position: absolute; opacity: 0; pointer-events: none; }
-  .app-shell { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; min-height: 100dvh; height: auto; background: linear-gradient(180deg, #0f132f 0%, #151b45 55%, #101432 100%); }
+  .app-shell { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; min-height: 100dvh; height: 100vh; height: 100dvh; background: linear-gradient(180deg, #0f132f 0%, #151b45 55%, #101432 100%); }
   .app-header { position: relative; z-index: 30; display: grid; grid-template-columns: 60px 1fr 80px; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--color-border); background: linear-gradient(90deg, #171c4e 0%, #232a68 100%); box-shadow: 0 8px 18px rgba(6, 8, 26, 0.35); }
   .app-header__center { display: flex; justify-content: center; }
   .app-header__right { display: flex; justify-content: flex-end; }
@@ -46,7 +46,7 @@ export const mobileShellStyles = `
   .menu-item { display: flex; gap: 10px; align-items: center; padding: 8px 6px; border-radius: var(--radius-sm); color: var(--color-text); border: 1px solid transparent; transition: background 0.2s ease, border-color 0.2s ease; }
   .menu-item:hover { background: var(--color-surface-elevated); border-color: var(--color-border); }
   .menu-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-muted); }
-  .app-main { padding: 10px; overflow: visible; background: linear-gradient(180deg, #141a40 0%, #12163a 100%); border: 1px solid var(--color-border); border-radius: 0; position: relative; z-index: 1; }
+  .app-main { padding: 10px; overflow: auto; overscroll-behavior: contain; background: linear-gradient(180deg, #141a40 0%, #12163a 100%); border: 1px solid var(--color-border); border-radius: 0; position: relative; z-index: 1; }
   .app-footer { padding: 6px 12px; border-top: 1px solid var(--color-border); background: #101636; color: var(--color-text-muted); text-align: center; }
   .profile-menu summary { list-style: none; cursor: pointer; }
   .profile-menu summary::-webkit-details-marker { display: none; }
