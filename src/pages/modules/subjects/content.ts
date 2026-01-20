@@ -1,9 +1,5 @@
 export type SubjectTemplateRow = {
   name: string;
-  slug: string;
-  structure: string;
-  classGroups: string;
-  streams: string;
   manageUrl: string;
   manageLabel: string;
 };
@@ -15,7 +11,7 @@ const renderSubjectRows = (subjects: SubjectTemplateRow[]): string => {
   if (!subjects.length) {
     return `
       <tr>
-        <td colspan="6">No subject templates have been registered yet.</td>
+        <td colspan="2">No subject templates have been registered yet.</td>
       </tr>`;
   }
 
@@ -24,10 +20,6 @@ const renderSubjectRows = (subjects: SubjectTemplateRow[]): string => {
       return `
         <tr>
           <td>${escapeValue(subject.name)}</td>
-          <td>${escapeValue(subject.slug)}</td>
-          <td>${escapeValue(subject.structure)}</td>
-          <td>${escapeValue(subject.classGroups)}</td>
-          <td>${escapeValue(subject.streams)}</td>
           <td>
             <a class="button-link" href="${escapeValue(subject.manageUrl)}">${escapeValue(subject.manageLabel)}</a>
           </td>
@@ -49,8 +41,8 @@ export const renderSubjectsModuleContent = ({
 }: SubjectsModuleContentProps): string => `
   <section class="page">
     <header class="page-header">
-      <h1 class="page-title">Subjects module</h1>
-      <p class="page-subtitle">Select a subject template to manage classes, chapters, and content.</p>
+      <h1 class="page-title">Subjects</h1>
+      <p class="page-subtitle">Select a subject to manage class-specific content.</p>
     </header>
     ${successMessage ? `<div class="alert">${escapeValue(successMessage)}</div>` : ""}
     ${errorMessage ? `<div class="alert alert--error">${escapeValue(errorMessage)}</div>` : ""}
@@ -60,10 +52,6 @@ export const renderSubjectsModuleContent = ({
           <thead>
             <tr>
               <th>Subject</th>
-              <th>Slug</th>
-              <th>Structure</th>
-              <th>Class groups</th>
-              <th>Streams</th>
               <th>Action</th>
             </tr>
           </thead>

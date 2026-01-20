@@ -23,8 +23,6 @@ export type SubjectListItem = {
   description: string | null;
   isTwoPaper: number;
   createdAt: string;
-  classGroups: string[];
-  streams: string[];
 };
 
 export type SubjectDetail = {
@@ -221,22 +219,13 @@ export const listSubjects = async (db: D1Database): Promise<SubjectListItem[]> =
         subjects.template_slug as templateSlug,
         subjects.description,
         subjects.is_two_paper as isTwoPaper,
-        subjects.created_at as createdAt,
-        GROUP_CONCAT(class_groups.slug) as classGroups,
-        GROUP_CONCAT(class_subjects.stream) as streams
+        subjects.created_at as createdAt
       FROM subjects
-      LEFT JOIN class_subjects ON class_subjects.subject_id = subjects.id
-      LEFT JOIN class_groups ON class_groups.id = class_subjects.class_group_id
-      GROUP BY subjects.id
       ORDER BY subjects.name ASC`,
     )
-    .all<{ classGroups: string | null; streams: string | null } & Omit<SubjectListItem, "classGroups" | "streams">>();
+    .all<SubjectListItem>();
 
-  return result.results.map((row) => ({
-    ...row,
-    classGroups: row.classGroups ? row.classGroups.split(",") : [],
-    streams: row.streams ? row.streams.split(",") : [],
-  }));
+  return result.results;
 };
 
 export const getSubjectById = async (db: D1Database, subjectId: number): Promise<SubjectDetail | null> => {

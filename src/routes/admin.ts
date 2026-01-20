@@ -19,13 +19,10 @@ import {
   ensureDefaultClassGroups,
   ensureModulesSeed,
   getSubjectById,
-  listChapters,
   listModules,
-  syncSubjectTemplates,
   listSubjectClassGroups,
   listSubjects,
-  listContentItems,
-  listTopics,
+  syncSubjectTemplates,
 } from "../features/admin/modules";
 import { renderPageLayout, type DeviceType } from "../layouts/pageLayout";
 import { renderAdminSetupPage } from "../pages/admin-setup/content";
@@ -147,8 +144,6 @@ const parseNumberParam = (value: string | null): number | null => {
 
 const renderModules = async (env: Env, context: AdminRouteContext): Promise<Response> => {
   await ensureModulesSeed(env.DB);
-  await ensureDefaultClassGroups(env.DB);
-  await syncSubjectTemplates(env.DB, listSubjectTemplates());
   let modules = await listModules(env.DB);
   if (!modules.length) {
     modules = [
@@ -179,19 +174,8 @@ const renderSubjectsModule = async (
   const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
   const subjectTemplates = listSubjectTemplates().map((template) => {
     const subject = subjectBySlug.get(template.slug);
-    const classGroups = template.classGroups.map((group) => group.slug).join(", ") || "-";
-    const streams = template.classGroups.map((group) => group.stream).join(", ") || "-";
-    const structure = [
-      template.structure.hasChapters ? "Chapters" : "No chapters",
-      template.structure.hasTopics ? "Topics" : "No topics",
-      `Content: ${template.structure.contentScope}`,
-    ].join(" · ");
     return {
       name: template.name,
-      slug: template.slug,
-      structure,
-      classGroups,
-      streams,
       manageUrl: subject ? `/admin/modules/subjects/${subject.id}` : "/admin/modules/subjects",
       manageLabel: subject ? "Manage" : "Sync pending",
     };
@@ -205,8 +189,6 @@ const renderSubjectDetail = async (
   context: AdminRouteContext,
   subjectId: number,
   classSubjectId: number | null,
-  chapterId: number | null,
-  topicId: number | null,
   successMessage?: string,
   errorMessage?: string,
 ): Promise<Response> => {
@@ -215,29 +197,12 @@ const renderSubjectDetail = async (
     return redirectResponse("/admin/modules/subjects");
   }
 
-  const template = getSubjectTemplate(subject.templateSlug ?? subject.slug);
   const classGroups = await listSubjectClassGroups(env.DB, subjectId);
-
-  const chapters = classSubjectId ? await listChapters(env.DB, classSubjectId) : [];
-  const topics = template?.structure.hasTopics && chapterId ? await listTopics(env.DB, chapterId) : [];
-  const contentItems = template?.structure.hasTopics
-    ? topicId
-      ? await listContentItems(env.DB, { topicId })
-      : []
-    : chapterId
-      ? await listContentItems(env.DB, { chapterId })
-      : [];
 
   const content = renderSubjectDetailContent({
     subject,
-    template,
     classGroups,
     selectedClassSubjectId: classSubjectId ?? undefined,
-    chapters,
-    selectedChapterId: chapterId ?? undefined,
-    topics,
-    selectedTopicId: topicId ?? undefined,
-    contentItems,
     successMessage,
     errorMessage,
   });
@@ -388,8 +353,6 @@ export const handleAdminRoutes = async (
 
     const subjectId = Number(subjectDetailMatch[1]);
     const classSubjectId = parseNumberParam(url.searchParams.get("classSubjectId"));
-    const chapterId = parseNumberParam(url.searchParams.get("chapterId"));
-    const topicId = parseNumberParam(url.searchParams.get("topicId"));
 
     if (request.method === "GET") {
       const successMessage = url.searchParams.get("updated") === "1" ? "Update saved." : undefined;
@@ -399,8 +362,6 @@ export const handleAdminRoutes = async (
         context,
         subjectId,
         classSubjectId,
-        chapterId,
-        topicId,
         successMessage,
         errorMessage,
       );
