@@ -173,10 +173,16 @@ const renderSubjectsModule = async (
   errorMessage?: string,
 ): Promise<Response> => {
   await ensureDefaultClassGroups(env.DB);
-  await syncSubjectTemplates(env.DB, listSubjectTemplates());
-  const subjects = await listSubjects(env.DB);
+  const subjectTemplates = listSubjectTemplates();
+  let subjects = await listSubjects(env.DB);
+  const existingSlugs = new Set(subjects.map((subject) => subject.slug));
+  const missingTemplates = subjectTemplates.filter((template) => !existingSlugs.has(template.slug));
+  if (missingTemplates.length) {
+    await syncSubjectTemplates(env.DB, missingTemplates);
+    subjects = await listSubjects(env.DB);
+  }
   const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
-  const subjectTemplates = listSubjectTemplates().map((template) => {
+  const subjectTemplateRows = subjectTemplates.map((template) => {
     const subject = subjectBySlug.get(template.slug);
     const customManageUrl =
       template.slug === "mathematics"
@@ -190,7 +196,7 @@ const renderSubjectsModule = async (
       manageLabel: subject ? "Manage" : "Sync pending",
     };
   });
-  const content = renderSubjectsModuleContent({ subjects: subjectTemplates, successMessage, errorMessage });
+  const content = renderSubjectsModuleContent({ subjects: subjectTemplateRows, successMessage, errorMessage });
   return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
 };
 

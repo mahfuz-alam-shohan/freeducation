@@ -19,8 +19,11 @@ const renderSubjectRows = (subjects: SubjectTemplateRow[]): string => {
     .map((subject) => {
       return `
         <tr>
-          <td>${escapeValue(subject.name)}</td>
           <td>
+            <a class="table-link" href="${escapeValue(subject.manageUrl)}">${escapeValue(subject.name)}</a>
+            <span class="table-meta">${escapeValue(subject.manageLabel)}</span>
+          </td>
+          <td class="table-actions">
             <a class="button-link" href="${escapeValue(subject.manageUrl)}">${escapeValue(subject.manageLabel)}</a>
           </td>
         </tr>`;
@@ -52,7 +55,7 @@ export const renderSubjectsModuleContent = ({
           <thead>
             <tr>
               <th>Subject</th>
-              <th>Action</th>
+              <th class="table-actions">Action</th>
             </tr>
           </thead>
           <tbody>
