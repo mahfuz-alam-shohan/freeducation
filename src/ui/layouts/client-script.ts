@@ -1,4 +1,32 @@
 export const clientScript = `
+  // Performance optimizations
+  let rafId = null;
+  
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+  
+  const throttle = (func, limit) => {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  };
+  
   const sidebarToggle = document.getElementById("sidebar-toggle");
   const sidebarToggleLabel = document.querySelector(".sidebar-toggle__label");
   const sidebarViewportQuery = window.matchMedia("(max-width: 768px)");
@@ -76,19 +104,40 @@ export const clientScript = `
     if (!breadcrumbRoot) return;
     const crumbs = window.breadcrumbCrumbs || [];
     if (!crumbs.length) {
-      breadcrumbRoot.innerHTML = "";
+      breadcrumbRoot.textContent = "";
       return;
     }
-    const markup = crumbs
-      .map((item, index) => {
-        const isLast = index === crumbs.length - 1;
-        if (isLast) {
-          return '<span class="breadcrumb__current" aria-current="page">' + item.label + "</span>";
-        }
-        return '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb__separator">&rsaquo;</span>';
-      })
-      .join("");
-    breadcrumbRoot.innerHTML = '<div class="breadcrumb">' + markup + "</div>";
+    
+    // Clear existing content
+    breadcrumbRoot.textContent = "";
+    
+    // Create breadcrumb container
+    const breadcrumbContainer = document.createElement("div");
+    breadcrumbContainer.className = "breadcrumb";
+    
+    crumbs.forEach((item, index) => {
+      const isLast = index === crumbs.length - 1;
+      
+      if (isLast) {
+        const current = document.createElement("span");
+        current.className = "breadcrumb__current";
+        current.setAttribute("aria-current", "page");
+        current.textContent = item.label;
+        breadcrumbContainer.appendChild(current);
+      } else {
+        const link = document.createElement("a");
+        link.href = item.href;
+        link.textContent = item.label;
+        breadcrumbContainer.appendChild(link);
+        
+        const separator = document.createElement("span");
+        separator.className = "breadcrumb__separator";
+        separator.textContent = "›";
+        breadcrumbContainer.appendChild(separator);
+      }
+    });
+    
+    breadcrumbRoot.appendChild(breadcrumbContainer);
     window.requestAnimationFrame(() => {
       breadcrumbRoot.scrollLeft = breadcrumbRoot.scrollWidth;
     });

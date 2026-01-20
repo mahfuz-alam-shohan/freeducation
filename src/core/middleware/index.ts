@@ -6,6 +6,13 @@ import { jsonResponse } from '../http/response';
 
 export { COMMON_VALIDATION_SCHEMAS, ValidationError } from './validation';
 
+// Generate a secure nonce for CSP
+export const generateNonce = (): string => {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
+};
+
 export interface SecurityMiddlewareConfig {
   enableRateLimit?: boolean;
   enableCSRF?: boolean;

@@ -68,7 +68,7 @@ export const renderPageLayout = ({ device, content, session, csrfToken }: PageLa
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     ${csrfMeta}
-    <title>Freeducation</title>
+    <title>freeducation</title>
     <style>${styles}</style>
   </head>
   <body>

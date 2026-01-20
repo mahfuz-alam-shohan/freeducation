@@ -2,14 +2,52 @@ import { themeStyles } from "../styles/theme";
 
 export const baseStyles = `
   ${themeStyles}
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; overflow: hidden; }
-  a { color: var(--color-link); text-decoration: none; }
-  a:hover { color: var(--color-link-hover); }
-  hr { border: none; border-top: 1px solid var(--color-border); margin: 12px 0; }
-  h1, h2, h3, h4 { font-family: var(--font-display); }
-  .icon { width: 18px; height: 18px; display: inline-block; }
+  
+  /* Performance optimizations */
+  * { 
+    box-sizing: border-box; 
+    will-change: auto; /* Optimize animations */
+  }
+  
+  html, body { 
+    height: 100%; 
+    scroll-behavior: smooth;
+  }
+  
+  body { 
+    margin: 0; 
+    overflow: hidden;
+    font-display: swap; /* Faster font loading */
+    text-rendering: optimizeSpeed; /* Faster text rendering */
+  }
+  
+  a { 
+    color: var(--color-link); 
+    text-decoration: none; 
+    transition: color 0.2s ease; /* Hardware accelerated */
+  }
+  
+  a:hover { 
+    color: var(--color-link-hover); 
+  }
+  
+  hr { 
+    border: none; 
+    border-top: 1px solid var(--color-border); 
+    margin: 12px 0; 
+  }
+  
+  h1, h2, h3, h4 { 
+    font-family: var(--font-display);
+    font-display: swap; /* Faster heading rendering */
+  }
+  
+  .icon { 
+    width: 18px; 
+    height: 18px; 
+    display: inline-block; 
+    transform: translateZ(0); /* Hardware acceleration */
+  }
   .button-link {
     display: inline-flex;
     align-items: center;

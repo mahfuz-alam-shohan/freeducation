@@ -1,32 +1,39 @@
-// Rate limiting store (in production, use KV or external store)
+// Rate limiting stores
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const apiRateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 export interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
   keyGenerator?: (request: Request) => string;
   store?: Map<string, { count: number; resetTime: number }>;
+  usePersistentStore?: boolean;
 }
 
 export const createRateLimitMiddleware = (config: RateLimitConfig) => {
-  const { windowMs, maxRequests, keyGenerator = defaultKeyGenerator, store = rateLimitStore } = config;
+  const { windowMs, maxRequests, keyGenerator = defaultKeyGenerator, usePersistentStore = false } = config;
+  
+  // Choose store based on whether we need persistence
+  const selectedStore = usePersistentStore ? apiRateLimitStore : rateLimitStore;
 
   return (request: Request): Response | null => {
     const key = keyGenerator(request);
     const now = Date.now();
 
-    // Clean up old entries
-    for (const [storeKey, data] of store.entries()) {
-      if (data.resetTime < now) {
-        store.delete(storeKey);
+    // Clean up old entries (only for in-memory stores)
+    if (!usePersistentStore) {
+      for (const [storeKey, data] of selectedStore.entries()) {
+        if (data.resetTime < now) {
+          selectedStore.delete(storeKey);
+        }
       }
     }
 
-    const existing = store.get(key);
+    const existing = selectedStore.get(key);
     
     if (!existing || existing.resetTime < now) {
       // New window
-      store.set(key, { count: 1, resetTime: now + windowMs });
+      selectedStore.set(key, { count: 1, resetTime: now + windowMs });
       return null;
     }
 
@@ -57,7 +64,7 @@ const defaultKeyGenerator = (request: Request): string => {
 
 // Predefined rate limit configurations
 export const RATE_LIMITS = {
-  AUTH: { windowMs: 15 * 60 * 1000, maxRequests: 5 }, // 5 requests per 15 minutes
-  GENERAL: { windowMs: 15 * 60 * 1000, maxRequests: 100 }, // 100 requests per 15 minutes
-  API: { windowMs: 1 * 60 * 1000, maxRequests: 30 }, // 30 requests per minute
+  AUTH: { windowMs: 15 * 60 * 1000, maxRequests: 5, usePersistentStore: false }, // In-memory for UI
+  GENERAL: { windowMs: 15 * 60 * 1000, maxRequests: 100, usePersistentStore: false }, // In-memory for UI
+  API: { windowMs: 1 * 60 * 1000, maxRequests: 30, usePersistentStore: true }, // Persistent for API
 } as const;
