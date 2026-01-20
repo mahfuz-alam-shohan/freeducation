@@ -6,9 +6,10 @@ const escapeValue = (value: string): string =>
 type ClassOption = {
   label: string;
   classSubjectId: number;
+  classGroupSlug: string;
 };
 
-const expandClassOptions = (classGroups: SubjectClassGroup[]): ClassOption[] => {
+const expandClassOptions = (classGroups: SubjectClassGroup[], splitCombined: boolean): ClassOption[] => {
   const order = ["9-10", "11-12"];
   const sorted = [...classGroups].sort((a, b) => {
     const aIndex = order.indexOf(a.classGroupSlug);
@@ -22,21 +23,21 @@ const expandClassOptions = (classGroups: SubjectClassGroup[]): ClassOption[] => 
   });
 
   return sorted.flatMap((group) => {
-    if (group.classGroupSlug === "9-10") {
+    if (splitCombined && group.classGroupSlug === "9-10") {
       return [
-        { label: "Class 9", classSubjectId: group.classSubjectId },
-        { label: "Class 10", classSubjectId: group.classSubjectId },
+        { label: "Class 9", classSubjectId: group.classSubjectId, classGroupSlug: group.classGroupSlug },
+        { label: "Class 10", classSubjectId: group.classSubjectId, classGroupSlug: group.classGroupSlug },
       ];
     }
 
-    if (group.classGroupSlug === "11-12") {
+    if (splitCombined && group.classGroupSlug === "11-12") {
       return [
-        { label: "Class 11", classSubjectId: group.classSubjectId },
-        { label: "Class 12", classSubjectId: group.classSubjectId },
+        { label: "Class 11", classSubjectId: group.classSubjectId, classGroupSlug: group.classGroupSlug },
+        { label: "Class 12", classSubjectId: group.classSubjectId, classGroupSlug: group.classGroupSlug },
       ];
     }
 
-    return [{ label: group.classGroupName, classSubjectId: group.classSubjectId }];
+    return [{ label: group.classGroupName, classSubjectId: group.classSubjectId, classGroupSlug: group.classGroupSlug }];
   });
 };
 
@@ -48,21 +49,30 @@ type SubjectDetailContentProps = {
   errorMessage?: string;
 };
 
-const renderClassGroupLinks = (subjectId: number, classGroups: SubjectClassGroup[], selected?: number): string => {
+const renderClassGroupLinks = (
+  subjectId: number,
+  classGroups: SubjectClassGroup[],
+  subjectSlug: string,
+  selected?: number,
+): string => {
   if (!classGroups.length) {
     return "<p class=\"helper-text\">No class groups assigned to this subject.</p>";
   }
 
-  const options = expandClassOptions(classGroups);
+  const options = expandClassOptions(classGroups, subjectSlug !== "bangla");
 
   return `
-    <div class="page-actions">
+    <div class="card-grid">
       ${options
         .map((option) => {
           const active = option.classSubjectId === selected;
+          const path =
+            subjectSlug === "bangla" && (option.classGroupSlug === "9-10" || option.classGroupSlug === "11-12")
+              ? `/admin/modules/subjects/bangla/${option.classGroupSlug}`
+              : `/admin/modules/subjects/${subjectId}?classSubjectId=${option.classSubjectId}`;
           return `
-            <a class="button-link ${active ? "button-link--primary" : ""}" href="/admin/modules/subjects/${subjectId}?classSubjectId=${option.classSubjectId}">
-              ${escapeValue(option.label)}
+            <a class="card-link ${active ? "card-link--active" : ""}" href="${path}">
+              <span class="card-title">${escapeValue(option.label)}</span>
             </a>`;
         })
         .join("")}
@@ -88,7 +98,7 @@ export const renderSubjectDetailContent = ({
     ${errorMessage ? `<div class="alert alert--error">${escapeValue(errorMessage)}</div>` : ""}
     <section class="page-section">
       <h2 class="section-title">Class selection</h2>
-      ${renderClassGroupLinks(subject.id, classGroups, selectedClassSubjectId)}
+      ${renderClassGroupLinks(subject.id, classGroups, subject.slug, selectedClassSubjectId)}
     </section>
   </section>
 `;

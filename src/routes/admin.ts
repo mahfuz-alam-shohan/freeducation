@@ -34,6 +34,8 @@ import { renderUserManagementContent } from "../pages/user-management/content";
 import { renderCreateUserContent } from "../pages/user-management/create/content";
 import type { AdminSession } from "../services/security/session";
 import { getSubjectTemplate, listSubjectTemplates } from "../modules/subjects/registry";
+import { handleBanglaNineTenRoutes } from "../modules/subjects/bangla/9-10/routes";
+import { handleBanglaElevenTwelveRoutes } from "../modules/subjects/bangla/11-12/routes";
 import {
   clearAdminSessionCookie,
   createAdminSessionToken,
@@ -343,6 +345,16 @@ export const handleAdminRoutes = async (
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  const banglaNineTenResponse = await handleBanglaNineTenRoutes(request, env, context);
+  if (banglaNineTenResponse) {
+    return banglaNineTenResponse;
+  }
+
+  const banglaElevenTwelveResponse = await handleBanglaElevenTwelveRoutes(request, env, context);
+  if (banglaElevenTwelveResponse) {
+    return banglaElevenTwelveResponse;
   }
 
   const subjectDetailMatch = url.pathname.match(/^\/admin\/modules\/subjects\/(\d+)$/);
