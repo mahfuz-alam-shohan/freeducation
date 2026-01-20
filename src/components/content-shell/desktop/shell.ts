@@ -11,7 +11,10 @@ export const renderContentShellDesktop = ({ header, sidebar, main, footer }: Con
     <div class="app-shell">
       ${header}
       ${sidebar}
-      <main class="app-main">${main}</main>
+      <main class="app-main">
+        <div class="app-main__breadcrumb" id="breadcrumb" role="navigation" aria-label="Breadcrumb"></div>
+        <div class="app-main__content">${main}</div>
+      </main>
       ${footer}
     </div>
   </div>
@@ -75,14 +78,21 @@ export const desktopShellStyles = `
   .menu-item:hover { background: var(--color-surface-elevated); border-color: var(--color-border); transform: translateX(2px); }
   .menu-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-muted); }
   .app-main {
-    padding: 12px 16px 16px;
-    overflow: auto;
-    overscroll-behavior: contain;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    min-height: 0;
     background: var(--color-bg);
     border: none;
     border-radius: 0;
     position: relative;
     z-index: 1;
+  }
+  .app-main__content {
+    padding: 12px 16px 16px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
     transition: opacity 0.2s ease, transform 0.2s ease;
     animation: page-enter 0.35s ease;
   }
@@ -120,7 +130,7 @@ export const desktopShellStyles = `
     font-weight: 600;
   }
   .profile-notifications { display: none; }
-  .sidebar-toggle:checked + .app-shell { grid-template-columns: 72px 1fr; }
+  .sidebar-toggle:checked + .app-shell { grid-template-columns: 60px 1fr; }
   .sidebar-toggle:checked + .app-shell .menu-label { display: none; }
   .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--open { display: inline-flex; }
   .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--close { display: none; }
@@ -151,6 +161,6 @@ export const desktopShellStyles = `
     .sidebar-toggle:checked + .app-shell .app-sidebar { transform: translateX(0); }
     .notification-menu { display: none; }
     .profile-notifications { display: block; }
-    .app-main { padding: 10px; }
+    .app-main__content { padding: 10px; }
   }
 `;
