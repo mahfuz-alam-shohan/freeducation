@@ -22,7 +22,7 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
     return studentResponse;
   }
 
-  const publicResponse = handlePublicRoutes(request, { adminReady, device, session });
+  const publicResponse = await handlePublicRoutes(request, { adminReady, device, session });
   if (publicResponse) {
     return publicResponse;
   }
