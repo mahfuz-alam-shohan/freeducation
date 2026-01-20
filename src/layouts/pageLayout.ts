@@ -72,6 +72,30 @@ const baseStyles = `
   .page-subtitle { margin: 0; color: var(--color-text-muted); }
   .app-main { transition: opacity 0.2s ease, transform 0.2s ease; }
   body.is-transitioning .app-main { opacity: 0.7; transform: translateY(4px); }
+  .app-main__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-size: 13px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app-main__breadcrumb:empty { display: none; }
+  .breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb a { color: var(--color-text-muted); }
+  .breadcrumb a:hover { color: var(--color-text); }
+  .breadcrumb__current { color: var(--color-text); font-weight: 600; }
+  .breadcrumb__separator { color: var(--color-text-muted); }
   .page-section { display: grid; gap: 10px; animation: fade-in 0.3s ease; }
   .page-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
   .section-title { margin: 0; font-size: 20px; text-align: center; }
@@ -178,6 +202,8 @@ const baseStyles = `
   .data-table tbody tr { transition: background-color 0.2s ease; }
   .data-table tbody tr:last-child td { border-bottom: none; }
   .data-table tbody tr:hover { background: var(--color-surface-elevated); }
+  .table-link { color: var(--color-text); display: block; text-decoration: none; }
+  .table-meta { display: none; font-size: 12px; color: var(--color-text-muted); }
   .confirm-delete { position: relative; display: inline-flex; }
   .confirm-delete__toggle { position: absolute; opacity: 0; pointer-events: none; }
   .confirm-delete__modal {
@@ -389,6 +415,14 @@ const baseStyles = `
     50% { transform: translateX(120%); }
     100% { transform: translateX(240%); }
   }
+  @media (max-width: 640px) {
+    .app-main__breadcrumb { padding: 6px 12px; font-size: 12px; }
+    .data-table { min-width: 100%; }
+    .data-table th,
+    .data-table td { padding: 6px; font-size: 13px; }
+    .data-table .table-actions { display: none; }
+    .table-meta { display: block; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   }
@@ -455,10 +489,92 @@ export const renderPageLayout = ({ device, content, session }: PageLayoutProps):
       const activateLoader = () => pageLoader?.classList.add("is-active");
       const deactivateLoader = () => pageLoader?.classList.remove("is-active");
       const resetTransition = () => document.body.classList.remove("is-transitioning");
+      const sidebarToggle = document.getElementById("sidebar-toggle");
+      const breadcrumbRoot = document.getElementById("breadcrumb");
+      const sidebarStorageKey = "freeducation.sidebarCollapsed";
+      const sidebarViewportQuery = window.matchMedia("(min-width: 769px)");
+
+      const toTitleCase = (value) =>
+        value
+          .split(" ")
+          .map((part) => part ? part[0].toUpperCase() + part.slice(1) : part)
+          .join(" ");
+
+      const labelOverrides = {
+        "subjects": "Subjects",
+        "9-10": "Class 9-10",
+        "11-12": "Class 11-12",
+        "first-paper": "1st paper",
+        "second-paper": "2nd paper",
+        "first": "1st paper",
+        "second": "2nd paper",
+      };
+
+      const formatBreadcrumbLabel = (segment) => {
+        if (labelOverrides[segment]) return labelOverrides[segment];
+        if (/^\\d+$/.test(segment)) return "Subject " + segment;
+        return toTitleCase(segment.replace(/-/g, " "));
+      };
+
+      const applySidebarState = () => {
+        if (!sidebarToggle) return;
+        if (!sidebarViewportQuery.matches) {
+          sidebarToggle.checked = false;
+          return;
+        }
+        const stored = window.localStorage?.getItem(sidebarStorageKey);
+        sidebarToggle.checked = stored === "collapsed";
+      };
+
+      const handleSidebarChange = () => {
+        if (!sidebarToggle || !sidebarViewportQuery.matches) return;
+        window.localStorage?.setItem(sidebarStorageKey, sidebarToggle.checked ? "collapsed" : "expanded");
+      };
+
+      const renderBreadcrumbs = () => {
+        if (!breadcrumbRoot) return;
+        const { pathname } = window.location;
+        if (!pathname.startsWith("/admin/modules/subjects")) {
+          breadcrumbRoot.innerHTML = "";
+          return;
+        }
+        const segments = pathname.split("/").filter(Boolean);
+        const subjectsIndex = segments.indexOf("subjects");
+        if (subjectsIndex === -1) {
+          breadcrumbRoot.innerHTML = "";
+          return;
+        }
+        const items = [];
+        for (let i = subjectsIndex; i < segments.length; i += 1) {
+          const label = formatBreadcrumbLabel(segments[i]);
+          const href = "/" + segments.slice(0, i + 1).join("/");
+          items.push({ label, href });
+        }
+        const markup = items
+          .map((item, index) => {
+            const isLast = index === items.length - 1;
+            if (isLast) {
+              return '<span class="breadcrumb__current" aria-current="page">' + item.label + "</span>";
+            }
+            return '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb__separator">›</span>';
+          })
+          .join("");
+        breadcrumbRoot.innerHTML = '<div class="breadcrumb">' + markup + "</div>";
+        window.requestAnimationFrame(() => {
+          breadcrumbRoot.scrollLeft = breadcrumbRoot.scrollWidth;
+        });
+      };
+
       window.addEventListener("pageshow", () => {
         deactivateLoader();
         resetTransition();
+        applySidebarState();
+        renderBreadcrumbs();
       });
+      applySidebarState();
+      renderBreadcrumbs();
+      sidebarViewportQuery.addEventListener("change", applySidebarState);
+      sidebarToggle?.addEventListener("change", handleSidebarChange);
       document.addEventListener("submit", (event) => {
         const target = event.target;
         if (target instanceof HTMLFormElement && target.target !== "_blank") {

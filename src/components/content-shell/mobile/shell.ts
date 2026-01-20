@@ -11,7 +11,10 @@ export const renderContentShellMobile = ({ header, sidebar, main, footer }: Cont
     <div class="app-shell">
       ${header}
       ${sidebar}
-      <main class="app-main">${main}</main>
+      <main class="app-main">
+        <div class="app-main__breadcrumb" id="breadcrumb" role="navigation" aria-label="Breadcrumb"></div>
+        <div class="app-main__content">${main}</div>
+      </main>
       ${footer}
     </div>
   </div>
@@ -83,14 +86,21 @@ export const mobileShellStyles = `
   .menu-item:hover { background: var(--color-surface-elevated); border-color: var(--color-border); transform: translateX(2px); }
   .menu-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-muted); }
   .app-main {
-    padding: 12px;
-    overflow: auto;
-    overscroll-behavior: contain;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    min-height: 0;
     background: var(--color-bg);
     border: none;
     border-radius: 0;
     position: relative;
     z-index: 1;
+  }
+  .app-main__content {
+    padding: 12px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
     transition: opacity 0.2s ease, transform 0.2s ease;
     animation: page-enter 0.35s ease;
   }
