@@ -8,12 +8,32 @@ import {
   normalizeUserRole,
   type UserRole,
 } from "../features/admin/userManagement";
+import {
+  createChapter,
+  createContentItem,
+  createTopic,
+  deleteChapter,
+  deleteContentItem,
+  deleteSubject,
+  deleteTopic,
+  getSubjectById,
+  listChapters,
+  listModules,
+  listSubjectClassGroups,
+  listSubjects,
+  listContentItems,
+  listTopics,
+} from "../features/admin/modules";
 import { renderPageLayout, type DeviceType } from "../layouts/pageLayout";
 import { renderAdminSetupPage } from "../pages/admin-setup/content";
 import { renderLoginContent } from "../pages/login/content";
+import { renderModulesContent } from "../pages/modules/content";
+import { renderSubjectDetailContent } from "../pages/modules/subjects/detail";
+import { renderSubjectsModuleContent } from "../pages/modules/subjects/content";
 import { renderUserManagementContent } from "../pages/user-management/content";
 import { renderCreateUserContent } from "../pages/user-management/create/content";
 import type { AdminSession } from "../services/security/session";
+import { getSubjectTemplate, listSubjectTemplates } from "../modules/subjects/registry";
 import {
   clearAdminSessionCookie,
   createAdminSessionToken,
@@ -113,6 +133,77 @@ const renderCreateUser = (
   return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
 };
 
+const parseNumberParam = (value: string | null): number | null => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const renderModules = async (env: Env, context: AdminRouteContext): Promise<Response> => {
+  const modules = await listModules(env.DB);
+  const content = renderModulesContent({ modules });
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
+};
+
+const renderSubjectsModule = async (
+  env: Env,
+  context: AdminRouteContext,
+  successMessage?: string,
+  errorMessage?: string,
+): Promise<Response> => {
+  const subjects = await listSubjects(env.DB);
+  const content = renderSubjectsModuleContent({ subjects, successMessage, errorMessage });
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
+};
+
+const renderSubjectDetail = async (
+  env: Env,
+  context: AdminRouteContext,
+  subjectId: number,
+  classSubjectId: number | null,
+  chapterId: number | null,
+  topicId: number | null,
+  successMessage?: string,
+  errorMessage?: string,
+): Promise<Response> => {
+  const subject = await getSubjectById(env.DB, subjectId);
+  if (!subject) {
+    return redirectResponse("/admin/modules/subjects");
+  }
+
+  const template = getSubjectTemplate(subject.templateSlug ?? subject.slug);
+  const classGroups = await listSubjectClassGroups(env.DB, subjectId);
+
+  const chapters = classSubjectId ? await listChapters(env.DB, classSubjectId) : [];
+  const topics = template?.structure.hasTopics && chapterId ? await listTopics(env.DB, chapterId) : [];
+  const contentItems = template?.structure.hasTopics
+    ? topicId
+      ? await listContentItems(env.DB, { topicId })
+      : []
+    : chapterId
+      ? await listContentItems(env.DB, { chapterId })
+      : [];
+
+  const content = renderSubjectDetailContent({
+    subject,
+    template,
+    classGroups,
+    selectedClassSubjectId: classSubjectId ?? undefined,
+    chapters,
+    selectedChapterId: chapterId ?? undefined,
+    topics,
+    selectedTopicId: topicId ?? undefined,
+    contentItems,
+    successMessage,
+    errorMessage,
+  });
+
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
+};
+
 export const getAdminSession = async (request: Request, env: Env): Promise<AdminSession | null> => {
   const cookieValue = getCookieValue(request.headers.get("cookie"), "admin_session");
   if (!cookieValue) {
@@ -204,6 +295,244 @@ export const handleAdminRoutes = async (
             ? "Enter your admin password to delete a user."
             : undefined;
       return renderUserList(env, context, role, query, successMessage, errorMessage);
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  if (url.pathname === "/admin/modules") {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    if (request.method === "GET") {
+      return renderModules(env, context);
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  if (url.pathname === "/admin/modules/subjects") {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    if (request.method === "GET") {
+      const successMessage =
+        url.searchParams.get("deleted") === "1"
+          ? "Subject deleted."
+          : url.searchParams.get("updated") === "1"
+            ? "Subject updated."
+            : undefined;
+      const errorMessage = url.searchParams.get("error") === "invalid" ? "Please complete all fields." : undefined;
+      return renderSubjectsModule(env, context, successMessage, errorMessage);
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  if (url.pathname === "/admin/modules/subjects/class-groups") {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  const subjectDetailMatch = url.pathname.match(/^\/admin\/modules\/subjects\/(\d+)$/);
+  if (subjectDetailMatch) {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    const subjectId = Number(subjectDetailMatch[1]);
+    const classSubjectId = parseNumberParam(url.searchParams.get("classSubjectId"));
+    const chapterId = parseNumberParam(url.searchParams.get("chapterId"));
+    const topicId = parseNumberParam(url.searchParams.get("topicId"));
+
+    if (request.method === "GET") {
+      const successMessage = url.searchParams.get("updated") === "1" ? "Update saved." : undefined;
+      const errorMessage = url.searchParams.get("error") === "invalid" ? "Please complete all fields." : undefined;
+      return renderSubjectDetail(
+        env,
+        context,
+        subjectId,
+        classSubjectId,
+        chapterId,
+        topicId,
+        successMessage,
+        errorMessage,
+      );
+    }
+
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  const subjectActionMatch = url.pathname.match(
+    /^\/admin\/modules\/subjects\/(\d+)\/(delete|chapters|chapters\/delete|topics|topics\/delete|content)$/,
+  );
+  if (subjectActionMatch) {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    const subjectId = Number(subjectActionMatch[1]);
+    const action = subjectActionMatch[2];
+    const subject = await getSubjectById(env.DB, subjectId);
+    const template = getSubjectTemplate(subject?.templateSlug ?? subject?.slug ?? null);
+
+    if (request.method !== "POST") {
+      return jsonResponse({ error: "Method not allowed" }, 405);
+    }
+
+    const formData = await request.formData();
+    const classSubjectId = parseNumberParam(formData.get("classSubjectId")?.toString() ?? null);
+    const chapterId = parseNumberParam(formData.get("chapterId")?.toString() ?? null);
+    const topicId = parseNumberParam(formData.get("topicId")?.toString() ?? null);
+
+    try {
+      if (action === "delete") {
+        await deleteSubject(env.DB, subjectId);
+        return redirectResponse("/admin/modules/subjects?deleted=1");
+      }
+
+      if (action === "chapters") {
+        const title = formData.get("title");
+        const slug = formData.get("slug");
+        const position = parseNumberParam(formData.get("position")?.toString() ?? null) ?? 0;
+        const summary = formData.get("summary");
+
+        if (!classSubjectId || typeof title !== "string" || typeof slug !== "string") {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+
+        await createChapter(env.DB, {
+          classSubjectId,
+          title: title.trim(),
+          slug: slug.trim().toLowerCase(),
+          position,
+          summary: typeof summary === "string" ? summary.trim() : undefined,
+        });
+
+        return redirectResponse(`/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&updated=1`);
+      }
+
+      if (action === "chapters/delete") {
+        if (!classSubjectId || !chapterId) {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+
+        await deleteChapter(env.DB, chapterId);
+        return redirectResponse(`/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&updated=1`);
+      }
+
+      if (action === "topics") {
+        if (template && !template.structure.hasTopics) {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+        const title = formData.get("title");
+        const slug = formData.get("slug");
+        const position = parseNumberParam(formData.get("position")?.toString() ?? null) ?? 0;
+
+        if (!classSubjectId || !chapterId || typeof title !== "string" || typeof slug !== "string") {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+
+        await createTopic(env.DB, {
+          chapterId,
+          title: title.trim(),
+          slug: slug.trim().toLowerCase(),
+          position,
+        });
+
+        return redirectResponse(
+          `/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&chapterId=${chapterId}&updated=1`,
+        );
+      }
+
+      if (action === "topics/delete") {
+        if (template && !template.structure.hasTopics) {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+        if (!classSubjectId || !chapterId || !topicId) {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+
+        await deleteTopic(env.DB, topicId);
+        return redirectResponse(
+          `/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&chapterId=${chapterId}&updated=1`,
+        );
+      }
+
+      if (action === "content") {
+        const contentType = formData.get("contentType");
+        const title = formData.get("title");
+        const body = formData.get("body");
+        const resourceUrl = formData.get("resourceUrl");
+        const position = parseNumberParam(formData.get("position")?.toString() ?? null) ?? 0;
+
+        const requiresTopic = template?.structure.hasTopics ?? true;
+        if (
+          !classSubjectId ||
+          !chapterId ||
+          (requiresTopic && !topicId) ||
+          typeof contentType !== "string" ||
+          typeof title !== "string"
+        ) {
+          return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+        }
+
+        await createContentItem(env.DB, {
+          chapterId: requiresTopic ? undefined : chapterId,
+          topicId,
+          contentType: contentType.trim(),
+          title: title.trim(),
+          body: typeof body === "string" ? body.trim() : undefined,
+          resourceUrl: typeof resourceUrl === "string" ? resourceUrl.trim() : undefined,
+          position,
+        });
+
+        return redirectResponse(
+          requiresTopic
+            ? `/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&chapterId=${chapterId}&topicId=${topicId}&updated=1`
+            : `/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&chapterId=${chapterId}&updated=1`,
+        );
+      }
+    } catch {
+      return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+    }
+
+    return redirectResponse(`/admin/modules/subjects/${subjectId}?error=invalid`);
+  }
+
+  if (url.pathname === "/admin/modules/subjects/content/delete") {
+    if (!context.session) {
+      return redirectResponse("/login");
+    }
+
+    if (request.method === "POST") {
+      const formData = await request.formData();
+      const contentItemId = parseNumberParam(formData.get("contentItemId")?.toString() ?? null);
+      const subjectId = parseNumberParam(formData.get("subjectId")?.toString() ?? null);
+      const classSubjectId = parseNumberParam(formData.get("classSubjectId")?.toString() ?? null);
+      const chapterId = parseNumberParam(formData.get("chapterId")?.toString() ?? null);
+      const topicId = parseNumberParam(formData.get("topicId")?.toString() ?? null);
+      if (!contentItemId) {
+        return redirectResponse("/admin/modules/subjects?error=invalid");
+      }
+
+      await deleteContentItem(env.DB, contentItemId);
+      if (subjectId && classSubjectId && chapterId && topicId) {
+        return redirectResponse(
+          `/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&chapterId=${chapterId}&topicId=${topicId}&updated=1`,
+        );
+      }
+      if (subjectId && classSubjectId && chapterId) {
+        return redirectResponse(
+          `/admin/modules/subjects/${subjectId}?classSubjectId=${classSubjectId}&chapterId=${chapterId}&updated=1`,
+        );
+      }
+      return redirectResponse("/admin/modules/subjects?updated=1");
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);

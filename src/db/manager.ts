@@ -1,3 +1,4 @@
+import { listSubjectTemplates } from "../modules/subjects/registry";
 import { buildColumnSql, buildCreateTableSql, expectedSchema, type ColumnDefinition } from "./schema";
 
 type D1Database = {
@@ -46,6 +47,10 @@ const hasMatchingColumn = (expected: ColumnDefinition, existing: ColumnInfo): bo
   }
 
   if (expected.notNull && existing.notnull !== 1) {
+    return false;
+  }
+
+  if (!expected.notNull && existing.notnull === 1) {
     return false;
   }
 
@@ -120,6 +125,87 @@ const createMinimalSchema = async (db: D1Database): Promise<void> => {
   }
 };
 
+const ensureSeedData = async (db: D1Database): Promise<void> => {
+  const createdAt = new Date().toISOString();
+
+  await db
+    .prepare(
+      `INSERT INTO modules (name, slug, description, is_active, created_at)
+       SELECT ?, ?, ?, ?, ?
+       WHERE NOT EXISTS (SELECT 1 FROM modules WHERE slug = ?)`,
+    )
+    .bind("Subjects", "subjects", "Manage class subjects, chapters, and content.", 1, createdAt, "subjects")
+    .run();
+
+  const classGroups = [
+    { name: "Class 9-10", slug: "9-10", description: "Combined curriculum for class 9 and 10." },
+    { name: "Class 11-12", slug: "11-12", description: "Combined curriculum for class 11 and 12." },
+  ];
+
+  for (const group of classGroups) {
+    await db
+      .prepare(
+        `INSERT INTO class_groups (name, slug, description, created_at)
+         SELECT ?, ?, ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM class_groups WHERE slug = ?)`,
+      )
+      .bind(group.name, group.slug, group.description, createdAt, group.slug)
+      .run();
+  }
+
+  const templateSubjects = listSubjectTemplates();
+  const classGroupRows = await db
+    .prepare("SELECT id, slug FROM class_groups")
+    .all<{ id: number; slug: string }>();
+  const classGroupMap = new Map(classGroupRows.results.map((group) => [group.slug, group.id]));
+
+  for (const template of templateSubjects) {
+    await db
+      .prepare(
+        `INSERT INTO subjects (name, slug, template_slug, description, is_two_paper, created_at)
+         SELECT ?, ?, ?, ?, ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM subjects WHERE slug = ?)`,
+      )
+      .bind(template.name, template.slug, template.slug, null, 0, createdAt, template.slug)
+      .run();
+
+    const subjectResult = await db
+      .prepare("SELECT id FROM subjects WHERE slug = ?")
+      .bind(template.slug)
+      .all<{ id: number }>();
+    const subjectId = subjectResult.results[0]?.id;
+    if (!subjectId) {
+      continue;
+    }
+
+    for (const group of template.classGroups) {
+      const classGroupId = classGroupMap.get(group.slug);
+      if (!classGroupId) {
+        continue;
+      }
+
+      await db
+        .prepare(
+          `INSERT INTO class_subjects (class_group_id, subject_id, stream, is_optional, created_at)
+           SELECT ?, ?, ?, ?, ?
+           WHERE NOT EXISTS (
+             SELECT 1 FROM class_subjects WHERE class_group_id = ? AND subject_id = ?
+           )`,
+        )
+        .bind(
+          classGroupId,
+          subjectId,
+          group.stream,
+          group.isOptional ? 1 : 0,
+          createdAt,
+          classGroupId,
+          subjectId,
+        )
+        .run();
+    }
+  }
+};
+
 export const ensureSchema = async (db: D1Database): Promise<void> => {
   try {
     const existingTables = await getExistingTables(db);
@@ -150,9 +236,12 @@ export const ensureSchema = async (db: D1Database): Promise<void> => {
         await addColumn(db, table.name, column);
       }
     }
+
+    await ensureSeedData(db);
   } catch (error) {
     if (isAuthorizationError(error)) {
       await createMinimalSchema(db);
+      await ensureSeedData(db);
       return;
     }
 
