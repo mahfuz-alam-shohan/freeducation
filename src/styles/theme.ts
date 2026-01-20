@@ -13,9 +13,9 @@ export const themeStyles = `
     --color-link: #2945d0;
     --color-link-hover: #1c35a6;
     --color-accent: #2f5bff;
-    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.08);
-    --radius-sm: 0;
-    --radius-md: 0;
+    --shadow-sm: 0 8px 18px rgba(16, 24, 40, 0.08);
+    --radius-sm: 10px;
+    --radius-md: 14px;
   }
 
   body {
