@@ -29,6 +29,11 @@ export const renderUsersIcon = (): string =>
     '<path d="M8 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm-8 2c-2.8 0-5 1.8-5 4v2m13-6c2.8 0 5 1.8 5 4v2M8 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',
   );
 
+export const renderModulesIcon = (): string =>
+  renderIcon(
+    '<path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />',
+  );
+
 export const renderBellIcon = (): string =>
   renderIcon(
     '<path d="M18 9a6 6 0 1 0-12 0c0 4-2 5-2 5h16s-2-1-2-5Zm-5 9a2 2 0 0 1-4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',
