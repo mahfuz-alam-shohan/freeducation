@@ -43,23 +43,23 @@ const baseStyles = `
     background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  .button-link:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-  .button-link:active { transform: translateY(0); box-shadow: none; }
+  .button-link:hover { background: var(--color-surface-muted); border-color: var(--color-border-strong); }
+  .button-link:active { background: var(--color-surface-elevated); }
   .button-link--primary {
     background: var(--color-accent);
     color: #fff;
     border-color: transparent;
   }
   .button-link--danger {
-    background: #3b1b2a;
-    color: #f7c8d4;
-    border-color: #6a2b46;
+    background: #ffe8ed;
+    color: #8b1f3c;
+    border-color: #f4bcc8;
   }
   .button-link--danger:hover {
-    background: #4a2134;
-    color: #ffd6df;
+    background: #ffd9e1;
+    color: #7a1733;
   }
   .page { max-width: 640px; margin: 0 auto; display: grid; gap: 12px; }
   .page-header { display: grid; gap: 6px; }
@@ -75,10 +75,10 @@ const baseStyles = `
     border-radius: var(--radius-md);
     padding: 12px;
     background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
   }
-  .form-card:hover { transform: translateY(-1px); }
+  .form-card:hover { border-color: var(--color-border-strong); }
   .form-grid { display: grid; gap: 10px; }
   .form-field { display: grid; gap: 6px; }
   .form-actions { display: flex; justify-content: flex-start; }
@@ -90,7 +90,7 @@ const baseStyles = `
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
   }
   .filter-fields { display: grid; gap: 10px; }
   .filter-field { display: grid; gap: 6px; }
@@ -104,7 +104,7 @@ const baseStyles = `
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
   }
   .data-table th,
   .data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
@@ -120,7 +120,7 @@ const baseStyles = `
     align-items: center;
     justify-content: center;
     padding: 12px;
-    background: rgba(6, 8, 26, 0.65);
+    background: rgba(15, 18, 28, 0.4);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -135,7 +135,7 @@ const baseStyles = `
     padding: 12px;
     display: grid;
     gap: 10px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
   }
   .confirm-delete__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .confirm-delete__title { margin: 0; font-size: 16px; }
@@ -152,7 +152,7 @@ const baseStyles = `
     padding: 8px 10px;
     background: var(--color-surface-muted);
   }
-  .alert--error { border-color: #6a2b46; color: #f3b9c8; background: #352039; }
+  .alert--error { border-color: #f4bcc8; color: #8b1f3c; background: #ffe8ed; }
   .home {
     width: 100%;
     max-width: none;
@@ -165,13 +165,9 @@ const baseStyles = `
     width: 100%;
     overflow: hidden;
     border-radius: 0;
-    border: 1px solid #262a6d;
-    padding: 20px 18px;
-    background:
-      linear-gradient(135deg, rgba(23, 27, 92, 0.95) 0%, rgba(50, 56, 152, 0.95) 45%, rgba(18, 20, 74, 0.98) 100%),
-      repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 12px),
-      radial-gradient(circle at 20% 20%, rgba(94, 108, 255, 0.35), transparent 45%),
-      radial-gradient(circle at 80% 10%, rgba(120, 138, 255, 0.25), transparent 40%);
+    border: 1px solid var(--color-border);
+    padding: 18px 16px;
+    background: var(--color-surface-muted);
   }
   .home-cover__content {
     position: relative;
@@ -184,7 +180,7 @@ const baseStyles = `
     margin: 0;
     font-size: 48px;
     font-family: "Playfair Display", "Times New Roman", serif;
-    color: #f4f6ff;
+    color: var(--color-text);
     letter-spacing: 1.5px;
   }
   .home-cover__quotes {
@@ -205,7 +201,7 @@ const baseStyles = `
     margin: 0;
     font-size: 16px;
     line-height: 1.5;
-    color: #e6e9ff;
+    color: var(--color-text-muted);
     position: absolute;
     inset: 0;
     opacity: 0;
@@ -222,16 +218,16 @@ const baseStyles = `
   .shape {
     position: absolute;
     display: block;
-    opacity: 0.9;
+    opacity: 0.4;
     border-radius: 0;
-    mix-blend-mode: screen;
+    mix-blend-mode: multiply;
     --shape-rotate: 0deg;
     animation: float-shape 10s ease-in-out infinite;
   }
   .shape--one {
     width: 120px;
     height: 50px;
-    background: rgba(97, 114, 255, 0.7);
+    background: rgba(46, 86, 255, 0.25);
     top: 16px;
     left: 12px;
     --shape-rotate: -8deg;
@@ -240,7 +236,7 @@ const baseStyles = `
   .shape--two {
     width: 76px;
     height: 76px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(41, 69, 208, 0.08);
     top: 18px;
     right: 32px;
     --shape-rotate: 12deg;
@@ -249,7 +245,7 @@ const baseStyles = `
   .shape--three {
     width: 160px;
     height: 38px;
-    background: rgba(72, 86, 214, 0.7);
+    background: rgba(46, 86, 255, 0.2);
     bottom: 18px;
     left: 40px;
     --shape-rotate: 6deg;
@@ -258,7 +254,7 @@ const baseStyles = `
   .shape--four {
     width: 110px;
     height: 42px;
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(41, 69, 208, 0.12);
     bottom: 28px;
     right: 40px;
     --shape-rotate: -10deg;
@@ -267,7 +263,7 @@ const baseStyles = `
   .shape--five {
     width: 42px;
     height: 120px;
-    background: rgba(92, 105, 255, 0.5);
+    background: rgba(46, 86, 255, 0.18);
     top: 40%;
     right: 12%;
     --shape-rotate: 4deg;

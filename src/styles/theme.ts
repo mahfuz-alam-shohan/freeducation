@@ -2,18 +2,18 @@ export const themeStyles = `
   :root {
     color-scheme: light;
     --font-body: "Inter", "Segoe UI", Arial, sans-serif;
-    --color-bg: #0f132f;
-    --color-surface: #151a3f;
-    --color-surface-muted: #1b2254;
-    --color-surface-elevated: #202862;
-    --color-text: #f2f4ff;
-    --color-text-muted: #c0c7f2;
-    --color-border: #2f3570;
-    --color-border-strong: #3c4591;
-    --color-link: #8ea0ff;
-    --color-link-hover: #b1c0ff;
-    --color-accent: #5b6dff;
-    --shadow-sm: 0 12px 24px rgba(9, 12, 32, 0.35);
+    --color-bg: #f6f7fb;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f0f2f7;
+    --color-surface-elevated: #e7eaf3;
+    --color-text: #1c2230;
+    --color-text-muted: #5d657a;
+    --color-border: #d4d9e4;
+    --color-border-strong: #b7bfd0;
+    --color-link: #2945d0;
+    --color-link-hover: #1c35a6;
+    --color-accent: #2f5bff;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.08);
     --radius-sm: 0;
     --radius-md: 0;
   }
@@ -38,7 +38,7 @@ export const themeStyles = `
     border-radius: var(--radius-sm);
     padding: 8px 12px;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
   button:disabled {
@@ -46,8 +46,8 @@ export const themeStyles = `
     cursor: not-allowed;
   }
 
-  button:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-  button:active { transform: translateY(0); box-shadow: none; }
+  button:hover { background: var(--color-surface-muted); border-color: var(--color-border-strong); }
+  button:active { background: var(--color-surface-elevated); }
 
   input,
   select,
