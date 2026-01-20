@@ -512,7 +512,7 @@ export const renderPageLayout = ({ device, content, session }: PageLayoutProps):
 
       const formatBreadcrumbLabel = (segment) => {
         if (labelOverrides[segment]) return labelOverrides[segment];
-        if (/^\\d+$/.test(segment)) return `Subject ${segment}`;
+        if (/^\\d+$/.test(segment)) return "Subject " + segment;
         return toTitleCase(segment.replace(/-/g, " "));
       };
 
