@@ -79,34 +79,36 @@ export const renderUserManagementContent = ({
     <header class="page-header">
       <h1 class="page-title">User management</h1>
       <p class="page-subtitle">Review and create student, teacher, and admin accounts.</p>
-      <div class="page-actions">
-        <a class="button-link button-link--primary" href="/admin/users/new">Add user</a>
-      </div>
     </header>
     ${successMessage ? `<div class="alert">${escapeValue(successMessage)}</div>` : ""}
     ${errorMessage ? `<div class="alert alert--error">${escapeValue(errorMessage)}</div>` : ""}
     <section class="page-section">
-      <form class="filter-bar" method="get" action="/admin/users">
-        <div class="filter-fields">
-          <label class="filter-field">
-            <span>Role</span>
-            <select name="role">
-              <option value="" ${roleValue === "" ? "selected" : ""}>All roles</option>
-              <option value="admin" ${roleValue === "admin" ? "selected" : ""}>Admin</option>
-              <option value="teacher" ${roleValue === "teacher" ? "selected" : ""}>Teacher</option>
-              <option value="student" ${roleValue === "student" ? "selected" : ""}>Student</option>
-            </select>
-          </label>
-          <label class="filter-field">
-            <span>Search</span>
-            <input name="q" placeholder="Name or email" value="${queryValue}" autocomplete="off" />
-          </label>
+      <div class="user-management-toolbar">
+        <form class="filter-form" method="get" action="/admin/users">
+          <div class="filter-fields">
+            <label class="filter-field">
+              <span>Role</span>
+              <select name="role">
+                <option value="" ${roleValue === "" ? "selected" : ""}>All roles</option>
+                <option value="admin" ${roleValue === "admin" ? "selected" : ""}>Admin</option>
+                <option value="teacher" ${roleValue === "teacher" ? "selected" : ""}>Teacher</option>
+                <option value="student" ${roleValue === "student" ? "selected" : ""}>Student</option>
+              </select>
+            </label>
+            <label class="filter-field">
+              <span>Search</span>
+              <input name="q" placeholder="Name or email" value="${queryValue}" autocomplete="off" />
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button type="submit" class="button-link">Filter</button>
+            <a class="button-link" href="/admin/users">Reset</a>
+          </div>
+        </form>
+        <div class="toolbar-actions">
+          <a class="button-link button-link--primary" href="/admin/users/new">Add user</a>
         </div>
-        <div class="filter-actions">
-          <button type="submit" class="button-link">Filter</button>
-          <a class="button-link" href="/admin/users">Reset</a>
-        </div>
-      </form>
+      </div>
     </section>
     <section class="page-section">
       <div class="table-scroll">

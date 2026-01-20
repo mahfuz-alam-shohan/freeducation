@@ -11,7 +11,7 @@ const renderSubjectRows = (subjects: SubjectTemplateRow[]): string => {
   if (!subjects.length) {
     return `
       <tr>
-        <td colspan="2">No subject templates have been registered yet.</td>
+        <td colspan="1">No subject templates have been registered yet.</td>
       </tr>`;
   }
 
@@ -20,11 +20,10 @@ const renderSubjectRows = (subjects: SubjectTemplateRow[]): string => {
       return `
         <tr>
           <td>
-            <a class="table-link" href="${escapeValue(subject.manageUrl)}">${escapeValue(subject.name)}</a>
-            <span class="table-meta">${escapeValue(subject.manageLabel)}</span>
-          </td>
-          <td class="table-actions">
-            <a class="button-link" href="${escapeValue(subject.manageUrl)}">${escapeValue(subject.manageLabel)}</a>
+            <a class="table-row-link" href="${escapeValue(subject.manageUrl)}">
+              <div style="font-weight: 500; margin-bottom: 2px;">${escapeValue(subject.name)}</div>
+              <div class="table-meta">${escapeValue(subject.manageLabel)}</div>
+            </a>
           </td>
         </tr>`;
     })
@@ -55,7 +54,6 @@ export const renderSubjectsModuleContent = ({
           <thead>
             <tr>
               <th>Subject</th>
-              <th class="table-actions">Action</th>
             </tr>
           </thead>
           <tbody>

@@ -23,11 +23,11 @@ export const themeStyles = `
     --color-success: #2d5016;
     --color-success-bg: #e7f2dc;
     --color-overlay: rgba(255, 255, 255, 0.88);
-    --shadow-sm: 0 10px 22px rgba(15, 23, 42, 0.08);
-    --shadow-md: 0 20px 40px rgba(15, 23, 42, 0.12);
-    --radius-sm: 10px;
-    --radius-md: 14px;
-    --radius-lg: 18px;
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 2px 6px rgba(15, 23, 42, 0.08);
+    --radius-sm: 4px;
+    --radius-md: 4px;
+    --radius-lg: 4px;
   }
 
   :root[data-theme="dark"] {
@@ -50,16 +50,12 @@ export const themeStyles = `
     --color-success: #8dd17b;
     --color-success-bg: #1f2c1b;
     --color-overlay: rgba(10, 14, 19, 0.8);
-    --shadow-sm: 0 14px 30px rgba(0, 0, 0, 0.45);
-    --shadow-md: 0 22px 46px rgba(0, 0, 0, 0.55);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.2);
   }
 
   body {
     background: var(--color-bg);
-    background-image:
-      radial-gradient(circle at 15% 15%, rgba(31, 126, 165, 0.18), transparent 45%),
-      radial-gradient(circle at 80% 10%, rgba(66, 111, 186, 0.12), transparent 40%),
-      linear-gradient(180deg, var(--color-bg), var(--color-bg-alt));
     color: var(--color-text);
     font-family: var(--font-body);
   }
@@ -75,7 +71,7 @@ export const themeStyles = `
   button {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-radius: 4px;
     padding: 8px 12px;
     cursor: pointer;
     transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -93,7 +89,7 @@ export const themeStyles = `
   select,
   textarea {
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-radius: 4px;
     padding: 8px 10px;
     background: var(--color-surface);
   }
