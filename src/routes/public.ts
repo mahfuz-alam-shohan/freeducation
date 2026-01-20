@@ -2,6 +2,7 @@ import { renderPageLayout, type DeviceType } from "../layouts/pageLayout";
 import { renderHomeContent } from "../pages/home/content";
 import type { AdminSession } from "../services/security/session";
 import { htmlResponse, jsonResponse } from "../utils";
+import { getOpenAPIJSON, getOpenAPIYAML } from "../docs/openapi";
 
 type PublicRouteContext = {
   adminReady: boolean;
@@ -30,6 +31,20 @@ export const handlePublicRoutes = async (request: Request, context: PublicRouteC
 
   if (url.pathname === "/health") {
     return jsonResponse({ status: "ok" });
+  }
+
+  if (url.pathname === "/api-docs") {
+    const format = url.searchParams.get("format") || "json";
+    const content = format === "yaml" ? getOpenAPIYAML() : getOpenAPIJSON();
+    const contentType = format === "yaml" ? "application/x-yaml" : "application/json";
+    
+    return new Response(content, {
+      status: 200,
+      headers: { 
+        "content-type": contentType,
+        "access-control-allow-origin": "*",
+      },
+    });
   }
 
   if (url.pathname === "/" || url.pathname === "/home") {

@@ -3,6 +3,7 @@ import { handleAdminRoutes, getAdminSession } from "./admin";
 import { handlePublicRoutes } from "./public";
 import { handleStudentRoutes } from "./student";
 import { getDeviceType, redirectResponse, serviceError } from "../utils";
+import { SECURITY_MIDDLEWARE, applySecurityToResponse, COMMON_VALIDATION_SCHEMAS } from "../middleware";
 import type { Env } from "./utils";
 
 export const handleRequest = async (request: Request, env: Env): Promise<Response> => {
@@ -18,24 +19,51 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
   const device = getDeviceType(request.headers.get("user-agent"));
   const session = await getAdminSession(request, env);
 
+  // Apply security middleware based on route type
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  
+  // Determine security context
+  let securityMiddleware = SECURITY_MIDDLEWARE.PUBLIC;
+  let securityContext = {};
+  
+  if (pathname.startsWith('/admin')) {
+    securityMiddleware = SECURITY_MIDDLEWARE.ADMIN;
+  } else if (pathname.startsWith('/signup') || pathname === '/login') {
+    securityMiddleware = SECURITY_MIDDLEWARE.AUTH;
+    if (pathname === '/signup') {
+      securityContext = { schema: COMMON_VALIDATION_SCHEMAS.USER_REGISTRATION };
+    } else if (pathname === '/login') {
+      securityContext = { schema: COMMON_VALIDATION_SCHEMAS.USER_LOGIN };
+    }
+  } else if (pathname.startsWith('/api')) {
+    securityMiddleware = SECURITY_MIDDLEWARE.API;
+  }
+
+  // Apply security checks
+  const securityResponse = await securityMiddleware(request, securityContext);
+  if (securityResponse) {
+    return securityResponse;
+  }
+
   const studentResponse = await handleStudentRoutes(request, env, { device, session });
   if (studentResponse) {
-    return studentResponse;
+    return applySecurityToResponse(studentResponse);
   }
 
   const publicResponse = await handlePublicRoutes(request, { adminReady, device, session });
   if (publicResponse) {
-    return publicResponse;
+    return applySecurityToResponse(publicResponse);
   }
 
   const adminResponse = await handleAdminRoutes(request, env, { adminReady, device, session });
   if (adminResponse) {
-    return adminResponse;
+    return applySecurityToResponse(adminResponse);
   }
 
   if (!adminReady) {
-    return redirectResponse("/setup-admin");
+    return applySecurityToResponse(redirectResponse("/setup-admin"));
   }
 
-  return redirectResponse("/");
+  return applySecurityToResponse(redirectResponse("/"));
 };
