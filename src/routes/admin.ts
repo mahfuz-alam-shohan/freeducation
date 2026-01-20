@@ -147,7 +147,10 @@ const parseNumberParam = (value: string | null): number | null => {
 
 const renderModules = async (env: Env, context: AdminRouteContext): Promise<Response> => {
   await ensureModulesSeed(env.DB);
+  await ensureDefaultClassGroups(env.DB);
+  await syncSubjectTemplates(env.DB, listSubjectTemplates());
   let modules = await listModules(env.DB);
+  const subjects = await listSubjects(env.DB);
 
   if (!modules.length) {
     modules = [
@@ -162,7 +165,28 @@ const renderModules = async (env: Env, context: AdminRouteContext): Promise<Resp
     ];
   }
 
-  const content = renderModulesContent({ modules });
+  const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
+  const subjectModules = listSubjectTemplates().map((template) => {
+    const subject = subjectBySlug.get(template.slug);
+    const classGroups = template.classGroups.map((group) => group.slug).join(", ") || "-";
+    const streams = template.classGroups.map((group) => group.stream).join(", ") || "-";
+    const structure = [
+      template.structure.hasChapters ? "Chapters" : "No chapters",
+      template.structure.hasTopics ? "Topics" : "No topics",
+      `Content: ${template.structure.contentScope}`,
+    ].join(" · ");
+    return {
+      name: template.name,
+      slug: template.slug,
+      structure,
+      classGroups,
+      streams,
+      manageUrl: subject ? `/admin/modules/subjects/${subject.id}` : "/admin/modules/subjects",
+      manageLabel: subject ? "Manage" : "Open subjects",
+    };
+  });
+
+  const content = renderModulesContent({ modules, subjectModules });
   return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
 };
 
