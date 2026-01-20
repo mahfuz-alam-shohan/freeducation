@@ -2,9 +2,11 @@ export const renderHomeContent = (): string => `
   <section class="page home">
     <section class="home-cover">
       <div class="home-cover__shapes" aria-hidden="true">
-        <span class="shape shape--circle shape--one"></span>
-        <span class="shape shape--circle shape--two"></span>
-        <span class="shape shape--pill shape--three"></span>
+        <span class="shape shape--one"></span>
+        <span class="shape shape--two"></span>
+        <span class="shape shape--three"></span>
+        <span class="shape shape--four"></span>
+        <span class="shape shape--five"></span>
       </div>
       <div class="home-cover__content">
         <h1 class="home-cover__title">freeducation</h1>
