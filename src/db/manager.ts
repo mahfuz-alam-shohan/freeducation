@@ -49,6 +49,10 @@ const hasMatchingColumn = (expected: ColumnDefinition, existing: ColumnInfo): bo
     return false;
   }
 
+  if (!expected.notNull && existing.notnull === 1) {
+    return false;
+  }
+
   return true;
 };
 
@@ -120,6 +124,35 @@ const createMinimalSchema = async (db: D1Database): Promise<void> => {
   }
 };
 
+const ensureSeedData = async (db: D1Database): Promise<void> => {
+  const createdAt = new Date().toISOString();
+
+  await db
+    .prepare(
+      `INSERT INTO modules (name, slug, description, is_active, created_at)
+       SELECT ?, ?, ?, ?, ?
+       WHERE NOT EXISTS (SELECT 1 FROM modules WHERE slug = ?)`,
+    )
+    .bind("Subjects", "subjects", "Manage class subjects, chapters, and content.", 1, createdAt, "subjects")
+    .run();
+
+  const classGroups = [
+    { name: "Class 9-10", slug: "9-10", description: "Combined curriculum for class 9 and 10." },
+    { name: "Class 11-12", slug: "11-12", description: "Combined curriculum for class 11 and 12." },
+  ];
+
+  for (const group of classGroups) {
+    await db
+      .prepare(
+        `INSERT INTO class_groups (name, slug, description, created_at)
+         SELECT ?, ?, ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM class_groups WHERE slug = ?)`,
+      )
+      .bind(group.name, group.slug, group.description, createdAt, group.slug)
+      .run();
+  }
+};
+
 export const ensureSchema = async (db: D1Database): Promise<void> => {
   try {
     const existingTables = await getExistingTables(db);
@@ -150,9 +183,12 @@ export const ensureSchema = async (db: D1Database): Promise<void> => {
         await addColumn(db, table.name, column);
       }
     }
+
+    await ensureSeedData(db);
   } catch (error) {
     if (isAuthorizationError(error)) {
       await createMinimalSchema(db);
+      await ensureSeedData(db);
       return;
     }
 
