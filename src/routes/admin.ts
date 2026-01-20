@@ -36,6 +36,8 @@ import type { AdminSession } from "../services/security/session";
 import { getSubjectTemplate, listSubjectTemplates } from "../modules/subjects/registry";
 import { handleBanglaNineTenRoutes } from "../modules/subjects/bangla/9-10/routes";
 import { handleBanglaElevenTwelveRoutes } from "../modules/subjects/bangla/11-12/routes";
+import { handleMathematicsRoutes } from "../modules/subjects/mathematics/routes";
+import { handleHigherMathematicsRoutes } from "../modules/subjects/higher-mathematics/routes";
 import {
   clearAdminSessionCookie,
   createAdminSessionToken,
@@ -176,9 +178,15 @@ const renderSubjectsModule = async (
   const subjectBySlug = new Map(subjects.map((subject) => [subject.slug, subject]));
   const subjectTemplates = listSubjectTemplates().map((template) => {
     const subject = subjectBySlug.get(template.slug);
+    const customManageUrl =
+      template.slug === "mathematics"
+        ? "/admin/modules/subjects/mathematics"
+        : template.slug === "higher-mathematics"
+          ? "/admin/modules/subjects/higher-mathematics"
+          : null;
     return {
       name: template.name,
-      manageUrl: subject ? `/admin/modules/subjects/${subject.id}` : "/admin/modules/subjects",
+      manageUrl: subject ? customManageUrl ?? `/admin/modules/subjects/${subject.id}` : "/admin/modules/subjects",
       manageLabel: subject ? "Manage" : "Sync pending",
     };
   });
@@ -355,6 +363,16 @@ export const handleAdminRoutes = async (
   const banglaElevenTwelveResponse = await handleBanglaElevenTwelveRoutes(request, env, context);
   if (banglaElevenTwelveResponse) {
     return banglaElevenTwelveResponse;
+  }
+
+  const mathematicsResponse = await handleMathematicsRoutes(request, env, context);
+  if (mathematicsResponse) {
+    return mathematicsResponse;
+  }
+
+  const higherMathematicsResponse = await handleHigherMathematicsRoutes(request, env, context);
+  if (higherMathematicsResponse) {
+    return higherMathematicsResponse;
   }
 
   const subjectDetailMatch = url.pathname.match(/^\/admin\/modules\/subjects\/(\d+)$/);
