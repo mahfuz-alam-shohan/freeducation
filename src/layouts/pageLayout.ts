@@ -43,9 +43,9 @@ const baseStyles = `
     background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   }
-  .button-link:hover { background: var(--color-surface-muted); border-color: var(--color-border-strong); }
+  .button-link:hover { background: var(--color-surface-muted); border-color: var(--color-border-strong); transform: translateY(-1px); }
   .button-link:active { background: var(--color-surface-elevated); }
   .button-link--primary {
     background: var(--color-accent);
@@ -109,6 +109,7 @@ const baseStyles = `
   .data-table th,
   .data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
   .data-table th { font-size: 14px; color: var(--color-text-muted); background: var(--color-surface-muted); }
+  .data-table tbody tr { transition: background-color 0.2s ease; }
   .data-table tbody tr:last-child td { border-bottom: none; }
   .data-table tbody tr:hover { background: var(--color-surface-elevated); }
   .confirm-delete { position: relative; display: inline-flex; }
@@ -153,6 +154,24 @@ const baseStyles = `
     background: var(--color-surface-muted);
   }
   .alert--error { border-color: #f4bcc8; color: #8b1f3c; background: #ffe8ed; }
+  .page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 200;
+    transition: opacity 0.2s ease;
+  }
+  .page-loader.is-active { opacity: 1; }
+  .page-loader__bar {
+    width: 35%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(62, 98, 255, 0), rgba(62, 98, 255, 0.7), rgba(62, 98, 255, 0));
+    animation: loader-slide 1.2s ease-in-out infinite;
+  }
   .home {
     width: 100%;
     max-width: none;
@@ -285,6 +304,14 @@ const baseStyles = `
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes loader-slide {
+    0% { transform: translateX(-40%); }
+    50% { transform: translateX(120%); }
+    100% { transform: translateX(240%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
 `;
 
 const renderShell = (device: DeviceType, header: string, sidebar: string, content: string, footer: string): string => {
@@ -340,6 +367,32 @@ export const renderPageLayout = ({ device, content, session }: PageLayoutProps):
   </head>
   <body>
     ${body}
+    <div class="page-loader" id="page-loader" aria-hidden="true">
+      <div class="page-loader__bar"></div>
+    </div>
+    <script>
+      const pageLoader = document.getElementById("page-loader");
+      const activateLoader = () => pageLoader?.classList.add("is-active");
+      const deactivateLoader = () => pageLoader?.classList.remove("is-active");
+      window.addEventListener("pageshow", deactivateLoader);
+      document.addEventListener("submit", (event) => {
+        const target = event.target;
+        if (target instanceof HTMLFormElement && target.target !== "_blank") {
+          activateLoader();
+        }
+      });
+      document.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const link = target.closest("a");
+        if (!link || link.target === "_blank") return;
+        const href = link.getAttribute("href");
+        if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+        const url = new URL(href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+        activateLoader();
+      });
+    </script>
   </body>
 </html>`;
 };

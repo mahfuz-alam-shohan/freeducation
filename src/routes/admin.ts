@@ -147,8 +147,6 @@ const parseNumberParam = (value: string | null): number | null => {
 
 const renderModules = async (env: Env, context: AdminRouteContext): Promise<Response> => {
   await ensureModulesSeed(env.DB);
-  await ensureDefaultClassGroups(env.DB);
-  await syncSubjectTemplates(env.DB, listSubjectTemplates());
   let modules = await listModules(env.DB);
   if (!modules.length) {
     modules = [
