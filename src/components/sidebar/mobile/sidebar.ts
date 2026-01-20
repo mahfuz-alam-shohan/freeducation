@@ -1,5 +1,5 @@
 import type { AdminSession } from "../../../services/security/session";
-import { renderCloseIcon, renderHomeIcon, renderModulesIcon, renderUsersIcon } from "../../ui/icons";
+import { renderCloseIcon, renderHomeIcon, renderUsersIcon } from "../../ui/icons";
 
 type SidebarProps = {
   session: AdminSession | null;
@@ -25,16 +25,6 @@ export const renderSidebarMobile = ({ session }: SidebarProps): string => `
           <a class="menu-item" href="/admin/users">
             <span class="menu-icon">${renderUsersIcon()}</span>
             <span class="menu-label">User management</span>
-          </a>
-        </li>`
-            : ""
-        }
-        ${
-          session
-            ? `<li>
-          <a class="menu-item" href="/admin/modules">
-            <span class="menu-icon">${renderModulesIcon()}</span>
-            <span class="menu-label">Modules</span>
           </a>
         </li>`
             : ""
