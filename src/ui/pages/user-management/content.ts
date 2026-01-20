@@ -38,9 +38,9 @@ export const renderUserManagementContent = ({
           (user, index) => `
         <tr>
           <td>${formatRoleLabel(user.role)}</td>
-          <td>${escapeValue(user.name)}</td>
-          <td>${escapeValue(user.email)}</td>
-          <td>${escapeValue(new Date(user.createdAt).toLocaleDateString())}</td>
+          <td title="${escapeValue(user.name)}">${escapeValue(user.name)}</td>
+          <td title="${escapeValue(user.email)}">${escapeValue(user.email)}</td>
+          <td title="${escapeValue(new Date(user.createdAt).toLocaleDateString())}">${escapeValue(new Date(user.createdAt).toLocaleDateString())}</td>
           <td>
             <div class="confirm-delete">
               <input class="confirm-delete__toggle" type="checkbox" id="confirm-delete-${index}" />
@@ -54,10 +54,10 @@ export const renderUserManagementContent = ({
                   <form class="confirm-delete__form" method="post" action="/admin/users/delete">
                     <input type="hidden" name="role" value="${escapeValue(user.role)}" />
                     <input type="hidden" name="email" value="${escapeValue(user.email)}" />
-                    <label class="confirm-delete__field">
+                    <div class="confirm-delete__field">
                       <span>Admin password</span>
-                      <input type="password" name="adminPassword" required />
-                    </label>
+                      <input type="password" name="adminPassword" required autocomplete="current-password" />
+                    </div>
                     <div class="confirm-delete__actions">
                       <label class="button-link" for="confirm-delete-${index}">Cancel</label>
                       <button type="submit" class="button-link button-link--danger">Confirm delete</button>
@@ -72,7 +72,7 @@ export const renderUserManagementContent = ({
         .join("")
     : `
         <tr>
-          <td colspan="5">No users found for this filter.</td>
+          <td colspan="5" style="text-align: center; padding: 24px; color: var(--color-text-muted); font-style: italic;">No users found for this filter.</td>
         </tr>`;
 
   return `
@@ -99,7 +99,7 @@ export const renderUserManagementContent = ({
           </label>
           <label class="filter-field">
             <span>Search</span>
-            <input name="q" placeholder="Name or email" value="${queryValue}" />
+            <input name="q" placeholder="Name or email" value="${queryValue}" autocomplete="off" />
           </label>
         </div>
         <div class="filter-actions">
