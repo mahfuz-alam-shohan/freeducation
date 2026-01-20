@@ -13,7 +13,7 @@ const renderModuleRows = (modules: ModuleListItem[]): string => {
   if (!modules.length) {
     return `
       <tr>
-        <td colspan="5">No modules have been registered yet.</td>
+        <td colspan="3">No modules have been registered yet.</td>
       </tr>`;
   }
 
@@ -22,8 +22,6 @@ const renderModuleRows = (modules: ModuleListItem[]): string => {
       (module) => `
       <tr>
         <td>${escapeValue(module.name)}</td>
-        <td>${escapeValue(module.slug)}</td>
-        <td>${escapeValue(module.description ?? "")}</td>
         <td>${module.isActive ? "Active" : "Inactive"}</td>
         <td>
           ${
@@ -51,8 +49,6 @@ export const renderModulesContent = ({ modules, successMessage, errorMessage }: 
           <thead>
             <tr>
               <th>Name</th>
-              <th>Slug</th>
-              <th>Description</th>
               <th>Status</th>
               <th>Action</th>
             </tr>

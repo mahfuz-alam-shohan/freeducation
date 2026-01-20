@@ -45,8 +45,13 @@ const baseStyles = `
     text-decoration: none;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   }
-  .button-link:hover { background: var(--color-surface-muted); border-color: var(--color-border-strong); transform: translateY(-1px); }
-  .button-link:active { background: var(--color-surface-elevated); }
+  .button-link:hover {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(30, 60, 180, 0.08);
+  }
+  .button-link:active { background: var(--color-surface-elevated); transform: translateY(0); }
   .button-link--primary {
     background: var(--color-accent);
     color: #fff;
@@ -61,24 +66,26 @@ const baseStyles = `
     background: #ffd9e1;
     color: #7a1733;
   }
-  .page { max-width: 640px; margin: 0 auto; display: grid; gap: 12px; }
-  .page-header { display: grid; gap: 6px; }
-  .page-title { margin: 0; font-size: 28px; }
+  .page { max-width: 720px; margin: 0 auto; display: grid; gap: 12px; animation: page-enter 0.35s ease; }
+  .page-header { display: grid; gap: 6px; text-align: center; align-items: center; }
+  .page-title { margin: 0; font-size: 28px; letter-spacing: 0.3px; }
   .page-subtitle { margin: 0; color: var(--color-text-muted); }
-  .page-section { display: grid; gap: 8px; animation: fade-in 0.3s ease; }
-  .page-actions { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
-  .section-title { margin: 0; font-size: 20px; }
+  .app-main { transition: opacity 0.2s ease, transform 0.2s ease; }
+  body.is-transitioning .app-main { opacity: 0.7; transform: translateY(4px); }
+  .page-section { display: grid; gap: 10px; animation: fade-in 0.3s ease; }
+  .page-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  .section-title { margin: 0; font-size: 20px; text-align: center; }
   .form-card {
     display: grid;
     gap: 10px;
-    border: 1px solid var(--color-border);
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
     padding: 12px;
     background: var(--color-surface);
-    box-shadow: none;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
-  .form-card:hover { border-color: var(--color-border-strong); }
+  .form-card:hover { border-color: var(--color-border); transform: translateY(-1px); }
   .form-grid { display: grid; gap: 10px; }
   .form-field { display: grid; gap: 6px; }
   .form-actions { display: flex; justify-content: flex-start; }
@@ -87,10 +94,10 @@ const baseStyles = `
     display: grid;
     gap: 10px;
     padding: 10px;
-    border: 1px solid var(--color-border);
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
     background: var(--color-surface);
-    box-shadow: none;
+    box-shadow: var(--shadow-sm);
   }
   .filter-fields { display: grid; gap: 10px; }
   .filter-field { display: grid; gap: 6px; }
@@ -100,11 +107,11 @@ const baseStyles = `
     width: 100%;
     min-width: 560px;
     border-collapse: collapse;
-    border: 1px solid var(--color-border);
+    border: none;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--color-surface);
-    box-shadow: none;
+    box-shadow: var(--shadow-sm);
   }
   .data-table th,
   .data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
@@ -149,11 +156,17 @@ const baseStyles = `
   .confirm-delete__actions { display: flex; justify-content: flex-end; gap: 8px; }
   .alert {
     border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
+    border: 1px solid transparent;
     padding: 8px 10px;
     background: var(--color-surface-muted);
+    box-shadow: var(--shadow-sm);
   }
   .alert--error { border-color: #f4bcc8; color: #8b1f3c; background: #ffe8ed; }
+  details[open] > summary .icon-button,
+  details[open] > summary .avatar {
+    border-color: rgba(47, 91, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(47, 91, 255, 0.12);
+  }
   .page-loader {
     position: fixed;
     top: 0;
@@ -304,6 +317,14 @@ const baseStyles = `
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes dropdown-fade {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   @keyframes loader-slide {
     0% { transform: translateX(-40%); }
     50% { transform: translateX(120%); }
@@ -374,11 +395,16 @@ export const renderPageLayout = ({ device, content, session }: PageLayoutProps):
       const pageLoader = document.getElementById("page-loader");
       const activateLoader = () => pageLoader?.classList.add("is-active");
       const deactivateLoader = () => pageLoader?.classList.remove("is-active");
-      window.addEventListener("pageshow", deactivateLoader);
+      const resetTransition = () => document.body.classList.remove("is-transitioning");
+      window.addEventListener("pageshow", () => {
+        deactivateLoader();
+        resetTransition();
+      });
       document.addEventListener("submit", (event) => {
         const target = event.target;
         if (target instanceof HTMLFormElement && target.target !== "_blank") {
           activateLoader();
+          document.body.classList.add("is-transitioning");
         }
       });
       document.addEventListener("click", (event) => {
@@ -391,6 +417,7 @@ export const renderPageLayout = ({ device, content, session }: PageLayoutProps):
         const url = new URL(href, window.location.href);
         if (url.origin !== window.location.origin) return;
         activateLoader();
+        document.body.classList.add("is-transitioning");
       });
     </script>
   </body>
