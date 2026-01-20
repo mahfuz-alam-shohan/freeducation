@@ -75,6 +75,65 @@ const baseStyles = `
   .page-section { display: grid; gap: 10px; animation: fade-in 0.3s ease; }
   .page-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
   .section-title { margin: 0; font-size: 20px; text-align: center; }
+  .card-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .card-link {
+    display: grid;
+    gap: 4px;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-align: center;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+  .card-link:hover { border-color: var(--color-border-strong); background: var(--color-surface-muted); }
+  .card-link--active { border-color: var(--color-border-strong); background: var(--color-surface-muted); }
+  .card-title { font-weight: 600; }
+  .item-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .item-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .item-card__main { display: grid; gap: 4px; }
+  .item-card__title { font-weight: 600; color: var(--color-text); }
+  .item-card__meta { font-size: 13px; color: var(--color-text-muted); }
+  .item-card__actions { display: flex; gap: 6px; align-items: center; }
+  .modal { position: relative; display: inline-flex; }
+  .modal__toggle { position: absolute; opacity: 0; pointer-events: none; }
+  .modal__overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(15, 18, 28, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 80;
+  }
+  .modal__toggle:checked ~ .modal__overlay { opacity: 1; pointer-events: auto; }
+  .modal__panel {
+    width: min(340px, 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    box-shadow: none;
+  }
+  .modal__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .modal__title { margin: 0; font-size: 16px; }
+  .modal__close { cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; }
   .form-card {
     display: grid;
     gap: 10px;

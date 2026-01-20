@@ -178,6 +178,46 @@ export const subjectExamQuestionTableSchema: TableSchema = {
   ],
 };
 
+export const banglaNineTenSahapathTableSchema: TableSchema = {
+  name: "bangla_9_10_sahapath_items",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "category", type: "TEXT", notNull: true },
+    { name: "title", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+  ],
+};
+
+export const banglaNineTenLiteratureTableSchema: TableSchema = {
+  name: "bangla_9_10_literature_items",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "category", type: "TEXT", notNull: true },
+    { name: "title", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+  ],
+};
+
+export const banglaElevenTwelveSahapathTableSchema: TableSchema = {
+  name: "bangla_11_12_sahapath_items",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "category", type: "TEXT", notNull: true },
+    { name: "title", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+  ],
+};
+
+export const banglaElevenTwelveLiteratureTableSchema: TableSchema = {
+  name: "bangla_11_12_literature_items",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
+    { name: "category", type: "TEXT", notNull: true },
+    { name: "title", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+  ],
+};
+
 export const expectedSchema: TableSchema[] = [
   adminTableSchema,
   studentTableSchema,
@@ -192,6 +232,10 @@ export const expectedSchema: TableSchema[] = [
   contentItemTableSchema,
   subjectExamTableSchema,
   subjectExamQuestionTableSchema,
+  banglaNineTenSahapathTableSchema,
+  banglaNineTenLiteratureTableSchema,
+  banglaElevenTwelveSahapathTableSchema,
+  banglaElevenTwelveLiteratureTableSchema,
 ];
 
 export const buildColumnSql = (column: ColumnDefinition): string => {
