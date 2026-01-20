@@ -35,25 +35,37 @@ export const renderUserManagementContent = ({
   const rows = users.length
     ? users
         .map(
-          (user) => `
+          (user, index) => `
         <tr>
           <td>${formatRoleLabel(user.role)}</td>
           <td>${escapeValue(user.name)}</td>
           <td>${escapeValue(user.email)}</td>
           <td>${escapeValue(new Date(user.createdAt).toLocaleDateString())}</td>
           <td>
-            <details class="confirm-delete">
-              <summary class="button-link button-link--danger">Delete</summary>
-              <form class="confirm-delete__form" method="post" action="/admin/users/delete">
-                <input type="hidden" name="role" value="${escapeValue(user.role)}" />
-                <input type="hidden" name="email" value="${escapeValue(user.email)}" />
-                <label class="confirm-delete__field">
-                  <span>Admin password</span>
-                  <input type="password" name="adminPassword" required />
-                </label>
-                <button type="submit" class="button-link button-link--danger">Confirm delete</button>
-              </form>
-            </details>
+            <div class="confirm-delete">
+              <input class="confirm-delete__toggle" type="checkbox" id="confirm-delete-${index}" />
+              <label class="button-link button-link--danger" for="confirm-delete-${index}">Delete</label>
+              <div class="confirm-delete__modal" role="dialog" aria-modal="true" aria-labelledby="confirm-delete-${index}-title">
+                <div class="confirm-delete__panel">
+                  <div class="confirm-delete__header">
+                    <h3 id="confirm-delete-${index}-title" class="confirm-delete__title">Confirm delete</h3>
+                    <label class="confirm-delete__close" for="confirm-delete-${index}" aria-label="Close">×</label>
+                  </div>
+                  <form class="confirm-delete__form" method="post" action="/admin/users/delete">
+                    <input type="hidden" name="role" value="${escapeValue(user.role)}" />
+                    <input type="hidden" name="email" value="${escapeValue(user.email)}" />
+                    <label class="confirm-delete__field">
+                      <span>Admin password</span>
+                      <input type="password" name="adminPassword" required />
+                    </label>
+                    <div class="confirm-delete__actions">
+                      <label class="button-link" for="confirm-delete-${index}">Cancel</label>
+                      <button type="submit" class="button-link button-link--danger">Confirm delete</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>`,
         )

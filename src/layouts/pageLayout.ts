@@ -111,18 +111,41 @@ const baseStyles = `
   .data-table th { font-size: 14px; color: var(--color-text-muted); background: var(--color-surface-muted); }
   .data-table tbody tr:last-child td { border-bottom: none; }
   .data-table tbody tr:hover { background: #f8fafc; }
-  .confirm-delete { display: grid; gap: 8px; }
-  .confirm-delete summary { list-style: none; cursor: pointer; }
-  .confirm-delete summary::-webkit-details-marker { display: none; }
-  .confirm-delete__form {
-    display: grid;
-    gap: 8px;
-    padding: 8px;
+  .confirm-delete { position: relative; display: inline-flex; }
+  .confirm-delete__toggle { position: absolute; opacity: 0; pointer-events: none; }
+  .confirm-delete__modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 80;
+  }
+  .confirm-delete__toggle:checked ~ .confirm-delete__modal { opacity: 1; pointer-events: auto; }
+  .confirm-delete__panel {
+    width: min(320px, 100%);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-surface-muted);
+    background: var(--color-surface);
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .confirm-delete__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .confirm-delete__title { margin: 0; font-size: 16px; }
+  .confirm-delete__close { cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; }
+  .confirm-delete__form {
+    display: grid;
+    gap: 10px;
   }
   .confirm-delete__field { display: grid; gap: 4px; font-size: 13px; color: var(--color-text-muted); }
+  .confirm-delete__actions { display: flex; justify-content: flex-end; gap: 8px; }
   .alert {
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border);
