@@ -2,19 +2,20 @@ export const themeStyles = `
   :root {
     color-scheme: light;
     --font-body: "Inter", "Segoe UI", Arial, sans-serif;
-    --color-bg: #f5f7fb;
-    --color-surface: #ffffff;
-    --color-surface-muted: #eef2f8;
-    --color-text: #1f2a3a;
-    --color-text-muted: #516176;
-    --color-border: #d2dae8;
-    --color-border-strong: #bcc7db;
-    --color-link: #2563eb;
-    --color-link-hover: #1d4ed8;
-    --color-accent: #2563eb;
-    --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.08);
-    --radius-sm: 6px;
-    --radius-md: 12px;
+    --color-bg: #0f132f;
+    --color-surface: #151a3f;
+    --color-surface-muted: #1b2254;
+    --color-surface-elevated: #202862;
+    --color-text: #f2f4ff;
+    --color-text-muted: #c0c7f2;
+    --color-border: #2f3570;
+    --color-border-strong: #3c4591;
+    --color-link: #8ea0ff;
+    --color-link-hover: #b1c0ff;
+    --color-accent: #5b6dff;
+    --shadow-sm: 0 12px 24px rgba(9, 12, 32, 0.35);
+    --radius-sm: 0;
+    --radius-md: 0;
   }
 
   body {

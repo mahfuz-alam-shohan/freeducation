@@ -37,7 +37,7 @@ const baseStyles = `
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border);
     background: var(--color-surface);
@@ -53,13 +53,13 @@ const baseStyles = `
     border-color: transparent;
   }
   .button-link--danger {
-    background: #fef2f2;
-    color: #991b1b;
-    border-color: #fecaca;
+    background: #3b1b2a;
+    color: #f7c8d4;
+    border-color: #6a2b46;
   }
   .button-link--danger:hover {
-    background: #fee2e2;
-    color: #7f1d1d;
+    background: #4a2134;
+    color: #ffd6df;
   }
   .page { max-width: 640px; margin: 0 auto; display: grid; gap: 12px; }
   .page-header { display: grid; gap: 6px; }
@@ -70,10 +70,10 @@ const baseStyles = `
   .section-title { margin: 0; font-size: 20px; }
   .form-card {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: 14px;
+    padding: 12px;
     background: var(--color-surface);
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -110,7 +110,7 @@ const baseStyles = `
   .data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); }
   .data-table th { font-size: 14px; color: var(--color-text-muted); background: var(--color-surface-muted); }
   .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table tbody tr:hover { background: #f8fafc; }
+  .data-table tbody tr:hover { background: var(--color-surface-elevated); }
   .confirm-delete { position: relative; display: inline-flex; }
   .confirm-delete__toggle { position: absolute; opacity: 0; pointer-events: none; }
   .confirm-delete__modal {
@@ -120,7 +120,7 @@ const baseStyles = `
     align-items: center;
     justify-content: center;
     padding: 12px;
-    background: rgba(15, 23, 42, 0.35);
+    background: rgba(6, 8, 26, 0.65);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -152,7 +152,7 @@ const baseStyles = `
     padding: 8px 10px;
     background: var(--color-surface-muted);
   }
-  .alert--error { border-color: #d98989; color: #8a1f1f; background: #fdecec; }
+  .alert--error { border-color: #6a2b46; color: #f3b9c8; background: #352039; }
   .home {
     width: 100%;
     max-width: none;
