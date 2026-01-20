@@ -76,7 +76,6 @@ export const renderUserManagementContent = ({
         </tr>`;
 
   return `
-  <section class="page">
     <header class="page-header">
       <h1 class="page-title">User management</h1>
       <p class="page-subtitle">Review and create student, teacher, and admin accounts.</p>
@@ -127,6 +126,5 @@ export const renderUserManagementContent = ({
         </table>
       </div>
     </section>
-  </section>
-`;
+  `;
 };
