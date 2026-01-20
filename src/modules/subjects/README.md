@@ -16,7 +16,7 @@ subjects/
 
 1. Create a folder: `src/modules/subjects/<subject-slug>/`.
 2. Add `definition.ts` that exports a `SubjectTemplate`.
-3. Register it in `src/modules/subjects/registry.ts`.
+3. Register it in `src/modules/subjects/registry.ts` using `defineSubjectModule`.
 
 Example template:
 
@@ -34,6 +34,17 @@ export const exampleTemplate: SubjectTemplate = {
 };
 ```
 
+Example module registration:
+
+```ts
+import { defineSubjectModule } from "./types";
+import { exampleTemplate } from "./example/definition";
+
+const subjectModules = [
+  defineSubjectModule({ template: exampleTemplate }),
+];
+```
+
 ## Structure rules
 
 - `hasChapters`: set `true` if the subject is split into chapters.
@@ -48,7 +59,7 @@ The admin UI follows these flags. If `hasTopics` is false, the Topics section is
 
 - Subject templates are stored on `subjects.template_slug` and synced automatically during deploy.
 - Chapter-level content uses `content_items.chapter_id` (topic can be null).
-- All schema changes must be added in `src/db/schema.ts` so `ensureSchema` can create or update tables automatically.
+- All schema changes must be added in `src/core/db/schema.ts` so `ensureSchema` can create or update tables automatically.
 
 ## Class group mapping
 
@@ -62,3 +73,13 @@ classGroups: [
 ```
 
 These are synced into `class_subjects` during deploy so the admin UI can manage chapters and content without manual setup.
+
+## Custom admin routes
+
+If a subject needs custom admin flows (e.g., Bangla or Mathematics), export a route handler and attach it in the registry:
+
+```ts
+import { handleExampleRoutes } from "./example/routes";
+
+defineSubjectModule({ template: exampleTemplate, adminRoutes: handleExampleRoutes });
+```

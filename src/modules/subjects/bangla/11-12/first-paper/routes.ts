@@ -1,8 +1,9 @@
-import type { DeviceType } from "../../../../../types/layout";
-import { renderPageLayout } from "../../../../../layouts/pageLayout";
-import type { AdminSession } from "../../../../../services/security/session";
-import { htmlResponse, jsonResponse, redirectResponse } from "../../../../../utils";
-import type { Env } from "../../../../../routes/utils";
+import type { DeviceType } from "../../../../../core/types/layout";
+import { renderPageLayout } from "../../../../../ui/layouts/pageLayout";
+import type { AdminSession } from "../../../../../core/security/session";
+import { htmlResponse, jsonResponse, redirectResponse } from "../../../../../core/http";
+import { createCSRFToken, setCSRFCookie } from "../../../../../core/middleware/csrf";
+import type { Env } from "../../../../../app/env";
 import {
   createBanglaElevenTwelveLiteratureItem,
   createBanglaElevenTwelveSahapathItem,
@@ -43,8 +44,13 @@ const parseNumberParam = (value: string | null): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const renderContent = (context: BanglaRouteContext, content: string): Response =>
-  htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
+const renderContent = (context: BanglaRouteContext, content: string): Response => {
+  const csrfToken = createCSRFToken();
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session, csrfToken }), 200, {
+    "Set-Cookie": setCSRFCookie(csrfToken),
+    "Cache-Control": "no-store",
+  });
+};
 
 const buildSwapPrompt = (url: URL): {
   entryId: number;
@@ -107,10 +113,16 @@ export const handleBanglaElevenTwelveFirstPaperRoutes = async (
       const availableCategories = sahapathCategories.filter((category) => !usedCategories.has(category));
       const successMessage = url.searchParams.get("updated") === "1" ? "তথ্য সংরক্ষণ হয়েছে।" : undefined;
       const errorMessage = url.searchParams.get("error") === "invalid" ? "অনুগ্রহ করে তথ্য পূরণ করুন।" : undefined;
-      const swapPrompt = buildSwapPrompt(url) ?? undefined;
+      const swapPrompt = buildSwapPrompt(url);
       return renderContent(
         context,
-        renderBanglaElevenTwelveSahapathList({ items, availableCategories, successMessage, errorMessage, swapPrompt }),
+        renderBanglaElevenTwelveSahapathList({
+          items,
+          availableCategories,
+          ...(successMessage ? { successMessage } : {}),
+          ...(errorMessage ? { errorMessage } : {}),
+          ...(swapPrompt ? { swapPrompt } : {}),
+        }),
       );
     }
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -278,7 +290,12 @@ export const handleBanglaElevenTwelveFirstPaperRoutes = async (
       const errorMessage = url.searchParams.get("error") === "invalid" ? "অনুগ্রহ করে তথ্য পূরণ করুন।" : undefined;
       return renderContent(
         context,
-        renderBanglaElevenTwelveLiteratureList({ items, category, successMessage, errorMessage }),
+        renderBanglaElevenTwelveLiteratureList({
+          items,
+          category,
+          ...(successMessage ? { successMessage } : {}),
+          ...(errorMessage ? { errorMessage } : {}),
+        }),
       );
     }
 

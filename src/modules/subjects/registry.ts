@@ -32,15 +32,94 @@ import { geographyTemplate } from "./geography/definition";
 import { logicTemplate } from "./logic/definition";
 import { psychologyTemplate } from "./psychology/definition";
 import { statisticsTemplate } from "./statistics/definition";
-import type { SubjectTemplate } from "./types";
+import { handleBanglaNineTenRoutes } from "./bangla/9-10/routes";
+import { handleBanglaElevenTwelveRoutes } from "./bangla/11-12/routes";
+import { handleMathematicsRoutes } from "./mathematics/routes";
+import { handleHigherMathematicsRoutes } from "./higher-mathematics/routes";
+import { defineSubjectModule, type SubjectModule, type SubjectTemplate } from "./types";
 
-const subjectTemplates: SubjectTemplate[] = [banglaTemplate, englishTemplate, mathematicsTemplate, bangladesh_and_global_studiesTemplate, information_and_communication_technologyTemplate, islam_and_moral_educationTemplate, hindu_religion_and_moral_educationTemplate, buddhist_religion_and_moral_educationTemplate, christian_religion_and_moral_educationTemplate, physicsTemplate, chemistryTemplate, biologyTemplate, higher_mathematicsTemplate, accountingTemplate, finance_and_bankingTemplate, business_entrepreneurshipTemplate, business_organization_and_managementTemplate, production_management_and_marketingTemplate, finance_banking_and_insuranceTemplate, geography_and_environmentTemplate, civics_and_citizenshipTemplate, economicsTemplate, history_of_bangladesh_and_world_civilizationTemplate, agriculture_studiesTemplate, home_scienceTemplate, civics_and_good_governanceTemplate, historyTemplate, islamic_history_and_cultureTemplate, sociologyTemplate, social_workTemplate, geographyTemplate, logicTemplate, psychologyTemplate, statisticsTemplate];
+const handleBanglaRoutes: SubjectModule["adminRoutes"] = async (request, env, context) => {
+  const nineTen = await handleBanglaNineTenRoutes(request, env, context);
+  if (nineTen) {
+    return nineTen;
+  }
 
-export const listSubjectTemplates = (): SubjectTemplate[] => subjectTemplates;
+  return handleBanglaElevenTwelveRoutes(request, env, context);
+};
+
+const subjectModules: SubjectModule[] = [
+  defineSubjectModule({ template: banglaTemplate, adminRoutes: handleBanglaRoutes }),
+  defineSubjectModule({ template: englishTemplate }),
+  defineSubjectModule({ template: mathematicsTemplate, adminRoutes: handleMathematicsRoutes }),
+  defineSubjectModule({ template: bangladesh_and_global_studiesTemplate }),
+  defineSubjectModule({ template: information_and_communication_technologyTemplate }),
+  defineSubjectModule({ template: islam_and_moral_educationTemplate }),
+  defineSubjectModule({ template: hindu_religion_and_moral_educationTemplate }),
+  defineSubjectModule({ template: buddhist_religion_and_moral_educationTemplate }),
+  defineSubjectModule({ template: christian_religion_and_moral_educationTemplate }),
+  defineSubjectModule({ template: physicsTemplate }),
+  defineSubjectModule({ template: chemistryTemplate }),
+  defineSubjectModule({ template: biologyTemplate }),
+  defineSubjectModule({ template: higher_mathematicsTemplate, adminRoutes: handleHigherMathematicsRoutes }),
+  defineSubjectModule({ template: accountingTemplate }),
+  defineSubjectModule({ template: finance_and_bankingTemplate }),
+  defineSubjectModule({ template: business_entrepreneurshipTemplate }),
+  defineSubjectModule({ template: business_organization_and_managementTemplate }),
+  defineSubjectModule({ template: production_management_and_marketingTemplate }),
+  defineSubjectModule({ template: finance_banking_and_insuranceTemplate }),
+  defineSubjectModule({ template: geography_and_environmentTemplate }),
+  defineSubjectModule({ template: civics_and_citizenshipTemplate }),
+  defineSubjectModule({ template: economicsTemplate }),
+  defineSubjectModule({ template: history_of_bangladesh_and_world_civilizationTemplate }),
+  defineSubjectModule({ template: agriculture_studiesTemplate }),
+  defineSubjectModule({ template: home_scienceTemplate }),
+  defineSubjectModule({ template: civics_and_good_governanceTemplate }),
+  defineSubjectModule({ template: historyTemplate }),
+  defineSubjectModule({ template: islamic_history_and_cultureTemplate }),
+  defineSubjectModule({ template: sociologyTemplate }),
+  defineSubjectModule({ template: social_workTemplate }),
+  defineSubjectModule({ template: geographyTemplate }),
+  defineSubjectModule({ template: logicTemplate }),
+  defineSubjectModule({ template: psychologyTemplate }),
+  defineSubjectModule({ template: statisticsTemplate }),
+];
+
+export const listSubjectModules = (): SubjectModule[] => subjectModules;
+
+export const listSubjectTemplates = (): SubjectTemplate[] =>
+  subjectModules.map((subjectModule) => subjectModule.template);
 
 export const getSubjectTemplate = (slug: string | null | undefined): SubjectTemplate | null => {
   if (!slug) {
     return null;
   }
-  return subjectTemplates.find((template) => template.slug === slug) ?? null;
+
+  return subjectModules.find((subjectModule) => subjectModule.template.slug === slug)?.template ?? null;
+};
+
+export const getSubjectModule = (slug: string | null | undefined): SubjectModule | null => {
+  if (!slug) {
+    return null;
+  }
+
+  return subjectModules.find((subjectModule) => subjectModule.template.slug === slug) ?? null;
+};
+
+export const handleSubjectAdminRoutes = async (
+  request: Request,
+  env: Parameters<NonNullable<SubjectModule["adminRoutes"]>>[1],
+  context: Parameters<NonNullable<SubjectModule["adminRoutes"]>>[2],
+): Promise<Response | null> => {
+  for (const subjectModule of subjectModules) {
+    if (!subjectModule.adminRoutes) {
+      continue;
+    }
+
+    const response = await subjectModule.adminRoutes(request, env, context);
+    if (response) {
+      return response;
+    }
+  }
+
+  return null;
 };

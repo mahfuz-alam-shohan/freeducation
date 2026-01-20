@@ -1,8 +1,9 @@
-import type { DeviceType } from "../../../types/layout";
-import { renderPageLayout } from "../../../layouts/pageLayout";
-import type { AdminSession } from "../../../services/security/session";
-import { htmlResponse, jsonResponse, redirectResponse } from "../../../utils";
-import type { Env } from "../../../routes/utils";
+import type { DeviceType } from "../../../core/types/layout";
+import { renderPageLayout } from "../../../ui/layouts/pageLayout";
+import type { AdminSession } from "../../../core/security/session";
+import { htmlResponse, jsonResponse, redirectResponse } from "../../../core/http";
+import { createCSRFToken, setCSRFCookie } from "../../../core/middleware/csrf";
+import type { Env } from "../../../app/env";
 import {
   createHigherMathematicsNineTenChapter,
   getHigherMathematicsNineTenChapter,
@@ -36,8 +37,13 @@ const parseNumberParam = (value: string | null): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const renderContent = (context: HigherMathematicsRouteContext, content: string): Response =>
-  htmlResponse(renderPageLayout({ device: context.device, content, session: context.session }));
+const renderContent = (context: HigherMathematicsRouteContext, content: string): Response => {
+  const csrfToken = createCSRFToken();
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session, csrfToken }), 200, {
+    "Set-Cookie": setCSRFCookie(csrfToken),
+    "Cache-Control": "no-store",
+  });
+};
 
 export const handleHigherMathematicsRoutes = async (
   request: Request,

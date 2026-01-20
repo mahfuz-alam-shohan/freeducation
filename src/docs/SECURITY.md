@@ -14,10 +14,10 @@ This document outlines the security features and API documentation implemented f
 
 ### 2. CSRF Protection
 - **Purpose**: Prevent Cross-Site Request Forgery attacks
-- **Implementation**: Token-based CSRF protection
+- **Implementation**: Double-submit token (cookie + header or hidden form field)
 - **Features**:
   - Secure, HttpOnly cookies
-  - SHA-256 token generation
+  - Per-page token issuance
   - Automatic token validation for state-changing requests
 
 ### 3. Security Headers
@@ -99,7 +99,7 @@ The platform provides comprehensive API documentation using OpenAPI 3.0 specific
 
 ### Applying Security Middleware
 ```typescript
-import { SECURITY_MIDDLEWARE } from '../middleware';
+import { SECURITY_MIDDLEWARE } from '../core/middleware';
 
 // For admin routes
 const securityResponse = await SECURITY_MIDDLEWARE.ADMIN(request, context);
@@ -112,7 +112,7 @@ if (securityResponse) {
 
 ### Input Validation
 ```typescript
-import { validateFormData, COMMON_VALIDATION_SCHEMAS } from '../middleware';
+import { validateFormData, COMMON_VALIDATION_SCHEMAS } from '../core/middleware';
 
 const errors = validateFormData(formData, COMMON_VALIDATION_SCHEMAS.USER_REGISTRATION);
 if (errors.length > 0) {
@@ -166,7 +166,7 @@ Regularly update all dependencies and security patches.
 
 ### Content Security Policy
 ```http
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 ```
 
 ### Strict Transport Security

@@ -11,7 +11,7 @@ This folder contains pluggable modules that define subject structure and admin U
 
 ## Database changes
 
-All schema changes are centralized in `src/db/schema.ts` and created automatically by `ensureSchema` in `src/db/manager.ts`.
+All schema changes are centralized in `src/core/db/schema.ts` and created automatically by `ensureSchema` in `src/core/db/manager.ts`.
 
 - **New tables**: add them to `expectedSchema`.
 - **New columns**: add columns to the table schema.
