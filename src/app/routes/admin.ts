@@ -126,8 +126,12 @@ const postAdminSetup = async (request: Request, env: Env): Promise<Response> => 
 };
 
 const renderLogin = (context: AdminRouteContext, errorMessage?: string): Response => {
-  const content = renderLoginContent(errorMessage ? { errorMessage } : {});
-  return renderAdminPage(context, content);
+  const csrfToken = createCSRFToken();
+  const content = renderLoginContent(errorMessage ? { errorMessage, csrfToken } : { csrfToken });
+  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session, csrfToken }), 200, {
+    "Set-Cookie": setCSRFCookie(csrfToken),
+    "Cache-Control": "no-store",
+  });
 };
 
 const renderUserList = async (

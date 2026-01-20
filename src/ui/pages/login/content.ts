@@ -1,11 +1,12 @@
 export type LoginContentProps = {
   errorMessage?: string;
+  csrfToken?: string;
 };
 
 const escapeValue = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export const renderLoginContent = ({ errorMessage }: LoginContentProps = {}): string => `
+export const renderLoginContent = ({ errorMessage, csrfToken }: LoginContentProps = {}): string => `
   <section class="page">
     <header class="page-header">
       <h1 class="page-title">Sign in</h1>
@@ -13,6 +14,7 @@ export const renderLoginContent = ({ errorMessage }: LoginContentProps = {}): st
     </header>
     ${errorMessage ? `<div class="alert alert--error">${escapeValue(errorMessage)}</div>` : ""}
     <form class="form-card form-grid" method="POST" action="/login">
+      ${csrfToken ? `<input type="hidden" name="csrf_token" value="${escapeValue(csrfToken)}" />` : ""}
       <label class="form-field">
         <span>Email</span>
         <input type="email" name="email" placeholder="you@gmail.com" autocomplete="email" required />
