@@ -236,11 +236,19 @@ export const higherMathematicsNineTenChapterTableSchema: TableSchema = {
   ],
 };
 
-export const higherMathematicsElevenTwelveChapterTableSchema: TableSchema = {
-  name: "higher_mathematics_11_12_chapters",
+export const higherMathematicsElevenTwelveFirstChapterTableSchema: TableSchema = {
+  name: "higher_mathematics_11_12_first_chapters",
   columns: [
     { name: "id", type: "INTEGER", primaryKey: true },
-    { name: "paper", type: "TEXT", notNull: true },
+    { name: "title", type: "TEXT", notNull: true },
+    { name: "created_at", type: "TEXT", notNull: true },
+  ],
+};
+
+export const higherMathematicsElevenTwelveSecondChapterTableSchema: TableSchema = {
+  name: "higher_mathematics_11_12_second_chapters",
+  columns: [
+    { name: "id", type: "INTEGER", primaryKey: true },
     { name: "title", type: "TEXT", notNull: true },
     { name: "created_at", type: "TEXT", notNull: true },
   ],
@@ -266,7 +274,8 @@ export const expectedSchema: TableSchema[] = [
   banglaElevenTwelveLiteratureTableSchema,
   mathematicsNineTenChapterTableSchema,
   higherMathematicsNineTenChapterTableSchema,
-  higherMathematicsElevenTwelveChapterTableSchema,
+  higherMathematicsElevenTwelveFirstChapterTableSchema,
+  higherMathematicsElevenTwelveSecondChapterTableSchema,
 ];
 
 export const buildColumnSql = (column: ColumnDefinition): string => {

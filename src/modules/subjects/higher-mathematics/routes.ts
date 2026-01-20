@@ -165,7 +165,7 @@ export const handleHigherMathematicsRoutes = async (
       return redirectResponse(`${basePath}/11-12`);
     }
 
-    const item = await getHigherMathematicsElevenTwelveChapter(env.DB, chapterId);
+    const item = await getHigherMathematicsElevenTwelveChapter(env.DB, chapterId, paper);
     if (!item) {
       return redirectResponse(`${basePath}/11-12/${paper}`);
     }
