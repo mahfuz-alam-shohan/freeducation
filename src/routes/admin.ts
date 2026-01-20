@@ -454,7 +454,7 @@ export const handleAdminRoutes = async (
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  const subjectDetailMatch = url.pathname.match(/^\\/admin\\/modules\\/subjects\\/(\\d+)$/);
+  const subjectDetailMatch = url.pathname.match(/^\/admin\/modules\/subjects\/(\d+)$/);
   if (subjectDetailMatch) {
     if (!context.session) {
       return redirectResponse("/login");
@@ -483,7 +483,9 @@ export const handleAdminRoutes = async (
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  const subjectActionMatch = url.pathname.match(/^\\/admin\\/modules\\/subjects\\/(\\d+)\\/(delete|chapters|chapters\\/delete|topics|topics\\/delete|content)$/);
+  const subjectActionMatch = url.pathname.match(
+    /^\/admin\/modules\/subjects\/(\d+)\/(delete|chapters|chapters\/delete|topics|topics\/delete|content)$/,
+  );
   if (subjectActionMatch) {
     if (!context.session) {
       return redirectResponse("/login");
