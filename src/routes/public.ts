@@ -1,7 +1,7 @@
 import { renderPageLayout, type DeviceType } from "../layouts/pageLayout";
 import { renderHomeContent } from "../pages/home/content";
 import type { AdminSession } from "../services/security/session";
-import { htmlResponse, jsonResponse } from "./utils";
+import { htmlResponse, jsonResponse } from "../utils";
 
 type PublicRouteContext = {
   adminReady: boolean;

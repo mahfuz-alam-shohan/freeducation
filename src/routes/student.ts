@@ -9,7 +9,8 @@ import {
 import { sendStudentVerificationEmail } from "../services/email/gmail";
 import type { AdminSession } from "../services/security/session";
 import { createVerificationCode, hashVerificationCode } from "../services/security/verification";
-import { htmlResponse, jsonResponse, type Env } from "./utils";
+import { htmlResponse, jsonResponse } from "../utils";
+import type { Env } from "./utils";
 
 const isValidPassword = (password: string): boolean =>
   password.length >= 8 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);

@@ -2,7 +2,8 @@ import { adminExists } from "../features/auth/adminSetup";
 import { handleAdminRoutes, getAdminSession } from "./admin";
 import { handlePublicRoutes } from "./public";
 import { handleStudentRoutes } from "./student";
-import { getDeviceType, redirectResponse, serviceError, type Env } from "./utils";
+import { getDeviceType, redirectResponse, serviceError } from "../utils";
+import type { Env } from "./utils";
 
 export const handleRequest = async (request: Request, env: Env): Promise<Response> => {
   if (!env.DB) {

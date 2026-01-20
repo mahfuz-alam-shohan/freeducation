@@ -1,7 +1,8 @@
-import type { DeviceType } from "../../../layouts/pageLayout";
+import type { DeviceType } from "../../../types/layout";
 import { renderPageLayout } from "../../../layouts/pageLayout";
 import type { AdminSession } from "../../../services/security/session";
-import { htmlResponse, jsonResponse, redirectResponse, type Env } from "../../../routes/utils";
+import { htmlResponse, jsonResponse, redirectResponse } from "../../../utils";
+import type { Env } from "../../../routes/utils";
 import { createMathematicsNineTenChapter, getMathematicsNineTenChapter, listMathematicsNineTenChapters } from "./9-10/data";
 import { renderMathematicsNineTenDetail, renderMathematicsNineTenList } from "./9-10/views";
 import { renderMathematicsHome } from "./views";
