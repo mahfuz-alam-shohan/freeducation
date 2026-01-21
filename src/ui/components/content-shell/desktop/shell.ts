@@ -35,6 +35,22 @@ export const desktopShellStyles = `
     pointer-events: none; 
   }
   
+  /* Toggle icon states for desktop */
+  .sidebar-toggle__icon { 
+    display: inline-flex; 
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  
+  .sidebar-toggle__icon--open { 
+    display: none; 
+    opacity: 0;
+    transform: rotate(180deg);
+  }
+  
+  .sidebar-toggle__icon--close { 
+    display: inline-flex; 
+  }
+  
   .app-shell { 
     display: grid; 
     grid-template-columns: 240px 1fr; 
@@ -50,6 +66,19 @@ export const desktopShellStyles = `
   /* Layout controls spacing between sidebar and main content */
   .sidebar-toggle:checked + .app-shell { 
     grid-template-columns: 60px 1fr; 
+  }
+  
+  /* Toggle icon states when checked */
+  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--open { 
+    display: inline-flex; 
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  
+  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--close { 
+    display: none; 
+    opacity: 0;
+    transform: rotate(-180deg);
   }
 
   /* Header Component */
@@ -201,33 +230,5 @@ export const desktopShellStyles = `
     display: none; 
   }
 
-  /* Responsive Design */
-  @media (max-width: 900px) {
-    .app-shell { 
-      grid-template-columns: 200px 1fr; 
-    }
-  }
-
-  @media (max-width: 768px) {
-    .app-shell { 
-      grid-template-columns: 1fr; 
-      grid-template-rows: auto 1fr auto; 
-    }
-    
-    .app-header { 
-      grid-template-columns: 60px 1fr 80px; 
-    }
-    
-    .notification-menu { 
-      display: none; 
-    }
-    
-    .profile-notifications { 
-      display: block; 
-    }
-    
-    .app-main__content { 
-      padding: 10px; 
-    }
-  }
+  /* Desktop only - no responsive styles */
 `;

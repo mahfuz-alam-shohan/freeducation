@@ -291,37 +291,6 @@ export const baseStyles = `
   .theme-toggle__label { font-size: 13px; font-weight: 600; }
   :root[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
   :root[data-theme="dark"] .theme-toggle__icon--moon { display: inline-flex; }
-  .sidebar-toggle {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .sidebar-toggle__label {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-  .sidebar-toggle__label:hover {
-    background: var(--color-surface-muted);
-    border-color: var(--color-border-strong);
-  }
-  .sidebar-toggle:checked ~ .app-shell .app-sidebar {
-    transform: translateX(-100%);
-  }
-  .sidebar-toggle:checked ~ .app-shell .app-main {
-    margin-left: 0;
-  }
-  .sidebar-toggle:checked ~ .app-shell .sidebar-toggle__label {
-    left: 8px;
-  }
   .loader {
     position: fixed;
     top: 0;
@@ -620,34 +589,5 @@ export const baseStyles = `
   .table-link:hover {
     color: var(--color-link-hover);
     text-decoration: underline;
-  }
-  @media (max-width: 768px) {
-    .sidebar-toggle__label { display: flex; }
-    .page { padding: 8px; }
-    .page-title { font-size: 24px; }
-    .card-grid { grid-template-columns: 1fr; }
-    .form { max-width: 100%; padding: 0 8px; }
-    .user-management-toolbar {
-      padding: 12px;
-      gap: 8px;
-    }
-    .filter-fields {
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-    .filter-actions {
-      justify-content: center;
-    }
-    .toolbar-actions {
-      justify-content: center;
-      padding-top: 12px;
-      border-top: 1px solid var(--color-border);
-    }
-    .data-table td:nth-child(2) { max-width: 120px; }
-    .data-table td:nth-child(3) { max-width: 150px; }
-    .confirm-delete__panel {
-      margin: 16px;
-      width: calc(100% - 32px);
-    }
   }
 `;
