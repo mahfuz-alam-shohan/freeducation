@@ -15,6 +15,7 @@ type D1Database = {
 // Simple validation for now (can add zod later if needed)
 const UserPreferencesSchema = {
   sidebarState: ['minimized', 'expanded'],
+  theme: ['light', 'dark'],
 };
 
 export const handleUserRoutes = async (
@@ -73,6 +74,10 @@ export const handleUserRoutes = async (
       // Validate sidebarState
       if (body.sidebarState && !UserPreferencesSchema.sidebarState.includes(body.sidebarState)) {
         return jsonResponse({ error: 'Invalid sidebarState value' }, 400);
+      }
+
+      if (body.theme && !UserPreferencesSchema.theme.includes(body.theme)) {
+        return jsonResponse({ error: 'Invalid theme value' }, 400);
       }
 
       // Get current preferences

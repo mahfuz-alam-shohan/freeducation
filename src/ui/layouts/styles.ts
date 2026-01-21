@@ -86,6 +86,32 @@ export const baseStyles = `
     color: var(--color-danger);
     border-color: var(--color-border-strong);
   }
+  .theme-toggle {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .theme-toggle:hover {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+  }
+  .theme-toggle__icon {
+    display: inline-flex;
+    align-items: center;
+  }
+  .theme-toggle__icon--moon { display: none; }
+  .theme-toggle__label { font-size: 13px; font-weight: 600; }
+  :root[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle__icon--moon { display: inline-flex; }
   .page { max-width: 720px; margin: 0 auto; display: grid; gap: 12px; animation: page-enter 0.35s ease; }
   .page-header { display: grid; gap: 6px; text-align: center; align-items: center; }
   .page-title { margin: 0; font-size: 28px; letter-spacing: 0.3px; font-weight: 600; }

@@ -20,7 +20,7 @@ export const clientScript = `
   // Network-aware loading
   const optimizeForNetwork = () => {
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = navigator.connection;
       if (connection.saveData || connection.effectiveType === 'slow-2g') {
         document.body.classList.add('reduced-data');
         // Disable animations for slow connections
@@ -124,7 +124,6 @@ export const clientScript = `
   };
   
   const sidebarToggle = document.getElementById("sidebar-toggle");
-  const sidebarToggleLabel = document.querySelector(".sidebar-toggle__label");
   const sidebarViewportQuery = window.matchMedia("(max-width: 768px)");
   const loader = document.querySelector(".loader");
   const breadcrumbRoot = document.getElementById("breadcrumb");
@@ -145,9 +144,8 @@ export const clientScript = `
   };
   
   const applySidebarState = async () => {
-    if (!sidebarToggle || !sidebarToggleLabel) return;
+    if (!sidebarToggle) return;
     const isMobile = sidebarViewportQuery.matches;
-    sidebarToggleLabel.style.display = isMobile ? "flex" : "none";
     
     // Load sidebar state from user account or localStorage (only for desktop/tablet)
     if (!isMobile) {
@@ -164,8 +162,35 @@ export const clientScript = `
     }
   };
 
+  let userPreferencesPromise = null;
+  let userPreferencesCache = null;
+  const loadUserPreferences = async () => {
+    if (userPreferencesCache) {
+      return userPreferencesCache;
+    }
+
+    if (userPreferencesPromise) {
+      return userPreferencesPromise;
+    }
+
+    userPreferencesPromise = (async () => {
+      try {
+        const response = await fetch("/api/user/preferences");
+        if (!response.ok) {
+          return null;
+        }
+        const data = await response.json();
+        userPreferencesCache = data;
+        return data;
+      } catch (error) {
+        return null;
+      }
+    })();
+
+    return userPreferencesPromise;
+  };
+
   const applyTheme = (theme) => {
-    console.log('Applying theme:', theme); // Debug log
     const root = document.documentElement;
     root.setAttribute("data-theme", theme);
     themeToggles.forEach((toggle) => {
@@ -173,7 +198,12 @@ export const clientScript = `
     });
   };
 
-  const resolveTheme = () => {
+  const resolveTheme = async () => {
+    const preferences = await loadUserPreferences();
+    if (preferences?.theme === "dark" || preferences?.theme === "light") {
+      return preferences.theme;
+    }
+
     const stored = window.localStorage?.getItem("theme");
     if (stored === "dark" || stored === "light") {
       return stored;
@@ -181,11 +211,35 @@ export const clientScript = `
     return "light";
   };
 
-  const toggleTheme = () => {
+  const saveThemePreference = async (theme) => {
+    window.localStorage?.setItem("theme", theme);
+
+    if (!csrfToken) {
+      return;
+    }
+
+    userPreferencesCache = { ...(userPreferencesCache ?? {}), theme };
+    userPreferencesPromise = Promise.resolve(userPreferencesCache);
+
+    try {
+      await fetch("/api/user/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken })
+        },
+        body: JSON.stringify({ theme })
+      });
+    } catch (error) {
+      return;
+    }
+  };
+
+  const toggleTheme = async () => {
     const current = document.documentElement.getAttribute("data-theme") || "light";
     const next = current === "dark" ? "light" : "dark";
-    window.localStorage?.setItem("theme", next);
     applyTheme(next);
+    await saveThemePreference(next);
   };
 
   const ensureCsrfInput = (form) => {
@@ -198,14 +252,18 @@ export const clientScript = `
     form.appendChild(input);
   };
   
-  const saveSidebarState = async (state: "minimized" | "expanded") => {
-    console.log('Saving sidebar state:', state); // Debug log
-    // Always save to localStorage as fallback
+  const saveSidebarState = async (state) => {
     window.localStorage?.setItem("sidebar-state", state);
-    
-    // Try to save to user account if logged in
+
+    if (!csrfToken) {
+      return;
+    }
+
+    userPreferencesCache = { ...(userPreferencesCache ?? {}), sidebarState: state };
+    userPreferencesPromise = Promise.resolve(userPreferencesCache);
+
     try {
-      const response = await fetch("/api/user/preferences", {
+      await fetch("/api/user/preferences", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,55 +271,34 @@ export const clientScript = `
         },
         body: JSON.stringify({ sidebarState: state })
       });
-      
-      console.log('Save response status:', response.status); // Debug log
-      
-      // If user is not logged in, that's okay - we'll use localStorage
-      if (response.status === 401) {
-        console.log('User not logged in, using localStorage only');
-      }
     } catch (error) {
-      console.log('Failed to save to user account, using localStorage:', error);
+      return;
     }
   };
 
-  const loadSidebarState = async (): Promise<"minimized" | "expanded"> => {
-    console.log('Loading sidebar state...'); // Debug log
-    // First try to load from user account if logged in
-    try {
-      const response = await fetch("/api/user/preferences");
-      console.log('Load response status:', response.status); // Debug log
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Loaded from database:', data.sidebarState); // Debug log
-        if (data.sidebarState) {
-          return data.sidebarState;
-        }
-      }
-    } catch (error) {
-      console.log('Failed to load from user account, using localStorage:', error);
+  const loadSidebarState = async () => {
+    const preferences = await loadUserPreferences();
+    if (preferences?.sidebarState === "minimized" || preferences?.sidebarState === "expanded") {
+      return preferences.sidebarState;
     }
-    
-    // Fallback to localStorage
+
     const savedState = window.localStorage?.getItem("sidebar-state");
-    console.log('Loaded from localStorage:', savedState); // Debug log
     return savedState === "minimized" ? "minimized" : "expanded";
   };
 
   const handleSidebarChange = async () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
-    const state = isChecked ? "minimized" : "expanded";
-    
-    // Save to both user account and localStorage
-    await saveSidebarState(state);
-    
-    if (isChecked) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+    const isMobile = sidebarViewportQuery.matches;
+
+    if (isMobile) {
+      document.body.style.overflow = isChecked ? "hidden" : "";
+      return;
     }
+
+    const state = isChecked ? "minimized" : "expanded";
+    document.body.style.overflow = "";
+    await saveSidebarState(state);
   };
   
   const renderBreadcrumbs = () => {
@@ -312,21 +349,18 @@ export const clientScript = `
     resetTransition();
     await applySidebarState();
     renderBreadcrumbs();
-    applyTheme(resolveTheme());
+    applyTheme(await resolveTheme());
     
     // Initialize performance optimizations
     measurePerformance();
     optimizeForNetwork();
     setupPrefetching();
     setupLazyLoading();
-    
-    // Debug: Check if theme toggles exist
-    console.log('Theme toggles found:', themeToggles.length, themeToggles); // Debug log
   });
   
-  await applySidebarState();
+  applySidebarState();
   renderBreadcrumbs();
-  applyTheme(resolveTheme());
+  resolveTheme().then(applyTheme);
   
   // Initialize performance features early
   measurePerformance();
@@ -336,23 +370,11 @@ export const clientScript = `
   sidebarViewportQuery.addEventListener("change", applySidebarState);
   sidebarToggle?.addEventListener("change", handleSidebarChange);
   
-  // Debug: Check if theme toggles exist
-  console.log('Theme toggles found:', themeToggles.length, themeToggles); // Debug log
-  
   themeToggles.forEach((toggle) => {
     toggle.addEventListener("click", () => {
       toggleTheme();
     });
   });
-  
-  // Manual test function - call from console to test theme switching
-  window.testThemeToggle = () => {
-    console.log('Manual theme test triggered');
-    const current = document.documentElement.getAttribute("data-theme") || "light";
-    const next = current === "dark" ? "light" : "dark";
-    console.log('Manual test:', current, '->', next);
-    applyTheme(next);
-  };
   document.addEventListener("submit", (event) => {
     const target = event.target;
     if (target instanceof HTMLFormElement && target.target !== "_blank") {
