@@ -1,6 +1,7 @@
 import { handleAdminRoutes } from './admin';
 import { handlePublicRoutes } from './public';
 import { handleStudentRoutes } from './student';
+import { handleUserRoutes } from './user';
 import type { Env } from '../app/env';
 import type { DeviceType } from '../core/types/layout';
 import type { AdminSession } from '../core/security/session';
@@ -17,7 +18,13 @@ export const handleApiRoutes = async (
   env: Env,
   context: ApiContext,
 ): Promise<Response | null> => {
-  // Try student routes first (signup, verification)
+  // Try user routes first (preferences)
+  const userResponse = await handleUserRoutes(request, env, context);
+  if (userResponse) {
+    return userResponse;
+  }
+
+  // Try student routes (signup, verification)
   const studentResponse = await handleStudentRoutes(request, env, context);
   if (studentResponse) {
     return studentResponse;

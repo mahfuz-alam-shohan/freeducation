@@ -1396,10 +1396,20 @@ var sidebarDesktopStyles = `
   
   .sidebar-toggle:checked + .app-shell .menu-item {
     justify-content: center;
+    width: 100%;
+    min-width: 0; /* Prevent flex items from overflowing */
+  }
+  
+  .sidebar-toggle:checked + .app-shell .menu-icon {
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: hidden;
   }
   
   .sidebar-toggle:checked + .app-shell .app-sidebar { 
     padding: 10px 6px; 
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: auto; /* Allow vertical scrolling only */
   }
   
   /* Hide theme button label when sidebar is minimized */
@@ -1408,6 +1418,12 @@ var sidebarDesktopStyles = `
     visibility: hidden;
     position: absolute;
     pointer-events: none;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .theme-toggle {
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
   }
 
   /* Sidebar Footer */
@@ -1590,10 +1606,20 @@ var sidebarTabletStyles = `
   
   .sidebar-toggle:checked + .app-shell .menu-item {
     justify-content: center;
+    width: 100%;
+    min-width: 0; /* Prevent flex items from overflowing */
+  }
+  
+  .sidebar-toggle:checked + .app-shell .menu-icon {
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: hidden;
   }
   
   .sidebar-toggle:checked + .app-shell .app-sidebar { 
     padding: 8px 4px; 
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: auto; /* Allow vertical scrolling only */
   }
   
   /* Hide theme button label when tablet sidebar is minimized */
@@ -1602,6 +1628,12 @@ var sidebarTabletStyles = `
     visibility: hidden;
     position: absolute;
     pointer-events: none;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .theme-toggle {
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
   }
 
   /* Sidebar Footer */
@@ -2551,14 +2583,14 @@ var clientScript = `
     document.body.classList.remove("is-transitioning");
   };
   
-  const applySidebarState = () => {
+  const applySidebarState = async () => {
     if (!sidebarToggle || !sidebarToggleLabel) return;
     const isMobile = sidebarViewportQuery.matches;
     sidebarToggleLabel.style.display = isMobile ? "flex" : "none";
     
-    // Restore sidebar state from localStorage (only for desktop)
+    // Load sidebar state from user account or localStorage (only for desktop/tablet)
     if (!isMobile) {
-      const savedState = window.localStorage?.getItem("sidebar-state");
+      const savedState = await loadSidebarState();
       if (savedState === "minimized") {
         sidebarToggle.checked = true;
       } else if (savedState === "expanded") {
@@ -2604,12 +2636,56 @@ var clientScript = `
     form.appendChild(input);
   };
   
-  const handleSidebarChange = () => {
+  const saveSidebarState = async (state: "minimized" | "expanded") => {
+    // Always save to localStorage as fallback
+    window.localStorage?.setItem("sidebar-state", state);
+    
+    // Try to save to user account if logged in
+    try {
+      const response = await fetch("/api/user/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken })
+        },
+        body: JSON.stringify({ sidebarState: state })
+      });
+      
+      // If user is not logged in, that's okay - we'll use localStorage
+      if (response.status === 401) {
+        console.log("User not logged in, using localStorage only");
+      }
+    } catch (error) {
+      console.log("Failed to save to user account, using localStorage:", error);
+    }
+  };
+
+  const loadSidebarState = async (): Promise<"minimized" | "expanded"> => {
+    // First try to load from user account if logged in
+    try {
+      const response = await fetch("/api/user/preferences");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.sidebarState) {
+          return data.sidebarState;
+        }
+      }
+    } catch (error) {
+      console.log("Failed to load from user account, using localStorage:", error);
+    }
+    
+    // Fallback to localStorage
+    const savedState = window.localStorage?.getItem("sidebar-state");
+    return savedState === "minimized" ? "minimized" : "expanded";
+  };
+
+  const handleSidebarChange = async () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
+    const state = isChecked ? "minimized" : "expanded";
     
-    // Save sidebar state to localStorage
-    window.localStorage?.setItem("sidebar-state", isChecked ? "minimized" : "expanded");
+    // Save to both user account and localStorage
+    await saveSidebarState(state);
     
     if (isChecked) {
       document.body.style.overflow = "hidden";
@@ -2661,10 +2737,10 @@ var clientScript = `
     });
   };
 
-  window.addEventListener("pageshow", () => {
+  window.addEventListener("pageshow", async () => {
     deactivateLoader();
     resetTransition();
-    applySidebarState();
+    await applySidebarState();
     renderBreadcrumbs();
     applyTheme(resolveTheme());
     
@@ -2675,7 +2751,7 @@ var clientScript = `
     setupLazyLoading();
   });
   
-  applySidebarState();
+  await applySidebarState();
   renderBreadcrumbs();
   applyTheme(resolveTheme());
   
@@ -7681,8 +7757,78 @@ var handleStudentRoutes = /* @__PURE__ */ __name(async (request, env, context) =
   return null;
 }, "handleStudentRoutes");
 
+// src/api/user.ts
+var UserPreferencesSchema = {
+  sidebarState: ["minimized", "expanded"]
+};
+var handleUserRoutes = /* @__PURE__ */ __name(async (request, env, context) => {
+  const { session } = context;
+  const url = new URL(request.url);
+  const path = url.pathname;
+  if (!path.startsWith("/api/user/")) {
+    return null;
+  }
+  if (request.method === "GET" && path === "/api/user/preferences") {
+    if (!session) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+    try {
+      const result = await env.DB.prepare(`
+        SELECT preferences FROM users WHERE email = ?
+      `).bind(session.email).all();
+      const preferences = result.results && result.results[0] ? JSON.parse(result.results[0].preferences) : {};
+      return jsonResponse({
+        sidebarState: preferences.sidebarState || "expanded",
+        theme: preferences.theme || "light"
+      });
+    } catch (error) {
+      console.error("Failed to get user preferences:", error);
+      return jsonResponse({ error: "Failed to get preferences" }, 500);
+    }
+  }
+  if (request.method === "POST" && path === "/api/user/preferences") {
+    if (!session) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+    const csrfToken = request.headers.get("X-CSRF-Token");
+    if (!csrfToken) {
+      return jsonResponse({ error: "CSRF token required" }, 403);
+    }
+    try {
+      const body = await request.json();
+      if (body.sidebarState && !UserPreferencesSchema.sidebarState.includes(body.sidebarState)) {
+        return jsonResponse({ error: "Invalid sidebarState value" }, 400);
+      }
+      const currentResult = await env.DB.prepare(`
+        SELECT preferences FROM users WHERE email = ?
+      `).bind(session.email).all();
+      const currentPreferences = currentResult.results && currentResult.results[0] ? JSON.parse(currentResult.results[0].preferences) : {};
+      const updatedPreferences = {
+        ...currentPreferences,
+        ...body,
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      await env.DB.prepare(`
+        UPDATE users SET preferences = ? WHERE email = ?
+      `).bind(JSON.stringify(updatedPreferences), session.email).run();
+      return jsonResponse({
+        success: true,
+        preferences: updatedPreferences
+      });
+    } catch (error) {
+      console.error("Failed to update user preferences:", error);
+      return jsonResponse({ error: "Failed to update preferences" }, 500);
+    }
+  }
+  return null;
+}, "handleUserRoutes");
+
 // src/api/index.ts
 var handleApiRoutes = /* @__PURE__ */ __name(async (request, env, context) => {
+  const userResponse = await handleUserRoutes(request, env, context);
+  if (userResponse) {
+    return userResponse;
+  }
   const studentResponse = await handleStudentRoutes(request, env, context);
   if (studentResponse) {
     return studentResponse;

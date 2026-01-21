@@ -144,14 +144,14 @@ export const clientScript = `
     document.body.classList.remove("is-transitioning");
   };
   
-  const applySidebarState = () => {
+  const applySidebarState = async () => {
     if (!sidebarToggle || !sidebarToggleLabel) return;
     const isMobile = sidebarViewportQuery.matches;
     sidebarToggleLabel.style.display = isMobile ? "flex" : "none";
     
-    // Restore sidebar state from localStorage (only for desktop)
+    // Load sidebar state from user account or localStorage (only for desktop/tablet)
     if (!isMobile) {
-      const savedState = window.localStorage?.getItem("sidebar-state");
+      const savedState = await loadSidebarState();
       if (savedState === "minimized") {
         sidebarToggle.checked = true;
       } else if (savedState === "expanded") {
@@ -197,12 +197,56 @@ export const clientScript = `
     form.appendChild(input);
   };
   
-  const handleSidebarChange = () => {
+  const saveSidebarState = async (state: "minimized" | "expanded") => {
+    // Always save to localStorage as fallback
+    window.localStorage?.setItem("sidebar-state", state);
+    
+    // Try to save to user account if logged in
+    try {
+      const response = await fetch("/api/user/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken })
+        },
+        body: JSON.stringify({ sidebarState: state })
+      });
+      
+      // If user is not logged in, that's okay - we'll use localStorage
+      if (response.status === 401) {
+        console.log("User not logged in, using localStorage only");
+      }
+    } catch (error) {
+      console.log("Failed to save to user account, using localStorage:", error);
+    }
+  };
+
+  const loadSidebarState = async (): Promise<"minimized" | "expanded"> => {
+    // First try to load from user account if logged in
+    try {
+      const response = await fetch("/api/user/preferences");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.sidebarState) {
+          return data.sidebarState;
+        }
+      }
+    } catch (error) {
+      console.log("Failed to load from user account, using localStorage:", error);
+    }
+    
+    // Fallback to localStorage
+    const savedState = window.localStorage?.getItem("sidebar-state");
+    return savedState === "minimized" ? "minimized" : "expanded";
+  };
+
+  const handleSidebarChange = async () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
+    const state = isChecked ? "minimized" : "expanded";
     
-    // Save sidebar state to localStorage
-    window.localStorage?.setItem("sidebar-state", isChecked ? "minimized" : "expanded");
+    // Save to both user account and localStorage
+    await saveSidebarState(state);
     
     if (isChecked) {
       document.body.style.overflow = "hidden";
@@ -254,10 +298,10 @@ export const clientScript = `
     });
   };
 
-  window.addEventListener("pageshow", () => {
+  window.addEventListener("pageshow", async () => {
     deactivateLoader();
     resetTransition();
-    applySidebarState();
+    await applySidebarState();
     renderBreadcrumbs();
     applyTheme(resolveTheme());
     
@@ -268,7 +312,7 @@ export const clientScript = `
     setupLazyLoading();
   });
   
-  applySidebarState();
+  await applySidebarState();
   renderBreadcrumbs();
   applyTheme(resolveTheme());
   

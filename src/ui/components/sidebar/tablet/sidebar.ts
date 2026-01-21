@@ -117,10 +117,20 @@ export const sidebarTabletStyles = `
   
   .sidebar-toggle:checked + .app-shell .menu-item {
     justify-content: center;
+    width: 100%;
+    min-width: 0; /* Prevent flex items from overflowing */
+  }
+  
+  .sidebar-toggle:checked + .app-shell .menu-icon {
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: hidden;
   }
   
   .sidebar-toggle:checked + .app-shell .app-sidebar { 
     padding: 8px 4px; 
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: auto; /* Allow vertical scrolling only */
   }
   
   /* Hide theme button label when tablet sidebar is minimized */
@@ -129,6 +139,12 @@ export const sidebarTabletStyles = `
     visibility: hidden;
     position: absolute;
     pointer-events: none;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .theme-toggle {
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
   }
 
   /* Sidebar Footer */
