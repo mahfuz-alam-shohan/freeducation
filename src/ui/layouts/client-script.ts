@@ -165,6 +165,7 @@ export const clientScript = `
   };
 
   const applyTheme = (theme) => {
+    console.log('Applying theme:', theme); // Debug log
     const root = document.documentElement;
     root.setAttribute("data-theme", theme);
     themeToggles.forEach((toggle) => {
@@ -183,6 +184,7 @@ export const clientScript = `
   const toggleTheme = () => {
     const current = document.documentElement.getAttribute("data-theme") || "light";
     const next = current === "dark" ? "light" : "dark";
+    console.log('Theme toggle:', current, '->', next); // Debug log
     window.localStorage?.setItem("theme", next);
     applyTheme(next);
   };
@@ -324,7 +326,8 @@ export const clientScript = `
   sidebarViewportQuery.addEventListener("change", applySidebarState);
   sidebarToggle?.addEventListener("change", handleSidebarChange);
   themeToggles.forEach((toggle) => {
-    toggle.addEventListener("click", () => {
+    toggle.addEventListener("click", (event) => {
+      console.log('Theme toggle clicked:', event.target); // Debug log
       toggleTheme();
     });
   });
