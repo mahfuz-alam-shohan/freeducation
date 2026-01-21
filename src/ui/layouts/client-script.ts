@@ -227,21 +227,26 @@ export const clientScript = `
   };
 
   const loadSidebarState = async (): Promise<"minimized" | "expanded"> => {
+    console.log('Loading sidebar state...'); // Debug log
     // First try to load from user account if logged in
     try {
       const response = await fetch("/api/user/preferences");
+      console.log('Load response status:', response.status); // Debug log
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Loaded from database:', data.sidebarState); // Debug log
         if (data.sidebarState) {
           return data.sidebarState;
         }
       }
     } catch (error) {
-      console.log("Failed to load from user account, using localStorage:", error);
+      console.log('Failed to load from user account, using localStorage:', error);
     }
     
     // Fallback to localStorage
     const savedState = window.localStorage?.getItem("sidebar-state");
+    console.log('Loaded from localStorage:', savedState); // Debug log
     return savedState === "minimized" ? "minimized" : "expanded";
   };
 
@@ -315,6 +320,9 @@ export const clientScript = `
     optimizeForNetwork();
     setupPrefetching();
     setupLazyLoading();
+    
+    // Debug: Check if theme toggles exist
+    console.log('Theme toggles found:', themeToggles.length, themeToggles); // Debug log
   });
   
   await applySidebarState();
@@ -328,12 +336,25 @@ export const clientScript = `
   setupLazyLoading();
   sidebarViewportQuery.addEventListener("change", applySidebarState);
   sidebarToggle?.addEventListener("change", handleSidebarChange);
+  
+  // Debug: Check if theme toggles exist
+  console.log('Theme toggles found:', themeToggles.length, themeToggles); // Debug log
+  
   themeToggles.forEach((toggle) => {
     toggle.addEventListener("click", (event) => {
       console.log('Theme toggle clicked:', event.target); // Debug log
       toggleTheme();
     });
   });
+  
+  // Manual test function - call from console to test theme switching
+  window.testThemeToggle = () => {
+    console.log('Manual theme test triggered');
+    const current = document.documentElement.getAttribute("data-theme") || "light";
+    const next = current === "dark" ? "light" : "dark";
+    console.log('Manual test:', current, '->', next);
+    applyTheme(next);
+  };
   document.addEventListener("submit", (event) => {
     const target = event.target;
     if (target instanceof HTMLFormElement && target.target !== "_blank") {
