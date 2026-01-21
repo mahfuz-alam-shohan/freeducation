@@ -184,7 +184,6 @@ export const clientScript = `
   const toggleTheme = () => {
     const current = document.documentElement.getAttribute("data-theme") || "light";
     const next = current === "dark" ? "light" : "dark";
-    console.log('Theme toggle:', current, '->', next); // Debug log
     window.localStorage?.setItem("theme", next);
     applyTheme(next);
   };
@@ -341,8 +340,7 @@ export const clientScript = `
   console.log('Theme toggles found:', themeToggles.length, themeToggles); // Debug log
   
   themeToggles.forEach((toggle) => {
-    toggle.addEventListener("click", (event) => {
-      console.log('Theme toggle clicked:', event.target); // Debug log
+    toggle.addEventListener("click", () => {
       toggleTheme();
     });
   });

@@ -168,120 +168,35 @@ export const tabletShellStyles = `
 
   /* Tablet specific - no responsive styles */
   
-  /* Glassy UI and Bouncy Animations */
-  .app-shell {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.05);
-  }
-  
-  :root[data-theme="dark"] .app-shell {
-    background: rgba(0, 0, 0, 0.05);
-  }
-  
-  .app-header {
-    backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  :root[data-theme="dark"] .app-header {
-    background: rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .app-sidebar {
-    backdrop-filter: blur(15px);
-    background: rgba(255, 255, 255, 0.08);
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
-  }
-  
-  :root[data-theme="dark"] .app-sidebar {
-    background: rgba(0, 0, 0, 0.08);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  
-  .app-main {
-    backdrop-filter: blur(5px);
-  }
-  
-  .icon-button {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  :root[data-theme="dark"] .icon-button {
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-  
-  .icon-button:hover { 
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  }
-  
-  :root[data-theme="dark"] .icon-button:hover {
-    background: rgba(0, 0, 0, 0.25);
-    border-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Bouncy sidebar transitions */
-  .app-shell {
-    transition: grid-template-columns 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  .app-sidebar {
-    transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  .menu-item {
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  .menu-item:hover { 
-    transform: translateX(4px) scale(1.02);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .menu-icon {
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  .menu-label {
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  /* Bouncy theme toggle */
+  /* Simple Theme Toggle - Clean and Professional */
   .theme-toggle {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  :root[data-theme="dark"] .theme-toggle {
-    background: rgba(0, 0, 0, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
   
   .theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.35);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
   }
   
-  :root[data-theme="dark"] .theme-toggle:hover {
-    background: rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  .theme-toggle__icon { 
+    display: inline-flex; 
+    align-items: center; 
   }
   
-  .theme-toggle:active {
-    transform: translateY(-1px) scale(0.98);
-  }
+  .theme-toggle__icon--moon { display: none; }
+  .theme-toggle__label { font-size: 12px; font-weight: 600; }
+  :root[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle__icon--moon { display: inline-flex; }
 `;
