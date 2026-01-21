@@ -1,5 +1,5 @@
 import type { AdminSession } from "../../../../core/security/session";
-import { renderHomeIcon, renderModulesIcon, renderUsersIcon, renderSunIcon, renderMoonIcon } from "../../ui/icons";
+import { renderHomeIcon, renderModulesIcon, renderUsersIcon, renderSunIcon, renderMoonIcon } from "../../icons";
 
 type SidebarProps = {
   session: AdminSession | null;

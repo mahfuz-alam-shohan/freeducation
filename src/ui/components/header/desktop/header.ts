@@ -1,4 +1,4 @@
-import { renderCloseIcon, renderMenuIcon } from "../../ui/icons";
+import { renderCloseIcon, renderMenuIcon } from "../../icons";
 
 export type HeaderProps = {
   siteName: string;
