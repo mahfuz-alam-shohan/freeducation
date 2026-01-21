@@ -7,7 +7,7 @@ import { renderFooterTablet } from "../components/footer/tablet/footer";
 import { renderHeaderDesktop } from "../components/header/desktop/header";
 import { renderHeaderMobile } from "../components/header/mobile/header";
 import { renderHeaderTablet } from "../components/header/tablet/header";
-import { renderSidebarDesktop } from "../components/sidebar/desktop/sidebar";
+import { renderSidebarDesktop, sidebarDesktopStyles } from "../components/sidebar/desktop/sidebar";
 import { renderSidebarMobile } from "../components/sidebar/mobile/sidebar";
 import { renderSidebarTablet } from "../components/sidebar/tablet/sidebar";
 import { renderNotificationMenu } from "../components/notification-menu";
@@ -38,7 +38,7 @@ const renderShellStyles = (device: DeviceType): string => {
     return tabletShellStyles;
   }
 
-  return desktopShellStyles;
+  return `${desktopShellStyles}\n${sidebarDesktopStyles}`;
 };
 
 export const renderPageLayout = ({ device, content, session, csrfToken, nonce }: PageLayoutProps): string => {

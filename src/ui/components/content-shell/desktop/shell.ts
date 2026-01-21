@@ -47,6 +47,11 @@ export const desktopShellStyles = `
     transition: grid-template-columns 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Layout controls spacing between sidebar and main content */
+  .sidebar-toggle:checked + .app-shell { 
+    grid-template-columns: 60px 1fr; 
+  }
+
   /* Header Component */
   .app-header {
     grid-column: 1 / -1;
@@ -102,71 +107,7 @@ export const desktopShellStyles = `
     transform: translateY(-1px); 
   }
 
-  /* Sidebar Toggle System */
-  .sidebar-toggle__icon { 
-    display: inline-flex; 
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-  
-  .sidebar-toggle__icon--open { 
-    display: none; 
-    opacity: 0;
-    transform: rotate(180deg);
-  }
-  
-  .sidebar-toggle__icon--close { 
-    display: inline-flex; 
-  }
-
-  /* Sidebar Component */
-  .app-sidebar {
-    grid-row: 2 / 3;
-    padding: 10px;
-    border-right: 1px solid var(--color-border);
-    background: var(--color-surface-muted);
-    overflow-y: auto;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Navigation Menu */
-  .menu { 
-    list-style: none; 
-    padding: 0; 
-    margin: 0; 
-  }
-  
-  .menu-item {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    padding: 8px 6px;
-    border-radius: var(--radius-sm);
-    color: var(--color-text);
-    border: 1px solid transparent;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .menu-item:hover { 
-    background: var(--color-surface-elevated); 
-    border-color: var(--color-border); 
-    transform: translateX(2px); 
-  }
-  
-  .menu-icon { 
-    display: inline-flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: var(--color-text-muted); 
-    flex-shrink: 0;
-  }
-  
-  .menu-label { 
-    transition: all 0.2s ease; 
-    white-space: nowrap;
-  }
-
-  /* Main Content Area */
+  /* Main Content Area - gets more/less space based on sidebar */
   .app-main {
     display: grid;
     grid-template-rows: auto 1fr;
@@ -260,33 +201,6 @@ export const desktopShellStyles = `
     display: none; 
   }
 
-  /* Sidebar Toggle States */
-  .sidebar-toggle:checked + .app-shell { 
-    grid-template-columns: 60px 1fr; 
-  }
-  
-  .sidebar-toggle:checked + .app-shell .menu-label { 
-    opacity: 0; 
-    width: 0; 
-    overflow: hidden; 
-  }
-  
-  .sidebar-toggle:checked + .app-shell .app-sidebar { 
-    padding: 10px 6px; 
-  }
-  
-  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--open { 
-    display: inline-flex; 
-    opacity: 1;
-    transform: rotate(0deg);
-  }
-  
-  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--close { 
-    display: none; 
-    opacity: 0;
-    transform: rotate(-180deg);
-  }
-
   /* Responsive Design */
   @media (max-width: 900px) {
     .app-shell { 
@@ -302,26 +216,6 @@ export const desktopShellStyles = `
     
     .app-header { 
       grid-template-columns: 60px 1fr 80px; 
-    }
-    
-    .app-sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 80%;
-      max-width: 320px;
-      background: var(--color-surface-muted);
-      border-right: 1px solid var(--color-border);
-      padding: 16px;
-      transform: translateX(-110%);
-      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-      z-index: 60;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .sidebar-toggle:checked + .app-shell .app-sidebar { 
-      transform: translateX(0); 
     }
     
     .notification-menu { 

@@ -49,3 +49,110 @@ export const renderSidebarDesktop = ({ session }: SidebarProps): string => `
     </div>
   </aside>
 `;
+
+export const sidebarDesktopStyles = `
+  /* Sidebar controls its own appearance */
+  .app-sidebar {
+    grid-row: 2 / 3;
+    padding: 10px;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-surface-muted);
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Navigation Menu */
+  .menu { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+  }
+  
+  .menu-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 6px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  
+  .menu-item:hover { 
+    background: var(--color-surface-elevated); 
+    border-color: var(--color-border); 
+    transform: translateX(2px); 
+  }
+  
+  /* Sidebar appearance when shrunk */
+  .sidebar-toggle:checked + .app-shell .menu-item:hover {
+    transform: translateX(0);
+    background: var(--color-surface-elevated); 
+  }
+  
+  .menu-icon { 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--color-text-muted); 
+    flex-shrink: 0;
+  }
+  
+  .menu-label { 
+    transition: all 0.2s ease; 
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Sidebar controls its own full/shrunk appearance */
+  .sidebar-toggle:checked + .app-shell .menu-label { 
+    opacity: 0; 
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .menu-item {
+    justify-content: center;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .app-sidebar { 
+    padding: 10px 6px; 
+  }
+
+  /* Sidebar Footer */
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Theme Toggle */
+  .theme-toggle {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .theme-toggle:hover {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+  }
+  .theme-toggle__icon { display: inline-flex; align-items: center; }
+  .theme-toggle__icon--moon { display: none; }
+  .theme-toggle__label { font-size: 13px; font-weight: 600; }
+  :root[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle__icon--moon { display: inline-flex; }
+`;
