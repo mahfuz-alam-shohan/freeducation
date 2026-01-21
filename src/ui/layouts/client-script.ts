@@ -200,6 +200,7 @@ export const clientScript = `
   };
   
   const saveSidebarState = async (state: "minimized" | "expanded") => {
+    console.log('Saving sidebar state:', state); // Debug log
     // Always save to localStorage as fallback
     window.localStorage?.setItem("sidebar-state", state);
     
@@ -214,12 +215,14 @@ export const clientScript = `
         body: JSON.stringify({ sidebarState: state })
       });
       
+      console.log('Save response status:', response.status); // Debug log
+      
       // If user is not logged in, that's okay - we'll use localStorage
       if (response.status === 401) {
-        console.log("User not logged in, using localStorage only");
+        console.log('User not logged in, using localStorage only');
       }
     } catch (error) {
-      console.log("Failed to save to user account, using localStorage:", error);
+      console.log('Failed to save to user account, using localStorage:', error);
     }
   };
 

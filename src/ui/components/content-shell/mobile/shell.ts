@@ -152,23 +152,23 @@ export const mobileShellStyles = `
   
   .app-header {
     backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   :root[data-theme="dark"] .app-header {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .app-sidebar {
     backdrop-filter: blur(15px);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.15);
   }
   
   :root[data-theme="dark"] .app-sidebar {
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
   

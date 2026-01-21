@@ -1150,23 +1150,23 @@ var mobileShellStyles = `
   
   .app-header {
     backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   :root[data-theme="dark"] .app-header {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .app-sidebar {
     backdrop-filter: blur(15px);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.15);
   }
   
   :root[data-theme="dark"] .app-sidebar {
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
   
@@ -2781,6 +2781,105 @@ var baseStyles2 = `
     color: var(--color-link-hover);
     text-decoration: underline;
   }
+  
+  /* Glassy Profile Dropdown */
+  .profile-menu {
+    position: relative;
+    z-index: 50;
+  }
+  
+  .profile-menu summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  
+  .profile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+  
+  .dropdown {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    min-width: 220px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(20px);
+    z-index: 60;
+    animation: dropdown-fade 0.3s ease;
+  }
+  
+  :root[data-theme="dark"] .dropdown {
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  }
+  
+  .dropdown p {
+    margin: 0 0 8px 0;
+    color: var(--color-text);
+  }
+  
+  .dropdown p strong {
+    color: var(--color-text);
+  }
+  
+  .dropdown hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 8px 0;
+  }
+  
+  .dropdown .button-link {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    margin: 4px 0 0 0;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .dropdown .button-link:hover {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dropdown .button-link--primary {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+  }
+  
+  .dropdown .button-link--primary:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .profile-notifications {
+    display: none;
+  }
+  
+  @keyframes dropdown-fade {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 // src/ui/layouts/client-script.ts
@@ -2986,6 +3085,7 @@ var clientScript = `
   };
   
   const saveSidebarState = async (state: "minimized" | "expanded") => {
+    console.log('Saving sidebar state:', state); // Debug log
     // Always save to localStorage as fallback
     window.localStorage?.setItem("sidebar-state", state);
     
@@ -3000,12 +3100,14 @@ var clientScript = `
         body: JSON.stringify({ sidebarState: state })
       });
       
+      console.log('Save response status:', response.status); // Debug log
+      
       // If user is not logged in, that's okay - we'll use localStorage
       if (response.status === 401) {
-        console.log("User not logged in, using localStorage only");
+        console.log('User not logged in, using localStorage only');
       }
     } catch (error) {
-      console.log("Failed to save to user account, using localStorage:", error);
+      console.log('Failed to save to user account, using localStorage:', error);
     }
   };
 
