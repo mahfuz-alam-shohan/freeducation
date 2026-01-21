@@ -143,13 +143,13 @@ export const clientScript = `
     document.body.classList.remove("is-transitioning");
   };
   
-  const applySidebarState = async () => {
+  const applySidebarState = () => {
     if (!sidebarToggle) return;
     const isMobile = sidebarViewportQuery.matches;
     
-    // Load sidebar state from user account or localStorage (only for desktop/tablet)
+    // Load sidebar state from localStorage (only for desktop/tablet)
     if (!isMobile) {
-      const savedState = await loadSidebarState();
+      const savedState = loadSidebarState();
       if (savedState === "minimized") {
         sidebarToggle.checked = true;
       } else if (savedState === "expanded") {
@@ -162,34 +162,6 @@ export const clientScript = `
     }
   };
 
-  let userPreferencesPromise = null;
-  let userPreferencesCache = null;
-  const loadUserPreferences = async () => {
-    if (userPreferencesCache) {
-      return userPreferencesCache;
-    }
-
-    if (userPreferencesPromise) {
-      return userPreferencesPromise;
-    }
-
-    userPreferencesPromise = (async () => {
-      try {
-        const response = await fetch("/api/user/preferences");
-        if (!response.ok) {
-          return null;
-        }
-        const data = await response.json();
-        userPreferencesCache = data;
-        return data;
-      } catch (error) {
-        return null;
-      }
-    })();
-
-    return userPreferencesPromise;
-  };
-
   const applyTheme = (theme) => {
     const root = document.documentElement;
     root.setAttribute("data-theme", theme);
@@ -198,12 +170,7 @@ export const clientScript = `
     });
   };
 
-  const resolveTheme = async () => {
-    const preferences = await loadUserPreferences();
-    if (preferences?.theme === "dark" || preferences?.theme === "light") {
-      return preferences.theme;
-    }
-
+  const resolveTheme = () => {
     const stored = window.localStorage?.getItem("theme");
     if (stored === "dark" || stored === "light") {
       return stored;
@@ -211,35 +178,15 @@ export const clientScript = `
     return "light";
   };
 
-  const saveThemePreference = async (theme) => {
+  const saveThemePreference = (theme) => {
     window.localStorage?.setItem("theme", theme);
-
-    if (!csrfToken) {
-      return;
-    }
-
-    userPreferencesCache = { ...(userPreferencesCache ?? {}), theme };
-    userPreferencesPromise = Promise.resolve(userPreferencesCache);
-
-    try {
-      await fetch("/api/user/preferences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(csrfToken && { "X-CSRF-Token": csrfToken })
-        },
-        body: JSON.stringify({ theme })
-      });
-    } catch (error) {
-      return;
-    }
   };
 
-  const toggleTheme = async () => {
+  const toggleTheme = () => {
     const current = document.documentElement.getAttribute("data-theme") || "light";
     const next = current === "dark" ? "light" : "dark";
     applyTheme(next);
-    await saveThemePreference(next);
+    saveThemePreference(next);
   };
 
   const ensureCsrfInput = (form) => {
@@ -252,41 +199,16 @@ export const clientScript = `
     form.appendChild(input);
   };
   
-  const saveSidebarState = async (state) => {
+  const saveSidebarState = (state) => {
     window.localStorage?.setItem("sidebar-state", state);
-
-    if (!csrfToken) {
-      return;
-    }
-
-    userPreferencesCache = { ...(userPreferencesCache ?? {}), sidebarState: state };
-    userPreferencesPromise = Promise.resolve(userPreferencesCache);
-
-    try {
-      await fetch("/api/user/preferences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(csrfToken && { "X-CSRF-Token": csrfToken })
-        },
-        body: JSON.stringify({ sidebarState: state })
-      });
-    } catch (error) {
-      return;
-    }
   };
 
-  const loadSidebarState = async () => {
-    const preferences = await loadUserPreferences();
-    if (preferences?.sidebarState === "minimized" || preferences?.sidebarState === "expanded") {
-      return preferences.sidebarState;
-    }
-
+  const loadSidebarState = () => {
     const savedState = window.localStorage?.getItem("sidebar-state");
     return savedState === "minimized" ? "minimized" : "expanded";
   };
 
-  const handleSidebarChange = async () => {
+  const handleSidebarChange = () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
     const isMobile = sidebarViewportQuery.matches;
@@ -298,7 +220,7 @@ export const clientScript = `
 
     const state = isChecked ? "minimized" : "expanded";
     document.body.style.overflow = "";
-    await saveSidebarState(state);
+    saveSidebarState(state);
   };
   
   const renderBreadcrumbs = () => {
@@ -344,12 +266,12 @@ export const clientScript = `
     });
   };
 
-  window.addEventListener("pageshow", async () => {
+  window.addEventListener("pageshow", () => {
     deactivateLoader();
     resetTransition();
-    await applySidebarState();
+    applySidebarState();
     renderBreadcrumbs();
-    applyTheme(await resolveTheme());
+    applyTheme(resolveTheme());
     
     // Initialize performance optimizations
     measurePerformance();
@@ -360,7 +282,7 @@ export const clientScript = `
   
   applySidebarState();
   renderBreadcrumbs();
-  resolveTheme().then(applyTheme);
+  applyTheme(resolveTheme());
   
   // Initialize performance features early
   measurePerformance();

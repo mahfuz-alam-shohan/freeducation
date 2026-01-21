@@ -19,6 +19,7 @@ export const renderAdminSetupPage = (csrfToken: string, requiresSetupToken: bool
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="${csrfToken}" />
     <title>Admin Setup</title>
+    <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
     <style>${adminSetupStyles}</style>
   </head>
   <body>
@@ -66,6 +67,7 @@ export const renderSetupDisabledPage = (): string => `<!DOCTYPE html>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Setup Complete</title>
+    <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
     <style>${adminSetupStyles}</style>
   </head>
   <body>
