@@ -62,6 +62,7 @@ export const renderPageLayout = ({ device, content, session, csrfToken, nonce }:
 
   const csrfMeta = csrfToken ? `<meta name="csrf-token" content="${csrfToken}" />` : "";
   const scriptNonce = nonce ? ` nonce="${nonce}"` : "";
+  const themeBootScript = `<script${scriptNonce}>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>`;
 
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -70,6 +71,7 @@ export const renderPageLayout = ({ device, content, session, csrfToken, nonce }:
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     ${csrfMeta}
     <title>freeducation</title>
+    ${themeBootScript}
     <style>${styles}</style>
   </head>
   <body>
