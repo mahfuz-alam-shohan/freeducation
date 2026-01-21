@@ -154,29 +154,4 @@ export const sidebarTabletStyles = `
     border-top: 1px solid var(--color-border);
   }
 
-  /* Theme Toggle - tablet specific */
-  .theme-toggle {
-    width: 100%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text);
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-  }
-  .theme-toggle:hover {
-    background: var(--color-surface-muted);
-    border-color: var(--color-border-strong);
-    transform: translateY(-1px);
-  }
-  .theme-toggle__icon { display: inline-flex; align-items: center; }
-  .theme-toggle__icon--moon { display: none; }
-  .theme-toggle__label { font-size: 12px; font-weight: 600; }
-  :root[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
-  :root[data-theme="dark"] .theme-toggle__icon--moon { display: inline-flex; }
 `;
