@@ -5,6 +5,25 @@ type SidebarProps = {
   session: AdminSession | null;
 };
 
+const renderAdminMenuItems = (session: AdminSession | null): string => {
+  if (!session) return "";
+  
+  return `
+    <li>
+      <a class="menu-item" href="/admin/users">
+        <span class="menu-icon">${renderUsersIcon()}</span>
+        <span class="menu-label">User management</span>
+      </a>
+    </li>
+    <li>
+      <a class="menu-item" href="/admin/modules">
+        <span class="menu-icon">${renderModulesIcon()}</span>
+        <span class="menu-label">Modules</span>
+      </a>
+    </li>
+  `;
+};
+
 export const renderSidebarDesktop = ({ session }: SidebarProps): string => `
   <aside class="app-sidebar app-sidebar--desktop">
     <nav>
@@ -15,26 +34,7 @@ export const renderSidebarDesktop = ({ session }: SidebarProps): string => `
             <span class="menu-label">Home</span>
           </a>
         </li>
-        ${
-          session
-            ? `<li>
-          <a class="menu-item" href="/admin/users">
-            <span class="menu-icon">${renderUsersIcon()}</span>
-            <span class="menu-label">User management</span>
-          </a>
-        </li>`
-            : ""
-        }
-        ${
-          session
-            ? `<li>
-          <a class="menu-item" href="/admin/modules">
-            <span class="menu-icon">${renderModulesIcon()}</span>
-            <span class="menu-label">Modules</span>
-          </a>
-        </li>`
-            : ""
-        }
+        ${renderAdminMenuItems(session)}
       </ul>
     </nav>
     <div class="sidebar-footer">

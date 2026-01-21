@@ -21,9 +21,22 @@ export const renderContentShellDesktop = ({ header, sidebar, main, footer }: Con
 `;
 
 export const desktopShellStyles = `
+  /* Base Layout */
   .app { min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
   .sidebar-toggle { position: absolute; opacity: 0; pointer-events: none; }
-  .app-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: auto 1fr auto; min-height: 100vh; min-height: 100dvh; height: 100vh; height: 100dvh; background: var(--color-bg); }
+  .app-shell { 
+    display: grid; 
+    grid-template-columns: 240px 1fr; 
+    grid-template-rows: auto 1fr auto; 
+    min-height: 100vh; 
+    min-height: 100dvh; 
+    height: 100vh; 
+    height: 100dvh; 
+    background: var(--color-bg); 
+    transition: grid-template-columns 0.3s ease;
+  }
+
+  /* Header */
   .app-header {
     grid-column: 1 / -1;
     position: relative;
@@ -39,6 +52,8 @@ export const desktopShellStyles = `
   .app-header__center { display: flex; justify-content: center; }
   .app-header__right { display: flex; justify-content: flex-end; gap: 12px; }
   .logo { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.4px; color: var(--color-text); text-transform: lowercase; }
+
+  /* Icon Button */
   .icon-button {
     cursor: pointer;
     border: 1px solid var(--color-border);
@@ -54,9 +69,13 @@ export const desktopShellStyles = `
     transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   }
   .icon-button:hover { border-color: var(--color-border-strong); background: var(--color-surface-muted); transform: translateY(-1px); }
+
+  /* Sidebar Toggle Icons */
   .sidebar-toggle__icon { display: inline-flex; }
   .sidebar-toggle__icon--open { display: none; }
   .sidebar-toggle__icon--close { display: inline-flex; }
+
+  /* Sidebar */
   .app-sidebar {
     grid-row: 2 / 3;
     padding: 10px;
@@ -64,8 +83,10 @@ export const desktopShellStyles = `
     background: var(--color-surface-muted);
     overflow: auto;
     box-shadow: var(--shadow-sm);
-    transition: padding 0.2s ease;
+    transition: padding 0.3s ease;
   }
+
+  /* Menu */
   .menu { list-style: none; padding: 0; margin: 0; }
   .menu-item {
     display: flex;
@@ -79,6 +100,9 @@ export const desktopShellStyles = `
   }
   .menu-item:hover { background: var(--color-surface-elevated); border-color: var(--color-border); transform: translateX(2px); }
   .menu-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-muted); }
+  .menu-label { transition: opacity 0.2s ease; }
+
+  /* Main Content */
   .app-main {
     display: grid;
     grid-template-rows: auto 1fr;
@@ -98,7 +122,18 @@ export const desktopShellStyles = `
     transition: opacity 0.2s ease, transform 0.2s ease;
     animation: page-enter 0.35s ease;
   }
-  .app-footer { grid-column: 1 / -1; padding: 6px 12px; border-top: 1px solid var(--color-border); background: var(--color-surface-muted); color: var(--color-text-muted); text-align: center; }
+
+  /* Footer */
+  .app-footer { 
+    grid-column: 1 / -1; 
+    padding: 6px 12px; 
+    border-top: 1px solid var(--color-border); 
+    background: var(--color-surface-muted); 
+    color: var(--color-text-muted); 
+    text-align: center; 
+  }
+
+  /* Dropdown Menu */
   .profile-menu, .notification-menu { position: relative; }
   .profile-menu summary, .notification-menu summary { list-style: none; cursor: pointer; }
   .profile-menu summary::-webkit-details-marker, .notification-menu summary::-webkit-details-marker { display: none; }
@@ -119,6 +154,8 @@ export const desktopShellStyles = `
   .dropdown p { margin: 0 0 8px; color: var(--color-text-muted); }
   .dropdown p strong { color: var(--color-text); }
   .dropdown .button-link { width: 100%; }
+
+  /* Avatar */
   .avatar {
     display: inline-flex;
     align-items: center;
@@ -132,11 +169,15 @@ export const desktopShellStyles = `
     font-weight: 600;
   }
   .profile-notifications { display: none; }
+
+  /* Sidebar Toggle States */
   .sidebar-toggle:checked + .app-shell { 
     grid-template-columns: 60px 1fr; 
   }
   .sidebar-toggle:checked + .app-shell .menu-label { 
-    display: none; 
+    opacity: 0; 
+    width: 0;
+    overflow: hidden;
   }
   .sidebar-toggle:checked + .app-shell .app-sidebar { 
     padding: 10px 6px; 
@@ -147,19 +188,17 @@ export const desktopShellStyles = `
   .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--close { 
     display: none; 
   }
-  .sidebar-toggle:not(:checked) + .app-shell .sidebar-toggle__icon--open { 
-    display: none; 
-  }
-  .sidebar-toggle:not(:checked) + .app-shell .sidebar-toggle__icon--close { 
-    display: inline-flex; 
-  }
 
+  /* Responsive Breakpoints */
   @media (max-width: 900px) {
     .app-shell { grid-template-columns: 200px 1fr; }
   }
 
   @media (max-width: 768px) {
-    .app-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    .app-shell { 
+      grid-template-columns: 1fr; 
+      grid-template-rows: auto 1fr auto; 
+    }
     .app-header { grid-template-columns: 60px 1fr 80px; }
     .app-sidebar {
       position: fixed;
