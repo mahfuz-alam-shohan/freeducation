@@ -1,18 +1,19 @@
-import { findUserRoleByEmail } from "../../domains/admin/userManagement";
-import { createOrRefreshStudentSignup, deleteStudentSignup, verifyStudentSignup } from "../../domains/auth/studentSignup";
-import { renderPageLayout } from "../../ui/layouts/pageLayout";
-import type { DeviceType } from "../../core/types/layout";
+import { findUserRoleByEmail } from "../domains/admin/userManagement";
+import { createOrRefreshStudentSignup, deleteStudentSignup, verifyStudentSignup } from "../domains/auth/studentSignup";
+import { renderPageLayout } from "../ui/layouts/pageLayout";
+import type { DeviceType } from "../core/types/layout";
 import {
   renderSignupConfirmationContent,
   renderSignupContent,
   renderSignupVerificationContent,
-} from "../../ui/pages/signup/content";
-import { sendStudentVerificationEmail } from "../../integrations/email/gmail";
-import type { AdminSession } from "../../core/security/session";
-import { createVerificationCode, hashVerificationCode } from "../../core/security/verification";
-import { createCSRFToken, setCSRFCookie } from "../../core/middleware/csrf";
-import { htmlResponse, jsonResponse } from "../../core/http";
-import type { Env } from "../env";
+} from "../ui/pages/signup/content";
+import { sendStudentVerificationEmail } from "../integrations/email/gmail";
+import type { AdminSession } from "../core/security/session";
+import { createVerificationCode, hashVerificationCode } from "../core/security/verification";
+import { createCSRFToken, setCSRFCookie } from "../core/middleware/csrf";
+import { htmlResponse, jsonResponse } from "../core/http";
+import type { Env } from "../app/env";
+import type { ApiContext } from "./index";
 
 const isValidPassword = (password: string): boolean =>
   password.length >= 8 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
@@ -59,7 +60,7 @@ const renderConfirmation = (device: DeviceType, session: AdminSession | null): R
 export const handleStudentRoutes = async (
   request: Request,
   env: Env,
-  context: { device: DeviceType; session: AdminSession | null },
+  context: ApiContext,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
 

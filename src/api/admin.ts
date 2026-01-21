@@ -1,5 +1,5 @@
-import { verifyAdminLogin } from "../../domains/auth/adminLogin";
-import { adminExists, createAdmin } from "../../domains/auth/adminSetup";
+import { verifyAdminLogin } from "../domains/auth/adminLogin";
+import { adminExists, createAdmin } from "../domains/auth/adminSetup";
 import {
   createUserAccount,
   deleteUserAccount,
@@ -7,7 +7,7 @@ import {
   listUsers,
   normalizeUserRole,
   type UserRole,
-} from "../../domains/admin/userManagement";
+} from "../domains/admin/userManagement";
 import {
   createChapter,
   createContentItem,
@@ -23,35 +23,32 @@ import {
   listSubjectClassGroups,
   listSubjects,
   syncSubjectTemplates,
-} from "../../domains/admin/modules";
-import { renderPageLayout } from "../../ui/layouts/pageLayout";
-import type { DeviceType } from "../../core/types/layout";
-import { renderAdminSetupPage } from "../../ui/pages/admin-setup/content";
-import { renderLoginContent } from "../../ui/pages/login/content";
-import { renderModulesContent } from "../../ui/pages/modules/content";
-import { renderSubjectDetailContent } from "../../ui/pages/modules/subjects/detail";
-import { renderSubjectsModuleContent } from "../../ui/pages/modules/subjects/content";
-import { renderUserManagementContent } from "../../ui/pages/user-management/content";
-import { renderCreateUserContent } from "../../ui/pages/user-management/create/content";
-import type { AdminSession } from "../../core/security/session";
-import { createCSRFToken, setCSRFCookie } from "../../core/middleware/csrf";
-import { getSubjectTemplate, handleSubjectAdminRoutes, listSubjectTemplates } from "../../modules/subjects/registry";
+} from "../domains/admin/modules";
+import { renderPageLayout } from "../ui/layouts/pageLayout";
+import type { DeviceType } from "../core/types/layout";
+import { renderAdminSetupPage } from "../ui/pages/admin-setup/content";
+import { renderLoginContent } from "../ui/pages/login/content";
+import { renderModulesContent } from "../ui/pages/modules/content";
+import { renderSubjectDetailContent } from "../ui/pages/modules/subjects/detail";
+import { renderSubjectsModuleContent } from "../ui/pages/modules/subjects/content";
+import { renderUserManagementContent } from "../ui/pages/user-management/content";
+import { renderCreateUserContent } from "../ui/pages/user-management/create/content";
+import type { AdminSession } from "../core/security/session";
+import { createCSRFToken, setCSRFCookie } from "../core/middleware/csrf";
+import { getSubjectTemplate, handleSubjectAdminRoutes, listSubjectTemplates } from "../modules/subjects/registry";
 import {
   clearAdminSessionCookie,
   createAdminSessionToken,
   getCookieValue,
   readAdminSessionToken,
   serializeAdminSessionCookie,
-} from "../../core/security/session";
-import { SESSION_CONFIG } from "../../core/config/constants";
-import { badRequest, htmlResponse, jsonResponse, redirectResponse } from "../../core/http";
-import type { Env } from "../env";
+} from "../core/security/session";
+import { SESSION_CONFIG } from "../core/config/constants";
+import { badRequest, htmlResponse, jsonResponse, redirectResponse } from "../core/http";
+import type { Env } from "../app/env";
+import type { ApiContext } from "./index";
 
-type AdminRouteContext = {
-  adminReady: boolean;
-  device: DeviceType;
-  session: AdminSession | null;
-};
+type AdminRouteContext = ApiContext;
 
 const isValidPassword = (password: string): boolean =>
   password.length >= 8 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);

@@ -1,7 +1,6 @@
 import { adminExists } from "../domains/auth/adminSetup";
-import { handleAdminRoutes, getAdminSession } from "./routes/admin";
-import { handlePublicRoutes } from "./routes/public";
-import { handleStudentRoutes } from "./routes/student";
+import { getAdminSession } from "../api/admin";
+import { handleApiRoutes } from "../api";
 import { getDeviceType, redirectResponse, serviceError } from "../core/http";
 import { SECURITY_MIDDLEWARE, applySecurityToResponse, COMMON_VALIDATION_SCHEMAS } from "../core/middleware";
 import type { Env } from "./env";
@@ -50,19 +49,9 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
     return applySecurityToResponse(securityResponse);
   }
 
-  const studentResponse = await handleStudentRoutes(request, env, { device, session });
-  if (studentResponse) {
-    return applySecurityToResponse(studentResponse);
-  }
-
-  const publicResponse = await handlePublicRoutes(request, { adminReady, device, session });
-  if (publicResponse) {
-    return applySecurityToResponse(publicResponse);
-  }
-
-  const adminResponse = await handleAdminRoutes(request, env, { adminReady, device, session });
-  if (adminResponse) {
-    return applySecurityToResponse(adminResponse);
+  const apiResponse = await handleApiRoutes(request, env, { adminReady, device, session });
+  if (apiResponse) {
+    return applySecurityToResponse(apiResponse);
   }
 
   if (!adminReady) {

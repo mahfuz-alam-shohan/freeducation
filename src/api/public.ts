@@ -1,15 +1,10 @@
-import { renderPageLayout } from "../../ui/layouts/pageLayout";
-import type { DeviceType } from "../../core/types/layout";
-import { renderHomeContent } from "../../ui/pages/home/content";
-import type { AdminSession } from "../../core/security/session";
-import { htmlResponse, jsonResponse } from "../../core/http";
-import { getOpenAPIJSON, getOpenAPIYAML } from "../../docs/openapi";
-
-type PublicRouteContext = {
-  adminReady: boolean;
-  device: DeviceType;
-  session: AdminSession | null;
-};
+import { renderPageLayout } from "../ui/layouts/pageLayout";
+import type { DeviceType } from "../core/types/layout";
+import { renderHomeContent } from "../ui/pages/home/content";
+import type { AdminSession } from "../core/security/session";
+import { htmlResponse, jsonResponse } from "../core/http";
+import { getOpenAPIJSON, getOpenAPIYAML } from "../docs/openapi";
+import type { ApiContext } from "./index";
 
 const getCacheStore = (): Cache | null => {
   const cacheStorage = (globalThis as { caches?: CacheStorage }).caches;
@@ -27,7 +22,7 @@ const renderHome = (device: DeviceType, session: AdminSession | null, cacheable:
   return htmlResponse(renderPageLayout({ device, content, session }), 200, headers);
 };
 
-export const handlePublicRoutes = async (request: Request, context: PublicRouteContext): Promise<Response | null> => {
+export const handlePublicRoutes = async (request: Request, context: ApiContext): Promise<Response | null> => {
   const url = new URL(request.url);
 
   if (url.pathname === "/health") {
