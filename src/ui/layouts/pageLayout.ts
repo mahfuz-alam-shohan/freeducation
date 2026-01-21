@@ -41,7 +41,7 @@ const renderShellStyles = (device: DeviceType): string => {
   return desktopShellStyles;
 };
 
-export const renderPageLayout = ({ device, content, session, csrfToken }: PageLayoutProps): string => {
+export const renderPageLayout = ({ device, content, session, csrfToken, nonce }: PageLayoutProps): string => {
   const profileMenu = renderProfileMenu({ session });
   const notificationMenu = renderNotificationMenu({ session });
 
@@ -61,6 +61,7 @@ export const renderPageLayout = ({ device, content, session, csrfToken }: PageLa
   const styles = `${baseStyles}\n${renderShellStyles(device)}`;
 
   const csrfMeta = csrfToken ? `<meta name="csrf-token" content="${csrfToken}" />` : "";
+  const scriptNonce = nonce ? ` nonce="${nonce}"` : "";
 
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -76,7 +77,7 @@ export const renderPageLayout = ({ device, content, session, csrfToken }: PageLa
     <div class="loader" id="page-loader" aria-hidden="true">
       <div class="loader__spinner"></div>
     </div>
-    <script>${clientScript}</script>
+    <script${scriptNonce}>${clientScript}</script>
   </body>
 </html>`;
 };

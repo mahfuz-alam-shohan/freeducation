@@ -1,4 +1,4 @@
-import type { DeviceType } from "../../../core/types/layout";
+import type { DeviceType, PageLayoutProps } from "../../../core/types/layout";
 import { renderPageLayout } from "../../../ui/layouts/pageLayout";
 import type { AdminSession } from "../../../core/security/session";
 import { htmlResponse, jsonResponse, redirectResponse } from "../../../core/http";
@@ -11,6 +11,7 @@ import { renderMathematicsHome } from "./views";
 type MathematicsRouteContext = {
   device: DeviceType;
   session: AdminSession | null;
+  nonce?: string;
 };
 
 const parseNumberParam = (value: string | null): number | null => {
@@ -23,7 +24,11 @@ const parseNumberParam = (value: string | null): number | null => {
 
 const renderContent = (context: MathematicsRouteContext, content: string): Response => {
   const csrfToken = createCSRFToken();
-  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session, csrfToken }), 200, {
+  const layoutProps: PageLayoutProps = { device: context.device, content, session: context.session, csrfToken };
+  if (context.nonce) {
+    layoutProps.nonce = context.nonce;
+  }
+  return htmlResponse(renderPageLayout(layoutProps), 200, {
     "Set-Cookie": setCSRFCookie(csrfToken),
     "Cache-Control": "no-store",
   });

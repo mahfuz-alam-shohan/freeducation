@@ -80,8 +80,8 @@ export const createSecurityMiddleware = (config: SecurityMiddlewareConfig = {}) 
 };
 
 // Apply security headers to response
-export const applySecurityToResponse = (response: Response): Response => {
-  return applySecurityHeaders(response);
+export const applySecurityToResponse = (response: Response, nonce?: string): Response => {
+  return applySecurityHeaders(response, undefined, nonce);
 };
 
 // Predefined security middleware configurations

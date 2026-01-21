@@ -2,7 +2,7 @@ import { adminExists } from "../domains/auth/adminSetup";
 import { getAdminSession } from "../api/admin";
 import { handleApiRoutes } from "../api";
 import { getDeviceType, redirectResponse, serviceError } from "../core/http";
-import { SECURITY_MIDDLEWARE, applySecurityToResponse, COMMON_VALIDATION_SCHEMAS } from "../core/middleware";
+import { SECURITY_MIDDLEWARE, applySecurityToResponse, COMMON_VALIDATION_SCHEMAS, generateNonce } from "../core/middleware";
 import type { Env } from "./env";
 
 export const handleRequest = async (request: Request, env: Env): Promise<Response> => {
@@ -17,6 +17,7 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
   const adminReady = await adminExists(env.DB);
   const device = getDeviceType(request.headers.get("user-agent"));
   const session = await getAdminSession(request, env);
+  const nonce = generateNonce();
 
   // Apply security middleware based on route type
   const url = new URL(request.url);
@@ -46,17 +47,17 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
   // Apply security checks
   const securityResponse = await securityMiddleware(request, securityContext);
   if (securityResponse) {
-    return applySecurityToResponse(securityResponse);
+    return applySecurityToResponse(securityResponse, nonce);
   }
 
-  const apiResponse = await handleApiRoutes(request, env, { adminReady, device, session });
+  const apiResponse = await handleApiRoutes(request, env, { adminReady, device, session, nonce });
   if (apiResponse) {
-    return applySecurityToResponse(apiResponse);
+    return applySecurityToResponse(apiResponse, nonce);
   }
 
   if (!adminReady) {
-    return applySecurityToResponse(redirectResponse("/setup-admin"));
+    return applySecurityToResponse(redirectResponse("/setup-admin"), nonce);
   }
 
-  return applySecurityToResponse(redirectResponse("/"));
+  return applySecurityToResponse(redirectResponse("/"), nonce);
 };

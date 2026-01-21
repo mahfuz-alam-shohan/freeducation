@@ -1,5 +1,5 @@
 import { renderPageLayout } from "../ui/layouts/pageLayout";
-import type { DeviceType } from "../core/types/layout";
+import type { DeviceType, PageLayoutProps } from "../core/types/layout";
 import { renderHomeContent } from "../ui/pages/home/content";
 import type { AdminSession } from "../core/security/session";
 import { htmlResponse, jsonResponse } from "../core/http";
@@ -11,7 +11,7 @@ const getCacheStore = (): Cache | null => {
   return cacheStorage?.default ?? null;
 };
 
-const renderHome = (device: DeviceType, session: AdminSession | null, cacheable: boolean): Response => {
+const renderHome = (device: DeviceType, session: AdminSession | null, cacheable: boolean, nonce?: string): Response => {
   const content = renderHomeContent();
   const headers: HeadersInit | undefined = cacheable
     ? {
@@ -19,7 +19,11 @@ const renderHome = (device: DeviceType, session: AdminSession | null, cacheable:
         Vary: "User-Agent",
       }
     : undefined;
-  return htmlResponse(renderPageLayout({ device, content, session }), 200, headers);
+  const layoutProps: PageLayoutProps = { device, content, session };
+  if (nonce) {
+    layoutProps.nonce = nonce;
+  }
+  return htmlResponse(renderPageLayout(layoutProps), 200, headers);
 };
 
 export const handlePublicRoutes = async (request: Request, context: ApiContext): Promise<Response | null> => {
@@ -55,11 +59,11 @@ export const handlePublicRoutes = async (request: Request, context: ApiContext):
       if (cached) {
         return cached;
       }
-      const response = renderHome(context.device, context.session, true);
+      const response = renderHome(context.device, context.session, true, context.nonce);
       await cache?.put(cacheKey, response.clone());
       return response;
     }
-    return renderHome(context.device, context.session, false);
+    return renderHome(context.device, context.session, false, context.nonce);
   }
 
   return null;

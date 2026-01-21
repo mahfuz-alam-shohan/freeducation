@@ -1,7 +1,7 @@
 import { findUserRoleByEmail } from "../domains/admin/userManagement";
 import { createOrRefreshStudentSignup, deleteStudentSignup, verifyStudentSignup } from "../domains/auth/studentSignup";
 import { renderPageLayout } from "../ui/layouts/pageLayout";
-import type { DeviceType } from "../core/types/layout";
+import type { DeviceType, PageLayoutProps } from "../core/types/layout";
 import {
   renderSignupConfirmationContent,
   renderSignupContent,
@@ -18,9 +18,13 @@ import type { ApiContext } from "./index";
 const isValidPassword = (password: string): boolean =>
   password.length >= 8 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
 
-const renderStudentPage = (device: DeviceType, session: AdminSession | null, content: string): Response => {
+const renderStudentPage = (device: DeviceType, session: AdminSession | null, content: string, nonce?: string): Response => {
   const csrfToken = createCSRFToken();
-  return htmlResponse(renderPageLayout({ device, content, session, csrfToken }), 200, {
+  const layoutProps: PageLayoutProps = { device, content, session, csrfToken };
+  if (nonce) {
+    layoutProps.nonce = nonce;
+  }
+  return htmlResponse(renderPageLayout(layoutProps), 200, {
     "Set-Cookie": setCSRFCookie(csrfToken),
     "Cache-Control": "no-store",
   });
@@ -31,12 +35,13 @@ const renderSignup = (
   session: AdminSession | null,
   errorMessage?: string,
   values?: { name?: string; email?: string; dateOfBirth?: string },
+  nonce?: string,
 ): Response => {
   const content = renderSignupContent({
     ...(errorMessage ? { errorMessage } : {}),
     ...(values ? { values } : {}),
   });
-  return renderStudentPage(device, session, content);
+  return renderStudentPage(device, session, content, nonce);
 };
 
 const renderVerification = (
@@ -44,17 +49,18 @@ const renderVerification = (
   session: AdminSession | null,
   email?: string,
   errorMessage?: string,
+  nonce?: string,
 ): Response => {
   const content = renderSignupVerificationContent({
     ...(errorMessage ? { errorMessage } : {}),
     ...(email ? { email } : {}),
   });
-  return renderStudentPage(device, session, content);
+  return renderStudentPage(device, session, content, nonce);
 };
 
-const renderConfirmation = (device: DeviceType, session: AdminSession | null): Response => {
+const renderConfirmation = (device: DeviceType, session: AdminSession | null, nonce?: string): Response => {
   const content = renderSignupConfirmationContent();
-  return renderStudentPage(device, session, content);
+  return renderStudentPage(device, session, content, nonce);
 };
 
 export const handleStudentRoutes = async (
@@ -66,7 +72,7 @@ export const handleStudentRoutes = async (
 
   if (url.pathname === "/signup") {
     if (request.method === "GET") {
-      return renderSignup(context.device, context.session);
+      return renderSignup(context.device, context.session, undefined, undefined, context.nonce);
     }
 
     if (request.method === "POST") {
@@ -82,7 +88,7 @@ export const handleStudentRoutes = async (
         typeof password !== "string" ||
         typeof dateOfBirth !== "string"
       ) {
-        return renderSignup(context.device, context.session, "Please complete all required fields.");
+        return renderSignup(context.device, context.session, "Please complete all required fields.", undefined, context.nonce);
       }
 
       const trimmedName = name.trim();
@@ -90,7 +96,7 @@ export const handleStudentRoutes = async (
       const trimmedDob = dateOfBirth.trim();
 
       if (!trimmedName) {
-        return renderSignup(context.device, context.session, "Please enter your full name.");
+        return renderSignup(context.device, context.session, "Please enter your full name.", undefined, context.nonce);
       }
 
       if (!normalizedEmail.endsWith("@gmail.com")) {
@@ -98,7 +104,7 @@ export const handleStudentRoutes = async (
           name: trimmedName,
           email: normalizedEmail,
           dateOfBirth: trimmedDob,
-        });
+        }, context.nonce);
       }
 
       if (!isValidPassword(password)) {
@@ -111,6 +117,7 @@ export const handleStudentRoutes = async (
             email: normalizedEmail,
             dateOfBirth: trimmedDob,
           },
+          context.nonce,
         );
       }
 
@@ -125,6 +132,7 @@ export const handleStudentRoutes = async (
             email: normalizedEmail,
             dateOfBirth: trimmedDob,
           },
+          context.nonce,
         );
       }
 
@@ -153,10 +161,10 @@ export const handleStudentRoutes = async (
           name: trimmedName,
           email: normalizedEmail,
           dateOfBirth: trimmedDob,
-        });
+        }, context.nonce);
       }
 
-      return renderVerification(context.device, context.session, normalizedEmail);
+      return renderVerification(context.device, context.session, normalizedEmail, undefined, context.nonce);
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -165,7 +173,7 @@ export const handleStudentRoutes = async (
   if (url.pathname === "/signup/verify") {
     if (request.method === "GET") {
       const email = url.searchParams.get("email")?.trim().toLowerCase();
-      return renderVerification(context.device, context.session, email, email ? undefined : "Please enter your email.");
+      return renderVerification(context.device, context.session, email, email ? undefined : "Please enter your email.", context.nonce);
     }
 
     if (request.method === "POST") {
@@ -174,28 +182,28 @@ export const handleStudentRoutes = async (
       const code = formData.get("code");
 
       if (typeof email !== "string" || typeof code !== "string") {
-        return renderVerification(context.device, context.session, undefined, "Please enter the email and code.");
+        return renderVerification(context.device, context.session, undefined, "Please enter the email and code.", context.nonce);
       }
 
       const normalizedEmail = email.trim().toLowerCase();
       const trimmedCode = code.trim();
 
       if (!normalizedEmail.endsWith("@gmail.com")) {
-        return renderVerification(context.device, context.session, normalizedEmail, "Please use a Gmail address.");
+        return renderVerification(context.device, context.session, normalizedEmail, "Please use a Gmail address.", context.nonce);
       }
 
       if (!/^\d{6}$/.test(trimmedCode)) {
-        return renderVerification(context.device, context.session, normalizedEmail, "Enter the 6-digit code we sent.");
+        return renderVerification(context.device, context.session, normalizedEmail, "Enter the 6-digit code we sent.", context.nonce);
       }
 
       try {
         await verifyStudentSignup(env.DB, { email: normalizedEmail, code: trimmedCode });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to verify this code.";
-        return renderVerification(context.device, context.session, normalizedEmail, message);
+        return renderVerification(context.device, context.session, normalizedEmail, message, context.nonce);
       }
 
-      return renderConfirmation(context.device, context.session);
+      return renderConfirmation(context.device, context.session, context.nonce);
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);

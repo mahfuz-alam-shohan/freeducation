@@ -1,6 +1,102 @@
 export const clientScript = `
-  // Performance optimizations
+  // Advanced performance optimizations
   let rafId = null;
+  
+  // Performance monitoring
+  const measurePerformance = () => {
+    if ('performance' in window) {
+      const navigation = performance.getEntriesByType('navigation')[0];
+      console.log('Page load time:', navigation.loadEventEnd - navigation.loadEventStart);
+      
+      // Largest Contentful Paint
+      new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const lastEntry = entries[entries.length - 1];
+        console.log('LCP:', lastEntry.startTime);
+      }).observe({ entryTypes: ['largest-contentful-paint'] });
+    }
+  };
+  
+  // Network-aware loading
+  const optimizeForNetwork = () => {
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      if (connection.saveData || connection.effectiveType === 'slow-2g') {
+        document.body.classList.add('reduced-data');
+        // Disable animations for slow connections
+        document.documentElement.style.setProperty('--animation-duration', '0s');
+      }
+    }
+  };
+  
+  // Predictive prefetching
+  const setupPrefetching = () => {
+    let prefetchTimeout;
+    document.addEventListener('mouseover', (e) => {
+      const link = e.target.closest('a');
+      if (link && link.href) {
+        prefetchTimeout = setTimeout(() => {
+          const prefetchLink = document.createElement('link');
+          prefetchLink.rel = 'prefetch';
+          prefetchLink.href = link.href;
+          document.head.appendChild(prefetchLink);
+        }, 100);
+      }
+    });
+    document.addEventListener('mouseout', () => {
+      clearTimeout(prefetchTimeout);
+    });
+  };
+  
+  // Lazy loading for images
+  const setupLazyLoading = () => {
+    const imageObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          if (img.dataset.src) {
+            img.src = img.dataset.src;
+            img.classList.remove('lazy');
+            imageObserver.unobserve(img);
+          }
+        }
+      });
+    });
+    
+    document.querySelectorAll('img[data-src]').forEach(img => {
+      imageObserver.observe(img);
+    });
+  };
+  
+  // Request batching
+  class RequestBatcher {
+    constructor(delay = 100) {
+      this.queue = [];
+      this.delay = delay;
+      this.timeout = null;
+    }
+    
+    add(url, options) {
+      return new Promise((resolve) => {
+        this.queue.push({ url, options: options || {}, resolve });
+        
+        if (!this.timeout) {
+          this.timeout = setTimeout(() => this.flush(), this.delay);
+        }
+      });
+    }
+    
+    async flush() {
+      const requests = this.queue.splice(0);
+      this.timeout = null;
+      
+      await Promise.all(
+        requests.map(({ url, options, resolve }) =>
+          fetch(url, options).then(resolve)
+        )
+      );
+    }
+  }
   
   const debounce = (func, wait) => {
     let timeout;
@@ -149,10 +245,23 @@ export const clientScript = `
     applySidebarState();
     renderBreadcrumbs();
     applyTheme(resolveTheme());
+    
+    // Initialize performance optimizations
+    measurePerformance();
+    optimizeForNetwork();
+    setupPrefetching();
+    setupLazyLoading();
   });
+  
   applySidebarState();
   renderBreadcrumbs();
   applyTheme(resolveTheme());
+  
+  // Initialize performance features early
+  measurePerformance();
+  optimizeForNetwork();
+  setupPrefetching();
+  setupLazyLoading();
   sidebarViewportQuery.addEventListener("change", applySidebarState);
   sidebarToggle?.addEventListener("change", handleSidebarChange);
   themeToggles.forEach((toggle) => {

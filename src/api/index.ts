@@ -9,6 +9,7 @@ export type ApiContext = {
   adminReady: boolean;
   device: DeviceType;
   session: AdminSession | null;
+  nonce?: string;
 };
 
 export const handleApiRoutes = async (

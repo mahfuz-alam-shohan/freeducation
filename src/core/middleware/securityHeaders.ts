@@ -16,14 +16,18 @@ export const SECURITY_HEADERS_CONFIG: SecurityHeadersConfig = {
   enablePermissionsPolicy: true,
 };
 
-export const getSecurityHeaders = (config: SecurityHeadersConfig = SECURITY_HEADERS_CONFIG): Record<string, string> => {
+export const getSecurityHeaders = (config: SecurityHeadersConfig = SECURITY_HEADERS_CONFIG, nonce?: string): Record<string, string> => {
   const headers: Record<string, string> = {};
 
   // Content Security Policy
   if (config.enableCSP) {
+    const scriptSrc = nonce 
+      ? `script-src 'self' 'nonce-${nonce}'`
+      : "script-src 'self'";
+    
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self' data:",
@@ -78,8 +82,8 @@ export const getSecurityHeaders = (config: SecurityHeadersConfig = SECURITY_HEAD
   return headers;
 };
 
-export const applySecurityHeaders = (response: Response, config?: SecurityHeadersConfig): Response => {
-  const headers = getSecurityHeaders(config);
+export const applySecurityHeaders = (response: Response, config?: SecurityHeadersConfig, nonce?: string): Response => {
+  const headers = getSecurityHeaders(config, nonce);
   
   // Create new headers object to avoid mutation
   const newHeaders = new Headers(response.headers);

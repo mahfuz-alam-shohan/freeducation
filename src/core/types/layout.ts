@@ -7,4 +7,5 @@ export type PageLayoutProps = {
   content: string;
   session: AdminSession | null;
   csrfToken?: string;
+  nonce?: string;
 };

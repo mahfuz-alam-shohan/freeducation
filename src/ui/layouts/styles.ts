@@ -3,7 +3,7 @@ import { themeStyles } from "../styles/theme";
 export const baseStyles = `
   ${themeStyles}
   
-  /* Performance optimizations */
+  /* Critical performance optimizations */
   * { 
     box-sizing: border-box; 
     will-change: auto; /* Optimize animations */
@@ -19,6 +19,7 @@ export const baseStyles = `
     overflow: hidden;
     font-display: swap; /* Faster font loading */
     text-rendering: optimizeSpeed; /* Faster text rendering */
+    contain: layout style paint; /* Performance optimization */
   }
   
   a { 

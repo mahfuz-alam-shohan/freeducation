@@ -5,7 +5,7 @@ import type { SubjectTemplate } from "../../core/types/subjects";
 
 export type SubjectModule = {
   template: SubjectTemplate;
-  adminRoutes?: (request: Request, env: Env, context: { device: DeviceType; session: AdminSession | null }) => Promise<Response | null>;
+  adminRoutes?: (request: Request, env: Env, context: { device: DeviceType; session: AdminSession | null; nonce?: string }) => Promise<Response | null>;
 };
 
 export const defineSubjectModule = (subjectModule: SubjectModule): SubjectModule => subjectModule;

@@ -25,7 +25,7 @@ import {
   syncSubjectTemplates,
 } from "../domains/admin/modules";
 import { renderPageLayout } from "../ui/layouts/pageLayout";
-import type { DeviceType } from "../core/types/layout";
+import type { DeviceType, PageLayoutProps } from "../core/types/layout";
 import { renderAdminSetupPage } from "../ui/pages/admin-setup/content";
 import { renderLoginContent } from "../ui/pages/login/content";
 import { renderModulesContent } from "../ui/pages/modules/content";
@@ -55,7 +55,11 @@ const isValidPassword = (password: string): boolean =>
 
 const renderAdminPage = (context: AdminRouteContext, content: string): Response => {
   const csrfToken = createCSRFToken();
-  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session, csrfToken }), 200, {
+  const layoutProps: PageLayoutProps = { device: context.device, content, session: context.session, csrfToken };
+  if (context.nonce) {
+    layoutProps.nonce = context.nonce;
+  }
+  return htmlResponse(renderPageLayout(layoutProps), 200, {
     "Set-Cookie": setCSRFCookie(csrfToken),
     "Cache-Control": "no-store",
   });
@@ -125,7 +129,11 @@ const postAdminSetup = async (request: Request, env: Env): Promise<Response> => 
 const renderLogin = (context: AdminRouteContext, errorMessage?: string): Response => {
   const csrfToken = createCSRFToken();
   const content = renderLoginContent(errorMessage ? { errorMessage, csrfToken } : { csrfToken });
-  return htmlResponse(renderPageLayout({ device: context.device, content, session: context.session, csrfToken }), 200, {
+  const layoutProps: PageLayoutProps = { device: context.device, content, session: context.session, csrfToken };
+  if (context.nonce) {
+    layoutProps.nonce = context.nonce;
+  }
+  return htmlResponse(renderPageLayout(layoutProps), 200, {
     "Set-Cookie": setCSRFCookie(csrfToken),
     "Cache-Control": "no-store",
   });
