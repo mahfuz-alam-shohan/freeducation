@@ -49,3 +49,13 @@ export const renderMoonIcon = (): string =>
   renderIcon(
     '<path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',
   );
+
+export const renderMinimizeIcon = (): string =>
+  renderIcon(
+    '<path d="M4 14h6v6M14 4h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',
+  );
+
+export const renderMaximizeIcon = (): string =>
+  renderIcon(
+    '<path d="M4 10h6V4M14 20h6v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />',
+  );

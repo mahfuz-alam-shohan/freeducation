@@ -122,6 +122,14 @@ export const sidebarDesktopStyles = `
   .sidebar-toggle:checked + .app-shell .app-sidebar { 
     padding: 10px 6px; 
   }
+  
+  /* Hide theme button label when sidebar is minimized */
+  .sidebar-toggle:checked + .app-shell .theme-toggle__label {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+  }
 
   /* Sidebar Footer */
   .sidebar-footer {

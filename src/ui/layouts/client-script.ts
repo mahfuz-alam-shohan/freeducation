@@ -148,6 +148,17 @@ export const clientScript = `
     if (!sidebarToggle || !sidebarToggleLabel) return;
     const isMobile = sidebarViewportQuery.matches;
     sidebarToggleLabel.style.display = isMobile ? "flex" : "none";
+    
+    // Restore sidebar state from localStorage (only for desktop)
+    if (!isMobile) {
+      const savedState = window.localStorage?.getItem("sidebar-state");
+      if (savedState === "minimized") {
+        sidebarToggle.checked = true;
+      } else if (savedState === "expanded") {
+        sidebarToggle.checked = false;
+      }
+    }
+    
     if (isMobile && sidebarToggle.checked) {
       sidebarToggle.checked = false;
     }
@@ -189,6 +200,10 @@ export const clientScript = `
   const handleSidebarChange = () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
+    
+    // Save sidebar state to localStorage
+    window.localStorage?.setItem("sidebar-state", isChecked ? "minimized" : "expanded");
+    
     if (isChecked) {
       document.body.style.overflow = "hidden";
     } else {

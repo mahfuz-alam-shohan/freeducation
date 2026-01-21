@@ -1226,14 +1226,20 @@ var renderSunIcon = /* @__PURE__ */ __name(() => renderIcon(
 var renderMoonIcon = /* @__PURE__ */ __name(() => renderIcon(
   '<path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />'
 ), "renderMoonIcon");
+var renderMinimizeIcon = /* @__PURE__ */ __name(() => renderIcon(
+  '<path d="M4 14h6v6M14 4h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />'
+), "renderMinimizeIcon");
+var renderMaximizeIcon = /* @__PURE__ */ __name(() => renderIcon(
+  '<path d="M4 10h6V4M14 20h6v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />'
+), "renderMaximizeIcon");
 
 // src/ui/components/header/desktop/header.ts
 var renderHeaderDesktop = /* @__PURE__ */ __name(({ siteName, profileMenu, notificationMenu }) => `
   <header class="app-header app-header--desktop">
     <div class="app-header__left">
       <label class="icon-button" for="sidebar-toggle" aria-label="Toggle sidebar">
-        <span class="sidebar-toggle__icon sidebar-toggle__icon--open">${renderMenuIcon()}</span>
-        <span class="sidebar-toggle__icon sidebar-toggle__icon--close">${renderCloseIcon()}</span>
+        <span class="sidebar-toggle__icon sidebar-toggle__icon--open">${renderMinimizeIcon()}</span>
+        <span class="sidebar-toggle__icon sidebar-toggle__icon--close">${renderMaximizeIcon()}</span>
       </label>
     </div>
     <div class="app-header__center">
@@ -1263,6 +1269,25 @@ var renderHeaderMobile = /* @__PURE__ */ __name(({ siteName, profileMenu }) => `
     </div>
   </header>
 `, "renderHeaderMobile");
+
+// src/ui/components/header/tablet/header.ts
+var renderHeaderTablet = /* @__PURE__ */ __name(({ siteName, profileMenu, notificationMenu }) => `
+  <header class="app-header app-header--tablet">
+    <div class="app-header__left">
+      <label class="icon-button" for="sidebar-toggle" aria-label="Toggle sidebar">
+        <span class="sidebar-toggle__icon sidebar-toggle__icon--open">${renderMinimizeIcon()}</span>
+        <span class="sidebar-toggle__icon sidebar-toggle__icon--close">${renderMaximizeIcon()}</span>
+      </label>
+    </div>
+    <div class="app-header__center">
+      <div class="logo">${siteName}</div>
+    </div>
+    <div class="app-header__right">
+      ${notificationMenu}
+      ${profileMenu}
+    </div>
+  </header>
+`, "renderHeaderTablet");
 
 // src/ui/components/sidebar/desktop/sidebar.ts
 var createMenuItem = /* @__PURE__ */ __name((href, icon, label) => `
@@ -1376,6 +1401,14 @@ var sidebarDesktopStyles = `
   .sidebar-toggle:checked + .app-shell .app-sidebar { 
     padding: 10px 6px; 
   }
+  
+  /* Hide theme button label when sidebar is minimized */
+  .sidebar-toggle:checked + .app-shell .theme-toggle__label {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+  }
 
   /* Sidebar Footer */
   .sidebar-footer {
@@ -1449,6 +1482,161 @@ var renderSidebarMobile = /* @__PURE__ */ __name(({ session }) => `
     </div>
   </aside>
 `, "renderSidebarMobile");
+
+// src/ui/components/sidebar/tablet/sidebar.ts
+var createMenuItem2 = /* @__PURE__ */ __name((href, icon, label) => `
+  <li>
+    <a class="menu-item" href="${href}">
+      <span class="menu-icon">${icon}</span>
+      <span class="menu-label">${label}</span>
+    </a>
+  </li>
+`, "createMenuItem");
+var renderNavigationItems2 = /* @__PURE__ */ __name((session) => {
+  const items = [
+    createMenuItem2("/", renderHomeIcon(), "Home")
+  ];
+  if (session) {
+    items.push(
+      createMenuItem2("/admin/users", renderUsersIcon(), "User management"),
+      createMenuItem2("/admin/modules", renderModulesIcon(), "Modules")
+    );
+  }
+  return items.join("");
+}, "renderNavigationItems");
+var renderThemeToggle2 = /* @__PURE__ */ __name(() => `
+  <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+    <span class="theme-toggle__icon theme-toggle__icon--sun">${renderSunIcon()}</span>
+    <span class="theme-toggle__icon theme-toggle__icon--moon">${renderMoonIcon()}</span>
+    <span class="theme-toggle__label">Theme</span>
+  </button>
+`, "renderThemeToggle");
+var renderSidebarTablet = /* @__PURE__ */ __name(({ session }) => `
+  <aside class="app-sidebar app-sidebar--tablet">
+    <nav>
+      <ul class="menu">
+        ${renderNavigationItems2(session)}
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      ${renderThemeToggle2()}
+    </div>
+  </aside>
+`, "renderSidebarTablet");
+var sidebarTabletStyles = `
+  /* Tablet sidebar controls its own appearance */
+  .app-sidebar {
+    grid-row: 2 / 3;
+    padding: 8px;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-surface-muted);
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Navigation Menu */
+  .menu { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+  }
+  
+  .menu-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 4px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  
+  .menu-item:hover { 
+    background: var(--color-surface-elevated); 
+    border-color: var(--color-border); 
+    transform: translateX(2px); 
+  }
+  
+  /* Tablet sidebar appearance when shrunk */
+  .sidebar-toggle:checked + .app-shell .menu-item:hover {
+    transform: translateX(0);
+    background: var(--color-surface-elevated); 
+  }
+  
+  .menu-icon { 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--color-text-muted); 
+    flex-shrink: 0;
+  }
+  
+  .menu-label { 
+    transition: all 0.2s ease; 
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Tablet sidebar controls its own full/shrunk appearance */
+  .sidebar-toggle:checked + .app-shell .menu-label { 
+    opacity: 0; 
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .menu-item {
+    justify-content: center;
+  }
+  
+  .sidebar-toggle:checked + .app-shell .app-sidebar { 
+    padding: 8px 4px; 
+  }
+  
+  /* Hide theme button label when tablet sidebar is minimized */
+  .sidebar-toggle:checked + .app-shell .theme-toggle__label {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* Sidebar Footer */
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Theme Toggle - tablet specific */
+  .theme-toggle {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .theme-toggle:hover {
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+  }
+  .theme-toggle__icon { display: inline-flex; align-items: center; }
+  .theme-toggle__icon--moon { display: none; }
+  .theme-toggle__label { font-size: 12px; font-weight: 600; }
+  :root[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle__icon--moon { display: inline-flex; }
+`;
 
 // src/ui/components/notification-menu.ts
 var renderNotificationMenu = /* @__PURE__ */ __name(({ session }) => {
@@ -2367,6 +2555,17 @@ var clientScript = `
     if (!sidebarToggle || !sidebarToggleLabel) return;
     const isMobile = sidebarViewportQuery.matches;
     sidebarToggleLabel.style.display = isMobile ? "flex" : "none";
+    
+    // Restore sidebar state from localStorage (only for desktop)
+    if (!isMobile) {
+      const savedState = window.localStorage?.getItem("sidebar-state");
+      if (savedState === "minimized") {
+        sidebarToggle.checked = true;
+      } else if (savedState === "expanded") {
+        sidebarToggle.checked = false;
+      }
+    }
+    
     if (isMobile && sidebarToggle.checked) {
       sidebarToggle.checked = false;
     }
@@ -2408,6 +2607,10 @@ var clientScript = `
   const handleSidebarChange = () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
+    
+    // Save sidebar state to localStorage
+    window.localStorage?.setItem("sidebar-state", isChecked ? "minimized" : "expanded");
+    
     if (isChecked) {
       document.body.style.overflow = "hidden";
     } else {
@@ -2525,7 +2728,8 @@ var renderShellStyles = /* @__PURE__ */ __name((device) => {
     return mobileShellStyles;
   }
   if (device === "tablet") {
-    return tabletShellStyles;
+    return `${tabletShellStyles}
+${sidebarTabletStyles}`;
   }
   return `${desktopShellStyles}
 ${sidebarDesktopStyles}`;
@@ -2533,8 +2737,8 @@ ${sidebarDesktopStyles}`;
 var renderPageLayout = /* @__PURE__ */ __name(({ device, content, session, csrfToken, nonce }) => {
   const profileMenu = renderProfileMenu({ session });
   const notificationMenu = renderNotificationMenu({ session });
-  const header = device === "mobile" ? renderHeaderMobile({ siteName: "freeducation", profileMenu }) : device === "tablet" ? renderHeaderDesktop({ siteName: "freeducation", profileMenu, notificationMenu }) : renderHeaderDesktop({ siteName: "freeducation", profileMenu, notificationMenu });
-  const sidebar = device === "mobile" ? renderSidebarMobile({ session }) : device === "tablet" ? renderSidebarDesktop({ session }) : renderSidebarDesktop({ session });
+  const header = device === "mobile" ? renderHeaderMobile({ siteName: "freeducation", profileMenu }) : device === "tablet" ? renderHeaderTablet({ siteName: "freeducation", profileMenu, notificationMenu }) : renderHeaderDesktop({ siteName: "freeducation", profileMenu, notificationMenu });
+  const sidebar = device === "mobile" ? renderSidebarMobile({ session }) : device === "tablet" ? renderSidebarTablet({ session }) : renderSidebarDesktop({ session });
   const footer = device === "mobile" ? renderFooterDesktop() : device === "tablet" ? renderFooterDesktop() : renderFooterDesktop();
   const body = renderShell(device, header, sidebar, content, footer);
   const styles = `${baseStyles2}

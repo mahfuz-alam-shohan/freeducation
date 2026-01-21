@@ -9,7 +9,7 @@ import { renderHeaderMobile } from "../components/header/mobile/header";
 import { renderHeaderTablet } from "../components/header/tablet/header";
 import { renderSidebarDesktop, sidebarDesktopStyles } from "../components/sidebar/desktop/sidebar";
 import { renderSidebarMobile } from "../components/sidebar/mobile/sidebar";
-import { renderSidebarTablet } from "../components/sidebar/tablet/sidebar";
+import { renderSidebarTablet, sidebarTabletStyles } from "../components/sidebar/tablet/sidebar";
 import { renderNotificationMenu } from "../components/notification-menu";
 import { renderProfileMenu } from "../components/profile-menu";
 import type { AdminSession } from "../../core/security/session";
@@ -35,7 +35,7 @@ const renderShellStyles = (device: DeviceType): string => {
   }
 
   if (device === "tablet") {
-    return tabletShellStyles;
+    return `${tabletShellStyles}\n${sidebarTabletStyles}`;
   }
 
   return `${desktopShellStyles}\n${sidebarDesktopStyles}`;
