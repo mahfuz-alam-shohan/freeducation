@@ -143,6 +143,8 @@ export const clientScript = `
   const themeToggles = document.querySelectorAll("[data-theme-toggle]");
   const csrfMeta = document.querySelector("meta[name='csrf-token']");
   const csrfToken = csrfMeta?.getAttribute("content") || null;
+  const layoutDevice = document.documentElement.getAttribute("data-device");
+  const sidebarStorageKey = `sidebar-state-${layoutDevice || "responsive"}`;
   
   const activateLoader = () => {
     loader?.classList.add("active");
@@ -172,9 +174,16 @@ export const clientScript = `
     }
   };
 
+  const isMobileLayout = () => {
+    if (layoutDevice) {
+      return layoutDevice === "mobile";
+    }
+    return sidebarViewportQuery.matches;
+  };
+
   const applySidebarState = () => {
     if (!sidebarToggle) return;
-    const isMobile = sidebarViewportQuery.matches;
+    const isMobile = isMobileLayout();
     
     // Load sidebar state from localStorage (only for desktop/tablet)
     if (!isMobile) {
@@ -229,18 +238,18 @@ export const clientScript = `
   };
   
   const saveSidebarState = (state) => {
-    setStorageItem("sidebar-state", state);
+    setStorageItem(sidebarStorageKey, state);
   };
 
   const loadSidebarState = () => {
-    const savedState = getStorageItem("sidebar-state");
+    const savedState = getStorageItem(sidebarStorageKey);
     return savedState === "minimized" ? "minimized" : "expanded";
   };
 
   const handleSidebarChange = () => {
     if (!sidebarToggle) return;
     const isChecked = sidebarToggle.checked;
-    const isMobile = sidebarViewportQuery.matches;
+    const isMobile = isMobileLayout();
 
     if (isMobile) {
       document.body.style.overflow = isChecked ? "hidden" : "";
