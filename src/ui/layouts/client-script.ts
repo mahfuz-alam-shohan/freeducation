@@ -144,7 +144,7 @@ export const clientScript = `
   const csrfMeta = document.querySelector("meta[name='csrf-token']");
   const csrfToken = csrfMeta?.getAttribute("content") || null;
   const layoutDevice = document.documentElement.getAttribute("data-device");
-  const sidebarStorageKey = `sidebar-state-${layoutDevice || "responsive"}`;
+  const sidebarStorageKey = "sidebar-state-" + (layoutDevice || "responsive");
   
   const activateLoader = () => {
     loader?.classList.add("active");
