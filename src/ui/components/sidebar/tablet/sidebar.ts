@@ -88,7 +88,8 @@ export const sidebarTabletStyles = `
   }
   
   /* Tablet sidebar appearance when shrunk */
-  .sidebar-toggle:checked + .app-shell .menu-item:hover {
+  .sidebar-toggle:checked + .app-shell .menu-item:hover,
+  html[data-sidebar="minimized"] .menu-item:hover {
     transform: translateX(0);
     background: var(--color-surface-elevated); 
   }
@@ -108,40 +109,46 @@ export const sidebarTabletStyles = `
   }
 
   /* Tablet sidebar controls its own full/shrunk appearance */
-  .sidebar-toggle:checked + .app-shell .menu-label { 
+  .sidebar-toggle:checked + .app-shell .menu-label,
+  html[data-sidebar="minimized"] .menu-label { 
     opacity: 0; 
     visibility: hidden;
     position: absolute;
     pointer-events: none;
   }
   
-  .sidebar-toggle:checked + .app-shell .menu-item {
+  .sidebar-toggle:checked + .app-shell .menu-item,
+  html[data-sidebar="minimized"] .menu-item {
     justify-content: center;
     width: 100%;
     min-width: 0; /* Prevent flex items from overflowing */
   }
   
-  .sidebar-toggle:checked + .app-shell .menu-icon {
+  .sidebar-toggle:checked + .app-shell .menu-icon,
+  html[data-sidebar="minimized"] .menu-icon {
     flex-shrink: 0;
     min-width: 0;
     overflow: hidden;
   }
   
-  .sidebar-toggle:checked + .app-shell .app-sidebar { 
+  .sidebar-toggle:checked + .app-shell .app-sidebar,
+  html[data-sidebar="minimized"] .app-sidebar { 
     padding: 8px 4px; 
     overflow-x: hidden; /* Prevent horizontal scrolling */
     overflow-y: auto; /* Allow vertical scrolling only */
   }
   
   /* Hide theme button label when tablet sidebar is minimized */
-  .sidebar-toggle:checked + .app-shell .theme-toggle__label {
+  .sidebar-toggle:checked + .app-shell .theme-toggle__label,
+  html[data-sidebar="minimized"] .theme-toggle__label {
     opacity: 0;
     visibility: hidden;
     position: absolute;
     pointer-events: none;
   }
   
-  .sidebar-toggle:checked + .app-shell .theme-toggle {
+  .sidebar-toggle:checked + .app-shell .theme-toggle,
+  html[data-sidebar="minimized"] .theme-toggle {
     justify-content: center;
     width: 100%;
     min-width: 0;

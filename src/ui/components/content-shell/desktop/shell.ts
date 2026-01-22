@@ -64,18 +64,21 @@ export const desktopShellStyles = `
   }
 
   /* Layout controls spacing between sidebar and main content */
-  .sidebar-toggle:checked + .app-shell { 
+  .sidebar-toggle:checked + .app-shell,
+  html[data-sidebar="minimized"] .app-shell { 
     grid-template-columns: 60px 1fr; 
   }
   
   /* Toggle icon states when checked */
-  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--open { 
+  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--open,
+  html[data-sidebar="minimized"] .sidebar-toggle__icon--open { 
     display: inline-flex; 
     opacity: 1;
     transform: rotate(0deg);
   }
   
-  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--close { 
+  .sidebar-toggle:checked + .app-shell .sidebar-toggle__icon--close,
+  html[data-sidebar="minimized"] .sidebar-toggle__icon--close { 
     display: none; 
     opacity: 0;
     transform: rotate(-180deg);

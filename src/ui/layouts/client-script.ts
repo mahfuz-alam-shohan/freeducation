@@ -11,7 +11,7 @@ export const clientScript = `
       }
       
       // Largest Contentful Paint
-      if ('PerformanceObserver' in window) {
+      if ('PerformanceObserver' in window && PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint')) {
         new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1];
@@ -193,10 +193,14 @@ export const clientScript = `
       } else if (savedState === "expanded") {
         sidebarToggle.checked = false;
       }
+      document.documentElement.setAttribute("data-sidebar", savedState);
     }
     
     if (isMobile && sidebarToggle.checked) {
       sidebarToggle.checked = false;
+    }
+    if (isMobile) {
+      document.documentElement.setAttribute("data-sidebar", "expanded");
     }
   };
 
@@ -253,12 +257,14 @@ export const clientScript = `
 
     if (isMobile) {
       document.body.style.overflow = isChecked ? "hidden" : "";
+      document.documentElement.setAttribute("data-sidebar", "expanded");
       return;
     }
 
     const state = isChecked ? "minimized" : "expanded";
     document.body.style.overflow = "";
     saveSidebarState(state);
+    document.documentElement.setAttribute("data-sidebar", state);
   };
   
   const renderBreadcrumbs = () => {
