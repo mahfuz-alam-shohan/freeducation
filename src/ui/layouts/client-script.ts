@@ -6,14 +6,18 @@ export const clientScript = `
   const measurePerformance = () => {
     if ('performance' in window) {
       const navigation = performance.getEntriesByType('navigation')[0];
-      console.log('Page load time:', navigation.loadEventEnd - navigation.loadEventStart);
+      if (navigation) {
+        console.log('Page load time:', navigation.loadEventEnd - navigation.loadEventStart);
+      }
       
       // Largest Contentful Paint
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1];
-        console.log('LCP:', lastEntry.startTime);
-      }).observe({ entryTypes: ['largest-contentful-paint'] });
+      if ('PerformanceObserver' in window) {
+        new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const lastEntry = entries[entries.length - 1];
+          console.log('LCP:', lastEntry.startTime);
+        }).observe({ entryTypes: ['largest-contentful-paint'] });
+      }
     }
   };
   
@@ -50,6 +54,15 @@ export const clientScript = `
   
   // Lazy loading for images
   const setupLazyLoading = () => {
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('img[data-src]').forEach(img => {
+        if (img.dataset.src) {
+          img.src = img.dataset.src;
+          img.classList.remove('lazy');
+        }
+      });
+      return;
+    }
     const imageObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -143,6 +156,22 @@ export const clientScript = `
     document.body.classList.remove("is-transitioning");
   };
   
+  const getStorageItem = (key) => {
+    try {
+      return window.localStorage?.getItem(key) ?? null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const setStorageItem = (key, value) => {
+    try {
+      window.localStorage?.setItem(key, value);
+    } catch (error) {
+      // Ignore storage failures (privacy mode, quota, etc.)
+    }
+  };
+
   const applySidebarState = () => {
     if (!sidebarToggle) return;
     const isMobile = sidebarViewportQuery.matches;
@@ -171,7 +200,7 @@ export const clientScript = `
   };
 
   const resolveTheme = () => {
-    const stored = window.localStorage?.getItem("theme");
+    const stored = getStorageItem("theme");
     if (stored === "dark" || stored === "light") {
       return stored;
     }
@@ -179,7 +208,7 @@ export const clientScript = `
   };
 
   const saveThemePreference = (theme) => {
-    window.localStorage?.setItem("theme", theme);
+    setStorageItem("theme", theme);
   };
 
   const toggleTheme = () => {
@@ -200,11 +229,11 @@ export const clientScript = `
   };
   
   const saveSidebarState = (state) => {
-    window.localStorage?.setItem("sidebar-state", state);
+    setStorageItem("sidebar-state", state);
   };
 
   const loadSidebarState = () => {
-    const savedState = window.localStorage?.getItem("sidebar-state");
+    const savedState = getStorageItem("sidebar-state");
     return savedState === "minimized" ? "minimized" : "expanded";
   };
 
@@ -289,7 +318,11 @@ export const clientScript = `
   optimizeForNetwork();
   setupPrefetching();
   setupLazyLoading();
-  sidebarViewportQuery.addEventListener("change", applySidebarState);
+  if ("addEventListener" in sidebarViewportQuery) {
+    sidebarViewportQuery.addEventListener("change", applySidebarState);
+  } else if ("addListener" in sidebarViewportQuery) {
+    sidebarViewportQuery.addListener(applySidebarState);
+  }
   sidebarToggle?.addEventListener("change", handleSidebarChange);
   
   themeToggles.forEach((toggle) => {
