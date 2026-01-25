@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freeducation - Home</title>
+    <link rel="stylesheet" href="/components/common/header/header.css">
+    <link rel="stylesheet" href="/components/common/sidebar/sidebar.css">
+    <link rel="stylesheet" href="/components/common/profile/profile.css">
+    <link rel="stylesheet" href="/components/common/notification/notification.css">
+    <link rel="stylesheet" href="/pages/home/home.css">
+</head>
+<body>
+    <!-- ===================================
+         MAIN APPLICATION LAYOUT
+         =================================== -->
+    <div class="app-layout">
+        
+        <!-- Header Component -->
+        <div id="header-container"></div>
+        
+        <!-- Sidebar Component -->
+        <div id="sidebar-container"></div>
+        
+        <!-- Main Content Area -->
+        <main class="app-main" data-main-content>
+            <div class="content-container">
+                <!-- Page content will be dynamically loaded here -->
+                <div class="welcome-message">
+                    <h2 class="page-title">Welcome to Freeducation</h2>
+                    <p class="page-subtitle">Your learning journey starts here. Explore subjects, join discussions, and challenge yourself.</p>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay hidden" data-mobile-overlay></div>
+    </div>
+    
+    <!-- ===================================
+         COMPONENT SCRIPTS
+         =================================== -->
+    <script src="/components/common/header/header.ts" type="module"></script>
+    <script src="/components/common/sidebar/sidebar.ts" type="module"></script>
+    <script src="/components/common/profile/profile.ts" type="module"></script>
+    <script src="/components/common/notification/notification.ts" type="module"></script>
+    <script src="/pages/home/home.ts" type="module"></script>
+</body>
+</html>

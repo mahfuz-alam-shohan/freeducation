@@ -1,0 +1,28 @@
+<div class="profile-dropdown hidden" data-profile-panel>
+    <!-- Logged In View -->
+    <div class="profile-info hidden" data-user-info>
+        <div class="profile-header">
+            <img src="" alt="Profile" class="profile-avatar-large" data-profile-avatar>
+            <div class="profile-details">
+                <h4 class="font-semibold" data-user-name></h4>
+                <p class="text-sm text-secondary" data-user-email></p>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <button class="btn btn-ghost w-full">Profile Settings</button>
+            <button class="btn btn-ghost w-full text-error" data-logout-btn>
+                Logout
+            </button>
+        </div>
+    </div>
+    
+    <!-- Logged Out View -->
+    <div class="auth-actions" data-auth-actions>
+        <button class="btn btn-primary w-full mb-2" data-login-btn>
+            Login
+        </button>
+        <button class="btn btn-ghost w-full" data-signup-btn>
+            Sign Up
+        </button>
+    </div>
+</div>

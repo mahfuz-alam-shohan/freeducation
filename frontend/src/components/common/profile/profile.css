@@ -1,0 +1,110 @@
+/* ===================================
+   PROFILE COMPONENT STYLES
+   =================================== */
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--spacing-2, 0.5rem);
+  background-color: var(--color-background, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-lg, 0.75rem);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+  min-width: 280px;
+  max-width: 320px;
+  z-index: var(--z-dropdown, 1000);
+  overflow: hidden;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3, 0.75rem);
+  padding: var(--spacing-4, 1rem);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.profile-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border, #e5e7eb);
+  object-fit: cover;
+}
+
+.profile-details h4 {
+  margin: 0;
+  font-size: var(--text-base, 1rem);
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+
+.profile-details p {
+  margin: 0;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.profile-actions {
+  padding: var(--spacing-2, 0.5rem);
+}
+
+.profile-actions .btn {
+  width: 100%;
+  justify-content: center;
+  padding: var(--spacing-3, 0.75rem);
+}
+
+.auth-actions {
+  padding: var(--spacing-4, 1rem);
+}
+
+.text-error {
+  color: var(--color-error, #ef4444);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.text-sm {
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+/* ===================================
+   CSS CUSTOM PROPERTIES
+   =================================== */
+
+:root {
+  --z-dropdown: 1000;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --radius-lg: 0.75rem;
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Colors */
+  --color-background: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-error: #ef4444;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0f172a;
+    --color-border: #334155;
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-error: #ef4444;
+  }
+}
