@@ -28,8 +28,6 @@ export class AppController {
   private state: AppState;
   private elements: {
     layoutContainer: HTMLElement | null;
-    headerComponent: HTMLElement | null;
-    sidebarComponent: HTMLElement | null;
     profileDropdown: HTMLElement | null;
     notificationDropdown: HTMLElement | null;
     mobileNotification: HTMLElement | null;
@@ -58,8 +56,6 @@ export class AppController {
 
     this.elements = {
       layoutContainer: null,
-      headerComponent: null,
-      sidebarComponent: null,
       profileDropdown: null,
       notificationDropdown: null,
       mobileNotification: null,
@@ -102,8 +98,6 @@ export class AppController {
    */
   private cacheElements(): void {
     this.elements.layoutContainer = document.querySelector('[data-layout-container]');
-    this.elements.headerComponent = document.querySelector('[data-header-component]');
-    this.elements.sidebarComponent = document.querySelector('[data-sidebar-component]');
     this.elements.profileDropdown = document.getElementById('profile-dropdown');
     this.elements.notificationDropdown = document.getElementById('notification-dropdown');
     this.elements.mobileNotification = document.getElementById('mobile-notification');
@@ -151,14 +145,10 @@ export class AppController {
   private async initializeComponents(): Promise<void> {
     try {
       // Initialize header component
-      if (this.elements.headerComponent) {
-        this.components.header.init(this.elements.headerComponent);
-      }
+      this.components.header.init();
 
       // Initialize sidebar component
-      if (this.elements.sidebarComponent) {
-        this.components.sidebar.init();
-      }
+      this.components.sidebar.init();
 
       // Initialize profile component
       if (this.elements.profileDropdown) {

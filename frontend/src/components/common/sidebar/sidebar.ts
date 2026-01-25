@@ -45,6 +45,20 @@ export class SidebarComponent {
 
   private cacheElements(): void {
     // Cache DOM elements
+    const navItems = document.querySelectorAll('[data-nav-item]');
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const menuItem: MenuItem = {
+          id: item.getAttribute('data-nav-item') || 'unknown',
+          label: item.textContent || 'Unknown',
+          icon: '📄',
+          href: item.getAttribute('href') || '#',
+          roles: ['student', 'admin']
+        };
+        this.config.onNavigation(menuItem);
+      });
+    });
   }
 
   private bindEvents(): void {
@@ -57,13 +71,49 @@ export class SidebarComponent {
   }
 
   private updateUI(): void {
-    this.updateSidebarState();
+    // Update active item
+    const navItems = document.querySelectorAll('[data-nav-item]');
+    navItems.forEach(item => {
+      const itemId = item.getAttribute('data-nav-item');
+      if (itemId === this.state.activeItem) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+
+  private handleResize(): void {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile && !this.state.collapsed) {
+      this.state.collapsed = true;
+      this.updateUI();
+    }
+  }
+
+  private closeMobile(): void {
+    this.state.mobileOpen = false;
+    this.config.onCloseMobile();
+  }
+
+  public setCollapsed(collapsed: boolean): void {
+    this.state.collapsed = collapsed;
+    this.updateUI();
+  }
+
+  public setMobileOpen(open: boolean): void {
+    this.state.mobileOpen = open;
+    this.updateUI();
+  }
+
+  public setUserRole(role: string): void {
+    this.state.userRole = role;
     this.renderMenuItems();
   }
 
-  private updateSidebarState(): void {
-    const isMobile = window.innerWidth < 768;
-    // Update sidebar classes based on state
+  public setActiveItem(itemId: string): void {
+    this.state.activeItem = itemId;
+    this.renderMenuItems();
   }
 
   private renderMenuItems(): void {

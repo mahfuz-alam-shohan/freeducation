@@ -292,130 +292,25 @@ var AdminSetupService = class {
   }
 };
 
-// backend/src/api/middleware/cors.ts
-function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Max-Age": "86400"
-  };
-}
-__name(corsHeaders, "corsHeaders");
-function handleCORS(request) {
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders()
-    });
-  }
-  return null;
-}
-__name(handleCORS, "handleCORS");
-
-// backend/src/core/RequestRouter.ts
-var RequestRouter = class {
+// backend/src/core/FrontendRenderer.ts
+var FrontendRenderer = class {
   static {
-    __name(this, "RequestRouter");
+    __name(this, "FrontendRenderer");
   }
-  db;
-  adminService;
   env;
   constructor(config) {
     this.env = config.env;
-    this.db = new DatabaseManager(this.env.DB);
-    this.adminService = new AdminSetupService(this.db);
   }
   /**
-   * Initialize the request router
+   * Handle frontend requests
    */
-  async initialize() {
-    await this.db.initialize();
+  async handleRequest(path) {
+    return this.serveMainApp();
   }
   /**
-   * Handle incoming requests
+   * Serve the main application page
    */
-  async handleRequest(request) {
-    const corsResponse = handleCORS(request);
-    if (corsResponse) return corsResponse;
-    try {
-      const url = new URL(request.url);
-      const path = url.pathname;
-      const method = request.method;
-      if (path === "/api/v1/admin/setup/check" && method === "GET") {
-        return this.handleSetupCheck();
-      }
-      if (path === "/api/v1/admin/setup" && method === "POST") {
-        return this.handleAdminSetup(request);
-      }
-      if (path === "/" || path.startsWith("/static/") || path.startsWith("/components/")) {
-        return this.serveFrontendIndex();
-      }
-      return new Response("Not Found", { status: 404 });
-    } catch (error) {
-      console.error("Request router error:", error);
-      return new Response("Internal Server Error", {
-        status: 500,
-        headers: corsHeaders()
-      });
-    }
-  }
-  /**
-   * Handle setup check
-   */
-  async handleSetupCheck() {
-    try {
-      const result = await this.adminService.checkAdminSetup();
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    } catch (error) {
-      console.error("Setup check error:", error);
-      return new Response(JSON.stringify({ error: "Failed to check setup status" }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    }
-  }
-  /**
-   * Handle admin setup
-   */
-  async handleAdminSetup(request) {
-    try {
-      const body = await request.json();
-      const result = await this.adminService.createFirstAdmin(body);
-      return new Response(JSON.stringify(result), {
-        status: result.success ? 200 : 400,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    } catch (error) {
-      console.error("Admin setup error:", error);
-      return new Response(JSON.stringify({
-        success: false,
-        message: "Failed to create admin account"
-      }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    }
-  }
-  /**
-   * Serve frontend index page
-   */
-  serveFrontendIndex() {
+  serveMainApp() {
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -672,6 +567,130 @@ var RequestRouter = class {
         "Content-Type": "text/html"
       }
     });
+  }
+};
+
+// backend/src/api/middleware/cors.ts
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400"
+  };
+}
+__name(corsHeaders, "corsHeaders");
+function handleCORS(request) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders()
+    });
+  }
+  return null;
+}
+__name(handleCORS, "handleCORS");
+
+// backend/src/core/RequestRouter.ts
+var RequestRouter = class {
+  static {
+    __name(this, "RequestRouter");
+  }
+  db;
+  adminService;
+  frontendRenderer;
+  env;
+  constructor(config) {
+    this.env = config.env;
+    this.db = new DatabaseManager(this.env.DB);
+    this.adminService = new AdminSetupService(this.db);
+    this.frontendRenderer = new FrontendRenderer({ env: this.env });
+  }
+  /**
+   * Initialize the request router
+   */
+  async initialize() {
+    await this.db.initialize();
+  }
+  /**
+   * Handle incoming requests
+   */
+  async handleRequest(request) {
+    const corsResponse = handleCORS(request);
+    if (corsResponse) return corsResponse;
+    try {
+      const url = new URL(request.url);
+      const path = url.pathname;
+      const method = request.method;
+      if (path === "/api/v1/admin/setup/check" && method === "GET") {
+        return this.handleSetupCheck();
+      }
+      if (path === "/api/v1/admin/setup" && method === "POST") {
+        return this.handleAdminSetup(request);
+      }
+      if (path === "/" || path.startsWith("/static/") || path.startsWith("/components/")) {
+        return this.frontendRenderer.handleRequest(path);
+      }
+      return new Response("Not Found", { status: 404 });
+    } catch (error) {
+      console.error("Request router error:", error);
+      return new Response("Internal Server Error", {
+        status: 500,
+        headers: corsHeaders()
+      });
+    }
+  }
+  /**
+   * Handle setup check
+   */
+  async handleSetupCheck() {
+    try {
+      const result = await this.adminService.checkAdminSetup();
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders()
+        }
+      });
+    } catch (error) {
+      console.error("Setup check error:", error);
+      return new Response(JSON.stringify({ error: "Failed to check setup status" }), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders()
+        }
+      });
+    }
+  }
+  /**
+   * Handle admin setup
+   */
+  async handleAdminSetup(request) {
+    try {
+      const body = await request.json();
+      const result = await this.adminService.createFirstAdmin(body);
+      return new Response(JSON.stringify(result), {
+        status: result.success ? 200 : 400,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders()
+        }
+      });
+    } catch (error) {
+      console.error("Admin setup error:", error);
+      return new Response(JSON.stringify({
+        success: false,
+        message: "Failed to create admin account"
+      }), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders()
+        }
+      });
+    }
   }
 };
 
