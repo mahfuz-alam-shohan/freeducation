@@ -98,10 +98,12 @@ async function handleAdminSetup(request, db) {
 async function serveFrontend(path) {
   // Check if admin setup is needed first
   try {
-    const setupResponse = await fetch('http://localhost:8787/api/v1/admin/setup/check');
-    const setupData = await setupResponse.json();
+    const db = new DatabaseManager(env.DB);
+    await db.initialize();
+    const adminService = new AdminSetupService(db);
+    const result = await adminService.checkAdminSetup();
     
-    if (setupData.needsSetup) {
+    if (result.needsSetup) {
       // Serve the original setup page
       return serveSetupPage();
     }
