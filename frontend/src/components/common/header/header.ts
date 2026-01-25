@@ -41,17 +41,6 @@ export class HeaderComponent {
       isAuthenticated: false,
       user: null
     };
-    
-    this.elements = {
-      header: null,
-      sidebarToggle: null,
-      menuToggle: null,
-      notificationToggle: null,
-      profileToggle: null,
-      notificationCount: null,
-      userAvatar: null,
-      defaultAvatar: null
-    };
   }
 
   /**

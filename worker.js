@@ -1,12 +1,12 @@
-import { ServerRouter } from './backend/src/server/router';
+import { RequestRouter } from './backend/src/core/RequestRouter';
 
 export default {
   async fetch(request, env, ctx) {
-    // Initialize server router
-    const serverRouter = new ServerRouter({ env });
-    await serverRouter.initialize();
+    // Initialize request router
+    const requestRouter = new RequestRouter({ env });
+    await requestRouter.initialize();
     
     // Handle the request
-    return serverRouter.handleRequest(request);
+    return requestRouter.handleRequest(request);
   }
 };

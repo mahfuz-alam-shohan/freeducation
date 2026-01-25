@@ -28,6 +28,21 @@ export class SidebarComponent {
     this.updateUI();
   }
 
+  destroy(): void {
+    // Clean up event listeners
+    console.log('Sidebar component destroyed');
+  }
+
+  setCollapsed(collapsed: boolean): void {
+    this.state.collapsed = collapsed;
+    this.updateUI();
+  }
+
+  setUserRole(role: string): void {
+    this.state.userRole = role;
+    this.updateUI();
+  }
+
   private cacheElements(): void {
     // Cache DOM elements
   }

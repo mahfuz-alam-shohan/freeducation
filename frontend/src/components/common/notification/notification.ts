@@ -19,6 +19,26 @@ export class NotificationComponent {
     this.loadNotifications();
   }
 
+  destroy(): void {
+    // Clean up event listeners
+    console.log('Notification component destroyed');
+  }
+
+  open(): void {
+    this.state.isOpen = true;
+    this.updateUI();
+  }
+
+  close(): void {
+    this.state.isOpen = false;
+    this.updateUI();
+  }
+
+  toggle(): void {
+    this.state.isOpen = !this.state.isOpen;
+    this.updateUI();
+  }
+
   private cacheElements(): void {
     // Cache DOM elements
   }
