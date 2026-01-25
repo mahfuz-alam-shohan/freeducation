@@ -1,335 +1,58 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+/**
+ * ===================================
+   PAGE CONTROLLER
+   ===================================
+ */
 
-// backend/src/core/database/migrations/migration_manager.ts
-var MigrationManager = class {
-  constructor(db) {
-    this.db = db;
-  }
-  static {
-    __name(this, "MigrationManager");
-  }
-  migrations = [];
-  addMigration(migration) {
-    this.migrations.push(migration);
-  }
-  async runMigrations() {
-    await this.db.prepare(`
-      CREATE TABLE IF NOT EXISTS schema_migrations (
-        version TEXT PRIMARY KEY,
-        applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `).run();
-    const appliedResult = await this.db.prepare(
-      "SELECT version FROM schema_migrations ORDER BY version"
-    ).all();
-    const appliedVersions = new Set(appliedResult.results?.map((row) => row.version) || []);
-    for (const migration of this.migrations) {
-      if (!appliedVersions.has(migration.version)) {
-        console.log(`Running migration: ${migration.version} - ${migration.description}`);
-        try {
-          await this.db.prepare(migration.up).run();
-          await this.db.prepare(
-            "INSERT INTO schema_migrations (version) VALUES (?)"
-          ).bind(migration.version).run();
-          console.log(`Migration ${migration.version} completed successfully`);
-        } catch (error) {
-          console.error(`Migration ${migration.version} failed:`, error);
-          throw error;
-        }
-      }
-    }
-  }
-  async resetDatabase() {
-    console.log("Resetting database...");
-    const tables = [
-      "schema_migrations",
-      "system_settings",
-      "subjects",
-      "users"
-    ];
-    for (const table of tables) {
-      try {
-        await this.db.prepare(`DROP TABLE IF EXISTS ${table}`).run();
-        console.log(`Dropped table: ${table}`);
-      } catch (error) {
-        console.warn(`Failed to drop table ${table}:`, error);
-      }
-    }
-    this.migrations = [];
-  }
-  async checkAndRecreate() {
-    const tables = ["users", "subjects", "system_settings"];
-    for (const table of tables) {
-      try {
-        const result = await this.db.prepare(`PRAGMA table_info(${table})`).all();
-        if (!result.results || result.results.length === 0) {
-          console.log(`Table ${table} missing, will recreate`);
-          await this.resetDatabase();
-          await this.runMigrations();
-          return;
-        }
-      } catch (error) {
-        console.log(`Error checking table ${table}, recreating database:`, error);
-        await this.resetDatabase();
-        await this.runMigrations();
-        return;
-      }
-    }
-  }
-};
+import { DatabaseManager } from './database/database_manager';
+import { AdminSetupService } from '../api/v1/admin/setup';
 
-// backend/src/core/database/models/user.ts
-var UserModel = class {
-  constructor(db) {
-    this.db = db;
-  }
-  static {
-    __name(this, "UserModel");
-  }
-  async create(userData) {
-    const id = crypto.randomUUID();
-    const password_hash = await this.hashPassword(userData.password);
-    const result = await this.db.prepare(`
-      INSERT INTO users (id, email, password_hash, name, role, profile_picture_url)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(
-      id,
-      userData.email,
-      password_hash,
-      userData.name,
-      userData.role || "student",
-      userData.profile_picture_url || null
-    ).run();
-    if (!result.success) {
-      throw new Error("Failed to create user");
-    }
-    return this.findById(id);
-  }
-  async findById(id) {
-    const result = await this.db.prepare(
-      "SELECT * FROM users WHERE id = ?"
-    ).bind(id).first();
-    return result;
-  }
-  async findByEmail(email) {
-    const result = await this.db.prepare(
-      "SELECT * FROM users WHERE email = ?"
-    ).bind(email).first();
-    return result || null;
-  }
-  async updateLastLogin(id) {
-    await this.db.prepare(
-      "UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?"
-    ).bind(id).run();
-  }
-  async hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  async verifyPassword(password, hash) {
-    const passwordHash = await this.hashPassword(password);
-    return passwordHash === hash;
-  }
-};
+interface PageControllerConfig {
+  env: any;
+}
 
-// backend/src/core/database/models/system_settings.ts
-var SystemSettingsModel = class {
-  constructor(db) {
-    this.db = db;
-  }
-  static {
-    __name(this, "SystemSettingsModel");
-  }
-  async get(key) {
-    const result = await this.db.prepare(
-      "SELECT value FROM system_settings WHERE key = ?"
-    ).bind(key).first();
-    return result?.value || null;
-  }
-  async set(key, value) {
-    await this.db.prepare(`
-      INSERT OR REPLACE INTO system_settings (key, value, updated_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-    `).bind(key, value).run();
-  }
-  async isAdminCreated() {
-    const value = await this.get("admin_created");
-    return value === "true";
-  }
-  async markAdminCreated() {
-    await this.set("admin_created", "true");
-  }
-};
+export class PageController {
+  private db: DatabaseManager;
+  private adminService: AdminSetupService;
+  private env: any;
 
-// backend/src/core/database/database_manager.ts
-var DatabaseManager = class {
-  constructor(db) {
-    this.db = db;
-    this.migrationManager = new MigrationManager(db);
-    this.users = new UserModel(db);
-    this.systemSettings = new SystemSettingsModel(db);
-  }
-  static {
-    __name(this, "DatabaseManager");
-  }
-  migrationManager;
-  users;
-  systemSettings;
-  async initialize() {
-    console.log("Initializing database...");
-    const migrationSQL = await this.loadMigration("001_initial_schema.sql");
-    this.migrationManager.addMigration({
-      version: "001",
-      description: "Initial database schema",
-      up: migrationSQL
-    });
-    await this.migrationManager.checkAndRecreate();
-    await this.migrationManager.runMigrations();
-    console.log("Database initialized successfully");
-  }
-  async loadMigration(filename) {
-    return `
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        name TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'student',
-        profile_picture_url TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        is_active BOOLEAN DEFAULT 1,
-        email_verified BOOLEAN DEFAULT 0,
-        last_login_at DATETIME
-      );
-
-      CREATE TABLE IF NOT EXISTS subjects (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        type TEXT NOT NULL,
-        teacher_id TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        is_active BOOLEAN DEFAULT 1,
-        FOREIGN KEY (teacher_id) REFERENCES users(id)
-      );
-
-      CREATE TABLE IF NOT EXISTS system_settings (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-
-      INSERT OR IGNORE INTO system_settings (key, value) VALUES 
-        ('admin_created', 'false'),
-        ('site_name', 'Freeducation'),
-        ('maintenance_mode', 'false');
-    `;
-  }
-};
-
-// backend/src/api/v1/admin/setup.ts
-var AdminSetupService = class {
-  constructor(db) {
-    this.db = db;
-  }
-  static {
-    __name(this, "AdminSetupService");
-  }
-  async createFirstAdmin(data) {
-    try {
-      const adminExists = await this.db.systemSettings.isAdminCreated();
-      if (adminExists) {
-        return { success: false, message: "Admin already exists" };
-      }
-      const validation = this.validateAdminData(data);
-      if (!validation.isValid) {
-        return { success: false, message: validation.message };
-      }
-      const admin = await this.db.users.create({
-        ...data,
-        role: "admin"
-      });
-      await this.db.systemSettings.markAdminCreated();
-      return {
-        success: true,
-        message: "Admin created successfully",
-        admin: {
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role
-        }
-      };
-    } catch (error) {
-      console.error("Error creating admin:", error);
-      return { success: false, message: "Failed to create admin" };
-    }
-  }
-  async checkAdminSetup() {
-    const adminExists = await this.db.systemSettings.isAdminCreated();
-    return { needsSetup: !adminExists };
-  }
-  validateAdminData(data) {
-    if (!data.name || data.name.trim().length < 2) {
-      return { isValid: false, message: "Name must be at least 2 characters long" };
-    }
-    if (!data.email || !this.isValidEmail(data.email)) {
-      return { isValid: false, message: "Please provide a valid email address" };
-    }
-    if (!data.password || data.password.length < 8) {
-      return { isValid: false, message: "Password must be at least 8 characters long" };
-    }
-    return { isValid: true, message: "Valid data" };
-  }
-  isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-};
-
-// backend/src/core/PageController.ts
-var PageController = class {
-  static {
-    __name(this, "PageController");
-  }
-  db;
-  adminService;
-  env;
-  constructor(config) {
+  constructor(config: PageControllerConfig) {
     this.env = config.env;
     this.db = new DatabaseManager(this.env.DB);
     this.adminService = new AdminSetupService(this.db);
   }
+
   /**
    * Initialize the page controller
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     await this.db.initialize();
   }
+
   /**
    * Handle page requests
    */
-  async handleRequest(path) {
+  async handleRequest(path: string): Promise<Response> {
+    // Check if admin setup is needed first
     try {
       const result = await this.adminService.checkAdminSetup();
+      
       if (result.needsSetup) {
         return this.serveSetupPage();
       }
     } catch (error) {
-      console.log("Could not check setup status, serving setup page");
+      console.log('Could not check setup status, serving setup page');
       return this.serveSetupPage();
     }
+
+    // Serve the main application
     return this.serveMainApp();
   }
+
   /**
    * Serve the main application
    */
-  serveMainApp() {
+  private serveMainApp(): Response {
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -513,16 +236,16 @@ var PageController = class {
         // Simple homepage for now
         document.querySelector('.content-wrapper').innerHTML = \`
             <div style="text-align: center; padding: 2rem;">
-                <h1 style="color: #3b82f6; font-size: 2rem; margin-bottom: 1rem;">Welcome to Freeducation! \u{1F393}</h1>
+                <h1 style="color: #3b82f6; font-size: 2rem; margin-bottom: 1rem;">Welcome to Freeducation! 🎓</h1>
                 <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 2rem;">Your modular ed-tech platform is ready!</p>
                 <div style="background: #f3f4f6; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #111827; margin-bottom: 1rem;">\u2705 Platform Status</h2>
+                    <h2 style="color: #111827; margin-bottom: 1rem;">✅ Platform Status</h2>
                     <ul style="text-align: left; color: #6b7280; line-height: 1.8;">
-                        <li>\u2705 Modular Architecture Implemented</li>
-                        <li>\u2705 Component-Based Structure</li>
-                        <li>\u2705 Database Connected</li>
-                        <li>\u2705 Admin Setup Complete</li>
-                        <li>\u2705 Layout Controller Active</li>
+                        <li>✅ Modular Architecture Implemented</li>
+                        <li>✅ Component-Based Structure</li>
+                        <li>✅ Database Connected</li>
+                        <li>✅ Admin Setup Complete</li>
+                        <li>✅ Layout Controller Active</li>
                     </ul>
                 </div>
                 <div style="margin-top: 2rem;">
@@ -538,19 +261,21 @@ var PageController = class {
                 </div>
             </div>
         \`;
-    <\/script>
+    </script>
 </body>
 </html>`;
+
     return new Response(html, {
       headers: {
-        "Content-Type": "text/html"
+        'Content-Type': 'text/html'
       }
     });
   }
+
   /**
    * Serve the setup page
    */
-  serveSetupPage() {
+  private serveSetupPage(): Response {
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -558,10 +283,10 @@ var PageController = class {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeducation - Setup</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
-    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -882,322 +607,14 @@ var PageController = class {
         }
 
         ReactDOM.render(<SetupPage />, document.getElementById('root'));
-    <\/script>
+    </script>
 </body>
 </html>`;
+
     return new Response(html, {
       headers: {
-        "Content-Type": "text/html"
+        'Content-Type': 'text/html'
       }
     });
   }
-};
-
-// backend/src/api/middleware/cors.ts
-function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Max-Age": "86400"
-  };
 }
-__name(corsHeaders, "corsHeaders");
-function handleCORS(request) {
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders()
-    });
-  }
-  return null;
-}
-__name(handleCORS, "handleCORS");
-
-// backend/src/server/router.ts
-var ServerRouter = class {
-  static {
-    __name(this, "ServerRouter");
-  }
-  db;
-  adminService;
-  pageController;
-  env;
-  constructor(config) {
-    this.env = config.env;
-    this.db = new DatabaseManager(this.env.DB);
-    this.adminService = new AdminSetupService(this.db);
-    this.pageController = new PageController({ env: this.env });
-  }
-  /**
-   * Initialize the server router
-   */
-  async initialize() {
-    await this.db.initialize();
-    await this.pageController.initialize();
-  }
-  /**
-   * Handle incoming requests
-   */
-  async handleRequest(request) {
-    const corsResponse = handleCORS(request);
-    if (corsResponse) return corsResponse;
-    try {
-      const url = new URL(request.url);
-      const path = url.pathname;
-      const method = request.method;
-      if (path === "/api/v1/admin/setup/check" && method === "GET") {
-        return this.handleSetupCheck();
-      }
-      if (path === "/api/v1/admin/setup" && method === "POST") {
-        return this.handleAdminSetup(request);
-      }
-      if (path === "/" || path.startsWith("/static/") || path.startsWith("/components/")) {
-        return this.pageController.handleRequest(path);
-      }
-      return new Response("Not Found", { status: 404 });
-    } catch (error) {
-      console.error("Server error:", error);
-      return new Response("Internal Server Error", {
-        status: 500,
-        headers: corsHeaders()
-      });
-    }
-  }
-  /**
-   * Handle setup check
-   */
-  async handleSetupCheck() {
-    try {
-      const result = await this.adminService.checkAdminSetup();
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    } catch (error) {
-      console.error("Setup check error:", error);
-      return new Response(JSON.stringify({ error: "Failed to check setup status" }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    }
-  }
-  /**
-   * Handle admin setup
-   */
-  async handleAdminSetup(request) {
-    try {
-      const body = await request.json();
-      const result = await this.adminService.createFirstAdmin(body);
-      return new Response(JSON.stringify(result), {
-        status: result.success ? 200 : 400,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    } catch (error) {
-      console.error("Admin setup error:", error);
-      return new Response(JSON.stringify({
-        success: false,
-        message: "Failed to create admin account"
-      }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders()
-        }
-      });
-    }
-  }
-};
-
-// worker.js
-var worker_default = {
-  async fetch(request, env, ctx) {
-    const serverRouter = new ServerRouter({ env });
-    await serverRouter.initialize();
-    return serverRouter.handleRequest(request);
-  }
-};
-
-// ../../../../../AppData/Roaming/npm/node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
-var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
-  try {
-    return await middlewareCtx.next(request, env);
-  } finally {
-    try {
-      if (request.body !== null && !request.bodyUsed) {
-        const reader = request.body.getReader();
-        while (!(await reader.read()).done) {
-        }
-      }
-    } catch (e) {
-      console.error("Failed to drain the unused request body.", e);
-    }
-  }
-}, "drainBody");
-var middleware_ensure_req_body_drained_default = drainBody;
-
-// ../../../../../AppData/Roaming/npm/node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts
-function reduceError(e) {
-  return {
-    name: e?.name,
-    message: e?.message ?? String(e),
-    stack: e?.stack,
-    cause: e?.cause === void 0 ? void 0 : reduceError(e.cause)
-  };
-}
-__name(reduceError, "reduceError");
-var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
-  try {
-    return await middlewareCtx.next(request, env);
-  } catch (e) {
-    const error = reduceError(e);
-    return Response.json(error, {
-      status: 500,
-      headers: { "MF-Experimental-Error-Stack": "true" }
-    });
-  }
-}, "jsonError");
-var middleware_miniflare3_json_error_default = jsonError;
-
-// .wrangler/tmp/bundle-eFxvu7/middleware-insertion-facade.js
-var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
-  middleware_ensure_req_body_drained_default,
-  middleware_miniflare3_json_error_default
-];
-var middleware_insertion_facade_default = worker_default;
-
-// ../../../../../AppData/Roaming/npm/node_modules/wrangler/templates/middleware/common.ts
-var __facade_middleware__ = [];
-function __facade_register__(...args) {
-  __facade_middleware__.push(...args.flat());
-}
-__name(__facade_register__, "__facade_register__");
-function __facade_invokeChain__(request, env, ctx, dispatch, middlewareChain) {
-  const [head, ...tail] = middlewareChain;
-  const middlewareCtx = {
-    dispatch,
-    next(newRequest, newEnv) {
-      return __facade_invokeChain__(newRequest, newEnv, ctx, dispatch, tail);
-    }
-  };
-  return head(request, env, ctx, middlewareCtx);
-}
-__name(__facade_invokeChain__, "__facade_invokeChain__");
-function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
-  return __facade_invokeChain__(request, env, ctx, dispatch, [
-    ...__facade_middleware__,
-    finalMiddleware
-  ]);
-}
-__name(__facade_invoke__, "__facade_invoke__");
-
-// .wrangler/tmp/bundle-eFxvu7/middleware-loader.entry.ts
-var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
-  constructor(scheduledTime, cron, noRetry) {
-    this.scheduledTime = scheduledTime;
-    this.cron = cron;
-    this.#noRetry = noRetry;
-  }
-  static {
-    __name(this, "__Facade_ScheduledController__");
-  }
-  #noRetry;
-  noRetry() {
-    if (!(this instanceof ___Facade_ScheduledController__)) {
-      throw new TypeError("Illegal invocation");
-    }
-    this.#noRetry();
-  }
-};
-function wrapExportedHandler(worker) {
-  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
-    return worker;
-  }
-  for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
-    __facade_register__(middleware);
-  }
-  const fetchDispatcher = /* @__PURE__ */ __name(function(request, env, ctx) {
-    if (worker.fetch === void 0) {
-      throw new Error("Handler does not export a fetch() function.");
-    }
-    return worker.fetch(request, env, ctx);
-  }, "fetchDispatcher");
-  return {
-    ...worker,
-    fetch(request, env, ctx) {
-      const dispatcher = /* @__PURE__ */ __name(function(type, init) {
-        if (type === "scheduled" && worker.scheduled !== void 0) {
-          const controller = new __Facade_ScheduledController__(
-            Date.now(),
-            init.cron ?? "",
-            () => {
-            }
-          );
-          return worker.scheduled(controller, env, ctx);
-        }
-      }, "dispatcher");
-      return __facade_invoke__(request, env, ctx, dispatcher, fetchDispatcher);
-    }
-  };
-}
-__name(wrapExportedHandler, "wrapExportedHandler");
-function wrapWorkerEntrypoint(klass) {
-  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
-    return klass;
-  }
-  for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
-    __facade_register__(middleware);
-  }
-  return class extends klass {
-    #fetchDispatcher = /* @__PURE__ */ __name((request, env, ctx) => {
-      this.env = env;
-      this.ctx = ctx;
-      if (super.fetch === void 0) {
-        throw new Error("Entrypoint class does not define a fetch() function.");
-      }
-      return super.fetch(request);
-    }, "#fetchDispatcher");
-    #dispatcher = /* @__PURE__ */ __name((type, init) => {
-      if (type === "scheduled" && super.scheduled !== void 0) {
-        const controller = new __Facade_ScheduledController__(
-          Date.now(),
-          init.cron ?? "",
-          () => {
-          }
-        );
-        return super.scheduled(controller);
-      }
-    }, "#dispatcher");
-    fetch(request) {
-      return __facade_invoke__(
-        request,
-        this.env,
-        this.ctx,
-        this.#dispatcher,
-        this.#fetchDispatcher
-      );
-    }
-  };
-}
-__name(wrapWorkerEntrypoint, "wrapWorkerEntrypoint");
-var WRAPPED_ENTRY;
-if (typeof middleware_insertion_facade_default === "object") {
-  WRAPPED_ENTRY = wrapExportedHandler(middleware_insertion_facade_default);
-} else if (typeof middleware_insertion_facade_default === "function") {
-  WRAPPED_ENTRY = wrapWorkerEntrypoint(middleware_insertion_facade_default);
-}
-var middleware_loader_entry_default = WRAPPED_ENTRY;
-export {
-  __INTERNAL_WRANGLER_MIDDLEWARE__,
-  middleware_loader_entry_default as default
-};
-//# sourceMappingURL=worker.js.map
