@@ -10,6 +10,65 @@ import { renderApiManagementPanel, renderApiModal } from './components/api.js';
 
 const app = document.getElementById('app');
 
+const loadingState = {
+  count: 0,
+  timer: null,
+  overlay: null
+};
+
+function ensureLoadingOverlay() {
+  if (loadingState.overlay) return loadingState.overlay;
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.innerHTML = `
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading...</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  loadingState.overlay = overlay;
+  return overlay;
+}
+
+function setLoading(active) {
+  const overlay = ensureLoadingOverlay();
+  overlay.classList.toggle('is-active', active);
+  document.body.classList.toggle('is-loading', active);
+  document.body.setAttribute('aria-busy', active ? 'true' : 'false');
+}
+
+function showLoading() {
+  loadingState.count += 1;
+  if (loadingState.timer) return;
+  loadingState.timer = setTimeout(() => {
+    loadingState.timer = null;
+    if (loadingState.count > 0) {
+      setLoading(true);
+    }
+  }, 120);
+}
+
+function hideLoading() {
+  loadingState.count = Math.max(0, loadingState.count - 1);
+  if (loadingState.count === 0) {
+    if (loadingState.timer) {
+      clearTimeout(loadingState.timer);
+      loadingState.timer = null;
+    }
+    setLoading(false);
+  }
+}
+
+async function withLoading(task) {
+  showLoading();
+  try {
+    return await task();
+  } finally {
+    hideLoading();
+  }
+}
+
 const state = {
   user: null,
   users: [],
@@ -316,9 +375,11 @@ function renderLogin(canBootstrap) {
     };
 
     try {
-      const result = await api.login(payload);
-      state.user = result.user;
-      await renderApp();
+      await withLoading(async () => {
+        const result = await api.login(payload);
+        state.user = result.user;
+        await renderApp();
+      });
     } catch (error) {
       showToast(error.message, 'error');
     }
@@ -337,9 +398,11 @@ function renderLogin(canBootstrap) {
       };
 
       try {
-        await api.bootstrap(payload);
-        showToast('Admin created, you can sign in now');
-        renderLogin(false);
+        await withLoading(async () => {
+          await api.bootstrap(payload);
+          showToast('Admin created, you can sign in now');
+          renderLogin(false);
+        });
       } catch (error) {
         showToast(error.message, 'error');
       }
@@ -383,58 +446,60 @@ async function loadSelectedTable() {
 }
 
 async function renderApp() {
-  const route = getRoute();
+  await withLoading(async () => {
+    const route = getRoute();
 
-  if (route === 'dashboard' || route === 'users') {
-    await loadUsers();
-  }
-
-  if (route === 'database') {
-    await loadTables();
-    await loadSelectedTable();
-  }
-
-  if (route === 'api') {
-    try {
-      await loadApis();
-    } catch (error) {
-      state.apis = [];
-      showToast(error.message, 'error');
+    if (route === 'dashboard' || route === 'users') {
+      await loadUsers();
     }
-  }
 
-  const sidebar = renderSidebar([
-    { id: 'dashboard', label: 'Dashboard', href: '#dashboard' },
-    { id: 'users', label: 'Users', href: '#users' },
-    { id: 'database', label: 'Database', href: '#database' },
-    { id: 'api', label: 'API Management', href: '#api' }
-  ], route);
+    if (route === 'database') {
+      await loadTables();
+      await loadSelectedTable();
+    }
 
-  let title = 'Dashboard';
-  let content = '';
+    if (route === 'api') {
+      try {
+        await loadApis();
+      } catch (error) {
+        state.apis = [];
+        showToast(error.message, 'error');
+      }
+    }
 
-  if (route === 'dashboard') {
-    title = 'Dashboard';
-    content = renderStatCards([
-      { label: 'Total users', value: state.total, caption: 'All roles' },
-      { label: 'Active admins', value: state.users.filter((u) => u.role === 'admin' && u.isActive).length, caption: 'Enabled' },
-      { label: 'Active educators', value: state.users.filter((u) => u.role === 'teacher' && u.isActive).length, caption: 'Teachers' }
-    ]);
-  } else if (route === 'users') {
-    title = 'Users';
-    content = renderUsersTable(state.users);
-  } else if (route === 'database') {
-    title = 'Database';
-    content = renderDatabasePanel(state);
-  } else if (route === 'api') {
-    title = 'API Management';
-    content = renderApiManagementPanel(state.apis);
-  }
+    const sidebar = renderSidebar([
+      { id: 'dashboard', label: 'Dashboard', href: '#dashboard' },
+      { id: 'users', label: 'Users', href: '#users' },
+      { id: 'database', label: 'Database', href: '#database' },
+      { id: 'api', label: 'API Management', href: '#api' }
+    ], route);
 
-  const topbar = renderTopbar(title, state.user);
-  app.innerHTML = renderLayout({ sidebar, topbar, content });
+    let title = 'Dashboard';
+    let content = '';
 
-  wireActions(route);
+    if (route === 'dashboard') {
+      title = 'Dashboard';
+      content = renderStatCards([
+        { label: 'Total users', value: state.total, caption: 'All roles' },
+        { label: 'Active admins', value: state.users.filter((u) => u.role === 'admin' && u.isActive).length, caption: 'Enabled' },
+        { label: 'Active educators', value: state.users.filter((u) => u.role === 'teacher' && u.isActive).length, caption: 'Teachers' }
+      ]);
+    } else if (route === 'users') {
+      title = 'Users';
+      content = renderUsersTable(state.users);
+    } else if (route === 'database') {
+      title = 'Database';
+      content = renderDatabasePanel(state);
+    } else if (route === 'api') {
+      title = 'API Management';
+      content = renderApiManagementPanel(state.apis);
+    }
+
+    const topbar = renderTopbar(title, state.user);
+    app.innerHTML = renderLayout({ sidebar, topbar, content });
+
+    wireActions(route);
+  });
 }
 
 function wireActions(route) {
@@ -447,8 +512,9 @@ function wireActions(route) {
 
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async () => {
-      await loadUsers();
-      renderApp();
+      await withLoading(async () => {
+        await renderApp();
+      });
     });
   }
 
@@ -458,19 +524,21 @@ function wireActions(route) {
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
-      await api.logout();
-      state.user = null;
-      state.users = [];
-      state.total = 0;
-      state.apis = [];
-      state.tables = [];
-      state.selectedTable = null;
-      state.tableRows = [];
-      state.tableColumns = [];
-      state.tablePrimaryKey = null;
-      state.tableTotal = 0;
-      state.maintenance = null;
-      renderLogin(false);
+      await withLoading(async () => {
+        await api.logout();
+        state.user = null;
+        state.users = [];
+        state.total = 0;
+        state.apis = [];
+        state.tables = [];
+        state.selectedTable = null;
+        state.tableRows = [];
+        state.tableColumns = [];
+        state.tablePrimaryKey = null;
+        state.tableTotal = 0;
+        state.maintenance = null;
+        renderLogin(false);
+      });
     });
   }
 
@@ -511,9 +579,10 @@ function wireActions(route) {
         if (!user) return;
 
         try {
-          await api.updateUser(id, { isActive: !user.isActive });
-          await loadUsers();
-          renderApp();
+          await withLoading(async () => {
+            await api.updateUser(id, { isActive: !user.isActive });
+            await renderApp();
+          });
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -530,16 +599,17 @@ function wireActions(route) {
 
     if (refreshTables) {
       refreshTables.addEventListener('click', async () => {
-        await loadTables();
-        await loadSelectedTable();
-        renderApp();
+        await withLoading(async () => {
+          await renderApp();
+        });
       });
     }
 
     if (reloadTable) {
       reloadTable.addEventListener('click', async () => {
-        await loadSelectedTable();
-        renderApp();
+        await withLoading(async () => {
+          await renderApp();
+        });
       });
     }
 
@@ -548,9 +618,10 @@ function wireActions(route) {
         if (!state.selectedTable) return;
         if (!confirm(`Format table ${state.selectedTable}? This clears all rows.`)) return;
         try {
-          await api.truncateTable(state.selectedTable);
-          await loadSelectedTable();
-          renderApp();
+          await withLoading(async () => {
+            await api.truncateTable(state.selectedTable);
+            await renderApp();
+          });
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -562,11 +633,11 @@ function wireActions(route) {
         if (!state.selectedTable) return;
         if (!confirm(`Delete table ${state.selectedTable}? This cannot be undone.`)) return;
         try {
-          await api.dropTable(state.selectedTable);
-          state.selectedTable = null;
-          await loadTables();
-          await loadSelectedTable();
-          renderApp();
+          await withLoading(async () => {
+            await api.dropTable(state.selectedTable);
+            state.selectedTable = null;
+            await renderApp();
+          });
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -576,12 +647,12 @@ function wireActions(route) {
     if (reconcile) {
       reconcile.addEventListener('click', async () => {
         try {
-          const data = await api.reconcileSchema();
-          state.maintenance = data.data;
-          await loadTables();
-          await loadSelectedTable();
-          renderApp();
-          showToast('Schema reconciled');
+          await withLoading(async () => {
+            const data = await api.reconcileSchema();
+            state.maintenance = data.data;
+            await renderApp();
+            showToast('Schema reconciled');
+          });
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -591,8 +662,9 @@ function wireActions(route) {
     app.querySelectorAll('[data-action="db-select"]').forEach((button) => {
       button.addEventListener('click', async () => {
         state.selectedTable = button.getAttribute('data-table');
-        await loadSelectedTable();
-        renderApp();
+        await withLoading(async () => {
+          await renderApp();
+        });
       });
     });
 
@@ -603,9 +675,10 @@ function wireActions(route) {
         if (!confirm('Delete this row?')) return;
 
         try {
-          await api.deleteRow(state.selectedTable, state.tablePrimaryKey, value);
-          await loadSelectedTable();
-          renderApp();
+          await withLoading(async () => {
+            await api.deleteRow(state.selectedTable, state.tablePrimaryKey, value);
+            await renderApp();
+          });
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -617,8 +690,9 @@ function wireActions(route) {
     const refresh = app.querySelector('[data-action="api-refresh"]');
     if (refresh) {
       refresh.addEventListener('click', async () => {
-        await loadApis();
-        renderApp();
+        await withLoading(async () => {
+          await renderApp();
+        });
       });
     }
 
@@ -627,9 +701,10 @@ function wireActions(route) {
         const id = input.getAttribute('data-id');
         if (!id) return;
         try {
-          await api.updateApiEndpoint(id, { isEnabled: input.checked });
-          await loadApis();
-          renderApp();
+          await withLoading(async () => {
+            await api.updateApiEndpoint(id, { isEnabled: input.checked });
+            await renderApp();
+          });
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -667,11 +742,12 @@ function openCreateModal() {
     };
 
     try {
-      await api.createUser(payload);
-      modal.remove();
-      await loadUsers();
-      renderApp();
-      showToast('User created');
+      await withLoading(async () => {
+        await api.createUser(payload);
+        modal.remove();
+        await renderApp();
+        showToast('User created');
+      });
     } catch (error) {
       showToast(error.message, 'error');
     }
@@ -681,8 +757,10 @@ function openCreateModal() {
 async function openApiModal(id) {
   let apiItem = null;
   try {
-    const data = await api.getApiEndpoint(id);
-    apiItem = normalizeApi(data.data);
+    apiItem = await withLoading(async () => {
+      const data = await api.getApiEndpoint(id);
+      return normalizeApi(data.data);
+    });
   } catch (error) {
     showToast(error.message, 'error');
     return;
@@ -755,9 +833,11 @@ async function openApiModal(id) {
       const keyId = input.getAttribute('data-key');
       if (!keyId) return;
       try {
-        await api.updateApiKey(keyId, { isEnabled: input.checked });
-        modal.remove();
-        await openApiModal(apiItem.id);
+        await withLoading(async () => {
+          await api.updateApiKey(keyId, { isEnabled: input.checked });
+          modal.remove();
+          await openApiModal(apiItem.id);
+        });
       } catch (error) {
         showToast(error.message, 'error');
       }
@@ -769,10 +849,12 @@ async function openApiModal(id) {
       const keyId = button.getAttribute('data-key');
       if (!keyId) return;
       try {
-        const data = await api.rotateApiKey(keyId);
-        showSecret(data.key, 'New API key');
-        modal.remove();
-        await openApiModal(apiItem.id);
+        await withLoading(async () => {
+          const data = await api.rotateApiKey(keyId);
+          showSecret(data.key, 'New API key');
+          modal.remove();
+          await openApiModal(apiItem.id);
+        });
       } catch (error) {
         showToast(error.message, 'error');
       }
@@ -785,9 +867,11 @@ async function openApiModal(id) {
       if (!keyId) return;
       if (!confirm('Delete this API key?')) return;
       try {
-        await api.deleteApiKey(keyId);
-        modal.remove();
-        await openApiModal(apiItem.id);
+        await withLoading(async () => {
+          await api.deleteApiKey(keyId);
+          modal.remove();
+          await openApiModal(apiItem.id);
+        });
       } catch (error) {
         showToast(error.message, 'error');
       }
@@ -800,10 +884,12 @@ async function openApiModal(id) {
       const input = modal.querySelector('[data-input="api-key-label"]');
       const label = input ? String(input.value || '').trim() : '';
       try {
-        const data = await api.createApiKey(apiItem.id, label || 'Primary key');
-        showSecret(data.key, 'New API key');
-        modal.remove();
-        await openApiModal(apiItem.id);
+        await withLoading(async () => {
+          const data = await api.createApiKey(apiItem.id, label || 'Primary key');
+          showSecret(data.key, 'New API key');
+          modal.remove();
+          await openApiModal(apiItem.id);
+        });
       } catch (error) {
         showToast(error.message, 'error');
       }
@@ -882,21 +968,24 @@ function showSecret(value, title) {
 }
 
 async function init() {
-  const session = await api.getSession();
-  if (session && session.user) {
-    state.user = session.user;
-    await renderApp();
-    window.addEventListener('hashchange', () => {
-      renderApp();
-    });
-  } else {
-    try {
-      const status = await api.bootstrapStatus();
-      renderLogin(status.canBootstrap);
-    } catch (error) {
-      renderLogin(false);
+  ensureLoadingOverlay();
+  await withLoading(async () => {
+    const session = await api.getSession();
+    if (session && session.user) {
+      state.user = session.user;
+      await renderApp();
+      window.addEventListener('hashchange', () => {
+        renderApp();
+      });
+    } else {
+      try {
+        const status = await api.bootstrapStatus();
+        renderLogin(status.canBootstrap);
+      } catch (error) {
+        renderLogin(false);
+      }
     }
-  }
+  });
 }
 
 init();

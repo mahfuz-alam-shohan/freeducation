@@ -27,6 +27,10 @@ body {
   overflow-x: hidden;
 }
 
+body.is-loading {
+  cursor: progress;
+}
+
 #app {
   min-height: 100vh;
 }
@@ -167,6 +171,7 @@ button {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  animation: pageIn 0.2s ease;
 }
 
 .grid {
@@ -222,6 +227,7 @@ button {
 .table-actions {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .table-header p {
@@ -656,6 +662,16 @@ button {
   box-shadow: none;
 }
 
+.button:hover {
+  filter: brightness(0.96);
+}
+
+.button:disabled,
+.button[aria-busy="true"] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .button.secondary {
   background: #fff;
   color: var(--accent-3);
@@ -791,6 +807,50 @@ button {
   animation: rise 0.4s ease;
 }
 
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(245, 246, 247, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 40;
+}
+
+.loading-overlay.is-active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.loading-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 6px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.loading-text {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .fade-in {
   animation: rise 0.4s ease both;
 }
@@ -803,6 +863,30 @@ button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -929,6 +1013,20 @@ button {
 
   .table th, .table td {
     padding: 8px 8px;
+  }
+
+  .api-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .api-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .loading-card {
+    width: min(90vw, 280px);
   }
 
   .db-sidebar,
