@@ -6,10 +6,6 @@
 
   return `
     <aside class="sidebar">
-      <div class="brand">
-        <h2>FREEDUCATION</h2>
-        <span>Admin Console</span>
-      </div>
       <nav>${links}</nav>
       <div class="footer">Version 1.0</div>
     </aside>

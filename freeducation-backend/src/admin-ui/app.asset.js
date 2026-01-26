@@ -342,26 +342,31 @@ function renderLogin(canBootstrap) {
   ` : '';
 
   app.innerHTML = `
-    <div class="auth-shell">
-      <div class="auth-panel">
-        <div class="auth-brand">FREEDUCATION</div>
-        <h1>Welcome back</h1>
-        <p>Sign in to manage FREEDUCATION.</p>
-        <form data-form="login">
-          <div class="field">
-            <label>Email</label>
-            <input class="input" type="email" name="email" required />
-          </div>
-          <div class="field" style="margin-top:12px;">
-            <label>Password</label>
-            <input class="input" type="password" name="password" required />
-          </div>
-          <div style="margin-top:16px; display:flex; justify-content:flex-end;">
-            <button class="button" type="submit">Sign in</button>
-          </div>
-        </form>
+    <div class="auth-page">
+      <header class="auth-header">
+        <div class="auth-header-brand">FREEDUCATION</div>
+      </header>
+      <div class="auth-shell">
+        <div class="auth-panel">
+          <div class="auth-brand">FREEDUCATION</div>
+          <h1>Welcome back</h1>
+          <p>Sign in to manage FREEDUCATION.</p>
+          <form data-form="login">
+            <div class="field">
+              <label>Email</label>
+              <input class="input" type="email" name="email" required />
+            </div>
+            <div class="field" style="margin-top:12px;">
+              <label>Password</label>
+              <input class="input" type="password" name="password" required />
+            </div>
+            <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+              <button class="button" type="submit">Sign in</button>
+            </div>
+          </form>
+        </div>
+        ${bootstrapPanel}
       </div>
-      ${bootstrapPanel}
     </div>
   `;
 
