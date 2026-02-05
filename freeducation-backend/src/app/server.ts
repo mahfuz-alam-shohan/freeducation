@@ -12,12 +12,19 @@ import { registerMaintenanceRoutes } from '../modules/admin/presentation/mainten
 import { registerDatabaseRoutes } from '../modules/admin/presentation/database.routes';
 import { registerApiManagementRoutes } from '../modules/admin/presentation/api.routes';
 import { ApiAccessService } from '../modules/api-access/application/api-access.service';
+import { ModuleTemplateService } from '../modules/module-templates/application/module-template.service';
+import { registerModuleTemplateRoutes } from '../modules/module-templates/presentation/module-template.routes';
+import { SubjectService } from '../modules/subjects/application/subject.service';
+import { registerSubjectRoutes } from '../modules/subjects/presentation/subject.routes';
+import { registerMediaRoutes } from '../modules/admin/presentation/media.routes';
 
 export function createServer(env: Env) {
   const config = loadConfig(env);
   const authService = new AuthService(env.DB, config);
   const userService = new UserService(env.DB);
   const apiAccessService = new ApiAccessService(env.DB);
+  const moduleTemplateService = new ModuleTemplateService(env.DB);
+  const subjectService = new SubjectService(env.DB);
   const adminGuard = createAdminGuard(authService, config.sessionCookieName);
   const router = new Router();
 
@@ -27,9 +34,12 @@ export function createServer(env: Env) {
 
   registerAuthRoutes(router, authService, config);
   registerUserRoutes(router, userService, adminGuard);
+  registerModuleTemplateRoutes(router, moduleTemplateService, adminGuard);
+  registerSubjectRoutes(router, subjectService, adminGuard);
   registerMaintenanceRoutes(router, env.DB, adminGuard);
   registerDatabaseRoutes(router, env.DB, adminGuard);
   registerApiManagementRoutes(router, env.DB, adminGuard);
+  registerMediaRoutes(router, adminGuard);
 
   async function handle(request: Request): Promise<Response> {
     const url = new URL(request.url);

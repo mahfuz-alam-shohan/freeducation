@@ -36,7 +36,7 @@
               </select>
             </div>
           </div>
-          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:18px;">
+          <div class="modal-actions">
             <button class="button ghost" type="button" data-action="close-modal">Cancel</button>
             <button class="button" type="submit">Create user</button>
           </div>

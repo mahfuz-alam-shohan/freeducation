@@ -8,11 +8,11 @@
     "start": "wrangler dev"
   },
   "dependencies": {
-    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.62.0"
   }
 }

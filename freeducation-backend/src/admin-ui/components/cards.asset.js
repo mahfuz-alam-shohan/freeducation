@@ -1,7 +1,7 @@
-﻿export function renderStatCards(stats) {
-  const cards = stats.map((stat, index) => {
+export function renderStatCards(stats) {
+  const cards = stats.map((stat) => {
     return `
-      <div class="card" style="animation-delay:${index * 0.05}s">
+      <div class="card">
         <h3>${stat.label}</h3>
         <div class="stats">
           <span>${stat.value}</span>

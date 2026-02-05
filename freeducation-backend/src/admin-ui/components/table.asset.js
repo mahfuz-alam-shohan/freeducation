@@ -42,9 +42,9 @@ function renderRow(user) {
     <tr>
       <td>${user.firstName} ${user.lastName}</td>
       <td>${user.email}</td>
-      <td><span class="badge warn">${user.role}</span></td>
-      <td><span class="badge ${statusClass}">${statusText}</span></td>
-      <td>
+      <td><span class="cell-tag">${user.role}</span></td>
+      <td><span class="cell-tag ${statusClass}">${statusText}</span></td>
+      <td class="cell-actions">
         <button class="button secondary" data-action="toggle" data-id="${user.id}">
           ${actionLabel}
         </button>

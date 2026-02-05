@@ -1,17 +1,41 @@
 export function renderApiManagementPanel(apis) {
   const rows = apis.map((api) => renderApiRow(api)).join('');
+  const emptyRow = `
+    <tr>
+      <td class="table-empty" colspan="7">No APIs configured yet.</td>
+    </tr>
+  `;
 
   return `
     <div class="api-page">
-      <div class="api-header">
-        <div>
-          <h3>API management</h3>
-          <p>Control access, keys, and payload details.</p>
+      <div class="card table-card">
+        <div class="table-header">
+          <div>
+            <h3>API management</h3>
+            <p>Control access, keys, and payload details.</p>
+          </div>
+          <div class="table-actions">
+            <button class="button ghost" data-action="api-refresh">Refresh</button>
+          </div>
         </div>
-        <button class="button ghost" data-action="api-refresh">Refresh</button>
-      </div>
-      <div class="api-list">
-        ${rows || '<p class="api-empty">No APIs configured yet.</p>'}
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>API</th>
+                <th>Path</th>
+                <th>Access</th>
+                <th>Users</th>
+                <th>Keys</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || emptyRow}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
@@ -163,27 +187,28 @@ function renderApiRow(api) {
     .join(', ') || 'none';
   const privacy = api.public ? 'Public' : 'Private';
   const status = api.enabled ? 'Enabled' : 'Disabled';
+  const access = `${privacy} | ${status}`;
 
   return `
-    <div class="api-row">
-      <div class="api-main">
-        <div class="api-title">
-          <span class="api-method">${api.method}</span>
-          <strong>${api.name}</strong>
-        </div>
-        <div class="api-meta">${api.path}</div>
-        <p class="api-desc">${api.description || ''}</p>
-        <div class="api-scope">${privacy} | ${status} | User types: ${userTypes} | Keys: ${activeKeys} active</div>
-      </div>
-      <div class="api-actions">
+    <tr>
+      <td><span class="cell-tag">${api.method}</span></td>
+      <td class="cell-wrap">
+        <div class="table-title">${api.name}</div>
+        <div class="table-sub">${api.description || ''}</div>
+      </td>
+      <td class="cell-mono">${api.path}</td>
+      <td>${access}</td>
+      <td>${userTypes}</td>
+      <td>${activeKeys}</td>
+      <td class="cell-actions">
         <label class="switch">
           <input type="checkbox" data-action="api-toggle" data-id="${api.id}" ${api.enabled ? 'checked' : ''} />
           <span class="switch-ui"></span>
           <span class="switch-label">${api.enabled ? 'On' : 'Off'}</span>
         </label>
         <button class="button secondary" data-action="api-manage" data-id="${api.id}">Manage</button>
-      </div>
-    </div>
+      </td>
+    </tr>
   `;
 }
 

@@ -22,7 +22,7 @@
     }).join('');
 
     const actionCell = primaryKey
-      ? `<td><button class="button ghost" data-action="db-delete-row" data-pk="${row[primaryKey]}">Delete</button></td>`
+      ? `<td class="cell-actions"><button class="button ghost" data-action="db-delete-row" data-pk="${row[primaryKey]}">Delete</button></td>`
       : '';
 
     return `<tr>${cells}${actionCell}</tr>`;

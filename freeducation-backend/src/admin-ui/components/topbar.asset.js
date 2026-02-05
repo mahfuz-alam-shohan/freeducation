@@ -25,15 +25,17 @@ export function renderTopbar(title, user) {
     
     <!-- Mobile layout - Menu left, Site name center, Avatar right -->
     <div class="mobile-layout">
-      <button class="mobile-menu-toggle" data-action="toggle-nav" aria-label="Toggle navigation">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      
-      <div class="mobile-site-name">FREEDUCATION</div>
-      
-      <div class="mobile-user-avatar" title="${user.firstName} ${user.lastName}">${initials}</div>
+      <div class="mobile-bar">
+        <button class="mobile-menu-toggle" data-action="toggle-nav" aria-label="Toggle navigation">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+        <div class="mobile-site-name">FREEDUCATION</div>
+
+        <div class="mobile-user-avatar" title="${user.firstName} ${user.lastName}">${initials}</div>
+      </div>
     </div>
   `;
 }

@@ -4,6 +4,16 @@ import apiEndpointsSql from './v1.1.0/api_endpoints.sql';
 import apiKeysSql from './v1.1.0/api_keys.sql';
 import apiAccessRolesSql from './v1.1.0/api_access_roles.sql';
 import apiUserOverridesSql from './v1.1.0/api_user_overrides.sql';
+import modulesPurgeSql from './v1.2.2/modules_purge.sql';
+import modulesSql from './v1.3.0/modules.sql';
+import subjectSkeletonRenameSql from './v1.3.1/subject_skeleton_rename.sql';
+import subjectsSql from './v1.4.0/subjects.sql';
+import subjectSkeletonHierarchySql from './v1.4.1/subject_skeleton_hierarchy.sql';
+import questionSectionLabelsSql from './v1.4.2/question_section_labels.sql';
+import scienceSubjectSkeletonSql from './v1.4.3/science_subject_skeleton.sql';
+import subjectTopicsSql from './v1.4.4/subject_topics.sql';
+import moduleNodeImagesSql from './v1.4.5/module_node_images.sql';
+import mathSubjectSkeletonSql from './v1.4.6/math_subject_skeleton.sql';
 
 interface Migration {
   version: string;
@@ -18,6 +28,46 @@ const MIGRATIONS: Migration[] = [
   {
     version: '1.1.0',
     statements: [apiEndpointsSql, apiKeysSql, apiAccessRolesSql, apiUserOverridesSql]
+  },
+  {
+    version: '1.2.2',
+    statements: [modulesPurgeSql]
+  },
+  {
+    version: '1.3.0',
+    statements: [modulesSql]
+  },
+  {
+    version: '1.3.1',
+    statements: [subjectSkeletonRenameSql]
+  },
+  {
+    version: '1.4.0',
+    statements: [subjectsSql]
+  },
+  {
+    version: '1.4.1',
+    statements: [subjectSkeletonHierarchySql]
+  },
+  {
+    version: '1.4.2',
+    statements: [questionSectionLabelsSql]
+  },
+  {
+    version: '1.4.3',
+    statements: [scienceSubjectSkeletonSql]
+  },
+  {
+    version: '1.4.4',
+    statements: [subjectTopicsSql]
+  },
+  {
+    version: '1.4.5',
+    statements: [moduleNodeImagesSql]
+  },
+  {
+    version: '1.4.6',
+    statements: [mathSubjectSkeletonSql]
   }
 ];
 

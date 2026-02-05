@@ -3,311 +3,34 @@ import { renderTopbar } from './components/topbar.js';
 import { renderLayout } from './components/layout.js';
 import { renderStatCards } from './components/cards.js';
 import { renderUsersTable } from './components/table.js';
-import { renderUserForm } from './components/form.js';
 import { showToast } from './components/toast.js';
 import { renderDatabasePanel } from './components/db.js';
-import { renderApiManagementPanel, renderApiModal } from './components/api.js';
+import { renderApiManagementPanel } from './components/api.js';
+import { renderModuleCategories } from './components/modules.categories.js';
+import { renderSubjectModules } from './components/modules.subjects.js';
+import { renderSubjectModuleOverview } from './components/modules.subject.detail.js';
+import { renderSubjectModuleCurriculum } from './components/modules.subject.curriculum.js';
+import { renderSubjectModuleExam } from './components/modules.subject.exam.js';
+import { renderSubjectsList } from './components/subjects.list.js';
+import { renderSubjectDetail } from './components/subjects.detail.js';
+import { renderSubjectChapters } from './components/subjects.chapters.js';
+import { renderSubjectTopics } from './components/subjects.topics.js';
+import { renderChapterOverview, renderChapterNotes, renderChapterVideos, renderQuestionBankOverview, renderQuestionCQOverview, renderQuestionCQSection, renderQuestionMCQ } from './components/subjects.chapter.detail.js';
+import { renderTopicOverview, renderTopicNotes, renderTopicVideos, renderTopicQuestionBankOverview, renderTopicQuestionCQOverview, renderTopicQuestionCQSection, renderTopicQuestionMCQ } from './components/subjects.topic.detail.js';
+import { renderSubjectNode } from './components/subjects.node.js';
+import { api } from './app/api/index.js';
+import { app } from './app/core/dom.js';
+import { DEFAULT_LABELS, state } from './app/core/state.js';
+import { CACHE_TTL, cache, invalidateApis, invalidateChapterDetail, invalidateModuleCategories, invalidateSubjectChapters, invalidateSubjectDetail, invalidateSubjectModuleDetail, invalidateSubjectModules, invalidateSubjectTopics, invalidateSubjects, invalidateTableData, invalidateTables, invalidateTopicDetail, invalidateUsers, isFresh, resetCache } from './app/core/cache.js';
+import { ensureLoadingOverlay, withLoading } from './app/core/loading.js';
+import { getChaptersBackNode, getChildNodes, getNodeById, getSoloChaptersChild, getTopicsNode, isChaptersNode, mediaUrl } from './app/core/helpers.js';
+import { parseRoute } from './app/core/router.js';
+import { openCreateModal } from './app/modals/users.js';
+import { openNodeModal, openSubjectModal } from './app/modals/subjects.js';
+import { openChapterModal, openNoteModal, openVideoModal } from './app/modals/chapters.js';
+import { openTopicModal } from './app/modals/topics.js';
+import { openApiModal } from './app/modals/api.js';
 
-const app = document.getElementById('app');
-
-const loadingState = {
-  count: 0,
-  timer: null,
-  overlay: null
-};
-
-function ensureLoadingOverlay() {
-  if (loadingState.overlay) return loadingState.overlay;
-  const overlay = document.createElement('div');
-  overlay.className = 'loading-overlay';
-  overlay.innerHTML = `
-    <div class="loading-card">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">Loading...</div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  loadingState.overlay = overlay;
-  return overlay;
-}
-
-function setLoading(active) {
-  const overlay = ensureLoadingOverlay();
-  overlay.classList.toggle('is-active', active);
-  document.body.classList.toggle('is-loading', active);
-  document.body.setAttribute('aria-busy', active ? 'true' : 'false');
-}
-
-function showLoading() {
-  loadingState.count += 1;
-  if (loadingState.timer) return;
-  loadingState.timer = setTimeout(() => {
-    loadingState.timer = null;
-    if (loadingState.count > 0) {
-      setLoading(true);
-    }
-  }, 120);
-}
-
-function hideLoading() {
-  loadingState.count = Math.max(0, loadingState.count - 1);
-  if (loadingState.count === 0) {
-    if (loadingState.timer) {
-      clearTimeout(loadingState.timer);
-      loadingState.timer = null;
-    }
-    setLoading(false);
-  }
-}
-
-async function withLoading(task) {
-  showLoading();
-  try {
-    return await task();
-  } finally {
-    hideLoading();
-  }
-}
-
-const state = {
-  user: null,
-  users: [],
-  total: 0,
-  apis: [],
-  tables: [],
-  selectedTable: null,
-  tableRows: [],
-  tableColumns: [],
-  tablePrimaryKey: null,
-  tableTotal: 0,
-  maintenance: null
-};
-
-const api = {
-  async getSession() {
-    const res = await fetch('/api/v1/admin/session', { credentials: 'include' });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.success ? data : null;
-  },
-  async bootstrap(payload) {
-    const res = await fetch('/api/v1/admin/bootstrap', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to create admin');
-    }
-    return data;
-  },
-  async bootstrapStatus() {
-    const res = await fetch('/api/v1/admin/bootstrap/status');
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to check bootstrap status');
-    }
-    return data;
-  },
-  async login(payload) {
-    const res = await fetch('/api/v1/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Login failed');
-    }
-    return data;
-  },
-  async logout() {
-    await fetch('/api/v1/admin/logout', {
-      method: 'POST',
-      credentials: 'include'
-    });
-  },
-  async listUsers() {
-    const res = await fetch('/api/v1/users?limit=50&offset=0', { credentials: 'include' });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to load users');
-    }
-    return data;
-  },
-  async createUser(payload) {
-    const res = await fetch('/api/v1/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to create user');
-    }
-    return data;
-  },
-  async updateUser(id, payload) {
-    const res = await fetch(`/api/v1/users/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to update user');
-    }
-    return data;
-  },
-  async listTables() {
-    const res = await fetch('/api/v1/admin/db/tables', { credentials: 'include' });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to load tables');
-    }
-    return data;
-  },
-  async getTable(name) {
-    const res = await fetch(`/api/v1/admin/db/table/${name}?limit=50&offset=0`, { credentials: 'include' });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to load table');
-    }
-    return data;
-  },
-  async deleteRow(table, primaryKey, value) {
-    const res = await fetch(`/api/v1/admin/db/table/${table}/row`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ primaryKey, value })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to delete row');
-    }
-    return data;
-  },
-  async truncateTable(table) {
-    const res = await fetch(`/api/v1/admin/db/table/${table}/truncate`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to truncate table');
-    }
-    return data;
-  },
-  async dropTable(table) {
-    const res = await fetch(`/api/v1/admin/db/table/${table}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to drop table');
-    }
-    return data;
-  },
-  async reconcileSchema() {
-    const res = await fetch('/api/v1/admin/maintenance/reconcile', {
-      method: 'POST',
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Maintenance failed');
-    }
-    return data;
-  },
-  async listApiEndpoints() {
-    const res = await fetch('/api/v1/admin/api/endpoints', { credentials: 'include' });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to load APIs');
-    }
-    return data;
-  },
-  async getApiEndpoint(id) {
-    const res = await fetch(`/api/v1/admin/api/endpoints/${id}`, { credentials: 'include' });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to load API');
-    }
-    return data;
-  },
-  async updateApiEndpoint(id, payload) {
-    const res = await fetch(`/api/v1/admin/api/endpoints/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to update API');
-    }
-    return data;
-  },
-  async createApiKey(endpointId, label) {
-    const res = await fetch(`/api/v1/admin/api/endpoints/${endpointId}/keys`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ label })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to create key');
-    }
-    return data;
-  },
-  async updateApiKey(keyId, payload) {
-    const res = await fetch(`/api/v1/admin/api/keys/${keyId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to update key');
-    }
-    return data;
-  },
-  async rotateApiKey(keyId) {
-    const res = await fetch(`/api/v1/admin/api/keys/${keyId}/rotate`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to rotate key');
-    }
-    return data;
-  },
-  async deleteApiKey(keyId) {
-    const res = await fetch(`/api/v1/admin/api/keys/${keyId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to delete key');
-    }
-    return data;
-  }
-};
-
-function getRoute() {
-  const hash = window.location.hash.replace('#', '');
-  return hash || 'dashboard';
-}
 
 function renderLogin(canBootstrap) {
   const bootstrapPanel = canBootstrap ? `
@@ -383,7 +106,8 @@ function renderLogin(canBootstrap) {
       await withLoading(async () => {
         const result = await api.login(payload);
         state.user = result.user;
-        await renderApp();
+        resetCache();
+        await renderApp({ force: true });
       });
     } catch (error) {
       showToast(error.message, 'error');
@@ -415,26 +139,191 @@ function renderLogin(canBootstrap) {
   }
 }
 
-async function loadUsers() {
+function normalizeApi(item) {
+  return {
+    id: item.id,
+    name: item.name,
+    method: item.method,
+    path: item.path,
+    description: item.description || '',
+    dataSummary: item.dataSummary || '',
+    enabled: Boolean(item.isEnabled),
+    public: Boolean(item.isPublic),
+    system: Boolean(item.isSystem),
+    roles: item.roles || { admin: false, teacher: false, student: false },
+    userOverrides: item.userOverrides || { allow: [], deny: [] },
+    keys: (item.keys || []).map((key) => ({
+      id: key.id,
+      label: key.label,
+      prefix: key.prefix,
+      enabled: Boolean(key.isEnabled),
+      createdAt: key.createdAt,
+      lastUsedAt: key.lastUsedAt,
+      expiresAt: key.expiresAt
+    }))
+  };
+}
+
+async function loadUsers(options = {}) {
+  const { force = false } = options;
+  if (!force && isFresh(cache.users.at, CACHE_TTL.users)) {
+    return;
+  }
   const data = await api.listUsers();
   state.users = data.data || [];
   state.total = data.pagination?.total || 0;
+  cache.users.at = Date.now();
 }
 
-async function loadApis() {
+async function loadApis(options = {}) {
+  const { force = false } = options;
+  if (!force && isFresh(cache.apis.at, CACHE_TTL.apis)) {
+    return;
+  }
   const data = await api.listApiEndpoints();
   state.apis = (data.data || []).map((item) => normalizeApi(item));
+  cache.apis.at = Date.now();
 }
 
-async function loadTables() {
+async function loadModuleCategories(options = {}) {
+  const { force = false } = options;
+  if (!force && isFresh(cache.moduleCategories.at, CACHE_TTL.moduleCategories)) {
+    return;
+  }
+  const data = await api.listModuleCategories();
+  state.moduleCategories = data.data || [];
+  cache.moduleCategories.at = Date.now();
+}
+
+async function loadSubjectModules(options = {}) {
+  const { force = false } = options;
+  if (!force && isFresh(cache.subjectModules.at, CACHE_TTL.subjectModules)) {
+    return;
+  }
+  const data = await api.listSubjectModules();
+  state.subjectModules = data.data || [];
+  cache.subjectModules.at = Date.now();
+}
+
+async function loadSubjectModuleDetail(moduleId, options = {}) {
+  const { force = false } = options;
+  const cached = cache.subjectModuleDetail[moduleId];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.subjectModuleDetail)) {
+    state.activeSubjectModule = cached.template;
+    state.subjectModuleNodes = cached.nodes;
+    return;
+  }
+
+  const data = await api.getSubjectModule(moduleId);
+  state.activeSubjectModule = data.data.template;
+  state.subjectModuleNodes = data.data.nodes || [];
+  cache.subjectModuleDetail[moduleId] = {
+    template: state.activeSubjectModule,
+    nodes: state.subjectModuleNodes,
+    at: Date.now()
+  };
+}
+
+async function loadSubjects(options = {}) {
+  const { force = false } = options;
+  if (!force && isFresh(cache.subjects.at, CACHE_TTL.subjects)) {
+    return;
+  }
+  const data = await api.listSubjects();
+  state.subjects = data.data || [];
+  cache.subjects.at = Date.now();
+}
+
+async function loadSubjectDetail(subjectId, options = {}) {
+  const { force = false } = options;
+  const cached = cache.subjectDetail[subjectId];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.subjectDetail)) {
+    state.activeSubject = cached.subject;
+    state.subjectNodes = cached.nodes;
+    state.subjectLabels = cached.labels;
+    return;
+  }
+
+  const data = await api.getSubject(subjectId);
+  state.activeSubject = data.data.subject;
+  state.subjectNodes = data.data.nodes || [];
+  state.subjectLabels = data.data.labels || DEFAULT_LABELS;
+  cache.subjectDetail[subjectId] = {
+    subject: state.activeSubject,
+    nodes: state.subjectNodes,
+    labels: state.subjectLabels,
+    at: Date.now()
+  };
+}
+
+async function loadSubjectChapters(subjectId, nodeId, options = {}) {
+  const { force = false } = options;
+  const key = `${subjectId}:${nodeId}`;
+  const cached = cache.subjectChapters[key];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.subjectChapters)) {
+    state.subjectChapters = cached.chapters;
+    return;
+  }
+
+  const data = await api.listSubjectChapters(subjectId, nodeId);
+  state.subjectChapters = data.data || [];
+  cache.subjectChapters[key] = { chapters: state.subjectChapters, at: Date.now() };
+}
+
+async function loadSubjectTopics(chapterId, options = {}) {
+  const { force = false } = options;
+  const cached = cache.subjectTopics[chapterId];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.subjectTopics)) {
+    state.subjectTopics = cached.topics;
+    return;
+  }
+
+  const data = await api.listChapterTopics(chapterId);
+  state.subjectTopics = data.data || [];
+  cache.subjectTopics[chapterId] = { topics: state.subjectTopics, at: Date.now() };
+}
+
+async function loadChapterDetail(chapterId, options = {}) {
+  const { force = false } = options;
+  const cached = cache.chapterDetail[chapterId];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.chapterDetail)) {
+    state.chapterDetail = cached.detail;
+    return;
+  }
+
+  const data = await api.getChapterDetail(chapterId);
+  state.chapterDetail = data.data;
+  cache.chapterDetail[chapterId] = { detail: state.chapterDetail, at: Date.now() };
+}
+
+async function loadTopicDetail(topicId, options = {}) {
+  const { force = false } = options;
+  const cached = cache.topicDetail[topicId];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.topicDetail)) {
+    state.topicDetail = cached.detail;
+    return;
+  }
+
+  const data = await api.getTopicDetail(topicId);
+  state.topicDetail = data.data;
+  cache.topicDetail[topicId] = { detail: state.topicDetail, at: Date.now() };
+}
+
+async function loadTables(options = {}) {
+  const { force = false } = options;
+  if (!force && isFresh(cache.tables.at, CACHE_TTL.tables)) {
+    return;
+  }
   const data = await api.listTables();
   state.tables = data.tables.map((item) => item.name);
   if (!state.selectedTable && state.tables.length > 0) {
     state.selectedTable = state.tables[0];
   }
+  cache.tables.at = Date.now();
 }
 
-async function loadSelectedTable() {
+async function loadSelectedTable(options = {}) {
+  const { force = false } = options;
   if (!state.selectedTable) {
     state.tableRows = [];
     state.tableColumns = [];
@@ -443,41 +332,175 @@ async function loadSelectedTable() {
     return;
   }
 
+  const cached = cache.tableData[state.selectedTable];
+  if (!force && cached && isFresh(cached.at, CACHE_TTL.tableData)) {
+    state.tableRows = cached.rows;
+    state.tableColumns = cached.columns;
+    state.tablePrimaryKey = cached.primaryKey;
+    state.tableTotal = cached.total;
+    return;
+  }
+
   const data = await api.getTable(state.selectedTable);
   state.tableRows = data.data.rows || [];
   state.tableColumns = data.data.columns || [];
   state.tablePrimaryKey = data.data.primaryKey;
   state.tableTotal = data.data.total || 0;
+  cache.tableData[state.selectedTable] = {
+    rows: state.tableRows,
+    columns: state.tableColumns,
+    primaryKey: state.tablePrimaryKey,
+    total: state.tableTotal,
+    at: Date.now()
+  };
 }
 
-async function renderApp() {
+async function renderApp(options = {}) {
+  const { force = false } = options;
   await withLoading(async () => {
-    const route = getRoute();
+    const { route, parts, section } = parseRoute();
 
     if (route === 'dashboard' || route === 'users') {
-      await loadUsers();
+      await loadUsers({ force });
     }
 
     if (route === 'database') {
-      await loadTables();
-      await loadSelectedTable();
+      if (state.selectedTable) {
+        await Promise.all([
+          loadTables({ force }),
+          loadSelectedTable({ force })
+        ]);
+      } else {
+        await loadTables({ force });
+        await loadSelectedTable({ force });
+      }
     }
 
     if (route === 'api') {
       try {
-        await loadApis();
+        await loadApis({ force });
       } catch (error) {
         state.apis = [];
         showToast(error.message, 'error');
       }
     }
 
+    if (section === 'modules') {
+      if (parts[1] === 'subjects') {
+        try {
+          await loadSubjectModules({ force });
+        } catch (error) {
+          state.subjectModules = [];
+          showToast(error.message, 'error');
+        }
+      } else {
+        try {
+          await loadModuleCategories({ force });
+        } catch (error) {
+          state.moduleCategories = [];
+          showToast(error.message, 'error');
+        }
+      }
+
+      const moduleId = Number(parts[2]);
+      if (parts[1] === 'subjects' && Number.isFinite(moduleId)) {
+        try {
+          await loadSubjectModuleDetail(moduleId, { force });
+        } catch (error) {
+          state.activeSubjectModule = null;
+          state.subjectModuleNodes = [];
+          showToast(error.message, 'error');
+        }
+      }
+    }
+
+    if (section === 'subjects') {
+      try {
+        await Promise.all([
+          loadSubjects({ force }),
+          loadSubjectModules({ force })
+        ]);
+      } catch (error) {
+        state.subjects = [];
+        showToast(error.message, 'error');
+      }
+
+      const subjectId = Number(parts[1]);
+      if (Number.isFinite(subjectId)) {
+        try {
+          await loadSubjectDetail(subjectId, { force });
+        } catch (error) {
+          state.activeSubject = null;
+          state.subjectNodes = [];
+          state.subjectLabels = DEFAULT_LABELS;
+          showToast(error.message, 'error');
+        }
+
+        const nodeRouteId = parts[2] === 'node' ? Number(parts[3]) : null;
+        const chapterRouteNodeId = parts[2] === 'chapters' ? Number(parts[3]) : null;
+        const targetNodeId = Number.isFinite(nodeRouteId) ? nodeRouteId : chapterRouteNodeId;
+        const targetNode = targetNodeId ? getNodeById(state.subjectNodes, targetNodeId) : null;
+        const chaptersNode = parts[2] === 'chapters'
+          ? targetNode
+          : (parts[2] === 'node'
+            ? (isChaptersNode(targetNode) ? targetNode : (targetNode ? getSoloChaptersChild(state.subjectNodes, targetNode.id) : null))
+            : null);
+
+        if (chaptersNode && Number.isFinite(chaptersNode.id)) {
+          try {
+            await loadSubjectChapters(subjectId, chaptersNode.id, { force });
+          } catch (error) {
+            state.subjectChapters = [];
+            showToast(error.message, 'error');
+          }
+        }
+
+        if (parts[2] === 'chapters') {
+          const chapterId = Number(parts[4]);
+          const topicsNode = chaptersNode ? getTopicsNode(state.subjectNodes, chaptersNode) : null;
+          const hasTopics = Boolean(topicsNode);
+          if (Number.isFinite(chapterId)) {
+            if (hasTopics) {
+              const topicSegment = parts[5];
+              const topicId = topicSegment === 'topics' ? Number(parts[6]) : null;
+              state.chapterDetail = null;
+              if (topicSegment === 'topics' && Number.isFinite(topicId)) {
+                try {
+                  await loadTopicDetail(topicId, { force });
+                } catch (error) {
+                  state.topicDetail = null;
+                  showToast(error.message, 'error');
+                }
+              } else {
+                try {
+                  await loadSubjectTopics(chapterId, { force });
+                } catch (error) {
+                  state.subjectTopics = [];
+                  showToast(error.message, 'error');
+                }
+                state.topicDetail = null;
+              }
+            } else {
+              try {
+                await loadChapterDetail(chapterId, { force });
+              } catch (error) {
+                state.chapterDetail = null;
+                showToast(error.message, 'error');
+              }
+              state.topicDetail = null;
+            }
+          }
+        }
+      }
+    }
+
     const sidebar = renderSidebar([
       { id: 'dashboard', label: 'Dashboard', href: '#dashboard' },
       { id: 'users', label: 'Users', href: '#users' },
+      { id: 'modules', label: 'Modules', href: '#modules' },
       { id: 'database', label: 'Database', href: '#database' },
       { id: 'api', label: 'API Management', href: '#api' }
-    ], route);
+    ], section);
 
     let title = 'Dashboard';
     let content = '';
@@ -492,6 +515,157 @@ async function renderApp() {
     } else if (route === 'users') {
       title = 'Users';
       content = renderUsersTable(state.users);
+    } else if (section === 'modules') {
+      title = 'Modules';
+      if (route === 'modules') {
+        content = renderModuleCategories(state.moduleCategories);
+      } else if (parts[1] === 'subjects' && !parts[2]) {
+        content = renderSubjectModules(state.subjectModules);
+      } else if (parts[1] === 'subjects' && parts[2]) {
+        const moduleId = Number(parts[2]);
+        const module = state.subjectModules.find((item) => item.id === moduleId) || state.activeSubjectModule;
+        if (!module) {
+          content = `<div class="card"><p class="muted">Module not found.</p></div>`;
+        } else if (parts[3] === 'curriculum') {
+          content = renderSubjectModuleCurriculum(module, state.subjectModuleNodes);
+        } else if (parts[3] === 'exam') {
+          content = renderSubjectModuleExam(module);
+        } else {
+          content = renderSubjectModuleOverview(module);
+        }
+      }
+    } else if (section === 'subjects') {
+      title = 'Subjects';
+      if (route === 'subjects') {
+        content = renderSubjectsList(state.subjects, state.subjectModules);
+      } else {
+        const subjectId = Number(parts[1]);
+        if (!Number.isFinite(subjectId) || !state.activeSubject) {
+          content = `<div class="card"><p class="muted">Subject not found.</p></div>`;
+        } else if (parts[2] === 'node') {
+          const nodeId = Number(parts[3]);
+          const node = getNodeById(state.subjectNodes, nodeId);
+          if (!node) {
+            content = `<div class="card"><p class="muted">Section not found.</p></div>`;
+          } else {
+            const chaptersNode = isChaptersNode(node) ? node : getSoloChaptersChild(state.subjectNodes, node.id);
+            if (chaptersNode) {
+              const backNode = getChaptersBackNode(state.subjectNodes, chaptersNode);
+              content = renderSubjectChapters(state.activeSubject, chaptersNode, state.subjectChapters, mediaUrl, backNode);
+            } else {
+              const parent = node.parentId ? getNodeById(state.subjectNodes, node.parentId) : null;
+              const children = getChildNodes(state.subjectNodes, node.id);
+              content = renderSubjectNode(state.activeSubject, node, parent, children, mediaUrl);
+            }
+          }
+        } else if (parts[2] === 'chapters') {
+          const nodeId = Number(parts[3]);
+          const node = getNodeById(state.subjectNodes, nodeId);
+          if (!node) {
+            content = `<div class="card"><p class="muted">Section not found.</p></div>`;
+          } else if (parts[4]) {
+            const chapterId = Number(parts[4]);
+            const topicsNode = getTopicsNode(state.subjectNodes, node);
+            const hasTopics = Boolean(topicsNode);
+
+            if (hasTopics) {
+              const topicSegment = parts[5];
+              const topicId = topicSegment === 'topics' ? Number(parts[6]) : null;
+              const chapter = state.subjectChapters.find((item) => item.id === chapterId);
+
+              if (!chapter) {
+                content = `<div class="card"><p class="muted">Chapter not found.</p></div>`;
+              } else if (topicSegment === 'topics' && Number.isFinite(topicId)) {
+                const topicSection = parts[7] || 'overview';
+                const questionSection = parts[8] || '';
+                if (!state.topicDetail) {
+                  content = `<div class="card"><p class="muted">Topic not found.</p></div>`;
+                } else if (topicSection === 'notes') {
+                  content = renderTopicNotes(state.topicDetail, mediaUrl);
+                } else if (topicSection === 'videos') {
+                  content = renderTopicVideos(state.topicDetail, mediaUrl);
+                } else if (topicSection === 'questions') {
+                  if (questionSection === 'cq') {
+                    const sectionKey = parts[9] || '';
+                    const cqMode = parts[10] || '';
+                    const cqQuestionId = Number(parts[11]);
+                    const cqQuestion = Number.isFinite(cqQuestionId)
+                      ? state.topicDetail.questions.find((item) => item.id === cqQuestionId)
+                      : null;
+                    const cqFormState = cqMode === 'new'
+                      ? { mode: 'new', question: null }
+                      : (cqMode === 'edit' && cqQuestion ? { mode: 'edit', question: cqQuestion } : null);
+                    content = sectionKey
+                      ? renderTopicQuestionCQSection(state.topicDetail, sectionKey, cqFormState)
+                      : renderTopicQuestionCQOverview(state.topicDetail);
+                  } else if (questionSection === 'mcq') {
+                    const mcqMode = parts[9] || '';
+                    const mcqQuestionId = Number(parts[10]);
+                    const mcqQuestion = Number.isFinite(mcqQuestionId)
+                      ? state.topicDetail.questions.find((item) => item.id === mcqQuestionId)
+                      : null;
+                    const mcqFormState = mcqMode === 'new'
+                      ? { mode: 'new', question: null }
+                      : (mcqMode === 'edit' && mcqQuestion ? { mode: 'edit', question: mcqQuestion } : null);
+                    content = renderTopicQuestionMCQ(state.topicDetail, mcqFormState);
+                  } else {
+                    content = renderTopicQuestionBankOverview(state.topicDetail);
+                  }
+                } else {
+                  content = renderTopicOverview(state.topicDetail, mediaUrl);
+                }
+              } else {
+                const backHref = `#subjects/${state.activeSubject.id}/chapters/${node.id}`;
+                content = renderSubjectTopics(state.activeSubject, node, chapter, state.subjectTopics, mediaUrl, backHref);
+              }
+            } else {
+              const chapterSection = parts[5] || 'overview';
+              const questionSection = parts[6] || '';
+              if (!state.chapterDetail) {
+                content = `<div class="card"><p class="muted">Chapter not found.</p></div>`;
+              } else if (chapterSection === 'notes') {
+                content = renderChapterNotes(state.chapterDetail, mediaUrl);
+              } else if (chapterSection === 'videos') {
+                content = renderChapterVideos(state.chapterDetail, mediaUrl);
+              } else if (chapterSection === 'questions') {
+                if (questionSection === 'cq') {
+                  const sectionKey = parts[7] || '';
+                  const cqMode = parts[8] || '';
+                  const cqQuestionId = Number(parts[9]);
+                  const cqQuestion = Number.isFinite(cqQuestionId)
+                    ? state.chapterDetail.questions.find((item) => item.id === cqQuestionId)
+                    : null;
+                  const cqFormState = cqMode === 'new'
+                    ? { mode: 'new', question: null }
+                    : (cqMode === 'edit' && cqQuestion ? { mode: 'edit', question: cqQuestion } : null);
+                  content = sectionKey
+                    ? renderQuestionCQSection(state.chapterDetail, sectionKey, cqFormState)
+                    : renderQuestionCQOverview(state.chapterDetail);
+                } else if (questionSection === 'mcq') {
+                  const mcqMode = parts[7] || '';
+                  const mcqQuestionId = Number(parts[8]);
+                  const mcqQuestion = Number.isFinite(mcqQuestionId)
+                    ? state.chapterDetail.questions.find((item) => item.id === mcqQuestionId)
+                    : null;
+                  const mcqFormState = mcqMode === 'new'
+                    ? { mode: 'new', question: null }
+                    : (mcqMode === 'edit' && mcqQuestion ? { mode: 'edit', question: mcqQuestion } : null);
+                  content = renderQuestionMCQ(state.chapterDetail, mcqFormState);
+                } else {
+                  content = renderQuestionBankOverview(state.chapterDetail);
+                }
+              } else {
+                content = renderChapterOverview(state.chapterDetail, mediaUrl);
+              }
+            }
+          } else {
+            const backNode = getChaptersBackNode(state.subjectNodes, node);
+            content = renderSubjectChapters(state.activeSubject, node, state.subjectChapters, mediaUrl, backNode);
+          }
+        } else {
+          content = renderSubjectDetail(state.activeSubject, state.subjectNodes, mediaUrl);
+        }
+      }
     } else if (route === 'database') {
       title = 'Database';
       content = renderDatabasePanel(state);
@@ -503,28 +677,30 @@ async function renderApp() {
     const topbar = renderTopbar(title, state.user);
     app.innerHTML = renderLayout({ sidebar, topbar, content });
 
-    wireActions(route);
+    wireActions();
   });
 }
 
-function wireActions(route) {
+function wireActions() {
+  const { route, parts, section } = parseRoute();
   const refreshBtn = app.querySelector('[data-action="refresh"]');
   const openCreate = app.querySelector('[data-action="open-create"]');
   const logoutBtn = app.querySelector('[data-action="logout"]');
   const navToggle = app.querySelector('[data-action="toggle-nav"]');
   const overlay = app.querySelector('[data-action="close-nav"]');
   const sidebar = app.querySelector('.sidebar');
+  const refresh = (options = {}) => renderApp(options);
 
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async () => {
       await withLoading(async () => {
-        await renderApp();
+        await renderApp({ force: true });
       });
     });
   }
 
   if (openCreate) {
-    openCreate.addEventListener('click', () => openCreateModal());
+    openCreate.addEventListener('click', () => openCreateModal({ refresh }));
   }
 
   if (logoutBtn) {
@@ -535,6 +711,18 @@ function wireActions(route) {
         state.users = [];
         state.total = 0;
         state.apis = [];
+        state.moduleCategories = [];
+        state.subjectModules = [];
+        state.activeSubjectModule = null;
+        state.subjectModuleNodes = [];
+        state.subjects = [];
+        state.activeSubject = null;
+        state.subjectNodes = [];
+        state.subjectLabels = DEFAULT_LABELS;
+        state.subjectChapters = [];
+        state.chapterDetail = null;
+        state.subjectTopics = [];
+        state.topicDetail = null;
         state.tables = [];
         state.selectedTable = null;
         state.tableRows = [];
@@ -542,6 +730,7 @@ function wireActions(route) {
         state.tablePrimaryKey = null;
         state.tableTotal = 0;
         state.maintenance = null;
+        resetCache();
         renderLogin(false);
       });
     });
@@ -586,7 +775,8 @@ function wireActions(route) {
         try {
           await withLoading(async () => {
             await api.updateUser(id, { isActive: !user.isActive });
-            await renderApp();
+            invalidateUsers();
+            await renderApp({ force: true });
           });
         } catch (error) {
           showToast(error.message, 'error');
@@ -605,7 +795,9 @@ function wireActions(route) {
     if (refreshTables) {
       refreshTables.addEventListener('click', async () => {
         await withLoading(async () => {
-          await renderApp();
+          invalidateTables();
+          invalidateTableData(state.selectedTable);
+          await renderApp({ force: true });
         });
       });
     }
@@ -613,7 +805,8 @@ function wireActions(route) {
     if (reloadTable) {
       reloadTable.addEventListener('click', async () => {
         await withLoading(async () => {
-          await renderApp();
+          invalidateTableData(state.selectedTable);
+          await renderApp({ force: true });
         });
       });
     }
@@ -625,7 +818,8 @@ function wireActions(route) {
         try {
           await withLoading(async () => {
             await api.truncateTable(state.selectedTable);
-            await renderApp();
+            invalidateTableData(state.selectedTable);
+            await renderApp({ force: true });
           });
         } catch (error) {
           showToast(error.message, 'error');
@@ -640,8 +834,10 @@ function wireActions(route) {
         try {
           await withLoading(async () => {
             await api.dropTable(state.selectedTable);
+            invalidateTables();
+            invalidateTableData(state.selectedTable);
             state.selectedTable = null;
-            await renderApp();
+            await renderApp({ force: true });
           });
         } catch (error) {
           showToast(error.message, 'error');
@@ -655,7 +851,9 @@ function wireActions(route) {
           await withLoading(async () => {
             const data = await api.reconcileSchema();
             state.maintenance = data.data;
-            await renderApp();
+            invalidateTables();
+            invalidateTableData(state.selectedTable);
+            await renderApp({ force: true });
             showToast('Schema reconciled');
           });
         } catch (error) {
@@ -682,7 +880,8 @@ function wireActions(route) {
         try {
           await withLoading(async () => {
             await api.deleteRow(state.selectedTable, state.tablePrimaryKey, value);
-            await renderApp();
+            invalidateTableData(state.selectedTable);
+            await renderApp({ force: true });
           });
         } catch (error) {
           showToast(error.message, 'error');
@@ -696,7 +895,8 @@ function wireActions(route) {
     if (refresh) {
       refresh.addEventListener('click', async () => {
         await withLoading(async () => {
-          await renderApp();
+          invalidateApis();
+          await renderApp({ force: true });
         });
       });
     }
@@ -708,7 +908,8 @@ function wireActions(route) {
         try {
           await withLoading(async () => {
             await api.updateApiEndpoint(id, { isEnabled: input.checked });
-            await renderApp();
+            invalidateApis();
+            await renderApp({ force: true });
           });
         } catch (error) {
           showToast(error.message, 'error');
@@ -720,256 +921,433 @@ function wireActions(route) {
       button.addEventListener('click', async () => {
         const id = button.getAttribute('data-id');
         if (!id) return;
-        await openApiModal(id);
+        await openApiModal(id, { refresh });
       });
     });
   }
-}
 
-function openCreateModal() {
-  const modalMarkup = renderUserForm();
-  document.body.insertAdjacentHTML('beforeend', modalMarkup);
+  if (section === 'subjects') {
+    const subjectId = Number(parts[1]);
 
-  const modal = document.querySelector('[data-modal]');
-  const closeButtons = modal.querySelectorAll('[data-action="close-modal"]');
-  closeButtons.forEach((btn) => btn.addEventListener('click', () => modal.remove()));
+    if (route === 'subjects') {
+      const createBtn = app.querySelector('[data-action="subject-create"]');
+      if (createBtn) {
+        createBtn.addEventListener('click', () => openSubjectModal(null, { refresh }));
+      }
 
-  const form = modal.querySelector('[data-form="user-create"]');
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const payload = {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      email: formData.get('email'),
-      password: formData.get('password'),
-      role: formData.get('role')
-    };
-
-    try {
-      await withLoading(async () => {
-        await api.createUser(payload);
-        modal.remove();
-        await renderApp();
-        showToast('User created');
+      app.querySelectorAll('[data-action="subject-edit"]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const id = Number(button.getAttribute('data-id'));
+          const subject = state.subjects.find((item) => item.id === id);
+          if (subject) {
+            openSubjectModal(subject, { refresh });
+          }
+        });
       });
-    } catch (error) {
-      showToast(error.message, 'error');
+
+      app.querySelectorAll('[data-action="subject-delete"]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const id = Number(button.getAttribute('data-id'));
+          if (!id) return;
+          if (!confirm('Delete this subject?')) return;
+          try {
+            await withLoading(async () => {
+              await api.deleteSubject(id);
+              invalidateSubjects();
+              await renderApp({ force: true });
+              showToast('Subject deleted');
+            });
+          } catch (error) {
+            showToast(error.message, 'error');
+          }
+        });
+      });
+    } else if (Number.isFinite(subjectId)) {
+      const nodeId = parts[2] === 'node' ? Number(parts[3]) : (parts[2] === 'chapters' ? Number(parts[3]) : null);
+      const node = Number.isFinite(nodeId) ? getNodeById(state.subjectNodes, nodeId) : null;
+      const chaptersNode = parts[2] === 'chapters'
+        ? node
+        : (parts[2] === 'node'
+          ? (isChaptersNode(node) ? node : (node ? getSoloChaptersChild(state.subjectNodes, node.id) : null))
+          : null);
+      const chaptersMode = Boolean(chaptersNode);
+
+      if (chaptersMode) {
+        const chapterId = Number(parts[4]);
+        const topicsNode = chaptersNode ? getTopicsNode(state.subjectNodes, chaptersNode) : null;
+        const hasTopics = Boolean(topicsNode);
+        const chapter = Number.isFinite(chapterId)
+          ? state.subjectChapters.find((item) => item.id === chapterId)
+          : null;
+
+        if (!parts[4]) {
+          const createChapter = app.querySelector('[data-action="chapter-create"]');
+          if (createChapter && chaptersNode) {
+            createChapter.addEventListener('click', () => openChapterModal(chaptersNode, null, { refresh }));
+          }
+
+          app.querySelectorAll('[data-action="chapter-edit"]').forEach((button) => {
+            button.addEventListener('click', () => {
+              const id = Number(button.getAttribute('data-id'));
+              const targetChapter = state.subjectChapters.find((item) => item.id === id);
+              if (targetChapter && chaptersNode) {
+                openChapterModal(chaptersNode, targetChapter, { refresh });
+              }
+            });
+          });
+
+          app.querySelectorAll('[data-action="chapter-delete"]').forEach((button) => {
+            button.addEventListener('click', async () => {
+              const id = Number(button.getAttribute('data-id'));
+              if (!id || !chaptersNode) return;
+              if (!confirm('Delete this chapter?')) return;
+              try {
+                await withLoading(async () => {
+                  await api.deleteSubjectChapter(subjectId, id);
+                  invalidateSubjectChapters(subjectId, chaptersNode.id);
+                  invalidateSubjectTopics(id);
+                  await renderApp({ force: true });
+                  showToast('Chapter deleted');
+                });
+              } catch (error) {
+                showToast(error.message, 'error');
+              }
+            });
+          });
+        } else if (hasTopics) {
+          const topicSegment = parts[5];
+          const topicId = topicSegment === 'topics' ? Number(parts[6]) : null;
+
+          if (topicSegment === 'topics' && Number.isFinite(topicId) && state.topicDetail) {
+            const topicSection = parts[7] || 'overview';
+            const questionSection = parts[8] || '';
+
+            const editTopic = app.querySelector('[data-action="topic-edit"]');
+            if (editTopic) {
+              editTopic.addEventListener('click', () => openTopicModal(state.topicDetail.chapter, state.topicDetail.topic, { refresh }));
+            }
+
+            const editChapter = app.querySelector('[data-action="chapter-edit"]');
+            if (editChapter && node) {
+              editChapter.addEventListener('click', () => openChapterModal(node, state.topicDetail.chapter, { refresh }));
+            }
+
+            if (topicSection === 'notes') {
+              const addNote = app.querySelector('[data-action="topic-note-add"]');
+              if (addNote) {
+                addNote.addEventListener('click', () => openNoteModal({ owner: 'topic', ownerId: state.topicDetail.topic.id }, { refresh }));
+              }
+
+              app.querySelectorAll('[data-action="topic-note-delete"]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                  const noteId = Number(button.getAttribute('data-id'));
+                  if (!noteId) return;
+                  try {
+                    await withLoading(async () => {
+                      await api.deleteTopicNote(state.topicDetail.topic.id, noteId);
+                      invalidateTopicDetail(state.topicDetail.topic.id);
+                      await renderApp({ force: true });
+                    });
+                  } catch (error) {
+                    showToast(error.message, 'error');
+                  }
+                });
+              });
+            }
+
+            if (topicSection === 'videos') {
+              const addVideo = app.querySelector('[data-action="topic-video-add"]');
+              if (addVideo) {
+                addVideo.addEventListener('click', () => openVideoModal({ owner: 'topic', ownerId: state.topicDetail.topic.id }, { refresh }));
+              }
+
+              app.querySelectorAll('[data-action="topic-video-delete"]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                  const videoId = Number(button.getAttribute('data-id'));
+                  if (!videoId) return;
+                  try {
+                    await withLoading(async () => {
+                      await api.deleteTopicVideo(state.topicDetail.topic.id, videoId);
+                      invalidateTopicDetail(state.topicDetail.topic.id);
+                      await renderApp({ force: true });
+                    });
+                  } catch (error) {
+                    showToast(error.message, 'error');
+                  }
+                });
+              });
+            }
+
+            if (topicSection === 'questions' && questionSection) {
+              app.querySelectorAll('[data-action="topic-question-delete"]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                  const id = Number(button.getAttribute('data-id'));
+                  if (!id) return;
+                  if (!confirm('Delete this question?')) return;
+                  try {
+                    await withLoading(async () => {
+                      await api.deleteTopicQuestion(state.topicDetail.topic.id, id);
+                      invalidateTopicDetail(state.topicDetail.topic.id);
+                      await renderApp({ force: true });
+                    });
+                  } catch (error) {
+                    showToast(error.message, 'error');
+                  }
+                });
+              });
+            }
+          } else if (chapter) {
+            const createTopic = app.querySelector('[data-action="topic-create"]');
+            if (createTopic) {
+              createTopic.addEventListener('click', () => openTopicModal(chapter, null, { refresh }));
+            }
+
+            const editChapter = app.querySelector('[data-action="chapter-edit"]');
+            if (editChapter && node) {
+              editChapter.addEventListener('click', () => openChapterModal(node, chapter, { refresh }));
+            }
+
+            app.querySelectorAll('[data-action="topic-edit"]').forEach((button) => {
+              button.addEventListener('click', () => {
+                const id = Number(button.getAttribute('data-id'));
+                const topic = state.subjectTopics.find((item) => item.id === id);
+                if (topic) {
+                  openTopicModal(chapter, topic, { refresh });
+                }
+              });
+            });
+
+            app.querySelectorAll('[data-action="topic-delete"]').forEach((button) => {
+              button.addEventListener('click', async () => {
+                const id = Number(button.getAttribute('data-id'));
+                if (!id) return;
+                if (!confirm('Delete this topic?')) return;
+                try {
+                  await withLoading(async () => {
+                    await api.deleteTopic(chapter.id, id);
+                    invalidateSubjectTopics(chapter.id);
+                    await renderApp({ force: true });
+                    showToast('Topic deleted');
+                  });
+                } catch (error) {
+                  showToast(error.message, 'error');
+                }
+              });
+            });
+          }
+        } else if (state.chapterDetail) {
+          const chapterSection = parts[5] || 'overview';
+          const questionSection = parts[6] || '';
+          const cqSectionKey = questionSection === 'cq' ? String(parts[7] || '').toUpperCase() : '';
+
+          const editChapter = app.querySelector('[data-action="chapter-edit"]');
+          if (editChapter) {
+            editChapter.addEventListener('click', () => openChapterModal(node || state.chapterDetail.node, state.chapterDetail.chapter, { refresh }));
+          }
+
+          if (chapterSection === 'notes') {
+            const addNote = app.querySelector('[data-action="note-add"]');
+            if (addNote) {
+              addNote.addEventListener('click', () => openNoteModal({ owner: 'chapter', ownerId: state.chapterDetail.chapter.id }, { refresh }));
+            }
+
+            app.querySelectorAll('[data-action="note-delete"]').forEach((button) => {
+              button.addEventListener('click', async () => {
+                const noteId = Number(button.getAttribute('data-id'));
+                if (!noteId) return;
+                try {
+                  await withLoading(async () => {
+                    await api.deleteChapterNote(state.chapterDetail.chapter.id, noteId);
+                    invalidateChapterDetail(state.chapterDetail.chapter.id);
+                    await renderApp({ force: true });
+                  });
+                } catch (error) {
+                  showToast(error.message, 'error');
+                }
+              });
+            });
+          }
+
+          if (chapterSection === 'videos') {
+            const addVideo = app.querySelector('[data-action="video-add"]');
+            if (addVideo) {
+              addVideo.addEventListener('click', () => openVideoModal({ owner: 'chapter', ownerId: state.chapterDetail.chapter.id }, { refresh }));
+            }
+
+            app.querySelectorAll('[data-action="video-delete"]').forEach((button) => {
+              button.addEventListener('click', async () => {
+                const videoId = Number(button.getAttribute('data-id'));
+                if (!videoId) return;
+                try {
+                  await withLoading(async () => {
+                    await api.deleteChapterVideo(state.chapterDetail.chapter.id, videoId);
+                    invalidateChapterDetail(state.chapterDetail.chapter.id);
+                    await renderApp({ force: true });
+                  });
+                } catch (error) {
+                  showToast(error.message, 'error');
+                }
+              });
+            });
+          }
+
+          if (chapterSection === 'questions' && ((questionSection === 'cq' && cqSectionKey) || questionSection === 'mcq')) {
+            app.querySelectorAll('[data-action="question-delete"]').forEach((button) => {
+              button.addEventListener('click', async () => {
+                const id = Number(button.getAttribute('data-id'));
+                if (!id) return;
+                if (!confirm('Delete this question?')) return;
+                try {
+                  await withLoading(async () => {
+                    await api.deleteChapterQuestion(state.chapterDetail.chapter.id, id);
+                    invalidateChapterDetail(state.chapterDetail.chapter.id);
+                    await renderApp({ force: true });
+                  });
+                } catch (error) {
+                  showToast(error.message, 'error');
+                }
+              });
+            });
+          }
+        }
+      }
+
+      const saveLabelsButtons = app.querySelectorAll('[data-action="labels-save"]');
+      if (saveLabelsButtons.length) {
+        const detail = state.topicDetail || state.chapterDetail;
+        if (detail) {
+          const currentLabels = detail.labels || DEFAULT_LABELS;
+          saveLabelsButtons.forEach((saveLabels) => {
+            saveLabels.addEventListener('click', async () => {
+              const getValue = (key, fallback) => {
+                const input = app.querySelector(`[data-label="${key}"]`);
+                if (!input) return fallback;
+                return String(input.value || '').trim();
+              };
+
+              const payload = {
+                typeLabels: {
+                  CQ: getValue('type-CQ', currentLabels.types.CQ || DEFAULT_LABELS.types.CQ),
+                  MCQ: getValue('type-MCQ', currentLabels.types.MCQ || DEFAULT_LABELS.types.MCQ)
+                },
+                sectionLabels: {
+                  KNOWLEDGE: getValue('section-KNOWLEDGE', currentLabels.sections.KNOWLEDGE || DEFAULT_LABELS.sections.KNOWLEDGE),
+                  TWO: getValue('section-TWO', currentLabels.sections.TWO || DEFAULT_LABELS.sections.TWO),
+                  THREE: getValue('section-THREE', currentLabels.sections.THREE || DEFAULT_LABELS.sections.THREE),
+                  FOUR: getValue('section-FOUR', currentLabels.sections.FOUR || DEFAULT_LABELS.sections.FOUR)
+                }
+              };
+
+              try {
+                await withLoading(async () => {
+                  await api.updateQuestionLabels(detail.subject.id, payload);
+                  invalidateSubjectDetail(detail.subject.id);
+                  if (detail.topic) {
+                    invalidateTopicDetail(detail.topic.id);
+                  } else if (detail.chapter) {
+                    invalidateChapterDetail(detail.chapter.id);
+                  }
+                  await renderApp({ force: true });
+                  showToast('Titles saved');
+                });
+              } catch (error) {
+                showToast(error.message, 'error');
+              }
+            });
+          });
+        }
+      }
+
+      const questionForm = app.querySelector('[data-form="question-page"]');
+      if (questionForm) {
+        questionForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const formData = new FormData(questionForm);
+          const mode = String(questionForm.getAttribute('data-mode') || 'new');
+          const type = String(questionForm.getAttribute('data-type') || 'CQ');
+          const section = String(questionForm.getAttribute('data-section') || '');
+          const owner = String(questionForm.getAttribute('data-owner') || 'chapter');
+          const ownerId = Number(questionForm.getAttribute('data-owner-id'));
+          const questionId = Number(questionForm.getAttribute('data-id'));
+          const backHref = String(questionForm.getAttribute('data-back-href') || '');
+          const attachment = formData.get('attachment');
+          const attachmentTarget = String(formData.get('attachmentTarget') || 'answer');
+          let questionText = String(formData.get('question') || '').trim();
+          let answerText = String(formData.get('answer') || '').trim();
+
+          try {
+            await withLoading(async () => {
+              if (!questionText || !answerText) {
+                throw new Error('Question and answer are required');
+              }
+              if (!Number.isFinite(ownerId)) {
+                throw new Error('Invalid question target');
+              }
+
+              if (attachment instanceof File && attachment.size > 0) {
+                const upload = await api.uploadMedia(attachment, 'subject-questions');
+                const link = mediaUrl(upload.data.key);
+                if (attachmentTarget === 'question') {
+                  questionText = `${questionText}\n${link}`;
+                } else {
+                  answerText = `${answerText}\n${link}`;
+                }
+              }
+
+              if (mode === 'edit' && Number.isFinite(questionId)) {
+                if (owner === 'topic') {
+                  await api.updateTopicQuestion(ownerId, questionId, { questionText, answerText });
+                  invalidateTopicDetail(ownerId);
+                } else {
+                  await api.updateChapterQuestion(ownerId, questionId, { questionText, answerText });
+                  invalidateChapterDetail(ownerId);
+                }
+              } else {
+                if (type === 'CQ' && !section) {
+                  throw new Error('CQ section is required');
+                }
+                if (owner === 'topic') {
+                  await api.addTopicQuestion(ownerId, {
+                    typeKey: type,
+                    sectionKey: type === 'CQ' ? section : null,
+                    questionText,
+                    answerText
+                  });
+                  invalidateTopicDetail(ownerId);
+                } else {
+                  await api.addChapterQuestion(ownerId, {
+                    typeKey: type,
+                    sectionKey: type === 'CQ' ? section : null,
+                    questionText,
+                    answerText
+                  });
+                  invalidateChapterDetail(ownerId);
+                }
+              }
+
+              if (backHref) {
+                window.location.hash = backHref;
+              }
+              await renderApp({ force: true });
+            });
+          } catch (error) {
+            showToast(error.message, 'error');
+          }
+        });
+      }
+
+      app.querySelectorAll('[data-action="node-edit"]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const id = Number(button.getAttribute('data-id'));
+          const target = getNodeById(state.subjectNodes, id);
+          if (target) {
+            openNodeModal(subjectId, target, { refresh });
+          }
+        });
+      });
     }
-  });
-}
-
-async function openApiModal(id) {
-  let apiItem = null;
-  try {
-    apiItem = await withLoading(async () => {
-      const data = await api.getApiEndpoint(id);
-      return normalizeApi(data.data);
-    });
-  } catch (error) {
-    showToast(error.message, 'error');
-    return;
   }
 
-  const modalMarkup = renderApiModal(apiItem);
-  document.body.insertAdjacentHTML('beforeend', modalMarkup);
-
-  const modal = document.querySelector('[data-modal]');
-  const closeButtons = modal.querySelectorAll('[data-action="close-modal"]');
-  closeButtons.forEach((btn) => btn.addEventListener('click', () => modal.remove()));
-
-  const form = modal.querySelector('[data-form="api-edit"]');
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const payload = {
-      name: String(formData.get('name') || apiItem.name),
-      method: String(formData.get('method') || apiItem.method),
-      path: String(formData.get('path') || apiItem.path),
-      description: String(formData.get('description') || ''),
-      dataSummary: String(formData.get('dataSummary') || ''),
-      isEnabled: apiItem.enabled,
-      isPublic: apiItem.public,
-      roles: apiItem.roles,
-      userOverrides: apiItem.userOverrides
-    };
-
-    try {
-      await api.updateApiEndpoint(apiItem.id, payload);
-      modal.remove();
-      await loadApis();
-      renderApp();
-      showToast('API settings saved');
-    } catch (error) {
-      showToast(error.message, 'error');
-    }
-  });
-
-  modal.querySelectorAll('[data-action="api-user-type"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      const role = input.getAttribute('data-role');
-      if (!role) return;
-      apiItem.roles[role] = input.checked;
-    });
-  });
-
-  modal.querySelectorAll('[data-action="api-enabled"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      apiItem.enabled = input.checked;
-      const label = input.closest('.switch')?.querySelector('.switch-label');
-      if (label) {
-        label.textContent = apiItem.enabled ? 'On' : 'Off';
-      }
-    });
-  });
-
-  modal.querySelectorAll('[data-action="api-public"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      apiItem.public = input.checked;
-      const label = input.closest('.switch')?.querySelector('.switch-label');
-      if (label) {
-        label.textContent = apiItem.public ? 'Public' : 'Private';
-      }
-    });
-  });
-
-  modal.querySelectorAll('[data-action="api-key-toggle"]').forEach((input) => {
-    input.addEventListener('change', async () => {
-      const keyId = input.getAttribute('data-key');
-      if (!keyId) return;
-      try {
-        await withLoading(async () => {
-          await api.updateApiKey(keyId, { isEnabled: input.checked });
-          modal.remove();
-          await openApiModal(apiItem.id);
-        });
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    });
-  });
-
-  modal.querySelectorAll('[data-action="api-key-rotate"]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const keyId = button.getAttribute('data-key');
-      if (!keyId) return;
-      try {
-        await withLoading(async () => {
-          const data = await api.rotateApiKey(keyId);
-          showSecret(data.key, 'New API key');
-          modal.remove();
-          await openApiModal(apiItem.id);
-        });
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    });
-  });
-
-  modal.querySelectorAll('[data-action="api-key-delete"]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const keyId = button.getAttribute('data-key');
-      if (!keyId) return;
-      if (!confirm('Delete this API key?')) return;
-      try {
-        await withLoading(async () => {
-          await api.deleteApiKey(keyId);
-          modal.remove();
-          await openApiModal(apiItem.id);
-        });
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    });
-  });
-
-  const createKey = modal.querySelector('[data-action="api-key-create"]');
-  if (createKey) {
-    createKey.addEventListener('click', async () => {
-      const input = modal.querySelector('[data-input="api-key-label"]');
-      const label = input ? String(input.value || '').trim() : '';
-      try {
-        await withLoading(async () => {
-          const data = await api.createApiKey(apiItem.id, label || 'Primary key');
-          showSecret(data.key, 'New API key');
-          modal.remove();
-          await openApiModal(apiItem.id);
-        });
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    });
-  }
-
-  const addUser = modal.querySelector('[data-action="api-user-add"]');
-  if (addUser) {
-    addUser.addEventListener('click', () => {
-      const input = modal.querySelector('[data-input="api-user-id"]');
-      const modeInput = modal.querySelector('[data-input="api-user-mode"]');
-      if (!input || !modeInput) return;
-      const value = String(input.value || '').trim();
-      const mode = String(modeInput.value || 'allow');
-      if (!value) return;
-      const parsed = Number(value);
-      if (!Number.isFinite(parsed)) {
-        showToast('User ID must be a number', 'error');
-        return;
-      }
-      const list = mode === 'deny' ? apiItem.userOverrides.deny : apiItem.userOverrides.allow;
-      if (!list.includes(parsed)) {
-        list.push(parsed);
-      }
-      modal.remove();
-      openApiModal(apiItem.id);
-    });
-  }
-
-  modal.querySelectorAll('[data-action="api-user-remove"]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const userId = button.getAttribute('data-user');
-      const mode = button.getAttribute('data-mode');
-      if (!userId) return;
-      const parsed = Number(userId);
-      if (!Number.isFinite(parsed)) return;
-      if (mode === 'deny') {
-        apiItem.userOverrides.deny = apiItem.userOverrides.deny.filter((id) => id !== parsed);
-      } else {
-        apiItem.userOverrides.allow = apiItem.userOverrides.allow.filter((id) => id !== parsed);
-      }
-      modal.remove();
-      openApiModal(apiItem.id);
-    });
-  });
-}
-
-function normalizeApi(item) {
-  return {
-    id: item.id,
-    name: item.name,
-    method: item.method,
-    path: item.path,
-    description: item.description || '',
-    dataSummary: item.dataSummary || '',
-    enabled: Boolean(item.isEnabled),
-    public: Boolean(item.isPublic),
-    system: Boolean(item.isSystem),
-    roles: item.roles || { admin: false, teacher: false, student: false },
-    userOverrides: item.userOverrides || { allow: [], deny: [] },
-    keys: (item.keys || []).map((key) => ({
-      id: key.id,
-      label: key.label,
-      prefix: key.prefix,
-      enabled: Boolean(key.isEnabled),
-      createdAt: key.createdAt,
-      lastUsedAt: key.lastUsedAt,
-      expiresAt: key.expiresAt
-    }))
-  };
-}
-
-function showSecret(value, title) {
-  const message = `${title}:\n${value}\n\nCopy this now. It will not be shown again.`;
-  window.prompt(message, value);
 }
 
 async function init() {
@@ -978,7 +1356,8 @@ async function init() {
     const session = await api.getSession();
     if (session && session.user) {
       state.user = session.user;
-      await renderApp();
+      resetCache();
+      await renderApp({ force: true });
       window.addEventListener('hashchange', () => {
         renderApp();
       });
