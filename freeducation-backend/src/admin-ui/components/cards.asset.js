@@ -1,7 +1,8 @@
-export function renderStatCards(stats) {
+export function renderStatCards(stats, options = {}) {
+  const className = options.className ? `grid ${options.className}` : 'grid';
   const cards = stats.map((stat) => {
     return `
-      <div class="card">
+      <div class="card stat-card">
         <h3>${stat.label}</h3>
         <div class="stats">
           <span>${stat.value}</span>
@@ -11,5 +12,5 @@ export function renderStatCards(stats) {
     `;
   }).join('');
 
-  return `<div class="grid">${cards}</div>`;
+  return `<div class="${className}">${cards}</div>`;
 }

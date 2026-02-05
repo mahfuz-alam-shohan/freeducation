@@ -1,6 +1,6 @@
 import { DEFAULT_SECTION_LABELS, DEFAULT_TYPE_LABELS } from './constants.js';
-import { renderQuestionRows } from './rows.js';
-import { renderQuestionForm } from './forms.js';
+import { renderMcqRows, renderQuestionRows } from './rows.js';
+import { renderMcqForm, renderQuestionForm } from './forms.js';
 
 export function renderTopicQuestionBankOverview(detail) {
   const { topic, chapter, subject, node, labels, questions } = detail;
@@ -183,7 +183,7 @@ export function renderTopicQuestionCQSection(detail, sectionKey, formState = nul
   `;
 }
 
-export function renderTopicQuestionMCQ(detail, formState = null) {
+export function renderTopicQuestionMCQ(detail, formState = null, mediaUrl) {
   const { topic, chapter, subject, node, labels, questions } = detail;
   const nodeName = node.displayName || node.serverName || '';
   const safeLabels = {
@@ -194,17 +194,16 @@ export function renderTopicQuestionMCQ(detail, formState = null) {
   const baseHref = `#subjects/${subject.id}/chapters/${node.id}/${chapter.id}/topics/${topic.id}/questions/mcq`;
   const addHref = `${baseHref}/new`;
   const formMarkup = formState
-    ? renderQuestionForm({
+    ? renderMcqForm({
       subject,
       node,
       chapter,
       topic,
       safeLabels,
-      typeKey: 'MCQ',
-      sectionKey: '',
       mode: formState.mode,
       question: formState.question,
-      backHref: baseHref
+      backHref: baseHref,
+      mediaUrl
     })
     : '';
 
@@ -227,12 +226,13 @@ export function renderTopicQuestionMCQ(detail, formState = null) {
           <thead>
             <tr>
               <th>Question</th>
-              <th>Answer</th>
+              <th>Options</th>
+              <th>Correct</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            ${renderQuestionRows(mcqQuestions, safeLabels, 'MCQ', { showSection: false, editHref: (item) => `${baseHref}/edit/${item.id}` })}
+            ${renderMcqRows(mcqQuestions, mediaUrl, { editHref: (item) => `${baseHref}/edit/${item.id}` })}
           </tbody>
         </table>
       </div>

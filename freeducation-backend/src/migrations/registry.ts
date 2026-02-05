@@ -14,6 +14,8 @@ import scienceSubjectSkeletonSql from './v1.4.3/science_subject_skeleton.sql';
 import subjectTopicsSql from './v1.4.4/subject_topics.sql';
 import moduleNodeImagesSql from './v1.4.5/module_node_images.sql';
 import mathSubjectSkeletonSql from './v1.4.6/math_subject_skeleton.sql';
+import sevenCqSubjectSkeletonSql from './v1.4.7/seven_cq_subject_skeleton.sql';
+import mcqQuestionFieldsSql from './v1.4.8/mcq_question_fields.sql';
 
 interface Migration {
   version: string;
@@ -68,6 +70,14 @@ const MIGRATIONS: Migration[] = [
   {
     version: '1.4.6',
     statements: [mathSubjectSkeletonSql]
+  },
+  {
+    version: '1.4.7',
+    statements: [sevenCqSubjectSkeletonSql]
+  },
+  {
+    version: '1.4.8',
+    statements: [mcqQuestionFieldsSql]
   }
 ];
 

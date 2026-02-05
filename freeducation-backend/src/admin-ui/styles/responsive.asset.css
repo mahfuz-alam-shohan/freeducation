@@ -172,6 +172,11 @@
     gap: 10px !important;
   }
 
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
   .card {
     padding: 14px !important;
     margin-bottom: 10px !important;
@@ -179,6 +184,27 @@
     border: 1px solid var(--sheet-line);
     background: var(--sheet-bg);
     box-shadow: none !important;
+  }
+
+  .stat-card {
+    padding: 10px !important;
+  }
+
+  .stat-card h3 {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .stat-card .stats span {
+    font-size: var(--font-lg);
+  }
+
+  .mcq-option {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mcq-correct {
+    justify-self: flex-start;
   }
 
   .stats span {
@@ -411,5 +437,18 @@
 
   .auth-panel h1 {
     font-size: var(--font-lg);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .stat-card {
+    padding: 8px !important;
+  }
+
+  .stat-card .stats span {
+    font-size: var(--font-md);
   }
 }

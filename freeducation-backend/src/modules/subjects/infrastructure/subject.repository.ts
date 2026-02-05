@@ -160,11 +160,11 @@ export class SubjectRepository {
     return this.questionsRepo.listQuestions(chapterId);
   }
 
-  addQuestion(chapterId: number, payload: { typeKey: QuestionRecord['typeKey']; sectionKey?: QuestionRecord['sectionKey'] | null; questionText: string; answerText: string }): Promise<QuestionRecord> {
+  addQuestion(chapterId: number, payload: { typeKey: QuestionRecord['typeKey']; sectionKey?: QuestionRecord['sectionKey'] | null; questionText: string; answerText: string; imageKey?: string | null; options?: string[] | null; correctOption?: string | null }): Promise<QuestionRecord> {
     return this.questionsRepo.addQuestion(chapterId, payload);
   }
 
-  updateQuestion(questionId: number, payload: { questionText?: string; answerText?: string }): Promise<QuestionRecord | null> {
+  updateQuestion(questionId: number, payload: { questionText?: string; answerText?: string; imageKey?: string | null; options?: string[] | null; correctOption?: string | null }): Promise<QuestionRecord | null> {
     return this.questionsRepo.updateQuestion(questionId, payload);
   }
 
@@ -180,11 +180,11 @@ export class SubjectRepository {
     return this.questionsRepo.listTopicQuestions(topicId);
   }
 
-  addTopicQuestion(topicId: number, payload: { typeKey: TopicQuestionRecord['typeKey']; sectionKey?: TopicQuestionRecord['sectionKey'] | null; questionText: string; answerText: string }): Promise<TopicQuestionRecord> {
+  addTopicQuestion(topicId: number, payload: { typeKey: TopicQuestionRecord['typeKey']; sectionKey?: TopicQuestionRecord['sectionKey'] | null; questionText: string; answerText: string; imageKey?: string | null; options?: string[] | null; correctOption?: string | null }): Promise<TopicQuestionRecord> {
     return this.questionsRepo.addTopicQuestion(topicId, payload);
   }
 
-  updateTopicQuestion(questionId: number, payload: { questionText?: string; answerText?: string }): Promise<TopicQuestionRecord | null> {
+  updateTopicQuestion(questionId: number, payload: { questionText?: string; answerText?: string; imageKey?: string | null; options?: string[] | null; correctOption?: string | null }): Promise<TopicQuestionRecord | null> {
     return this.questionsRepo.updateTopicQuestion(questionId, payload);
   }
 

@@ -1,5 +1,6 @@
 export type QuestionTypeKey = 'CQ' | 'MCQ';
 export type SectionKey = 'KNOWLEDGE' | 'TWO' | 'THREE' | 'FOUR';
+export type McqOptionKey = 'A' | 'B' | 'C' | 'D';
 
 export interface Subject {
   id: number;
@@ -57,6 +58,9 @@ export interface QuestionItem {
   sectionKey: SectionKey | null;
   questionText: string;
   answerText: string;
+  imageKey: string | null;
+  options: string[] | null;
+  correctOption: McqOptionKey | null;
 }
 
 export interface Topic {
@@ -91,6 +95,9 @@ export interface TopicQuestionItem {
   sectionKey: SectionKey | null;
   questionText: string;
   answerText: string;
+  imageKey: string | null;
+  options: string[] | null;
+  correctOption: McqOptionKey | null;
 }
 
 export type SubjectRecord = Subject;

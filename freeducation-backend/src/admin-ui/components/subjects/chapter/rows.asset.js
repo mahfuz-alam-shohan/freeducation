@@ -104,3 +104,45 @@ export function renderQuestionRows(questions, labels, typeKey, options = {}) {
     `;
   }).join('');
 }
+
+export function renderMcqRows(questions, mediaUrl, options = {}) {
+  if (!questions || questions.length === 0) {
+    return `
+      <tr>
+        <td class="table-empty" colspan="4">No MCQ questions added yet.</td>
+      </tr>
+    `;
+  }
+
+  const deleteAction = options.deleteAction || 'question-delete';
+
+  return questions.map((item) => {
+    const optionsList = Array.isArray(item.options) ? item.options : [];
+    const correct = item.correctOption || '-';
+    const optionMarkup = ['A', 'B', 'C', 'D'].map((label, index) => {
+      const text = optionsList[index] || '-';
+      const tagClass = correct === label ? 'cell-tag good' : 'cell-tag';
+      return `<div class="option-line"><span class="${tagClass}">${label}</span><span class="cell-wrap">${text}</span></div>`;
+    }).join('');
+    const imageUrl = item.imageKey && mediaUrl ? mediaUrl(item.imageKey) : '';
+    const imageCell = imageUrl ? renderImageCell(imageUrl) : '<span class="muted">None</span>';
+    const editControl = options.editHref
+      ? `<a class="button ghost" href="${options.editHref(item)}">Edit</a>`
+      : '';
+
+    return `
+      <tr>
+        <td>
+          <div class="table-title">${item.questionText}</div>
+          <div class="table-sub">${imageCell}</div>
+        </td>
+        <td class="cell-wrap"><div class="option-list">${optionMarkup}</div></td>
+        <td><span class="cell-tag good">${correct}</span></td>
+        <td class="cell-actions">
+          ${editControl}
+          <button class="button ghost" data-action="${deleteAction}" data-id="${item.id}">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}

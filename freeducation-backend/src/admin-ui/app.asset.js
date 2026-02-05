@@ -1,7 +1,7 @@
 import { renderSidebar } from './components/sidebar.js';
 import { renderTopbar } from './components/topbar.js';
 import { renderLayout } from './components/layout.js';
-import { renderStatCards } from './components/cards.js';
+import { renderDashboard } from './components/dashboard.js';
 import { renderUsersTable } from './components/table.js';
 import { showToast } from './components/toast.js';
 import { renderDatabasePanel } from './components/db.js';
@@ -360,7 +360,43 @@ async function renderApp(options = {}) {
   await withLoading(async () => {
     const { route, parts, section } = parseRoute();
 
-    if (route === 'dashboard' || route === 'users') {
+    if (route === 'dashboard') {
+      try {
+        await loadUsers({ force });
+      } catch (error) {
+        state.users = [];
+        state.total = 0;
+        showToast(error.message, 'error');
+      }
+
+      try {
+        await loadSubjectModules({ force });
+      } catch (error) {
+        state.subjectModules = [];
+        showToast(error.message, 'error');
+      }
+
+      try {
+        await loadSubjects({ force });
+      } catch (error) {
+        state.subjects = [];
+        showToast(error.message, 'error');
+      }
+
+      try {
+        await loadApis({ force });
+      } catch (error) {
+        state.apis = [];
+        showToast(error.message, 'error');
+      }
+
+      try {
+        await loadTables({ force });
+      } catch (error) {
+        state.tables = [];
+        showToast(error.message, 'error');
+      }
+    } else if (route === 'users') {
       await loadUsers({ force });
     }
 
@@ -507,11 +543,14 @@ async function renderApp(options = {}) {
 
     if (route === 'dashboard') {
       title = 'Dashboard';
-      content = renderStatCards([
-        { label: 'Total users', value: state.total, caption: 'All roles' },
-        { label: 'Active admins', value: state.users.filter((u) => u.role === 'admin' && u.isActive).length, caption: 'Enabled' },
-        { label: 'Active educators', value: state.users.filter((u) => u.role === 'teacher' && u.isActive).length, caption: 'Teachers' }
-      ]);
+      content = renderDashboard({
+        users: state.users,
+        totalUsers: state.total,
+        subjectModules: state.subjectModules,
+        subjects: state.subjects,
+        apis: state.apis,
+        tables: state.tables
+      });
     } else if (route === 'users') {
       title = 'Users';
       content = renderUsersTable(state.users);
@@ -607,7 +646,7 @@ async function renderApp(options = {}) {
                     const mcqFormState = mcqMode === 'new'
                       ? { mode: 'new', question: null }
                       : (mcqMode === 'edit' && mcqQuestion ? { mode: 'edit', question: mcqQuestion } : null);
-                    content = renderTopicQuestionMCQ(state.topicDetail, mcqFormState);
+                    content = renderTopicQuestionMCQ(state.topicDetail, mcqFormState, mediaUrl);
                   } else {
                     content = renderTopicQuestionBankOverview(state.topicDetail);
                   }
@@ -650,7 +689,7 @@ async function renderApp(options = {}) {
                   const mcqFormState = mcqMode === 'new'
                     ? { mode: 'new', question: null }
                     : (mcqMode === 'edit' && mcqQuestion ? { mode: 'edit', question: mcqQuestion } : null);
-                  content = renderQuestionMCQ(state.chapterDetail, mcqFormState);
+                  content = renderQuestionMCQ(state.chapterDetail, mcqFormState, mediaUrl);
                 } else {
                   content = renderQuestionBankOverview(state.chapterDetail);
                 }
@@ -1270,58 +1309,107 @@ function wireActions() {
           const ownerId = Number(questionForm.getAttribute('data-owner-id'));
           const questionId = Number(questionForm.getAttribute('data-id'));
           const backHref = String(questionForm.getAttribute('data-back-href') || '');
-          const attachment = formData.get('attachment');
-          const attachmentTarget = String(formData.get('attachmentTarget') || 'answer');
           let questionText = String(formData.get('question') || '').trim();
           let answerText = String(formData.get('answer') || '').trim();
 
           try {
             await withLoading(async () => {
-              if (!questionText || !answerText) {
-                throw new Error('Question and answer are required');
-              }
               if (!Number.isFinite(ownerId)) {
                 throw new Error('Invalid question target');
               }
 
-              if (attachment instanceof File && attachment.size > 0) {
-                const upload = await api.uploadMedia(attachment, 'subject-questions');
-                const link = mediaUrl(upload.data.key);
-                if (attachmentTarget === 'question') {
-                  questionText = `${questionText}\n${link}`;
-                } else {
-                  answerText = `${answerText}\n${link}`;
+              if (type === 'MCQ') {
+                if (!questionText) {
+                  throw new Error('Question is required');
                 }
-              }
+                const options = ['A', 'B', 'C', 'D'].map((label) => String(formData.get(`option${label}`) || '').trim());
+                const correctOption = String(formData.get('correctOption') || '').trim();
+                if (options.some((option) => !option)) {
+                  throw new Error('All four options are required');
+                }
+                if (!correctOption) {
+                  throw new Error('Select the correct option');
+                }
+                const correctIndex = ['A', 'B', 'C', 'D'].indexOf(correctOption);
+                if (correctIndex < 0) {
+                  throw new Error('Invalid correct option');
+                }
+                answerText = options[correctIndex];
 
-              if (mode === 'edit' && Number.isFinite(questionId)) {
-                if (owner === 'topic') {
-                  await api.updateTopicQuestion(ownerId, questionId, { questionText, answerText });
-                  invalidateTopicDetail(ownerId);
+                const imageFile = formData.get('image');
+                let imageKey = null;
+                if (imageFile instanceof File && imageFile.size > 0) {
+                  const upload = await api.uploadMedia(imageFile, 'subject-questions');
+                  imageKey = upload.data.key;
+                }
+
+                if (mode === 'edit' && Number.isFinite(questionId)) {
+                  const payload = { questionText, answerText, options, correctOption };
+                  if (imageKey) payload.imageKey = imageKey;
+                  if (owner === 'topic') {
+                    await api.updateTopicQuestion(ownerId, questionId, payload);
+                    invalidateTopicDetail(ownerId);
+                  } else {
+                    await api.updateChapterQuestion(ownerId, questionId, payload);
+                    invalidateChapterDetail(ownerId);
+                  }
                 } else {
-                  await api.updateChapterQuestion(ownerId, questionId, { questionText, answerText });
-                  invalidateChapterDetail(ownerId);
+                  const payload = { typeKey: 'MCQ', sectionKey: null, questionText, answerText, options, correctOption };
+                  if (imageKey) payload.imageKey = imageKey;
+                  if (owner === 'topic') {
+                    await api.addTopicQuestion(ownerId, payload);
+                    invalidateTopicDetail(ownerId);
+                  } else {
+                    await api.addChapterQuestion(ownerId, payload);
+                    invalidateChapterDetail(ownerId);
+                  }
                 }
               } else {
-                if (type === 'CQ' && !section) {
-                  throw new Error('CQ section is required');
+                const attachment = formData.get('attachment');
+                const attachmentTarget = String(formData.get('attachmentTarget') || 'answer');
+                if (!questionText || !answerText) {
+                  throw new Error('Question and answer are required');
                 }
-                if (owner === 'topic') {
-                  await api.addTopicQuestion(ownerId, {
-                    typeKey: type,
-                    sectionKey: type === 'CQ' ? section : null,
-                    questionText,
-                    answerText
-                  });
-                  invalidateTopicDetail(ownerId);
+
+                if (attachment instanceof File && attachment.size > 0) {
+                  const upload = await api.uploadMedia(attachment, 'subject-questions');
+                  const link = mediaUrl(upload.data.key);
+                  if (attachmentTarget === 'question') {
+                    questionText = `${questionText}\n${link}`;
+                  } else {
+                    answerText = `${answerText}\n${link}`;
+                  }
+                }
+
+                if (mode === 'edit' && Number.isFinite(questionId)) {
+                  if (owner === 'topic') {
+                    await api.updateTopicQuestion(ownerId, questionId, { questionText, answerText });
+                    invalidateTopicDetail(ownerId);
+                  } else {
+                    await api.updateChapterQuestion(ownerId, questionId, { questionText, answerText });
+                    invalidateChapterDetail(ownerId);
+                  }
                 } else {
-                  await api.addChapterQuestion(ownerId, {
-                    typeKey: type,
-                    sectionKey: type === 'CQ' ? section : null,
-                    questionText,
-                    answerText
-                  });
-                  invalidateChapterDetail(ownerId);
+                  if (type === 'CQ' && !section) {
+                    throw new Error('CQ section is required');
+                  }
+                  if (owner === 'topic') {
+                    await api.addTopicQuestion(ownerId, {
+                      typeKey: type,
+                      sectionKey: type === 'CQ' ? section : null,
+                      questionText,
+                      answerText
+                    });
+                    invalidateTopicDetail(ownerId);
+                  } else {
+                    await api.addChapterQuestion(ownerId, {
+                      typeKey: type,
+                      sectionKey: type === 'CQ' ? section : null,
+                      questionText,
+                      answerText
+                    });
+                    invalidateChapterDetail(ownerId);
+                  }
                 }
               }
 

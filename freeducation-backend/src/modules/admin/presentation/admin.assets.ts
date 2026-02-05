@@ -31,6 +31,7 @@ import layoutJs from '../../../admin-ui/components/layout.asset.js';
 import sidebarJs from '../../../admin-ui/components/sidebar.asset.js';
 import topbarJs from '../../../admin-ui/components/topbar.asset.js';
 import cardsJs from '../../../admin-ui/components/cards.asset.js';
+import dashboardJs from '../../../admin-ui/components/dashboard.asset.js';
 import tableJs from '../../../admin-ui/components/table.asset.js';
 import formJs from '../../../admin-ui/components/form.asset.js';
 import toastJs from '../../../admin-ui/components/toast.asset.js';
@@ -105,6 +106,7 @@ const assetMap = new Map<string, AssetEntry>([
   ['/admin/assets/components/sidebar.js', { body: sidebarJs, contentType: 'application/javascript; charset=UTF-8' }],
   ['/admin/assets/components/topbar.js', { body: topbarJs, contentType: 'application/javascript; charset=UTF-8' }],
   ['/admin/assets/components/cards.js', { body: cardsJs, contentType: 'application/javascript; charset=UTF-8' }],
+  ['/admin/assets/components/dashboard.js', { body: dashboardJs, contentType: 'application/javascript; charset=UTF-8' }],
   ['/admin/assets/components/table.js', { body: tableJs, contentType: 'application/javascript; charset=UTF-8' }],
   ['/admin/assets/components/form.js', { body: formJs, contentType: 'application/javascript; charset=UTF-8' }],
   ['/admin/assets/components/toast.js', { body: toastJs, contentType: 'application/javascript; charset=UTF-8' }],
