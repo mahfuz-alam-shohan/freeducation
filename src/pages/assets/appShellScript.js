@@ -46,7 +46,7 @@ async function downscaleImageFile(file) {
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.72));
   if (!blob) return file;
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
-  return new File([blob], `${targetName}.webp`, { type: 'image/webp', lastModified: Date.now() });
+  return new File([blob], targetName + '.webp', { type: 'image/webp', lastModified: Date.now() });
 }
 
 async function prepareImageInputs(form) {
