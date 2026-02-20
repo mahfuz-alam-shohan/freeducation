@@ -1,5 +1,5 @@
-import { loginScript } from './assets.js';
-import { basePage } from './templates/base.js';
+import { loginScript } from '../assets.js';
+import { basePage } from '../templates/base.js';
 
 export function loginPage() {
   return basePage(

@@ -1,4 +1,4 @@
-import { appShell } from './templates/shell.js';
+import { appShell } from '../templates/shell.js';
 
 export function dashboardPage(user, stats) {
   const content = `

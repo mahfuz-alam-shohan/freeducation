@@ -1,4 +1,4 @@
-import { basePage } from './templates/base.js';
+import { basePage } from '../templates/base.js';
 
 export function publicHomePage(user = null) {
   const authActions = user

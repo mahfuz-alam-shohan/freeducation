@@ -1,5 +1,5 @@
-import { setupScript } from './assets.js';
-import { basePage } from './templates/base.js';
+import { setupScript } from '../assets.js';
+import { basePage } from '../templates/base.js';
 
 export function setupPage() {
   return basePage(
