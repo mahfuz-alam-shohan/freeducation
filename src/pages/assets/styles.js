@@ -330,12 +330,18 @@ a { color: inherit; }
 
 .input,
 .select {
-  height: 34px;
+  height: 36px;
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: 8px;
   padding: 0 12px;
-  font-size: 14px;
+  font-size: 16px;
+}
+.input,
+.select,
+textarea,
+[contenteditable="true"] {
+  -webkit-text-size-adjust: 100%;
 }
 .rich-editor {
   border: 1px solid #d0d7de;
@@ -392,6 +398,7 @@ a { color: inherit; }
   padding: 10px;
   outline: none;
   line-height: 1.6;
+  font-size: 16px;
 }
 .rich-editor-preview { background: #ffffff; }
 .grid > .rich-editor { grid-column: 1 / -1; }
