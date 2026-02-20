@@ -456,6 +456,64 @@ a { color: inherit; }
 }
 .table tbody tr:hover { background: #f8fafc; }
 
+
+.content-list {
+  display: grid;
+  gap: 10px;
+}
+
+.content-entry {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.entry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.note-numbering {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.note-number-link {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.content-modal {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: 900px;
+  width: min(900px, 96vw);
+}
+
+.content-modal::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.content-modal-inner {
+  max-width: none;
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.content-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .pagination {
   display: flex;
   justify-content: space-between;

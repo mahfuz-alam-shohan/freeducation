@@ -84,6 +84,53 @@ function initializeRichEditors() {
   });
 }
 
+
+function initializeContentModals() {
+  document.querySelectorAll('[data-content-modal-open]').forEach((button) => {
+    if (button.dataset.bound === '1') return;
+    button.addEventListener('click', () => {
+      const modalId = button.getAttribute('data-content-modal-open');
+      if (!modalId) return;
+      const dialog = document.querySelector('[data-content-modal="' + modalId + '"]');
+      if (!dialog) return;
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', 'open');
+      }
+    });
+    button.dataset.bound = '1';
+  });
+
+  document.querySelectorAll('[data-content-modal-close]').forEach((button) => {
+    if (button.dataset.bound === '1') return;
+    button.addEventListener('click', () => {
+      const dialog = button.closest('dialog');
+      if (!dialog) return;
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    });
+    button.dataset.bound = '1';
+  });
+
+  document.querySelectorAll('dialog[data-content-modal]').forEach((dialog) => {
+    if (dialog.dataset.bound === '1') return;
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        if (typeof dialog.close === 'function') {
+          dialog.close();
+        } else {
+          dialog.removeAttribute('open');
+        }
+      }
+    });
+    dialog.dataset.bound = '1';
+  });
+}
+
 async function refreshLiveRegion(regionName) {
   const response = await fetch(window.location.href, { method: 'GET', credentials: 'same-origin' });
   if (!response.ok) return;
@@ -95,6 +142,7 @@ async function refreshLiveRegion(regionName) {
   if (!current || !incoming) return;
   current.replaceWith(incoming);
   initializeRichEditors();
+  initializeContentModals();
   initializeFormHandlers();
 }
 
@@ -257,6 +305,7 @@ if (!shell) {
   });
 
   initializeRichEditors();
+  initializeContentModals();
   initializeFormHandlers();
 }
 `;
