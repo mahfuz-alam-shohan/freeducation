@@ -328,8 +328,8 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
-      <h3 class="card-title">Add short note</h3>
-      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="short note" aria-expanded="false">Add short note</button>
+      <h3 class="card-title">Add notes</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="notes" aria-expanded="false">Add Notes</button>
     </div>
     <div data-add-form-panel>
       ${noteForm(subject.id, node.id, chapter?.id, { page: safePage })}
@@ -346,6 +346,7 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
 }
 
 function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
+  const submitLabel = mcq ? 'Update Question' : 'Add Question';
   return `<form method="post" action="/api/mcqs" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="id" value="${mcq?.id || ''}" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
@@ -361,7 +362,7 @@ function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
     <select class="select" name="correctOption" required>
       ${['A', 'B', 'C', 'D'].map((v) => `<option value="${v}" ${mcq?.correct_option === v ? 'selected' : ''}>Correct: ${v}</option>`).join('')}
     </select>
-    <div>${mcq ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}<button class="btn btn-primary" type="submit">${mcq ? 'Update MCQ' : 'Add MCQ'}</button></div>
+    <div>${mcq ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}<button class="btn btn-primary" type="submit">${submitLabel}</button></div>
   </form>`;
 }
 
@@ -386,10 +387,10 @@ export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
       </div>
       ${m.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(m.image_key) || '')}" alt="MCQ image ${itemIndex}" loading="lazy" /></figure>` : ''}
       <div class="mcq-options-grid" role="list" aria-label="Options for MCQ ${index + 1}">
-        <p class="mcq-option" role="listitem"><span class="mcq-option-label">A.</span><span>${h(m.option_a)}</span></p>
-        <p class="mcq-option" role="listitem"><span class="mcq-option-label">B.</span><span>${h(m.option_b)}</span></p>
-        <p class="mcq-option" role="listitem"><span class="mcq-option-label">C.</span><span>${h(m.option_c)}</span></p>
-        <p class="mcq-option" role="listitem"><span class="mcq-option-label">D.</span><span>${h(m.option_d)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'A' ? 'mcq-option-correct' : ''}" role="listitem"><span class="mcq-option-label">A.</span><span>${h(m.option_a)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'B' ? 'mcq-option-correct' : ''}" role="listitem"><span class="mcq-option-label">B.</span><span>${h(m.option_b)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'C' ? 'mcq-option-correct' : ''}" role="listitem"><span class="mcq-option-label">C.</span><span>${h(m.option_c)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'D' ? 'mcq-option-correct' : ''}" role="listitem"><span class="mcq-option-label">D.</span><span>${h(m.option_d)}</span></p>
       </div>
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
@@ -411,8 +412,8 @@ export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
-      <h3 class="card-title">Add MCQ</h3>
-      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="MCQ" aria-expanded="false">Add MCQ</button>
+      <h3 class="card-title">Add question</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="question" aria-expanded="false">Add Question</button>
     </div>
     <div data-add-form-panel>
       ${mcqForm(subject.id, node.id, chapter?.id, { page: safePage })}
