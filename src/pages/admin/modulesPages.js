@@ -50,18 +50,26 @@ export function templateDetailsPage(user, template, nodes) {
     byParent.get(key).push(node);
   }
 
-  function walk(parentId, depth) {
+  function walk(parentId, depth, parentChain = []) {
     const list = byParent.get(parentId || 'root') || [];
     return list
-      .map((node) => {
-        const label = `${'— '.repeat(depth)}${h(node.server_name)}`;
+      .map((node, index) => {
+        const isLast = index === list.length - 1;
+        const branch = [...parentChain, isLast ? 'end' : 'mid'];
+        const hierarchy = `<div class="template-tree-row" style="--depth:${depth};">
+            <span class="template-tree-guides" aria-hidden="true">${branch
+              .slice(0, -1)
+              .map((segment) => `<span class="template-guide ${segment === 'end' ? 'blank' : ''}"></span>`)
+              .join('')}<span class="template-guide template-branch ${isLast ? 'end' : 'mid'}"></span></span>
+            <span class="template-tree-label">${h(node.server_name)}</span>
+          </div>`;
         return `<tr>
-          <td>${label}</td>
+          <td>${hierarchy}</td>
           <td>${h(node.node_type)}</td>
           <td>${yesNo(node.supports_edit)}</td>
           <td>${yesNo(node.supports_image)}</td>
           <td>${yesNo(node.supports_chapters)}</td>
-        </tr>${walk(node.id, depth + 1)}`;
+        </tr>${walk(node.id, depth + 1, branch)}`;
       })
       .join('');
   }
@@ -113,16 +121,16 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
   const rows = nodes
     .map(
       (n) => `<tr>
-      <td><a href="/subjects/${subject.id}/nodes/${n.id}">${h(n.display_name)}</a><div class="muted">Server key: ${h(n.server_name)}</div></td>
+      <td class="subject-node-name-cell"><a href="/subjects/${subject.id}/nodes/${n.id}" class="truncate-one-line">${h(n.display_name)}</a><div class="muted truncate-one-line">Server key: ${h(n.server_name)}</div></td>
       <td>${yesNo(n.supports_edit)}</td>
       <td>${yesNo(n.supports_image)}</td>
       <td>${imageCell(n.image_key)}</td>
-      <td>
-        <form method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" class="toolbar-group">
+      <td class="subject-node-actions-cell">
+        <form method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" class="subject-node-actions-row">
           <input type="hidden" name="redirect" value="${h(backHref)}" />
-          <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} />
+          <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} maxlength="120" />
           <input class="input" name="image" type="file" accept="image/*" ${n.supports_image ? '' : 'disabled'} />
-          <label><input type="checkbox" name="removeImage" value="1" ${n.supports_image ? '' : 'disabled'} /> Remove image</label>
+          <label class="subject-node-checkbox"><input type="checkbox" name="removeImage" value="1" ${n.supports_image ? '' : 'disabled'} /> Remove image</label>
           <button class="btn btn-secondary" type="submit">Save</button>
         </form>
       </td>

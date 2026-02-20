@@ -1,3 +1,8 @@
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
 export async function getAdminCount(db) {
   const row = await db.prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'").first();
   return Number(row?.count ?? 0);
@@ -54,4 +59,24 @@ export async function listUsers(db) {
     .prepare('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 500')
     .all();
   return rows.results ?? [];
+}
+
+
+export async function findUserById(db, userId) {
+  return db.prepare('SELECT * FROM users WHERE id = ?1').bind(userId).first();
+}
+
+export async function updateUserName(db, userId, name) {
+  await db.prepare('UPDATE users SET name = ?2, updated_at = ?3 WHERE id = ?1').bind(userId, name, nowIso()).run();
+}
+
+export async function updateUserImage(db, userId, imageKey) {
+  await db.prepare('UPDATE users SET image_key = ?2, updated_at = ?3 WHERE id = ?1').bind(userId, imageKey, nowIso()).run();
+}
+
+export async function updateUserPassword(db, userId, passwordHash, passwordSalt, passwordIterations) {
+  await db
+    .prepare('UPDATE users SET password_hash = ?2, password_salt = ?3, password_iterations = ?4, updated_at = ?5 WHERE id = ?1')
+    .bind(userId, passwordHash, passwordSalt, passwordIterations, nowIso())
+    .run();
 }
