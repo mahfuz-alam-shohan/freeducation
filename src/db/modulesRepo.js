@@ -230,14 +230,14 @@ export async function createNote(db, input) {
       `INSERT INTO short_notes (id, subject_id, subject_node_id, chapter_id, title, content_html, image_key, created_at, updated_at)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`
     )
-    .bind(crypto.randomUUID(), input.subjectId, input.subjectNodeId, input.chapterId || null, input.title, input.contentHtml, input.imageKey, createdAt)
+    .bind(crypto.randomUUID(), input.subjectId, input.subjectNodeId, input.chapterId || null, input.title || '', input.contentHtml, input.imageKey, createdAt)
     .run();
 }
 
 export async function updateNote(db, input) {
   await db
     .prepare('UPDATE short_notes SET title = ?2, content_html = ?3, image_key = ?4, updated_at = ?5 WHERE id = ?1')
-    .bind(input.id, input.title, input.contentHtml, input.imageKey, nowIso())
+    .bind(input.id, input.title || '', input.contentHtml, input.imageKey, nowIso())
     .run();
 }
 

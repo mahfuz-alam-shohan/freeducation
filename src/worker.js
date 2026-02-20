@@ -319,7 +319,7 @@ async function handleAdminPost(request, env, url) {
     const title = String(form.get('title') || '').trim();
     const contentHtml = String(form.get('contentHtml') || '').trim();
     const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}`;
-    if (!title || !contentHtml) return redirect(redirectUrl);
+    if (!contentHtml) return redirect(redirectUrl);
     if (!idVal) {
       const imageKey = await uploadImage(env, 'notes', form.get('image'));
       await createNote(env.DB, { subjectId, subjectNodeId, chapterId, title, contentHtml, imageKey });
@@ -408,7 +408,7 @@ async function serveMedia(url, env, user) {
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('etag', object.httpEtag);
-  headers.set('cache-control', 'private, max-age=3600');
+  headers.set('cache-control', 'private, max-age=31536000, immutable');
   return new Response(object.body, { headers });
 }
 

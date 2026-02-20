@@ -267,6 +267,7 @@ export async function ensureSchema(db, options = {}) {
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_template ON template_nodes(template_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_parent ON subject_nodes(parent_subject_node_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)');

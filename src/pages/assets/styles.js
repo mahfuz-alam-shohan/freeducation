@@ -337,6 +337,11 @@ a { color: inherit; }
   padding: 0 12px;
   font-size: 14px;
 }
+.rich-editor { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.editor-tools { display: flex; gap: 6px; padding: 6px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.editor-tools .btn { min-height: 28px; padding: 0 8px; }
+.rich-editor-input { min-height: 150px; padding: 10px; outline: none; line-height: 1.6; }
+.rich-editor-input:empty::before { content: 'Write your note here...'; color: var(--muted); }
 .badge {
   display: inline-flex;
   border-radius: 999px;

@@ -3,7 +3,7 @@ export function json(data, status = 200, headers = {}) {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
+      'cache-control': 'private, no-cache, max-age=0, must-revalidate',
       ...headers,
     },
   });
@@ -14,7 +14,7 @@ export function html(body, status = 200) {
     status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'no-store',
+      'cache-control': 'private, no-cache, max-age=0, must-revalidate',
     },
   });
 }

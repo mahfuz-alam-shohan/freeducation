@@ -208,16 +208,29 @@ export function contentKindsPage(user, subject, node, chapter) {
 
 function noteForm(subjectId, subjectNodeId, chapterId, note) {
   return `<form method="post" action="/api/notes" enctype="multipart/form-data" class="grid grid-2">
+    <input type="hidden" name="liveRegion" value="notes-page" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
     <input type="hidden" name="id" value="${note?.id || ''}" />
-    <input class="input" name="title" placeholder="Note title" value="${h(note?.title || '')}" required />
+    <input class="input" name="title" placeholder="Optional note heading" value="${h(note?.title || '')}" />
     <input class="input" type="file" name="image" accept="image/*" />
-    <textarea class="input" name="contentHtml" style="height:120px; padding:10px;" placeholder="Write and format with basic HTML tags allowed." required>${h(note?.content_html || '')}</textarea>
+    <div class="rich-editor" data-rich-editor>
+      <div class="editor-tools">
+        <button type="button" class="btn btn-secondary" data-editor-command="bold"><strong>B</strong></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="italic"><em>I</em></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="underline"><u>U</u></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="insertUnorderedList">• List</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="insertOrderedList">1. List</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="formatBlock" data-editor-value="h3">H3</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="removeFormat">Clear</button>
+      </div>
+      <div class="rich-editor-input" data-editor-input contenteditable="true">${note?.content_html || ''}</div>
+      <textarea class="input" name="contentHtml" data-editor-storage hidden required>${h(note?.content_html || '')}</textarea>
+    </div>
     <div class="toolbar-group">
       ${note ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}
-      <button class="btn btn-primary" type="submit">${note ? 'Update Note' : 'Add Note'}</button>
+      <button class="btn btn-primary" type="submit" data-live-form="true">${note ? 'Update Note' : 'Add Note'}</button>
     </div>
   </form>`;
 }
@@ -225,12 +238,12 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
 export function notesPage(user, subject, node, chapter, notes) {
   const rows = notes
     .map(
-      (n) => `<div class="card"><h3 class="card-title">${h(n.title)}</h3>
+      (n) => `<div class="card">${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : ''}
       <p class="muted">${new Date(n.created_at).toLocaleString()}</p>
       <div>${n.content_html}</div>
       ${n.image_key ? `<p><code>${h(n.image_key)}</code></p>` : ''}
       ${noteForm(subject.id, node.id, chapter?.id, n)}
-      <form method="post" action="/api/notes/delete"><input type="hidden" name="id" value="${n.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit">Delete</button></form>
+      <form method="post" action="/api/notes/delete"><input type="hidden" name="liveRegion" value="notes-page" /><input type="hidden" name="id" value="${n.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit" data-live-form="true">Delete</button></form>
       </div>`
     )
     .join('');
@@ -241,7 +254,7 @@ export function notesPage(user, subject, node, chapter, notes) {
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
   <section class="card">${noteForm(subject.id, node.id, chapter?.id)}</section>
-  <section class="grid">${rows || '<p class="muted">No notes yet.</p>'}</section>`;
+  <section class="grid" data-live-region="notes-page">${rows || '<p class="muted">No notes yet.</p>'}</section>`;
 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
 }
