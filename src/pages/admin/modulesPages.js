@@ -239,7 +239,6 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
     <input type="hidden" name="id" value="${note?.id || ''}" />
-    <input class="input" name="title" placeholder="Optional note heading" value="${h(note?.title || '')}" />
     <input class="input" type="file" name="image" accept="image/*" />
     ${richTextEditor('contentHtml', note?.content_html || '', 'Write your short note here…', true)}
     <div class="toolbar-group">
@@ -265,16 +264,13 @@ export function notesPage(user, subject, node, chapter, notes) {
     .map((n, index) => {
       const modalId = `note-edit-${n.id}`;
       return `<article class="content-entry note-entry" id="note-${n.id}">
-      <div class="entry-head note-entry-head">
-        <p class="muted">Note ${index + 1}</p>
+      <div class="note-line-wrap">
+        <div class="note-content note-content-single-line">${n.content_html}</div>
         <div class="toolbar-group note-actions">
           <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
           ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id)}
         </div>
       </div>
-      ${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : '<p class="muted">Untitled note</p>'}
-      <p class="muted note-time">${new Date(n.created_at).toLocaleString()}</p>
-      <div class="note-content">${n.content_html}</div>
       ${n.image_key ? `<figure class="entry-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${index + 1}" loading="lazy" /></figure>` : ''}
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
@@ -288,15 +284,6 @@ export function notesPage(user, subject, node, chapter, notes) {
       </article>`;
     })
     .join('');
-
-  const numberLinks = notes.length
-    ? `<nav class="pagination" aria-label="Notes list numbering">
-      <span>${notes.length} note${notes.length > 1 ? 's' : ''}</span>
-      <div class="note-numbering">${notes
-        .map((n, index) => `<a href="#note-${n.id}" class="note-number-link">${index + 1}</a>`)
-        .join('')}</div>
-    </nav>`
-    : '';
 
   const backHref = chapter
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
@@ -312,7 +299,7 @@ export function notesPage(user, subject, node, chapter, notes) {
       ${noteForm(subject.id, node.id, chapter?.id)}
     </div>
   </section>
-  <section class="content-list" data-live-region="notes-page">${noteItems || '<p class="muted">No notes yet.</p>'}${numberLinks}</section>`;
+  <section class="content-list" data-live-region="notes-page">${noteItems || '<p class="muted">No notes yet.</p>'}</section>`;
 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
 }

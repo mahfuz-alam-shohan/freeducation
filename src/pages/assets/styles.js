@@ -509,21 +509,26 @@ a { color: inherit; }
   margin-top: 2px;
 }
 
-.note-entry-head {
-  margin-bottom: 4px;
+.note-line-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
 }
 
 .note-actions {
   margin-left: auto;
 }
 
-.note-time {
-  margin-bottom: 6px;
+.note-content {
+  line-height: 1.5;
+  font-size: 14px;
 }
 
-.note-content {
-  line-height: 1.6;
-  font-size: 14px;
+.note-content-single-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .entry-media {
@@ -866,7 +871,10 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
     align-items: flex-start;
     flex-direction: column;
   }
-  .note-entry-head,
+  .note-line-wrap {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
   .mcq-entry-head {
     flex-direction: row;
     align-items: center;
@@ -875,6 +883,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .note-actions {
     width: auto;
     margin-left: 0;
+    justify-content: flex-start;
   }
   .note-actions form {
     margin: 0;
