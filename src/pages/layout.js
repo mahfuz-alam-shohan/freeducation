@@ -44,9 +44,11 @@ function sidebar(active) {
       <button class="sidebar-toggle desktop-only" data-sidebar-toggle aria-label="Toggle sidebar">⟵</button>
     </header>
     <div class="sidebar-scroll">
-      <a href="/dashboard" class="menu-item ${active === 'dashboard' ? 'active' : ''}"><span class="icon">◻</span><span class="label">Dashboard</span></a>
-      <a href="/users" class="menu-item ${active === 'users' ? 'active' : ''}"><span class="icon">◼</span><span class="label">Users</span></a>
-      <a href="/api/logout" class="menu-item"><span class="icon">↗</span><span class="label">Logout</span></a>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="menu-item ${active === 'dashboard' ? 'active' : ''}"><span class="label">Dashboard</span></a>
+        <a href="/users" class="menu-item ${active === 'users' ? 'active' : ''}"><span class="label">Users</span></a>
+      </nav>
+      <a href="/api/logout" class="menu-item logout-item"><span class="label">Log out</span></a>
     </div>
   </aside>`;
 }
@@ -55,10 +57,10 @@ function topbar(user) {
   return `<header class="topbar">
       <div class="topbar-left">
         <button class="icon-btn mobile-only" data-mobile-toggle aria-label="Open menu">☰</button>
-        <p class="muted">Signed in as ${user.email}</p>
+        <p class="muted login-note">Logged in as <strong class="login-name">${user.name}</strong></p>
       </div>
       <div class="topbar-right">
-        <button class="icon-btn" aria-label="Profile"><span class="avatar">${initials(user.name)}</span></button>
+        <span class="avatar" aria-label="Profile">${initials(user.name)}</span>
       </div>
     </header>`;
 }
@@ -79,7 +81,6 @@ function shell(active, user, pageTitle, subtitle, content) {
           ${content}
         </div>
       </main>
-      <div class="toast" data-toast>Updated</div>
     </div>`,
     appScript
   );
