@@ -7,12 +7,12 @@ export function publicHomePage(user = null) {
 
   return basePage(
     'Freeducation',
-    `<main class="container" style="padding-top:24px;">
-      <section class="card">
+    `<main class="container section-gap-sm">
+      <section class="card section-stack">
         <p class="badge badge-info">Public page</p>
         <h1 class="page-title">Freeducation</h1>
         <p class="page-subtitle">A content-first workspace with role-based access. This page stays public for everyone.</p>
-        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">${authActions}</div>
+        <div class="inline-actions">${authActions}</div>
       </section>
     </main>`
   );

@@ -21,6 +21,10 @@ function imageCell(imageKey) {
   return imageKey ? `<code>${h(imageKey)}</code>` : '<span class="muted">No image</span>';
 }
 
+function tableRowsOrEmpty(rows, colSpan, label) {
+  return rows || `<tr><td colspan="${colSpan}" class="table-empty">${h(label)}</td></tr>`;
+}
+
 export function templatesPage(user, templates) {
   const rows = templates
     .map(
@@ -36,7 +40,7 @@ export function templatesPage(user, templates) {
   const content = `<section class="card">
     <div class="table-wrap"><table class="table">
       <thead><tr><th>Template</th><th>Code</th><th>Description</th><th>Created</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <tbody>${tableRowsOrEmpty(rows, 4, 'No templates yet.')}</tbody>
     </table></div>
   </section>`;
 
@@ -57,7 +61,7 @@ export function templateDetailsPage(user, template, nodes) {
       .map((node, index) => {
         const isLast = index === list.length - 1;
         const branch = [...parentChain, isLast ? 'end' : 'mid'];
-        const hierarchy = `<div class="template-tree-row" style="--depth:${depth};">
+        const hierarchy = `<div class="template-tree-row">
             <span class="template-tree-guides" aria-hidden="true">${branch
               .slice(0, -1)
               .map((segment) => `<span class="template-guide ${segment === 'end' ? 'blank' : ''}"></span>`)
@@ -79,7 +83,7 @@ export function templateDetailsPage(user, template, nodes) {
     <p class="muted">Template code: <strong>${h(template.code)}</strong></p>
     <div class="table-wrap"><table class="table">
       <thead><tr><th>Hierarchy</th><th>Type</th><th>Editable Name</th><th>Image Upload</th><th>Chapter Based</th></tr></thead>
-      <tbody>${walk(null, 0)}</tbody>
+      <tbody>${tableRowsOrEmpty(walk(null, 0), 5, 'No hierarchy nodes found.')}</tbody>
     </table></div>
   </section>`;
 
@@ -111,7 +115,7 @@ export function subjectsPage(user, subjects, templates) {
   <section class="card">
     <div class="table-wrap"><table class="table">
       <thead><tr><th>Subject</th><th>Class</th><th>Template</th><th>Created</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <tbody>${tableRowsOrEmpty(rows, 4, 'No subjects yet.')}</tbody>
     </table></div>
   </section>`;
 
@@ -139,10 +143,10 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
     )
     .join('');
 
-  const content = `<section class="card"><a href="${backHref}">← Back</a></section>
+  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card"><div class="table-wrap"><table class="table">
     <thead><tr><th>Name</th><th>Edit</th><th>Image</th><th>Current Image</th><th>Actions</th></tr></thead>
-    <tbody>${rows}</tbody>
+    <tbody>${tableRowsOrEmpty(rows, 5, 'No nodes found.')}</tbody>
   </table></div></section>`;
 
   return appShell('subjects', user, title, subtitle, content);
@@ -170,8 +174,8 @@ export function chaptersPage(user, subject, node, chapters) {
     .join('');
 
   const content = `<section class="card">
-    <a href="/subjects/${subject.id}/nodes/${node.parent_subject_node_id}">← Back</a>
-    <form method="post" action="/api/chapters" enctype="multipart/form-data" class="toolbar-group" style="margin-top:8px;">
+    <a class="back-link" href="/subjects/${subject.id}/nodes/${node.parent_subject_node_id}">← Back</a>
+    <form method="post" action="/api/chapters" enctype="multipart/form-data" class="toolbar-group section-gap-sm">
       <input type="hidden" name="subjectNodeId" value="${node.id}" />
       <input type="hidden" name="subjectId" value="${subject.id}" />
       <input class="input" name="name" placeholder="Chapter name" required />
@@ -181,7 +185,7 @@ export function chaptersPage(user, subject, node, chapters) {
   </section>
   <section class="card"><div class="table-wrap"><table class="table">
     <thead><tr><th>Chapter</th><th>Image</th><th>Actions</th></tr></thead>
-    <tbody>${rows}</tbody>
+    <tbody>${tableRowsOrEmpty(rows, 3, 'No chapters yet.')}</tbody>
   </table></div></section>`;
 
   return appShell('subjects', user, `${subject.name} · ${node.display_name}`, 'Manage chapters.', content);
@@ -202,7 +206,7 @@ export function contentKindsPage(user, subject, node, chapter) {
     })
     .join('');
   const backHref = node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
-  const content = `<section class="card"><a href="${backHref}">← Back</a></section>
+  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Content Type</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   return appShell('subjects', user, `${subject.name} · ${chapter ? chapter.name : node.display_name}`, 'Choose a content section.', content);
 }
@@ -325,7 +329,7 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
-  const content = `<section class="card"><a href="${backHref}">← Back</a></section>
+  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
       <h3 class="card-title">Add notes</h3>
@@ -409,7 +413,7 @@ export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
-  const content = `<section class="card"><a href="${backHref}">← Back</a></section>
+  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
       <h3 class="card-title">Add question</h3>
