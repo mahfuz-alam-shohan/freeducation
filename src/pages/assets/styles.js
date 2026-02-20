@@ -754,7 +754,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .template-builder .select { min-width: 120px; }
 .template-builder .template-options { display: grid; gap: 4px; min-width: 180px; }
 .template-builder .template-row-actions { white-space: nowrap; width: 1%; }
-.template-builder .template-row-actions .btn { min-width: 74px; }
+.template-builder .template-row-actions .btn { min-width: 44px; padding-inline: 8px; }
 
 .template-live-hierarchy { border: 1px solid var(--line); padding: 8px; border-radius: 8px; background: #fff; }
 .template-live-tree,
