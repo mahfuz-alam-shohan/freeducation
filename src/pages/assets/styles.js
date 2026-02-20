@@ -462,6 +462,57 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .app-shell.mobile-open .mobile-overlay { opacity: 1; pointer-events: auto; }
 .mobile-only { display: none; }
 
+
+.truncate-one-line {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.subject-node-name-cell { max-width: 280px; }
+.subject-node-actions-cell { width: 1%; white-space: nowrap; }
+.subject-node-actions-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(180px, 220px) auto auto;
+  gap: 6px;
+  align-items: center;
+}
+.subject-node-checkbox { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+
+.profile-hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.profile-avatar-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.profile-avatar {
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f1f5f9;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  overflow: hidden;
+}
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar-form { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.profile-upload-btn .icon { width: 14px; height: 14px; }
+.profile-file-input { max-width: 190px; }
+.profile-tabs-card { display: grid; gap: 12px; }
+.profile-tabs { width: fit-content; }
+.profile-tab-panel { display: grid; gap: 10px; }
+.profile-readonly-row { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #f8fafc; }
+.profile-fixed-value { margin: 2px 0 0; font-weight: 600; color: #0f172a; }
+.profile-form-grid { display: grid; gap: 8px; max-width: 560px; }
+.profile-form-grid label { display: flex; align-items: center; gap: 8px; }
+.profile-form-grid label .icon { width: 15px; height: 15px; }
+.profile-form-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+
 @media (max-width: 1024px) {
   .grid-4,
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -489,6 +540,9 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .grid-4,
   .grid-3,
   .grid-2 { grid-template-columns: 1fr; }
+  .subject-node-actions-row { grid-template-columns: 1fr; }
+  .profile-hero { grid-template-columns: 1fr; }
+  .profile-form-actions { justify-content: flex-start; }
   .card { padding: 10px; border-radius: 10px; }
   .kpi { font-size: 36px; }
   .page-title { font-size: 24px; }

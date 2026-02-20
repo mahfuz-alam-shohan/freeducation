@@ -113,16 +113,16 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
   const rows = nodes
     .map(
       (n) => `<tr>
-      <td><a href="/subjects/${subject.id}/nodes/${n.id}">${h(n.display_name)}</a><div class="muted">Server key: ${h(n.server_name)}</div></td>
+      <td class="subject-node-name-cell"><a href="/subjects/${subject.id}/nodes/${n.id}" class="truncate-one-line">${h(n.display_name)}</a><div class="muted truncate-one-line">Server key: ${h(n.server_name)}</div></td>
       <td>${yesNo(n.supports_edit)}</td>
       <td>${yesNo(n.supports_image)}</td>
       <td>${imageCell(n.image_key)}</td>
-      <td>
-        <form method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" class="toolbar-group">
+      <td class="subject-node-actions-cell">
+        <form method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" class="subject-node-actions-row">
           <input type="hidden" name="redirect" value="${h(backHref)}" />
-          <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} />
+          <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} maxlength="120" />
           <input class="input" name="image" type="file" accept="image/*" ${n.supports_image ? '' : 'disabled'} />
-          <label><input type="checkbox" name="removeImage" value="1" ${n.supports_image ? '' : 'disabled'} /> Remove image</label>
+          <label class="subject-node-checkbox"><input type="checkbox" name="removeImage" value="1" ${n.supports_image ? '' : 'disabled'} /> Remove image</label>
           <button class="btn btn-secondary" type="submit">Save</button>
         </form>
       </td>

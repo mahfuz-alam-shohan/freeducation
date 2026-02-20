@@ -4,8 +4,12 @@ import {
   createSession,
   deleteSession,
   findUserByEmail,
+  findUserById,
   getAdminCount,
   listUsers,
+  updateUserImage,
+  updateUserName,
+  updateUserPassword,
 } from './db/adminRepo.js';
 import {
   createChapter,
@@ -206,6 +210,50 @@ const pageRoutes = [
     handle: async ({ env, user }) => html(subjectsPage(user, await listSubjects(env.DB), await listTemplates(env.DB))),
   },
 ];
+
+
+async function handleProfilePost(request, env, url, user) {
+  if (request.method !== 'POST') return null;
+
+  if (url.pathname === '/api/profile/name') {
+    const form = await request.formData();
+    const name = String(form.get('name') || '').trim();
+    if (!name || name.length > 100) return redirect('/profile');
+    await updateUserName(env.DB, user.id, name);
+    return redirect('/profile');
+  }
+
+  if (url.pathname === '/api/profile/avatar') {
+    const form = await request.formData();
+    const imageKey = await uploadImage(env, 'profiles', form.get('avatar'));
+    if (imageKey) await updateUserImage(env.DB, user.id, imageKey);
+    return redirect('/profile');
+  }
+
+  if (url.pathname === '/api/profile/password') {
+    const form = await request.formData();
+    const currentPassword = String(form.get('currentPassword') || '');
+    const newPassword = String(form.get('newPassword') || '');
+    const confirmPassword = String(form.get('confirmPassword') || '');
+
+    if (newPassword.length < 8 || newPassword.length > 120 || newPassword !== confirmPassword) return redirect('/profile');
+    const currentUser = await findUserById(env.DB, user.id);
+    if (!currentUser) return redirect('/profile');
+
+    const valid = await verifyPassword(currentPassword, {
+      salt: currentUser.password_salt,
+      hash: currentUser.password_hash,
+      iterations: currentUser.password_iterations,
+    });
+    if (!valid) return redirect('/profile');
+
+    const hashed = await hashPassword(newPassword);
+    await updateUserPassword(env.DB, user.id, hashed.hash, hashed.salt, hashed.iterations);
+    return redirect('/profile');
+  }
+
+  return null;
+}
 
 async function handleAdminPost(request, env, url) {
   if (url.pathname === '/api/subjects' && request.method === 'POST') {
@@ -447,6 +495,8 @@ export default {
 
     if (url.pathname.startsWith('/api/') && request.method === 'POST' && !['/api/bootstrap', '/api/login'].includes(url.pathname)) {
       if (!user) return redirect('/login');
+      const profilePost = await handleProfilePost(request, env, url, user);
+      if (profilePost) return profilePost;
       if (user.role !== 'admin') return html(forbiddenPage(), 403);
       const protectedPost = await handleAdminPost(request, env, url);
       if (protectedPost) return protectedPost;
