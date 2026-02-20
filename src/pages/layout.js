@@ -28,22 +28,58 @@ export function loginPage() {
   );
 }
 
-function shell(active, content, userName) {
+function initials(name) {
+  return String(name || 'A')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('');
+}
+
+function shell(active, content, user) {
   return base(
     'Admin Dashboard',
-    `<div class="app"><aside class="sidebar"><div class="logo">freeducation</div><nav class="menu">
-      <a href="/dashboard" class="${active === 'dashboard' ? 'active' : ''}">Dashboard</a>
-      <a href="/users" class="${active === 'users' ? 'active' : ''}">User management</a>
-      <a href="/api/logout">Logout</a>
-      </nav></aside><main class="main"><div class="topbar"><span class="badge">${userName}</span></div>${content}</main></div>`
+    `<div class="app-shell">
+      <aside class="sidebar">
+        <div class="logo">freeducation</div>
+        <p class="muted nav-caption">Workspace</p>
+        <nav class="menu">
+          <a href="/dashboard" class="${active === 'dashboard' ? 'active' : ''}">Dashboard</a>
+          <a href="/users" class="${active === 'users' ? 'active' : ''}">User management</a>
+          <a href="/api/logout">Logout</a>
+        </nav>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1 class="page-title">${active === 'users' ? 'User management' : 'Dashboard overview'}</h1>
+            <p class="muted">Simple and fast admin workspace</p>
+          </div>
+          <div class="account-card">
+            <div class="avatar">${initials(user.name)}</div>
+            <div>
+              <p class="account-name">${user.name}</p>
+              <p class="account-email">${user.email}</p>
+            </div>
+          </div>
+        </header>
+        <nav class="mobile-menu">
+          <a href="/dashboard" class="${active === 'dashboard' ? 'active' : ''}">Dashboard</a>
+          <a href="/users" class="${active === 'users' ? 'active' : ''}">Users</a>
+          <a href="/api/logout">Logout</a>
+        </nav>
+        ${content}
+      </main>
+    </div>`
   );
 }
 
 export function dashboardPage(user, stats) {
-  const content = `<div class="grid"><div class="card"><div class="muted">Total users</div><div class="kpi">${stats.userCount}</div></div>
+  const content = `<section class="grid"><div class="card"><div class="muted">Total users</div><div class="kpi">${stats.userCount}</div></div>
     <div class="card"><div class="muted">Admins</div><div class="kpi">${stats.adminCount}</div></div>
-    <div class="card"><div class="muted">Active sessions</div><div class="kpi">${stats.sessionCount}</div></div></div>`;
-  return shell('dashboard', content, user.name);
+    <div class="card"><div class="muted">Active sessions</div><div class="kpi">${stats.sessionCount}</div></div></section>`;
+  return shell('dashboard', content, user);
 }
 
 export function usersPage(user, rows) {
@@ -52,6 +88,6 @@ export function usersPage(user, rows) {
       (r) => `<tr><td>${r.name}</td><td>${r.email}</td><td>${r.role}</td><td>${new Date(r.created_at).toLocaleString()}</td></tr>`
     )
     .join('');
-  const content = `<div class="card"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead><tbody>${bodyRows}</tbody></table></div>`;
-  return shell('users', content, user.name);
+  const content = `<section class="card table-card"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead><tbody>${bodyRows}</tbody></table></section>`;
+  return shell('users', content, user);
 }
