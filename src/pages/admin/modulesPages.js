@@ -260,14 +260,14 @@ function noteDeleteForm(subjectId, subjectNodeId, chapterId, noteId) {
 }
 
 export function notesPage(user, subject, node, chapter, notes) {
-  const noteCards = notes
+  const noteItems = notes
     .map((n, index) => {
       const modalId = `note-edit-${n.id}`;
-      return `<article class="card" id="note-${n.id}">
-      <div class="note-head">
+      return `<article class="content-entry" id="note-${n.id}">
+      <div class="entry-head">
         <p class="muted">Note ${index + 1}</p>
         <div class="toolbar-group">
-          <button type="button" class="btn btn-secondary" data-note-modal-open="${modalId}">Edit</button>
+          <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
           ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id)}
         </div>
       </div>
@@ -275,11 +275,11 @@ export function notesPage(user, subject, node, chapter, notes) {
       <p class="muted">${new Date(n.created_at).toLocaleString()}</p>
       <div>${n.content_html}</div>
       ${n.image_key ? `<p><code>${h(n.image_key)}</code></p>` : ''}
-      <dialog class="note-modal" data-note-modal="${modalId}">
-        <div class="modal note-modal-inner">
-          <div class="note-modal-head">
+      <dialog class="content-modal" data-content-modal="${modalId}">
+        <div class="modal content-modal-inner">
+          <div class="content-modal-head">
             <h3 class="card-title">Edit note</h3>
-            <button type="button" class="btn btn-secondary" data-note-modal-close>Close</button>
+            <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
           </div>
           ${noteForm(subject.id, node.id, chapter?.id, n)}
         </div>
@@ -303,7 +303,7 @@ export function notesPage(user, subject, node, chapter, notes) {
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
   <section class="card">${noteForm(subject.id, node.id, chapter?.id)}</section>
-  <section class="grid" data-live-region="notes-page">${noteCards || '<p class="muted">No notes yet.</p>'}${numberLinks}</section>`;
+  <section class="content-list" data-live-region="notes-page">${noteItems || '<p class="muted">No notes yet.</p>'}${numberLinks}</section>`;
 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
 }
@@ -329,12 +329,29 @@ function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
 
 export function mcqsPage(user, subject, node, chapter, mcqs) {
   const rows = mcqs
-    .map(
-      (m) => `<div class="card"><div>${m.question_html}</div><p class="muted">A) ${h(m.option_a)} · B) ${h(m.option_b)} · C) ${h(m.option_c)} · D) ${h(m.option_d)} | Correct: ${h(m.correct_option)}</p>
-      ${mcqForm(subject.id, node.id, chapter?.id, m)}
-      <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit">Delete</button></form>
-      </div>`
-    )
+    .map((m, index) => {
+      const modalId = `mcq-edit-${m.id}`;
+      return `<article class="content-entry" id="mcq-${m.id}">
+      <div class="entry-head">
+        <p class="muted">MCQ ${index + 1}</p>
+        <div class="toolbar-group">
+          <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
+          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit">Delete</button></form>
+        </div>
+      </div>
+      <div>${m.question_html}</div>
+      <p class="muted">A) ${h(m.option_a)} · B) ${h(m.option_b)} · C) ${h(m.option_c)} · D) ${h(m.option_d)} | Correct: ${h(m.correct_option)}</p>
+      <dialog class="content-modal" data-content-modal="${modalId}">
+        <div class="modal content-modal-inner">
+          <div class="content-modal-head">
+            <h3 class="card-title">Edit MCQ</h3>
+            <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
+          </div>
+          ${mcqForm(subject.id, node.id, chapter?.id, m)}
+        </div>
+      </dialog>
+      </article>`;
+    })
     .join('');
 
   const backHref = chapter
@@ -343,7 +360,7 @@ export function mcqsPage(user, subject, node, chapter, mcqs) {
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
   <section class="card">${mcqForm(subject.id, node.id, chapter?.id)}</section>
-  <section class="grid">${rows || '<p class="muted">No MCQs yet.</p>'}</section>`;
+  <section class="content-list">${rows || '<p class="muted">No MCQs yet.</p>'}</section>`;
 
   return appShell('subjects', user, `${subject.name} · MCQ Bank`, 'Create, edit, and delete MCQs.', content);
 }

@@ -85,13 +85,13 @@ function initializeRichEditors() {
 }
 
 
-function initializeNoteModals() {
-  document.querySelectorAll('[data-note-modal-open]').forEach((button) => {
+function initializeContentModals() {
+  document.querySelectorAll('[data-content-modal-open]').forEach((button) => {
     if (button.dataset.bound === '1') return;
     button.addEventListener('click', () => {
-      const modalId = button.getAttribute('data-note-modal-open');
+      const modalId = button.getAttribute('data-content-modal-open');
       if (!modalId) return;
-      const dialog = document.querySelector('[data-note-modal="' + modalId + '"]');
+      const dialog = document.querySelector('[data-content-modal="' + modalId + '"]');
       if (!dialog) return;
       if (typeof dialog.showModal === 'function') {
         dialog.showModal();
@@ -102,7 +102,7 @@ function initializeNoteModals() {
     button.dataset.bound = '1';
   });
 
-  document.querySelectorAll('[data-note-modal-close]').forEach((button) => {
+  document.querySelectorAll('[data-content-modal-close]').forEach((button) => {
     if (button.dataset.bound === '1') return;
     button.addEventListener('click', () => {
       const dialog = button.closest('dialog');
@@ -116,7 +116,7 @@ function initializeNoteModals() {
     button.dataset.bound = '1';
   });
 
-  document.querySelectorAll('dialog[data-note-modal]').forEach((dialog) => {
+  document.querySelectorAll('dialog[data-content-modal]').forEach((dialog) => {
     if (dialog.dataset.bound === '1') return;
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) {
@@ -142,7 +142,7 @@ async function refreshLiveRegion(regionName) {
   if (!current || !incoming) return;
   current.replaceWith(incoming);
   initializeRichEditors();
-  initializeNoteModals();
+  initializeContentModals();
   initializeFormHandlers();
 }
 
@@ -305,7 +305,7 @@ if (!shell) {
   });
 
   initializeRichEditors();
-  initializeNoteModals();
+  initializeContentModals();
   initializeFormHandlers();
 }
 `;
