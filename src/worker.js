@@ -65,6 +65,8 @@ const ACCESS = {
   PUBLIC: 'public',
   AUTHENTICATED: 'authenticated',
 };
+let appReadyPromise = null;
+let hasAdminCache = null;
 
 function id() {
   return crypto.randomUUID();
@@ -130,12 +132,36 @@ async function apiBootstrap(request, env) {
       passwordIterations: hashed.iterations,
       createdAt: new Date().toISOString(),
     });
+    hasAdminCache = true;
 
     const cookie = await createAndSetSession(env, userId);
     return json({ ok: true }, 200, { 'Set-Cookie': cookie });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Unable to create admin.' }, 500);
   }
+}
+
+async function ensureAppReady(env) {
+  if (!appReadyPromise) {
+    appReadyPromise = (async () => {
+      await ensureSchema(env.DB, { cleanUnknownTables: env.CLEAN_UNKNOWN_TABLES === 'true' });
+      await ensureDefaultTemplate(env.DB);
+    })();
+  }
+
+  try {
+    await appReadyPromise;
+  } catch (error) {
+    appReadyPromise = null;
+    throw error;
+  }
+}
+
+async function hasAdmin(env) {
+  if (hasAdminCache === true) return true;
+  const adminCount = await getAdminCount(env.DB);
+  hasAdminCache = adminCount > 0;
+  return hasAdminCache;
 }
 
 async function apiLogin(request, env) {
@@ -207,7 +233,10 @@ const pageRoutes = [
     path: '/subjects',
     access: ACCESS.AUTHENTICATED,
     roles: ['admin'],
-    handle: async ({ env, user }) => html(subjectsPage(user, await listSubjects(env.DB), await listTemplates(env.DB))),
+    handle: async ({ env, user }) => {
+      const [subjects, templates] = await Promise.all([listSubjects(env.DB), listTemplates(env.DB)]);
+      return html(subjectsPage(user, subjects, templates));
+    },
   },
 ];
 
@@ -425,7 +454,8 @@ async function handleDynamicPages(url, env, user) {
   if (templateMatch) {
     const template = await getTemplate(env.DB, templateMatch[1]);
     if (!template) return new Response('Not Found', { status: 404 });
-    return html(templateDetailsPage(user, template, await listTemplateNodes(env.DB, template.id)));
+    const nodes = await listTemplateNodes(env.DB, template.id);
+    return html(templateDetailsPage(user, template, nodes));
   }
 
   const subjectRootMatch = url.pathname.match(/^\/subjects\/([^/]+)$/);
@@ -438,8 +468,7 @@ async function handleDynamicPages(url, env, user) {
 
   const subjectNodeMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)$/);
   if (subjectNodeMatch) {
-    const subject = await getSubject(env.DB, subjectNodeMatch[1]);
-    const node = await getSubjectNode(env.DB, subjectNodeMatch[2]);
+    const [subject, node] = await Promise.all([getSubject(env.DB, subjectNodeMatch[1]), getSubjectNode(env.DB, subjectNodeMatch[2])]);
     if (!subject || !node) return new Response('Not Found', { status: 404 });
 
     if (node.supports_chapters) {
@@ -465,9 +494,11 @@ async function handleDynamicPages(url, env, user) {
 
   const chapterPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
   if (chapterPageMatch) {
-    const subject = await getSubject(env.DB, chapterPageMatch[1]);
-    const node = await getSubjectNode(env.DB, chapterPageMatch[2]);
-    const chapter = await getChapter(env.DB, chapterPageMatch[3]);
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, chapterPageMatch[1]),
+      getSubjectNode(env.DB, chapterPageMatch[2]),
+      getChapter(env.DB, chapterPageMatch[3]),
+    ]);
     if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
     return html(contentKindsPage(user, subject, node, chapter));
   }
@@ -478,11 +509,14 @@ async function handleDynamicPages(url, env, user) {
     const chapterId = url.searchParams.get('chapter');
     const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const subject = await getSubject(env.DB, subjectId);
-    const node = await getSubjectNode(env.DB, nodeId);
-    const chapter = chapterId ? await getChapter(env.DB, chapterId) : null;
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, subjectId),
+      getSubjectNode(env.DB, nodeId),
+      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+    ]);
     if (!subject || !node) return new Response('Not Found', { status: 404 });
-    return html(notesPage(user, subject, node, chapter, await listNotes(env.DB, node.id, chapter?.id), safePage));
+    const notes = await listNotes(env.DB, node.id, chapter?.id);
+    return html(notesPage(user, subject, node, chapter, notes, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/mcqs$/)) {
@@ -491,11 +525,14 @@ async function handleDynamicPages(url, env, user) {
     const chapterId = url.searchParams.get('chapter');
     const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const subject = await getSubject(env.DB, subjectId);
-    const node = await getSubjectNode(env.DB, nodeId);
-    const chapter = chapterId ? await getChapter(env.DB, chapterId) : null;
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, subjectId),
+      getSubjectNode(env.DB, nodeId),
+      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+    ]);
     if (!subject || !node) return new Response('Not Found', { status: 404 });
-    return html(mcqsPage(user, subject, node, chapter, await listMcqs(env.DB, node.id, chapter?.id), safePage));
+    const mcqs = await listMcqs(env.DB, node.id, chapter?.id);
+    return html(mcqsPage(user, subject, node, chapter, mcqs, safePage));
   }
 
   return null;
@@ -506,8 +543,7 @@ export default {
     if (!env.AUTH_SECRET) return new Response('AUTH_SECRET is required', { status: 500 });
 
     try {
-      await ensureSchema(env.DB, { cleanUnknownTables: env.CLEAN_UNKNOWN_TABLES === 'true' });
-      await ensureDefaultTemplate(env.DB);
+      await ensureAppReady(env);
     } catch (error) {
       return json({ error: error instanceof Error ? error.message : 'Schema initialization failed.' }, 500);
     }
@@ -517,8 +553,7 @@ export default {
     if (url.pathname === '/api/bootstrap') return apiBootstrap(request, env);
     if (url.pathname === '/api/login') return apiLogin(request, env);
 
-    const adminCount = await getAdminCount(env.DB);
-    if (adminCount === 0) {
+    if (!(await hasAdmin(env))) {
       if (url.pathname === '/api/logout') return redirect('/setup');
       if (url.pathname === '/' || url.pathname === '/setup') return html(setupPage());
       return redirect('/setup');
