@@ -17,6 +17,7 @@ import {
   createMcq,
   createNote,
   createSubject,
+  deleteTemplate,
   deleteChapter,
   deleteMcq,
   deleteNote,
@@ -32,6 +33,7 @@ import {
   listSubjects,
   listTemplateNodes,
   listTemplates,
+  updateTemplate,
   updateChapter,
   updateMcq,
   updateNote,
@@ -56,6 +58,7 @@ import {
   subjectNodeListPage,
   subjectsPage,
   templateDetailsPage,
+  templateDesignerPage,
   templatesPage,
   usersPage,
 } from './pages/layout.js';
@@ -208,6 +211,64 @@ function routeRequiresRole(route, user) {
   return Array.isArray(route.roles) && !route.roles.includes(user.role);
 }
 
+function normalizeTemplateNodes(nodesRaw) {
+  let parsedNodes = [];
+  try {
+    parsedNodes = JSON.parse(nodesRaw);
+  } catch {
+    return null;
+  }
+
+  if (!Array.isArray(parsedNodes) || parsedNodes.length === 0 || parsedNodes.length > 300) return null;
+
+  const allowedTypes = new Set(['section', 'content']);
+  const seenClientIds = new Set();
+  const seenNodeKeys = new Set();
+  const normalizedNodes = [];
+
+  for (let index = 0; index < parsedNodes.length; index += 1) {
+    const node = parsedNodes[index] || {};
+    const clientId = String(node.clientId || '').trim();
+    const parentClientId = String(node.parentClientId || '').trim() || null;
+    const serverName = String(node.serverName || '').trim();
+    const nodeType = String(node.nodeType || '').trim().toLowerCase();
+    const nodeKey = String(node.nodeKey || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_\-]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^[_\-]+|[_\-]+$/g, '');
+    const contentKind = String(node.contentKind || '').trim();
+    const supportsEdit = Boolean(node.supportsEdit);
+    const supportsImage = Boolean(node.supportsImage);
+    const supportsChapters = Boolean(node.supportsChapters);
+
+    if (!clientId || seenClientIds.has(clientId)) return null;
+    if (!serverName || serverName.length > 140) return null;
+    if (!allowedTypes.has(nodeType)) return null;
+    if (!nodeKey || nodeKey.length > 140 || seenNodeKeys.has(nodeKey)) return null;
+    if (nodeType === 'content' && !contentKind) return null;
+    if (parentClientId && !seenClientIds.has(parentClientId)) return null;
+
+    seenClientIds.add(clientId);
+    seenNodeKeys.add(nodeKey);
+    normalizedNodes.push({
+      clientId,
+      parentClientId,
+      serverName,
+      nodeType,
+      nodeKey,
+      contentKind: contentKind || null,
+      sortOrder: index + 1,
+      supportsEdit,
+      supportsImage,
+      supportsChapters,
+    });
+  }
+
+  return normalizedNodes;
+}
+
 const pageRoutes = [
   { path: '/', access: ACCESS.PUBLIC, handle: ({ user }) => html(publicHomePage(user)) },
   { path: '/login', access: ACCESS.PUBLIC, handle: () => html(loginPage()) },
@@ -292,67 +353,51 @@ async function handleAdminPost(request, env, url) {
     const code = String(form.get('code') || '').trim().toUpperCase();
     const description = String(form.get('description') || '').trim();
     const nodesRaw = String(form.get('nodesJson') || '[]').trim();
-    if (!name || !code || name.length > 120 || code.length > 120) return redirect('/templates');
+    if (!name || !code || name.length > 120 || code.length > 120) return redirect('/templates/designer');
 
     const existing = (await listTemplates(env.DB)).find((template) => template.code.toUpperCase() === code);
-    if (existing) return redirect('/templates');
+    if (existing) return redirect('/templates/designer');
 
-    let parsedNodes = [];
-    try {
-      parsedNodes = JSON.parse(nodesRaw);
-    } catch {
-      return redirect('/templates');
-    }
-
-    if (!Array.isArray(parsedNodes) || parsedNodes.length === 0 || parsedNodes.length > 300) return redirect('/templates');
-
-    const allowedTypes = new Set(['section', 'content']);
-    const seenClientIds = new Set();
-    const seenNodeKeys = new Set();
-    const normalizedNodes = [];
-
-    for (let index = 0; index < parsedNodes.length; index += 1) {
-      const node = parsedNodes[index] || {};
-      const clientId = String(node.clientId || '').trim();
-      const parentClientId = String(node.parentClientId || '').trim() || null;
-      const serverName = String(node.serverName || '').trim();
-      const nodeType = String(node.nodeType || '').trim().toLowerCase();
-      const nodeKey = String(node.nodeKey || '')
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_\-]/g, '_')
-        .replace(/_+/g, '_')
-        .replace(/^[_\-]+|[_\-]+$/g, '');
-      const contentKind = String(node.contentKind || '').trim();
-      const supportsEdit = Boolean(node.supportsEdit);
-      const supportsImage = Boolean(node.supportsImage);
-      const supportsChapters = Boolean(node.supportsChapters);
-
-      if (!clientId || seenClientIds.has(clientId)) return redirect('/templates');
-      if (!serverName || serverName.length > 140) return redirect('/templates');
-      if (!allowedTypes.has(nodeType)) return redirect('/templates');
-      if (!nodeKey || nodeKey.length > 140 || seenNodeKeys.has(nodeKey)) return redirect('/templates');
-      if (nodeType === 'content' && !contentKind) return redirect('/templates');
-      if (parentClientId && !seenClientIds.has(parentClientId)) return redirect('/templates');
-
-      seenClientIds.add(clientId);
-      seenNodeKeys.add(nodeKey);
-      normalizedNodes.push({
-        clientId,
-        parentClientId,
-        serverName,
-        nodeType,
-        nodeKey,
-        contentKind: contentKind || null,
-        sortOrder: index + 1,
-        supportsEdit,
-        supportsImage,
-        supportsChapters,
-      });
-    }
+    const normalizedNodes = normalizeTemplateNodes(nodesRaw);
+    if (!normalizedNodes) return redirect('/templates/designer');
 
     await createTemplate(env.DB, { name, code, description, nodes: normalizedNodes });
     return redirect('/templates');
+  }
+
+  if (url.pathname.startsWith('/api/templates/') && request.method === 'POST') {
+    const templateId = url.pathname.split('/').pop();
+    const currentTemplate = await getTemplate(env.DB, templateId);
+    if (!currentTemplate) return new Response('Not Found', { status: 404 });
+
+    const form = await request.formData();
+    const intent = String(form.get('intent') || 'update');
+
+    if (intent === 'delete') {
+      try {
+        await deleteTemplate(env.DB, templateId);
+      } catch {
+        return redirect(`/templates/${templateId}`);
+      }
+      return redirect('/templates');
+    }
+
+    const name = String(form.get('name') || '').trim();
+    const code = String(form.get('code') || '').trim().toUpperCase();
+    const description = String(form.get('description') || '').trim();
+    const nodesRaw = String(form.get('nodesJson') || '[]').trim();
+    if (!name || !code || name.length > 120 || code.length > 120) return redirect(`/templates/${templateId}/edit`);
+
+    const existing = (await listTemplates(env.DB)).find(
+      (template) => template.id !== templateId && template.code.toUpperCase() === code
+    );
+    if (existing) return redirect(`/templates/${templateId}/edit`);
+
+    const normalizedNodes = normalizeTemplateNodes(nodesRaw);
+    if (!normalizedNodes) return redirect(`/templates/${templateId}/edit`);
+
+    await updateTemplate(env.DB, templateId, { name, code, description, nodes: normalizedNodes });
+    return redirect(`/templates/${templateId}`);
   }
 
   if (url.pathname === '/api/subjects' && request.method === 'POST') {
@@ -520,6 +565,18 @@ async function serveMedia(url, env, user) {
 }
 
 async function handleDynamicPages(url, env, user) {
+  if (url.pathname === '/templates/designer') {
+    return html(templateDesignerPage(user));
+  }
+
+  const templateEditMatch = url.pathname.match(/^\/templates\/([^/]+)\/edit$/);
+  if (templateEditMatch) {
+    const template = await getTemplate(env.DB, templateEditMatch[1]);
+    if (!template) return new Response('Not Found', { status: 404 });
+    const nodes = await listTemplateNodes(env.DB, template.id);
+    return html(templateDesignerPage(user, template, nodes));
+  }
+
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
   if (templateMatch) {
     const template = await getTemplate(env.DB, templateMatch[1]);
