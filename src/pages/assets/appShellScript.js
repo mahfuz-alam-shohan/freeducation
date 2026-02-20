@@ -29,6 +29,93 @@ function syncSidebarToggleLabel(isCollapsed) {
   sidebarToggle.setAttribute('aria-label', expanded ? 'Collapse sidebar' : 'Expand sidebar');
 }
 
+function initializeRichEditors() {
+  document.querySelectorAll('[data-rich-editor]').forEach((editor) => {
+    if (editor.dataset.bound === '1') return;
+    const input = editor.querySelector('[data-editor-input]');
+    const storage = editor.querySelector('[data-editor-storage]');
+    if (!input || !storage) return;
+
+    const sync = () => {
+      storage.value = input.innerHTML.trim();
+    };
+
+    editor.querySelectorAll('[data-editor-command]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const command = button.getAttribute('data-editor-command');
+        const value = button.getAttribute('data-editor-value') || null;
+        input.focus();
+        document.execCommand(command, false, value);
+        sync();
+      });
+    });
+
+    input.addEventListener('input', sync);
+    sync();
+    editor.dataset.bound = '1';
+  });
+}
+
+async function refreshLiveRegion(regionName) {
+  const response = await fetch(window.location.href, { method: 'GET', credentials: 'same-origin' });
+  if (!response.ok) return;
+  const html = await response.text();
+  const parser = new DOMParser();
+  const nextDoc = parser.parseFromString(html, 'text/html');
+  const current = document.querySelector('[data-live-region="' + regionName + '"]');
+  const incoming = nextDoc.querySelector('[data-live-region="' + regionName + '"]');
+  if (!current || !incoming) return;
+  current.replaceWith(incoming);
+  initializeRichEditors();
+  initializeFormHandlers();
+}
+
+function initializeFormHandlers() {
+  document.querySelectorAll('form[enctype="multipart/form-data"], form').forEach((form) => {
+    if (form.dataset.bound === '1') return;
+    form.addEventListener('submit', async (event) => {
+      if (form.dataset.submitting === '1') return;
+      const hasLiveButton = Boolean(form.querySelector('[data-live-form="true"]'));
+      if (!hasLiveButton && !form.matches('[enctype="multipart/form-data"]')) return;
+
+      event.preventDefault();
+      form.dataset.submitting = '1';
+      await prepareImageInputs(form).catch(() => null);
+      form.querySelectorAll('[data-rich-editor]').forEach((editor) => {
+        const input = editor.querySelector('[data-editor-input]');
+        const storage = editor.querySelector('[data-editor-storage]');
+        if (input && storage) storage.value = input.innerHTML.trim();
+      });
+
+      if (!hasLiveButton) {
+        form.dataset.submitting = '0';
+        form.submit();
+        return;
+      }
+
+      const body = new FormData(form);
+      const response = await fetch(form.action, {
+        method: (form.method || 'POST').toUpperCase(),
+        body,
+        credentials: 'same-origin',
+        redirect: 'follow',
+      }).catch(() => null);
+
+      form.dataset.submitting = '0';
+      if (!response || !response.ok) {
+        form.submit();
+        return;
+      }
+
+      const regionName = String(body.get('liveRegion') || '').trim();
+      if (regionName) {
+        await refreshLiveRegion(regionName).catch(() => null);
+      }
+    });
+    form.dataset.bound = '1';
+  });
+}
+
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
   const bitmap = await createImageBitmap(file);
@@ -141,17 +228,7 @@ if (!shell) {
     });
   });
 
-  document.querySelectorAll('form[enctype="multipart/form-data"]').forEach((form) => {
-    form.addEventListener('submit', async (event) => {
-      if (form.dataset.imagesPrepared === '1') {
-        form.dataset.imagesPrepared = '0';
-        return;
-      }
-      event.preventDefault();
-      await prepareImageInputs(form).catch(() => null);
-      form.dataset.imagesPrepared = '1';
-      form.requestSubmit();
-    });
-  });
+  initializeRichEditors();
+  initializeFormHandlers();
 }
 `;
