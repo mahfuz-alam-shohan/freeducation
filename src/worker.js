@@ -12,6 +12,7 @@ import {
   updateUserPassword,
 } from './db/adminRepo.js';
 import {
+  createTemplate,
   createChapter,
   createMcq,
   createNote,
@@ -285,6 +286,75 @@ async function handleProfilePost(request, env, url, user) {
 }
 
 async function handleAdminPost(request, env, url) {
+  if (url.pathname === '/api/templates' && request.method === 'POST') {
+    const form = await request.formData();
+    const name = String(form.get('name') || '').trim();
+    const code = String(form.get('code') || '').trim().toUpperCase();
+    const description = String(form.get('description') || '').trim();
+    const nodesRaw = String(form.get('nodesJson') || '[]').trim();
+    if (!name || !code || name.length > 120 || code.length > 120) return redirect('/templates');
+
+    const existing = (await listTemplates(env.DB)).find((template) => template.code.toUpperCase() === code);
+    if (existing) return redirect('/templates');
+
+    let parsedNodes = [];
+    try {
+      parsedNodes = JSON.parse(nodesRaw);
+    } catch {
+      return redirect('/templates');
+    }
+
+    if (!Array.isArray(parsedNodes) || parsedNodes.length === 0 || parsedNodes.length > 300) return redirect('/templates');
+
+    const allowedTypes = new Set(['section', 'content']);
+    const seenClientIds = new Set();
+    const seenNodeKeys = new Set();
+    const normalizedNodes = [];
+
+    for (let index = 0; index < parsedNodes.length; index += 1) {
+      const node = parsedNodes[index] || {};
+      const clientId = String(node.clientId || '').trim();
+      const parentClientId = String(node.parentClientId || '').trim() || null;
+      const serverName = String(node.serverName || '').trim();
+      const nodeType = String(node.nodeType || '').trim().toLowerCase();
+      const nodeKey = String(node.nodeKey || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_\-]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^[_\-]+|[_\-]+$/g, '');
+      const contentKind = String(node.contentKind || '').trim();
+      const supportsEdit = Boolean(node.supportsEdit);
+      const supportsImage = Boolean(node.supportsImage);
+      const supportsChapters = Boolean(node.supportsChapters);
+
+      if (!clientId || seenClientIds.has(clientId)) return redirect('/templates');
+      if (!serverName || serverName.length > 140) return redirect('/templates');
+      if (!allowedTypes.has(nodeType)) return redirect('/templates');
+      if (!nodeKey || nodeKey.length > 140 || seenNodeKeys.has(nodeKey)) return redirect('/templates');
+      if (nodeType === 'content' && !contentKind) return redirect('/templates');
+      if (parentClientId && !seenClientIds.has(parentClientId)) return redirect('/templates');
+
+      seenClientIds.add(clientId);
+      seenNodeKeys.add(nodeKey);
+      normalizedNodes.push({
+        clientId,
+        parentClientId,
+        serverName,
+        nodeType,
+        nodeKey,
+        contentKind: contentKind || null,
+        sortOrder: index + 1,
+        supportsEdit,
+        supportsImage,
+        supportsChapters,
+      });
+    }
+
+    await createTemplate(env.DB, { name, code, description, nodes: normalizedNodes });
+    return redirect('/templates');
+  }
+
   if (url.pathname === '/api/subjects' && request.method === 'POST') {
     const form = await request.formData();
     const name = String(form.get('name') || '').trim();

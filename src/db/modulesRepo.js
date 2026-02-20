@@ -80,6 +80,45 @@ export async function listTemplates(db) {
   return rows.results ?? [];
 }
 
+export async function createTemplate(db, input) {
+  const templateId = crypto.randomUUID();
+  const createdAt = nowIso();
+  await db
+    .prepare('INSERT INTO subject_templates (id, code, name, description, created_at) VALUES (?1, ?2, ?3, ?4, ?5)')
+    .bind(templateId, input.code, input.name, input.description || null, createdAt)
+    .run();
+
+  const idByClientId = new Map();
+  const sortedNodes = [...input.nodes].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  for (const node of sortedNodes) {
+    const nodeId = crypto.randomUUID();
+    idByClientId.set(node.clientId, nodeId);
+    await db
+      .prepare(
+        `INSERT INTO template_nodes (
+          id, template_id, parent_id, node_key, server_name, node_type, supports_edit, supports_image,
+          supports_chapters, content_kind, sort_order
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`
+      )
+      .bind(
+        nodeId,
+        templateId,
+        node.parentClientId ? idByClientId.get(node.parentClientId) || null : null,
+        node.nodeKey,
+        node.serverName,
+        node.nodeType,
+        node.supportsEdit ? 1 : 0,
+        node.supportsImage ? 1 : 0,
+        node.supportsChapters ? 1 : 0,
+        node.contentKind || null,
+        Number(node.sortOrder)
+      )
+      .run();
+  }
+
+  return templateId;
+}
+
 export async function getTemplate(db, templateId) {
   return db.prepare('SELECT id, code, name, description, created_at FROM subject_templates WHERE id = ?1').bind(templateId).first();
 }

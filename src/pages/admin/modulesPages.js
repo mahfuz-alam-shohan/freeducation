@@ -38,6 +38,25 @@ export function templatesPage(user, templates) {
     .join('');
 
   const content = `<section class="card">
+    <form method="post" action="/api/templates" class="template-builder" data-template-builder>
+      <div class="grid grid-3">
+        <input class="input" name="name" placeholder="Template name" maxlength="120" required />
+        <input class="input" name="code" placeholder="Template code (ex: SCIENCE-6)" maxlength="120" required />
+        <input class="input" name="description" placeholder="Description (optional)" maxlength="180" />
+      </div>
+      <input type="hidden" name="nodesJson" data-template-builder-storage />
+      <div class="table-wrap section-gap-sm"><table class="table">
+        <thead><tr><th>Node Name</th><th>Node Key</th><th>Parent</th><th>Type</th><th>Content Kind</th><th>Options</th><th></th></tr></thead>
+        <tbody data-template-builder-rows></tbody>
+      </table></div>
+      <div class="toolbar-group section-gap-sm">
+        <button class="btn btn-secondary" type="button" data-template-builder-add>Add Node</button>
+        <button class="btn btn-primary" type="submit">Create Template</button>
+      </div>
+      <p class="muted">Build your own structure with unlimited depth. Enable chapters, edit, image, and custom content kind per node.</p>
+    </form>
+  </section>
+  <section class="card">
     <div class="table-wrap"><table class="table">
       <thead><tr><th>Template</th><th>Code</th><th>Description</th><th>Created</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 4, 'No templates yet.')}</tbody>
