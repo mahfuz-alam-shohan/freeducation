@@ -169,6 +169,7 @@ function initializeTemplateBuilder() {
     const rowsHost = form.querySelector('[data-template-builder-rows]');
     const addBtn = form.querySelector('[data-template-builder-add]');
     const storage = form.querySelector('[data-template-builder-storage]');
+    const treeHost = form.querySelector('[data-template-builder-tree]');
     if (!rowsHost || !addBtn || !storage) return;
 
     const rowTemplate = (id) => {
@@ -202,6 +203,50 @@ function initializeTemplateBuilder() {
       }
     };
 
+    const serializeRows = () => {
+      const rows = Array.from(rowsHost.querySelectorAll('[data-builder-row]'));
+      return rows.map((row, index) => ({
+        clientId: row.getAttribute('data-builder-row') || '',
+        parentClientId: row.querySelector('[data-field="parent"]')?.value || null,
+        serverName: row.querySelector('[data-field="serverName"]')?.value?.trim() || '',
+        nodeKey: slugifyTemplateKey(row.querySelector('[data-field="nodeKey"]')?.value || ''),
+        nodeType: row.querySelector('[data-field="nodeType"]')?.value || 'section',
+        contentKind: row.querySelector('[data-field="contentKind"]')?.value?.trim() || '',
+        supportsEdit: Boolean(row.querySelector('[data-field="supportsEdit"]')?.checked),
+        supportsImage: Boolean(row.querySelector('[data-field="supportsImage"]')?.checked),
+        supportsChapters: Boolean(row.querySelector('[data-field="supportsChapters"]')?.checked),
+        sortOrder: index + 1,
+      }));
+    };
+
+    const renderTree = () => {
+      if (!treeHost) return;
+      const nodes = serializeRows();
+      if (nodes.length === 0) {
+        treeHost.innerHTML = '<li class="muted">No nodes yet.</li>';
+        return;
+      }
+      const childrenByParent = new Map();
+      nodes.forEach((node) => {
+        const key = node.parentClientId || 'root';
+        const list = childrenByParent.get(key) || [];
+        list.push(node);
+        childrenByParent.set(key, list);
+      });
+
+      const renderLevel = (parent) => {
+        const list = childrenByParent.get(parent) || [];
+        if (list.length === 0) return '';
+        return '<ol>' + list.map((node) => {
+          const tag = node.nodeType === 'content' ? 'Content' : 'Section';
+          const label = (node.serverName || 'Untitled').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<li><span>' + label + ' <small class="muted">(' + tag + ')</small></span>' + renderLevel(node.clientId) + '</li>';
+        }).join('') + '</ol>';
+      };
+
+      treeHost.innerHTML = renderLevel('root') || '<li class="muted">No root nodes found.</li>';
+    };
+
     const refreshParentOptions = () => {
       const rows = Array.from(rowsHost.querySelectorAll('[data-builder-row]'));
       rows.forEach((row) => {
@@ -219,17 +264,15 @@ function initializeTemplateBuilder() {
         parentSelect.innerHTML = options.join('');
         if (selected && selected !== rowId) parentSelect.value = selected;
       });
+      renderTree();
     };
 
-    const addRow = () => {
-      const rowId = 'node_' + Math.random().toString(36).slice(2, 9);
-      const row = rowTemplate(rowId);
-      rowsHost.appendChild(row);
-
+    const bindRow = (row) => {
       const nameInput = row.querySelector('[data-field="serverName"]');
       const keyInput = row.querySelector('[data-field="nodeKey"]');
       const typeInput = row.querySelector('[data-field="nodeType"]');
       const removeButton = row.querySelector('[data-row-remove]');
+      const parentInput = row.querySelector('[data-field="parent"]');
 
       nameInput?.addEventListener('blur', () => {
         if (!keyInput) return;
@@ -240,33 +283,65 @@ function initializeTemplateBuilder() {
       keyInput?.addEventListener('blur', () => {
         keyInput.value = slugifyTemplateKey(keyInput.value);
       });
-      typeInput?.addEventListener('change', () => updateTypeState(row));
+      keyInput?.addEventListener('input', renderTree);
+      typeInput?.addEventListener('change', () => {
+        updateTypeState(row);
+        renderTree();
+      });
+      parentInput?.addEventListener('change', renderTree);
       removeButton?.addEventListener('click', () => {
+        const rowId = row.getAttribute('data-builder-row');
         row.remove();
+        rowsHost.querySelectorAll('[data-field="parent"]').forEach((select) => {
+          if (select.value === rowId) select.value = '';
+        });
         refreshParentOptions();
       });
 
       updateTypeState(row);
+    };
+
+    const addRow = (seed = null) => {
+      const rowId = seed?.clientId || 'node_' + Math.random().toString(36).slice(2, 9);
+      const row = rowTemplate(rowId);
+      rowsHost.appendChild(row);
+      bindRow(row);
+      if (seed) {
+        row.querySelector('[data-field="serverName"]').value = seed.serverName || '';
+        row.querySelector('[data-field="nodeKey"]').value = slugifyTemplateKey(seed.nodeKey || '');
+        row.querySelector('[data-field="nodeType"]').value = seed.nodeType || 'section';
+        row.querySelector('[data-field="contentKind"]').value = seed.contentKind || '';
+        row.querySelector('[data-field="supportsEdit"]').checked = Boolean(seed.supportsEdit);
+        row.querySelector('[data-field="supportsImage"]').checked = Boolean(seed.supportsImage);
+        row.querySelector('[data-field="supportsChapters"]').checked = Boolean(seed.supportsChapters);
+        row.setAttribute('data-parent-id-seed', seed.parentClientId || '');
+      }
+      updateTypeState(row);
       refreshParentOptions();
     };
 
-    const serializeRows = () => {
-      const rows = Array.from(rowsHost.querySelectorAll('[data-builder-row]'));
-      return rows.map((row, index) => ({
-        clientId: row.getAttribute('data-builder-row') || '',
-        parentClientId: row.querySelector('[data-field="parent"]')?.value || null,
-        serverName: row.querySelector('[data-field="serverName"]')?.value?.trim() || '',
-        nodeKey: slugifyTemplateKey(row.querySelector('[data-field="nodeKey"]')?.value || ''),
-        nodeType: row.querySelector('[data-field="nodeType"]')?.value || 'section',
-        contentKind: row.querySelector('[data-field="contentKind"]')?.value?.trim() || '',
-        supportsEdit: Boolean(row.querySelector('[data-field="supportsEdit"]')?.checked),
-        supportsImage: Boolean(row.querySelector('[data-field="supportsImage"]')?.checked),
-        supportsChapters: Boolean(row.querySelector('[data-field="supportsChapters"]')?.checked),
-        sortOrder: index + 1,
-      }));
+    const loadInitialRows = () => {
+      const raw = form.getAttribute('data-template-builder-initial') || '';
+      if (!raw) return false;
+      let initial = [];
+      try {
+        initial = JSON.parse(raw);
+      } catch {
+        return false;
+      }
+      if (!Array.isArray(initial) || initial.length === 0) return false;
+      initial.forEach((seed) => addRow(seed));
+      rowsHost.querySelectorAll('[data-builder-row]').forEach((row) => {
+        const seedParent = row.getAttribute('data-parent-id-seed');
+        if (!seedParent) return;
+        const parent = row.querySelector('[data-field="parent"]');
+        if (parent) parent.value = seedParent;
+      });
+      renderTree();
+      return true;
     };
 
-    addBtn.addEventListener('click', addRow);
+    addBtn.addEventListener('click', () => addRow());
     form.addEventListener('submit', (event) => {
       const nodes = serializeRows();
       if (nodes.length === 0) {
@@ -277,7 +352,7 @@ function initializeTemplateBuilder() {
       storage.value = JSON.stringify(nodes);
     });
 
-    addRow();
+    if (!loadInitialRows()) addRow();
     form.dataset.bound = '1';
   });
 }

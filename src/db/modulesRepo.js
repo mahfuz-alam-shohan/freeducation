@@ -88,8 +88,14 @@ export async function createTemplate(db, input) {
     .bind(templateId, input.code, input.name, input.description || null, createdAt)
     .run();
 
+  await insertTemplateNodes(db, templateId, input.nodes);
+
+  return templateId;
+}
+
+async function insertTemplateNodes(db, templateId, nodes) {
   const idByClientId = new Map();
-  const sortedNodes = [...input.nodes].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  const sortedNodes = [...nodes].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
   for (const node of sortedNodes) {
     const nodeId = crypto.randomUUID();
     idByClientId.set(node.clientId, nodeId);
@@ -115,8 +121,19 @@ export async function createTemplate(db, input) {
       )
       .run();
   }
+}
 
-  return templateId;
+export async function updateTemplate(db, templateId, input) {
+  await db
+    .prepare('UPDATE subject_templates SET code = ?2, name = ?3, description = ?4 WHERE id = ?1')
+    .bind(templateId, input.code, input.name, input.description || null)
+    .run();
+  await db.prepare('DELETE FROM template_nodes WHERE template_id = ?1').bind(templateId).run();
+  await insertTemplateNodes(db, templateId, input.nodes);
+}
+
+export async function deleteTemplate(db, templateId) {
+  await db.prepare('DELETE FROM subject_templates WHERE id = ?1').bind(templateId).run();
 }
 
 export async function getTemplate(db, templateId) {

@@ -25,6 +25,48 @@ function tableRowsOrEmpty(rows, colSpan, label) {
   return rows || `<tr><td colspan="${colSpan}" class="table-empty">${h(label)}</td></tr>`;
 }
 
+function serializeBuilderNodes(nodes = []) {
+  return JSON.stringify(
+    nodes.map((node, index) => ({
+      clientId: node.id || `node_${index + 1}`,
+      parentClientId: node.parent_id || null,
+      serverName: node.server_name,
+      nodeKey: node.node_key,
+      nodeType: node.node_type,
+      contentKind: node.content_kind || '',
+      supportsEdit: Boolean(node.supports_edit),
+      supportsImage: Boolean(node.supports_image),
+      supportsChapters: Boolean(node.supports_chapters),
+      sortOrder: index + 1,
+    }))
+  );
+}
+
+function templateBuilderForm({ action, submitLabel, template = null, nodes = [] }) {
+  const initialNodesJson = h(serializeBuilderNodes(nodes));
+  return `<form method="post" action="${action}" class="template-builder" data-template-builder data-template-builder-initial="${initialNodesJson}">
+    <div class="grid grid-3">
+      <input class="input" name="name" placeholder="Template name" maxlength="120" value="${h(template?.name || '')}" required />
+      <input class="input" name="code" placeholder="Template code (ex: SCIENCE-6)" maxlength="120" value="${h(template?.code || '')}" required />
+      <input class="input" name="description" placeholder="Description (optional)" maxlength="180" value="${h(template?.description || '')}" />
+    </div>
+    <input type="hidden" name="nodesJson" data-template-builder-storage />
+    <div class="table-wrap section-gap-sm"><table class="table">
+      <thead><tr><th>Node Name</th><th>Node Key</th><th>Parent</th><th>Type</th><th>Content Kind</th><th>Options</th><th></th></tr></thead>
+      <tbody data-template-builder-rows></tbody>
+    </table></div>
+    <div class="toolbar-group section-gap-sm">
+      <button class="btn btn-secondary" type="button" data-template-builder-add>Add Node</button>
+      <button class="btn btn-primary" type="submit">${submitLabel}</button>
+    </div>
+    <div class="template-live-hierarchy">
+      <div class="muted">Live hierarchy preview</div>
+      <ol data-template-builder-tree class="template-live-tree"></ol>
+    </div>
+    <p class="muted">Teacher-friendly builder for any subject. Use sections and content nodes, reorder by removing/re-adding, and preview the hierarchy live.</p>
+  </form>`;
+}
+
 export function templatesPage(user, templates) {
   const rows = templates
     .map(
@@ -33,37 +75,49 @@ export function templatesPage(user, templates) {
       <td>${h(t.code)}</td>
       <td>${h(t.description || '-')}</td>
       <td>${new Date(t.created_at).toLocaleDateString()}</td>
+      <td>
+        <div class="toolbar-group">
+          <a class="btn btn-secondary" href="/templates/${t.id}/edit">Edit</a>
+          <form method="post" action="/api/templates/${t.id}" onsubmit="return confirm('Delete this template?');">
+            <input type="hidden" name="intent" value="delete" />
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </td>
     </tr>`
     )
     .join('');
 
   const content = `<section class="card">
-    <form method="post" action="/api/templates" class="template-builder" data-template-builder>
-      <div class="grid grid-3">
-        <input class="input" name="name" placeholder="Template name" maxlength="120" required />
-        <input class="input" name="code" placeholder="Template code (ex: SCIENCE-6)" maxlength="120" required />
-        <input class="input" name="description" placeholder="Description (optional)" maxlength="180" />
-      </div>
-      <input type="hidden" name="nodesJson" data-template-builder-storage />
-      <div class="table-wrap section-gap-sm"><table class="table">
-        <thead><tr><th>Node Name</th><th>Node Key</th><th>Parent</th><th>Type</th><th>Content Kind</th><th>Options</th><th></th></tr></thead>
-        <tbody data-template-builder-rows></tbody>
-      </table></div>
-      <div class="toolbar-group section-gap-sm">
-        <button class="btn btn-secondary" type="button" data-template-builder-add>Add Node</button>
-        <button class="btn btn-primary" type="submit">Create Template</button>
-      </div>
-      <p class="muted">Build your own structure with unlimited depth. Enable chapters, edit, image, and custom content kind per node.</p>
-    </form>
+    <div class="toolbar-group">
+      <a class="btn btn-primary" href="/templates/designer">Open Template Designer</a>
+    </div>
   </section>
   <section class="card">
     <div class="table-wrap"><table class="table">
-      <thead><tr><th>Template</th><th>Code</th><th>Description</th><th>Created</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(rows, 4, 'No templates yet.')}</tbody>
+      <thead><tr><th>Template</th><th>Code</th><th>Description</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 5, 'No templates yet.')}</tbody>
     </table></div>
   </section>`;
 
-  return appShell('templates', user, 'Subject Templates', 'Reusable skeletons for subject structure.', content);
+  return appShell('templates', user, 'Subject Templates', 'Create, edit, and delete reusable structures for any subject.', content);
+}
+
+export function templateDesignerPage(user, template = null, nodes = []) {
+  const editing = Boolean(template?.id);
+  const title = editing ? `Edit Template: ${template.name}` : 'Template Designer';
+  const subtitle = editing
+    ? 'Update template details, hierarchy, and node capabilities.'
+    : 'Design any subject template with a guided UI and live hierarchy preview.';
+  const action = editing ? `/api/templates/${template.id}` : '/api/templates';
+  const submitLabel = editing ? 'Save Template' : 'Create Template';
+
+  const content = `<section class="card">
+    <a class="back-link" href="/templates">← Back to templates</a>
+    ${templateBuilderForm({ action, submitLabel, template, nodes })}
+  </section>`;
+
+  return appShell('templates', user, title, subtitle, content);
 }
 
 export function templateDetailsPage(user, template, nodes) {
@@ -74,7 +128,7 @@ export function templateDetailsPage(user, template, nodes) {
     byParent.get(key).push(node);
   }
 
-  function walk(parentId, depth, parentChain = []) {
+  function walk(parentId, parentChain = []) {
     const list = byParent.get(parentId || 'root') || [];
     return list
       .map((node, index) => {
@@ -93,16 +147,23 @@ export function templateDetailsPage(user, template, nodes) {
           <td>${yesNo(node.supports_edit)}</td>
           <td>${yesNo(node.supports_image)}</td>
           <td>${yesNo(node.supports_chapters)}</td>
-        </tr>${walk(node.id, depth + 1, branch)}`;
+        </tr>${walk(node.id, branch)}`;
       })
       .join('');
   }
 
   const content = `<section class="card">
+    <div class="toolbar-group section-gap-sm">
+      <a class="btn btn-secondary" href="/templates/${template.id}/edit">Edit Template</a>
+      <form method="post" action="/api/templates/${template.id}" onsubmit="return confirm('Delete this template?');">
+        <input type="hidden" name="intent" value="delete" />
+        <button class="btn btn-danger" type="submit">Delete Template</button>
+      </form>
+    </div>
     <p class="muted">Template code: <strong>${h(template.code)}</strong></p>
     <div class="table-wrap"><table class="table">
       <thead><tr><th>Hierarchy</th><th>Type</th><th>Editable Name</th><th>Image Upload</th><th>Chapter Based</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(walk(null, 0), 5, 'No hierarchy nodes found.')}</tbody>
+      <tbody>${tableRowsOrEmpty(walk(null), 5, 'No hierarchy nodes found.')}</tbody>
     </table></div>
   </section>`;
 
