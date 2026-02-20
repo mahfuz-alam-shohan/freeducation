@@ -16,8 +16,8 @@ export const styles = `
   --radius-lg: 12px;
   --radius-md: 10px;
   --radius-sm: 8px;
-  --sidebar-open: 272px;
-  --sidebar-collapse: 80px;
+  --sidebar-open: 248px;
+  --sidebar-collapse: 72px;
 }
 
 * { box-sizing: border-box; }
@@ -210,7 +210,7 @@ a { color: inherit; }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 16px;
+  padding: 0 12px;
   border-bottom: 1px solid var(--line);
   background: #ffffff;
 }
@@ -273,15 +273,15 @@ a { color: inherit; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
 
 .container {
-  width: min(1440px, 100%);
+  width: min(1760px, 100%);
   margin: 0 auto;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 .page-head { margin-bottom: 10px; }
 .page-title { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: -0.03em; }
 .page-subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
 
-.grid { display: grid; gap: 12px; }
+.grid { display: grid; gap: 10px; }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -291,7 +291,7 @@ a { color: inherit; }
   border: 1px solid #d8e3f2;
   border-radius: 8px;
   box-shadow: none;
-  padding: 8px;
+  padding: 6px;
 }
 .card-title { margin: 0 0 6px; font-size: 16px; }
 .kpi-grid .kpi-card:nth-child(1) { background: #f4f8ff; }
@@ -381,6 +381,11 @@ a { color: inherit; }
   background: #ffffff;
   color: #24292f;
 }
+.editor-tools .btn.active {
+  background: #e0e7ff;
+  color: #1e1b4b;
+  border-color: #a5b4fc;
+}
 .rich-editor-input,
 .rich-editor-preview {
   min-height: 140px;
@@ -457,14 +462,157 @@ a { color: inherit; }
 .table tbody tr:hover { background: #f8fafc; }
 
 
+.content-form-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.content-form-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.content-form-shell [data-add-form-toggle] {
+  display: none;
+}
+
+.content-form-shell [data-add-form-panel] {
+  display: grid;
+  gap: 8px;
+}
+
+
 .content-list {
   display: grid;
   gap: 10px;
 }
 
+.content-list > .muted {
+  padding: 4px 2px;
+}
+
 .content-entry {
   border-bottom: 1px solid var(--line);
   padding-bottom: 8px;
+}
+
+.note-entry {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  background: #fff;
+}
+
+.note-entry + .note-entry {
+  margin-top: 2px;
+}
+
+.note-entry-head {
+  margin-bottom: 4px;
+}
+
+.note-actions {
+  margin-left: auto;
+}
+
+.note-time {
+  margin-bottom: 6px;
+}
+
+.note-content {
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.entry-media {
+  margin: 6px 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.entry-media img {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+}
+
+.mcq-media {
+  margin-top: 2px;
+}
+
+.mcq-entry {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  background: #fff;
+}
+
+.mcq-entry + .mcq-entry {
+  margin-top: 2px;
+}
+
+.mcq-entry-head {
+  margin-bottom: 6px;
+}
+
+.mcq-actions {
+  margin-left: auto;
+}
+
+.mcq-question-wrap {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.mcq-label {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.mcq-question {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.mcq-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.mcq-option {
+  margin: 0;
+  border: 1px solid #dbe2ea;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 14px;
+}
+
+.mcq-option-label {
+  font-weight: 700;
+  color: #334155;
+}
+
+.mcq-option.is-correct {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.mcq-answer {
+  margin: 0;
+  font-size: 14px;
+  color: #0f172a;
 }
 
 .entry-head {
@@ -666,6 +814,13 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .profile-form-grid label .icon { width: 15px; height: 15px; }
 .profile-form-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
 
+
+@media (min-width: 1600px) {
+  .container {
+    width: min(1860px, 100%);
+  }
+}
+
 @media (max-width: 1024px) {
   .grid-4,
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -684,8 +839,8 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .main-shell { grid-column: 1; }
   .main-shell::before,
   .main-shell::after { display: none; }
-  .container { padding: 10px; }
-  .topbar { padding: 0 16px; }
+  .container { padding: 6px 7px; }
+  .topbar { padding: 0 10px; }
   .desktop-only { display: none !important; }
   .mobile-only { display: inline-flex; }
   .topbar-left { flex: 1; min-width: 0; }
@@ -695,7 +850,53 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .grid-2 { grid-template-columns: 1fr; }
   .profile-hero { grid-template-columns: 1fr; }
   .profile-form-actions { justify-content: flex-start; }
-  .card { padding: 10px; border-radius: 10px; }
+  .card { padding: 7px; border-radius: 8px; }
+  .content-form-shell [data-add-form-toggle] {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 116px;
+  }
+  .content-form-shell [data-add-form-panel] {
+    display: none;
+  }
+  .content-form-shell.form-expanded [data-add-form-panel] {
+    display: grid;
+  }
+  .entry-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .note-entry-head,
+  .mcq-entry-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .note-actions {
+    width: auto;
+    margin-left: 0;
+  }
+  .note-actions form {
+    margin: 0;
+  }
+  .mcq-actions {
+    width: auto;
+    margin-left: 0;
+  }
+  .mcq-actions form {
+    margin: 0;
+  }
+  .mcq-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .mcq-option {
+    padding: 6px;
+    font-size: 13px;
+  }
+  .entry-media img {
+    max-height: 210px;
+  }
   .kpi { font-size: 36px; }
   .page-title { font-size: 24px; }
   .auth-card { padding: 16px; }

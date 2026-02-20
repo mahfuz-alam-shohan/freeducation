@@ -1,4 +1,5 @@
 import { appShell } from '../templates/shell.js';
+import { imageUrlFromKey } from '../imageUrl.js';
 
 function h(value) {
   return String(value ?? '')
@@ -263,18 +264,18 @@ export function notesPage(user, subject, node, chapter, notes) {
   const noteItems = notes
     .map((n, index) => {
       const modalId = `note-edit-${n.id}`;
-      return `<article class="content-entry" id="note-${n.id}">
-      <div class="entry-head">
+      return `<article class="content-entry note-entry" id="note-${n.id}">
+      <div class="entry-head note-entry-head">
         <p class="muted">Note ${index + 1}</p>
-        <div class="toolbar-group">
+        <div class="toolbar-group note-actions">
           <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
           ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id)}
         </div>
       </div>
-      ${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : ''}
-      <p class="muted">${new Date(n.created_at).toLocaleString()}</p>
-      <div>${n.content_html}</div>
-      ${n.image_key ? `<p><code>${h(n.image_key)}</code></p>` : ''}
+      ${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : '<p class="muted">Untitled note</p>'}
+      <p class="muted note-time">${new Date(n.created_at).toLocaleString()}</p>
+      <div class="note-content">${n.content_html}</div>
+      ${n.image_key ? `<figure class="entry-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${index + 1}" loading="lazy" /></figure>` : ''}
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
           <div class="content-modal-head">
@@ -302,7 +303,15 @@ export function notesPage(user, subject, node, chapter, notes) {
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
-  <section class="card">${noteForm(subject.id, node.id, chapter?.id)}</section>
+  <section class="card content-form-shell" data-add-form-shell>
+    <div class="content-form-head">
+      <h3 class="card-title">Add short note</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="short note" aria-expanded="false">Add short note</button>
+    </div>
+    <div data-add-form-panel>
+      ${noteForm(subject.id, node.id, chapter?.id)}
+    </div>
+  </section>
   <section class="content-list" data-live-region="notes-page">${noteItems || '<p class="muted">No notes yet.</p>'}${numberLinks}</section>`;
 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
@@ -331,16 +340,23 @@ export function mcqsPage(user, subject, node, chapter, mcqs) {
   const rows = mcqs
     .map((m, index) => {
       const modalId = `mcq-edit-${m.id}`;
-      return `<article class="content-entry" id="mcq-${m.id}">
-      <div class="entry-head">
+      return `<article class="content-entry mcq-entry" id="mcq-${m.id}">
+      <div class="entry-head mcq-entry-head">
         <p class="muted">MCQ ${index + 1}</p>
-        <div class="toolbar-group">
+        <div class="toolbar-group mcq-actions">
           <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
           <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit">Delete</button></form>
         </div>
       </div>
-      <div>${m.question_html}</div>
-      <p class="muted">A) ${h(m.option_a)} · B) ${h(m.option_b)} · C) ${h(m.option_c)} · D) ${h(m.option_d)} | Correct: ${h(m.correct_option)}</p>
+      ${m.image_key ? `<figure class="entry-media mcq-media"><img src="${h(imageUrlFromKey(m.image_key) || '')}" alt="MCQ image ${index + 1}" loading="lazy" /></figure>` : ''}
+      <div class="mcq-question-wrap"><span class="mcq-label">Ques:</span><div class="mcq-question">${m.question_html}</div></div>
+      <div class="mcq-options-grid" role="list" aria-label="Options for MCQ ${index + 1}">
+        <p class="mcq-option ${m.correct_option === 'A' ? 'is-correct' : ''}" role="listitem"><span class="mcq-option-label">A.</span><span>${h(m.option_a)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'B' ? 'is-correct' : ''}" role="listitem"><span class="mcq-option-label">B.</span><span>${h(m.option_b)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'C' ? 'is-correct' : ''}" role="listitem"><span class="mcq-option-label">C.</span><span>${h(m.option_c)}</span></p>
+        <p class="mcq-option ${m.correct_option === 'D' ? 'is-correct' : ''}" role="listitem"><span class="mcq-option-label">D.</span><span>${h(m.option_d)}</span></p>
+      </div>
+      <p class="mcq-answer"><span class="mcq-label">Ans:</span> ${h(m.correct_option)} ${m.correct_option === 'A' ? '· ' + h(m.option_a) : m.correct_option === 'B' ? '· ' + h(m.option_b) : m.correct_option === 'C' ? '· ' + h(m.option_c) : '· ' + h(m.option_d)}</p>
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
           <div class="content-modal-head">
@@ -359,7 +375,15 @@ export function mcqsPage(user, subject, node, chapter, mcqs) {
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
-  <section class="card">${mcqForm(subject.id, node.id, chapter?.id)}</section>
+  <section class="card content-form-shell" data-add-form-shell>
+    <div class="content-form-head">
+      <h3 class="card-title">Add MCQ</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="MCQ" aria-expanded="false">Add MCQ</button>
+    </div>
+    <div data-add-form-panel>
+      ${mcqForm(subject.id, node.id, chapter?.id)}
+    </div>
+  </section>
   <section class="content-list">${rows || '<p class="muted">No MCQs yet.</p>'}</section>`;
 
   return appShell('subjects', user, `${subject.name} · MCQ Bank`, 'Create, edit, and delete MCQs.', content);
