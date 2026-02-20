@@ -463,6 +463,51 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .mobile-only { display: none; }
 
 
+
+.template-tree-row {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  gap: 6px;
+}
+.template-tree-guides {
+  display: inline-flex;
+  align-items: stretch;
+  height: 20px;
+}
+.template-guide {
+  width: 16px;
+  border-left: 1px solid #cbd5e1;
+  display: inline-block;
+}
+.template-guide.blank { border-left-color: transparent; }
+.template-branch {
+  position: relative;
+  border-left: 1px solid #cbd5e1;
+}
+.template-branch::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 10px;
+  border-top: 1px solid #cbd5e1;
+}
+.template-branch.end::before,
+.template-branch.mid::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  border-left: 1px solid #cbd5e1;
+}
+.template-branch.end::before { top: 0; height: 50%; }
+.template-branch.mid::before { top: 0; height: 100%; }
+.template-tree-label {
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
 .truncate-one-line {
   display: block;
   white-space: nowrap;

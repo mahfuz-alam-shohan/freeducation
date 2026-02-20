@@ -50,18 +50,26 @@ export function templateDetailsPage(user, template, nodes) {
     byParent.get(key).push(node);
   }
 
-  function walk(parentId, depth) {
+  function walk(parentId, depth, parentChain = []) {
     const list = byParent.get(parentId || 'root') || [];
     return list
-      .map((node) => {
-        const label = `${'— '.repeat(depth)}${h(node.server_name)}`;
+      .map((node, index) => {
+        const isLast = index === list.length - 1;
+        const branch = [...parentChain, isLast ? 'end' : 'mid'];
+        const hierarchy = `<div class="template-tree-row" style="--depth:${depth};">
+            <span class="template-tree-guides" aria-hidden="true">${branch
+              .slice(0, -1)
+              .map((segment) => `<span class="template-guide ${segment === 'end' ? 'blank' : ''}"></span>`)
+              .join('')}<span class="template-guide template-branch ${isLast ? 'end' : 'mid'}"></span></span>
+            <span class="template-tree-label">${h(node.server_name)}</span>
+          </div>`;
         return `<tr>
-          <td>${label}</td>
+          <td>${hierarchy}</td>
           <td>${h(node.node_type)}</td>
           <td>${yesNo(node.supports_edit)}</td>
           <td>${yesNo(node.supports_image)}</td>
           <td>${yesNo(node.supports_chapters)}</td>
-        </tr>${walk(node.id, depth + 1)}`;
+        </tr>${walk(node.id, depth + 1, branch)}`;
       })
       .join('');
   }
