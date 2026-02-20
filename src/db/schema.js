@@ -223,6 +223,35 @@ const TABLES = {
       updated_at: 'TEXT',
     },
   },
+  content_entries: {
+    create: `CREATE TABLE IF NOT EXISTS content_entries (
+      id TEXT PRIMARY KEY,
+      subject_id TEXT NOT NULL,
+      subject_node_id TEXT NOT NULL,
+      chapter_id TEXT,
+      content_kind TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content_html TEXT NOT NULL,
+      image_key TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+      FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE,
+      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+    )`,
+    columns: {
+      id: 'TEXT',
+      subject_id: 'TEXT',
+      subject_node_id: 'TEXT',
+      chapter_id: 'TEXT',
+      content_kind: 'TEXT',
+      title: 'TEXT',
+      content_html: 'TEXT',
+      image_key: 'TEXT',
+      created_at: 'TEXT',
+      updated_at: 'TEXT',
+    },
+  },
 };
 
 let schemaInitialized = false;
@@ -271,5 +300,6 @@ export async function ensureSchema(db, options = {}) {
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_content_entries_lookup ON content_entries(subject_node_id, chapter_id, content_kind)');
   schemaInitialized = true;
 }

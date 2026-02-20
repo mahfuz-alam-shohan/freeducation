@@ -14,11 +14,13 @@ import {
 import {
   createTemplate,
   createChapter,
+  createContentEntry,
   createMcq,
   createNote,
   createSubject,
   deleteTemplate,
   deleteChapter,
+  deleteContentEntry,
   deleteMcq,
   deleteNote,
   ensureDefaultTemplate,
@@ -27,6 +29,7 @@ import {
   getSubjectNode,
   getTemplate,
   listChapters,
+  listContentEntries,
   listMcqs,
   listNotes,
   listSubjectNodesByParent,
@@ -35,6 +38,7 @@ import {
   listTemplates,
   updateTemplate,
   updateChapter,
+  updateContentEntry,
   updateMcq,
   updateNote,
   updateSubjectNode,
@@ -46,6 +50,7 @@ import { methodNotAllowed } from './http/request.js';
 import { requireAuth } from './api/auth.js';
 import {
   chaptersPage,
+  contentEntriesPage,
   contentKindsPage,
   dashboardPage,
   forbiddenPage,
@@ -536,6 +541,47 @@ async function handleAdminPost(request, env, url) {
     return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`);
   }
 
+
+
+  if (url.pathname === '/api/content-entries' && request.method === 'POST') {
+    const form = await request.formData();
+    const idVal = String(form.get('id') || '');
+    const subjectId = String(form.get('subjectId') || '');
+    const subjectNodeId = String(form.get('subjectNodeId') || '');
+    const chapterId = String(form.get('chapterId') || '');
+    const contentKind = String(form.get('contentKind') || '').trim();
+    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+    const title = String(form.get('title') || '').trim();
+    const contentHtml = String(form.get('contentHtml') || '').trim();
+    const redirectUrl = `/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&kind=${encodeURIComponent(contentKind)}&page=${safePage}`;
+    if (!contentKind || !contentHtml) return redirect(redirectUrl);
+
+    if (!idVal) {
+      const imageKey = await uploadImage(env, 'content', form.get('image'));
+      await createContentEntry(env.DB, { subjectId, subjectNodeId, chapterId, contentKind, title, contentHtml, imageKey });
+    } else {
+      const existing = (await listContentEntries(env.DB, subjectNodeId, chapterId, contentKind)).find((entry) => entry.id === idVal);
+      const uploaded = await uploadImage(env, 'content', form.get('image'));
+      const imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
+      await updateContentEntry(env.DB, { id: idVal, title, contentHtml, imageKey });
+    }
+
+    return redirect(redirectUrl);
+  }
+
+  if (url.pathname === '/api/content-entries/delete' && request.method === 'POST') {
+    const form = await request.formData();
+    const idVal = String(form.get('id') || '');
+    const subjectId = String(form.get('subjectId') || '');
+    const subjectNodeId = String(form.get('subjectNodeId') || '');
+    const chapterId = String(form.get('chapterId') || '');
+    const kind = String(form.get('kind') || '').trim();
+    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+    if (idVal) await deleteContentEntry(env.DB, idVal);
+    return redirect(`/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&kind=${encodeURIComponent(kind)}&page=${safePage}`);
+  }
   return null;
 }
 
@@ -603,20 +649,22 @@ async function handleDynamicPages(url, env, user) {
     }
 
     const children = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    if (children.length > 0) {
+    const contentChildren = children.filter((child) => child.node_type === 'content');
+    const sectionChildren = children.filter((child) => child.node_type !== 'content');
+    if (sectionChildren.length > 0) {
       return html(
         subjectNodeListPage(
           user,
           subject,
           `${subject.name} · ${node.display_name}`,
           'Rename items and upload template images.',
-          children,
+          sectionChildren,
           `/subjects/${subject.id}`
         )
       );
     }
 
-    return html(contentKindsPage(user, subject, node, null));
+    return html(contentKindsPage(user, subject, node, null, contentChildren));
   }
 
   const chapterPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
@@ -627,7 +675,25 @@ async function handleDynamicPages(url, env, user) {
       getChapter(env.DB, chapterPageMatch[3]),
     ]);
     if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
-    return html(contentKindsPage(user, subject, node, chapter));
+    const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    return html(contentKindsPage(user, subject, node, chapter, contentChildren));
+  }
+
+  if (url.pathname.match(/^\/subjects\/([^/]+)\/content$/)) {
+    const subjectId = url.pathname.split('/')[2];
+    const nodeId = url.searchParams.get('node');
+    const chapterId = url.searchParams.get('chapter');
+    const contentKind = String(url.searchParams.get('kind') || '').trim();
+    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, subjectId),
+      getSubjectNode(env.DB, nodeId),
+      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+    ]);
+    if (!subject || !node || !contentKind) return new Response('Not Found', { status: 404 });
+    const entries = await listContentEntries(env.DB, node.id, chapter?.id, contentKind);
+    return html(contentEntriesPage(user, subject, node, chapter, contentKind, entries, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/notes$/)) {

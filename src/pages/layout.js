@@ -13,6 +13,7 @@ export {
   subjectNodeListPage,
   chaptersPage,
   contentKindsPage,
+  contentEntriesPage,
   notesPage,
   mcqsPage,
 } from './admin/modulesPages.js';

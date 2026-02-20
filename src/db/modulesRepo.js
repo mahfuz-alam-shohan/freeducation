@@ -350,3 +350,52 @@ export async function updateMcq(db, input) {
 export async function deleteMcq(db, mcqId) {
   await db.prepare('DELETE FROM mcq_bank WHERE id = ?1').bind(mcqId).run();
 }
+
+
+export async function listContentEntries(db, subjectNodeId, chapterId, contentKind) {
+  const rows = await db
+    .prepare(
+      `SELECT * FROM content_entries
+       WHERE subject_node_id = ?1
+         AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2)
+         AND content_kind = ?3
+       ORDER BY created_at DESC`
+    )
+    .bind(subjectNodeId, chapterId || null, contentKind)
+    .all();
+  return rows.results ?? [];
+}
+
+export async function createContentEntry(db, input) {
+  const createdAt = nowIso();
+  await db
+    .prepare(
+      `INSERT INTO content_entries (
+        id, subject_id, subject_node_id, chapter_id, content_kind,
+        title, content_html, image_key, created_at, updated_at
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
+    )
+    .bind(
+      crypto.randomUUID(),
+      input.subjectId,
+      input.subjectNodeId,
+      input.chapterId || null,
+      input.contentKind,
+      input.title || '',
+      input.contentHtml,
+      input.imageKey,
+      createdAt
+    )
+    .run();
+}
+
+export async function updateContentEntry(db, input) {
+  await db
+    .prepare('UPDATE content_entries SET title = ?2, content_html = ?3, image_key = ?4, updated_at = ?5 WHERE id = ?1')
+    .bind(input.id, input.title || '', input.contentHtml, input.imageKey, nowIso())
+    .run();
+}
+
+export async function deleteContentEntry(db, entryId) {
+  await db.prepare('DELETE FROM content_entries WHERE id = ?1').bind(entryId).run();
+}
