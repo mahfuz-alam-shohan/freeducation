@@ -12,10 +12,22 @@ import { buildSessionCookie, clearSessionCookie, createSignedToken } from './sec
 import { html, json, redirect } from './http/response.js';
 import { methodNotAllowed } from './http/request.js';
 import { requireAuth } from './api/auth.js';
-import { dashboardPage, loginPage, setupPage, usersPage } from './pages/layout.js';
+import {
+  dashboardPage,
+  forbiddenPage,
+  loginPage,
+  profilePage,
+  publicHomePage,
+  setupPage,
+  usersPage,
+} from './pages/layout.js';
 import { MAX_IMAGE_BYTES } from './env.js';
 
 const MAX_BOOTSTRAP_BODY_BYTES = 4 * 1024 * 1024;
+const ACCESS = {
+  PUBLIC: 'public',
+  AUTHENTICATED: 'authenticated',
+};
 
 function id() {
   return crypto.randomUUID();
@@ -131,6 +143,18 @@ async function getStats(db) {
   };
 }
 
+function routeRequiresRole(route, user) {
+  return Array.isArray(route.roles) && !route.roles.includes(user.role);
+}
+
+const pageRoutes = [
+  { path: '/', access: ACCESS.PUBLIC, handle: ({ user }) => html(publicHomePage(user)) },
+  { path: '/login', access: ACCESS.PUBLIC, handle: () => html(loginPage()) },
+  { path: '/dashboard', access: ACCESS.AUTHENTICATED, roles: ['admin'], handle: async ({ env, user }) => html(dashboardPage(user, await getStats(env.DB))) },
+  { path: '/profile', access: ACCESS.AUTHENTICATED, handle: ({ user }) => html(profilePage(user)) },
+  { path: '/users', access: ACCESS.AUTHENTICATED, roles: ['admin'], handle: async ({ env, user }) => html(usersPage(user, await listUsers(env.DB))) },
+];
+
 export default {
   async fetch(request, env) {
     if (!env.AUTH_SECRET) {
@@ -151,26 +175,29 @@ export default {
 
     const adminCount = await getAdminCount(env.DB);
     if (adminCount === 0) {
+      if (url.pathname === '/api/logout') return redirect('/setup');
       if (url.pathname === '/' || url.pathname === '/setup') return html(setupPage());
       return redirect('/setup');
     }
 
-    if (url.pathname === '/login') return html(loginPage());
-
     const user = await requireAuth(request, env);
-    if (!user) {
+    if (url.pathname === '/api/logout') {
+      if (!user) return redirect('/login');
+      return apiLogout(env, user);
+    }
+
+    const route = pageRoutes.find((item) => item.path === url.pathname);
+    if (!route) return new Response('Not Found', { status: 404 });
+
+    if (route.access === ACCESS.AUTHENTICATED && !user) {
       if (url.pathname.startsWith('/api/')) return json({ error: 'Unauthorized' }, 401);
       return redirect('/login');
     }
 
-    if (url.pathname === '/api/logout') return apiLogout(env, user);
-    if (url.pathname === '/' || url.pathname === '/dashboard') {
-      return html(dashboardPage(user, await getStats(env.DB)));
-    }
-    if (url.pathname === '/users') {
-      return html(usersPage(user, await listUsers(env.DB)));
+    if (route.access === ACCESS.AUTHENTICATED && routeRequiresRole(route, user)) {
+      return html(forbiddenPage(), 403);
     }
 
-    return new Response('Not Found', { status: 404 });
+    return route.handle({ request, env, user });
   },
 };
