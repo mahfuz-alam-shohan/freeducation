@@ -324,6 +324,8 @@ a { color: inherit; }
   flex-wrap: wrap;
 }
 .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.table .toolbar-group { flex-wrap: nowrap; }
+.table .toolbar-group > * { flex-shrink: 0; }
 
 .btn {
   border-radius: 10px;
@@ -585,7 +587,6 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .grid-4,
   .grid-3,
   .grid-2 { grid-template-columns: 1fr; }
-  .subject-node-actions-row { grid-template-columns: 1fr; }
   .profile-hero { grid-template-columns: 1fr; }
   .profile-form-actions { justify-content: flex-start; }
   .card { padding: 10px; border-radius: 10px; }
