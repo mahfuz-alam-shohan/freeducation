@@ -456,6 +456,57 @@ a { color: inherit; }
 }
 .table tbody tr:hover { background: #f8fafc; }
 
+
+.note-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.note-numbering {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.note-number-link {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.note-modal {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: 900px;
+  width: min(900px, 96vw);
+}
+
+.note-modal::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.note-modal-inner {
+  max-width: none;
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.note-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .pagination {
   display: flex;
   justify-content: space-between;

@@ -248,18 +248,54 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
   </form>`;
 }
 
+function noteDeleteForm(subjectId, subjectNodeId, chapterId, noteId) {
+  return `<form method="post" action="/api/notes/delete">
+    <input type="hidden" name="liveRegion" value="notes-page" />
+    <input type="hidden" name="id" value="${noteId}" />
+    <input type="hidden" name="subjectId" value="${subjectId}" />
+    <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
+    <input type="hidden" name="chapterId" value="${chapterId || ''}" />
+    <button class="btn btn-danger" type="submit" data-live-form="true">Delete</button>
+  </form>`;
+}
+
 export function notesPage(user, subject, node, chapter, notes) {
-  const rows = notes
-    .map(
-      (n) => `<div class="card">${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : ''}
+  const noteCards = notes
+    .map((n, index) => {
+      const modalId = `note-edit-${n.id}`;
+      return `<article class="card" id="note-${n.id}">
+      <div class="note-head">
+        <p class="muted">Note ${index + 1}</p>
+        <div class="toolbar-group">
+          <button type="button" class="btn btn-secondary" data-note-modal-open="${modalId}">Edit</button>
+          ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id)}
+        </div>
+      </div>
+      ${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : ''}
       <p class="muted">${new Date(n.created_at).toLocaleString()}</p>
       <div>${n.content_html}</div>
       ${n.image_key ? `<p><code>${h(n.image_key)}</code></p>` : ''}
-      ${noteForm(subject.id, node.id, chapter?.id, n)}
-      <form method="post" action="/api/notes/delete"><input type="hidden" name="liveRegion" value="notes-page" /><input type="hidden" name="id" value="${n.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit" data-live-form="true">Delete</button></form>
-      </div>`
-    )
+      <dialog class="note-modal" data-note-modal="${modalId}">
+        <div class="modal note-modal-inner">
+          <div class="note-modal-head">
+            <h3 class="card-title">Edit note</h3>
+            <button type="button" class="btn btn-secondary" data-note-modal-close>Close</button>
+          </div>
+          ${noteForm(subject.id, node.id, chapter?.id, n)}
+        </div>
+      </dialog>
+      </article>`;
+    })
     .join('');
+
+  const numberLinks = notes.length
+    ? `<nav class="pagination" aria-label="Notes list numbering">
+      <span>${notes.length} note${notes.length > 1 ? 's' : ''}</span>
+      <div class="note-numbering">${notes
+        .map((n, index) => `<a href="#note-${n.id}" class="note-number-link">${index + 1}</a>`)
+        .join('')}</div>
+    </nav>`
+    : '';
 
   const backHref = chapter
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
@@ -267,7 +303,7 @@ export function notesPage(user, subject, node, chapter, notes) {
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
   <section class="card">${noteForm(subject.id, node.id, chapter?.id)}</section>
-  <section class="grid" data-live-region="notes-page">${rows || '<p class="muted">No notes yet.</p>'}</section>`;
+  <section class="grid" data-live-region="notes-page">${noteCards || '<p class="muted">No notes yet.</p>'}${numberLinks}</section>`;
 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
 }
