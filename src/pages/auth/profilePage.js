@@ -1,4 +1,5 @@
 import { appShell } from '../templates/shell.js';
+import { imageUrlFromKey } from '../imageUrl.js';
 
 function h(value) {
   return String(value ?? '')
@@ -21,9 +22,11 @@ function profileHeader(user) {
     .map((part) => part[0]?.toUpperCase() || '')
     .join('');
 
+  const avatarUrl = imageUrlFromKey(user.imageKey);
+
   return `<section class="card profile-hero">
     <div class="profile-avatar-wrap">
-      <div class="profile-avatar">${h(initials || 'U')}</div>
+      <div class="profile-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="${h(user.name)} avatar" loading="lazy" />` : h(initials || 'U')}</div>
       <form method="post" action="/api/profile/avatar" enctype="multipart/form-data" class="profile-avatar-form">
         <label class="btn btn-ghost profile-upload-btn" for="avatar-upload"><span class="icon">${iconCamera}</span>Change Avatar</label>
         <input id="avatar-upload" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" class="profile-file-input" />

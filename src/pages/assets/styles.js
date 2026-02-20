@@ -286,6 +286,7 @@ a { color: inherit; }
   line-height: 1;
   flex: 0 0 36px;
 }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .container {
   width: min(1440px, 100%);

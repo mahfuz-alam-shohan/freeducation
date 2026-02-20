@@ -1,6 +1,7 @@
 import { appScript } from '../assets.js';
 import { getNavigation } from '../navigation.js';
 import { basePage } from './base.js';
+import { imageUrlFromKey } from '../imageUrl.js';
 import { iconChevron, iconClose, iconCollapse, iconLogout, iconMenu, siteLogo } from './icons.js';
 
 function initials(name) {
@@ -56,13 +57,15 @@ function sidebar(active, role) {
 }
 
 function topbar(user) {
+  const avatarUrl = imageUrlFromKey(user.imageKey);
+  const avatarLabel = `${user.name} avatar`;
   return `<header class="topbar">
       <div class="topbar-left">
         <button class="icon-btn mobile-only mobile-menu-btn" data-mobile-toggle aria-label="Open navigation menu" aria-expanded="false"><span class="mobile-icon mobile-icon-menu" aria-hidden="true">${iconMenu}</span><span class="mobile-icon mobile-icon-close" aria-hidden="true">${iconClose}</span></button>
         <p class="muted login-note">Logged in as <strong class="login-name">${user.name}</strong> (${user.role})</p>
       </div>
       <div class="topbar-right">
-        <span class="avatar" aria-label="Profile">${initials(user.name)}</span>
+        <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" />` : initials(user.name)}</span>
       </div>
     </header>`;
 }
