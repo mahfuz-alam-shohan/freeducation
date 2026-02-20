@@ -585,6 +585,14 @@ a { color: inherit; }
   font-size: 14px;
 }
 
+.mcq-option-correct {
+  color: #166534;
+}
+
+.mcq-option-correct .mcq-option-label {
+  color: #166534;
+}
+
 .mcq-option-label {
   font-weight: 700;
   color: #334155;
