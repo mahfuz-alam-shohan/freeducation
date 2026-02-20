@@ -1,4 +1,5 @@
 import { appShell } from '../templates/shell.js';
+import { imageUrlFromKey } from '../imageUrl.js';
 
 function h(value) {
   return String(value ?? '')
@@ -237,8 +238,8 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
+    <input type="hidden" name="page" value="${note?.page || 1}" />
     <input type="hidden" name="id" value="${note?.id || ''}" />
-    <input class="input" name="title" placeholder="Optional note heading" value="${h(note?.title || '')}" />
     <input class="input" type="file" name="image" accept="image/*" />
     ${richTextEditor('contentHtml', note?.content_html || '', 'Write your short note here…', true)}
     <div class="toolbar-group">
@@ -248,62 +249,98 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
   </form>`;
 }
 
-function noteDeleteForm(subjectId, subjectNodeId, chapterId, noteId) {
+function noteDeleteForm(subjectId, subjectNodeId, chapterId, noteId, page = 1) {
   return `<form method="post" action="/api/notes/delete">
     <input type="hidden" name="liveRegion" value="notes-page" />
     <input type="hidden" name="id" value="${noteId}" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
-    <button class="btn btn-danger" type="submit" data-live-form="true">Delete</button>
+    <input type="hidden" name="page" value="${page}" />
+    <button class="btn btn-icon btn-icon-danger" type="submit" data-live-form="true" aria-label="Delete note" title="Delete note">🗑</button>
   </form>`;
 }
 
-export function notesPage(user, subject, node, chapter, notes) {
-  const noteItems = notes
-    .map((n, index) => {
+function getPagedItems(items, currentPage, perPage) {
+  const totalPages = Math.max(1, Math.ceil(items.length / perPage));
+  const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+  const start = (safePage - 1) * perPage;
+  return {
+    totalPages,
+    safePage,
+    pageItems: items.slice(start, start + perPage),
+  };
+}
+
+function renderPagination(baseHref, page, totalPages) {
+  if (totalPages <= 1) return '';
+  const pageLinks = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .map((value) =>
+      value === page
+        ? `<span class="page-link current" aria-current="page">${value}</span>`
+        : `<a class="page-link" href="${baseHref}&page=${value}">${value}</a>`
+    )
+    .join('');
+  return `<nav class="pagination" aria-label="Pagination">
+    <a class="page-link" href="${baseHref}&page=${Math.max(1, page - 1)}">Prev</a>
+    <div class="page-links">${pageLinks}</div>
+    <a class="page-link" href="${baseHref}&page=${Math.min(totalPages, page + 1)}">Next</a>
+  </nav>`;
+}
+
+export function notesPage(user, subject, node, chapter, notes, currentPage = 1) {
+  const baseHref = `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}`;
+  const { totalPages, safePage, pageItems } = getPagedItems(notes, currentPage, 40);
+  const leftColumn = pageItems.slice(0, 20);
+  const rightColumn = pageItems.slice(20, 40);
+
+  const renderNoteItems = (list, startIndex) =>
+    list
+      .map((n, index) => {
       const modalId = `note-edit-${n.id}`;
-      return `<article class="content-entry" id="note-${n.id}">
-      <div class="entry-head">
-        <p class="muted">Note ${index + 1}</p>
-        <div class="toolbar-group">
-          <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
-          ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id)}
+      const itemIndex = (safePage - 1) * 40 + startIndex + index + 1;
+      return `<article class="plain-entry" id="note-${n.id}">
+      <div class="plain-line-wrap">
+        <div class="note-content">${itemIndex}. ${n.content_html}</div>
+        <div class="note-actions-inline">
+          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit note" title="Edit note">✎</button>
+          ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id, safePage)}
         </div>
       </div>
-      ${n.title ? `<h3 class="card-title">${h(n.title)}</h3>` : ''}
-      <p class="muted">${new Date(n.created_at).toLocaleString()}</p>
-      <div>${n.content_html}</div>
-      ${n.image_key ? `<p><code>${h(n.image_key)}</code></p>` : ''}
+      ${n.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${itemIndex}" loading="lazy" /></figure>` : ''}
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
           <div class="content-modal-head">
             <h3 class="card-title">Edit note</h3>
             <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
           </div>
-          ${noteForm(subject.id, node.id, chapter?.id, n)}
+          ${noteForm(subject.id, node.id, chapter?.id, { ...n, page: safePage })}
         </div>
       </dialog>
       </article>`;
     })
     .join('');
 
-  const numberLinks = notes.length
-    ? `<nav class="pagination" aria-label="Notes list numbering">
-      <span>${notes.length} note${notes.length > 1 ? 's' : ''}</span>
-      <div class="note-numbering">${notes
-        .map((n, index) => `<a href="#note-${n.id}" class="note-number-link">${index + 1}</a>`)
-        .join('')}</div>
-    </nav>`
-    : '';
-
   const backHref = chapter
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
-  <section class="card">${noteForm(subject.id, node.id, chapter?.id)}</section>
-  <section class="content-list" data-live-region="notes-page">${noteItems || '<p class="muted">No notes yet.</p>'}${numberLinks}</section>`;
+  <section class="card content-form-shell" data-add-form-shell>
+    <div class="content-form-head">
+      <h3 class="card-title">Add short note</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="short note" aria-expanded="false">Add short note</button>
+    </div>
+    <div data-add-form-panel>
+      ${noteForm(subject.id, node.id, chapter?.id, { page: safePage })}
+    </div>
+  </section>
+  <section class="content-list plain-two-column" data-live-region="notes-page">
+    <div>${renderNoteItems(leftColumn, 0) || ''}</div>
+    <div>${renderNoteItems(rightColumn, 20) || ''}</div>
+  </section>
+  ${!pageItems.length ? '<p class="muted">No notes yet.</p>' : ''}
+  ${renderPagination(baseHref, safePage, totalPages)}`;
 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
 }
@@ -314,6 +351,7 @@ function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
+    <input type="hidden" name="page" value="${mcq?.page || 1}" />
     ${richTextEditor('questionHtml', mcq?.question_html || '', 'Write the MCQ question here…', true)}
     <input class="input" type="file" name="image" accept="image/*" />
     <input class="input" name="optionA" placeholder="Option A" value="${h(mcq?.option_a || '')}" required />
@@ -327,27 +365,39 @@ function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
   </form>`;
 }
 
-export function mcqsPage(user, subject, node, chapter, mcqs) {
-  const rows = mcqs
-    .map((m, index) => {
+export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
+  const baseHref = `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}`;
+  const { totalPages, safePage, pageItems } = getPagedItems(mcqs, currentPage, 20);
+  const leftColumn = pageItems.slice(0, 10);
+  const rightColumn = pageItems.slice(10, 20);
+
+  const renderMcqItems = (list, startIndex) =>
+    list
+      .map((m, index) => {
       const modalId = `mcq-edit-${m.id}`;
-      return `<article class="content-entry" id="mcq-${m.id}">
-      <div class="entry-head">
-        <p class="muted">MCQ ${index + 1}</p>
-        <div class="toolbar-group">
-          <button type="button" class="btn btn-secondary" data-content-modal-open="${modalId}">Edit</button>
-          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><button class="btn btn-danger" type="submit">Delete</button></form>
+      const itemIndex = (safePage - 1) * 20 + startIndex + index + 1;
+      return `<article class="plain-entry" id="mcq-${m.id}">
+      <div class="plain-line-wrap">
+        <div class="mcq-question">${itemIndex}. ${m.question_html}</div>
+        <div class="mcq-actions-inline">
+          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit MCQ" title="Edit MCQ">✎</button>
+          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">🗑</button></form>
         </div>
       </div>
-      <div>${m.question_html}</div>
-      <p class="muted">A) ${h(m.option_a)} · B) ${h(m.option_b)} · C) ${h(m.option_c)} · D) ${h(m.option_d)} | Correct: ${h(m.correct_option)}</p>
+      ${m.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(m.image_key) || '')}" alt="MCQ image ${itemIndex}" loading="lazy" /></figure>` : ''}
+      <div class="mcq-options-grid" role="list" aria-label="Options for MCQ ${index + 1}">
+        <p class="mcq-option" role="listitem"><span class="mcq-option-label">A.</span><span>${h(m.option_a)}</span></p>
+        <p class="mcq-option" role="listitem"><span class="mcq-option-label">B.</span><span>${h(m.option_b)}</span></p>
+        <p class="mcq-option" role="listitem"><span class="mcq-option-label">C.</span><span>${h(m.option_c)}</span></p>
+        <p class="mcq-option" role="listitem"><span class="mcq-option-label">D.</span><span>${h(m.option_d)}</span></p>
+      </div>
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
           <div class="content-modal-head">
             <h3 class="card-title">Edit MCQ</h3>
             <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
           </div>
-          ${mcqForm(subject.id, node.id, chapter?.id, m)}
+          ${mcqForm(subject.id, node.id, chapter?.id, { ...m, page: safePage })}
         </div>
       </dialog>
       </article>`;
@@ -359,8 +409,21 @@ export function mcqsPage(user, subject, node, chapter, mcqs) {
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
   const content = `<section class="card"><a href="${backHref}">← Back</a></section>
-  <section class="card">${mcqForm(subject.id, node.id, chapter?.id)}</section>
-  <section class="content-list">${rows || '<p class="muted">No MCQs yet.</p>'}</section>`;
+  <section class="card content-form-shell" data-add-form-shell>
+    <div class="content-form-head">
+      <h3 class="card-title">Add MCQ</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="MCQ" aria-expanded="false">Add MCQ</button>
+    </div>
+    <div data-add-form-panel>
+      ${mcqForm(subject.id, node.id, chapter?.id, { page: safePage })}
+    </div>
+  </section>
+  <section class="content-list plain-two-column">
+    <div>${renderMcqItems(leftColumn, 0) || ''}</div>
+    <div>${renderMcqItems(rightColumn, 10) || ''}</div>
+  </section>
+  ${!pageItems.length ? '<p class="muted">No MCQs yet.</p>' : ''}
+  ${renderPagination(baseHref, safePage, totalPages)}`;
 
   return appShell('subjects', user, `${subject.name} · MCQ Bank`, 'Create, edit, and delete MCQs.', content);
 }

@@ -43,6 +43,24 @@ function initializeRichEditors() {
       if (preview) preview.innerHTML = html || '<p class="muted">Nothing to preview yet.</p>';
     };
 
+    const refreshToolStates = () => {
+      editor.querySelectorAll('[data-editor-command]').forEach((button) => {
+        const command = button.getAttribute('data-editor-command');
+        const value = button.getAttribute('data-editor-value');
+        let isActive = false;
+        if (command === 'formatBlock' && value) {
+          const current = (document.queryCommandValue('formatBlock') || '').replace(/[<>]/g, '').toLowerCase();
+          isActive = current === value.toLowerCase();
+        } else if (command === 'createLink') {
+          isActive = Boolean(document.queryCommandState('createLink'));
+        } else {
+          isActive = Boolean(document.queryCommandState(command));
+        }
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+    };
+
     const activateTab = (mode) => {
       const isPreview = mode === 'preview';
       editor.classList.toggle('preview-mode', isPreview);
@@ -68,6 +86,7 @@ function initializeRichEditors() {
         input.focus();
         document.execCommand(command, false, value);
         sync();
+        refreshToolStates();
       });
     });
 
@@ -77,10 +96,58 @@ function initializeRichEditors() {
       });
     });
 
-    input.addEventListener('input', sync);
+    input.addEventListener('input', () => {
+      sync();
+      refreshToolStates();
+    });
+    input.addEventListener('keyup', refreshToolStates);
+    input.addEventListener('mouseup', refreshToolStates);
+    input.addEventListener('focus', refreshToolStates);
+    document.addEventListener('selectionchange', () => {
+      if (!editor.contains(document.activeElement)) return;
+      refreshToolStates();
+    });
     sync();
+    refreshToolStates();
     activateTab('write');
     editor.dataset.bound = '1';
+  });
+}
+
+function initializeAddFormToggles() {
+  const isMobile = window.matchMedia('(max-width: 840px)').matches;
+  document.querySelectorAll('[data-add-form-shell]').forEach((shell) => {
+    const toggle = shell.querySelector('[data-add-form-toggle]');
+    const panel = shell.querySelector('[data-add-form-panel]');
+    if (!toggle || !panel) return;
+
+    const label = toggle.getAttribute('data-add-form-label') || 'form';
+    const setExpanded = (expanded) => {
+      shell.classList.toggle('form-expanded', expanded);
+      panel.hidden = !expanded;
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.textContent = expanded ? 'Hide ' + label : 'Add ' + label;
+      if (expanded && isMobile) {
+        const firstInput = panel.querySelector('input, textarea, [contenteditable="true"]');
+        if (firstInput && typeof firstInput.focus === 'function') {
+          firstInput.focus({ preventScroll: true });
+        }
+        panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+    };
+
+    if (shell.dataset.bound !== '1') {
+      toggle.addEventListener('click', () => {
+        setExpanded(!shell.classList.contains('form-expanded'));
+      });
+      shell.dataset.bound = '1';
+    }
+
+    if (isMobile) {
+      setExpanded(false);
+    } else {
+      setExpanded(true);
+    }
   });
 }
 
@@ -142,6 +209,7 @@ async function refreshLiveRegion(regionName) {
   if (!current || !incoming) return;
   current.replaceWith(incoming);
   initializeRichEditors();
+  initializeAddFormToggles();
   initializeContentModals();
   initializeFormHandlers();
 }
@@ -305,6 +373,7 @@ if (!shell) {
   });
 
   initializeRichEditors();
+  initializeAddFormToggles();
   initializeContentModals();
   initializeFormHandlers();
 }
