@@ -5,7 +5,7 @@ name = "freeducation"
 [[d1_databases]]
 binding = "DB"
 database_name = "freeducation"
-database_id = "f2bd4fc8-dc5d-4a0d-8539-e18b1925de25"
+database_id = "6ed7404e-5078-4d86-8e1c-02dc2a0cc9dd"
 
 [[r2_buckets]]
 binding = "BUCKET"
