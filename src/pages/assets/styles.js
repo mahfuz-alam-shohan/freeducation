@@ -337,11 +337,63 @@ a { color: inherit; }
   padding: 0 12px;
   font-size: 14px;
 }
-.rich-editor { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
-.editor-tools { display: flex; gap: 6px; padding: 6px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.editor-tools .btn { min-height: 28px; padding: 0 8px; }
-.rich-editor-input { min-height: 150px; padding: 10px; outline: none; line-height: 1.6; }
-.rich-editor-input:empty::before { content: 'Write your note here...'; color: var(--muted); }
+.rich-editor {
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d8dee4;
+  background: #f6f8fa;
+}
+.editor-mode-tabs { display: inline-flex; }
+.editor-mode-tab {
+  border: 0;
+  background: transparent;
+  color: #57606a;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 32px;
+  padding: 0 12px;
+  cursor: pointer;
+  border-right: 1px solid #d8dee4;
+}
+.editor-mode-tab.active {
+  color: #24292f;
+  background: #ffffff;
+}
+.editor-tools {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border-bottom: 1px solid #d8dee4;
+  background: #f6f8fa;
+  flex-wrap: wrap;
+}
+.editor-tools .btn {
+  min-height: 28px;
+  padding: 0 8px;
+  border-color: #d0d7de;
+  background: #ffffff;
+  color: #24292f;
+}
+.rich-editor-input,
+.rich-editor-preview {
+  min-height: 140px;
+  padding: 10px;
+  outline: none;
+  line-height: 1.6;
+}
+.rich-editor-preview { background: #ffffff; }
+.grid > .rich-editor { grid-column: 1 / -1; }
+.rich-editor-input:empty::before {
+  content: attr(data-editor-placeholder);
+  color: var(--muted);
+}
 .badge {
   display: inline-flex;
   border-radius: 999px;

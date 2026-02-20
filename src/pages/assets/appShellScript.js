@@ -34,24 +34,52 @@ function initializeRichEditors() {
     if (editor.dataset.bound === '1') return;
     const input = editor.querySelector('[data-editor-input]');
     const storage = editor.querySelector('[data-editor-storage]');
+    const preview = editor.querySelector('[data-editor-preview]');
     if (!input || !storage) return;
 
     const sync = () => {
-      storage.value = input.innerHTML.trim();
+      const html = input.innerHTML.trim();
+      storage.value = html;
+      if (preview) preview.innerHTML = html || '<p class="muted">Nothing to preview yet.</p>';
+    };
+
+    const activateTab = (mode) => {
+      const isPreview = mode === 'preview';
+      editor.classList.toggle('preview-mode', isPreview);
+      if (preview) preview.hidden = !isPreview;
+      input.hidden = isPreview;
+      editor.querySelectorAll('[data-editor-tab]').forEach((tab) => {
+        const active = tab.getAttribute('data-editor-tab') === mode;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', String(active));
+      });
     };
 
     editor.querySelectorAll('[data-editor-command]').forEach((button) => {
       button.addEventListener('click', () => {
         const command = button.getAttribute('data-editor-command');
-        const value = button.getAttribute('data-editor-value') || null;
+        let value = button.getAttribute('data-editor-value') || null;
+        const promptText = button.getAttribute('data-editor-prompt');
+        if (promptText) {
+          value = window.prompt(promptText, 'https://') || null;
+          if (!value) return;
+        }
+
         input.focus();
         document.execCommand(command, false, value);
         sync();
       });
     });
 
+    editor.querySelectorAll('[data-editor-tab]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        activateTab(tab.getAttribute('data-editor-tab') || 'write');
+      });
+    });
+
     input.addEventListener('input', sync);
     sync();
+    activateTab('write');
     editor.dataset.bound = '1';
   });
 }

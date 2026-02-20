@@ -206,6 +206,31 @@ export function contentKindsPage(user, subject, node, chapter) {
   return appShell('subjects', user, `${subject.name} · ${chapter ? chapter.name : node.display_name}`, 'Choose a content section.', content);
 }
 
+function richTextEditor(fieldName, value, placeholder, required = false) {
+  return `<div class="rich-editor" data-rich-editor>
+      <div class="editor-header">
+        <div class="editor-mode-tabs" role="tablist" aria-label="Editor view mode">
+          <button type="button" class="editor-mode-tab active" data-editor-tab="write" role="tab" aria-selected="true">Write</button>
+          <button type="button" class="editor-mode-tab" data-editor-tab="preview" role="tab" aria-selected="false">Preview</button>
+        </div>
+      </div>
+      <div class="editor-tools">
+        <button type="button" class="btn btn-secondary" data-editor-command="bold" title="Bold"><strong>B</strong></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="italic" title="Italic"><em>I</em></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="underline" title="Underline"><u>U</u></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="formatBlock" data-editor-value="h2">H2</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="formatBlock" data-editor-value="blockquote">Quote</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="insertUnorderedList">• List</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="insertOrderedList">1. List</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="createLink" data-editor-prompt="Enter URL">Link</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="removeFormat">Clear</button>
+      </div>
+      <div class="rich-editor-input" data-editor-input data-editor-placeholder="${h(placeholder)}" contenteditable="true">${value || ''}</div>
+      <div class="rich-editor-preview" data-editor-preview hidden></div>
+      <textarea class="input" name="${fieldName}" data-editor-storage hidden ${required ? 'required' : ''}>${h(value || '')}</textarea>
+    </div>`;
+}
+
 function noteForm(subjectId, subjectNodeId, chapterId, note) {
   return `<form method="post" action="/api/notes" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="liveRegion" value="notes-page" />
@@ -215,19 +240,7 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
     <input type="hidden" name="id" value="${note?.id || ''}" />
     <input class="input" name="title" placeholder="Optional note heading" value="${h(note?.title || '')}" />
     <input class="input" type="file" name="image" accept="image/*" />
-    <div class="rich-editor" data-rich-editor>
-      <div class="editor-tools">
-        <button type="button" class="btn btn-secondary" data-editor-command="bold"><strong>B</strong></button>
-        <button type="button" class="btn btn-secondary" data-editor-command="italic"><em>I</em></button>
-        <button type="button" class="btn btn-secondary" data-editor-command="underline"><u>U</u></button>
-        <button type="button" class="btn btn-secondary" data-editor-command="insertUnorderedList">• List</button>
-        <button type="button" class="btn btn-secondary" data-editor-command="insertOrderedList">1. List</button>
-        <button type="button" class="btn btn-secondary" data-editor-command="formatBlock" data-editor-value="h3">H3</button>
-        <button type="button" class="btn btn-secondary" data-editor-command="removeFormat">Clear</button>
-      </div>
-      <div class="rich-editor-input" data-editor-input contenteditable="true">${note?.content_html || ''}</div>
-      <textarea class="input" name="contentHtml" data-editor-storage hidden required>${h(note?.content_html || '')}</textarea>
-    </div>
+    ${richTextEditor('contentHtml', note?.content_html || '', 'Write your short note here…', true)}
     <div class="toolbar-group">
       ${note ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}
       <button class="btn btn-primary" type="submit" data-live-form="true">${note ? 'Update Note' : 'Add Note'}</button>
@@ -265,7 +278,7 @@ function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
-    <textarea class="input" name="questionHtml" style="height:90px; padding:10px;" placeholder="Question" required>${h(mcq?.question_html || '')}</textarea>
+    ${richTextEditor('questionHtml', mcq?.question_html || '', 'Write the MCQ question here…', true)}
     <input class="input" type="file" name="image" accept="image/*" />
     <input class="input" name="optionA" placeholder="Option A" value="${h(mcq?.option_a || '')}" required />
     <input class="input" name="optionB" placeholder="Option B" value="${h(mcq?.option_b || '')}" required />
