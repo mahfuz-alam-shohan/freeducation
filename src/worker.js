@@ -387,6 +387,31 @@ async function handleAdminPost(request, env, url) {
   return null;
 }
 
+
+async function serveMedia(url, env, user) {
+  if (!user) return redirect('/login');
+  const encodedKey = url.pathname.slice('/media/'.length);
+  if (!encodedKey) return new Response('Not Found', { status: 404 });
+
+  let key;
+  try {
+    key = decodeURIComponent(encodedKey);
+  } catch {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  if (!key || key.includes('..')) return new Response('Not Found', { status: 404 });
+
+  const object = await env.BUCKET.get(key);
+  if (!object) return new Response('Not Found', { status: 404 });
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('etag', object.httpEtag);
+  headers.set('cache-control', 'private, max-age=3600');
+  return new Response(object.body, { headers });
+}
+
 async function handleDynamicPages(url, env, user) {
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
   if (templateMatch) {
@@ -488,6 +513,9 @@ export default {
     }
 
     const user = await requireAuth(request, env);
+
+    if (url.pathname.startsWith('/media/')) return serveMedia(url, env, user);
+
     if (url.pathname === '/api/logout') {
       if (!user) return redirect('/login');
       return apiLogout(env, user);
