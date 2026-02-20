@@ -316,9 +316,11 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const title = String(form.get('title') || '').trim();
     const contentHtml = String(form.get('contentHtml') || '').trim();
-    const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}`;
+    const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`;
     if (!contentHtml) return redirect(redirectUrl);
     if (!idVal) {
       const imageKey = await uploadImage(env, 'notes', form.get('image'));
@@ -338,8 +340,10 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteNote(env.DB, idVal);
-    return redirect(`/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}`);
+    return redirect(`/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`);
   }
 
   if (url.pathname === '/api/mcqs' && request.method === 'POST') {
@@ -348,6 +352,8 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const payload = {
       id: idVal,
       subjectId,
@@ -360,7 +366,7 @@ async function handleAdminPost(request, env, url) {
       optionD: String(form.get('optionD') || '').trim(),
       correctOption: String(form.get('correctOption') || 'A'),
     };
-    const redirectUrl = `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}`;
+    const redirectUrl = `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`;
     if (!payload.questionHtml || !payload.optionA || !payload.optionB || !payload.optionC || !payload.optionD) return redirect(redirectUrl);
     if (!idVal) {
       payload.imageKey = await uploadImage(env, 'mcq', form.get('image'));
@@ -380,8 +386,10 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteMcq(env.DB, idVal);
-    return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}`);
+    return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`);
   }
 
   return null;
@@ -468,22 +476,26 @@ async function handleDynamicPages(url, env, user) {
     const subjectId = url.pathname.split('/')[2];
     const nodeId = url.searchParams.get('node');
     const chapterId = url.searchParams.get('chapter');
+    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const subject = await getSubject(env.DB, subjectId);
     const node = await getSubjectNode(env.DB, nodeId);
     const chapter = chapterId ? await getChapter(env.DB, chapterId) : null;
     if (!subject || !node) return new Response('Not Found', { status: 404 });
-    return html(notesPage(user, subject, node, chapter, await listNotes(env.DB, node.id, chapter?.id)));
+    return html(notesPage(user, subject, node, chapter, await listNotes(env.DB, node.id, chapter?.id), safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/mcqs$/)) {
     const subjectId = url.pathname.split('/')[2];
     const nodeId = url.searchParams.get('node');
     const chapterId = url.searchParams.get('chapter');
+    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const subject = await getSubject(env.DB, subjectId);
     const node = await getSubjectNode(env.DB, nodeId);
     const chapter = chapterId ? await getChapter(env.DB, chapterId) : null;
     if (!subject || !node) return new Response('Not Found', { status: 404 });
-    return html(mcqsPage(user, subject, node, chapter, await listMcqs(env.DB, node.id, chapter?.id)));
+    return html(mcqsPage(user, subject, node, chapter, await listMcqs(env.DB, node.id, chapter?.id), safePage));
   }
 
   return null;
