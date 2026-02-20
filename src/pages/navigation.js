@@ -1,4 +1,12 @@
-import { iconDashboard, iconHome, iconManagement, iconProfile, iconUsers } from './templates/icons.js';
+import {
+  iconDashboard,
+  iconHome,
+  iconManagement,
+  iconProfile,
+  iconSubjects,
+  iconTemplates,
+  iconUsers,
+} from './templates/icons.js';
 
 export function getNavigation(role) {
   const nav = [
@@ -19,6 +27,18 @@ export function getNavigation(role) {
   });
 
   if (role === 'admin') {
+    nav.push({
+      title: 'Modules',
+      collapsible: true,
+      expandedKeys: ['templates', 'subjects'],
+      key: 'modules',
+      icon: iconManagement,
+      items: [
+        { key: 'templates', href: '/templates', label: 'Templates', icon: iconTemplates },
+        { key: 'subjects', href: '/subjects', label: 'Subjects', icon: iconSubjects },
+      ],
+    });
+
     nav.push({
       title: 'Management',
       collapsible: true,

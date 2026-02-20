@@ -5,3 +5,13 @@ export { forbiddenPage } from './shared/forbiddenPage.js';
 export { dashboardPage } from './admin/dashboardPage.js';
 export { profilePage } from './auth/profilePage.js';
 export { usersPage } from './admin/usersPage.js';
+export {
+  templatesPage,
+  templateDetailsPage,
+  subjectsPage,
+  subjectNodeListPage,
+  chaptersPage,
+  contentKindsPage,
+  notesPage,
+  mcqsPage,
+} from './admin/modulesPages.js';
