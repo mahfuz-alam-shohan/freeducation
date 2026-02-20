@@ -37,26 +37,41 @@ function initials(name) {
     .join('');
 }
 
+
+const siteLogo = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="#fff" stroke="#0f172a" stroke-width="1.5"/><path d="M6.5 16V8.5c2.1 0 3.6.6 5.1 1.9 1.5-1.3 3-1.9 5.1-1.9V16c-2.1 0-3.6.5-5.1 1.7-1.5-1.2-3-1.7-5.1-1.7Z" fill="none" stroke="#0f172a" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.6 10.4v7.2" stroke="#0f172a" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+const iconDashboard = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>`;
+const iconManagement = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const iconUsers = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="17" cy="10" r="2.5"/><path d="M14.5 18.5c.4-1.9 2-3.5 4-4"/></svg>`;
+const iconLogout = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 16l4-4-4-4"/><path d="M18 12H9"/></svg>`;
+const iconChevron = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>`;
+const iconCollapse = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>`;
+const iconMenu = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
+const iconClose = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>`;
+
 function sidebar(active) {
+  const managementOpen = active === 'users';
   return `<aside class="sidebar">
     <header class="sidebar-head">
-      <span class="brand">freeducation</span>
-      <button class="sidebar-toggle desktop-only" data-sidebar-toggle aria-label="Toggle sidebar">⟵</button>
+      <span class="brand">
+        <span class="brand-logo" aria-hidden="true">${siteLogo}</span>
+        <span class="brand-name">freeducation</span>
+      </span>
+      <button class="sidebar-toggle desktop-only" data-sidebar-toggle aria-label="Collapse sidebar" aria-expanded="true">
+        <span class="toggle-icon" aria-hidden="true">${iconCollapse}</span>
+      </button>
     </header>
     <div class="sidebar-scroll">
       <p class="nav-group-title">Core</p>
-      <a href="/dashboard" class="menu-item ${active === 'dashboard' ? 'active' : ''}"><span class="icon">◻</span><span class="label">Dashboard</span></a>
-      <div class="menu-block open">
-        <button class="menu-expand" data-expand><span class="menu-item" style="padding:0;margin:0"><span class="icon">◎</span><span class="label">Management</span></span><span class="chevron">▾</span></button>
+      <a href="/dashboard" class="menu-item ${active === 'dashboard' ? 'active' : ''}"><span class="icon">${iconDashboard}</span><span class="label">Dashboard</span></a>
+
+      <div class="menu-block ${managementOpen ? 'open' : ''}">
+        <button class="menu-expand" data-expand aria-expanded="${managementOpen ? 'true' : 'false'}"><span><span class="icon">${iconManagement}</span><span class="label">Management</span></span><span class="chevron">${iconChevron}</span></button>
         <div class="submenu-wrap"><div class="submenu">
-          <a href="/users" class="submenu-item ${active === 'users' ? 'active' : ''}"><span class="icon">◼</span><span class="label">Users</span></a>
-          <a href="#" class="submenu-item"><span class="icon">◼</span><span class="label">Roles</span></a>
-          <a href="#" class="submenu-item"><span class="icon">◼</span><span class="label">Billing</span></a>
+          <a href="/users" class="submenu-item ${active === 'users' ? 'active' : ''}"><span class="icon">${iconUsers}</span><span class="label">Users</span></a>
         </div></div>
       </div>
-      <p class="nav-group-title">Scale</p>
-      ${Array.from({ length: 12 }, (_, idx) => `<a href="#" class="menu-item"><span class="icon">◦</span><span class="label">Menu item ${idx + 1}</span></a>`).join('')}
-      <a href="/api/logout" class="menu-item"><span class="icon">↗</span><span class="label">Logout</span></a>
+
+      <a href="/api/logout" class="menu-item logout-item"><span class="icon">${iconLogout}</span><span class="label">Log out</span></a>
     </div>
   </aside>`;
 }
@@ -64,13 +79,11 @@ function sidebar(active) {
 function topbar(user) {
   return `<header class="topbar">
       <div class="topbar-left">
-        <button class="icon-btn mobile-only" data-mobile-toggle aria-label="Open menu">☰</button>
-        <div class="search-wrap"><span class="icon">⌕</span><input class="input" placeholder="Search users, settings, invoices..."/></div>
+        <button class="icon-btn mobile-only mobile-menu-btn" data-mobile-toggle aria-label="Open navigation menu" aria-expanded="false"><span class="mobile-icon mobile-icon-menu" aria-hidden="true">${iconMenu}</span><span class="mobile-icon mobile-icon-close" aria-hidden="true">${iconClose}</span></button>
+        <p class="muted login-note">Logged in as <strong class="login-name">${user.name}</strong></p>
       </div>
       <div class="topbar-right">
-        <span class="workspace-pill desktop-only">Main workspace ▾</span>
-        <button class="icon-btn" aria-label="Notifications">🔔</button>
-        <button class="icon-btn" aria-label="Profile"><span class="avatar">${initials(user.name)}</span></button>
+        <span class="avatar" aria-label="Profile">${initials(user.name)}</span>
       </div>
     </header>`;
 }
@@ -91,7 +104,6 @@ function shell(active, user, pageTitle, subtitle, content) {
           ${content}
         </div>
       </main>
-      <div class="toast" data-toast>Updated</div>
     </div>`,
     appScript
   );
@@ -99,51 +111,19 @@ function shell(active, user, pageTitle, subtitle, content) {
 
 export function dashboardPage(user, stats) {
   const content = `
-    <section class="grid grid-4" style="margin-bottom:16px;">
-      <article class="card"><p class="muted">Total users</p><p class="kpi">${stats.userCount}</p><span class="badge badge-info">+12% this month</span></article>
-      <article class="card"><p class="muted">Admins</p><p class="kpi">${stats.adminCount}</p><span class="badge badge-success">Healthy ratio</span></article>
-      <article class="card"><p class="muted">Active sessions</p><p class="kpi">${stats.sessionCount}</p><span class="badge badge-info">Live now</span></article>
-      <article class="card"><p class="muted">Errors</p><p class="kpi">0</p><span class="badge badge-warn">No incidents</span></article>
-    </section>
-
-    <section class="card" style="margin-bottom:16px;">
-      <div class="toolbar">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab>Overview</button>
-          <button class="tab-btn" data-tab>Acquisition</button>
-          <button class="tab-btn" data-tab>Retention</button>
-        </div>
-        <div class="toolbar-group">
-          <button class="btn btn-ghost">Export</button>
-          <button class="btn btn-secondary">Schedule report</button>
-          <button class="btn btn-primary">Create campaign</button>
-        </div>
-      </div>
-      <div class="grid grid-2">
-        <article class="card" style="padding:16px;"><h3 class="card-title">Pipeline health</h3><p class="muted">Conversion trend and lead volume for the current period.</p></article>
-        <article class="card" style="padding:16px;"><h3 class="card-title">Team updates</h3><p class="muted">Recent product and operations updates from internal teams.</p></article>
-      </div>
+    <section class="grid grid-3 kpi-grid" style="margin-bottom:12px;">
+      <article class="card kpi-card"><p class="muted">Total users</p><p class="kpi">${stats.userCount}</p></article>
+      <article class="card kpi-card"><p class="muted">Admins</p><p class="kpi">${stats.adminCount}</p></article>
+      <article class="card kpi-card"><p class="muted">Active sessions</p><p class="kpi">${stats.sessionCount}</p></article>
     </section>
 
     <section class="card">
-      <div class="toolbar">
-        <div class="toolbar-group"><input class="input" placeholder="Search table"/><select class="select"><option>All roles</option><option>Admin</option><option>Member</option></select></div>
-        <div class="toolbar-group"><button class="btn btn-ghost">Columns</button><button class="btn btn-danger">Archive selected</button></div>
-      </div>
-      <div class="table-wrap">
-        <table class="table">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th></tr></thead>
-          <tbody>
-            <tr><td>Jane Cooper</td><td>jane@freeducation.com</td><td>Admin</td><td><span class="badge badge-success">Active</span></td><td>2026-01-08</td></tr>
-            <tr><td>Wade Warren</td><td>wade@freeducation.com</td><td>Editor</td><td><span class="badge badge-info">Invited</span></td><td>2026-01-04</td></tr>
-            <tr><td>Cody Fisher</td><td>cody@freeducation.com</td><td>Support</td><td><span class="badge badge-warn">Pending</span></td><td>2025-12-29</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination"><span>Showing 1-3 of 37</span><div class="toolbar-group"><button class="btn btn-ghost">Previous</button><button class="btn btn-ghost">Next</button></div></div>
-    </section>`;
+      <h3 class="card-title">What this dashboard shows</h3>
+      <p class="muted">All values on this page come directly from the current database state. Use the users page to review account-level details.</p>
+    </section>
+    `;
 
-  return shell('dashboard', user, 'Dashboard overview', 'Modern SaaS workspace with scalable navigation and data controls.', content);
+  return shell('dashboard', user, 'Dashboard overview', 'Live system metrics.', content);
 }
 
 export function usersPage(user, rows) {
@@ -155,22 +135,13 @@ export function usersPage(user, rows) {
     .join('');
 
   const content = `<section class="card">
-      <div class="toolbar">
-        <div class="toolbar-group">
-          <input class="input" placeholder="Search users"/>
-          <select class="select"><option>All statuses</option><option>Active</option><option>Pending</option></select>
-          <select class="select"><option>All roles</option><option>admin</option><option>user</option></select>
-        </div>
-        <div class="toolbar-group"><button class="btn btn-secondary">Invite user</button><button class="btn btn-primary">Add user</button></div>
-      </div>
       <div class="table-wrap">
         <table class="table">
           <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th></tr></thead>
           <tbody>${bodyRows}</tbody>
         </table>
       </div>
-      <div class="pagination"><span>Rows per page: 10</span><div class="toolbar-group"><button class="btn btn-ghost">Prev</button><button class="btn btn-ghost">Next</button></div></div>
     </section>`;
 
-  return shell('users', user, 'User management', 'Manage accounts, permissions, and lifecycle in a unified data table.', content);
+  return shell('users', user, 'User management', 'Current users in the database.', content);
 }
