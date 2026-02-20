@@ -54,14 +54,17 @@ a { color: inherit; }
 
 .sidebar-head {
   height: 64px;
+  flex: 0 0 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  overflow-y: auto;
-  overflow-x: hidden;
+  padding: 0 12px;
+  overflow: visible;
   scrollbar-gutter: stable;
   border-bottom: 1px solid var(--line);
   position: relative;
+  background: #f8fafc;
+  z-index: 1;
 }
 .brand {
   display: inline-flex;
@@ -879,6 +882,10 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
     transform: translateX(-100%);
     transition: transform 170ms ease;
     width: min(84vw, 310px);
+  }
+  .sidebar-head {
+    position: sticky;
+    top: 0;
   }
   .app-shell.mobile-open .sidebar { transform: translateX(0); }
   .main-shell { grid-column: 1; }
