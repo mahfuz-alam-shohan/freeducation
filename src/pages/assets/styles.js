@@ -746,6 +746,16 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 
 
 
+
+
+.template-builder { display: grid; gap: 8px; }
+.template-builder td { vertical-align: top; }
+.template-builder .input,
+.template-builder .select { min-width: 120px; }
+.template-builder .template-options { display: grid; gap: 4px; min-width: 180px; }
+.template-builder .template-row-actions { white-space: nowrap; width: 1%; }
+.template-builder .template-row-actions .btn { min-width: 74px; }
+
 .template-tree-row {
   display: flex;
   align-items: center;
