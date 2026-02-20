@@ -9,5 +9,5 @@ export const iconProfile = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle 
 export const iconLogout = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 16l4-4-4-4"/><path d="M18 12H9"/></svg>`;
 export const iconChevron = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>`;
 export const iconCollapse = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>`;
-export const iconMenu = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
+export const iconMenu = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.5h13M5.5 12h13M5.5 16.5h13"/></svg>`;
 export const iconClose = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>`;

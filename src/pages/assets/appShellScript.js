@@ -29,6 +29,43 @@ function syncSidebarToggleLabel(isCollapsed) {
   sidebarToggle.setAttribute('aria-label', expanded ? 'Collapse sidebar' : 'Expand sidebar');
 }
 
+async function downscaleImageFile(file) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  const bitmap = await createImageBitmap(file);
+  const maxEdge = 960;
+  const longestEdge = Math.max(bitmap.width, bitmap.height);
+  const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.72));
+  if (!blob) return file;
+  const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
+  return new File([blob], `${targetName}.webp`, { type: 'image/webp', lastModified: Date.now() });
+}
+
+async function prepareImageInputs(form) {
+  const fileInputs = Array.from(form.querySelectorAll('input[type="file"]'));
+  const imageInputs = fileInputs.filter((input) => {
+    const selected = input.files;
+    if (!selected || selected.length === 0) return false;
+    return Array.from(selected).some((file) => file.type.startsWith('image/'));
+  });
+
+  for (const input of imageInputs) {
+    const files = Array.from(input.files || []);
+    const optimized = await Promise.all(files.map((file) => downscaleImageFile(file)));
+    const dataTransfer = new DataTransfer();
+    optimized.forEach((file) => dataTransfer.items.add(file));
+    input.files = dataTransfer.files;
+  }
+}
+
 if (!shell) {
   // no-op when app shell is not present
 } else {
@@ -101,6 +138,19 @@ if (!shell) {
         mobileToggle.setAttribute('aria-expanded', 'false');
         mobileToggle.setAttribute('aria-label', 'Open navigation menu');
       }
+    });
+  });
+
+  document.querySelectorAll('form[enctype="multipart/form-data"]').forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      if (form.dataset.imagesPrepared === '1') {
+        form.dataset.imagesPrepared = '0';
+        return;
+      }
+      event.preventDefault();
+      await prepareImageInputs(form).catch(() => null);
+      form.dataset.imagesPrepared = '1';
+      form.requestSubmit();
     });
   });
 }

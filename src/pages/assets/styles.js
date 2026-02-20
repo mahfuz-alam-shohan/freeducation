@@ -255,14 +255,15 @@ a { color: inherit; }
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255,255,255,0.8);
 }
 .mobile-icon {
-  width: 19px;
-  height: 19px;
+  width: 22px;
+  height: 22px;
   color: #0f172a;
   display: inline-grid;
+  place-items: center;
 }
 .mobile-icon svg {
-  width: 100%;
-  height: 100%;
+  width: 18px;
+  height: 18px;
   stroke: currentColor;
   fill: none;
   stroke-width: 2;
@@ -277,6 +278,7 @@ a { color: inherit; }
   height: 36px;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
+  border: 1px solid #bfdbfe;
   background: #dbeafe;
   color: #1e3a8a;
   display: inline-grid;
@@ -285,8 +287,9 @@ a { color: inherit; }
   font-weight: 700;
   line-height: 1;
   flex: 0 0 36px;
+  overflow: hidden;
 }
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
 
 .container {
   width: min(1440px, 100%);
@@ -548,9 +551,10 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   overflow: hidden;
 }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-avatar-form { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.profile-avatar-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.profile-upload-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 136px; text-align: center; }
 .profile-upload-btn .icon { width: 14px; height: 14px; }
-.profile-file-input { max-width: 190px; }
+.profile-file-input { width: 0.1px; height: 0.1px; opacity: 0; position: absolute; pointer-events: none; }
 .profile-tabs-card { display: grid; gap: 12px; }
 .profile-tabs { width: fit-content; }
 .profile-tab-panel { display: grid; gap: 10px; }
