@@ -1,6 +1,6 @@
 name = "freeducation"
-main = "src/worker.js"
-compatibility_date = "2026-02-01"
+
+
 
 [[d1_databases]]
 binding = "DB"
@@ -11,9 +11,9 @@ database_id = "6ed7404e-5078-4d86-8e1c-02dc2a0cc9dd"
 binding = "BUCKET"
 bucket_name = "freeducation"
 
+
+
 [vars]
-CLEAN_UNKNOWN_TABLES = "false"
-AUTH_SECRET = "replace-with-strong-random-secret"
 GMAIL_CLIENT_ID = "151296843802-ansdm59387uk2r0lfaebvkr5566beq3g.apps.googleusercontent.com"
 GMAIL_CLIENT_SECRET = "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"
 GMAIL_REFRESH_TOKEN = "1//047Rxk_CAUUvpCgYIARAAGAQSNwF-L9Iro5UdL91EkNaDDzfXpc9_7i4ZiA4bqe2YxK7gtZ76sC36W16yYkylDysJGKcn9fnWRaM"
