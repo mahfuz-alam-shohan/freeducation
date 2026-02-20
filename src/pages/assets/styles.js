@@ -45,8 +45,10 @@ a { color: inherit; }
   border-right: 1px solid #d9e3f3;
   display: flex;
   flex-direction: column;
+  scrollbar-gutter: stable;
   transition: width 160ms ease;
   z-index: 35;
+  overflow: hidden;
 }
 .app-shell.collapsed .sidebar { width: var(--sidebar-collapse); }
 
@@ -55,7 +57,9 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
   border-bottom: 1px solid var(--line);
   position: relative;
 }
@@ -192,6 +196,7 @@ a { color: inherit; }
   grid-column: 2;
   margin-left: 0;
   min-width: 0;
+  scrollbar-gutter: stable;
 }
 
 .main-shell { position: relative; overflow: hidden; }
