@@ -5,6 +5,7 @@ const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
 const mobileToggle = document.querySelector('[data-mobile-toggle]');
 const overlay = document.querySelector('[data-overlay]');
 const sidebarStateKey = 'freeducation.sidebar.collapsed';
+const mobileViewport = window.matchMedia('(max-width: 840px)');
 
 function readSidebarCollapsedState() {
   try {
@@ -301,17 +302,41 @@ if (!shell) {
   // no-op when app shell is not present
 } else {
   let hoverExpanded = false;
+  let preferredCollapsed = readSidebarCollapsedState();
 
-  const sidebarCollapsed = readSidebarCollapsedState();
-  shell.classList.toggle('collapsed', sidebarCollapsed);
-  syncSidebarToggleLabel(sidebarCollapsed);
+  const applySidebarViewportMode = () => {
+    if (mobileViewport.matches) {
+      shell.classList.remove('collapsed', 'hover-expanded');
+      hoverExpanded = false;
+      syncSidebarToggleLabel(false);
+      return;
+    }
+    shell.classList.toggle('collapsed', preferredCollapsed);
+    shell.classList.remove('hover-expanded');
+    hoverExpanded = false;
+    syncSidebarToggleLabel(preferredCollapsed);
+  };
+
+  applySidebarViewportMode();
+  if (typeof mobileViewport.addEventListener === 'function') {
+    mobileViewport.addEventListener('change', applySidebarViewportMode);
+  } else if (typeof mobileViewport.addListener === 'function') {
+    mobileViewport.addListener(applySidebarViewportMode);
+  }
 
   if(sidebarToggle){
     sidebarToggle.addEventListener('click', ()=>{
+      if (mobileViewport.matches) {
+        shell.classList.remove('collapsed', 'hover-expanded');
+        hoverExpanded = false;
+        syncSidebarToggleLabel(false);
+        return;
+      }
       shell.classList.toggle('collapsed');
       shell.classList.remove('hover-expanded');
       hoverExpanded = false;
       const isCollapsed = shell.classList.contains('collapsed');
+      preferredCollapsed = isCollapsed;
       writeSidebarCollapsedState(isCollapsed);
       syncSidebarToggleLabel(isCollapsed);
     });

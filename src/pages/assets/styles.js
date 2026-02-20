@@ -854,6 +854,27 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .app-shell,
   .app-shell.collapsed,
   .app-shell.collapsed.hover-expanded { grid-template-columns: 1fr; }
+  .app-shell.collapsed .brand-name,
+  .app-shell.collapsed .label,
+  .app-shell.collapsed .nav-group-title,
+  .app-shell.collapsed .chevron {
+    display: initial;
+    opacity: 1;
+    width: auto;
+  }
+  .app-shell.collapsed .brand {
+    justify-content: initial;
+    width: auto;
+  }
+  .app-shell.collapsed .menu-item,
+  .app-shell.collapsed .submenu-item,
+  .app-shell.collapsed .menu-expand {
+    justify-content: flex-start;
+    padding: 6px 10px;
+  }
+  .app-shell.collapsed .submenu {
+    padding-left: 14px;
+  }
   .sidebar {
     transform: translateX(-100%);
     transition: transform 170ms ease;
