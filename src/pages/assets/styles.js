@@ -989,6 +989,86 @@ textarea,
   line-height: 1.35;
 }
 
+.public-class-strip {
+  padding: 10px 8px 12px;
+}
+
+.public-class-strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.public-class-strip-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.public-class-see-all {
+  color: #334155;
+  text-decoration: none;
+  font-size: 22px;
+}
+
+.public-class-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 180px;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.public-class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.class-card {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.class-card-poster-wrap {
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.class-card-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.class-card-poster-empty {
+  display: grid;
+  place-items: center;
+  color: #475569;
+  font-size: 12px;
+}
+
+.class-card-name {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.public-class-page {
+  padding-top: 12px;
+}
+
 .public-login-shell {
   padding: 10px 8px;
 }

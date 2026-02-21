@@ -19,9 +19,6 @@ function yesNo(v) {
   return v ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-warn">No</span>';
 }
 
-function classOptions() {
-  return Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}">Class ${i + 1}</option>`).join('');
-}
 
 function imageCell(imageKey) {
   return imageKey ? `<code>${h(imageKey)}</code>` : '<span class="muted">No image</span>';
@@ -98,13 +95,79 @@ export function templateDetailsPage(user, template, nodes) {
   return appShell('templates', user, `Template: ${template.name}`, 'Hierarchy and capability matrix.', content);
 }
 
-export function subjectsPage(user, subjects, templates) {
+
+function classSelectOptions(classes) {
+  return classes.map((item) => `<option value="${item.id}">${h(item.name)}</option>`).join('');
+}
+
+export function classesPage(user, classes) {
+  const rows = classes
+    .map(
+      (item) => `<tr>
+      <td>${fullTextCell(item.name, `class-name-${item.id}`, 'Class name')}</td>
+      <td>${h(item.sort_order)}</td>
+      <td>${imageCell(item.image_key)}</td>
+      <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data"><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
+      <td><input class="input" type="number" name="sortOrder" form="class-update-${item.id}" value="${h(item.sort_order)}" /></td>
+      <td><input class="input" type="file" name="image" form="class-update-${item.id}" accept="image/*" /></td>
+      <td><label><input type="checkbox" name="removeImage" value="1" form="class-update-${item.id}" /> Remove</label></td>
+      <td><button class="btn btn-secondary" form="class-update-${item.id}" name="intent" value="update" type="submit">Save</button></td>
+      <td>
+        <button class="btn btn-danger" type="button" data-content-modal-open="class-delete-${item.id}">Delete</button>
+        <dialog class="content-modal" data-content-modal="class-delete-${item.id}">
+          <div class="modal content-modal-inner">
+            <div class="content-modal-head">
+              <h3 class="card-title">Delete class</h3>
+              <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
+            </div>
+            <p>Are you sure you want to delete <strong>${h(item.name)}</strong>?</p>
+            <form method="post" action="/api/classes/${item.id}" class="toolbar-group" enctype="multipart/form-data">
+              <input type="hidden" name="intent" value="delete" />
+              <button class="btn btn-danger" type="submit">Confirm delete</button>
+            </form>
+          </div>
+        </dialog>
+      </td>
+    </tr>`
+    )
+    .join('');
+
+  const content = `<section class="card flat-card">
+    <div class="toolbar-group">
+      <button class="btn btn-primary" type="button" data-content-modal-open="class-add-modal">Add Class</button>
+    </div>
+    <dialog class="content-modal" data-content-modal="class-add-modal">
+      <div class="modal content-modal-inner">
+        <div class="content-modal-head">
+          <h3 class="card-title">Add class</h3>
+          <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
+        </div>
+        <form method="post" action="/api/classes" class="grid grid-4" enctype="multipart/form-data">
+          <input class="input" name="name" placeholder="Class name" required />
+          <input class="input" type="number" name="sortOrder" value="0" />
+          <input class="input" type="file" name="image" accept="image/*" />
+          <button class="btn btn-primary" type="submit">Create</button>
+        </form>
+      </div>
+    </dialog>
+  </section>
+  <section class="card flat-card">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel">
+      <thead><tr><th>Class</th><th>Order</th><th>Image</th><th>Rename</th><th>Sort</th><th>Upload Image</th><th>Remove Image</th><th>Save</th><th>Delete</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 9, 'No classes yet.')}</tbody>
+    </table></div>
+  </section>`;
+
+  return appShell('classes', user, 'Classes', 'Manage class list and class card thumbnails.', content);
+}
+
+export function subjectsPage(user, subjects, templates, classes) {
   const rows = subjects
     .map(
       (s) => `<tr>
       <td class="table-action-open-cell"><a href="/subjects/${s.id}" class="btn btn-secondary">Open</a></td>
       <td>${fullTextCell(s.name, `subject-name-${s.id}`, 'Subject name')}</td>
-      <td>Class ${s.class_level}</td>
+      <td>${h(s.class_name || `Class ${s.class_level || '-'}`)}</td>
       <td>${fullTextCell(s.template_name, `subject-template-${s.id}`, 'Template name')}</td>
       <td>${imageCell(s.image_key)}</td>
       <td>${new Date(s.created_at).toLocaleDateString()}</td>
@@ -146,7 +209,7 @@ export function subjectsPage(user, subjects, templates) {
         </div>
         <form method="post" action="/api/subjects" class="grid grid-4" enctype="multipart/form-data">
           <input class="input" name="name" placeholder="Subject name" required />
-          <select class="select" name="classLevel" required>${classOptions()}</select>
+          <select class="select" name="classId" required>${classSelectOptions(classes)}</select>
           <select class="select" name="templateId" required>${templateOptions}</select>
           <input class="input" type="file" name="image" accept="image/*" />
           <button class="btn btn-primary" type="submit">Create</button>
