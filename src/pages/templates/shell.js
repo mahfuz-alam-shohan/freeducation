@@ -52,6 +52,8 @@ function sidebar(active, user) {
     <div class="sidebar-scroll">
       <p class="muted sidebar-login-note">Logged in as <strong class="login-name">${user.name}</strong> (${user.role})</p>
       ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
+    </div>
+    <div class="sidebar-foot">
       <a href="/api/logout" class="menu-item logout-item"><span class="icon">${iconLogout}</span><span class="label">Log out</span></a>
     </div>
   </aside>`;
@@ -76,7 +78,9 @@ function topbar(user) {
     </header>`;
 }
 
-export function appShell(active, user, pageTitle, subtitle, content) {
+export function appShell(active, user, pageTitle, subtitle, content, options = {}) {
+  const hidePageHead = Boolean(options.hidePageHead);
+  const containerClass = `container${options.fullBleed ? ' container-full-bleed' : ''}`;
   return basePage(
     pageTitle,
     `<div class="app-shell" data-shell>
@@ -84,11 +88,13 @@ export function appShell(active, user, pageTitle, subtitle, content) {
       <div class="mobile-overlay" data-overlay></div>
       <main class="main-shell">
         ${topbar(user)}
-        <div class="container">
-          <section class="page-head">
+        <div class="${containerClass}">
+          ${hidePageHead
+            ? ''
+            : `<section class="page-head">
             <h1 class="page-title">${pageTitle}</h1>
             <p class="page-subtitle">${subtitle}</p>
-          </section>
+          </section>`}
           ${content}
         </div>
       </main>
