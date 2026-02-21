@@ -644,6 +644,54 @@ textarea,
 
 .file-indicator-status[data-tone="ready"] { color: #166534; }
 
+
+.image-slot {
+  position: relative;
+  display: inline-flex;
+}
+
+.image-slot-trigger {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d5dde7;
+  background: #fff;
+  border-radius: 4px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.image-slot-trigger img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.image-slot-input {
+  display: none;
+}
+
+.image-slot-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  min-width: 124px;
+  background: #fff;
+  border: 1px solid #d5dde7;
+}
+
+.image-slot-preview-large {
+  width: min(100%, 480px);
+  max-height: 70vh;
+  object-fit: contain;
+}
+
 .table-text-cell {
   display: block;
   width: 100%;

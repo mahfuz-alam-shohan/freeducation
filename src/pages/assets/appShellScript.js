@@ -246,6 +246,85 @@ function initializeFileIndicators() {
   });
 }
 
+function initializeImageSlots() {
+  document.querySelectorAll('[data-image-slot]').forEach((slot) => {
+    if (slot.dataset.boundImageSlot === '1') return;
+    const trigger = slot.querySelector('[data-image-slot-trigger]');
+    const popup = slot.querySelector('[data-image-slot-popup]');
+    const input = slot.querySelector('[data-image-slot-input]');
+    const uploadButton = slot.querySelector('[data-image-slot-upload]');
+    const removeButton = slot.querySelector('[data-image-slot-remove-action]');
+    const removeInput = slot.querySelector('[data-image-slot-remove]');
+    if (!trigger || !popup || !input || !uploadButton || !removeInput) return;
+
+    const closePopup = () => {
+      popup.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    };
+
+    const openPopup = () => {
+      popup.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+    };
+
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      const willOpen = popup.hidden;
+      document.querySelectorAll('[data-image-slot-popup]').forEach((item) => {
+        item.hidden = true;
+        const owner = item.closest('[data-image-slot]')?.querySelector('[data-image-slot-trigger]');
+        if (owner) owner.setAttribute('aria-expanded', 'false');
+      });
+      if (willOpen) openPopup();
+    });
+
+    uploadButton.addEventListener('click', () => {
+      removeInput.value = '0';
+      input.click();
+      closePopup();
+    });
+
+    if (removeButton) {
+      removeButton.addEventListener('click', () => {
+        removeInput.value = '1';
+        input.value = '';
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        closePopup();
+      });
+    }
+
+    input.addEventListener('change', () => {
+      if (input.files && input.files[0]) {
+        removeInput.value = '0';
+        const preview = slot.querySelector('img');
+        if (preview) {
+          preview.src = URL.createObjectURL(input.files[0]);
+        } else {
+          const icon = slot.querySelector('span[aria-hidden="true"]');
+          if (icon) {
+            const img = document.createElement('img');
+            img.alt = 'Uploaded image';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.src = URL.createObjectURL(input.files[0]);
+            icon.replaceWith(img);
+          }
+        }
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (slot.contains(event.target)) return;
+      closePopup();
+    });
+
+    slot.dataset.boundImageSlot = '1';
+  });
+}
+
 async function refreshLiveRegion(regionName) {
   const response = await fetch(window.location.href, { method: 'GET', credentials: 'same-origin' });
   if (!response.ok) return;
@@ -260,6 +339,7 @@ async function refreshLiveRegion(regionName) {
   initializeAddFormToggles();
   initializeContentModals();
   initializeFileIndicators();
+  initializeImageSlots();
   initializeFormHandlers();
 }
 
@@ -319,7 +399,7 @@ function captureFormState(form) {
   const pairs = [];
   for (const [name, value] of body.entries()) {
     if (value instanceof File) {
-      pairs.push(name + '=[file:' + value.name + ':' + value.size + ':' + value.type + ':' + value.lastModified + ']');
+      pairs.push(name + '=[file:' + value.name + ':' + value.size + ':' + value.type + ':no-last-mod]');
       continue;
     }
     pairs.push(name + '=' + String(value));
@@ -430,7 +510,7 @@ function initializeFormHandlers() {
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
   const bitmap = await createImageBitmap(file);
-  const maxEdge = 960;
+  const maxEdge = 420;
   const longestEdge = Math.max(bitmap.width, bitmap.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
   const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -441,7 +521,7 @@ async function downscaleImageFile(file) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return file;
   ctx.drawImage(bitmap, 0, 0, width, height);
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.72));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.52));
   if (!blob) return file;
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
   return new File([blob], targetName + '.webp', { type: 'image/webp', lastModified: Date.now() });
@@ -592,6 +672,7 @@ if (!shell) {
   initializeAddFormToggles();
   initializeContentModals();
   initializeFileIndicators();
+  initializeImageSlots();
   initializeFormHandlers();
 }
 `;
