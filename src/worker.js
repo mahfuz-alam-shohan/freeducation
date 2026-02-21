@@ -103,7 +103,7 @@ function isEmail(value) {
 
 async function uploadImage(env, folder, file) {
   if (!file || file.size === 0 || typeof file.arrayBuffer !== 'function') return null;
-  if (file.size > MAX_IMAGE_BYTES) throw new Error('Image too large (max 3MB).');
+  if (file.size > MAX_IMAGE_BYTES) throw new Error('Image too large (max 5MB).');
   const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/png' ? 'png' : file.type === 'image/jpeg' ? 'jpg' : 'bin';
   const key = `${folder}/${id()}.${ext}`;
   await env.BUCKET.put(key, await file.arrayBuffer(), {
@@ -298,6 +298,12 @@ async function handleProfilePost(request, env, url, user) {
     const form = await request.formData();
     const imageKey = await uploadImage(env, 'profiles', form.get('avatar'));
     if (imageKey) await updateUserImage(env.DB, user.id, imageKey);
+
+    const wantsJson = request.headers.get('accept')?.includes('application/json');
+    if (wantsJson) {
+      return json({ ok: true, imageKey, imageUrl: imageKey ? `/media/${encodeURIComponent(imageKey)}` : null });
+    }
+
     return redirect('/profile');
   }
 
@@ -655,7 +661,7 @@ async function serveMedia(request, url, env, user, ctx) {
 
   const method = request.method.toUpperCase();
   const canUseCache = method === 'GET';
-  const cacheKey = new Request(`https://media-cache.local/${encodeURIComponent(user.id)}/${encodeURIComponent(key)}`, { method: 'GET' });
+  const cacheKey = new Request(`https://media-cache.local/${encodeURIComponent(key)}`, { method: 'GET' });
   if (canUseCache) {
     const cached = await caches.default.match(cacheKey);
     if (cached) return cached;

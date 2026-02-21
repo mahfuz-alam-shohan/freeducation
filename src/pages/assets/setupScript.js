@@ -5,16 +5,16 @@ const imageInput = document.getElementById('image');
 
 async function downscale(file){
   const bmp = await createImageBitmap(file);
-  const max=240;
+  const max=320;
   const scale = Math.min(1, max / Math.max(bmp.width,bmp.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1,Math.round(bmp.width*scale));
   canvas.height = Math.max(1,Math.round(bmp.height*scale));
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'low';
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(bmp,0,0,canvas.width,canvas.height);
-  const blob = await new Promise((resolve)=>canvas.toBlob(resolve,'image/webp',0.35));
+  const blob = await new Promise((resolve)=>canvas.toBlob(resolve,'image/webp',0.62));
   if (!blob || blob.size >= file.size) return file;
   return new File([blob], 'profile.webp', { type: 'image/webp' });
 }
