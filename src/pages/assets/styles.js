@@ -643,18 +643,9 @@ textarea,
   font-size: 13px;
 }
 
-.subject-row-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
+.table-action-open-cell {
+  min-width: 86px;
 }
-
-.subject-row-actions .input {
-  min-width: 180px;
-  height: 32px;
-}
-
 
 .content-form-shell {
   display: grid;

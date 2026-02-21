@@ -35,20 +35,18 @@ export function templatesPage(user, templates) {
   const rows = templates
     .map(
       (t) => `<tr>
+      <td class="table-action-open-cell"><a href="/templates/${t.id}" class="btn btn-secondary">Open</a></td>
       <td>${fullTextCell(t.name, `template-name-${t.id}`, 'Template name')}</td>
       <td>${fullTextCell(t.code, `template-code-${t.id}`, 'Template code')}</td>
       <td>${fullTextCell(t.description || '-', `template-desc-${t.id}`, 'Template description')}</td>
       <td>${new Date(t.created_at).toLocaleDateString()}</td>
-      <td class="table-actions-cell">
-        <a href="/templates/${t.id}" class="btn btn-secondary">Open</a>
-      </td>
     </tr>`
     )
     .join('');
 
   const content = `<section class="card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Template</th><th>Code</th><th>Description</th><th>Created</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Open</th><th>Template</th><th>Code</th><th>Description</th><th>Created</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 5, 'No templates yet.')}</tbody>
     </table></div>
   </section>`;
@@ -104,17 +102,21 @@ export function subjectsPage(user, subjects, templates) {
   const rows = subjects
     .map(
       (s) => `<tr>
+      <td class="table-action-open-cell"><a href="/subjects/${s.id}" class="btn btn-secondary">Open</a></td>
       <td>${fullTextCell(s.name, `subject-name-${s.id}`, 'Subject name')}</td>
       <td>Class ${s.class_level}</td>
       <td>${fullTextCell(s.template_name, `subject-template-${s.id}`, 'Template name')}</td>
       <td>${new Date(s.created_at).toLocaleDateString()}</td>
-      <td class="table-actions-cell">
-        <form method="post" action="/api/subjects/${s.id}" class="subject-row-actions" enctype="multipart/form-data">
-          <a href="/subjects/${s.id}" class="btn btn-secondary">Open</a>
+      <td>
+        <form id="subject-update-${s.id}" method="post" action="/api/subjects/${s.id}" enctype="multipart/form-data">
           <input class="input" name="name" value="${h(s.name)}" required maxlength="120" />
-          <button class="btn btn-secondary" name="intent" value="update" type="submit">Save</button>
-          <button class="btn btn-danger" type="button" data-content-modal-open="subject-delete-${s.id}">Delete</button>
         </form>
+      </td>
+      <td>
+        <button class="btn btn-secondary" form="subject-update-${s.id}" name="intent" value="update" type="submit">Save</button>
+      </td>
+      <td>
+        <button class="btn btn-danger" type="button" data-content-modal-open="subject-delete-${s.id}">Delete</button>
         <dialog class="content-modal" data-content-modal="subject-delete-${s.id}">
           <div class="modal content-modal-inner">
             <div class="content-modal-head">
@@ -156,8 +158,8 @@ export function subjectsPage(user, subjects, templates) {
   </section>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Subject</th><th>Class</th><th>Template</th><th>Created</th><th>Actions</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(rows, 5, 'No subjects yet.')}</tbody>
+      <thead><tr><th>Open</th><th>Subject</th><th>Class</th><th>Template</th><th>Created</th><th>Rename</th><th>Save</th><th>Delete</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 8, 'No subjects yet.')}</tbody>
     </table></div>
   </section>`;
 
@@ -168,6 +170,7 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
   const rows = nodes
     .map(
       (n) => `<tr>
+      <td class="table-action-open-cell"><a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a></td>
       <td class="subject-node-name-cell">${fullTextCell(`${n.display_name} (Server key: ${n.server_name})`, `subject-node-${n.id}`, 'Subject node')}</td>
       <td>${yesNo(n.supports_edit)}</td>
       <td>${yesNo(n.supports_image)}</td>
@@ -175,7 +178,6 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
       <td class="subject-node-actions-cell">
         <form method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" class="subject-node-actions-row">
           <input type="hidden" name="redirect" value="${h(backHref)}" />
-          <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
           <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} maxlength="120" />
           <input class="input" name="image" type="file" accept="image/*" ${n.supports_image ? '' : 'disabled'} />
           <label class="subject-node-checkbox"><input type="checkbox" name="removeImage" value="1" ${n.supports_image ? '' : 'disabled'} /> Remove image</label>
@@ -188,8 +190,8 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
 
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Name</th><th>Edit</th><th>Image</th><th>Current Image</th><th>Actions</th></tr></thead>
-    <tbody>${tableRowsOrEmpty(rows, 5, 'No nodes found.')}</tbody>
+    <thead><tr><th>Open</th><th>Name</th><th>Edit</th><th>Image</th><th>Current Image</th><th>Actions</th></tr></thead>
+    <tbody>${tableRowsOrEmpty(rows, 6, 'No nodes found.')}</tbody>
   </table></div></section>`;
 
   return appShell('subjects', user, title, subtitle, content);
