@@ -353,6 +353,7 @@ export async function ensureSchema(db, options = {}) {
 
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_template ON template_nodes(template_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_classes_sort ON classes(sort_order, created_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)');
@@ -360,7 +361,10 @@ export async function ensureSchema(db, options = {}) {
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_topics_chapter ON topics(chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup_fast ON short_notes(subject_node_id, chapter_id, topic_id, created_at DESC)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup_fast ON mcq_bank(subject_node_id, chapter_id, topic_id, created_at DESC)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_content_entries_lookup ON content_entries(subject_node_id, chapter_id, content_kind)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_content_entries_lookup_fast ON content_entries(subject_node_id, chapter_id, topic_id, content_kind, created_at DESC)');
   schemaInitialized = true;
 }

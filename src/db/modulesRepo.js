@@ -2,6 +2,27 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function buildNodeScopeClause(subjectNodeId, chapterId, topicId) {
+  const clauses = ['subject_node_id = ?1'];
+  const params = [subjectNodeId];
+
+  if (chapterId) {
+    clauses.push(`chapter_id = ?${params.length + 1}`);
+    params.push(chapterId);
+  } else {
+    clauses.push('chapter_id IS NULL');
+  }
+
+  if (topicId) {
+    clauses.push(`topic_id = ?${params.length + 1}`);
+    params.push(topicId);
+  } else {
+    clauses.push('topic_id IS NULL');
+  }
+
+  return { whereSql: clauses.join(' AND '), params };
+}
+
 const CODE_TEMPLATE_CODES = ['BANGLA-1ST-NCTB2010', 'PHY-CHEM-BIO-NCTB2010'];
 
 async function removeNonCodeTemplates(db) {
@@ -395,11 +416,10 @@ export async function deleteTopic(db, topicId) {
 }
 
 export async function listNotes(db, subjectNodeId, chapterId, topicId = null) {
+  const scope = buildNodeScopeClause(subjectNodeId, chapterId || null, topicId || null);
   const rows = await db
-    .prepare(
-      'SELECT * FROM short_notes WHERE subject_node_id = ?1 AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2) AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3) ORDER BY created_at DESC'
-    )
-    .bind(subjectNodeId, chapterId || null, topicId || null)
+    .prepare(`SELECT * FROM short_notes WHERE ${scope.whereSql} ORDER BY created_at DESC`)
+    .bind(...scope.params)
     .all();
   return rows.results ?? [];
 }
@@ -437,11 +457,10 @@ export async function deleteNote(db, noteId) {
 }
 
 export async function listMcqs(db, subjectNodeId, chapterId, topicId = null) {
+  const scope = buildNodeScopeClause(subjectNodeId, chapterId || null, topicId || null);
   const rows = await db
-    .prepare(
-      'SELECT * FROM mcq_bank WHERE subject_node_id = ?1 AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2) AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3) ORDER BY created_at DESC'
-    )
-    .bind(subjectNodeId, chapterId || null, topicId || null)
+    .prepare(`SELECT * FROM mcq_bank WHERE ${scope.whereSql} ORDER BY created_at DESC`)
+    .bind(...scope.params)
     .all();
   return rows.results ?? [];
 }
@@ -491,16 +510,16 @@ export async function deleteMcq(db, mcqId) {
 
 
 export async function listContentEntries(db, subjectNodeId, chapterId, topicId, contentKind) {
+  const scope = buildNodeScopeClause(subjectNodeId, chapterId || null, topicId || null);
+  const contentKindParam = scope.params.length + 1;
   const rows = await db
     .prepare(
       `SELECT * FROM content_entries
-       WHERE subject_node_id = ?1
-         AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2)
-         AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3)
-         AND content_kind = ?4
+       WHERE ${scope.whereSql}
+         AND content_kind = ?${contentKindParam}
        ORDER BY created_at DESC`
     )
-    .bind(subjectNodeId, chapterId || null, topicId || null, contentKind)
+    .bind(...scope.params, contentKind)
     .all();
   return rows.results ?? [];
 }
@@ -530,16 +549,15 @@ export async function createContentEntry(db, input) {
 }
 
 export async function upsertSummaryEntry(db, input) {
+  const scope = buildNodeScopeClause(input.subjectNodeId, input.chapterId || null, input.topicId || null);
   const existing = await db
     .prepare(
       `SELECT id FROM content_entries
-       WHERE subject_node_id = ?1
-         AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2)
-         AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3)
+       WHERE ${scope.whereSql}
          AND content_kind = 'Summary'
        LIMIT 1`
     )
-    .bind(input.subjectNodeId, input.chapterId || null, input.topicId || null)
+    .bind(...scope.params)
     .first();
 
   if (existing?.id) {
