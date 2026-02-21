@@ -182,6 +182,22 @@ function initializeAddFormToggles() {
 
 
 function initializeContentModals() {
+  const closeDialog = (dialog) => {
+    if (!dialog) return;
+    if (typeof dialog.close === 'function') {
+      dialog.close();
+    } else {
+      dialog.removeAttribute('open');
+    }
+  };
+
+  const closeAllContentModals = (exceptDialog) => {
+    document.querySelectorAll('dialog[data-content-modal]').forEach((dialog) => {
+      if (dialog === exceptDialog || !dialog.hasAttribute('open')) return;
+      closeDialog(dialog);
+    });
+  };
+
   document.querySelectorAll('[data-content-modal-open]').forEach((button) => {
     if (button.dataset.bound === '1') return;
     button.addEventListener('click', () => {
@@ -189,6 +205,7 @@ function initializeContentModals() {
       if (!modalId) return;
       const dialog = document.querySelector('[data-content-modal="' + modalId + '"]');
       if (!dialog) return;
+      closeAllContentModals(dialog);
       if (typeof dialog.showModal === 'function') {
         dialog.showModal();
       } else {
@@ -202,12 +219,7 @@ function initializeContentModals() {
     if (button.dataset.bound === '1') return;
     button.addEventListener('click', () => {
       const dialog = button.closest('dialog');
-      if (!dialog) return;
-      if (typeof dialog.close === 'function') {
-        dialog.close();
-      } else {
-        dialog.removeAttribute('open');
-      }
+      closeDialog(dialog);
     });
     button.dataset.bound = '1';
   });
@@ -216,11 +228,7 @@ function initializeContentModals() {
     if (dialog.dataset.bound === '1') return;
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) {
-        if (typeof dialog.close === 'function') {
-          dialog.close();
-        } else {
-          dialog.removeAttribute('open');
-        }
+        closeDialog(dialog);
       }
     });
     dialog.dataset.bound = '1';
@@ -249,42 +257,26 @@ function initializeFileIndicators() {
 function initializeImageSlots() {
   document.querySelectorAll('[data-image-slot]').forEach((slot) => {
     if (slot.dataset.boundImageSlot === '1') return;
-    const trigger = slot.querySelector('[data-image-slot-trigger]');
-    const popup = slot.querySelector('[data-image-slot-popup]');
     const input = slot.querySelector('[data-image-slot-input]');
     const uploadButton = slot.querySelector('[data-image-slot-upload]');
     const removeButton = slot.querySelector('[data-image-slot-remove-action]');
     const removeInput = slot.querySelector('[data-image-slot-remove]');
-    if (!trigger || !popup || !input || !uploadButton || !removeInput) return;
+    if (!input || !uploadButton || !removeInput) return;
 
-    const closePopup = () => {
-      popup.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
+    const closeSlotDialog = () => {
+      const dialog = uploadButton.closest('dialog[data-content-modal]');
+      if (!dialog) return;
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
     };
-
-    const openPopup = () => {
-      popup.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-    };
-
-    trigger.setAttribute('aria-haspopup', 'menu');
-    trigger.setAttribute('aria-expanded', 'false');
-
-    trigger.addEventListener('click', (event) => {
-      event.preventDefault();
-      const willOpen = popup.hidden;
-      document.querySelectorAll('[data-image-slot-popup]').forEach((item) => {
-        item.hidden = true;
-        const owner = item.closest('[data-image-slot]')?.querySelector('[data-image-slot-trigger]');
-        if (owner) owner.setAttribute('aria-expanded', 'false');
-      });
-      if (willOpen) openPopup();
-    });
 
     uploadButton.addEventListener('click', () => {
       removeInput.value = '0';
       input.click();
-      closePopup();
+      closeSlotDialog();
     });
 
     if (removeButton) {
@@ -292,7 +284,7 @@ function initializeImageSlots() {
         removeInput.value = '1';
         input.value = '';
         input.dispatchEvent(new Event('change', { bubbles: true }));
-        closePopup();
+        closeSlotDialog();
       });
     }
 
@@ -303,7 +295,7 @@ function initializeImageSlots() {
         if (preview) {
           preview.src = URL.createObjectURL(input.files[0]);
         } else {
-          const icon = slot.querySelector('span[aria-hidden="true"]');
+          const icon = slot.querySelector('.image-slot-icon');
           if (icon) {
             const img = document.createElement('img');
             img.alt = 'Uploaded image';
@@ -314,11 +306,6 @@ function initializeImageSlots() {
           }
         }
       }
-    });
-
-    document.addEventListener('click', (event) => {
-      if (slot.contains(event.target)) return;
-      closePopup();
     });
 
     slot.dataset.boundImageSlot = '1';

@@ -600,12 +600,20 @@ textarea,
   color: #334155;
   font-size: 11px;
   border: 1px solid #d5dde7;
+  padding: 6px;
 }
 
 .flat-grid-table tbody td {
   border: 1px solid #d5dde7;
-  padding: 4px 6px;
+  padding: 3px 5px;
   font-size: 12px;
+}
+
+.flat-grid-table .input,
+.flat-grid-table .select {
+  min-height: 34px;
+  padding: 5px 8px;
+  border-radius: 5px;
 }
 
 .flat-grid-table tbody tr:hover { background: transparent; }
@@ -653,13 +661,31 @@ textarea,
 .image-slot-trigger {
   width: 28px;
   height: 28px;
-  border: 1px solid #d5dde7;
+  border: 1px solid #c7d2e4;
   background: #fff;
   border-radius: 4px;
   padding: 0;
   display: grid;
   place-items: center;
   cursor: pointer;
+}
+
+.image-slot-icon {
+  width: 15px;
+  height: 15px;
+  color: #475569;
+  display: inline-grid;
+  place-items: center;
+}
+
+.image-slot-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .image-slot-trigger img {
@@ -673,17 +699,13 @@ textarea,
   display: none;
 }
 
-.image-slot-popup {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  z-index: 20;
+.image-slot-actions-modal {
+  width: min(360px, calc(100vw - 24px));
+}
+
+.image-slot-actions {
   display: grid;
-  gap: 4px;
-  padding: 6px;
-  min-width: 124px;
-  background: #fff;
-  border: 1px solid #d5dde7;
+  gap: 8px;
 }
 
 .image-slot-preview-large {
