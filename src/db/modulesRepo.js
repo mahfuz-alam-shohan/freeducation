@@ -2,7 +2,24 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+const CODE_TEMPLATE_CODES = ['BANGLA-1ST-NCTB2010'];
+
+async function removeNonCodeTemplates(db) {
+  const placeholders = CODE_TEMPLATE_CODES.map((_, i) => `?${i + 1}`).join(', ');
+  const nonCodeTemplates = await db
+    .prepare(`SELECT id FROM subject_templates WHERE code NOT IN (${placeholders})`)
+    .bind(...CODE_TEMPLATE_CODES)
+    .all();
+
+  for (const template of nonCodeTemplates.results ?? []) {
+    await db.prepare('DELETE FROM subjects WHERE template_id = ?1').bind(template.id).run();
+    await db.prepare('DELETE FROM subject_templates WHERE id = ?1').bind(template.id).run();
+  }
+}
+
 export async function ensureDefaultTemplate(db) {
+  await removeNonCodeTemplates(db);
+
   const existing = await db.prepare("SELECT id FROM subject_templates WHERE code = 'BANGLA-1ST-NCTB2010'").first();
   if (existing?.id) return existing.id;
 
