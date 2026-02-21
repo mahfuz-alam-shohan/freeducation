@@ -554,10 +554,15 @@ function initializeFormHandlers() {
       }
 
       const hasLiveButton = Boolean(form.querySelector('[data-live-form="true"]'));
-      if (!hasLiveButton && !form.matches('[enctype="multipart/form-data"]')) return;
+      const isMultipartForm = form.matches('[enctype="multipart/form-data"]');
+      if (!hasLiveButton && !isMultipartForm) return;
 
       event.preventDefault();
       form.dataset.submitting = '1';
+
+      if (isMultipartForm) {
+        await prepareImageInputs(form).catch(() => null);
+      }
 
       if (!hasLiveButton) {
         form.dataset.submitting = '0';
@@ -576,22 +581,68 @@ function initializeFormHandlers() {
   });
 }
 
+async function readImageDimensions(file) {
+  if (typeof createImageBitmap === 'function') {
+    const bitmap = await createImageBitmap(file);
+    return {
+      width: bitmap.width,
+      height: bitmap.height,
+      release: () => {
+        if (typeof bitmap.close === 'function') bitmap.close();
+      },
+      draw(ctx, width, height) {
+        ctx.drawImage(bitmap, 0, 0, width, height);
+      },
+    };
+  }
+
+  const imageUrl = URL.createObjectURL(file);
+  const image = new Image();
+  image.decoding = 'async';
+
+  await new Promise((resolve, reject) => {
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error('Unable to decode image.'));
+    image.src = imageUrl;
+  });
+
+  return {
+    width: image.naturalWidth || image.width,
+    height: image.naturalHeight || image.height,
+    release: () => URL.revokeObjectURL(imageUrl),
+    draw(ctx, width, height) {
+      ctx.drawImage(image, 0, 0, width, height);
+    },
+  };
+}
+
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
-  const bitmap = await createImageBitmap(file);
-  const maxEdge = 420;
-  const longestEdge = Math.max(bitmap.width, bitmap.height);
+  if (file.type === 'image/webp' && file.size <= 220 * 1024) return file;
+
+  const source = await readImageDimensions(file);
+  const maxEdge = 360;
+  const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const width = Math.max(1, Math.round(source.width * scale));
+  const height = Math.max(1, Math.round(source.height * scale));
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.52));
-  if (!blob) return file;
+  if (!ctx) {
+    source.release();
+    return file;
+  }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  source.draw(ctx, width, height);
+  source.release();
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.46));
+  if (!blob || blob.size >= file.size) return file;
+
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
   return new File([blob], targetName + '.webp', { type: 'image/webp', lastModified: Date.now() });
 }
