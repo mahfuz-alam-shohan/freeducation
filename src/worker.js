@@ -345,11 +345,22 @@ async function handleProfilePost(request, env, url, user) {
 
   if (url.pathname === '/api/profile/dob') {
     const form = await request.formData();
-    const dateOfBirthRaw = String(form.get('dateOfBirth') || '').trim();
+    let dateOfBirthRaw = String(form.get('dateOfBirth') || '').trim();
+
     if (!dateOfBirthRaw) {
-      await updateUserDateOfBirth(env.DB, user.id, null);
-      return redirect('/profile');
+      const day = String(form.get('dobDay') || '').trim();
+      const month = String(form.get('dobMonth') || '').trim();
+      const year = String(form.get('dobYear') || '').trim();
+      if (!day && !month && !year) {
+        await updateUserDateOfBirth(env.DB, user.id, null);
+        return redirect('/profile');
+      }
+      if (day && month && year) {
+        dateOfBirthRaw = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
     }
+
+    if (!dateOfBirthRaw) return redirect('/profile');
 
     const dobMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirthRaw);
     const dobDate = new Date(`${dateOfBirthRaw}T00:00:00.000Z`);
