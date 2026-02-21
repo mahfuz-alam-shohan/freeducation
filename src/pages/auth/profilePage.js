@@ -148,14 +148,20 @@ function profilePageScript() {
     element.dataset.tone = tone || 'idle';
   };
 
-  const submitForm = async (form) => {
+  const submitForm = async (form, options) => {
     const response = await fetch(form.action, {
       method: (form.method || 'POST').toUpperCase(),
       body: new FormData(form),
       credentials: 'same-origin',
       redirect: 'follow',
+      headers: options?.headers || undefined,
     }).catch(() => null);
-    return Boolean(response && response.ok);
+
+    if (!response || !response.ok) return { ok: false, data: null };
+    if (!options?.expectJson) return { ok: true, data: null };
+
+    const data = await response.json().catch(() => null);
+    return { ok: true, data };
   };
 
   if (avatarInput && avatarForm) {
@@ -165,13 +171,30 @@ function profilePageScript() {
         avatarStatus.dataset.tone = 'working';
         avatarStatus.textContent = 'Uploading ' + avatarInput.files[0].name + '…';
       }
-      const ok = await submitForm(avatarForm);
-      if (ok) {
+      const result = await submitForm(avatarForm, {
+        expectJson: true,
+        headers: { Accept: 'application/json' },
+      });
+      if (result.ok) {
+        const avatarWrap = document.querySelector('.profile-avatar');
+        const existingImg = avatarWrap ? avatarWrap.querySelector('img') : null;
+        const serverUrl = result.data?.imageUrl ? String(result.data.imageUrl) : '';
+        const nextUrl = serverUrl ? serverUrl + (serverUrl.includes('?') ? '&' : '?') + 'v=' + Date.now() : '';
+        if (avatarWrap && nextUrl) {
+          const img = existingImg || document.createElement('img');
+          img.src = nextUrl;
+          img.alt = 'Profile avatar';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          if (!existingImg) {
+            avatarWrap.textContent = '';
+            avatarWrap.appendChild(img);
+          }
+        }
         if (avatarStatus) {
           avatarStatus.dataset.tone = 'success';
-          avatarStatus.textContent = 'Upload complete. Refreshing profile…';
+          avatarStatus.textContent = 'Upload complete.';
         }
-        window.location.reload();
         return;
       }
       if (avatarStatus) {
@@ -200,9 +223,9 @@ function profilePageScript() {
     }
     setStatus('name', 'Saving name…', 'working');
     nameSaving = true;
-    const ok = await submitForm(nameForm);
+    const result = await submitForm(nameForm);
     nameSaving = false;
-    if (ok) {
+    if (result.ok) {
       lastSavedName = nextName;
       setStatus('name', 'Name saved.', 'success');
       if (String(nameInput.value || '').trim() !== lastSavedName) {
@@ -284,9 +307,9 @@ function profilePageScript() {
       if (nextDob === lastSavedDob) return;
       setStatus('dob', 'Saving date of birth…', 'working');
       dobSaving = true;
-      const ok = await submitForm(dobForm);
+      const result = await submitForm(dobForm);
       dobSaving = false;
-      if (!ok) {
+      if (!result.ok) {
         setStatus('dob', 'Could not save date of birth.', 'error');
         return;
       }

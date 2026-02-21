@@ -631,7 +631,7 @@ async function readImageDimensions(file) {
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
 
-  const maxEdge = 180;
+  const maxEdge = 256;
   const source = await readImageDimensions(file);
   const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
@@ -651,7 +651,7 @@ async function downscaleImageFile(file) {
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.45));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.62));
   if (!blob) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
