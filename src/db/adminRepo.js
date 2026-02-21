@@ -15,8 +15,8 @@ export async function findUserByEmail(db, email) {
 export async function createAdmin(db, user) {
   await db
     .prepare(
-      `INSERT INTO users (id, email, name, role, image_key, password_hash, password_salt, password_iterations, created_at, updated_at)
-       VALUES (?1, ?2, ?3, 'admin', ?4, ?5, ?6, ?7, ?8, ?8)`
+      `INSERT INTO users (id, email, name, role, image_key, date_of_birth, password_hash, password_salt, password_iterations, created_at, updated_at)
+       VALUES (?1, ?2, ?3, 'admin', ?4, NULL, ?5, ?6, ?7, ?8, ?8)`
     )
     .bind(
       user.id,
@@ -41,7 +41,7 @@ export async function createSession(db, session) {
 export async function findSessionWithUser(db, sessionId) {
   return db
     .prepare(
-      `SELECT s.id as session_id, s.expires_at, u.id, u.email, u.name, u.role, u.image_key
+      `SELECT s.id as session_id, s.expires_at, u.id, u.email, u.name, u.role, u.image_key, u.date_of_birth
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.id = ?1`
@@ -79,4 +79,9 @@ export async function updateUserPassword(db, userId, passwordHash, passwordSalt,
     .prepare('UPDATE users SET password_hash = ?2, password_salt = ?3, password_iterations = ?4, updated_at = ?5 WHERE id = ?1')
     .bind(userId, passwordHash, passwordSalt, passwordIterations, nowIso())
     .run();
+}
+
+
+export async function updateUserDateOfBirth(db, userId, dateOfBirth) {
+  await db.prepare('UPDATE users SET date_of_birth = ?2, updated_at = ?3 WHERE id = ?1').bind(userId, dateOfBirth, nowIso()).run();
 }

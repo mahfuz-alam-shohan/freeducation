@@ -21,6 +21,7 @@ export async function requireAuth(request, env) {
     email: record.email,
     role: record.role,
     imageKey: record.image_key,
+    dateOfBirth: record.date_of_birth,
     sessionId: verified.sessionId,
   };
 }
