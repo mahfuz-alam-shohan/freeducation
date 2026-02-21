@@ -413,6 +413,8 @@ if (!shell) {
       profileTrigger.setAttribute('aria-expanded', 'false');
     };
 
+    closeProfilePopup();
+
     profileTrigger.addEventListener('click', (event) => {
       event.preventDefault();
       const isOpen = !profilePopup.hidden;
