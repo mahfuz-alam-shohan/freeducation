@@ -1246,8 +1246,22 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   overflow: hidden;
 }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-avatar-form { display: flex; justify-content: center; }
-.profile-upload-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 152px; text-align: center; }
+.profile-avatar-form {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: min(260px, 100%);
+  padding: 8px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.profile-upload-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 170px; text-align: center; }
+.profile-upload-help,
+.profile-upload-status { margin: 0; font-size: 12px; }
+.profile-upload-status[data-tone="working"] { color: #0c4a6e; }
+.profile-upload-status[data-tone="success"] { color: #166534; }
+.profile-upload-status[data-tone="error"] { color: #991b1b; }
 .profile-upload-btn .icon,
 .profile-form-grid .icon,
 .btn-icon-inline .icon,
