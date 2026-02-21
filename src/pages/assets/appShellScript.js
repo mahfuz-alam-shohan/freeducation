@@ -170,11 +170,10 @@ function initializeTemplateBuilder() {
     const addBtn = form.querySelector('[data-template-builder-add]');
     const storage = form.querySelector('[data-template-builder-storage]');
     const treeHost = form.querySelector('[data-template-builder-tree]');
-    const healthHost = form.querySelector('[data-template-builder-health]');
     const presetSelect = form.querySelector('[data-template-builder-preset]');
-    const generateBtn = form.querySelector('[data-template-builder-generate]');
-    const focusInput = form.querySelector('[data-template-builder-focus]');
-    const depthSelect = form.querySelector('[data-template-builder-depth]');
+    const contentInput = form.querySelector('[data-template-content-input]');
+    const contentAddBtn = form.querySelector('[data-template-content-add]');
+    const contentList = form.querySelector('[data-template-content-list]');
     if (!rowsHost || !addBtn || !storage) return;
 
     const presetSeeds = {
@@ -195,66 +194,17 @@ function initializeTemplateBuilder() {
       ],
     };
 
-    const smartTemplateBlueprint = (focus, depthTarget = 5) => {
-      const safeFocus = focus || 'Subject';
-      const depth = Math.max(3, Math.min(Number(depthTarget || 5), 6));
-      const rootId = 'node_' + Math.random().toString(36).slice(2, 9);
-      const unitId = 'node_' + Math.random().toString(36).slice(2, 9);
-      const lessonId = 'node_' + Math.random().toString(36).slice(2, 9);
-      const nodes = [
-        { clientId: rootId, serverName: safeFocus + ' Foundations', nodeKey: slugifyTemplateKey(safeFocus + '_foundations'), nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true },
-        { clientId: unitId, parentClientId: rootId, serverName: 'Core Units', nodeKey: 'core_units', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true },
-        { clientId: lessonId, parentClientId: unitId, serverName: 'Lesson Concepts', nodeKey: 'lesson_concepts', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: depth >= 5 },
-      ];
-
-      const contentMatrix = [
-        { name: 'Short Notes', key: 'short_notes' },
-        { name: 'CQ Bank', key: 'cq_bank' },
-        { name: 'MCQ Bank', key: 'mcq_bank' },
-        { name: 'Worked Examples', key: 'worked_examples' },
-      ];
-
-      contentMatrix.forEach((entry) => {
-        nodes.push({
-          clientId: 'node_' + Math.random().toString(36).slice(2, 9),
-          parentClientId: lessonId,
-          serverName: entry.name,
-          nodeKey: entry.key,
-          nodeType: 'content',
-          contentKind: entry.name,
-          supportsEdit: true,
-          supportsImage: true,
-          supportsChapters: false,
-        });
-      });
-
-      if (depth >= 5) {
-        const practiceId = 'node_' + Math.random().toString(36).slice(2, 9);
-        nodes.push({ clientId: practiceId, parentClientId: unitId, serverName: 'Practice Ladder', nodeKey: 'practice_ladder', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true });
-        ['Drills', 'Mixed Review', 'Previous Questions'].forEach((name) => {
-          nodes.push({ clientId: 'node_' + Math.random().toString(36).slice(2, 9), parentClientId: practiceId, serverName: name, nodeKey: slugifyTemplateKey(name), nodeType: 'content', contentKind: name, supportsEdit: true, supportsImage: true, supportsChapters: false });
-        });
-      }
-
-      if (depth >= 6) {
-        const masteryId = 'node_' + Math.random().toString(36).slice(2, 9);
-        nodes.push({ clientId: masteryId, parentClientId: rootId, serverName: 'Mastery + Diagnostics', nodeKey: 'mastery_diagnostics', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true });
-        ['Skill Gaps', 'Revision Tracker', 'Challenge Tasks'].forEach((name) => {
-          nodes.push({ clientId: 'node_' + Math.random().toString(36).slice(2, 9), parentClientId: masteryId, serverName: name, nodeKey: slugifyTemplateKey(name), nodeType: 'content', contentKind: name, supportsEdit: true, supportsImage: true, supportsChapters: false });
-        });
-      }
-
-      return nodes;
-    };
+    const contentTypes = new Set(['Short Notes', 'MCQ Bank', 'CQ Bank', 'Activities']);
 
     const rowTemplate = (id) => {
       const tr = document.createElement('tr');
       tr.setAttribute('data-builder-row', id);
-      tr.innerHTML = '<td><input class="input" data-field="serverName" maxlength="140" placeholder="Stories" required /></td>' +
+      tr.draggable = true;
+      tr.innerHTML = '<td><div class="template-dropzone" data-row-dropzone><input class="input" data-field="serverName" maxlength="140" placeholder="Stories" required /></div></td>' +
         '<td><input class="input" data-field="nodeKey" maxlength="140" placeholder="stories" required /></td>' +
         '<td><select class="select" data-field="parent"><option value="">Root</option></select></td>' +
         '<td><select class="select" data-field="nodeType"><option value="section">Section</option><option value="content">Content</option></select></td>' +
-        '<td><input class="input" data-field="contentKind" maxlength="80" placeholder="CQ Bank" /></td>' +
+        '<td><input class="input" data-field="contentKind" maxlength="80" placeholder="Type name" /></td>' +
         '<td><div class="template-options">' +
           '<label><input type="checkbox" data-field="supportsEdit" checked /> Editable</label>' +
           '<label><input type="checkbox" data-field="supportsImage" checked /> Image</label>' +
@@ -269,11 +219,17 @@ function initializeTemplateBuilder() {
       return tr;
     };
 
+    const updateContentTypeList = () => {
+      if (!contentList) return;
+      contentList.innerHTML = Array.from(contentTypes)
+        .map((type) => '<li class="template-content-item" draggable="true" data-content-type="' + type.replace(/"/g, '&quot;') + '"><span>' + type.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span><button class="btn btn-secondary" type="button" data-content-remove="' + type.replace(/"/g, '&quot;') + '">×</button></li>')
+        .join('');
+    };
+
     const updateTypeState = (row) => {
       const type = row.querySelector('[data-field="nodeType"]')?.value;
       const contentKind = row.querySelector('[data-field="contentKind"]');
-      const chapterInput = row.querySelector('[data-field="supportsChapters"]');
-      if (!contentKind || !chapterInput) return;
+      if (!contentKind) return;
       if (type === 'content') {
         contentKind.required = true;
       } else {
@@ -312,55 +268,9 @@ function initializeTemplateBuilder() {
       const renderLevel = (parent) => {
         const list = childrenByParent.get(parent) || [];
         if (!list.length) return '';
-        return '<ol>' + list.map((node) => '<li><span>' + (node.serverName || 'Untitled').replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' <small class="muted">(' + (node.nodeType === 'content' ? 'Content' : 'Section') + ')</small></span>' + renderLevel(node.clientId) + '</li>').join('') + '</ol>';
+        return '<ol>' + list.map((node) => '<li><span>' + (node.serverName || 'Untitled').replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' <small class="muted">(' + (node.nodeType === 'content' ? (node.contentKind || 'Content') : 'Section') + ')</small></span>' + renderLevel(node.clientId) + '</li>').join('') + '</ol>';
       };
       treeHost.innerHTML = renderLevel('root') || '<li class="muted">No root nodes found.</li>';
-    };
-
-    const analyzeTemplate = () => {
-      if (!healthHost) return;
-      const nodes = serializeRows();
-      if (!nodes.length) {
-        healthHost.innerHTML = '<li class="muted">No nodes yet.</li>';
-        return;
-      }
-      const childrenByParent = new Map();
-      nodes.forEach((node) => {
-        const key = node.parentClientId || 'root';
-        const list = childrenByParent.get(key) || [];
-        list.push(node.clientId);
-        childrenByParent.set(key, list);
-      });
-
-      const depthFor = (id, seen = new Set()) => {
-        if (seen.has(id)) return 0;
-        seen.add(id);
-        const children = childrenByParent.get(id) || [];
-        if (!children.length) return 1;
-        return 1 + Math.max(...children.map((child) => depthFor(child, new Set(seen))));
-      };
-
-      const rootNodes = childrenByParent.get('root') || [];
-      const maxDepth = rootNodes.length ? Math.max(...rootNodes.map((id) => depthFor(id))) : 0;
-      const contentNodes = nodes.filter((node) => node.nodeType === 'content');
-      const chapterNodes = nodes.filter((node) => node.supportsChapters);
-      const duplicateKeys = new Set();
-      const seenKeys = new Set();
-      nodes.forEach((node) => {
-        if (!node.nodeKey) return;
-        if (seenKeys.has(node.nodeKey)) duplicateKeys.add(node.nodeKey);
-        seenKeys.add(node.nodeKey);
-      });
-
-      const messages = [];
-      messages.push('Nodes: ' + nodes.length + ' | Content nodes: ' + contentNodes.length + ' | Max depth: ' + maxDepth);
-      if (maxDepth < 4) messages.push('Increase hierarchy depth to at least 4 levels for richer navigation.');
-      if (contentNodes.length < 4) messages.push('Add more content branches (notes, CQ, MCQ, examples) for balanced coverage.');
-      if (!chapterNodes.length) messages.push('No chapter-enabled node found. Consider enabling chapters for large subjects.');
-      if (duplicateKeys.size) messages.push('Duplicate node keys detected: ' + Array.from(duplicateKeys).join(', '));
-      if (messages.length === 1) messages.push('Good structure. You can still add mastery/revision branches for deeper intelligence.');
-
-      healthHost.innerHTML = messages.map((msg) => '<li>' + msg.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</li>').join('');
     };
 
     const refreshParentOptions = () => {
@@ -381,71 +291,6 @@ function initializeTemplateBuilder() {
         if (selected && selected !== rowId) parentSelect.value = selected;
       });
       renderTree();
-      analyzeTemplate();
-    };
-
-    const duplicateFromRow = (row) => {
-      const current = {
-        serverName: row.querySelector('[data-field="serverName"]')?.value || '',
-        nodeKey: (row.querySelector('[data-field="nodeKey"]')?.value || '') + '_copy',
-        parentClientId: row.querySelector('[data-field="parent"]')?.value || null,
-        nodeType: row.querySelector('[data-field="nodeType"]')?.value || 'section',
-        contentKind: row.querySelector('[data-field="contentKind"]')?.value || '',
-        supportsEdit: Boolean(row.querySelector('[data-field="supportsEdit"]')?.checked),
-        supportsImage: Boolean(row.querySelector('[data-field="supportsImage"]')?.checked),
-        supportsChapters: Boolean(row.querySelector('[data-field="supportsChapters"]')?.checked),
-      };
-      addRow(current);
-    };
-
-    const bindRow = (row) => {
-      const nameInput = row.querySelector('[data-field="serverName"]');
-      const keyInput = row.querySelector('[data-field="nodeKey"]');
-      const typeInput = row.querySelector('[data-field="nodeType"]');
-      const parentInput = row.querySelector('[data-field="parent"]');
-      row.querySelector('[data-row-remove]')?.addEventListener('click', () => {
-        const rowId = row.getAttribute('data-builder-row');
-        row.remove();
-        rowsHost.querySelectorAll('[data-field="parent"]').forEach((select) => {
-          if (select.value === rowId) select.value = '';
-        });
-        refreshParentOptions();
-      });
-      row.querySelector('[data-row-up]')?.addEventListener('click', () => {
-        const previous = row.previousElementSibling;
-        if (previous) rowsHost.insertBefore(row, previous);
-        refreshParentOptions();
-      });
-      row.querySelector('[data-row-down]')?.addEventListener('click', () => {
-        const next = row.nextElementSibling;
-        if (next) rowsHost.insertBefore(next, row);
-        refreshParentOptions();
-      });
-      row.querySelector('[data-row-duplicate]')?.addEventListener('click', () => duplicateFromRow(row));
-
-      nameInput?.addEventListener('blur', () => {
-        if (!keyInput) return;
-        if (!keyInput.value.trim()) keyInput.value = slugifyTemplateKey(nameInput.value);
-        refreshParentOptions();
-      });
-      nameInput?.addEventListener('input', refreshParentOptions);
-      keyInput?.addEventListener('blur', () => {
-        keyInput.value = slugifyTemplateKey(keyInput.value);
-      });
-      keyInput?.addEventListener('input', () => {
-        renderTree();
-        analyzeTemplate();
-      });
-      typeInput?.addEventListener('change', () => {
-        updateTypeState(row);
-        renderTree();
-        analyzeTemplate();
-      });
-      parentInput?.addEventListener('change', () => {
-        renderTree();
-        analyzeTemplate();
-      });
-      updateTypeState(row);
     };
 
     const addRow = (seed = null) => {
@@ -467,6 +312,128 @@ function initializeTemplateBuilder() {
       refreshParentOptions();
     };
 
+    const addContentTypeToRow = (row, typeName) => {
+      const nodeTypeInput = row.querySelector('[data-field="nodeType"]');
+      const rowId = row.getAttribute('data-builder-row');
+      if (!nodeTypeInput || !rowId) return;
+      if (nodeTypeInput.value === 'content') {
+        const kindInput = row.querySelector('[data-field="contentKind"]');
+        if (kindInput) kindInput.value = typeName;
+        const nameInput = row.querySelector('[data-field="serverName"]');
+        if (nameInput && !nameInput.value.trim()) nameInput.value = typeName;
+      } else {
+        addRow({
+          serverName: typeName,
+          nodeKey: slugifyTemplateKey(typeName),
+          parentClientId: rowId,
+          nodeType: 'content',
+          contentKind: typeName,
+          supportsEdit: true,
+          supportsImage: true,
+          supportsChapters: false,
+        });
+      }
+      contentTypes.add(typeName);
+      updateContentTypeList();
+      refreshParentOptions();
+    };
+
+    const bindRow = (row) => {
+      const nameInput = row.querySelector('[data-field="serverName"]');
+      const keyInput = row.querySelector('[data-field="nodeKey"]');
+      const typeInput = row.querySelector('[data-field="nodeType"]');
+      const parentInput = row.querySelector('[data-field="parent"]');
+      const dropzone = row.querySelector('[data-row-dropzone]');
+
+      row.addEventListener('dragstart', (event) => {
+        row.classList.add('dragging');
+        event.dataTransfer?.setData('text/template-row-id', row.getAttribute('data-builder-row') || '');
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+      });
+      row.addEventListener('dragover', (event) => {
+        if (event.dataTransfer?.types?.includes('text/template-row-id')) {
+          event.preventDefault();
+        }
+      });
+      row.addEventListener('drop', (event) => {
+        const draggedId = event.dataTransfer?.getData('text/template-row-id');
+        if (!draggedId || draggedId === row.getAttribute('data-builder-row')) return;
+        const draggedRow = rowsHost.querySelector('[data-builder-row="' + draggedId + '"]');
+        if (!draggedRow) return;
+        event.preventDefault();
+        rowsHost.insertBefore(draggedRow, row);
+        refreshParentOptions();
+      });
+
+      dropzone?.addEventListener('dragover', (event) => {
+        if (event.dataTransfer?.types?.includes('text/template-content-type')) event.preventDefault();
+      });
+      dropzone?.addEventListener('drop', (event) => {
+        const typeName = event.dataTransfer?.getData('text/template-content-type');
+        if (!typeName) return;
+        event.preventDefault();
+        addContentTypeToRow(row, typeName);
+      });
+
+      row.querySelector('[data-row-remove]')?.addEventListener('click', () => {
+        const rowId = row.getAttribute('data-builder-row');
+        row.remove();
+        rowsHost.querySelectorAll('[data-field="parent"]').forEach((select) => {
+          if (select.value === rowId) select.value = '';
+        });
+        refreshParentOptions();
+      });
+      row.querySelector('[data-row-up]')?.addEventListener('click', () => {
+        const previous = row.previousElementSibling;
+        if (previous) rowsHost.insertBefore(row, previous);
+        refreshParentOptions();
+      });
+      row.querySelector('[data-row-down]')?.addEventListener('click', () => {
+        const next = row.nextElementSibling;
+        if (next) rowsHost.insertBefore(next, row);
+        refreshParentOptions();
+      });
+      row.querySelector('[data-row-duplicate]')?.addEventListener('click', () => {
+        addRow({
+          serverName: nameInput?.value || '',
+          nodeKey: (keyInput?.value || '') + '_copy',
+          parentClientId: parentInput?.value || null,
+          nodeType: typeInput?.value || 'section',
+          contentKind: row.querySelector('[data-field="contentKind"]')?.value || '',
+          supportsEdit: Boolean(row.querySelector('[data-field="supportsEdit"]')?.checked),
+          supportsImage: Boolean(row.querySelector('[data-field="supportsImage"]')?.checked),
+          supportsChapters: Boolean(row.querySelector('[data-field="supportsChapters"]')?.checked),
+        });
+      });
+
+      nameInput?.addEventListener('blur', () => {
+        if (!keyInput) return;
+        if (!keyInput.value.trim()) keyInput.value = slugifyTemplateKey(nameInput.value);
+        refreshParentOptions();
+      });
+      nameInput?.addEventListener('input', refreshParentOptions);
+      keyInput?.addEventListener('blur', () => {
+        keyInput.value = slugifyTemplateKey(keyInput.value);
+      });
+      keyInput?.addEventListener('input', renderTree);
+      typeInput?.addEventListener('change', () => {
+        updateTypeState(row);
+        renderTree();
+      });
+      parentInput?.addEventListener('change', renderTree);
+      row.querySelector('[data-field="contentKind"]')?.addEventListener('change', (event) => {
+        const value = event.target?.value?.trim();
+        if (value) {
+          contentTypes.add(value);
+          updateContentTypeList();
+        }
+        renderTree();
+      });
+      updateTypeState(row);
+    };
+
     const loadInitialRows = () => {
       const raw = form.getAttribute('data-template-builder-initial') || '';
       if (!raw) return false;
@@ -477,7 +444,10 @@ function initializeTemplateBuilder() {
         return false;
       }
       if (!Array.isArray(initial) || !initial.length) return false;
-      initial.forEach((seed) => addRow(seed));
+      initial.forEach((seed) => {
+        if (seed.contentKind) contentTypes.add(seed.contentKind);
+        addRow(seed);
+      });
       rowsHost.querySelectorAll('[data-builder-row]').forEach((row) => {
         const seedParent = row.getAttribute('data-parent-id-seed');
         if (!seedParent) return;
@@ -489,27 +459,7 @@ function initializeTemplateBuilder() {
     };
 
     addBtn.addEventListener('click', () => addRow());
-    generateBtn?.addEventListener('click', () => {
-      const focus = focusInput?.value?.trim();
-      if (!focus) {
-        window.alert('Add a blueprint focus (example: Class 10 Biology) before generating.');
-        return;
-      }
-      if (rowsHost.querySelectorAll('[data-builder-row]').length > 0 && !window.confirm('Replace current nodes with an intelligent deep blueprint?')) {
-        return;
-      }
-      rowsHost.innerHTML = '';
-      const seeds = smartTemplateBlueprint(focus, Number(depthSelect?.value || 5));
-      seeds.forEach((seed) => addRow(seed));
-      rowsHost.querySelectorAll('[data-builder-row]').forEach((row) => {
-        const seedParent = row.getAttribute('data-parent-id-seed');
-        if (!seedParent) return;
-        const parent = row.querySelector('[data-field="parent"]');
-        if (parent) parent.value = seedParent;
-      });
-      renderTree();
-      analyzeTemplate();
-    });
+
     presetSelect?.addEventListener('change', () => {
       const preset = presetSeeds[presetSelect.value];
       if (!preset) return;
@@ -518,8 +468,43 @@ function initializeTemplateBuilder() {
         return;
       }
       rowsHost.innerHTML = '';
-      preset.forEach((seed) => addRow(seed));
+      preset.forEach((seed) => {
+        if (seed.contentKind) contentTypes.add(seed.contentKind);
+        addRow(seed);
+      });
       presetSelect.value = '';
+      updateContentTypeList();
+    });
+
+    contentAddBtn?.addEventListener('click', () => {
+      const nextType = contentInput?.value?.trim();
+      if (!nextType) return;
+      contentTypes.add(nextType);
+      if (contentInput) contentInput.value = '';
+      updateContentTypeList();
+    });
+
+    contentInput?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      contentAddBtn?.click();
+    });
+
+    contentList?.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const removeType = target.getAttribute('data-content-remove');
+      if (!removeType) return;
+      contentTypes.delete(removeType);
+      updateContentTypeList();
+    });
+
+    contentList?.addEventListener('dragstart', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const item = target.closest('[data-content-type]');
+      if (!(item instanceof HTMLElement)) return;
+      event.dataTransfer?.setData('text/template-content-type', item.getAttribute('data-content-type') || '');
     });
 
     form.addEventListener('submit', (event) => {
@@ -545,7 +530,7 @@ function initializeTemplateBuilder() {
     });
 
     if (!loadInitialRows()) addRow();
-    analyzeTemplate();
+    updateContentTypeList();
     form.dataset.bound = '1';
   });
 }
