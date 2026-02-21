@@ -45,6 +45,8 @@ function profileHeader(user) {
       <form method="post" action="/api/profile/avatar" enctype="multipart/form-data" class="profile-avatar-form">
         <label class="btn btn-ghost profile-upload-btn" for="avatar-upload"><span class="icon">${iconCamera}</span>${actionText}</label>
         <input id="avatar-upload" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" class="profile-file-input" />
+        <p class="muted profile-upload-help">PNG, JPG, or WEBP. Auto uploads after selection.</p>
+        <p class="muted profile-upload-status" data-profile-avatar-status aria-live="polite">No file selected.</p>
       </form>
     </div>
     <div class="profile-hero-meta">
@@ -137,6 +139,7 @@ function profilePageScript() {
 (function () {
   const avatarInput = document.getElementById('avatar-upload');
   const avatarForm = avatarInput ? avatarInput.closest('form') : null;
+  const avatarStatus = document.querySelector('[data-profile-avatar-status]');
 
   const setStatus = (key, message, tone) => {
     const element = document.querySelector('[data-profile-status="' + key + '"]');
@@ -158,27 +161,53 @@ function profilePageScript() {
   if (avatarInput && avatarForm) {
     avatarInput.addEventListener('change', async () => {
       if (!avatarInput.files?.length) return;
+      if (avatarStatus) {
+        avatarStatus.dataset.tone = 'working';
+        avatarStatus.textContent = 'Uploading ' + avatarInput.files[0].name + '…';
+      }
       const ok = await submitForm(avatarForm);
       if (ok) {
+        if (avatarStatus) {
+          avatarStatus.dataset.tone = 'success';
+          avatarStatus.textContent = 'Upload complete. Refreshing profile…';
+        }
         window.location.reload();
+        return;
+      }
+      if (avatarStatus) {
+        avatarStatus.dataset.tone = 'error';
+        avatarStatus.textContent = 'Could not upload image. Please try again.';
       }
     });
   }
 
   let nameTimer = null;
+  let nameSaving = false;
   let lastSavedName = '';
   const nameForm = document.querySelector('[data-profile-name-form]');
   const nameInput = document.getElementById('profile-name');
 
   const saveName = async () => {
-    if (!nameForm || !nameInput) return;
+    if (!nameForm || !nameInput || nameSaving) return;
     const nextName = String(nameInput.value || '').trim();
-    if (!nextName || nextName.length > 100 || nextName === lastSavedName) return;
+    if (!nextName || nextName.length > 100) {
+      setStatus('name', 'Name must be between 1 and 100 characters.', 'error');
+      return;
+    }
+    if (nextName === lastSavedName) {
+      setStatus('name', 'All changes saved.', 'success');
+      return;
+    }
     setStatus('name', 'Saving name…', 'working');
+    nameSaving = true;
     const ok = await submitForm(nameForm);
+    nameSaving = false;
     if (ok) {
       lastSavedName = nextName;
       setStatus('name', 'Name saved.', 'success');
+      if (String(nameInput.value || '').trim() !== lastSavedName) {
+        saveName().catch(() => setStatus('name', 'Could not save name. Please retry.', 'error'));
+      }
       return;
     }
     setStatus('name', 'Could not save name. Please retry.', 'error');
@@ -187,11 +216,11 @@ function profilePageScript() {
   if (nameForm && nameInput) {
     lastSavedName = String(nameInput.value || '').trim();
     nameInput.addEventListener('input', () => {
-      setStatus('name', 'Saving changes soon…', 'working');
+      setStatus('name', 'Changes detected. Autosaving…', 'working');
       clearTimeout(nameTimer);
       nameTimer = setTimeout(() => {
         saveName().catch(() => setStatus('name', 'Could not save name. Please retry.', 'error'));
-      }, 500);
+      }, 250);
     });
     nameInput.addEventListener('blur', () => {
       clearTimeout(nameTimer);
@@ -200,6 +229,11 @@ function profilePageScript() {
     nameForm.addEventListener('submit', (event) => {
       event.preventDefault();
     });
+    window.setInterval(() => {
+      if (String(nameInput.value || '').trim() !== lastSavedName) {
+        saveName().catch(() => setStatus('name', 'Could not save name. Please retry.', 'error'));
+      }
+    }, 1200);
   }
 
   const dobForm = document.querySelector('[data-profile-dob-form]');
@@ -239,7 +273,9 @@ function profilePageScript() {
 
   if (dobForm && dobYear && dobMonth && dobDay && dobValue) {
     let lastSavedDob = dobValue.value;
+    let dobSaving = false;
     const saveDob = async () => {
+      if (dobSaving) return;
       const nextDob = updateDobValue();
       if (nextDob === null) {
         setStatus('dob', 'Please select a valid date.', 'error');
@@ -247,7 +283,9 @@ function profilePageScript() {
       }
       if (nextDob === lastSavedDob) return;
       setStatus('dob', 'Saving date of birth…', 'working');
+      dobSaving = true;
       const ok = await submitForm(dobForm);
+      dobSaving = false;
       if (!ok) {
         setStatus('dob', 'Could not save date of birth.', 'error');
         return;
@@ -264,6 +302,11 @@ function profilePageScript() {
     dobForm.addEventListener('submit', (event) => {
       event.preventDefault();
     });
+    window.setInterval(() => {
+      if (updateDobValue() !== lastSavedDob) {
+        saveDob().catch(() => setStatus('dob', 'Could not save date of birth.', 'error'));
+      }
+    }, 1200);
   }
 })();
 </script>`;
