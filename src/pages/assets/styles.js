@@ -1403,12 +1403,16 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   text-align: center;
 }
 .profile-name-row h2 { margin: 0; font-size: 28px; line-height: 1.2; }
-.profile-upload-status { margin: 0; font-size: 12px; min-height: 18px; }
-.profile-upload-status[data-tone="working"] { color: #0c4a6e; }
-.profile-upload-status[data-tone="success"] { color: #166534; }
-.profile-upload-status[data-tone="error"] { color: #991b1b; }
-.profile-body-flat { display: grid; gap: 10px; margin-top: 8px; }
-.profile-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--line); }
+.profile-upload-status,
+.profile-autosave-status { margin: 0; font-size: 12px; min-height: 18px; }
+.profile-upload-status[data-tone="working"],
+.profile-autosave-status[data-tone="working"] { color: #0c4a6e; }
+.profile-upload-status[data-tone="success"],
+.profile-autosave-status[data-tone="success"] { color: #166534; }
+.profile-upload-status[data-tone="error"],
+.profile-autosave-status[data-tone="error"] { color: #991b1b; }
+.profile-body-flat { display: grid; gap: 8px; margin-top: 8px; }
+.profile-tabs { display: flex; gap: 10px; border-bottom: 1px solid var(--line); }
 .profile-tab {
   border: 0;
   background: transparent;
@@ -1419,8 +1423,8 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   cursor: pointer;
 }
 .profile-tab.is-active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
-.profile-tab-panel { display: grid; gap: 10px; }
-.profile-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.profile-tab-panel { display: grid; gap: 10px; padding-top: 4px; }
+.profile-tab-panel[hidden] { display: none; }
 .profile-bio { display: grid; gap: 10px; }
 .profile-readonly-row { display: grid; gap: 2px; }
 .profile-readonly-head {
@@ -1455,10 +1459,6 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .profile-form-grid > * { min-width: 0; }
 .profile-dob-fields { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, .8fr); gap: 6px; }
 .profile-form-actions { display: flex; justify-content: flex-start; gap: 8px; margin-top: 2px; }
-.profile-autosave-status { margin: 0; font-size: 12px; min-height: 18px; }
-.profile-autosave-status[data-tone="working"] { color: #0c4a6e; }
-.profile-autosave-status[data-tone="success"] { color: #166534; }
-.profile-autosave-status[data-tone="error"] { color: #991b1b; }
 .profile-photo-modal-card { width: min(780px, calc(100vw - 28px)); }
 .profile-photo-modal-image img { width: 100%; max-height: 72vh; object-fit: contain; }
 
