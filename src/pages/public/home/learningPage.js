@@ -106,18 +106,36 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
 export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
   const list = mcqs
     .map(
-      (item, index) => `<li>
-      <h3 class="public-note-title">${index + 1}. MCQ</h3>
+      (item) => `<li class="public-mcq-item" data-correct-option="${h(item.correct_option)}">
+      <div class="public-mcq-head">
+        <h3 class="public-note-title">MCQ</h3>
+        <button class="public-mcq-answer-toggle" type="button" data-answer-toggle>See answer</button>
+      </div>
       <div class="public-note-body">${item.question_html}</div>
-      <ul>
-        <li><strong>A.</strong> ${h(item.option_a)}</li>
-        <li><strong>B.</strong> ${h(item.option_b)}</li>
-        <li><strong>C.</strong> ${h(item.option_c)}</li>
-        <li><strong>D.</strong> ${h(item.option_d)}</li>
+      <ul class="public-mcq-options">
+        <li data-option="A"><strong>A.</strong> ${h(item.option_a)}</li>
+        <li data-option="B"><strong>B.</strong> ${h(item.option_b)}</li>
+        <li data-option="C"><strong>C.</strong> ${h(item.option_c)}</li>
+        <li data-option="D"><strong>D.</strong> ${h(item.option_d)}</li>
       </ul>
     </li>`
     )
     .join('');
+
+  const mcqScript = `<script>
+  document.querySelectorAll('[data-answer-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const container = button.closest('.public-mcq-item');
+      if (!container) return;
+      const answer = String(container.dataset.correctOption || '').toUpperCase();
+      const isVisible = container.classList.toggle('show-answer');
+      container.querySelectorAll('.public-mcq-options li').forEach((option) => {
+        option.classList.toggle('public-mcq-option-correct', isVisible && option.dataset.option === answer);
+      });
+      button.textContent = isVisible ? 'Hide answer' : 'See answer';
+    });
+  });
+  </script>`;
 
   return publicShell(
     'home',
@@ -128,7 +146,7 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
       <ol class="public-note-list">${list || '<li>No MCQs yet.</li>'}</ol>
     </section>`,
-    '',
+    mcqScript,
     publicHomeStyles
   );
 }
