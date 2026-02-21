@@ -1368,6 +1368,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
   z-index: 5;
 }
+.profile-photo-actions[data-profile-photo-actions="avatar"] { left: 0; right: auto; }
 .profile-photo-control.menu-open .profile-photo-actions { display: grid; }
 .profile-photo-action {
   border: 0;
@@ -1383,8 +1384,11 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   min-height: 52px;
   display: flex;
   align-items: center;
-  margin-left: 188px;
+  justify-content: center;
+  width: 148px;
+  margin-left: 20px;
   margin-top: 8px;
+  text-align: center;
 }
 .profile-name-row h2 { margin: 0; font-size: 28px; line-height: 1.2; }
 .profile-upload-status { margin: 0; font-size: 12px; min-height: 18px; }
@@ -1404,16 +1408,19 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 }
 .profile-tab.is-active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
 .profile-tab-panel { display: grid; gap: 10px; }
+.profile-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.profile-bio { display: grid; gap: 10px; }
 .profile-readonly-row { display: grid; gap: 2px; }
 .profile-fixed-value { margin: 0; font-weight: 600; color: #0f172a; }
 .profile-form-grid { display: grid; gap: 7px; max-width: 640px; }
 .profile-form-grid > * { min-width: 0; }
 .profile-dob-fields { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, .8fr); gap: 6px; }
-.profile-form-actions { display: flex; justify-content: flex-start; margin-top: 2px; }
-.profile-autosave-status { margin: 0; font-size: 12px; }
+.profile-form-actions { display: flex; justify-content: flex-start; gap: 8px; margin-top: 2px; }
+.profile-autosave-status { margin: 0; font-size: 12px; min-height: 18px; }
 .profile-autosave-status[data-tone="working"] { color: #0c4a6e; }
 .profile-autosave-status[data-tone="success"] { color: #166534; }
 .profile-autosave-status[data-tone="error"] { color: #991b1b; }
+.profile-photo-modal-card { width: min(780px, calc(100vw - 28px)); }
 .profile-photo-modal-image img { width: 100%; max-height: 72vh; object-fit: contain; }
 
 @media (min-width: 1600px) {
@@ -1507,7 +1514,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .profile-avatar-row { left: 10px; bottom: -40px; }
   .profile-avatar-shell { width: 108px; height: 108px; font-size: 30px; border-width: 3px; }
   .profile-avatar-control { right: -2px; bottom: 2px; }
-  .profile-name-row { margin-left: 124px; min-height: 40px; }
+  .profile-name-row { margin-left: 10px; width: 108px; min-height: 40px; }
   .profile-name-row h2 { font-size: 20px; }
   .profile-dob-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .subject-node-actions-row {

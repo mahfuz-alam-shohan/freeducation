@@ -23,6 +23,7 @@ export async function requireAuth(request, env) {
     imageKey: record.image_key,
     coverImageKey: record.cover_image_key,
     dateOfBirth: record.date_of_birth,
+    createdAt: record.created_at,
     sessionId: verified.sessionId,
   };
 }
