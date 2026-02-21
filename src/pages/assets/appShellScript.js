@@ -259,9 +259,15 @@ function initializeImageSlots() {
     if (slot.dataset.boundImageSlot === '1') return;
     const input = slot.querySelector('[data-image-slot-input]');
     const uploadButton = slot.querySelector('[data-image-slot-upload]');
+    const seeButton = slot.querySelector('[data-image-slot-see]');
     const removeButton = slot.querySelector('[data-image-slot-remove-action]');
     const removeInput = slot.querySelector('[data-image-slot-remove]');
+    const trigger = slot.querySelector('[data-image-slot-trigger]');
+    const previewLarge = slot.querySelector('.image-slot-preview-large');
     if (!input || !uploadButton || !removeInput) return;
+
+    const defaultIconMarkup = '<span class="image-slot-icon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><rect x="2.25" y="3.25" width="15.5" height="13.5" rx="2"></rect><circle cx="7" cy="8" r="1.6"></circle><path d="M4.75 14l3.6-3.9 2.35 2.45 2.35-2.95 2.2 4.4"></path></svg></span>';
+    let previewUrl = '';
 
     const closeSlotDialog = () => {
       const dialog = uploadButton.closest('dialog[data-content-modal]');
@@ -273,6 +279,33 @@ function initializeImageSlots() {
       }
     };
 
+    const renderSlotState = ({ hasImage, src = '' }) => {
+      uploadButton.textContent = hasImage ? 'Change image' : 'Upload image';
+      if (removeButton) removeButton.hidden = !hasImage;
+      if (seeButton) seeButton.hidden = !hasImage;
+
+      if (previewLarge) {
+        previewLarge.hidden = !hasImage;
+        previewLarge.src = hasImage ? src : '';
+      }
+
+      if (!trigger) return;
+      if (!hasImage) {
+        trigger.innerHTML = defaultIconMarkup;
+        return;
+      }
+      trigger.innerHTML = '';
+      const img = document.createElement('img');
+      img.alt = 'Uploaded image';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.src = src;
+      trigger.appendChild(img);
+    };
+
+    const currentImage = slot.querySelector('[data-image-slot-trigger] img');
+    renderSlotState({ hasImage: Boolean(currentImage), src: currentImage?.getAttribute('src') || '' });
+
     uploadButton.addEventListener('click', () => {
       removeInput.value = '0';
       input.click();
@@ -283,6 +316,11 @@ function initializeImageSlots() {
       removeButton.addEventListener('click', () => {
         removeInput.value = '1';
         input.value = '';
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+          previewUrl = '';
+        }
+        renderSlotState({ hasImage: false });
         input.dispatchEvent(new Event('change', { bubbles: true }));
         closeSlotDialog();
       });
@@ -291,24 +329,52 @@ function initializeImageSlots() {
     input.addEventListener('change', () => {
       if (input.files && input.files[0]) {
         removeInput.value = '0';
-        const preview = slot.querySelector('img');
-        if (preview) {
-          preview.src = URL.createObjectURL(input.files[0]);
-        } else {
-          const icon = slot.querySelector('.image-slot-icon');
-          if (icon) {
-            const img = document.createElement('img');
-            img.alt = 'Uploaded image';
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            img.src = URL.createObjectURL(input.files[0]);
-            icon.replaceWith(img);
-          }
-        }
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(input.files[0]);
+        renderSlotState({ hasImage: true, src: previewUrl });
       }
     });
 
     slot.dataset.boundImageSlot = '1';
+  });
+}
+
+function initializeClassMoveControls() {
+  document.querySelectorAll('[data-class-move]').forEach((button) => {
+    if (button.dataset.boundClassMove === '1') return;
+    button.addEventListener('click', async () => {
+      if (button.disabled) return;
+      const classId = button.getAttribute('data-class-id');
+      const direction = button.getAttribute('data-class-move');
+      if (!classId || !direction) return;
+
+      const row = button.closest('[data-class-row]');
+      if (!row || !row.parentElement) return;
+      const targetRow = direction === 'up' ? row.previousElementSibling : row.nextElementSibling;
+      if (!targetRow) return;
+
+      if (direction === 'up') {
+        row.parentElement.insertBefore(row, targetRow);
+      } else {
+        row.parentElement.insertBefore(targetRow, row);
+      }
+
+      const body = new FormData();
+      body.set('intent', direction === 'up' ? 'move-up' : 'move-down');
+      const response = await fetch('/api/classes/' + classId, {
+        method: 'POST',
+        body,
+        credentials: 'same-origin',
+      }).catch(() => null);
+
+      if (!response || !response.ok) {
+        window.location.reload();
+        return;
+      }
+
+      window.location.reload();
+    });
+    button.dataset.boundClassMove = '1';
   });
 }
 
@@ -327,6 +393,7 @@ async function refreshLiveRegion(regionName) {
   initializeContentModals();
   initializeFileIndicators();
   initializeImageSlots();
+  initializeClassMoveControls();
   initializeFormHandlers();
 }
 
@@ -660,6 +727,7 @@ if (!shell) {
   initializeContentModals();
   initializeFileIndicators();
   initializeImageSlots();
+  initializeClassMoveControls();
   initializeFormHandlers();
 }
 `;

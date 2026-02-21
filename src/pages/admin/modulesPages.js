@@ -34,9 +34,10 @@ function imageUploadCell({ id, formId, disabled = false }) {
 
 function imageSlotCell({ id, formId, imageKey, disabled = false }) {
   const imageUrl = imageUrlFromKey(imageKey);
+  const defaultIcon = '<span class="image-slot-icon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><rect x="2.25" y="3.25" width="15.5" height="13.5" rx="2" /><circle cx="7" cy="8" r="1.6" /><path d="M4.75 14l3.6-3.9 2.35 2.45 2.35-2.95 2.2 4.4" /></svg></span>';
   return `<div class="image-slot" data-image-slot>
     <button class="image-slot-trigger" type="button" data-image-slot-trigger ${disabled ? 'disabled' : ''} aria-label="Manage image" data-content-modal-open="${h(id)}-actions">
-      ${imageUrl ? `<img src="${h(imageUrl)}" alt="Uploaded image" loading="lazy" decoding="async" />` : '<span class="image-slot-icon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><rect x="2.25" y="3.25" width="15.5" height="13.5" rx="2" /><circle cx="7" cy="8" r="1.6" /><path d="M4.75 14l3.6-3.9 2.35 2.45 2.35-2.95 2.2 4.4" /></svg></span>'}
+      ${imageUrl ? `<img src="${h(imageUrl)}" alt="Uploaded image" loading="lazy" decoding="async" />` : defaultIcon}
     </button>
     <input class="image-slot-input" type="file" name="image" ${formId ? `form="${h(formId)}"` : ''} accept="image/*" ${disabled ? 'disabled' : ''} data-image-slot-input />
     <input type="hidden" name="removeImage" value="0" ${formId ? `form="${h(formId)}"` : ''} data-image-slot-remove />
@@ -47,13 +48,18 @@ function imageSlotCell({ id, formId, imageKey, disabled = false }) {
           <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
         </div>
         <div class="image-slot-actions">
-          ${imageUrl ? `<button class="btn btn-secondary" type="button" data-image-slot-see data-content-modal-open="${h(id)}-preview">See image</button>` : ''}
+          <button class="btn btn-secondary" type="button" data-image-slot-see data-content-modal-open="${h(id)}-preview" ${imageUrl ? '' : 'hidden'}>See image</button>
           <button class="btn btn-primary" type="button" data-image-slot-upload>${imageUrl ? 'Change image' : 'Upload image'}</button>
-          ${imageUrl ? '<button class="btn btn-danger" type="button" data-image-slot-remove-action>Remove image</button>' : ''}
+          <button class="btn btn-danger" type="button" data-image-slot-remove-action ${imageUrl ? '' : 'hidden'}>Remove image</button>
         </div>
       </div>
     </dialog>
-    ${imageUrl ? `<dialog class="content-modal" data-content-modal="${h(id)}-preview"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Image preview</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div><img class="image-slot-preview-large" src="${h(imageUrl)}" alt="Uploaded image preview" loading="lazy" decoding="async" /></div></dialog>` : ''}
+    <dialog class="content-modal" data-content-modal="${h(id)}-preview">
+      <div class="modal content-modal-inner">
+        <div class="content-modal-head"><h3 class="card-title">Image preview</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>
+        <img class="image-slot-preview-large" src="${h(imageUrl || '')}" alt="Uploaded image preview" loading="lazy" decoding="async" ${imageUrl ? '' : 'hidden'} />
+      </div>
+    </dialog>
   </div>`;
 }
 
@@ -132,11 +138,12 @@ function classSelectOptions(classes) {
 export function classesPage(user, classes) {
   const rows = classes
     .map(
-      (item) => `<tr>
+      (item, index) => `<tr data-class-row data-class-id="${item.id}">
       <td>${fullTextCell(item.name, `class-name-${item.id}`, 'Class name')}</td>
       <td>${h(item.sort_order)}</td>
       <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
-      <td><input class="input" type="number" name="sortOrder" form="class-update-${item.id}" value="${h(item.sort_order)}" /></td>
+      <td><button class="btn btn-secondary" type="button" data-class-move="up" data-class-id="${item.id}" ${index === 0 ? 'disabled' : ''}>↑</button></td>
+      <td><button class="btn btn-secondary" type="button" data-class-move="down" data-class-id="${item.id}" ${index === classes.length - 1 ? 'disabled' : ''}>↓</button></td>
       <td><label><input type="checkbox" name="showOnHome" value="1" form="class-update-${item.id}" ${item.show_on_home ? 'checked' : ''} /> Show</label></td>
       <td>${imageSlotCell({ id: `class-image-${item.id}`, formId: `class-update-${item.id}`, imageKey: item.image_key })}</td>
       <td><small class="muted" data-auto-save-status form="class-update-${item.id}">Synced</small></td>
@@ -173,7 +180,6 @@ export function classesPage(user, classes) {
         <form method="post" action="/api/classes" class="grid grid-4" enctype="multipart/form-data">
           <label><input type="checkbox" name="showOnHome" value="1" checked /> Show on homepage</label>
           <input class="input" name="name" placeholder="Class name" required />
-          <input class="input" type="number" name="sortOrder" value="0" />
           ${imageUploadCell({ id: 'class-create-upload' })}
           <button class="btn btn-primary" type="submit">Create</button>
         </form>
@@ -182,8 +188,8 @@ export function classesPage(user, classes) {
   </section>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Class</th><th>Order</th><th>Rename</th><th>Sort</th><th>Homepage</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(rows, 8, 'No classes yet.')}</tbody>
+      <thead><tr><th>Class</th><th>Order</th><th>Rename</th><th>Up</th><th>Down</th><th>Homepage</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 9, 'No classes yet.')}</tbody>
     </table></div>
   </section>`;
 
