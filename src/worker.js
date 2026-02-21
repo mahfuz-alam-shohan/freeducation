@@ -14,25 +14,30 @@ import {
 } from './db/adminRepo.js';
 import {
   createChapter,
+  createClass,
   createContentEntry,
   createMcq,
   createNote,
   createSubject,
   createTopic,
   deleteChapter,
+  deleteClass,
   deleteContentEntry,
   deleteMcq,
   deleteNote,
   deleteSubject,
   deleteTopic,
+  ensureDefaultClasses,
   ensureDefaultTemplate,
   ensurePhyChemBioTemplate,
   getChapter,
+  getClassById,
   getSubject,
   getSubjectNode,
   getTemplate,
   getTopic,
   listChapters,
+  listClasses,
   listContentEntries,
   listMcqs,
   listNotes,
@@ -42,6 +47,7 @@ import {
   listTemplates,
   listTopics,
   updateChapter,
+  updateClass,
   updateContentEntry,
   updateMcq,
   updateNote,
@@ -66,9 +72,11 @@ import {
   notesPage,
   profilePage,
   publicHomePage,
+  publicClassesPage,
   setupPage,
   subjectNodeListPage,
   subjectsPage,
+  classesPage,
   templateDetailsPage,
   templatesPage,
   topicsPage,
@@ -163,6 +171,7 @@ async function ensureAppReady(env) {
       await ensureSchema(env.DB, { cleanUnknownTables: env.CLEAN_UNKNOWN_TABLES === 'true' });
       await ensureDefaultTemplate(env.DB);
       await ensurePhyChemBioTemplate(env.DB);
+      await ensureDefaultClasses(env.DB);
     })();
   }
 
@@ -225,7 +234,16 @@ function routeRequiresRole(route, user) {
 }
 
 const pageRoutes = [
-  { path: '/', access: ACCESS.PUBLIC, handle: ({ user }) => html(publicHomePage(user)) },
+  {
+    path: '/',
+    access: ACCESS.PUBLIC,
+    handle: async ({ env, user }) => html(publicHomePage(user, await listClasses(env.DB))),
+  },
+  {
+    path: '/classes',
+    access: ACCESS.PUBLIC,
+    handle: async ({ env, user }) => html(publicClassesPage(user, await listClasses(env.DB))),
+  },
   { path: '/login', access: ACCESS.PUBLIC, handle: () => html(loginPage()) },
   {
     path: '/dashboard',
@@ -247,12 +265,18 @@ const pageRoutes = [
     handle: async ({ env, user }) => html(templatesPage(user, await listTemplates(env.DB))),
   },
   {
+    path: '/classes/manage',
+    access: ACCESS.AUTHENTICATED,
+    roles: ['admin'],
+    handle: async ({ env, user }) => html(classesPage(user, await listClasses(env.DB))),
+  },
+  {
     path: '/subjects',
     access: ACCESS.AUTHENTICATED,
     roles: ['admin'],
     handle: async ({ env, user }) => {
-      const [subjects, templates] = await Promise.all([listSubjects(env.DB), listTemplates(env.DB)]);
-      return html(subjectsPage(user, subjects, templates));
+      const [subjects, templates, classes] = await Promise.all([listSubjects(env.DB), listTemplates(env.DB), listClasses(env.DB)]);
+      return html(subjectsPage(user, subjects, templates, classes));
     },
   },
 ];
@@ -321,14 +345,52 @@ async function handleProfilePost(request, env, url, user) {
 }
 
 async function handleAdminPost(request, env, url) {
+  if (url.pathname === '/api/classes' && request.method === 'POST') {
+    const form = await request.formData();
+    const name = String(form.get('name') || '').trim();
+    const sortOrder = Number.parseInt(String(form.get('sortOrder') || '0'), 10);
+    if (!name) return redirect('/classes/manage');
+    const imageKey = await uploadImage(env, 'classes', form.get('image'));
+    await createClass(env.DB, { name, sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0, imageKey });
+    return redirect('/classes/manage');
+  }
+
+  if (url.pathname.startsWith('/api/classes/') && request.method === 'POST') {
+    const classId = url.pathname.split('/').pop();
+    const current = await getClassById(env.DB, classId);
+    if (!current) return new Response('Not found', { status: 404 });
+    const form = await request.formData();
+    const intent = String(form.get('intent') || 'update');
+    if (intent === 'delete') {
+      await deleteClass(env.DB, classId);
+      return redirect('/classes/manage');
+    }
+    const name = String(form.get('name') || '').trim();
+    if (!name) return redirect('/classes/manage');
+    const sortOrder = Number.parseInt(String(form.get('sortOrder') || current.sort_order || 0), 10);
+    const removeImage = form.get('removeImage') === '1';
+    const uploaded = await uploadImage(env, 'classes', form.get('image'));
+    const imageKey = removeImage ? null : uploaded || current.image_key;
+    await updateClass(env.DB, classId, {
+      name,
+      sortOrder: Number.isFinite(sortOrder) ? sortOrder : Number(current.sort_order || 0),
+      imageKey,
+    });
+    return redirect('/classes/manage');
+  }
+
   if (url.pathname === '/api/subjects' && request.method === 'POST') {
     const form = await request.formData();
     const name = String(form.get('name') || '').trim();
-    const classLevel = Number(form.get('classLevel'));
+    const classId = String(form.get('classId') || '');
     const templateId = String(form.get('templateId') || '');
-    if (!name || !templateId || classLevel < 1 || classLevel > 12) return redirect('/subjects');
+    if (!name || !templateId || !classId) return redirect('/subjects');
+    const selectedClass = await getClassById(env.DB, classId);
+    if (!selectedClass) return redirect('/subjects');
+    const classLevelMatch = String(selectedClass.name).match(/(\d+)/);
+    const classLevel = classLevelMatch ? Number(classLevelMatch[1]) : 0;
     const imageKey = await uploadImage(env, 'subjects', form.get('image'));
-    await createSubject(env.DB, { name, classLevel, templateId, imageKey });
+    await createSubject(env.DB, { name, classId, classLevel, templateId, imageKey });
     return redirect('/subjects');
   }
 

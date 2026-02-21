@@ -30,11 +30,12 @@ export function getNavigation(role) {
     nav.push({
       title: 'Modules',
       collapsible: true,
-      expandedKeys: ['templates', 'subjects'],
+      expandedKeys: ['templates', 'classes', 'subjects'],
       key: 'modules',
       icon: iconManagement,
       items: [
         { key: 'templates', href: '/templates', label: 'Templates', icon: iconTemplates },
+        { key: 'classes', href: '/classes/manage', label: 'Classes', icon: iconSubjects },
         { key: 'subjects', href: '/subjects', label: 'Subjects', icon: iconSubjects },
       ],
     });

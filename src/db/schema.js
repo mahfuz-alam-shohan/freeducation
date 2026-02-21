@@ -88,21 +88,42 @@ const TABLES = {
       sort_order: 'INTEGER',
     },
   },
+  classes: {
+    create: `CREATE TABLE IF NOT EXISTS classes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      image_key TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    columns: {
+      id: 'TEXT',
+      name: 'TEXT',
+      image_key: 'TEXT',
+      sort_order: 'INTEGER',
+      created_at: 'TEXT',
+      updated_at: 'TEXT',
+    },
+  },
   subjects: {
     create: `CREATE TABLE IF NOT EXISTS subjects (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       class_level INTEGER NOT NULL,
+      class_id TEXT,
       template_id TEXT NOT NULL,
       image_key TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
+      FOREIGN KEY (class_id) REFERENCES classes(id),
       FOREIGN KEY (template_id) REFERENCES subject_templates(id)
     )`,
     columns: {
       id: 'TEXT',
       name: 'TEXT',
       class_level: 'INTEGER',
+      class_id: 'TEXT',
       template_id: 'TEXT',
       image_key: 'TEXT',
       created_at: 'TEXT',
@@ -331,6 +352,7 @@ export async function ensureSchema(db, options = {}) {
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_template ON template_nodes(template_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_classes_sort ON classes(sort_order, created_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_parent ON subject_nodes(parent_subject_node_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
