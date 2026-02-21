@@ -170,23 +170,47 @@ export async function getClassById(db, classId) {
 export async function createClass(db, input) {
   const id = crypto.randomUUID();
   const createdAt = nowIso();
+  const maxRow = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) maxOrder FROM classes').first();
+  const nextOrder = Number(maxRow?.maxOrder || 0) + 1;
   await db
     .prepare('INSERT INTO classes (id, name, image_key, show_on_home, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)')
-    .bind(id, input.name, input.imageKey || null, input.showOnHome ? 1 : 0, input.sortOrder, createdAt)
+    .bind(id, input.name, input.imageKey || null, input.showOnHome ? 1 : 0, nextOrder, createdAt)
     .run();
   return id;
 }
 
 export async function updateClass(db, classId, input) {
   await db
-    .prepare('UPDATE classes SET name = ?2, image_key = ?3, show_on_home = ?4, sort_order = ?5, updated_at = ?6 WHERE id = ?1')
-    .bind(classId, input.name, input.imageKey || null, input.showOnHome ? 1 : 0, input.sortOrder, nowIso())
+    .prepare('UPDATE classes SET name = ?2, image_key = ?3, show_on_home = ?4, updated_at = ?5 WHERE id = ?1')
+    .bind(classId, input.name, input.imageKey || null, input.showOnHome ? 1 : 0, nowIso())
     .run();
+}
+
+export async function moveClass(db, classId, direction) {
+  const classes = await listClasses(db);
+  const index = classes.findIndex((item) => item.id === classId);
+  if (index === -1) return;
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  if (targetIndex < 0 || targetIndex >= classes.length) return;
+
+  const current = classes[index];
+  const target = classes[targetIndex];
+
+  await db.prepare('UPDATE classes SET sort_order = ?2, updated_at = ?3 WHERE id = ?1').bind(current.id, target.sort_order, nowIso()).run();
+  await db.prepare('UPDATE classes SET sort_order = ?2, updated_at = ?3 WHERE id = ?1').bind(target.id, current.sort_order, nowIso()).run();
 }
 
 export async function deleteClass(db, classId) {
   await db.prepare('UPDATE subjects SET class_id = NULL WHERE class_id = ?1').bind(classId).run();
   await db.prepare('DELETE FROM classes WHERE id = ?1').bind(classId).run();
+
+  const classes = await listClasses(db);
+  for (let index = 0; index < classes.length; index += 1) {
+    const item = classes[index];
+    const nextOrder = index + 1;
+    if (Number(item.sort_order) === nextOrder) continue;
+    await db.prepare('UPDATE classes SET sort_order = ?2, updated_at = ?3 WHERE id = ?1').bind(item.id, nextOrder, nowIso()).run();
+  }
 }
 
 export async function listTemplates(db) {

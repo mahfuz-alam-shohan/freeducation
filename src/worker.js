@@ -46,6 +46,7 @@ import {
   listTemplateNodes,
   listTemplates,
   listTopics,
+  moveClass,
   updateChapter,
   updateClass,
   updateContentEntry,
@@ -348,11 +349,10 @@ async function handleAdminPost(request, env, url) {
   if (url.pathname === '/api/classes' && request.method === 'POST') {
     const form = await request.formData();
     const name = String(form.get('name') || '').trim();
-    const sortOrder = Number.parseInt(String(form.get('sortOrder') || '0'), 10);
     const showOnHome = form.get('showOnHome') === '1';
     if (!name) return redirect('/classes/manage');
     const imageKey = await uploadImage(env, 'classes', form.get('image'));
-    await createClass(env.DB, { name, sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0, imageKey, showOnHome });
+    await createClass(env.DB, { name, imageKey, showOnHome });
     return redirect('/classes/manage');
   }
 
@@ -366,16 +366,19 @@ async function handleAdminPost(request, env, url) {
       await deleteClass(env.DB, classId);
       return redirect('/classes/manage');
     }
+    if (intent === 'move-up' || intent === 'move-down') {
+      await moveClass(env.DB, classId, intent === 'move-up' ? 'up' : 'down');
+      return redirect('/classes/manage');
+    }
+
     const name = String(form.get('name') || '').trim();
     if (!name) return redirect('/classes/manage');
-    const sortOrder = Number.parseInt(String(form.get('sortOrder') || current.sort_order || 0), 10);
     const showOnHome = form.get('showOnHome') === '1';
     const removeImage = form.get('removeImage') === '1';
     const uploaded = await uploadImage(env, 'classes', form.get('image'));
     const imageKey = removeImage ? null : uploaded || current.image_key;
     await updateClass(env.DB, classId, {
       name,
-      sortOrder: Number.isFinite(sortOrder) ? sortOrder : Number(current.sort_order || 0),
       imageKey,
       showOnHome,
     });
