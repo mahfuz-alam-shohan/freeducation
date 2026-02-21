@@ -639,7 +639,7 @@ async function handleAdminPost(request, env, url) {
 }
 
 
-async function serveMedia(url, env, user) {
+async function serveMedia(request, url, env, user) {
   if (!user) return redirect('/login');
   const encodedKey = url.pathname.slice('/media/'.length);
   if (!encodedKey) return new Response('Not Found', { status: 404 });
@@ -656,9 +656,18 @@ async function serveMedia(url, env, user) {
   const object = await env.BUCKET.get(key);
   if (!object) return new Response('Not Found', { status: 404 });
 
+  const etag = object.httpEtag;
+  const ifNoneMatch = request.headers.get('if-none-match');
+  if (etag && ifNoneMatch && ifNoneMatch === etag) {
+    return new Response(null, {
+      status: 304,
+      headers: { etag, 'cache-control': 'private, max-age=31536000, immutable' },
+    });
+  }
+
   const headers = new Headers();
   object.writeHttpMetadata(headers);
-  headers.set('etag', object.httpEtag);
+  if (etag) headers.set('etag', etag);
   headers.set('cache-control', 'private, max-age=31536000, immutable');
   return new Response(object.body, { headers });
 }
@@ -817,7 +826,7 @@ export default {
 
     const user = await requireAuth(request, env);
 
-    if (url.pathname.startsWith('/media/')) return serveMedia(url, env, user);
+    if (url.pathname.startsWith('/media/')) return serveMedia(request, url, env, user);
 
     if (url.pathname === '/api/logout') {
       if (!user) return redirect('/login');
