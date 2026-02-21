@@ -142,6 +142,50 @@ export async function ensurePhyChemBioTemplate(db) {
   return templateId;
 }
 
+export async function ensureDefaultClasses(db) {
+  const count = await db.prepare('SELECT COUNT(*) count FROM classes').first();
+  if (Number(count?.count ?? 0) > 0) return;
+
+  const createdAt = nowIso();
+  for (let i = 1; i <= 12; i += 1) {
+    await db
+      .prepare('INSERT INTO classes (id, name, image_key, sort_order, created_at, updated_at) VALUES (?1, ?2, NULL, ?3, ?4, ?4)')
+      .bind(crypto.randomUUID(), `Class ${i}`, i, createdAt)
+      .run();
+  }
+}
+
+export async function listClasses(db) {
+  const rows = await db.prepare('SELECT id, name, image_key, sort_order, created_at, updated_at FROM classes ORDER BY sort_order ASC, created_at ASC').all();
+  return rows.results ?? [];
+}
+
+export async function getClassById(db, classId) {
+  return db.prepare('SELECT id, name, image_key, sort_order, created_at, updated_at FROM classes WHERE id = ?1').bind(classId).first();
+}
+
+export async function createClass(db, input) {
+  const id = crypto.randomUUID();
+  const createdAt = nowIso();
+  await db
+    .prepare('INSERT INTO classes (id, name, image_key, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?5)')
+    .bind(id, input.name, input.imageKey || null, input.sortOrder, createdAt)
+    .run();
+  return id;
+}
+
+export async function updateClass(db, classId, input) {
+  await db
+    .prepare('UPDATE classes SET name = ?2, image_key = ?3, sort_order = ?4, updated_at = ?5 WHERE id = ?1')
+    .bind(classId, input.name, input.imageKey || null, input.sortOrder, nowIso())
+    .run();
+}
+
+export async function deleteClass(db, classId) {
+  await db.prepare('UPDATE subjects SET class_id = NULL WHERE class_id = ?1').bind(classId).run();
+  await db.prepare('DELETE FROM classes WHERE id = ?1').bind(classId).run();
+}
+
 export async function listTemplates(db) {
   const rows = await db.prepare('SELECT id, code, name, description, created_at FROM subject_templates ORDER BY created_at ASC').all();
   return rows.results ?? [];
@@ -168,8 +212,9 @@ export async function listTemplateNodes(db, templateId) {
 export async function listSubjects(db) {
   const rows = await db
     .prepare(
-      `SELECT s.id, s.name, s.class_level, s.image_key, s.created_at, t.name template_name
+      `SELECT s.id, s.name, s.class_level, s.class_id, c.name class_name, s.image_key, s.created_at, t.name template_name
        FROM subjects s
+       LEFT JOIN classes c ON c.id = s.class_id
        JOIN subject_templates t ON t.id = s.template_id
        ORDER BY s.created_at DESC`
     )
@@ -181,8 +226,8 @@ export async function createSubject(db, input) {
   const id = crypto.randomUUID();
   const createdAt = nowIso();
   await db
-    .prepare('INSERT INTO subjects (id, name, class_level, template_id, image_key, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)')
-    .bind(id, input.name, input.classLevel, input.templateId, input.imageKey || null, createdAt)
+    .prepare('INSERT INTO subjects (id, name, class_level, class_id, template_id, image_key, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)')
+    .bind(id, input.name, input.classLevel, input.classId || null, input.templateId, input.imageKey || null, createdAt)
     .run();
 
   const templateNodes = await listTemplateNodes(db, input.templateId);
@@ -230,8 +275,9 @@ export async function deleteSubject(db, subjectId) {
 export async function getSubject(db, subjectId) {
   return db
     .prepare(
-      `SELECT s.id, s.name, s.class_level, s.template_id, s.image_key, s.created_at, t.name template_name
+      `SELECT s.id, s.name, s.class_level, s.class_id, c.name class_name, s.template_id, s.image_key, s.created_at, t.name template_name
        FROM subjects s
+       LEFT JOIN classes c ON c.id = s.class_id
        JOIN subject_templates t ON t.id = s.template_id
        WHERE s.id = ?1`
     )
