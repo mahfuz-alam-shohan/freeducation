@@ -254,13 +254,20 @@ function setAutoSaveStatus(form, message, tone) {
 
 async function submitLiveForm(form) {
   await prepareImageInputs(form).catch(() => null);
+  syncRichEditorStorage(form);
+  const body = new FormData(form);
+  return submitLiveBody(form, body);
+}
+
+function syncRichEditorStorage(form) {
   form.querySelectorAll('[data-rich-editor]').forEach((editor) => {
     const input = editor.querySelector('[data-editor-input]');
     const storage = editor.querySelector('[data-editor-storage]');
     if (input && storage) storage.value = input.innerHTML.trim();
   });
+}
 
-  const body = new FormData(form);
+async function submitLiveBody(form, body) {
   const response = await fetch(form.action, {
     method: (form.method || 'POST').toUpperCase(),
     body,
@@ -276,8 +283,39 @@ async function submitLiveForm(form) {
   return true;
 }
 
+function getFormFields(form) {
+  const fields = new Set(form.querySelectorAll('input, textarea, select'));
+  const formId = form.getAttribute('id');
+  if (!formId) return Array.from(fields);
+  document.querySelectorAll('input[form], textarea[form], select[form]').forEach((field) => {
+    if (field.getAttribute('form') === formId) fields.add(field);
+  });
+  return Array.from(fields);
+}
+
+function captureFormState(form) {
+  syncRichEditorStorage(form);
+  const body = new FormData(form);
+  const pairs = [];
+  for (const [name, value] of body.entries()) {
+    if (value instanceof File) {
+      pairs.push(`${name}=[file:${value.name}:${value.size}:${value.type}:${value.lastModified}]`);
+      continue;
+    }
+    pairs.push(`${name}=${String(value)}`);
+  }
+  pairs.sort();
+  return pairs.join('&');
+}
+
 function initializeFormHandlers() {
   const scheduleAutoSave = (form, delayMs = 700) => {
+    const nextState = captureFormState(form);
+    if (nextState === (form.dataset.autoSaveSyncedState || '')) {
+      setAutoSaveStatus(form, 'Synced', 'success');
+      return;
+    }
+
     const timerKey = Number(form.dataset.autoSaveTimer || '0');
     if (timerKey) {
       window.clearTimeout(timerKey);
@@ -285,10 +323,36 @@ function initializeFormHandlers() {
     setAutoSaveStatus(form, 'Saving…', 'working');
     const nextTimer = window.setTimeout(async () => {
       form.dataset.autoSaveTimer = '0';
-      if (form.dataset.submitting === '1') return;
+      const stateBeforeSave = captureFormState(form);
+      if (stateBeforeSave === (form.dataset.autoSaveSyncedState || '')) {
+        setAutoSaveStatus(form, 'Synced', 'success');
+        return;
+      }
+      if (form.dataset.submitting === '1') {
+        form.dataset.autoSaveQueued = '1';
+        return;
+      }
       form.dataset.submitting = '1';
-      const ok = await submitLiveForm(form);
+      await prepareImageInputs(form).catch(() => null);
+      syncRichEditorStorage(form);
+      const body = new FormData(form);
+      const submittedState = captureFormState(form);
+      const ok = await submitLiveBody(form, body);
       form.dataset.submitting = '0';
+      if (ok) {
+        form.dataset.autoSaveSyncedState = submittedState;
+      }
+
+      const latestState = captureFormState(form);
+      if (latestState !== (form.dataset.autoSaveSyncedState || '')) {
+        setAutoSaveStatus(form, ok ? 'Unsynced changes' : 'Retry needed', 'error');
+        if (ok || form.dataset.autoSaveQueued === '1') {
+          form.dataset.autoSaveQueued = '0';
+          scheduleAutoSave(form, 0);
+          return;
+        }
+      }
+
       setAutoSaveStatus(form, ok ? 'Synced' : 'Retry needed', ok ? 'success' : 'error');
     }, delayMs);
     form.dataset.autoSaveTimer = String(nextTimer);
@@ -299,7 +363,7 @@ function initializeFormHandlers() {
     const isAutoSaveForm = form.dataset.autoSave === 'true';
 
     if (isAutoSaveForm) {
-      form.querySelectorAll('input, textarea, select').forEach((field) => {
+      getFormFields(form).forEach((field) => {
         if (field.matches('input[type="file"], input[type="checkbox"], select')) {
           field.addEventListener('change', () => scheduleAutoSave(form, 0));
           return;
@@ -307,7 +371,9 @@ function initializeFormHandlers() {
         field.addEventListener('input', () => scheduleAutoSave(form));
         field.addEventListener('blur', () => scheduleAutoSave(form, 0));
       });
-      setAutoSaveStatus(form, 'Synced', 'idle');
+      form.dataset.autoSaveSyncedState = captureFormState(form);
+      form.dataset.autoSaveQueued = '0';
+      setAutoSaveStatus(form, 'Synced', 'success');
     }
 
     form.addEventListener('submit', async (event) => {
