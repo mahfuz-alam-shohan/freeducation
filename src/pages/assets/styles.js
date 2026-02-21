@@ -748,24 +748,6 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 
 
 
-.template-builder { display: grid; gap: 8px; }
-.template-builder td { vertical-align: top; }
-.template-builder .input,
-.template-builder .select { min-width: 120px; }
-.template-builder .template-options { display: grid; gap: 4px; min-width: 180px; }
-.template-builder .template-row-actions { white-space: nowrap; width: 1%; }
-.template-builder .template-row-actions .btn { min-width: 44px; padding-inline: 8px; }
-
-.template-live-hierarchy { border: 1px solid var(--line); padding: 8px; border-radius: 8px; background: #fff; }
-.template-live-tree,
-.template-live-tree ol { margin: 6px 0 0 16px; padding: 0; }
-.template-live-tree li { margin: 2px 0; }
-.template-dropzone { border: 1px dashed transparent; border-radius: 6px; }
-.template-builder tr.dragging { opacity: 0.55; }
-.template-content-studio { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: #fff; }
-.template-content-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.template-content-item { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; background: #fff; cursor: grab; }
-.template-content-item .btn { min-width: 28px; padding-inline: 6px; }
 .toolbar-group form { margin: 0; }
 
 .template-tree-row {

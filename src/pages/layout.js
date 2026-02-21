@@ -8,7 +8,6 @@ export { usersPage } from './admin/usersPage.js';
 export {
   templatesPage,
   templateDetailsPage,
-  templateDesignerPage,
   subjectsPage,
   subjectNodeListPage,
   chaptersPage,
