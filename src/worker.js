@@ -299,9 +299,10 @@ async function handleProfilePost(request, env, url, user) {
     const dobMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirthRaw);
     const dobDate = new Date(`${dateOfBirthRaw}T00:00:00.000Z`);
     const isValidDate = Number.isFinite(dobDate.getTime()) && dobDate.toISOString().slice(0, 10) === dateOfBirthRaw;
+    const earliest = new Date(Date.UTC(1900, 0, 1));
     const today = new Date();
     const latest = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-    if (!dobMatch || !isValidDate || dobDate > latest) return redirect('/profile');
+    if (!dobMatch || !isValidDate || dobDate < earliest || dobDate > latest) return redirect('/profile');
 
     await updateUserDateOfBirth(env.DB, user.id, dateOfBirthRaw);
     return redirect('/profile');
