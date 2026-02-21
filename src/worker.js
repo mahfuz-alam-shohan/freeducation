@@ -639,16 +639,13 @@ async function handleAdminPost(request, env, url) {
 }
 
 
-  const method = request.method.toUpperCase();
-  const canUseCache = method === 'GET';
-  const cacheKey = new Request(`https://media-cache.local/${encodeURIComponent(user.id)}/${encodeURIComponent(key)}`, { method: 'GET' });
+async function serveMedia(request, url, env, user) {
+  if (!user) return redirect('/login');
+  const encodedKey = url.pathname.slice('/media/'.length);
+  if (!encodedKey) return new Response('Not Found', { status: 404 });
 
-      headers: { etag, 'cache-control': 'private, max-age=2592000, stale-while-revalidate=86400' },
-  headers.set('cache-control', 'private, max-age=2592000, stale-while-revalidate=86400');
-  headers.set('accept-ranges', 'bytes');
-
-  if (method === 'HEAD') return new Response(null, { headers });
-
+  let key;
+  try {
     key = decodeURIComponent(encodedKey);
   } catch {
     return new Response('Not Found', { status: 404 });
