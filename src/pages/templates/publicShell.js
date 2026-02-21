@@ -4,6 +4,7 @@ import { imageUrlFromKey } from '../imageUrl.js';
 import { basePage } from './base.js';
 import { renderNavigationGroup } from './navigationMarkup.js';
 import { iconClose, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
+import { sidebarIdentityMarkup } from './sidebarIdentity.js';
 
 function initials(name) {
   return String(name || 'A')
@@ -25,6 +26,7 @@ function publicSidebar(active, user) {
       </span>
     </header>
     <div class="sidebar-scroll">
+      ${sidebarIdentityMarkup(user)}
       ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
     </div>
     <div class="sidebar-foot">
