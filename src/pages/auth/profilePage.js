@@ -42,6 +42,8 @@ function profileHeader(user) {
 }
 
 function profileDetails(user) {
+  const dobMin = '1900-01-01';
+  const dobMax = new Date().toISOString().slice(0, 10);
   const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || '')) ? String(user.dateOfBirth) : '';
   return `<section class="card profile-tabs-card">
     <div class="profile-readonly-row"><p class="muted">Email (read-only)</p><p class="profile-fixed-value">${h(user.email)}</p></div>
@@ -59,7 +61,7 @@ function profileDetails(user) {
 
     <form method="post" action="/api/profile/dob" class="profile-form-grid">
       <label for="profile-dob"><span class="icon">${iconCalendar}</span>Date of birth</label>
-      <input id="profile-dob" class="input" name="dateOfBirth" type="date" max="${new Date().toISOString().slice(0, 10)}" value="${h(dobValue)}" />
+      <input id="profile-dob" class="input" name="dateOfBirth" type="date" min="${dobMin}" max="${dobMax}" pattern="\\d{4}-\\d{2}-\\d{2}" maxlength="10" value="${h(dobValue)}" />
       <div class="profile-form-actions"><button class="btn btn-primary" type="submit">Save date of birth</button></div>
     </form>
 
@@ -112,6 +114,25 @@ function profilePageScript() {
       saveNameButton.hidden = false;
       editNameButton.hidden = true;
     });
+  }
+
+  const dobInput = document.getElementById('profile-dob');
+  if (dobInput) {
+    const minDate = dobInput.min;
+    const maxDate = dobInput.max;
+    const clampDobValue = () => {
+      const rawValue = String(dobInput.value || '').trim();
+      if (!rawValue) return;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
+        dobInput.value = '';
+        return;
+      }
+      if (minDate && rawValue < minDate) dobInput.value = minDate;
+      if (maxDate && rawValue > maxDate) dobInput.value = maxDate;
+    };
+
+    dobInput.addEventListener('input', clampDobValue);
+    dobInput.addEventListener('change', clampDobValue);
   }
 })();
 </script>`;
