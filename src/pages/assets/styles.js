@@ -892,7 +892,12 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .profile-readonly-row { display: grid; gap: 2px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #f8fafc; }
 .profile-fixed-value { margin: 0; font-weight: 600; color: #0f172a; }
 .profile-form-grid { display: grid; gap: 7px; }
+.profile-form-grid > * { min-width: 0; }
 .profile-form-grid label { display: flex; align-items: center; gap: 6px; }
+.profile-form-grid input[type="date"] {
+  width: 100%;
+  max-width: 100%;
+}
 .profile-form-actions { display: flex; justify-content: flex-start; margin-top: 2px; }
 .profile-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .btn-icon-inline { min-width: auto; padding: 6px 9px; }
