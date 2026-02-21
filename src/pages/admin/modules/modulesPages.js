@@ -394,10 +394,13 @@ function richTextEditor(fieldName, value, placeholder, required = false) {
         <button type="button" class="btn btn-secondary" data-editor-command="bold" title="Bold"><strong>B</strong></button>
         <button type="button" class="btn btn-secondary" data-editor-command="italic" title="Italic"><em>I</em></button>
         <button type="button" class="btn btn-secondary" data-editor-command="underline" title="Underline"><u>U</u></button>
+        <button type="button" class="btn btn-secondary" data-editor-command="strikeThrough" title="Strike"><s>S</s></button>
         <button type="button" class="btn btn-secondary" data-editor-command="formatBlock" data-editor-value="h2">H2</button>
         <button type="button" class="btn btn-secondary" data-editor-command="formatBlock" data-editor-value="blockquote">Quote</button>
         <button type="button" class="btn btn-secondary" data-editor-command="insertUnorderedList">• List</button>
         <button type="button" class="btn btn-secondary" data-editor-command="insertOrderedList">1. List</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="undo" title="Undo">↶</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="redo" title="Redo">↷</button>
         <button type="button" class="btn btn-secondary" data-editor-command="createLink" data-editor-prompt="Enter URL">Link</button>
         <button type="button" class="btn btn-secondary" data-editor-command="insertImage" data-editor-prompt="Enter image URL">Image</button>
         <button type="button" class="btn btn-secondary" data-editor-image-float="left">Img Left</button>
@@ -412,7 +415,7 @@ function richTextEditor(fieldName, value, placeholder, required = false) {
 }
 
 function noteForm(subjectId, subjectNodeId, chapterId, topicId, note) {
-  return `<form method="post" action="/api/notes" enctype="multipart/form-data" class="grid grid-2">
+  return `<form method="post" action="/api/notes" enctype="multipart/form-data" class="notes-form" data-note-form>
     <input type="hidden" name="liveRegion" value="notes-page" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
@@ -420,11 +423,9 @@ function noteForm(subjectId, subjectNodeId, chapterId, topicId, note) {
     <input type="hidden" name="topicId" value="${topicId || ''}" />
     <input type="hidden" name="page" value="${note?.page || 1}" />
     <input type="hidden" name="id" value="${note?.id || ''}" />
-    <input class="input" type="file" name="image" accept="image/*" />
-    ${richTextEditor('contentHtml', note?.content_html || '', 'Write your short note here…', true)}
+    <div class="note-form-editor">${richTextEditor('contentHtml', note?.content_html || '', 'Write one short line note…', true)}</div>
     <div class="toolbar-group">
-      ${note ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}
-      <button class="btn btn-primary" type="submit" data-live-form="true">${note ? 'Update Note' : 'Add Note'}</button>
+      <button class="btn btn-primary" type="submit" data-live-form="true">${note ? 'Update note' : 'Add note'}</button>
     </div>
   </form>`;
 }
@@ -482,13 +483,12 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
       const itemIndex = (safePage - 1) * 40 + startIndex + index + 1;
       return `<article class="plain-entry" id="note-${n.id}">
       <div class="plain-line-wrap">
-        <div class="note-content">${itemIndex}. ${n.content_html}</div>
+        <div class="note-content"><span class="note-index">${itemIndex}.</span> <span>${n.content_html}</span></div>
         <div class="note-actions-inline">
           <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit note" title="Edit note">✎</button>
           ${noteDeleteForm(subject.id, node.id, chapter?.id, topic?.id, n.id, safePage)}
         </div>
       </div>
-      ${n.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ''}
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
           <div class="content-modal-head">
@@ -511,8 +511,8 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
-      <h3 class="card-title">Add notes</h3>
-      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="notes" aria-expanded="false">Add Notes</button>
+      <h3 class="card-title">Short notes</h3>
+      <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="note" aria-expanded="false">Add note</button>
     </div>
     <div data-add-form-panel>
       ${noteForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}
@@ -525,7 +525,7 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
   ${!pageItems.length ? '<p class="muted">No notes yet.</p>' : ''}
   ${renderPagination(baseHref, safePage, totalPages)}`;
 
-  return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content, { pageStyles: modulesStyles });
+  return appShell('subjects', user, `${subject.name} · Short Notes`, 'Single-line short notes with clean formatting tools.', content, { pageStyles: modulesStyles });
 }
 
 function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {

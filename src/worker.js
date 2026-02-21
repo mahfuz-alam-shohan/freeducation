@@ -549,18 +549,13 @@ async function handleAdminPost(request, env, url) {
     const topicId = String(form.get('topicId') || '');
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const title = String(form.get('title') || '').trim();
     const contentHtml = String(form.get('contentHtml') || '').trim();
     const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
     if (!contentHtml) return redirect(redirectUrl);
     if (!idVal) {
-      const imageKey = await uploadImage(env, 'notes', form.get('image'));
-      await createNote(env.DB, { subjectId, subjectNodeId, chapterId, topicId, title, contentHtml, imageKey });
+      await createNote(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentHtml, imageKey: null });
     } else {
-      const existing = (await listNotes(env.DB, subjectNodeId, chapterId, topicId)).find((n) => n.id === idVal);
-      const uploaded = await uploadImage(env, 'notes', form.get('image'));
-      const imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
-      await updateNote(env.DB, { id: idVal, title, contentHtml, imageKey });
+      await updateNote(env.DB, { id: idVal, contentHtml, imageKey: null });
     }
     return redirect(redirectUrl);
   }

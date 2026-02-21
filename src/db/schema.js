@@ -220,7 +220,6 @@ const TABLES = {
       subject_node_id TEXT NOT NULL,
       chapter_id TEXT,
       topic_id TEXT,
-      title TEXT NOT NULL,
       content_html TEXT NOT NULL,
       image_key TEXT,
       created_at TEXT NOT NULL,
@@ -236,7 +235,6 @@ const TABLES = {
       subject_node_id: 'TEXT',
       chapter_id: 'TEXT',
       topic_id: 'TEXT',
-      title: 'TEXT',
       content_html: 'TEXT',
       image_key: 'TEXT',
       created_at: 'TEXT',
@@ -321,6 +319,32 @@ async function runSql(db, sql) {
   await db.prepare(sql).run();
 }
 
+async function migrateShortNotesDropTitle(db) {
+  const info = await db.prepare('PRAGMA table_info(short_notes)').all();
+  const hasTitle = (info.results ?? []).some((row) => row.name === 'title');
+  if (!hasTitle) return;
+
+  await runSql(db, `CREATE TABLE short_notes__migrated (
+    id TEXT PRIMARY KEY,
+    subject_id TEXT NOT NULL,
+    subject_node_id TEXT NOT NULL,
+    chapter_id TEXT,
+    topic_id TEXT,
+    content_html TEXT NOT NULL,
+    image_key TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE,
+    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
+    FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
+  )`);
+  await runSql(db, `INSERT INTO short_notes__migrated (id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at)
+    SELECT id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at FROM short_notes`);
+  await runSql(db, 'DROP TABLE short_notes');
+  await runSql(db, 'ALTER TABLE short_notes__migrated RENAME TO short_notes');
+}
+
 export async function ensureSchema(db, options = {}) {
   if (schemaInitialized) return;
 
@@ -334,6 +358,8 @@ export async function ensureSchema(db, options = {}) {
   for (const tableName of Object.keys(TABLES)) {
     await runSql(db, TABLES[tableName].create);
   }
+
+  await migrateShortNotesDropTitle(db);
 
   for (const [tableName, table] of Object.entries(TABLES)) {
     const info = await db.prepare(`PRAGMA table_info(${tableName})`).all();
