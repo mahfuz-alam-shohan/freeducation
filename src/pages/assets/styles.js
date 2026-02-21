@@ -105,10 +105,15 @@ a { color: inherit; }
 .sidebar-scroll {
   overflow: auto;
   padding: 10px 8px;
-  min-height: calc(100vh - 64px);
-  display: flex;
-  flex-direction: column;
+  height: calc(100vh - 64px - 56px);
 }
+.sidebar-foot {
+  flex: 0 0 56px;
+  padding: 8px;
+  border-top: 1px solid var(--line);
+  background: #f8fafc;
+}
+.sidebar-foot .menu-item { margin: 0; }
 .sidebar-login-note {
   padding: 2px 10px 10px;
   border-bottom: 1px solid var(--line);
@@ -150,7 +155,6 @@ a { color: inherit; }
 .menu-item.active,
 .submenu-item.active { background: #e6eeff; color: #1e3a8a; font-weight: 600; }
 .logout-item {
-  margin-top: auto;
   border: 1px solid #fecaca;
   color: #991b1b;
   background: #fff5f5;
@@ -325,6 +329,12 @@ a { color: inherit; }
   width: min(1760px, 100%);
   margin: 0 auto;
   padding: 6px 8px;
+}
+.container-full-bleed {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 .page-head { margin-bottom: 8px; }
 .page-title { margin: 0; font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; }
@@ -812,22 +822,24 @@ textarea,
 
 .public-home-cover {
   width: 100%;
-  background: #ffffff;
-  border-bottom: 1px solid var(--line);
-  padding: 14px 12px 12px;
+  background: #1d4ed8;
+  color: #eff6ff;
+  min-height: calc(100vh - 64px);
+  padding: 16px 14px;
   display: grid;
-  gap: 8px;
+  align-content: center;
+  gap: 16px;
 }
 
 .public-cover-brand-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .public-cover-logo {
-  width: 42px;
-  height: 42px;
+  width: 64px;
+  height: 64px;
   display: inline-grid;
   place-items: center;
 }
@@ -839,7 +851,7 @@ textarea,
 
 .public-cover-name {
   margin: 0;
-  font-size: clamp(30px, 5vw, 46px);
+  font-size: clamp(46px, 9vw, 104px);
   line-height: 1;
   text-transform: lowercase;
   letter-spacing: -0.02em;
@@ -847,9 +859,10 @@ textarea,
 
 .public-cover-quote {
   margin: 0;
-  font-size: clamp(14px, 2vw, 19px);
-  color: #334155;
-  min-height: 28px;
+  font-size: clamp(18px, 2.4vw, 34px);
+  color: #dbeafe;
+  max-width: 980px;
+  min-height: 48px;
 }
 
 .public-login-shell {
@@ -1176,6 +1189,13 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .kpi { font-size: 36px; }
   .page-title { font-size: 24px; }
   .auth-card { padding: 16px; }
-  .public-home-cover { padding: 12px 10px; }
+  .public-home-cover {
+    min-height: calc(100vh - 64px);
+    padding: 14px 10px;
+  }
+  .public-cover-logo {
+    width: 52px;
+    height: 52px;
+  }
 }
 `;

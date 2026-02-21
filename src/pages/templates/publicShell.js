@@ -35,6 +35,8 @@ function publicSidebar(active, user) {
             .join('')}`
         )
         .join('')}
+    </div>
+    <div class="sidebar-foot">
       <a href="${user ? '/api/logout' : '/login'}" class="menu-item ${user ? 'logout-item' : 'sidebar-login-item'}"><span class="icon">${user ? iconLogout : iconProfile}</span><span class="label">${user ? 'Log out' : 'Login'}</span></a>
     </div>
   </aside>`;
@@ -72,7 +74,10 @@ function publicTopbar(user) {
 
 export function publicShell(active, user, title, content, script = '') {
   if (user) {
-    return appShell(active, user, title, 'Public page', content);
+    return appShell(active, user, title, 'Public page', content, {
+      hidePageHead: active === 'home',
+      fullBleed: active === 'home',
+    });
   }
 
   return basePage(
@@ -83,7 +88,7 @@ export function publicShell(active, user, title, content, script = '') {
       <main class="main-shell public-main-shell">
         ${publicTopbar(user)}
         <div class="public-content-shell">${content}</div>
-        <footer class="public-footer">Freeducation</footer>
+        ${active === 'home' ? '' : '<footer class="public-footer">Freeducation</footer>'}
       </main>
     </div>`,
     `${appScript}\n${script || ''}`
