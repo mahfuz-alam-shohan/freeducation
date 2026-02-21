@@ -759,6 +759,11 @@ async function handleDynamicPages(url, env, user) {
     const subject = await getSubject(env.DB, publicSubjectRootMatch[1]);
     if (!subject) return new Response('Not Found', { status: 404 });
     const nodes = await listSubjectNodesByParent(env.DB, subject.id, null);
+    if (nodes.length === 1 && nodes[0].supports_chapters) {
+      const rootNode = nodes[0];
+      const chapters = await listChapters(env.DB, rootNode.id);
+      return html(publicSubjectNodePage(user, subject, subject.name, 'Choose a chapter.', chapters, (chapter) => `/learn/subjects/${subject.id}/nodes/${rootNode.id}/chapters/${chapter.id}`));
+    }
     return html(publicSubjectNodePage(user, subject, subject.name, 'Select a book.', nodes, (node) => `/learn/subjects/${subject.id}/nodes/${node.id}`));
   }
 
@@ -844,6 +849,10 @@ async function handleDynamicPages(url, env, user) {
     const subject = await getSubject(env.DB, subjectRootMatch[1]);
     if (!subject) return new Response('Not Found', { status: 404 });
     const nodes = await listSubjectNodesByParent(env.DB, subject.id, null);
+    if (nodes.length === 1 && nodes[0].supports_chapters) {
+      const rootNode = nodes[0];
+      return html(chaptersPage(user, subject, rootNode, await listChapters(env.DB, rootNode.id)));
+    }
     return html(subjectNodeListPage(user, subject, `${subject.name} · Top Categories`, 'Manage Main Book and Assisting Book.', nodes, '/subjects'));
   }
 
