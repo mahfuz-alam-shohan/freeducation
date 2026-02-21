@@ -270,6 +270,21 @@ export async function listSubjects(db) {
   return rows.results ?? [];
 }
 
+export async function listSubjectsByClass(db, classId) {
+  const rows = await db
+    .prepare(
+      `SELECT s.id, s.name, s.class_level, s.class_id, c.name class_name, s.template_id, s.image_key, s.created_at, t.name template_name
+       FROM subjects s
+       LEFT JOIN classes c ON c.id = s.class_id
+       JOIN subject_templates t ON t.id = s.template_id
+       WHERE s.class_id = ?1
+       ORDER BY s.name ASC, s.created_at ASC`
+    )
+    .bind(classId)
+    .all();
+  return rows.results ?? [];
+}
+
 export async function createSubject(db, input) {
   const id = crypto.randomUUID();
   const createdAt = nowIso();

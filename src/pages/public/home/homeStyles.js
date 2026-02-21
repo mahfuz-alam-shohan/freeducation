@@ -17,6 +17,18 @@ export const publicHomeStyles = `
 .class-card-name { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-public-heading); }
 .class-card-meta { margin: 0; font-size: 12px; color: #475569; }
 .public-class-page { padding-top: 12px; }
+.public-stack { padding: 10px 8px 14px; }
+.public-stack-title { margin: 0 0 10px; font-size: 22px; font-family: var(--font-public-heading); }
+.public-stack-subtitle { margin: -4px 0 10px; color: #475569; font-size: 14px; }
+.public-flat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; }
+.public-card-link { color: inherit; text-decoration: none; display: grid; gap: 4px; }
+.public-wide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.public-cta-card { border: 1px solid #cbd5e1; background: #f8fafc; text-decoration: none; color: #0f172a; font-weight: 600; padding: 12px; display: block; }
+.public-note-list { margin: 0; padding-left: 20px; }
+.public-note-list li { margin-bottom: 8px; }
+.public-note-title { margin: 0 0 4px; font-size: 16px; }
+.public-note-body :first-child { margin-top: 0; }
+.public-note-body :last-child { margin-bottom: 0; }
 
 @media (max-width: 840px) {
   .public-home-cover { grid-template-columns: 1fr; gap: 8px; min-height: 148px; padding: 12px 10px; text-align: center; }

@@ -44,6 +44,7 @@ import {
   listNotes,
   listSubjectNodesByParent,
   listSubjects,
+  listSubjectsByClass,
   listTemplateNodes,
   listTemplates,
   listTopics,
@@ -75,10 +76,15 @@ import {
   profilePage,
   publicHomePage,
   publicClassesPage,
+  publicClassSubjectsPage,
+  publicSubjectNodePage,
+  publicChapterContentPage,
+  publicContentEntriesPage,
   setupPage,
   subjectNodeListPage,
   subjectsPage,
   classesPage,
+  classSubjectsPage,
   templateDetailsPage,
   templatesPage,
   topicsPage,
@@ -271,6 +277,11 @@ const pageRoutes = [
     access: ACCESS.AUTHENTICATED,
     roles: ['admin'],
     handle: async ({ env, user }) => html(classesPage(user, await listClasses(env.DB))),
+  },
+  {
+    path: '/learn',
+    access: ACCESS.PUBLIC,
+    handle: () => redirect('/'),
   },
   {
     path: '/subjects',
@@ -726,6 +737,100 @@ async function serveMedia(request, url, env, user, ctx) {
 
 
 async function handleDynamicPages(url, env, user) {
+  const adminClassMatch = url.pathname.match(/^\/classes\/manage\/([^/]+)$/);
+  if (adminClassMatch) {
+    const classItem = await getClassById(env.DB, adminClassMatch[1]);
+    if (!classItem) return new Response('Not Found', { status: 404 });
+    if (!user || user.role !== 'admin') return html(forbiddenPage(), 403);
+    const subjects = await listSubjectsByClass(env.DB, classItem.id);
+    return html(classSubjectsPage(user, classItem, subjects));
+  }
+
+  const publicClassMatch = url.pathname.match(/^\/classes\/([^/]+)$/);
+  if (publicClassMatch) {
+    const classItem = await getClassById(env.DB, publicClassMatch[1]);
+    if (!classItem) return new Response('Not Found', { status: 404 });
+    const subjects = await listSubjectsByClass(env.DB, classItem.id);
+    return html(publicClassSubjectsPage(user, classItem, subjects));
+  }
+
+  const publicSubjectRootMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)$/);
+  if (publicSubjectRootMatch) {
+    const subject = await getSubject(env.DB, publicSubjectRootMatch[1]);
+    if (!subject) return new Response('Not Found', { status: 404 });
+    const nodes = await listSubjectNodesByParent(env.DB, subject.id, null);
+    return html(publicSubjectNodePage(user, subject, subject.name, 'Select a book.', nodes, (node) => `/learn/subjects/${subject.id}/nodes/${node.id}`));
+  }
+
+  const publicSubjectNodeMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)$/);
+  if (publicSubjectNodeMatch) {
+    const [subject, node] = await Promise.all([getSubject(env.DB, publicSubjectNodeMatch[1]), getSubjectNode(env.DB, publicSubjectNodeMatch[2])]);
+    if (!subject || !node) return new Response('Not Found', { status: 404 });
+
+    if (node.supports_chapters) {
+      const chapters = await listChapters(env.DB, node.id);
+      return html(publicSubjectNodePage(user, subject, node.display_name, 'Choose a chapter.', chapters, (chapter) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`));
+    }
+
+    const children = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    const sectionChildren = children.filter((child) => child.node_type !== 'content');
+    if (sectionChildren.length > 0) {
+      return html(publicSubjectNodePage(user, subject, node.display_name, 'Choose a section.', sectionChildren, (child) => `/learn/subjects/${subject.id}/nodes/${child.id}`));
+    }
+
+    return new Response('Not Found', { status: 404 });
+  }
+
+  const publicChapterMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
+  if (publicChapterMatch) {
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, publicChapterMatch[1]),
+      getSubjectNode(env.DB, publicChapterMatch[2]),
+      getChapter(env.DB, publicChapterMatch[3]),
+    ]);
+    if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
+
+    if (chapter.has_topics) {
+      const topics = await listTopics(env.DB, chapter.id);
+      return html(publicSubjectNodePage(user, subject, chapter.name, 'Choose a topic.', topics, (topic) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`));
+    }
+
+    const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    const shortNotesNode = contentNodes.find((item) => item.content_kind === 'Short Notes');
+    const notes = shortNotesNode ? await listNotes(env.DB, shortNotesNode.id, chapter.id, null) : [];
+    return html(publicChapterContentPage(user, subject, node, chapter, notes, contentNodes));
+  }
+
+  const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
+  if (publicTopicMatch) {
+    const [subject, node, chapter, topic] = await Promise.all([
+      getSubject(env.DB, publicTopicMatch[1]),
+      getSubjectNode(env.DB, publicTopicMatch[2]),
+      getChapter(env.DB, publicTopicMatch[3]),
+      getTopic(env.DB, publicTopicMatch[4]),
+    ]);
+    if (!subject || !node || !chapter || !topic) return new Response('Not Found', { status: 404 });
+
+    const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    const shortNotesNode = contentNodes.find((item) => item.content_kind === 'Short Notes');
+    const notes = shortNotesNode ? await listNotes(env.DB, shortNotesNode.id, chapter.id, topic.id) : [];
+    return html(publicChapterContentPage(user, subject, node, topic, notes, contentNodes, topic.id));
+  }
+
+  const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/content\/([^/]+)$/);
+  if (publicContentMatch) {
+    const contentKind = decodeURIComponent(publicContentMatch[4]);
+    const topicId = url.searchParams.get('topic');
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, publicContentMatch[1]),
+      getSubjectNode(env.DB, publicContentMatch[2]),
+      getChapter(env.DB, publicContentMatch[3]),
+    ]);
+    if (!subject || !node || !chapter || !contentKind) return new Response('Not Found', { status: 404 });
+    const entries = await listContentEntries(env.DB, node.id, chapter.id, topicId || null, contentKind);
+    return html(publicContentEntriesPage(user, subject, chapter, contentKind, entries));
+  }
+
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
   if (templateMatch) {
     const template = await getTemplate(env.DB, templateMatch[1]);
@@ -898,7 +1003,7 @@ export default {
     const route = pageRoutes.find((item) => item.path === url.pathname);
     if (!route) {
       if (!user) return redirect('/login');
-      if ((url.pathname.startsWith('/subjects') || url.pathname.startsWith('/templates')) && user.role !== 'admin') {
+      if ((url.pathname.startsWith('/subjects') || url.pathname.startsWith('/templates') || url.pathname.startsWith('/classes/manage')) && user.role !== 'admin') {
         return html(forbiddenPage(), 403);
       }
       const dynamic = await handleDynamicPages(url, env, user);
