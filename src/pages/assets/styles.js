@@ -232,25 +232,31 @@ a { color: inherit; }
   place-items: center;
 }
 .mobile-menu-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border-color: #94a3b8;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mobile-menu-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 .mobile-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   color: #0f172a;
   display: inline-grid;
   place-items: center;
 }
 .mobile-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   stroke: currentColor;
   fill: none;
-  stroke-width: 2;
+  stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
