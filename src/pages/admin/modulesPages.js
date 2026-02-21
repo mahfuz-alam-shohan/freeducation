@@ -191,14 +191,16 @@ export function chaptersPage(user, subject, node, chapters) {
   const rows = chapters
     .map(
       (c) => `<tr>
-      <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${h(c.name)}</a></td>
+      <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${c.sort_order}. ${h(c.name)}</a></td>
       <td>${imageCell(c.image_key)}</td>
+      <td>${yesNo(c.has_topics)}</td>
       <td>
         <form method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data" class="toolbar-group">
           <input type="hidden" name="subjectId" value="${subject.id}" />
           <input type="hidden" name="nodeId" value="${node.id}" />
           <input class="input" name="name" value="${h(c.name)}" required />
           <input class="input" type="file" name="image" accept="image/*" />
+          <label><input type="checkbox" name="hasTopics" value="1" ${c.has_topics ? 'checked' : ''} /> Enable topics</label>
           <label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>
           <button class="btn btn-secondary" name="intent" value="update" type="submit">Update</button>
           <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
@@ -215,33 +217,79 @@ export function chaptersPage(user, subject, node, chapters) {
       <input type="hidden" name="subjectId" value="${subject.id}" />
       <input class="input" name="name" placeholder="Chapter name" required />
       <input class="input" type="file" name="image" accept="image/*" />
+      <label><input type="checkbox" name="hasTopics" value="1" /> Enable topics</label>
       <button class="btn btn-primary" type="submit">Add Chapter</button>
     </form>
   </section>
   <section class="card"><div class="table-wrap"><table class="table">
-    <thead><tr><th>Chapter</th><th>Image</th><th>Actions</th></tr></thead>
-    <tbody>${tableRowsOrEmpty(rows, 3, 'No chapters yet.')}</tbody>
+    <thead><tr><th>Chapter</th><th>Image</th><th>Topics Enabled</th><th>Actions</th></tr></thead>
+    <tbody>${tableRowsOrEmpty(rows, 4, 'No chapters yet.')}</tbody>
   </table></div></section>`;
 
   return appShell('subjects', user, `${subject.name} · ${node.display_name}`, 'Manage chapters.', content);
 }
 
-export function contentKindsPage(user, subject, node, chapter, childNodes = []) {
+export function topicsPage(user, subject, node, chapter, topics) {
+  const rows = topics
+    .map(
+      (t) => `<tr>
+      <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}">${t.sort_order}. ${h(t.name)}</a></td>
+      <td>${imageCell(t.image_key)}</td>
+      <td>
+        <form method="post" action="/api/topics/${t.id}" enctype="multipart/form-data" class="toolbar-group">
+          <input type="hidden" name="subjectId" value="${subject.id}" />
+          <input type="hidden" name="nodeId" value="${node.id}" />
+          <input type="hidden" name="chapterId" value="${chapter.id}" />
+          <input class="input" name="name" value="${h(t.name)}" required />
+          <input class="input" type="file" name="image" accept="image/*" />
+          <label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>
+          <button class="btn btn-secondary" name="intent" value="update" type="submit">Update</button>
+          <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>`
+    )
+    .join('');
+
+  const content = `<section class="card">
+    <a class="back-link" href="/subjects/${subject.id}/nodes/${node.id}">← Back</a>
+    <form method="post" action="/api/topics" enctype="multipart/form-data" class="toolbar-group section-gap-sm">
+      <input type="hidden" name="chapterId" value="${chapter.id}" />
+      <input type="hidden" name="subjectId" value="${subject.id}" />
+      <input type="hidden" name="nodeId" value="${node.id}" />
+      <input class="input" name="name" placeholder="Topic name" required />
+      <input class="input" type="file" name="image" accept="image/*" />
+      <button class="btn btn-primary" type="submit">Add Topic</button>
+    </form>
+  </section>
+  <section class="card"><div class="table-wrap"><table class="table">
+    <thead><tr><th>Topic</th><th>Image</th><th>Actions</th></tr></thead>
+    <tbody>${tableRowsOrEmpty(rows, 3, 'No topics yet.')}</tbody>
+  </table></div></section>`;
+
+  return appShell('subjects', user, `${subject.name} · ${chapter.name}`, 'Manage topics for this chapter.', content);
+}
+
+export function contentKindsPage(user, subject, node, chapter, topic, childNodes = []) {
   const detectedKinds = childNodes.filter((n) => n.node_type === 'content').map((n) => n.content_kind || n.display_name);
-  const fallbackKinds = node.content_kind ? [node.content_kind] : ['CQ Bank', 'MCQ Bank', 'Short Notes', 'Videos'];
+  const fallbackKinds = node.content_kind ? [node.content_kind] : ['CQ Bank', 'MCQ Bank', 'Short Notes', 'Videos', 'Summary'];
   const kinds = Array.from(new Set((detectedKinds.length ? detectedKinds : fallbackKinds).filter(Boolean)));
 
   const hrefForKind = (kind) => {
-    if (kind === 'Short Notes') return `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}`;
-    if (kind === 'MCQ Bank') return `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}`;
-    return `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ''}&kind=${encodeURIComponent(kind)}`;
+    if (kind === 'Short Notes') return `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
+    if (kind === 'MCQ Bank') return `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
+    return `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}&kind=${encodeURIComponent(kind)}`;
   };
 
   const rows = kinds.map((kind) => `<tr><td>${h(kind)}</td><td><a href="${hrefForKind(kind)}">Open</a></td></tr>`).join('');
-  const backHref = node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
+  const backHref = topic
+    ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
+    : node.supports_chapters
+      ? `/subjects/${subject.id}/nodes/${node.id}`
+      : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Content Type</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
-  return appShell('subjects', user, `${subject.name} · ${chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content);
+  return appShell('subjects', user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content);
 }
 
 function richTextEditor(fieldName, value, placeholder, required = false) {
@@ -261,6 +309,10 @@ function richTextEditor(fieldName, value, placeholder, required = false) {
         <button type="button" class="btn btn-secondary" data-editor-command="insertUnorderedList">• List</button>
         <button type="button" class="btn btn-secondary" data-editor-command="insertOrderedList">1. List</button>
         <button type="button" class="btn btn-secondary" data-editor-command="createLink" data-editor-prompt="Enter URL">Link</button>
+        <button type="button" class="btn btn-secondary" data-editor-command="insertImage" data-editor-prompt="Enter image URL">Image</button>
+        <button type="button" class="btn btn-secondary" data-editor-image-float="left">Img Left</button>
+        <button type="button" class="btn btn-secondary" data-editor-image-float="right">Img Right</button>
+        <button type="button" class="btn btn-secondary" data-editor-image-float="none">Img Inline</button>
         <button type="button" class="btn btn-secondary" data-editor-command="removeFormat">Clear</button>
       </div>
       <div class="rich-editor-input" data-editor-input data-editor-placeholder="${h(placeholder)}" contenteditable="true">${value || ''}</div>
@@ -269,12 +321,13 @@ function richTextEditor(fieldName, value, placeholder, required = false) {
     </div>`;
 }
 
-function noteForm(subjectId, subjectNodeId, chapterId, note) {
+function noteForm(subjectId, subjectNodeId, chapterId, topicId, note) {
   return `<form method="post" action="/api/notes" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="liveRegion" value="notes-page" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
+    <input type="hidden" name="topicId" value="${topicId || ''}" />
     <input type="hidden" name="page" value="${note?.page || 1}" />
     <input type="hidden" name="id" value="${note?.id || ''}" />
     <input class="input" type="file" name="image" accept="image/*" />
@@ -286,13 +339,14 @@ function noteForm(subjectId, subjectNodeId, chapterId, note) {
   </form>`;
 }
 
-function noteDeleteForm(subjectId, subjectNodeId, chapterId, noteId, page = 1) {
+function noteDeleteForm(subjectId, subjectNodeId, chapterId, topicId, noteId, page = 1) {
   return `<form method="post" action="/api/notes/delete">
     <input type="hidden" name="liveRegion" value="notes-page" />
     <input type="hidden" name="id" value="${noteId}" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
+    <input type="hidden" name="topicId" value="${topicId || ''}" />
     <input type="hidden" name="page" value="${page}" />
     <button class="btn btn-icon btn-icon-danger" type="submit" data-live-form="true" aria-label="Delete note" title="Delete note">🗑</button>
   </form>`;
@@ -325,8 +379,8 @@ function renderPagination(baseHref, page, totalPages) {
   </nav>`;
 }
 
-export function notesPage(user, subject, node, chapter, notes, currentPage = 1) {
-  const baseHref = `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}`;
+export function notesPage(user, subject, node, chapter, topic, notes, currentPage = 1) {
+  const baseHref = `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
   const { totalPages, safePage, pageItems } = getPagedItems(notes, currentPage, 40);
   const leftColumn = pageItems.slice(0, 20);
   const rightColumn = pageItems.slice(20, 40);
@@ -341,7 +395,7 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
         <div class="note-content">${itemIndex}. ${n.content_html}</div>
         <div class="note-actions-inline">
           <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit note" title="Edit note">✎</button>
-          ${noteDeleteForm(subject.id, node.id, chapter?.id, n.id, safePage)}
+          ${noteDeleteForm(subject.id, node.id, chapter?.id, topic?.id, n.id, safePage)}
         </div>
       </div>
       ${n.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${itemIndex}" loading="lazy" /></figure>` : ''}
@@ -351,14 +405,16 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
             <h3 class="card-title">Edit note</h3>
             <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
           </div>
-          ${noteForm(subject.id, node.id, chapter?.id, { ...n, page: safePage })}
+          ${noteForm(subject.id, node.id, chapter?.id, topic?.id, { ...n, page: safePage })}
         </div>
       </dialog>
       </article>`;
     })
     .join('');
 
-  const backHref = chapter
+  const backHref = topic
+    ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`
+    : chapter
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
@@ -369,7 +425,7 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
       <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="notes" aria-expanded="false">Add Notes</button>
     </div>
     <div data-add-form-panel>
-      ${noteForm(subject.id, node.id, chapter?.id, { page: safePage })}
+      ${noteForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}
     </div>
   </section>
   <section class="content-list plain-two-column" data-live-region="notes-page">
@@ -382,13 +438,14 @@ export function notesPage(user, subject, node, chapter, notes, currentPage = 1) 
   return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
 }
 
-function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
+function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {
   const submitLabel = mcq ? 'Update Question' : 'Add Question';
   return `<form method="post" action="/api/mcqs" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="id" value="${mcq?.id || ''}" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
     <input type="hidden" name="subjectNodeId" value="${subjectNodeId}" />
     <input type="hidden" name="chapterId" value="${chapterId || ''}" />
+    <input type="hidden" name="topicId" value="${topicId || ''}" />
     <input type="hidden" name="page" value="${mcq?.page || 1}" />
     ${richTextEditor('questionHtml', mcq?.question_html || '', 'Write the MCQ question here…', true)}
     <input class="input" type="file" name="image" accept="image/*" />
@@ -405,24 +462,28 @@ function mcqForm(subjectId, subjectNodeId, chapterId, mcq) {
 
 
 
-export function contentEntriesPage(user, subject, node, chapter, contentKind, entries, currentPage = 1) {
-  const baseHref = `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ''}&kind=${encodeURIComponent(contentKind)}`;
+export function contentEntriesPage(user, subject, node, chapter, topic, contentKind, entries, currentPage = 1) {
+  const baseHref = `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}&kind=${encodeURIComponent(contentKind)}`;
   const { totalPages, safePage, pageItems } = getPagedItems(entries, currentPage, 20);
-  const backHref = chapter
+  const backHref = topic
+    ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`
+    : chapter
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
+  const isSummary = contentKind === 'Summary';
   const entryForm = (entry) => `<form method="post" action="/api/content-entries" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="id" value="${entry?.id || ''}" />
     <input type="hidden" name="subjectId" value="${subject.id}" />
     <input type="hidden" name="subjectNodeId" value="${node.id}" />
     <input type="hidden" name="chapterId" value="${chapter?.id || ''}" />
+    <input type="hidden" name="topicId" value="${topic?.id || ''}" />
     <input type="hidden" name="contentKind" value="${h(contentKind)}" />
     <input type="hidden" name="page" value="${entry?.page || safePage}" />
-    <input class="input" name="title" placeholder="Title" value="${h(entry?.title || '')}" maxlength="180" />
-    <input class="input" type="file" name="image" accept="image/*" />
+    ${isSummary ? '' : `<input class="input" name="title" placeholder="Title" value="${h(entry?.title || '')}" maxlength="180" />`}
+    ${isSummary ? '' : '<input class="input" type="file" name="image" accept="image/*" />'}
     ${richTextEditor('contentHtml', entry?.content_html || '', `Write ${h(contentKind)} content here…`, true)}
-    <div>${entry ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}<button class="btn btn-primary" type="submit">${entry ? 'Update Entry' : 'Add Entry'}</button></div>
+    <div>${entry && !isSummary ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ''}<button class="btn btn-primary" type="submit">${entry || isSummary ? 'Update Entry' : 'Add Entry'}</button></div>
   </form>`;
 
   const items = pageItems.map((entry, idx) => {
@@ -430,10 +491,10 @@ export function contentEntriesPage(user, subject, node, chapter, contentKind, en
     const itemIndex = (safePage - 1) * 20 + idx + 1;
     return `<article class="plain-entry" id="content-entry-${entry.id}">
       <div class="plain-line-wrap">
-        <div class="mcq-question"><strong>${itemIndex}.</strong> ${h(entry.title || `${contentKind} entry`)}</div>
+        <div class="mcq-question"><strong>${itemIndex}.</strong> ${h(entry.title || (isSummary ? 'Summary' : `${contentKind} entry`))}</div>
         <div class="mcq-actions-inline">
           <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit content" title="Edit content">✎</button>
-          <form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">🗑</button></form>
+          <form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="topicId" value="${topic?.id || ''}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">🗑</button></form>
         </div>
       </div>
       ${entry.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(entry.image_key) || '')}" alt="${h(contentKind)} image ${itemIndex}" loading="lazy" /></figure>` : ''}
@@ -443,7 +504,7 @@ export function contentEntriesPage(user, subject, node, chapter, contentKind, en
   }).join('');
 
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
-  <section class="card content-form-shell" data-add-form-shell><div class="content-form-head"><h3 class="card-title">Add ${h(contentKind)} item</h3><button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="${h(contentKind)}" aria-expanded="false">Add ${h(contentKind)}</button></div><div data-add-form-panel>${entryForm({ page: safePage })}</div></section>
+  <section class="card content-form-shell" data-add-form-shell><div class="content-form-head"><h3 class="card-title">${isSummary ? 'Summary editor' : `Add ${h(contentKind)} item`}</h3><button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="${h(contentKind)}" aria-expanded="false">${isSummary ? 'Edit Summary' : `Add ${h(contentKind)}`}</button></div><div data-add-form-panel>${entryForm((isSummary && entries[0]) ? { ...entries[0], page: safePage } : { page: safePage })}</div></section>
   <section class="content-list">${items}</section>
   ${!pageItems.length ? '<p class="muted">No content yet.</p>' : ''}
   ${renderPagination(baseHref, safePage, totalPages)}`;
@@ -451,8 +512,8 @@ export function contentEntriesPage(user, subject, node, chapter, contentKind, en
   return appShell('subjects', user, `${subject.name} · ${h(contentKind)}`, 'Flexible content editor for any custom content type.', content);
 }
 
-export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
-  const baseHref = `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}`;
+export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage = 1) {
+  const baseHref = `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
   const { totalPages, safePage, pageItems } = getPagedItems(mcqs, currentPage, 20);
   const leftColumn = pageItems.slice(0, 10);
   const rightColumn = pageItems.slice(10, 20);
@@ -467,7 +528,7 @@ export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
         <div class="mcq-question">${itemIndex}. ${m.question_html}</div>
         <div class="mcq-actions-inline">
           <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit MCQ" title="Edit MCQ">✎</button>
-          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">🗑</button></form>
+          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="topicId" value="${topic?.id || ''}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">🗑</button></form>
         </div>
       </div>
       ${m.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(m.image_key) || '')}" alt="MCQ image ${itemIndex}" loading="lazy" /></figure>` : ''}
@@ -483,14 +544,16 @@ export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
             <h3 class="card-title">Edit MCQ</h3>
             <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
           </div>
-          ${mcqForm(subject.id, node.id, chapter?.id, { ...m, page: safePage })}
+          ${mcqForm(subject.id, node.id, chapter?.id, topic?.id, { ...m, page: safePage })}
         </div>
       </dialog>
       </article>`;
     })
     .join('');
 
-  const backHref = chapter
+  const backHref = topic
+    ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`
+    : chapter
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
@@ -501,7 +564,7 @@ export function mcqsPage(user, subject, node, chapter, mcqs, currentPage = 1) {
       <button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="question" aria-expanded="false">Add Question</button>
     </div>
     <div data-add-form-panel>
-      ${mcqForm(subject.id, node.id, chapter?.id, { page: safePage })}
+      ${mcqForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}
     </div>
   </section>
   <section class="content-list plain-two-column">

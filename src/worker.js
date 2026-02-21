@@ -18,16 +18,20 @@ import {
   createMcq,
   createNote,
   createSubject,
+  createTopic,
   deleteChapter,
-  deleteSubject,
   deleteContentEntry,
   deleteMcq,
   deleteNote,
+  deleteSubject,
+  deleteTopic,
   ensureDefaultTemplate,
+  ensurePhyChemBioTemplate,
   getChapter,
   getSubject,
   getSubjectNode,
   getTemplate,
+  getTopic,
   listChapters,
   listContentEntries,
   listMcqs,
@@ -36,12 +40,15 @@ import {
   listSubjects,
   listTemplateNodes,
   listTemplates,
+  listTopics,
   updateChapter,
   updateContentEntry,
   updateMcq,
   updateNote,
   updateSubject,
   updateSubjectNode,
+  updateTopic,
+  upsertSummaryEntry,
 } from './db/modulesRepo.js';
 import { hashPassword, verifyPassword } from './security/password.js';
 import { buildSessionCookie, clearSessionCookie, createSignedToken } from './security/session.js';
@@ -64,6 +71,7 @@ import {
   subjectsPage,
   templateDetailsPage,
   templatesPage,
+  topicsPage,
   usersPage,
 } from './pages/layout.js';
 import { MAX_IMAGE_BYTES } from './env.js';
@@ -154,6 +162,7 @@ async function ensureAppReady(env) {
     appReadyPromise = (async () => {
       await ensureSchema(env.DB, { cleanUnknownTables: env.CLEAN_UNKNOWN_TABLES === 'true' });
       await ensureDefaultTemplate(env.DB);
+      await ensurePhyChemBioTemplate(env.DB);
     })();
   }
 
@@ -359,7 +368,8 @@ async function handleAdminPost(request, env, url) {
     const name = String(form.get('name') || '').trim();
     if (!subjectNodeId || !name) return redirect('/subjects');
     const imageKey = await uploadImage(env, 'chapters', form.get('image'));
-    await createChapter(env.DB, subjectNodeId, name, imageKey);
+    const hasTopics = form.get('hasTopics') === '1' ? 1 : 0;
+    await createChapter(env.DB, subjectNodeId, name, imageKey, hasTopics);
     return redirect(`/subjects/${subjectId}/nodes/${subjectNodeId}`);
   }
 
@@ -377,9 +387,42 @@ async function handleAdminPost(request, env, url) {
       const uploaded = await uploadImage(env, 'chapters', form.get('image'));
       const removeImage = form.get('removeImage') === '1';
       const imageKey = removeImage ? null : uploaded || current.image_key;
-      await updateChapter(env.DB, chapterId, String(form.get('name') || current.name), imageKey);
+      const hasTopics = form.get('hasTopics') === '1' ? 1 : 0;
+      await updateChapter(env.DB, chapterId, String(form.get('name') || current.name), imageKey, hasTopics);
     }
     return redirect(`/subjects/${subjectId}/nodes/${nodeId}`);
+  }
+
+  if (url.pathname === '/api/topics' && request.method === 'POST') {
+    const form = await request.formData();
+    const chapterId = String(form.get('chapterId') || '');
+    const subjectId = String(form.get('subjectId') || '');
+    const nodeId = String(form.get('nodeId') || '');
+    const name = String(form.get('name') || '').trim();
+    if (!chapterId || !name) return redirect('/subjects');
+    const imageKey = await uploadImage(env, 'topics', form.get('image'));
+    await createTopic(env.DB, chapterId, name, imageKey);
+    return redirect(`/subjects/${subjectId}/nodes/${nodeId}/chapters/${chapterId}`);
+  }
+
+  if (url.pathname.startsWith('/api/topics/') && request.method === 'POST') {
+    const topicId = url.pathname.split('/').pop();
+    const current = await getTopic(env.DB, topicId);
+    if (!current) return new Response('Not found', { status: 404 });
+    const form = await request.formData();
+    const intent = String(form.get('intent') || 'update');
+    const subjectId = String(form.get('subjectId') || '');
+    const nodeId = String(form.get('nodeId') || '');
+    const chapterId = String(form.get('chapterId') || current.chapter_id);
+    if (intent === 'delete') {
+      await deleteTopic(env.DB, topicId);
+    } else {
+      const uploaded = await uploadImage(env, 'topics', form.get('image'));
+      const removeImage = form.get('removeImage') === '1';
+      const imageKey = removeImage ? null : uploaded || current.image_key;
+      await updateTopic(env.DB, topicId, String(form.get('name') || current.name), imageKey);
+    }
+    return redirect(`/subjects/${subjectId}/nodes/${nodeId}/chapters/${chapterId}`);
   }
 
   if (url.pathname === '/api/notes' && request.method === 'POST') {
@@ -388,17 +431,18 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const topicId = String(form.get('topicId') || '');
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const title = String(form.get('title') || '').trim();
     const contentHtml = String(form.get('contentHtml') || '').trim();
-    const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`;
+    const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
     if (!contentHtml) return redirect(redirectUrl);
     if (!idVal) {
       const imageKey = await uploadImage(env, 'notes', form.get('image'));
-      await createNote(env.DB, { subjectId, subjectNodeId, chapterId, title, contentHtml, imageKey });
+      await createNote(env.DB, { subjectId, subjectNodeId, chapterId, topicId, title, contentHtml, imageKey });
     } else {
-      const existing = (await listNotes(env.DB, subjectNodeId, chapterId)).find((n) => n.id === idVal);
+      const existing = (await listNotes(env.DB, subjectNodeId, chapterId, topicId)).find((n) => n.id === idVal);
       const uploaded = await uploadImage(env, 'notes', form.get('image'));
       const imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
       await updateNote(env.DB, { id: idVal, title, contentHtml, imageKey });
@@ -412,10 +456,11 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const topicId = String(form.get('topicId') || '');
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteNote(env.DB, idVal);
-    return redirect(`/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`);
+    return redirect(`/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
   }
 
   if (url.pathname === '/api/mcqs' && request.method === 'POST') {
@@ -424,6 +469,7 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const topicId = String(form.get('topicId') || '');
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const payload = {
@@ -431,6 +477,7 @@ async function handleAdminPost(request, env, url) {
       subjectId,
       subjectNodeId,
       chapterId,
+      topicId,
       questionHtml: String(form.get('questionHtml') || '').trim(),
       optionA: String(form.get('optionA') || '').trim(),
       optionB: String(form.get('optionB') || '').trim(),
@@ -438,13 +485,13 @@ async function handleAdminPost(request, env, url) {
       optionD: String(form.get('optionD') || '').trim(),
       correctOption: String(form.get('correctOption') || 'A'),
     };
-    const redirectUrl = `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`;
+    const redirectUrl = `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
     if (!payload.questionHtml || !payload.optionA || !payload.optionB || !payload.optionC || !payload.optionD) return redirect(redirectUrl);
     if (!idVal) {
       payload.imageKey = await uploadImage(env, 'mcq', form.get('image'));
       await createMcq(env.DB, payload);
     } else {
-      const existing = (await listMcqs(env.DB, subjectNodeId, chapterId)).find((m) => m.id === idVal);
+      const existing = (await listMcqs(env.DB, subjectNodeId, chapterId, topicId)).find((m) => m.id === idVal);
       const uploaded = await uploadImage(env, 'mcq', form.get('image'));
       payload.imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
       await updateMcq(env.DB, payload);
@@ -458,10 +505,11 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const topicId = String(form.get('topicId') || '');
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteMcq(env.DB, idVal);
-    return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&page=${safePage}`);
+    return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
   }
 
 
@@ -472,22 +520,31 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const topicId = String(form.get('topicId') || '');
     const contentKind = String(form.get('contentKind') || '').trim();
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const title = String(form.get('title') || '').trim();
     const contentHtml = String(form.get('contentHtml') || '').trim();
-    const redirectUrl = `/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&kind=${encodeURIComponent(contentKind)}&page=${safePage}`;
+    const redirectUrl = `/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&kind=${encodeURIComponent(contentKind)}&page=${safePage}`;
     if (!contentKind || !contentHtml) return redirect(redirectUrl);
 
     if (!idVal) {
-      const imageKey = await uploadImage(env, 'content', form.get('image'));
-      await createContentEntry(env.DB, { subjectId, subjectNodeId, chapterId, contentKind, title, contentHtml, imageKey });
+      if (contentKind === 'Summary') {
+        await upsertSummaryEntry(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentHtml });
+      } else {
+        const imageKey = await uploadImage(env, 'content', form.get('image'));
+        await createContentEntry(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentKind, title, contentHtml, imageKey });
+      }
     } else {
-      const existing = (await listContentEntries(env.DB, subjectNodeId, chapterId, contentKind)).find((entry) => entry.id === idVal);
-      const uploaded = await uploadImage(env, 'content', form.get('image'));
-      const imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
-      await updateContentEntry(env.DB, { id: idVal, title, contentHtml, imageKey });
+      if (contentKind === 'Summary') {
+        await upsertSummaryEntry(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentHtml });
+      } else {
+        const existing = (await listContentEntries(env.DB, subjectNodeId, chapterId, topicId, contentKind)).find((entry) => entry.id === idVal);
+        const uploaded = await uploadImage(env, 'content', form.get('image'));
+        const imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
+        await updateContentEntry(env.DB, { id: idVal, title, contentHtml, imageKey });
+      }
     }
 
     return redirect(redirectUrl);
@@ -499,11 +556,12 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get('subjectId') || '');
     const subjectNodeId = String(form.get('subjectNodeId') || '');
     const chapterId = String(form.get('chapterId') || '');
+    const topicId = String(form.get('topicId') || '');
     const kind = String(form.get('kind') || '').trim();
     const page = Number.parseInt(String(form.get('page') || '1'), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteContentEntry(env.DB, idVal);
-    return redirect(`/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&kind=${encodeURIComponent(kind)}&page=${safePage}`);
+    return redirect(`/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&kind=${encodeURIComponent(kind)}&page=${safePage}`);
   }
   return null;
 }
@@ -575,7 +633,7 @@ async function handleDynamicPages(url, env, user) {
       );
     }
 
-    return html(contentKindsPage(user, subject, node, null, contentChildren));
+    return html(contentKindsPage(user, subject, node, null, null, contentChildren));
   }
 
   const chapterPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
@@ -586,57 +644,79 @@ async function handleDynamicPages(url, env, user) {
       getChapter(env.DB, chapterPageMatch[3]),
     ]);
     if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
+    if (chapter.has_topics) {
+      return html(topicsPage(user, subject, node, chapter, await listTopics(env.DB, chapter.id)));
+    }
     const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    return html(contentKindsPage(user, subject, node, chapter, contentChildren));
+    return html(contentKindsPage(user, subject, node, chapter, null, contentChildren));
+  }
+
+  const topicPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
+  if (topicPageMatch) {
+    const [subject, node, chapter, topic] = await Promise.all([
+      getSubject(env.DB, topicPageMatch[1]),
+      getSubjectNode(env.DB, topicPageMatch[2]),
+      getChapter(env.DB, topicPageMatch[3]),
+      getTopic(env.DB, topicPageMatch[4]),
+    ]);
+    if (!subject || !node || !chapter || !topic) return new Response('Not Found', { status: 404 });
+    const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    return html(contentKindsPage(user, subject, node, chapter, topic, contentChildren));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/content$/)) {
     const subjectId = url.pathname.split('/')[2];
     const nodeId = url.searchParams.get('node');
     const chapterId = url.searchParams.get('chapter');
+    const topicId = url.searchParams.get('topic');
     const contentKind = String(url.searchParams.get('kind') || '').trim();
     const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const [subject, node, chapter] = await Promise.all([
+    const [subject, node, chapter, topic] = await Promise.all([
       getSubject(env.DB, subjectId),
       getSubjectNode(env.DB, nodeId),
       chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
     ]);
     if (!subject || !node || !contentKind) return new Response('Not Found', { status: 404 });
-    const entries = await listContentEntries(env.DB, node.id, chapter?.id, contentKind);
-    return html(contentEntriesPage(user, subject, node, chapter, contentKind, entries, safePage));
+    const entries = await listContentEntries(env.DB, node.id, chapter?.id, topic?.id, contentKind);
+    return html(contentEntriesPage(user, subject, node, chapter, topic, contentKind, entries, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/notes$/)) {
     const subjectId = url.pathname.split('/')[2];
     const nodeId = url.searchParams.get('node');
     const chapterId = url.searchParams.get('chapter');
+    const topicId = url.searchParams.get('topic');
     const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const [subject, node, chapter] = await Promise.all([
+    const [subject, node, chapter, topic] = await Promise.all([
       getSubject(env.DB, subjectId),
       getSubjectNode(env.DB, nodeId),
       chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
     ]);
     if (!subject || !node) return new Response('Not Found', { status: 404 });
-    const notes = await listNotes(env.DB, node.id, chapter?.id);
-    return html(notesPage(user, subject, node, chapter, notes, safePage));
+    const notes = await listNotes(env.DB, node.id, chapter?.id, topic?.id);
+    return html(notesPage(user, subject, node, chapter, topic, notes, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/mcqs$/)) {
     const subjectId = url.pathname.split('/')[2];
     const nodeId = url.searchParams.get('node');
     const chapterId = url.searchParams.get('chapter');
+    const topicId = url.searchParams.get('topic');
     const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const [subject, node, chapter] = await Promise.all([
+    const [subject, node, chapter, topic] = await Promise.all([
       getSubject(env.DB, subjectId),
       getSubjectNode(env.DB, nodeId),
       chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
     ]);
     if (!subject || !node) return new Response('Not Found', { status: 404 });
-    const mcqs = await listMcqs(env.DB, node.id, chapter?.id);
-    return html(mcqsPage(user, subject, node, chapter, mcqs, safePage));
+    const mcqs = await listMcqs(env.DB, node.id, chapter?.id, topic?.id);
+    return html(mcqsPage(user, subject, node, chapter, topic, mcqs, safePage));
   }
 
   return null;
