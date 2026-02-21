@@ -10,6 +10,7 @@ import {
   updateUserImage,
   updateUserName,
   updateUserPassword,
+  updateUserDateOfBirth,
 } from './db/adminRepo.js';
 import {
   createChapter,
@@ -270,9 +271,8 @@ async function handleProfilePost(request, env, url, user) {
     const form = await request.formData();
     const currentPassword = String(form.get('currentPassword') || '');
     const newPassword = String(form.get('newPassword') || '');
-    const confirmPassword = String(form.get('confirmPassword') || '');
 
-    if (newPassword.length < 8 || newPassword.length > 120 || newPassword !== confirmPassword) return redirect('/profile');
+    if (newPassword.length < 8 || newPassword.length > 120) return redirect('/profile');
     const currentUser = await findUserById(env.DB, user.id);
     if (!currentUser) return redirect('/profile');
 
@@ -285,6 +285,25 @@ async function handleProfilePost(request, env, url, user) {
 
     const hashed = await hashPassword(newPassword);
     await updateUserPassword(env.DB, user.id, hashed.hash, hashed.salt, hashed.iterations);
+    return redirect('/profile');
+  }
+
+  if (url.pathname === '/api/profile/dob') {
+    const form = await request.formData();
+    const dateOfBirthRaw = String(form.get('dateOfBirth') || '').trim();
+    if (!dateOfBirthRaw) {
+      await updateUserDateOfBirth(env.DB, user.id, null);
+      return redirect('/profile');
+    }
+
+    const dobMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirthRaw);
+    const dobDate = new Date(`${dateOfBirthRaw}T00:00:00.000Z`);
+    const isValidDate = Number.isFinite(dobDate.getTime()) && dobDate.toISOString().slice(0, 10) === dateOfBirthRaw;
+    const today = new Date();
+    const latest = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    if (!dobMatch || !isValidDate || dobDate > latest) return redirect('/profile');
+
+    await updateUserDateOfBirth(env.DB, user.id, dateOfBirthRaw);
     return redirect('/profile');
   }
 
