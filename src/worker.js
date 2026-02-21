@@ -18,6 +18,7 @@ import {
   createNote,
   createSubject,
   deleteChapter,
+  deleteSubject,
   deleteContentEntry,
   deleteMcq,
   deleteNote,
@@ -38,6 +39,7 @@ import {
   updateContentEntry,
   updateMcq,
   updateNote,
+  updateSubject,
   updateSubjectNode,
 } from './db/modulesRepo.js';
 import { hashPassword, verifyPassword } from './security/password.js';
@@ -297,6 +299,22 @@ async function handleAdminPost(request, env, url) {
     const templateId = String(form.get('templateId') || '');
     if (!name || !templateId || classLevel < 1 || classLevel > 12) return redirect('/subjects');
     await createSubject(env.DB, { name, classLevel, templateId });
+    return redirect('/subjects');
+  }
+
+  if (url.pathname.startsWith('/api/subjects/') && request.method === 'POST') {
+    const subjectId = url.pathname.split('/').pop();
+    const form = await request.formData();
+    const intent = String(form.get('intent') || 'update');
+    const current = await getSubject(env.DB, subjectId);
+    if (!current) return new Response('Not found', { status: 404 });
+    if (intent === 'delete') {
+      await deleteSubject(env.DB, subjectId);
+      return redirect('/subjects');
+    }
+    const name = String(form.get('name') || '').trim();
+    if (!name) return redirect('/subjects');
+    await updateSubject(env.DB, subjectId, name);
     return redirect('/subjects');
   }
 

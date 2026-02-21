@@ -480,6 +480,45 @@ textarea,
 .table tbody tr:hover { background: #f8fafc; }
 
 
+.flat-card {
+  border-radius: 0;
+  border-color: #d5dde7;
+  padding: 6px;
+}
+
+.flat-grid-table {
+  border-collapse: collapse;
+  min-width: 920px;
+}
+
+.flat-grid-table thead th {
+  background: #ffffff;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #334155;
+  font-size: 13px;
+  border: 1px solid #d5dde7;
+}
+
+.flat-grid-table tbody td {
+  border: 1px solid #d5dde7;
+  padding: 6px 8px;
+}
+
+.flat-grid-table tbody tr:hover { background: transparent; }
+
+.subject-row-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.subject-row-actions .input {
+  min-width: 180px;
+  height: 32px;
+}
+
+
 .content-form-shell {
   display: grid;
   gap: 8px;

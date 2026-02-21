@@ -168,6 +168,15 @@ export async function createSubject(db, input) {
   return id;
 }
 
+
+export async function updateSubject(db, subjectId, name) {
+  await db.prepare('UPDATE subjects SET name = ?2, updated_at = ?3 WHERE id = ?1').bind(subjectId, name, nowIso()).run();
+}
+
+export async function deleteSubject(db, subjectId) {
+  await db.prepare('DELETE FROM subjects WHERE id = ?1').bind(subjectId).run();
+}
+
 export async function getSubject(db, subjectId) {
   return db
     .prepare(

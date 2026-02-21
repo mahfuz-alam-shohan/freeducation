@@ -102,24 +102,55 @@ export function subjectsPage(user, subjects, templates) {
       <td>Class ${s.class_level}</td>
       <td>${h(s.template_name)}</td>
       <td>${new Date(s.created_at).toLocaleDateString()}</td>
+      <td>
+        <form method="post" action="/api/subjects/${s.id}" class="subject-row-actions" enctype="multipart/form-data">
+          <input class="input" name="name" value="${h(s.name)}" required maxlength="120" />
+          <button class="btn btn-secondary" name="intent" value="update" type="submit">Save</button>
+          <button class="btn btn-danger" type="button" data-content-modal-open="subject-delete-${s.id}">Delete</button>
+        </form>
+        <dialog class="content-modal" data-content-modal="subject-delete-${s.id}">
+          <div class="modal content-modal-inner">
+            <div class="content-modal-head">
+              <h3 class="card-title">Delete subject</h3>
+              <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
+            </div>
+            <p>Are you sure you want to delete <strong>${h(s.name)}</strong>? This action cannot be undone.</p>
+            <form method="post" action="/api/subjects/${s.id}" class="toolbar-group" enctype="multipart/form-data">
+              <input type="hidden" name="intent" value="delete" />
+              <button class="btn btn-danger" type="submit">Confirm delete</button>
+            </form>
+          </div>
+        </dialog>
+      </td>
     </tr>`
     )
     .join('');
 
   const templateOptions = templates.map((t) => `<option value="${t.id}">${h(t.name)}</option>`).join('');
 
-  const content = `<section class="card">
-    <form method="post" action="/api/subjects" class="grid grid-4" enctype="multipart/form-data">
-      <input class="input" name="name" placeholder="Subject name" required />
-      <select class="select" name="classLevel" required>${classOptions()}</select>
-      <select class="select" name="templateId" required>${templateOptions}</select>
-      <button class="btn btn-primary" type="submit">Add Subject</button>
-    </form>
+  const content = `<section class="card flat-card">
+    <div class="toolbar-group">
+      <button class="btn btn-primary" type="button" data-content-modal-open="subject-add-modal">Add Subject</button>
+    </div>
+    <dialog class="content-modal" data-content-modal="subject-add-modal">
+      <div class="modal content-modal-inner">
+        <div class="content-modal-head">
+          <h3 class="card-title">Add subject</h3>
+          <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
+        </div>
+        <form method="post" action="/api/subjects" class="grid grid-3" enctype="multipart/form-data">
+          <input class="input" name="name" placeholder="Subject name" required />
+          <select class="select" name="classLevel" required>${classOptions()}</select>
+          <select class="select" name="templateId" required>${templateOptions}</select>
+          <button class="btn btn-primary" type="submit">Create</button>
+        </form>
+      </div>
+    </dialog>
   </section>
-  <section class="card">
-    <div class="table-wrap"><table class="table">
-      <thead><tr><th>Subject</th><th>Class</th><th>Template</th><th>Created</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(rows, 4, 'No subjects yet.')}</tbody>
+  <section class="card flat-card">
+    <div class="table-wrap"><table class="table flat-grid-table">
+      <thead><tr><th>Subject</th><th>Class</th><th>Template</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 5, 'No subjects yet.')}</tbody>
     </table></div>
   </section>`;
 
