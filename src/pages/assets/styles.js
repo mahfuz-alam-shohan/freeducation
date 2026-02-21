@@ -47,10 +47,14 @@ a { color: inherit; }
 .nav-group-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 10px 10px 8px; }
 .menu-item,.submenu-item,.menu-expand { border-radius: 10px; min-height: 36px; display: flex; align-items: center; text-decoration: none; gap: 10px; padding: 6px 10px; color: #334155; font-size: 14px; margin-bottom: 4px; }
 .menu-expand { width: 100%; border: 0; background: transparent; cursor: pointer; justify-content: space-between; }
+.menu-leading { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .menu-item:hover,.menu-expand:hover,.submenu-item:hover { background: #dfebff; }
 .menu-item.active,.submenu-item.active { background: #d7e6ff; color: #1e3a8a; font-weight: 600; }
-.logout-item { border: 1px solid #fecaca; color: #991b1b; background: #fff5f5; }
+.logout-item,.sidebar-login-item { border-width: 1px; border-style: solid; min-height: 38px; font-weight: 600; }
+.logout-item { border-color: #fca5a5; color: #991b1b; background: #fff1f2; }
+.sidebar-login-item { border-color: #93c5fd; color: #1d4ed8; background: #eff6ff; }
 .icon { width: 18px; height: 18px; flex: none; display: inline-grid; place-items: center; color: #64748b; }
+.icon svg { width: 100%; height: 100%; display: block; }
 .label { overflow: hidden; white-space: nowrap; }
 .app-shell.collapsed .brand-name,.app-shell.collapsed .label,.app-shell.collapsed .nav-group-title,.app-shell.collapsed .chevron,.app-shell.collapsed .sidebar-login-note { opacity: 0; width: 0; display: none; }
 .app-shell.collapsed .brand { justify-content: center; width: 100%; }
@@ -87,7 +91,7 @@ a { color: inherit; }
 .profile-popup { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; min-width: 220px; border: 1px solid #dbe4f3; background: #fff; border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
 .profile-popup[hidden] { display: none; }
 .profile-popup-login-btn { width: 100%; }
-.sidebar-login-item { margin-top: auto; border: 1px solid #bfdbfe; color: #1d4ed8; background: #eff6ff; }
+.sidebar-login-item { margin-top: auto; }
 
 .grid { display: grid; gap: 8px; }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }

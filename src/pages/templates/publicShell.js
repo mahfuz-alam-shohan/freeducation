@@ -3,7 +3,7 @@ import { getNavigation } from '../navigation.js';
 import { imageUrlFromKey } from '../imageUrl.js';
 import { basePage } from './base.js';
 import { renderNavigationGroup } from './navigationMarkup.js';
-import { iconClose, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
+import { iconClose, iconLogin, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
 import { sidebarIdentityMarkup } from './sidebarIdentity.js';
 
 function initials(name) {
@@ -30,7 +30,7 @@ function publicSidebar(active, user) {
       ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
     </div>
     <div class="sidebar-foot">
-      <a href="${user ? '/api/logout' : '/login'}" class="menu-item ${user ? 'logout-item' : 'sidebar-login-item'}"><span class="icon">${user ? iconLogout : iconProfile}</span><span class="label">${user ? 'Log out' : 'Login'}</span></a>
+      <a href="${user ? '/api/logout' : '/login'}" class="menu-item ${user ? 'logout-item' : 'sidebar-login-item'}"><span class="icon">${user ? iconLogout : iconLogin}</span><span class="label">${user ? 'Log out' : 'Login'}</span></a>
     </div>
   </aside>`;
 }

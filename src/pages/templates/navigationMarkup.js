@@ -10,7 +10,7 @@ export function renderNavigationGroup(group, active) {
       )
       .join('');
     return `<div class="menu-block ${expanded ? 'open' : ''}">
-      <button class="menu-expand" data-expand aria-expanded="${expanded ? 'true' : 'false'}"><span><span class="icon">${group.icon}</span><span class="label">${group.title}</span></span><span class="chevron">${iconChevron}</span></button>
+      <button class="menu-expand" data-expand aria-expanded="${expanded ? 'true' : 'false'}"><span class="menu-leading"><span class="icon">${group.icon}</span><span class="label">${group.title}</span></span><span class="chevron">${iconChevron}</span></button>
       <div class="submenu-wrap"><div class="submenu">${items}</div></div>
     </div>`;
   }
