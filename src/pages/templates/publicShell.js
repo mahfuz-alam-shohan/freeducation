@@ -2,6 +2,7 @@ import { appScript } from '../assets.js';
 import { getNavigation } from '../navigation.js';
 import { imageUrlFromKey } from '../imageUrl.js';
 import { basePage } from './base.js';
+import { renderNavigationGroup } from './navigationMarkup.js';
 import { iconClose, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
 
 function initials(name) {
@@ -24,16 +25,7 @@ function publicSidebar(active, user) {
       </span>
     </header>
     <div class="sidebar-scroll">
-      ${nav
-        .map(
-          (group) => `<p class="nav-group-title">${group.title}</p>${group.items
-            .map(
-              (item) =>
-                `<a href="${item.href}" class="menu-item ${active === item.key ? 'active' : ''}"><span class="icon">${item.icon || ''}</span><span class="label">${item.label}</span></a>`
-            )
-            .join('')}`
-        )
-        .join('')}
+      ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
     </div>
     <div class="sidebar-foot">
       <a href="${user ? '/api/logout' : '/login'}" class="menu-item ${user ? 'logout-item' : 'sidebar-login-item'}"><span class="icon">${user ? iconLogout : iconProfile}</span><span class="label">${user ? 'Log out' : 'Login'}</span></a>
