@@ -1,4 +1,6 @@
 export const styles = `
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
 :root {
   color-scheme: light;
   --bg: #f2f6ff;
@@ -18,12 +20,15 @@ export const styles = `
   --radius-sm: 6px;
   --sidebar-open: 248px;
   --sidebar-collapse: 72px;
+  --font-body: Inter, 'Noto Sans Bengali', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --font-public-heading: 'Playfair Display', 'Noto Serif Bengali', Georgia, 'Times New Roman', serif;
+  --font-public-brand: 'Cinzel', 'Noto Serif Bengali', Georgia, 'Times New Roman', serif;
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   line-height: 1.45;
@@ -893,6 +898,14 @@ textarea,
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  font-family: var(--font-body);
+}
+
+.public-sidebar,
+.public-main-shell .topbar,
+.public-content-shell,
+.public-footer {
+  font-family: var(--font-body);
 }
 
 .public-content-shell {
@@ -945,8 +958,8 @@ textarea,
 }
 
 .public-cover-logo {
-  width: 54px;
-  height: 54px;
+  width: 74px;
+  height: 74px;
   display: inline-grid;
   place-items: center;
 }
@@ -962,6 +975,8 @@ textarea,
   line-height: 1;
   text-transform: lowercase;
   letter-spacing: -0.02em;
+  font-family: var(--font-public-brand);
+  font-weight: 700;
 }
 
 .public-cover-quote-wrap {
@@ -987,6 +1002,7 @@ textarea,
   display: -webkit-box;
   overflow: hidden;
   line-height: 1.35;
+  font-family: var(--font-public-heading);
 }
 
 .public-class-strip {
@@ -1006,6 +1022,7 @@ textarea,
   font-size: 20px;
   line-height: 1.25;
   letter-spacing: -0.01em;
+  font-family: var(--font-public-heading);
 }
 
 .public-class-see-all {
@@ -1066,6 +1083,7 @@ textarea,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-public-heading);
 }
 
 
@@ -1442,8 +1460,8 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
     gap: 8px;
   }
   .public-cover-logo {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
   }
   .public-cover-name {
     font-size: clamp(28px, 11vw, 40px);
