@@ -11,21 +11,7 @@ function h(value) {
 }
 
 const iconCamera = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5a2 2 0 0 1 2-2h2.05c.46 0 .9-.22 1.18-.6l.8-1.09A2 2 0 0 1 11.14 4h1.72a2 2 0 0 1 1.61.81l.8 1.09c.28.38.72.6 1.18.6h2.05a2 2 0 0 1 2 2v8.75a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.75"/><path d="M17.35 10.25h.01"/></svg>`;
-
-const dobMonths = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+const iconEdit = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h5.2a2 2 0 0 0 1.42-.59L20 10.03a1.9 1.9 0 0 0 0-2.69l-3.32-3.32a1.9 1.9 0 0 0-2.69 0L3.59 14.42A2 2 0 0 0 3 15.84z"/><path d="m12.6 5.4 6 6"/></svg>`;
 
 function initialsForUser(user) {
   return (user.name || user.email || 'U')
@@ -91,25 +77,6 @@ function profileHeader(user) {
 
 function profileMain(user) {
   const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || '')) ? String(user.dateOfBirth) : '';
-  const [dobYear = '', dobMonth = '', dobDay = ''] = dobValue ? dobValue.split('-') : ['', '', ''];
-  const currentYear = new Date().getUTCFullYear();
-  const yearOptions = Array.from({ length: currentYear - 1899 }, (_, index) => {
-    const year = String(currentYear - index);
-    const selected = year === dobYear ? ' selected' : '';
-    return `<option value="${year}"${selected}>${year}</option>`;
-  }).join('');
-  const monthOptions = dobMonths
-    .map((label, index) => {
-      const value = String(index + 1).padStart(2, '0');
-      const selected = value === dobMonth ? ' selected' : '';
-      return `<option value="${value}"${selected}>${label}</option>`;
-    })
-    .join('');
-  const dayOptions = Array.from({ length: 31 }, (_, index) => {
-    const value = String(index + 1).padStart(2, '0');
-    const selected = value === dobDay ? ' selected' : '';
-    return `<option value="${value}"${selected}>${value}</option>`;
-  }).join('');
 
   return `<section class="profile-body-flat">
     <nav class="profile-tabs" aria-label="Profile sections" role="tablist">
@@ -119,31 +86,25 @@ function profileMain(user) {
 
     <div class="profile-tab-panel" id="profile-about-panel" role="tabpanel" aria-labelledby="profile-about-tab" data-profile-panel="about">
       <div class="profile-bio" data-profile-about-view>
-        <div class="profile-about-head">
-          <h3 class="profile-about-title">Bio Data</h3>
-          <div class="profile-form-actions">
-            <button type="button" class="btn btn-secondary" data-profile-about-cancel hidden>Cancel</button>
-            <button type="button" class="btn btn-primary" data-profile-about-edit-toggle>Edit</button>
-          </div>
+        <div class="profile-section-actions">
+          <button type="button" class="profile-icon-btn" data-profile-about-edit-toggle aria-label="Edit about me"><span class="icon">${iconEdit}</span></button>
         </div>
+
         <div class="profile-readonly-row" data-profile-inline-field="name">
-          <p class="profile-bio-line"><span class="profile-bio-label">Name</span><span class="profile-bio-colon">:</span><span class="profile-fixed-value" data-profile-name-value>${h(user.name)}</span></p>
+          <p class="profile-bio-label">Name</p>
+          <p class="profile-fixed-value" data-profile-name-value>${h(user.name)}</p>
           <label for="profile-name" class="sr-only">Name</label>
           <input id="profile-name" class="input profile-inline-input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" hidden />
         </div>
-        <div class="profile-readonly-row"><p class="profile-bio-line"><span class="profile-bio-label">Email</span><span class="profile-bio-colon">:</span><span class="profile-fixed-value">${h(user.email)}</span></p></div>
-        <div class="profile-readonly-row"><p class="profile-bio-line"><span class="profile-bio-label">Role</span><span class="profile-bio-colon">:</span><span class="profile-fixed-value">${h(user.role || 'user')}</span></p></div>
+        <div class="profile-readonly-row"><p class="profile-bio-label">Email</p><p class="profile-fixed-value">${h(user.email)}</p></div>
+        <div class="profile-readonly-row"><p class="profile-bio-label">Role</p><p class="profile-fixed-value">${h(user.role || 'user')}</p></div>
         <div class="profile-readonly-row" data-profile-inline-field="dob">
-          <p class="profile-bio-line"><span class="profile-bio-label">Date of birth</span><span class="profile-bio-colon">:</span><span class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</span></p>
-          <label for="profile-dob-year" class="sr-only">Date of birth</label>
-          <div class="profile-dob-fields" data-profile-dob-fields hidden>
-            <select class="input" name="dobYear" id="profile-dob-year" aria-label="Birth year"><option value="">Year</option>${yearOptions}</select>
-            <select class="input" name="dobMonth" id="profile-dob-month" aria-label="Birth month"><option value="">Month</option>${monthOptions}</select>
-            <select class="input" name="dobDay" id="profile-dob-day" aria-label="Birth day"><option value="">Day</option>${dayOptions}</select>
-          </div>
-          <input type="hidden" name="dateOfBirth" value="${h(dobValue)}" data-profile-dob-value />
+          <p class="profile-bio-label">Date of birth</p>
+          <p class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</p>
+          <label for="profile-dob" class="sr-only">Date of birth</label>
+          <input id="profile-dob" class="input profile-inline-input" type="date" name="dateOfBirth" value="${h(dobValue)}" max="${new Date().toISOString().slice(0, 10)}" hidden />
         </div>
-        <div class="profile-readonly-row"><p class="profile-bio-line"><span class="profile-bio-label">Joined</span><span class="profile-bio-colon">:</span><span class="profile-fixed-value">${h(formatJoined(user.createdAt))}</span></p></div>
+        <div class="profile-readonly-row"><p class="profile-bio-label">Joined</p><p class="profile-fixed-value">${h(formatJoined(user.createdAt))}</p></div>
         <p class="muted profile-autosave-status" data-profile-status="about" aria-live="polite"></p>
       </div>
     </div>
@@ -306,9 +267,8 @@ function profilePageScript() {
   });
 
   const editToggle = document.querySelector('[data-profile-about-edit-toggle]');
-  const cancelButton = document.querySelector('[data-profile-about-cancel]');
   const nameInlineInput = document.getElementById('profile-name');
-  const dobInlineFields = document.querySelector('[data-profile-dob-fields]');
+  const dobInlineInput = document.getElementById('profile-dob');
   let isEditing = false;
 
   const nameForm = document.createElement('form');
@@ -319,61 +279,44 @@ function profilePageScript() {
   dobForm.action = '/api/profile/dob';
 
   const nameInput = document.getElementById('profile-name');
-  const dobYear = document.getElementById('profile-dob-year');
-  const dobMonth = document.getElementById('profile-dob-month');
-  const dobDay = document.getElementById('profile-dob-day');
-  const dobValue = document.querySelector('[data-profile-dob-value]');
+  const dobInput = document.getElementById('profile-dob');
   const nameTitle = document.querySelector('[data-profile-name-title]');
   const nameValue = document.querySelector('[data-profile-name-value]');
   const dobText = document.querySelector('[data-profile-dob-text]');
 
   let lastSavedName = String(nameInput?.value || '').trim();
-  let lastSavedDob = String(dobValue?.value || '');
+  let lastSavedDob = String(dobInput?.value || '');
 
   const syncEditUi = () => {
     isEditing = !isEditing;
     if (nameInlineInput) nameInlineInput.hidden = !isEditing;
-    if (dobInlineFields) dobInlineFields.hidden = !isEditing;
+    if (dobInlineInput) dobInlineInput.hidden = !isEditing;
     document.querySelectorAll('[data-profile-name-value],[data-profile-dob-text]').forEach((item) => item.hidden = isEditing);
-    if (cancelButton) cancelButton.hidden = !isEditing;
-    if (editToggle) editToggle.textContent = isEditing ? 'Save' : 'Edit';
+    if (editToggle) {
+      editToggle.setAttribute('aria-label', isEditing ? 'Save about me' : 'Edit about me');
+      editToggle.classList.toggle('is-editing', isEditing);
+    }
     if (isEditing) nameInput?.focus();
   };
 
   const resetAboutForm = () => {
     if (nameInput) nameInput.value = lastSavedName;
-    if (dobValue) dobValue.value = lastSavedDob;
-    if (dobYear && dobMonth && dobDay) {
-      const [year = '', month = '', day = ''] = lastSavedDob ? lastSavedDob.split('-') : ['', '', ''];
-      dobYear.value = year;
-      dobMonth.value = month;
-      dobDay.value = day;
-    }
+    if (dobInput) dobInput.value = lastSavedDob;
     setFieldStatus('about', '', 'idle');
   };
 
   const updateDobValue = () => {
-    if (!dobYear || !dobMonth || !dobDay || !dobValue) return null;
-    const year = dobYear.value;
-    const month = dobMonth.value;
-    const day = dobDay.value;
-    if (!year && !month && !day) return (dobValue.value = '');
-    if (!year || !month || !day) return null;
-    const candidate = year + '-' + month + '-' + day;
+    if (!dobInput) return '';
+    const candidate = String(dobInput.value || '');
+    if (!candidate) return '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return null;
     const date = new Date(candidate + 'T00:00:00.000Z');
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) return null;
     const today = new Date();
     const max = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
     if (date.getUTCFullYear() < 1900 || date > max) return null;
-    dobValue.value = candidate;
     return candidate;
   };
-
-  cancelButton?.addEventListener('click', () => {
-    if (!isEditing) return;
-    resetAboutForm();
-    syncEditUi();
-  });
 
   editToggle?.addEventListener('click', async () => {
     if (!isEditing) {
@@ -381,8 +324,6 @@ function profilePageScript() {
       syncEditUi();
       return;
     }
-    if (!dobValue) return;
-
     const nextName = String(nameInput?.value || '').trim();
     if (!nextName || nextName.length > 100) {
       setFieldStatus('about', 'Name must be between 1 and 100 characters.', 'error');
