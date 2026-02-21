@@ -9,6 +9,8 @@ const profileTrigger = profileMenu?.querySelector('[data-profile-trigger]');
 const profilePopup = profileMenu?.querySelector('[data-profile-popup]');
 const sidebarStateKey = 'freeducation.sidebar.collapsed';
 const mobileViewport = window.matchMedia('(max-width: 840px)');
+const prefetchedNavigationUrls = new Set();
+const maxPrefetchCount = 40;
 
 function readSidebarCollapsedState() {
   try {
@@ -251,6 +253,95 @@ function initializeFileIndicators() {
     input.addEventListener('change', syncStatus);
     syncStatus();
     input.dataset.boundFileIndicator = '1';
+  });
+}
+
+function normalizeNavigationUrl(rawUrl) {
+  if (!rawUrl) return null;
+  try {
+    const url = new URL(rawUrl, window.location.href);
+    url.hash = '';
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function isInternalNavigationLink(link) {
+  if (!link || !link.href) return false;
+  if (link.target && link.target !== '_self') return false;
+  if (link.hasAttribute('download') || link.dataset.noPrefetch === '1') return false;
+  if (link.classList.contains('logout-item') || link.classList.contains('sidebar-login-item')) return false;
+
+  const rel = String(link.getAttribute('rel') || '').toLowerCase();
+  if (rel.includes('external')) return false;
+
+  const href = String(link.getAttribute('href') || '').trim();
+  if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
+
+  const url = normalizeNavigationUrl(link.href);
+  if (!url || url.origin !== window.location.origin) return false;
+  if (!['http:', 'https:'].includes(url.protocol)) return false;
+  if (url.pathname === '/api/logout' || url.pathname.startsWith('/api/')) return false;
+  return true;
+}
+
+function prefetchNavigationUrl(rawUrl) {
+  if (prefetchedNavigationUrls.size >= maxPrefetchCount) return;
+  const url = normalizeNavigationUrl(rawUrl);
+  if (!url) return;
+  const href = url.toString();
+  if (prefetchedNavigationUrls.has(href)) return;
+
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'document';
+  link.href = href;
+  document.head.appendChild(link);
+  prefetchedNavigationUrls.add(href);
+}
+
+function initializeNavigationBoost() {
+  const navLinks = Array.from(document.querySelectorAll('a')).filter(isInternalNavigationLink);
+  if (navLinks.length === 0) return;
+
+  const onNavigate = (event) => {
+    if (event.defaultPrevented) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    document.body.classList.add('page-nav-pending');
+  };
+
+  navLinks.forEach((link) => {
+    const url = link.href;
+    const warmup = () => prefetchNavigationUrl(url);
+    link.addEventListener('pointerenter', warmup, { passive: true });
+    link.addEventListener('focus', warmup);
+    link.addEventListener('touchstart', warmup, { passive: true });
+    link.addEventListener('click', onNavigate);
+  });
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const link = entry.target;
+        if (!(link instanceof HTMLAnchorElement)) return;
+        prefetchNavigationUrl(link.href);
+        observer.unobserve(link);
+      });
+    }, { rootMargin: '180px 0px' });
+    navLinks.forEach((link) => observer.observe(link));
+  }
+}
+
+function initializePageMotion() {
+  const body = document.body;
+  if (!body) return;
+  body.classList.add('page-entering');
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      body.classList.remove('page-entering');
+    });
   });
 }
 
@@ -817,5 +908,7 @@ if (!shell) {
   initializeImageSlots();
   initializeClassMoveControls();
   initializeFormHandlers();
+  initializeNavigationBoost();
+  initializePageMotion();
 }
 `;
