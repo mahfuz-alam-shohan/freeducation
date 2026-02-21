@@ -73,8 +73,8 @@ a { color: inherit; }
   white-space: nowrap;
 }
 .brand-logo {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   display: inline-grid;
   place-items: center;
 }
@@ -315,6 +315,7 @@ a { color: inherit; }
   display: grid;
   gap: 8px;
 }
+.profile-popup[hidden] { display: none; }
 
 .sidebar-login-item {
   margin-top: auto;
@@ -824,10 +825,9 @@ textarea,
   width: 100%;
   background: #1d4ed8;
   color: #eff6ff;
-  min-height: calc(100vh - 64px);
   padding: 16px 14px;
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 16px;
 }
 
@@ -1113,8 +1113,8 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
     gap: 8px;
   }
   .topbar-brand .brand-logo {
-    width: 22px;
-    height: 22px;
+    width: 30px;
+    height: 30px;
   }
   .topbar-brand .brand-name {
     font-size: 18px;
@@ -1190,7 +1190,6 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .page-title { font-size: 24px; }
   .auth-card { padding: 16px; }
   .public-home-cover {
-    min-height: calc(100vh - 64px);
     padding: 14px 10px;
   }
   .public-cover-logo {

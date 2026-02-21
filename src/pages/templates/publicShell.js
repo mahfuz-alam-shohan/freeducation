@@ -2,7 +2,6 @@ import { appScript } from '../assets.js';
 import { getNavigation } from '../navigation.js';
 import { imageUrlFromKey } from '../imageUrl.js';
 import { basePage } from './base.js';
-import { appShell } from './shell.js';
 import { iconClose, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
 
 function initials(name) {
@@ -73,13 +72,6 @@ function publicTopbar(user) {
 }
 
 export function publicShell(active, user, title, content, script = '') {
-  if (user) {
-    return appShell(active, user, title, 'Public page', content, {
-      hidePageHead: active === 'home',
-      fullBleed: active === 'home',
-    });
-  }
-
   return basePage(
     title,
     `<div class="app-shell" data-shell>
