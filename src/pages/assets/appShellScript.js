@@ -318,6 +318,7 @@ function initializeImageSlots() {
 
     uploadButton.addEventListener('click', () => {
       removeInput.value = '0';
+      input.value = '';
       input.click();
       closeSlotDialog();
     });
@@ -618,7 +619,6 @@ async function readImageDimensions(file) {
 
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
-  if (file.type === 'image/webp' && file.size <= 160 * 1024) return file;
 
   const maxEdge = 240;
   const source = await readImageDimensions(file);
@@ -636,12 +636,12 @@ async function downscaleImageFile(file) {
   }
 
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'low';
+  ctx.imageSmoothingQuality = 'high';
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.35));
-  if (!blob || blob.size >= file.size) return file;
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.7));
+  if (!blob) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
   return new File([blob], targetName + '.webp', { type: 'image/webp', lastModified: Date.now() });
