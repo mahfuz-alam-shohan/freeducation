@@ -95,6 +95,21 @@ function profileMain(user) {
   }).join('');
 
   return `<section class="profile-body-flat">
+    <div class="profile-snapshot" aria-label="Profile overview">
+      <article class="profile-snapshot-item">
+        <p class="profile-snapshot-label">Email</p>
+        <p class="profile-snapshot-value">${h(user.email)}</p>
+      </article>
+      <article class="profile-snapshot-item">
+        <p class="profile-snapshot-label">Role</p>
+        <p class="profile-snapshot-value">${h(user.role || 'user')}</p>
+      </article>
+      <article class="profile-snapshot-item">
+        <p class="profile-snapshot-label">Joined</p>
+        <p class="profile-snapshot-value">${h(formatJoined(user.createdAt))}</p>
+      </article>
+    </div>
+
     <nav class="profile-tabs" aria-label="Profile sections" role="tablist">
       <button type="button" class="profile-tab is-active" role="tab" aria-selected="true" aria-controls="profile-about-panel" id="profile-about-tab" data-profile-tab="about">About Me</button>
       <button type="button" class="profile-tab" role="tab" aria-selected="false" aria-controls="profile-security-panel" id="profile-security-tab" data-profile-tab="security">Security</button>
@@ -102,6 +117,7 @@ function profileMain(user) {
 
     <div class="profile-tab-panel" id="profile-about-panel" role="tabpanel" aria-labelledby="profile-about-tab" data-profile-panel="about">
       <div class="profile-bio" data-profile-about-view>
+        <p class="profile-panel-title">Personal details</p>
         <div class="profile-readonly-row" data-profile-inline-field="name">
           <div class="profile-field-head">
             <p class="profile-bio-label" id="profile-name-label">Name</p>
@@ -118,8 +134,6 @@ function profileMain(user) {
           </form>
           <p class="muted profile-inline-status" data-profile-status="name" aria-live="polite"></p>
         </div>
-        <div class="profile-readonly-row"><p class="profile-bio-label">Email</p><p class="profile-fixed-value">${h(user.email)}</p></div>
-        <div class="profile-readonly-row"><p class="profile-bio-label">Role</p><p class="profile-fixed-value">${h(user.role || 'user')}</p></div>
         <div class="profile-readonly-row" data-profile-inline-field="dob">
           <div class="profile-field-head">
             <p class="profile-bio-label" id="profile-dob-label">Date of birth</p>
@@ -147,11 +161,11 @@ function profileMain(user) {
           </form>
           <p class="muted profile-inline-status" data-profile-status="dob" aria-live="polite"></p>
         </div>
-        <div class="profile-readonly-row"><p class="profile-bio-label">Joined</p><p class="profile-fixed-value">${h(formatJoined(user.createdAt))}</p></div>
       </div>
     </div>
 
     <div class="profile-tab-panel" id="profile-security-panel" role="tabpanel" aria-labelledby="profile-security-tab" data-profile-panel="security" hidden>
+      <p class="profile-panel-title">Password</p>
       <form method="post" action="/api/profile/password" class="profile-form-grid">
         <label for="profile-current-password">Current password</label>
         <input id="profile-current-password" class="input" type="password" name="currentPassword" minlength="8" maxlength="120" required autocomplete="current-password" />
