@@ -354,11 +354,10 @@ export function topicsPage(user, subject, node, chapter, topics) {
 }
 
 export function contentKindsPage(user, subject, node, chapter, topic, childNodes = []) {
-  const disabledKinds = new Set(['Videos']);
-  const removedKinds = new Set(['CQ Bank']);
+  const disabledKinds = new Set(['CQ Bank', 'Videos']);
   const detectedKinds = childNodes.filter((n) => n.node_type === 'content').map((n) => n.content_kind || n.display_name);
-  const fallbackKinds = node.content_kind ? [node.content_kind] : ['MCQ Bank', 'Short Notes', 'Videos', 'Summary'];
-  const kinds = Array.from(new Set((detectedKinds.length ? detectedKinds : fallbackKinds).filter(Boolean))).filter((kind) => !removedKinds.has(kind));
+  const fallbackKinds = node.content_kind ? [node.content_kind] : ['CQ Bank', 'MCQ Bank', 'Short Notes', 'Videos', 'Summary'];
+  const kinds = Array.from(new Set((detectedKinds.length ? detectedKinds : fallbackKinds).filter(Boolean)));
 
   const hrefForKind = (kind) => {
     if (kind === 'Short Notes') return `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
