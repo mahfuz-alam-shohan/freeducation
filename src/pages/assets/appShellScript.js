@@ -267,6 +267,8 @@ function initializeImageSlots() {
     if (!input || !uploadButton || !removeInput) return;
 
     const defaultIconMarkup = '<span class="image-slot-icon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><rect x="2.25" y="3.25" width="15.5" height="13.5" rx="2"></rect><circle cx="7" cy="8" r="1.6"></circle><path d="M4.75 14l3.6-3.9 2.35 2.45 2.35-2.95 2.2 4.4"></path></svg></span>';
+    const initialImageSrc = (slot.dataset.imageSlotSrc || '').trim();
+    let hasPersistedImage = slot.dataset.imageSlotHasImage === '1' && Boolean(initialImageSrc);
     let previewUrl = '';
 
     const closeSlotDialog = () => {
@@ -280,17 +282,22 @@ function initializeImageSlots() {
     };
 
     const renderSlotState = ({ hasImage, src = '' }) => {
-      uploadButton.textContent = hasImage ? 'Change image' : 'Upload image';
-      if (removeButton) removeButton.hidden = !hasImage;
-      if (seeButton) seeButton.hidden = !hasImage;
+      const normalizedSrc = typeof src === 'string' ? src.trim() : '';
+      const showImage = Boolean(hasImage && normalizedSrc);
+      uploadButton.textContent = showImage ? 'Change image' : 'Upload image';
+      if (removeButton) removeButton.hidden = !showImage;
+      if (seeButton) seeButton.hidden = !showImage;
 
       if (previewLarge) {
-        previewLarge.hidden = !hasImage;
-        previewLarge.src = hasImage ? src : '';
+        previewLarge.hidden = !showImage;
+        previewLarge.src = showImage ? normalizedSrc : '';
       }
 
+      slot.dataset.imageSlotHasImage = showImage ? '1' : '0';
+      slot.dataset.imageSlotSrc = showImage ? normalizedSrc : '';
+
       if (!trigger) return;
-      if (!hasImage) {
+      if (!showImage) {
         trigger.innerHTML = defaultIconMarkup;
         return;
       }
@@ -299,12 +306,15 @@ function initializeImageSlots() {
       img.alt = 'Uploaded image';
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.src = src;
+      img.src = normalizedSrc;
       trigger.appendChild(img);
     };
 
     const currentImage = slot.querySelector('[data-image-slot-trigger] img');
-    renderSlotState({ hasImage: Boolean(currentImage), src: currentImage?.getAttribute('src') || '' });
+    const currentImageSrc = (currentImage?.getAttribute('src') || '').trim();
+    const effectiveInitialSrc = hasPersistedImage ? initialImageSrc : currentImageSrc;
+    hasPersistedImage = Boolean(effectiveInitialSrc);
+    renderSlotState({ hasImage: hasPersistedImage, src: effectiveInitialSrc });
 
     uploadButton.addEventListener('click', () => {
       removeInput.value = '0';
@@ -320,6 +330,7 @@ function initializeImageSlots() {
           URL.revokeObjectURL(previewUrl);
           previewUrl = '';
         }
+        hasPersistedImage = false;
         renderSlotState({ hasImage: false });
         input.dispatchEvent(new Event('change', { bubbles: true }));
         closeSlotDialog();
@@ -332,6 +343,10 @@ function initializeImageSlots() {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         previewUrl = URL.createObjectURL(input.files[0]);
         renderSlotState({ hasImage: true, src: previewUrl });
+      } else if (!hasPersistedImage) {
+        renderSlotState({ hasImage: false });
+      } else {
+        renderSlotState({ hasImage: true, src: initialImageSrc });
       }
     });
 
