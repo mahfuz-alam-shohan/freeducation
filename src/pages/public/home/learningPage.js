@@ -1,0 +1,93 @@
+import { publicShell } from '../../templates/publicShell.js';
+import { imageUrlFromKey } from '../../imageUrl.js';
+import { publicHomeStyles } from './homeStyles.js';
+
+function h(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function cardGrid(items, hrefBuilder) {
+  return items
+    .map(
+      (item) => `<article class="class-card"><a class="public-card-link" href="${h(hrefBuilder(item))}">
+        <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.display_name || item.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
+        <p class="class-card-name">${h(item.display_name || item.name)}</p>
+      </a></article>`
+    )
+    .join('');
+}
+
+export function publicSubjectNodePage(user, subject, title, subtitle, items, hrefBuilder) {
+  return publicShell(
+    'home',
+    user,
+    `${subject.name} · ${title}`,
+    `<section class="public-stack">
+      <h1 class="public-stack-title">${h(title)}</h1>
+      <p class="public-stack-subtitle">${h(subtitle)}</p>
+      <div class="public-flat-grid">${cardGrid(items, hrefBuilder)}</div>
+    </section>`,
+    '',
+    publicHomeStyles
+  );
+}
+
+export function publicChapterContentPage(user, subject, node, chapter, shortNotes = [], contentNodes = [], topicId = null) {
+  const actions = contentNodes
+    .filter((item) => item.content_kind !== 'Short Notes')
+    .map(
+      (item) => `<a class="public-cta-card" href="/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent(item.content_kind || '')}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ''}">${h(item.display_name)}</a>`
+    )
+    .join('');
+
+  const notes = shortNotes
+    .map(
+      (entry, index) => `<li>
+      <h3 class="public-note-title">${index + 1}. ${h(entry.title || 'Short note')}</h3>
+      <div class="public-note-body">${entry.content_html}</div>
+    </li>`
+    )
+    .join('');
+
+  return publicShell(
+    'home',
+    user,
+    `${chapter.name} · ${node.display_name}`,
+    `<section class="public-stack">
+      <h1 class="public-stack-title">${h(chapter.name)}</h1>
+      <p class="public-stack-subtitle">${h(node.display_name)}</p>
+      <div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
+      <ol class="public-note-list">${notes || '<li>No short notes yet.</li>'}</ol>
+    </section>`,
+    '',
+    publicHomeStyles
+  );
+}
+
+export function publicContentEntriesPage(user, subject, chapter, kind, entries = []) {
+  const list = entries
+    .map(
+      (entry, index) => `<li>
+      <h3 class="public-note-title">${index + 1}. ${h(entry.title || kind)}</h3>
+      <div class="public-note-body">${entry.content_html}</div>
+    </li>`
+    )
+    .join('');
+
+  return publicShell(
+    'home',
+    user,
+    `${chapter.name} · ${kind}`,
+    `<section class="public-stack">
+      <h1 class="public-stack-title">${h(kind)}</h1>
+      <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
+      <ol class="public-note-list">${list || '<li>No content yet.</li>'}</ol>
+    </section>`,
+    '',
+    publicHomeStyles
+  );
+}

@@ -11,13 +11,28 @@ function h(value) {
     .replaceAll('"', '&quot;');
 }
 
-function classCardsMarkup(classes = []) {
+function classCardsMarkup(classes = [], makeHref = (item) => `/classes/${item.id}`) {
   return classes
     .map(
       (item) => `<article class="class-card">
-        <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
-        <p class="class-card-name">${h(item.name)}</p>
-        <p class="class-card-meta">Tap to start lessons</p>
+        <a class="public-card-link" href="${h(makeHref(item))}">
+          <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
+          <p class="class-card-name">${h(item.name)}</p>
+          <p class="class-card-meta">Tap to start lessons</p>
+        </a>
+      </article>`
+    )
+    .join('');
+}
+
+function subjectCardsMarkup(subjects = []) {
+  return subjects
+    .map(
+      (subject) => `<article class="class-card">
+        <a class="public-card-link" href="/learn/subjects/${subject.id}">
+          <div class="class-card-poster-wrap">${subject.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(subject.image_key)}" alt="${h(subject.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
+          <p class="class-card-name">${h(subject.name)}</p>
+        </a>
       </article>`
     )
     .join('');
@@ -80,6 +95,21 @@ export function publicClassesPage(user = null, classes = []) {
         <h1 class="public-class-strip-title">All Classes</h1>
       </div>
       <div class="public-class-grid">${classCardsMarkup(classes)}</div>
+    </section>`,
+    '',
+    publicHomeStyles
+  );
+}
+
+export function publicClassSubjectsPage(user = null, classItem, subjects = []) {
+  return publicShell(
+    'home',
+    user,
+    `${classItem.name} Subjects`,
+    `<section class="public-stack">
+      <h1 class="public-stack-title">${h(classItem.name)}</h1>
+      <p class="public-stack-subtitle">Select a subject.</p>
+      <div class="public-flat-grid">${subjectCardsMarkup(subjects)}</div>
     </section>`,
     '',
     publicHomeStyles

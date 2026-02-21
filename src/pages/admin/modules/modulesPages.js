@@ -142,6 +142,7 @@ export function classesPage(user, classes) {
     .map(
       (item, index) => `<tr data-class-row data-class-id="${item.id}">
       <td>${fullTextCell(item.name, `class-name-${item.id}`, 'Class name')}</td>
+      <td class="table-action-open-cell"><a href="/classes/manage/${item.id}" class="btn btn-secondary">Subjects</a></td>
       <td>${h(item.sort_order)}</td>
       <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
       <td><button class="btn btn-secondary" type="button" data-class-move="up" data-class-id="${item.id}" ${index === 0 ? 'disabled' : ''}>↑</button></td>
@@ -190,8 +191,8 @@ export function classesPage(user, classes) {
   </section>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Class</th><th>Order</th><th>Rename</th><th>Up</th><th>Down</th><th>Homepage</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(rows, 9, 'No classes yet.')}</tbody>
+      <thead><tr><th>Class</th><th>Subjects</th><th>Order</th><th>Rename</th><th>Up</th><th>Down</th><th>Homepage</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 10, 'No classes yet.')}</tbody>
     </table></div>
   </section>`;
 
@@ -657,4 +658,29 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
   ${renderPagination(baseHref, safePage, totalPages)}`;
 
   return appShell('subjects', user, `${subject.name} · MCQ Bank`, 'Create, edit, and delete MCQs.', content, { pageStyles: modulesStyles });
+}
+
+export function classSubjectsPage(user, classItem, subjects) {
+  const rows = subjects
+    .map(
+      (item) => `<tr>
+      <td>${h(item.name)}</td>
+      <td>${h(item.template_name)}</td>
+      <td>${new Date(item.created_at).toLocaleDateString()}</td>
+      <td class="table-action-open-cell"><a href="/subjects/${item.id}" class="btn btn-secondary">Manage</a></td>
+    </tr>`
+    )
+    .join('');
+
+  const content = `<section class="card flat-card"><a class="back-link" href="/classes/manage">← Back to classes</a></section>
+  <section class="card flat-card">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel">
+      <thead><tr><th>Subject</th><th>Template</th><th>Created</th><th>Open</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 4, 'No subjects assigned to this class yet.')}</tbody>
+    </table></div>
+  </section>`;
+
+  return appShell('classes', user, `${classItem.name} Subjects`, 'Open any subject to manage its template content.', content, {
+    pageStyles: modulesStyles,
+  });
 }
