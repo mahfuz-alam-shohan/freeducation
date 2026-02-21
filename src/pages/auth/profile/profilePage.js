@@ -77,6 +77,7 @@ function profileHeader(user) {
 
 function profileMain(user) {
   const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || '')) ? String(user.dateOfBirth) : '';
+  const maxDob = new Date().toISOString().slice(0, 10);
 
   return `<section class="profile-body-flat">
     <nav class="profile-tabs" aria-label="Profile sections" role="tablist">
@@ -86,26 +87,41 @@ function profileMain(user) {
 
     <div class="profile-tab-panel" id="profile-about-panel" role="tabpanel" aria-labelledby="profile-about-tab" data-profile-panel="about">
       <div class="profile-bio" data-profile-about-view>
-        <div class="profile-section-actions">
-          <button type="button" class="profile-icon-btn" data-profile-about-edit-toggle aria-label="Edit about me"><span class="icon">${iconEdit}</span></button>
-        </div>
-
         <div class="profile-readonly-row" data-profile-inline-field="name">
-          <p class="profile-bio-label">Name</p>
+          <div class="profile-field-head">
+            <p class="profile-bio-label" id="profile-name-label">Name</p>
+            <button type="button" class="profile-inline-edit-btn" data-profile-inline-toggle="name" aria-expanded="false" aria-controls="profile-name-editor" aria-label="Edit name"><span class="icon">${iconEdit}</span></button>
+          </div>
           <p class="profile-fixed-value" data-profile-name-value>${h(user.name)}</p>
-          <label for="profile-name" class="sr-only">Name</label>
-          <input id="profile-name" class="input profile-inline-input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" hidden />
+          <form id="profile-name-editor" class="profile-inline-editor" data-profile-inline-editor="name" method="post" action="/api/profile/name" hidden>
+            <label for="profile-name" class="profile-field-label">Name</label>
+            <input id="profile-name" class="input profile-inline-input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" />
+            <div class="profile-inline-actions">
+              <button class="btn btn-primary" type="submit">Save</button>
+              <button class="btn btn-secondary" type="button" data-profile-inline-cancel="name">Cancel</button>
+            </div>
+          </form>
+          <p class="muted profile-inline-status" data-profile-status="name" aria-live="polite"></p>
         </div>
         <div class="profile-readonly-row"><p class="profile-bio-label">Email</p><p class="profile-fixed-value">${h(user.email)}</p></div>
         <div class="profile-readonly-row"><p class="profile-bio-label">Role</p><p class="profile-fixed-value">${h(user.role || 'user')}</p></div>
         <div class="profile-readonly-row" data-profile-inline-field="dob">
-          <p class="profile-bio-label">Date of birth</p>
+          <div class="profile-field-head">
+            <p class="profile-bio-label" id="profile-dob-label">Date of birth</p>
+            <button type="button" class="profile-inline-edit-btn" data-profile-inline-toggle="dob" aria-expanded="false" aria-controls="profile-dob-editor" aria-label="Edit date of birth"><span class="icon">${iconEdit}</span></button>
+          </div>
           <p class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</p>
-          <label for="profile-dob" class="sr-only">Date of birth</label>
-          <input id="profile-dob" class="input profile-inline-input" type="date" name="dateOfBirth" value="${h(dobValue)}" max="${new Date().toISOString().slice(0, 10)}" hidden />
+          <form id="profile-dob-editor" class="profile-inline-editor" data-profile-inline-editor="dob" method="post" action="/api/profile/dob" hidden>
+            <label for="profile-dob" class="profile-field-label">Date of birth</label>
+            <input id="profile-dob" class="input profile-inline-input" type="date" name="dateOfBirth" value="${h(dobValue)}" max="${maxDob}" />
+            <div class="profile-inline-actions">
+              <button class="btn btn-primary" type="submit">Save</button>
+              <button class="btn btn-secondary" type="button" data-profile-inline-cancel="dob">Cancel</button>
+            </div>
+          </form>
+          <p class="muted profile-inline-status" data-profile-status="dob" aria-live="polite"></p>
         </div>
         <div class="profile-readonly-row"><p class="profile-bio-label">Joined</p><p class="profile-fixed-value">${h(formatJoined(user.createdAt))}</p></div>
-        <p class="muted profile-autosave-status" data-profile-status="about" aria-live="polite"></p>
       </div>
     </div>
 
@@ -266,18 +282,6 @@ function profilePageScript() {
     });
   });
 
-  const editToggle = document.querySelector('[data-profile-about-edit-toggle]');
-  const nameInlineInput = document.getElementById('profile-name');
-  const dobInlineInput = document.getElementById('profile-dob');
-  let isEditing = false;
-
-  const nameForm = document.createElement('form');
-  nameForm.method = 'post';
-  nameForm.action = '/api/profile/name';
-  const dobForm = document.createElement('form');
-  dobForm.method = 'post';
-  dobForm.action = '/api/profile/dob';
-
   const nameInput = document.getElementById('profile-name');
   const dobInput = document.getElementById('profile-dob');
   const nameTitle = document.querySelector('[data-profile-name-title]');
@@ -287,22 +291,17 @@ function profilePageScript() {
   let lastSavedName = String(nameInput?.value || '').trim();
   let lastSavedDob = String(dobInput?.value || '');
 
-  const syncEditUi = () => {
-    isEditing = !isEditing;
-    if (nameInlineInput) nameInlineInput.hidden = !isEditing;
-    if (dobInlineInput) dobInlineInput.hidden = !isEditing;
-    document.querySelectorAll('[data-profile-name-value],[data-profile-dob-text]').forEach((item) => item.hidden = isEditing);
-    if (editToggle) {
-      editToggle.setAttribute('aria-label', isEditing ? 'Save about me' : 'Edit about me');
-      editToggle.classList.toggle('is-editing', isEditing);
+  const setEditorOpen = (key, open) => {
+    const editor = document.querySelector('[data-profile-inline-editor="' + key + '"]');
+    const toggle = document.querySelector('[data-profile-inline-toggle="' + key + '"]');
+    const value = key === 'name' ? nameValue : dobText;
+    if (editor) editor.hidden = !open;
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.classList.toggle('is-open', open);
     }
-    if (isEditing) nameInput?.focus();
-  };
-
-  const resetAboutForm = () => {
-    if (nameInput) nameInput.value = lastSavedName;
-    if (dobInput) dobInput.value = lastSavedDob;
-    setFieldStatus('about', '', 'idle');
+    if (value) value.hidden = open;
+    if (open) editor?.querySelector('input')?.focus();
   };
 
   const updateDobValue = () => {
@@ -318,64 +317,89 @@ function profilePageScript() {
     return candidate;
   };
 
-  editToggle?.addEventListener('click', async () => {
-    if (!isEditing) {
-      setFieldStatus('about', '', 'idle');
-      syncEditUi();
-      return;
-    }
+  document.querySelectorAll('[data-profile-inline-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.getAttribute('data-profile-inline-toggle');
+      if (!key) return;
+      const editor = document.querySelector('[data-profile-inline-editor="' + key + '"]');
+      const opening = Boolean(editor?.hidden);
+      setEditorOpen(key, opening);
+      setFieldStatus(key, '', 'idle');
+      if (!opening && key === 'name' && nameInput) nameInput.value = lastSavedName;
+      if (!opening && key === 'dob' && dobInput) dobInput.value = lastSavedDob;
+    });
+  });
+
+  document.querySelectorAll('[data-profile-inline-cancel]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.getAttribute('data-profile-inline-cancel');
+      if (!key) return;
+      if (key === 'name' && nameInput) nameInput.value = lastSavedName;
+      if (key === 'dob' && dobInput) dobInput.value = lastSavedDob;
+      setFieldStatus(key, '', 'idle');
+      setEditorOpen(key, false);
+    });
+  });
+
+  const submitName = async (event) => {
+    event.preventDefault();
     const nextName = String(nameInput?.value || '').trim();
     if (!nextName || nextName.length > 100) {
-      setFieldStatus('about', 'Name must be between 1 and 100 characters.', 'error');
+      setFieldStatus('name', 'Name must be between 1 and 100 characters.', 'error');
       return;
     }
+    if (nextName === lastSavedName) {
+      setFieldStatus('name', 'No changes to save.', 'idle');
+      setEditorOpen('name', false);
+      return;
+    }
+    setFieldStatus('name', 'Saving…', 'working');
+    const payload = new FormData();
+    payload.set('name', nextName);
+    const response = await fetch('/api/profile/name', { method: 'POST', body: payload, credentials: 'same-origin' }).catch(() => null);
+    if (!response?.ok) {
+      setFieldStatus('name', 'Could not save name.', 'error');
+      return;
+    }
+    lastSavedName = nextName;
+    if (nameTitle) nameTitle.textContent = nextName;
+    if (nameValue) nameValue.textContent = nextName;
+    setFieldStatus('name', 'Saved.', 'success');
+    setEditorOpen('name', false);
+    setTimeout(() => setFieldStatus('name', '', 'idle'), 1200);
+  };
 
+  const submitDob = async (event) => {
+    event.preventDefault();
     const nextDob = updateDobValue();
     if (nextDob === null) {
-      setFieldStatus('about', 'Please select a valid date of birth.', 'error');
+      setFieldStatus('dob', 'Please select a valid date of birth.', 'error');
       return;
     }
-
-    const hasNameChange = nextName !== lastSavedName;
-    const hasDobChange = (nextDob || '') !== lastSavedDob;
-    if (!hasNameChange && !hasDobChange) {
-      setFieldStatus('about', 'No changes to save.', 'idle');
-      syncEditUi();
+    if ((nextDob || '') === lastSavedDob) {
+      setFieldStatus('dob', 'No changes to save.', 'idle');
+      setEditorOpen('dob', false);
       return;
     }
-
-    setFieldStatus('about', 'Saving…', 'working');
-    if (hasNameChange) {
-      const namePayload = new FormData();
-      namePayload.set('name', nextName);
-      const nameResponse = await fetch(nameForm.action, { method: 'POST', body: namePayload, credentials: 'same-origin' }).catch(() => null);
-      if (!nameResponse?.ok) {
-        setFieldStatus('about', 'Could not save profile details.', 'error');
-        return;
-      }
-      lastSavedName = nextName;
-      if (nameTitle) nameTitle.textContent = nextName;
-      if (nameValue) nameValue.textContent = nextName;
+    setFieldStatus('dob', 'Saving…', 'working');
+    const payload = new FormData();
+    payload.set('dateOfBirth', nextDob || '');
+    const response = await fetch('/api/profile/dob', { method: 'POST', body: payload, credentials: 'same-origin' }).catch(() => null);
+    if (!response?.ok) {
+      setFieldStatus('dob', 'Could not save date of birth.', 'error');
+      return;
     }
+    lastSavedDob = nextDob || '';
+    if (dobText) dobText.textContent = nextDob
+      ? new Date(nextDob + 'T00:00:00.000Z').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
+      : 'Not set';
+    setFieldStatus('dob', 'Saved.', 'success');
+    setEditorOpen('dob', false);
+    setTimeout(() => setFieldStatus('dob', '', 'idle'), 1200);
+  };
 
-    if (hasDobChange) {
-      const dobPayload = new FormData();
-      dobPayload.set('dateOfBirth', nextDob || '');
-      const dobResponse = await fetch(dobForm.action, { method: 'POST', body: dobPayload, credentials: 'same-origin' }).catch(() => null);
-      if (!dobResponse?.ok) {
-        setFieldStatus('about', 'Could not save profile details.', 'error');
-        return;
-      }
-      lastSavedDob = nextDob || '';
-      if (dobText) dobText.textContent = nextDob
-        ? new Date(nextDob + 'T00:00:00.000Z').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
-        : 'Not set';
-    }
-
-    setFieldStatus('about', 'Saved.', 'success');
-    setTimeout(() => setFieldStatus('about', '', 'idle'), 1200);
-    syncEditUi();
-  });
+  document.querySelector('[data-profile-inline-editor="name"]')?.addEventListener('submit', submitName);
+  document.querySelector('[data-profile-inline-editor="dob"]')?.addEventListener('submit', submitDob);
 })();
 </script>`;
 }
