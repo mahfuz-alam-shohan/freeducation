@@ -4,6 +4,7 @@ import { basePage } from './base.js';
 import { imageUrlFromKey } from '../imageUrl.js';
 import { renderNavigationGroup } from './navigationMarkup.js';
 import { iconClose, iconCollapse, iconLogout, iconMenu, siteLogo } from './icons.js';
+import { sidebarIdentityMarkup } from './sidebarIdentity.js';
 
 function initials(name) {
   return String(name || 'A')
@@ -28,7 +29,7 @@ function sidebar(active, user) {
       </button>
     </header>
     <div class="sidebar-scroll">
-      <p class="muted sidebar-login-note">Logged in as <strong class="login-name">${user.name}</strong> (${user.role})</p>
+      ${sidebarIdentityMarkup(user)}
       ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
     </div>
     <div class="sidebar-foot">
