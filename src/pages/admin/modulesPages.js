@@ -28,6 +28,14 @@ function tableRowsOrEmpty(rows, colSpan, label) {
   return rows || `<tr><td colspan="${colSpan}" class="table-empty">${h(label)}</td></tr>`;
 }
 
+function imageUploadCell({ id, formId, disabled = false }) {
+  return `<div class="file-indicator-cell">
+    <span class="file-indicator-icon" aria-hidden="true">🖼️</span>
+    <input id="${h(id)}" class="input file-indicator-input js-file-indicator-input" type="file" name="image" ${formId ? `form="${h(formId)}"` : ''} accept="image/*" ${disabled ? 'disabled' : ''} data-file-indicator-target="${h(id)}-status" />
+    <small class="muted file-indicator-status" id="${h(id)}-status" aria-live="polite">No image selected</small>
+  </div>`;
+}
+
 export function templatesPage(user, templates) {
   const rows = templates
     .map(
@@ -110,7 +118,7 @@ export function classesPage(user, classes) {
       <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
       <td><input class="input" type="number" name="sortOrder" form="class-update-${item.id}" value="${h(item.sort_order)}" /></td>
       <td><label><input type="checkbox" name="showOnHome" value="1" form="class-update-${item.id}" ${item.show_on_home ? 'checked' : ''} /> Show</label></td>
-      <td><input class="input" type="file" name="image" form="class-update-${item.id}" accept="image/*" /></td>
+      <td>${imageUploadCell({ id: `class-upload-${item.id}`, formId: `class-update-${item.id}` })}</td>
       <td><label><input type="checkbox" name="removeImage" value="1" form="class-update-${item.id}" /> Remove</label></td>
       <td><small class="muted" data-auto-save-status form="class-update-${item.id}">Synced</small></td>
       <td>
@@ -147,7 +155,7 @@ export function classesPage(user, classes) {
           <label><input type="checkbox" name="showOnHome" value="1" checked /> Show on homepage</label>
           <input class="input" name="name" placeholder="Class name" required />
           <input class="input" type="number" name="sortOrder" value="0" />
-          <input class="input" type="file" name="image" accept="image/*" />
+          ${imageUploadCell({ id: 'class-create-upload' })}
           <button class="btn btn-primary" type="submit">Create</button>
         </form>
       </div>

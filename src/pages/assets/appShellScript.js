@@ -227,6 +227,25 @@ function initializeContentModals() {
   });
 }
 
+function initializeFileIndicators() {
+  document.querySelectorAll('.js-file-indicator-input').forEach((input) => {
+    if (input.dataset.boundFileIndicator === '1') return;
+    const targetId = input.dataset.fileIndicatorTarget;
+    const status = targetId ? document.getElementById(targetId) : null;
+    if (!status) return;
+
+    const syncStatus = () => {
+      const selected = input.files && input.files[0] ? input.files[0].name : '';
+      status.textContent = selected || 'No image selected';
+      status.dataset.tone = selected ? 'ready' : 'idle';
+    };
+
+    input.addEventListener('change', syncStatus);
+    syncStatus();
+    input.dataset.boundFileIndicator = '1';
+  });
+}
+
 async function refreshLiveRegion(regionName) {
   const response = await fetch(window.location.href, { method: 'GET', credentials: 'same-origin' });
   if (!response.ok) return;
@@ -240,6 +259,7 @@ async function refreshLiveRegion(regionName) {
   initializeRichEditors();
   initializeAddFormToggles();
   initializeContentModals();
+  initializeFileIndicators();
   initializeFormHandlers();
 }
 
@@ -571,6 +591,7 @@ if (!shell) {
   initializeRichEditors();
   initializeAddFormToggles();
   initializeContentModals();
+  initializeFileIndicators();
   initializeFormHandlers();
 }
 `;
