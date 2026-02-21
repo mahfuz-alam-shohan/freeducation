@@ -14,7 +14,7 @@ function classCardsMarkup(classes = []) {
   return classes
     .map(
       (item) => `<article class="class-card">
-        <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.name)}" loading="lazy" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
+        <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
         <p class="class-card-name">${h(item.name)}</p>
         <p class="class-card-meta">Tap to start lessons</p>
       </article>`

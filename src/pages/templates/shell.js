@@ -52,7 +52,7 @@ function topbar(user) {
         </span>
       </div>
       <div class="topbar-right">
-        <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" />` : initials(user.name)}</span>
+        <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>
       </div>
     </header>`;
 }

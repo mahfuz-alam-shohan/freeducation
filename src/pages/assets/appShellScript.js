@@ -423,10 +423,22 @@ function setAutoSaveStatus(form, message, tone) {
 }
 
 async function submitLiveForm(form) {
-  await prepareImageInputs(form).catch(() => null);
-  syncRichEditorStorage(form);
-  const body = new FormData(form);
+  const body = await buildOptimizedFormData(form);
   return submitLiveBody(form, body);
+}
+
+async function submitStandardForm(form) {
+  const body = await buildOptimizedFormData(form);
+  const response = await fetch(form.action, {
+    method: (form.method || 'POST').toUpperCase(),
+    body,
+    credentials: 'same-origin',
+    redirect: 'follow',
+  }).catch(() => null);
+
+  if (!response || !response.ok) return false;
+  window.location.assign(response.url || window.location.href);
+  return true;
 }
 
 function syncRichEditorStorage(form) {
@@ -503,9 +515,7 @@ function initializeFormHandlers() {
         return;
       }
       form.dataset.submitting = '1';
-      await prepareImageInputs(form).catch(() => null);
-      syncRichEditorStorage(form);
-      const body = new FormData(form);
+      const body = await buildOptimizedFormData(form);
       const submittedState = captureFormState(form);
       const ok = await submitLiveBody(form, body);
       form.dataset.submitting = '0';
@@ -561,12 +571,13 @@ function initializeFormHandlers() {
       event.preventDefault();
       form.dataset.submitting = '1';
 
-      if (isMultipartForm) {
-        await prepareImageInputs(form).catch(() => null);
-      }
-
       if (!hasLiveButton) {
         form.dataset.submitting = '0';
+        if (isMultipartForm) {
+          const ok = await submitStandardForm(form);
+          if (!ok) form.submit();
+          return;
+        }
         form.submit();
         return;
       }
@@ -620,7 +631,7 @@ async function readImageDimensions(file) {
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
 
-  const maxEdge = 240;
+  const maxEdge = 180;
   const source = await readImageDimensions(file);
   const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
@@ -640,28 +651,39 @@ async function downscaleImageFile(file) {
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.7));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.45));
   if (!blob) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
   return new File([blob], targetName + '.webp', { type: 'image/webp', lastModified: Date.now() });
 }
 
-async function prepareImageInputs(form) {
-  const fileInputs = Array.from(form.querySelectorAll('input[type="file"]'));
-  const imageInputs = fileInputs.filter((input) => {
-    const selected = input.files;
-    if (!selected || selected.length === 0) return false;
-    return Array.from(selected).some((file) => file.type.startsWith('image/'));
+async function buildOptimizedFormData(form) {
+  syncRichEditorStorage(form);
+  const body = new FormData(form);
+  const fileInputs = getFormFields(form).filter((field) => field.matches && field.matches('input[type="file"]'));
+  const replacements = [];
+  const cleared = new Set();
+
+  for (const input of fileInputs) {
+    const fieldName = String(input.getAttribute('name') || '').trim();
+    const selected = Array.from(input.files || []);
+    if (!fieldName || selected.length === 0) continue;
+    const optimized = await Promise.all(selected.map((file) => downscaleImageFile(file).catch(() => file)));
+    replacements.push({ fieldName, files: optimized });
+  }
+
+  replacements.forEach(({ fieldName }) => {
+    if (cleared.has(fieldName)) return;
+    body.delete(fieldName);
+    cleared.add(fieldName);
   });
 
-  for (const input of imageInputs) {
-    const files = Array.from(input.files || []);
-    const optimized = await Promise.all(files.map((file) => downscaleImageFile(file)));
-    const dataTransfer = new DataTransfer();
-    optimized.forEach((file) => dataTransfer.items.add(file));
-    input.files = dataTransfer.files;
-  }
+  replacements.forEach(({ fieldName, files }) => {
+    files.forEach((file) => body.append(fieldName, file));
+  });
+
+  return body;
 }
 
 if (!shell) {

@@ -639,7 +639,7 @@ async function handleAdminPost(request, env, url) {
 }
 
 
-async function serveMedia(request, url, env, user) {
+async function serveMedia(request, url, env, user, ctx) {
   if (!user) return redirect('/login');
   const encodedKey = url.pathname.slice('/media/'.length);
   if (!encodedKey) return new Response('Not Found', { status: 404 });
@@ -653,6 +653,14 @@ async function serveMedia(request, url, env, user) {
 
   if (!key || key.includes('..')) return new Response('Not Found', { status: 404 });
 
+  const method = request.method.toUpperCase();
+  const canUseCache = method === 'GET';
+  const cacheKey = new Request(`https://media-cache.local/${encodeURIComponent(user.id)}/${encodeURIComponent(key)}`, { method: 'GET' });
+  if (canUseCache) {
+    const cached = await caches.default.match(cacheKey);
+    if (cached) return cached;
+  }
+
   const object = await env.BUCKET.get(key);
   if (!object) return new Response('Not Found', { status: 404 });
 
@@ -661,16 +669,24 @@ async function serveMedia(request, url, env, user) {
   if (etag && ifNoneMatch && ifNoneMatch === etag) {
     return new Response(null, {
       status: 304,
-      headers: { etag, 'cache-control': 'private, max-age=31536000, immutable' },
+      headers: { etag, 'cache-control': 'private, max-age=2592000, stale-while-revalidate=86400' },
     });
   }
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   if (etag) headers.set('etag', etag);
-  headers.set('cache-control', 'private, max-age=31536000, immutable');
-  return new Response(object.body, { headers });
+  headers.set('cache-control', 'private, max-age=2592000, stale-while-revalidate=86400');
+  headers.set('accept-ranges', 'bytes');
+
+  if (method === 'HEAD') return new Response(null, { headers });
+  const response = new Response(object.body, { headers });
+  if (canUseCache) {
+    ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+  }
+  return response;
 }
+
 
 async function handleDynamicPages(url, env, user) {
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
@@ -804,7 +820,7 @@ async function handleDynamicPages(url, env, user) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (!env.AUTH_SECRET) return new Response('AUTH_SECRET is required', { status: 500 });
 
     try {
@@ -826,7 +842,7 @@ export default {
 
     const user = await requireAuth(request, env);
 
-    if (url.pathname.startsWith('/media/')) return serveMedia(request, url, env, user);
+    if (url.pathname.startsWith('/media/')) return serveMedia(request, url, env, user, ctx);
 
     if (url.pathname === '/api/logout') {
       if (!user) return redirect('/login');
