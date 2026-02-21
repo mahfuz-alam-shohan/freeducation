@@ -54,7 +54,7 @@ function publicTopbar(user) {
         <div class="profile-popup" data-profile-popup hidden>
           <span class="avatar">${iconProfile}</span>
           <p class="muted">Login to get full access.</p>
-          <a class="btn btn-primary" href="/login">Login</a>
+          <a class="btn btn-primary profile-popup-login-btn" href="/login">Login</a>
         </div>
       </div>`;
   return `<header class="topbar">
