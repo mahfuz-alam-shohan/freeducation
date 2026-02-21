@@ -608,30 +608,31 @@ textarea,
 }
 
 .table-text-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: block;
+  width: 100%;
   max-width: 100%;
 }
 
+.table-text-cell-button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.table-text-cell-button:hover .table-text-ellipsis {
+  text-decoration: underline;
+}
+
 .table-text-ellipsis {
-  display: inline-block;
+  display: block;
   min-width: 0;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.table-text-expand {
-  min-height: 24px;
-  min-width: 24px;
-  padding: 0;
-  font-size: 12px;
-}
-
-.table-inline-link {
-  margin-left: 4px;
-  font-size: 11px;
-  color: #1d4ed8;
 }
 
 .table-text-full {
@@ -646,6 +647,7 @@ textarea,
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .subject-row-actions .input {
@@ -1090,12 +1092,23 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.table-actions-cell {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.table-actions-cell .btn {
+  white-space: nowrap;
+}
+
 .subject-node-name-cell { max-width: 280px; }
-.subject-node-name-cell .table-text-cell { max-width: calc(100% - 44px); }
+.subject-node-name-cell .table-text-cell { max-width: 100%; }
 .subject-node-actions-cell { width: 1%; white-space: nowrap; }
 .subject-node-actions-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(180px, 1fr) auto auto;
+  grid-template-columns: auto minmax(140px, 1fr) minmax(180px, 1fr) auto auto;
   gap: 6px;
   align-items: center;
 }
@@ -1255,6 +1268,10 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
     grid-template-columns: 1fr;
     align-items: stretch;
   }
+  .table-actions-cell,
+  .subject-node-actions-cell {
+    min-width: 220px;
+  }
   .subject-node-actions-row .btn {
     width: fit-content;
   }
@@ -1313,6 +1330,10 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .table-excel td {
     max-width: 130px;
     font-size: 11px;
+  }
+  .table-excel th:last-child,
+  .table-excel td:last-child {
+    max-width: none;
   }
   .entry-media img {
     max-height: 210px;

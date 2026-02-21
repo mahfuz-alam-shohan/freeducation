@@ -11,7 +11,7 @@ function h(value) {
 
 function fullTextCell(value, modalId, title = 'Full text') {
   const text = value ?? '-';
-  return `<div class="table-text-cell"><span class="table-text-ellipsis" title="${h(text)}">${h(text)}</span><button class="btn btn-ghost table-text-expand" type="button" data-content-modal-open="${modalId}" aria-label="View full text">…</button></div>
+  return `<button class="table-text-cell table-text-cell-button" type="button" data-content-modal-open="${modalId}" aria-label="View full ${h(title).toLowerCase()}"><span class="table-text-ellipsis" title="${h(text)}">${h(text)}</span></button>
   <dialog class="content-modal" data-content-modal="${modalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">${h(title)}</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div><pre class="table-text-full">${h(text)}</pre></div></dialog>`;
 }
 
@@ -35,12 +35,12 @@ export function templatesPage(user, templates) {
   const rows = templates
     .map(
       (t) => `<tr>
-      <td>${fullTextCell(t.name, `template-name-${t.id}`, 'Template name')}<a href="/templates/${t.id}" class="table-inline-link">Open</a></td>
+      <td>${fullTextCell(t.name, `template-name-${t.id}`, 'Template name')}</td>
       <td>${fullTextCell(t.code, `template-code-${t.id}`, 'Template code')}</td>
       <td>${fullTextCell(t.description || '-', `template-desc-${t.id}`, 'Template description')}</td>
       <td>${new Date(t.created_at).toLocaleDateString()}</td>
-      <td>
-        <span class="muted">View only</span>
+      <td class="table-actions-cell">
+        <a href="/templates/${t.id}" class="btn btn-secondary">Open</a>
       </td>
     </tr>`
     )
@@ -104,12 +104,13 @@ export function subjectsPage(user, subjects, templates) {
   const rows = subjects
     .map(
       (s) => `<tr>
-      <td>${fullTextCell(s.name, `subject-name-${s.id}`, 'Subject name')}<a href="/subjects/${s.id}" class="table-inline-link">Open</a></td>
+      <td>${fullTextCell(s.name, `subject-name-${s.id}`, 'Subject name')}</td>
       <td>Class ${s.class_level}</td>
       <td>${fullTextCell(s.template_name, `subject-template-${s.id}`, 'Template name')}</td>
       <td>${new Date(s.created_at).toLocaleDateString()}</td>
-      <td>
+      <td class="table-actions-cell">
         <form method="post" action="/api/subjects/${s.id}" class="subject-row-actions" enctype="multipart/form-data">
+          <a href="/subjects/${s.id}" class="btn btn-secondary">Open</a>
           <input class="input" name="name" value="${h(s.name)}" required maxlength="120" />
           <button class="btn btn-secondary" name="intent" value="update" type="submit">Save</button>
           <button class="btn btn-danger" type="button" data-content-modal-open="subject-delete-${s.id}">Delete</button>
@@ -167,13 +168,14 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
   const rows = nodes
     .map(
       (n) => `<tr>
-      <td class="subject-node-name-cell">${fullTextCell(`${n.display_name} (Server key: ${n.server_name})`, `subject-node-${n.id}`, 'Subject node')}<a href="/subjects/${subject.id}/nodes/${n.id}" class="table-inline-link">Open</a></td>
+      <td class="subject-node-name-cell">${fullTextCell(`${n.display_name} (Server key: ${n.server_name})`, `subject-node-${n.id}`, 'Subject node')}</td>
       <td>${yesNo(n.supports_edit)}</td>
       <td>${yesNo(n.supports_image)}</td>
       <td>${imageCell(n.image_key)}</td>
       <td class="subject-node-actions-cell">
         <form method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" class="subject-node-actions-row">
           <input type="hidden" name="redirect" value="${h(backHref)}" />
+          <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
           <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} maxlength="120" />
           <input class="input" name="image" type="file" accept="image/*" ${n.supports_image ? '' : 'disabled'} />
           <label class="subject-node-checkbox"><input type="checkbox" name="removeImage" value="1" ${n.supports_image ? '' : 'disabled'} /> Remove image</label>
