@@ -1,5 +1,6 @@
 import { appShell } from '../templates/shell.js';
 import { imageUrlFromKey } from '../imageUrl.js';
+import { modulesStyles } from './modulesStyles.js';
 
 function h(value) {
   return String(value ?? '')
@@ -84,7 +85,7 @@ export function templatesPage(user, templates) {
     </table></div>
   </section>`;
 
-  return appShell('templates', user, 'Subject Templates', 'View available subject structures.', content);
+  return appShell('templates', user, 'Subject Templates', 'View available subject structures.', content, { pageStyles: modulesStyles });
 }
 
 export function templateDetailsPage(user, template, nodes) {
@@ -128,7 +129,7 @@ export function templateDetailsPage(user, template, nodes) {
     </table></div>
   </section>`;
 
-  return appShell('templates', user, `Template: ${template.name}`, 'Hierarchy and capability matrix.', content);
+  return appShell('templates', user, `Template: ${template.name}`, 'Hierarchy and capability matrix.', content, { pageStyles: modulesStyles });
 }
 
 
@@ -194,7 +195,7 @@ export function classesPage(user, classes) {
     </table></div>
   </section>`;
 
-  return appShell('classes', user, 'Classes', 'Manage class list and class card thumbnails.', content);
+  return appShell('classes', user, 'Classes', 'Manage class list and class card thumbnails.', content, { pageStyles: modulesStyles });
 }
 
 export function subjectsPage(user, subjects, templates, classes) {
@@ -258,7 +259,7 @@ export function subjectsPage(user, subjects, templates, classes) {
     </table></div>
   </section>`;
 
-  return appShell('subjects', user, 'Subjects', 'Create subjects from templates and manage their content.', content);
+  return appShell('subjects', user, 'Subjects', 'Create subjects from templates and manage their content.', content, { pageStyles: modulesStyles });
 }
 
 export function subjectNodeListPage(user, subject, title, subtitle, nodes, backHref) {
@@ -282,7 +283,7 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
     <tbody>${tableRowsOrEmpty(rows, 7, 'No nodes found.')}</tbody>
   </table></div></section>`;
 
-  return appShell('subjects', user, title, subtitle, content);
+  return appShell('subjects', user, title, subtitle, content, { pageStyles: modulesStyles });
 }
 
 export function chaptersPage(user, subject, node, chapters) {
@@ -316,7 +317,7 @@ export function chaptersPage(user, subject, node, chapters) {
     <tbody>${tableRowsOrEmpty(rows, 7, 'No chapters yet.')}</tbody>
   </table></div></section>`;
 
-  return appShell('subjects', user, `${subject.name} · ${node.display_name}`, 'Manage chapters.', content);
+  return appShell('subjects', user, `${subject.name} · ${node.display_name}`, 'Manage chapters.', content, { pageStyles: modulesStyles });
 }
 
 export function topicsPage(user, subject, node, chapter, topics) {
@@ -348,7 +349,7 @@ export function topicsPage(user, subject, node, chapter, topics) {
     <tbody>${tableRowsOrEmpty(rows, 5, 'No topics yet.')}</tbody>
   </table></div></section>`;
 
-  return appShell('subjects', user, `${subject.name} · ${chapter.name}`, 'Manage topics for this chapter.', content);
+  return appShell('subjects', user, `${subject.name} · ${chapter.name}`, 'Manage topics for this chapter.', content, { pageStyles: modulesStyles });
 }
 
 export function contentKindsPage(user, subject, node, chapter, topic, childNodes = []) {
@@ -370,7 +371,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th>Content Type</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
-  return appShell('subjects', user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content);
+  return appShell('subjects', user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content, { pageStyles: modulesStyles });
 }
 
 function richTextEditor(fieldName, value, placeholder, required = false) {
@@ -516,7 +517,7 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
   ${!pageItems.length ? '<p class="muted">No notes yet.</p>' : ''}
   ${renderPagination(baseHref, safePage, totalPages)}`;
 
-  return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content);
+  return appShell('subjects', user, `${subject.name} · Short Notes`, 'Create, edit, and delete notes.', content, { pageStyles: modulesStyles });
 }
 
 function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {
@@ -590,7 +591,7 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
   ${!pageItems.length ? '<p class="muted">No content yet.</p>' : ''}
   ${renderPagination(baseHref, safePage, totalPages)}`;
 
-  return appShell('subjects', user, `${subject.name} · ${h(contentKind)}`, 'Flexible content editor for any custom content type.', content);
+  return appShell('subjects', user, `${subject.name} · ${h(contentKind)}`, 'Flexible content editor for any custom content type.', content, { pageStyles: modulesStyles });
 }
 
 export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage = 1) {
@@ -655,5 +656,5 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
   ${!pageItems.length ? '<p class="muted">No MCQs yet.</p>' : ''}
   ${renderPagination(baseHref, safePage, totalPages)}`;
 
-  return appShell('subjects', user, `${subject.name} · MCQ Bank`, 'Create, edit, and delete MCQs.', content);
+  return appShell('subjects', user, `${subject.name} · MCQ Bank`, 'Create, edit, and delete MCQs.', content, { pageStyles: modulesStyles });
 }

@@ -1,4 +1,5 @@
 import { appShell } from '../templates/shell.js';
+import { dashboardStyles } from './dashboardStyles.js';
 
 export function dashboardPage(user, stats) {
   const content = `
@@ -16,5 +17,5 @@ export function dashboardPage(user, stats) {
     </section>
     `;
 
-  return appShell('dashboard', user, 'Dashboard overview', 'Live system metrics.', content);
+  return appShell('dashboard', user, 'Dashboard overview', 'Live system metrics.', content, { pageStyles: dashboardStyles });
 }

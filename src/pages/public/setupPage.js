@@ -1,5 +1,6 @@
 import { setupScript } from '../assets.js';
 import { basePage } from '../templates/base.js';
+import { authPageStyles } from './authStyles.js';
 
 export function setupPage() {
   return basePage(
@@ -10,6 +11,7 @@ export function setupPage() {
       <label>Password</label><input required class="input" name="password" type="password" minlength="8" maxlength="120" />
       <label>Profile picture</label><input id="image" class="input" name="image" type="file" accept="image/*" />
       <button class="btn btn-primary" type="submit">Create admin</button></form></section></div>`,
-    setupScript
+    setupScript,
+    authPageStyles
   );
 }

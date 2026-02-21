@@ -65,7 +65,7 @@ function publicTopbar(user) {
     </header>`;
 }
 
-export function publicShell(active, user, title, content, script = '') {
+export function publicShell(active, user, title, content, script = '', pageStyles = '') {
   return basePage(
     title,
     `<div class="app-shell" data-shell>
@@ -77,6 +77,7 @@ export function publicShell(active, user, title, content, script = '') {
         ${active === 'home' ? '' : '<footer class="public-footer">Freeducation</footer>'}
       </main>
     </div>`,
-    `${appScript}\n${script || ''}`
+    `${appScript}\n${script || ''}`,
+    pageStyles
   );
 }
