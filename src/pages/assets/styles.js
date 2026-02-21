@@ -619,6 +619,31 @@ textarea,
   vertical-align: middle;
 }
 
+.file-indicator-cell {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 156px;
+}
+
+.file-indicator-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.file-indicator-input {
+  max-width: 100%;
+}
+
+.file-indicator-status {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.file-indicator-status[data-tone="ready"] { color: #166534; }
+
 .table-text-cell {
   display: block;
   width: 100%;
