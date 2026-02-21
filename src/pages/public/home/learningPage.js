@@ -10,6 +10,18 @@ function h(value) {
     .replaceAll('"', '&quot;');
 }
 
+function pathBar(items = []) {
+  if (!items.length) return '';
+  const links = items
+    .map((item, index) => {
+      const label = h(item.label);
+      if (!item.href || index === items.length - 1) return `<span class="public-path-current">${label}</span>`;
+      return `<a href="${h(item.href)}">${label}</a>`;
+    })
+    .join('<span class="public-path-sep" aria-hidden="true">/</span>');
+  return `<nav class="public-path-bar" aria-label="Breadcrumb">${links}</nav>`;
+}
+
 function cardGrid(items, hrefBuilder) {
   return items
     .map(
@@ -26,7 +38,7 @@ export function publicSubjectNodePage(user, subject, title, subtitle, items, hre
     'home',
     user,
     `${subject.name} · ${title}`,
-    `<section class="public-stack">
+    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes', href: '/classes' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: title }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(title)}</h1>
       <p class="public-stack-subtitle">${h(subtitle)}</p>
       <div class="public-flat-grid">${cardGrid(items, hrefBuilder)}</div>
@@ -57,7 +69,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
     'home',
     user,
     `${chapter.name} · ${node.display_name}`,
-    `<section class="public-stack">
+    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes', href: '/classes' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: node.display_name, href: `/learn/subjects/${subject.id}/nodes/${node.id}` }, { label: chapter.name }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(chapter.name)}</h1>
       <p class="public-stack-subtitle">${h(node.display_name)}</p>
       <div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
@@ -82,7 +94,7 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
     'home',
     user,
     `${chapter.name} · ${kind}`,
-    `<section class="public-stack">
+    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes', href: '/classes' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: kind }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(kind)}</h1>
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
       <ol class="public-note-list">${list || '<li>No content yet.</li>'}</ol>

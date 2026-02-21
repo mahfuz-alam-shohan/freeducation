@@ -9,9 +9,15 @@ export const publicHomeStyles = `
 .public-class-strip-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .public-class-strip-title { margin: 0; font-size: 20px; font-family: var(--font-public-heading); }
 .public-class-row { display: grid; grid-auto-flow: column; grid-auto-columns: 148px; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.public-path-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 8px 0; font-size: 12px; color: #475569; }
+.public-path-bar a { color: #1d4ed8; text-decoration: none; }
+.public-path-bar a:hover { text-decoration: underline; }
+.public-path-current { color: #0f172a; font-weight: 600; }
+.public-path-sep { color: #94a3b8; }
 .public-class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; }
 .class-card { display: grid; gap: 3px; min-width: 0; }
-.class-card-poster-wrap { aspect-ratio: 2 / 3; width: 100%; overflow: hidden; background: #e2e8f0; }
+.class-card, .public-card-link { border-radius: 6px; }
+.class-card-poster-wrap { aspect-ratio: 2 / 3; width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 6px; }
 .class-card-poster { width: 100%; height: 100%; object-fit: cover; display: block; }
 .class-card-poster-empty { display: grid; place-items: center; color: #475569; font-size: 12px; }
 .class-card-name { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-public-heading); }
@@ -32,6 +38,10 @@ export const publicHomeStyles = `
 
 @media (max-width: 840px) {
   .public-home-cover { grid-template-columns: 1fr; gap: 8px; min-height: 148px; padding: 12px 10px; text-align: center; }
+  .public-class-row { grid-auto-columns: 122px; gap: 6px; }
+  .public-class-grid,.public-flat-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .class-card-name { font-size: 14px; }
+  .public-path-bar { padding: 6px 8px 2px; font-size: 11px; }
   .public-cover-brand-row { justify-content: center; gap: 8px; }
   .public-cover-logo { width: 56px; height: 56px; }
   .public-cover-name { font-size: clamp(28px, 11vw, 40px); }

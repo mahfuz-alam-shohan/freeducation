@@ -11,6 +11,18 @@ function h(value) {
     .replaceAll('"', '&quot;');
 }
 
+function pathBar(items = []) {
+  if (!items.length) return '';
+  const links = items
+    .map((item, index) => {
+      const label = h(item.label);
+      if (!item.href || index === items.length - 1) return `<span class="public-path-current">${label}</span>`;
+      return `<a href="${h(item.href)}">${label}</a>`;
+    })
+    .join('<span class="public-path-sep" aria-hidden="true">/</span>');
+  return `<nav class="public-path-bar" aria-label="Breadcrumb">${links}</nav>`;
+}
+
 function classCardsMarkup(classes = [], makeHref = (item) => `/classes/${item.id}`) {
   return classes
     .map(
@@ -90,7 +102,7 @@ export function publicClassesPage(user = null, classes = []) {
     'home',
     user,
     'All Classes',
-    `<section class="public-class-strip public-class-page">
+    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes' }])}<section class="public-class-strip public-class-page">
       <div class="public-class-strip-head">
         <h1 class="public-class-strip-title">All Classes</h1>
       </div>
@@ -106,7 +118,7 @@ export function publicClassSubjectsPage(user = null, classItem, subjects = []) {
     'home',
     user,
     `${classItem.name} Subjects`,
-    `<section class="public-stack">
+    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes', href: '/classes' }, { label: classItem.name }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(classItem.name)}</h1>
       <p class="public-stack-subtitle">Select a subject.</p>
       <div class="public-flat-grid">${subjectCardsMarkup(subjects)}</div>
