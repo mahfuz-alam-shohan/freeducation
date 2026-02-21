@@ -1,6 +1,6 @@
-import { publicShell } from '../templates/publicShell.js';
-import { siteLogo } from '../templates/icons.js';
-import { imageUrlFromKey } from '../imageUrl.js';
+import { publicShell } from '../../templates/publicShell.js';
+import { siteLogo } from '../../templates/icons.js';
+import { imageUrlFromKey } from '../../imageUrl.js';
 import { publicHomeStyles } from './homeStyles.js';
 
 function h(value) {

@@ -1,5 +1,5 @@
-import { appShell } from '../templates/shell.js';
-import { imageUrlFromKey } from '../imageUrl.js';
+import { appShell } from '../../templates/shell.js';
+import { imageUrlFromKey } from '../../imageUrl.js';
 import { modulesStyles } from './modulesStyles.js';
 
 function h(value) {

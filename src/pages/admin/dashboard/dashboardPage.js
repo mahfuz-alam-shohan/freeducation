@@ -1,4 +1,4 @@
-import { appShell } from '../templates/shell.js';
+import { appShell } from '../../templates/shell.js';
 import { dashboardStyles } from './dashboardStyles.js';
 
 export function dashboardPage(user, stats) {

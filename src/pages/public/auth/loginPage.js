@@ -1,5 +1,5 @@
-import { loginScript } from '../assets.js';
-import { publicShell } from '../templates/publicShell.js';
+import { loginScript } from '../../assets.js';
+import { publicShell } from '../../templates/publicShell.js';
 import { authPageStyles } from './authStyles.js';
 
 export function loginPage() {

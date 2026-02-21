@@ -1,10 +1,10 @@
-export { setupPage } from './public/setupPage.js';
-export { loginPage } from './public/loginPage.js';
-export { publicHomePage, publicClassesPage } from './public/homePage.js';
-export { forbiddenPage } from './shared/forbiddenPage.js';
-export { dashboardPage } from './admin/dashboardPage.js';
-export { profilePage } from './auth/profilePage.js';
-export { usersPage } from './admin/usersPage.js';
+export { setupPage } from './public/auth/setupPage.js';
+export { loginPage } from './public/auth/loginPage.js';
+export { publicHomePage, publicClassesPage } from './public/home/homePage.js';
+export { forbiddenPage } from './shared/forbidden/forbiddenPage.js';
+export { dashboardPage } from './admin/dashboard/dashboardPage.js';
+export { profilePage } from './auth/profile/profilePage.js';
+export { usersPage } from './admin/users/usersPage.js';
 export {
   templatesPage,
   templateDetailsPage,
@@ -17,4 +17,4 @@ export {
   contentEntriesPage,
   notesPage,
   mcqsPage,
-} from './admin/modulesPages.js';
+} from './admin/modules/modulesPages.js';
