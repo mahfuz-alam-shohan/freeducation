@@ -7,6 +7,7 @@ import {
   findUserById,
   getAdminCount,
   listUsers,
+  updateUserCoverImage,
   updateUserImage,
   updateUserName,
   updateUserPassword,
@@ -298,6 +299,20 @@ async function handleProfilePost(request, env, url, user) {
     const form = await request.formData();
     const imageKey = await uploadImage(env, 'profiles', form.get('avatar'));
     if (imageKey) await updateUserImage(env.DB, user.id, imageKey);
+
+    const wantsJson = request.headers.get('accept')?.includes('application/json');
+    if (wantsJson) {
+      return json({ ok: true, imageKey, imageUrl: imageKey ? `/media/${encodeURIComponent(imageKey)}` : null });
+    }
+
+    return redirect('/profile');
+  }
+
+
+  if (url.pathname === '/api/profile/cover') {
+    const form = await request.formData();
+    const imageKey = await uploadImage(env, 'profile-covers', form.get('cover'));
+    if (imageKey) await updateUserCoverImage(env.DB, user.id, imageKey);
 
     const wantsJson = request.headers.get('accept')?.includes('application/json');
     if (wantsJson) {

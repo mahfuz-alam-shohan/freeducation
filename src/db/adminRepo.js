@@ -15,8 +15,8 @@ export async function findUserByEmail(db, email) {
 export async function createAdmin(db, user) {
   await db
     .prepare(
-      `INSERT INTO users (id, email, name, role, image_key, date_of_birth, password_hash, password_salt, password_iterations, created_at, updated_at)
-       VALUES (?1, ?2, ?3, 'admin', ?4, NULL, ?5, ?6, ?7, ?8, ?8)`
+      `INSERT INTO users (id, email, name, role, image_key, cover_image_key, date_of_birth, password_hash, password_salt, password_iterations, created_at, updated_at)
+       VALUES (?1, ?2, ?3, 'admin', ?4, NULL, NULL, ?5, ?6, ?7, ?8, ?8)`
     )
     .bind(
       user.id,
@@ -41,7 +41,7 @@ export async function createSession(db, session) {
 export async function findSessionWithUser(db, sessionId) {
   return db
     .prepare(
-      `SELECT s.id as session_id, s.expires_at, u.id, u.email, u.name, u.role, u.image_key, u.date_of_birth
+      `SELECT s.id as session_id, s.expires_at, u.id, u.email, u.name, u.role, u.image_key, u.cover_image_key, u.date_of_birth
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.id = ?1`
@@ -72,6 +72,10 @@ export async function updateUserName(db, userId, name) {
 
 export async function updateUserImage(db, userId, imageKey) {
   await db.prepare('UPDATE users SET image_key = ?2, updated_at = ?3 WHERE id = ?1').bind(userId, imageKey, nowIso()).run();
+}
+
+export async function updateUserCoverImage(db, userId, imageKey) {
+  await db.prepare('UPDATE users SET cover_image_key = ?2, updated_at = ?3 WHERE id = ?1').bind(userId, imageKey, nowIso()).run();
 }
 
 export async function updateUserPassword(db, userId, passwordHash, passwordSalt, passwordIterations) {
