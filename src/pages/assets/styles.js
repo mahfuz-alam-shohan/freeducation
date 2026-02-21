@@ -288,6 +288,38 @@ a { color: inherit; }
   overflow: hidden;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
+.avatar svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.profile-menu { position: relative; }
+.profile-trigger {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.profile-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 220px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar-login-item {
+  margin-top: auto;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+.sidebar-login-item .icon { color: #1d4ed8; }
+.sidebar-login-item:hover { background: #dbeafe; }
 
 .container {
   width: min(1760px, 100%);

@@ -4,6 +4,9 @@ const sidebar = document.querySelector('.sidebar');
 const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
 const mobileToggle = document.querySelector('[data-mobile-toggle]');
 const overlay = document.querySelector('[data-overlay]');
+const profileMenu = document.querySelector('[data-profile-menu]');
+const profileTrigger = profileMenu?.querySelector('[data-profile-trigger]');
+const profilePopup = profileMenu?.querySelector('[data-profile-popup]');
 const sidebarStateKey = 'freeducation.sidebar.collapsed';
 const mobileViewport = window.matchMedia('(max-width: 840px)');
 
@@ -401,6 +404,29 @@ if (!shell) {
         mobileToggle.setAttribute('aria-expanded', 'false');
         mobileToggle.setAttribute('aria-label', 'Open navigation menu');
       }
+    });
+  }
+
+  if (profileMenu && profileTrigger && profilePopup) {
+    const closeProfilePopup = () => {
+      profilePopup.hidden = true;
+      profileTrigger.setAttribute('aria-expanded', 'false');
+    };
+
+    profileTrigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      const isOpen = !profilePopup.hidden;
+      profilePopup.hidden = isOpen;
+      profileTrigger.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (profileMenu.contains(event.target)) return;
+      closeProfilePopup();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeProfilePopup();
     });
   }
 
