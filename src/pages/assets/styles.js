@@ -1295,6 +1295,18 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   text-overflow: ellipsis;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .table-actions-cell {
   white-space: normal;
   overflow: visible;
@@ -1383,11 +1395,11 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .profile-name-row {
   min-height: 52px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  width: 148px;
-  margin-left: 20px;
-  margin-top: 8px;
+  width: 168px;
+  margin-left: 10px;
+  margin-top: 56px;
   text-align: center;
 }
 .profile-name-row h2 { margin: 0; font-size: 28px; line-height: 1.2; }
@@ -1411,6 +1423,33 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .profile-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .profile-bio { display: grid; gap: 10px; }
 .profile-readonly-row { display: grid; gap: 2px; }
+.profile-readonly-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.profile-inline-edit-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #475569;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.profile-inline-edit-btn:hover { background: #f8fafc; color: #1e293b; }
+.profile-inline-edit-btn .icon { width: 14px; height: 14px; }
+.profile-inline-form {
+  display: grid;
+  gap: 7px;
+  max-width: 640px;
+  margin-top: 4px;
+}
+.profile-inline-form[hidden] { display: none; }
 .profile-fixed-value { margin: 0; font-weight: 600; color: #0f172a; }
 .profile-form-grid { display: grid; gap: 7px; max-width: 640px; }
 .profile-form-grid > * { min-width: 0; }
@@ -1514,7 +1553,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .profile-avatar-row { left: 10px; bottom: -40px; }
   .profile-avatar-shell { width: 108px; height: 108px; font-size: 30px; border-width: 3px; }
   .profile-avatar-control { right: -2px; bottom: 2px; }
-  .profile-name-row { margin-left: 10px; width: 108px; min-height: 40px; }
+  .profile-name-row { margin-left: 8px; width: 124px; min-height: 40px; margin-top: 44px; }
   .profile-name-row h2 { font-size: 20px; }
   .profile-dob-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .subject-node-actions-row {
