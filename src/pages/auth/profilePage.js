@@ -10,9 +10,23 @@ function h(value) {
 }
 
 const iconCamera = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7.5 9.4 5h5.2L16 7.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2z"/><circle cx="12" cy="13.25" r="3.75"/></svg>`;
-const iconEdit = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16 9.9-9.9a2.2 2.2 0 0 1 3.1 0l.8.8a2.2 2.2 0 0 1 0 3.1L8 20H4z"/><path d="M14.5 5.5 18.5 9.5"/></svg>`;
 const iconCalendar = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></svg>`;
 const iconLock = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`;
+
+const dobMonths = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 function profileHeader(user) {
   const initials = (user.name || user.email || 'U')
@@ -42,27 +56,54 @@ function profileHeader(user) {
 }
 
 function profileDetails(user) {
-  const dobMin = '1900-01-01';
-  const dobMax = new Date().toISOString().slice(0, 10);
   const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || '')) ? String(user.dateOfBirth) : '';
+  const [dobYear = '', dobMonth = '', dobDay = ''] = dobValue ? dobValue.split('-') : ['', '', ''];
+  const currentYear = new Date().getUTCFullYear();
+  const yearOptions = Array.from({ length: currentYear - 1899 }, (_, index) => {
+    const year = String(currentYear - index);
+    const selected = year === dobYear ? ' selected' : '';
+    return `<option value="${year}"${selected}>${year}</option>`;
+  }).join('');
+  const monthOptions = dobMonths
+    .map((label, index) => {
+      const value = String(index + 1).padStart(2, '0');
+      const selected = value === dobMonth ? ' selected' : '';
+      return `<option value="${value}"${selected}>${label}</option>`;
+    })
+    .join('');
+  const dayOptions = Array.from({ length: 31 }, (_, index) => {
+    const value = String(index + 1).padStart(2, '0');
+    const selected = value === dobDay ? ' selected' : '';
+    return `<option value="${value}"${selected}>${value}</option>`;
+  }).join('');
+
   return `<section class="card profile-tabs-card">
     <div class="profile-readonly-row"><p class="muted">Email (read-only)</p><p class="profile-fixed-value">${h(user.email)}</p></div>
 
-    <form method="post" action="/api/profile/name" class="profile-form-grid" data-profile-name-form>
-      <div class="profile-label-row">
-        <label for="profile-name">Full name</label>
-        <button class="btn btn-ghost btn-icon-inline" type="button" data-profile-name-edit aria-label="Edit full name"><span class="icon">${iconEdit}</span>Edit</button>
-      </div>
-      <input id="profile-name" class="input" name="name" maxlength="100" required value="${h(user.name)}" disabled />
-      <div class="profile-form-actions">
-        <button class="btn btn-primary" type="submit" data-profile-name-save hidden>Save name</button>
-      </div>
+    <form method="post" action="/api/profile/name" class="profile-form-grid" data-profile-name-form data-profile-autosave>
+      <label for="profile-name">Full name</label>
+      <input id="profile-name" class="input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" />
+      <p class="muted profile-autosave-status" data-profile-status="name" aria-live="polite">Changes save automatically.</p>
     </form>
 
-    <form method="post" action="/api/profile/dob" class="profile-form-grid">
-      <label for="profile-dob"><span class="icon">${iconCalendar}</span>Date of birth</label>
-      <input id="profile-dob" class="input" name="dateOfBirth" type="date" min="${dobMin}" max="${dobMax}" pattern="\\d{4}-\\d{2}-\\d{2}" maxlength="10" value="${h(dobValue)}" />
-      <div class="profile-form-actions"><button class="btn btn-primary" type="submit">Save date of birth</button></div>
+    <form method="post" action="/api/profile/dob" class="profile-form-grid" data-profile-dob-form data-profile-autosave>
+      <label for="profile-dob-year"><span class="icon">${iconCalendar}</span>Date of birth</label>
+      <div class="profile-dob-fields">
+        <select class="input" name="dobYear" id="profile-dob-year" aria-label="Birth year">
+          <option value="">Year</option>
+          ${yearOptions}
+        </select>
+        <select class="input" name="dobMonth" id="profile-dob-month" aria-label="Birth month">
+          <option value="">Month</option>
+          ${monthOptions}
+        </select>
+        <select class="input" name="dobDay" id="profile-dob-day" aria-label="Birth day">
+          <option value="">Day</option>
+          ${dayOptions}
+        </select>
+      </div>
+      <input type="hidden" name="dateOfBirth" value="${h(dobValue)}" data-profile-dob-value />
+      <p class="muted profile-autosave-status" data-profile-status="dob" aria-live="polite">Select year, month, and day to autosave.</p>
     </form>
 
     <div class="profile-security-row">
@@ -95,44 +136,134 @@ function profilePageScript() {
   return `<script>
 (function () {
   const avatarInput = document.getElementById('avatar-upload');
-  const avatarForm = avatarInput?.closest('form');
+  const avatarForm = avatarInput ? avatarInput.closest('form') : null;
+
+  const setStatus = (key, message, tone) => {
+    const element = document.querySelector('[data-profile-status="' + key + '"]');
+    if (!element) return;
+    element.textContent = message;
+    element.dataset.tone = tone || 'idle';
+  };
+
+  const submitForm = async (form) => {
+    const response = await fetch(form.action, {
+      method: (form.method || 'POST').toUpperCase(),
+      body: new FormData(form),
+      credentials: 'same-origin',
+      redirect: 'follow',
+    }).catch(() => null);
+    return Boolean(response && response.ok);
+  };
+
   if (avatarInput && avatarForm) {
-    avatarInput.addEventListener('change', () => {
+    avatarInput.addEventListener('change', async () => {
       if (!avatarInput.files?.length) return;
-      avatarForm.requestSubmit();
+      const ok = await submitForm(avatarForm);
+      if (ok) {
+        window.location.reload();
+      }
     });
   }
 
-  const editNameButton = document.querySelector('[data-profile-name-edit]');
-  const saveNameButton = document.querySelector('[data-profile-name-save]');
+  let nameTimer = null;
+  let lastSavedName = '';
+  const nameForm = document.querySelector('[data-profile-name-form]');
   const nameInput = document.getElementById('profile-name');
-  if (editNameButton && saveNameButton && nameInput) {
-    editNameButton.addEventListener('click', () => {
-      nameInput.disabled = false;
-      nameInput.focus();
-      nameInput.select();
-      saveNameButton.hidden = false;
-      editNameButton.hidden = true;
+
+  const saveName = async () => {
+    if (!nameForm || !nameInput) return;
+    const nextName = String(nameInput.value || '').trim();
+    if (!nextName || nextName.length > 100 || nextName === lastSavedName) return;
+    setStatus('name', 'Saving name…', 'working');
+    const ok = await submitForm(nameForm);
+    if (ok) {
+      lastSavedName = nextName;
+      setStatus('name', 'Name saved.', 'success');
+      return;
+    }
+    setStatus('name', 'Could not save name. Please retry.', 'error');
+  };
+
+  if (nameForm && nameInput) {
+    lastSavedName = String(nameInput.value || '').trim();
+    nameInput.addEventListener('input', () => {
+      setStatus('name', 'Saving changes soon…', 'working');
+      clearTimeout(nameTimer);
+      nameTimer = setTimeout(() => {
+        saveName().catch(() => setStatus('name', 'Could not save name. Please retry.', 'error'));
+      }, 500);
+    });
+    nameInput.addEventListener('blur', () => {
+      clearTimeout(nameTimer);
+      saveName().catch(() => setStatus('name', 'Could not save name. Please retry.', 'error'));
+    });
+    nameForm.addEventListener('submit', (event) => {
+      event.preventDefault();
     });
   }
 
-  const dobInput = document.getElementById('profile-dob');
-  if (dobInput) {
-    const minDate = dobInput.min;
-    const maxDate = dobInput.max;
-    const clampDobValue = () => {
-      const rawValue = String(dobInput.value || '').trim();
-      if (!rawValue) return;
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
-        dobInput.value = '';
+  const dobForm = document.querySelector('[data-profile-dob-form]');
+  const dobYear = document.getElementById('profile-dob-year');
+  const dobMonth = document.getElementById('profile-dob-month');
+  const dobDay = document.getElementById('profile-dob-day');
+  const dobValue = document.querySelector('[data-profile-dob-value]');
+
+  const updateDobValue = () => {
+    if (!dobYear || !dobMonth || !dobDay || !dobValue) return null;
+    const year = dobYear.value;
+    const month = dobMonth.value;
+    const day = dobDay.value;
+    if (!year && !month && !day) {
+      dobValue.value = '';
+      return '';
+    }
+    if (!year || !month || !day) {
+      dobValue.value = '';
+      return null;
+    }
+    const candidate = year + '-' + month + '-' + day;
+    const date = new Date(candidate + 'T00:00:00.000Z');
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) {
+      dobValue.value = '';
+      return null;
+    }
+    const today = new Date();
+    const max = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    if (date.getUTCFullYear() < 1900 || date > max) {
+      dobValue.value = '';
+      return null;
+    }
+    dobValue.value = candidate;
+    return candidate;
+  };
+
+  if (dobForm && dobYear && dobMonth && dobDay && dobValue) {
+    let lastSavedDob = dobValue.value;
+    const saveDob = async () => {
+      const nextDob = updateDobValue();
+      if (nextDob === null) {
+        setStatus('dob', 'Please select a valid date.', 'error');
         return;
       }
-      if (minDate && rawValue < minDate) dobInput.value = minDate;
-      if (maxDate && rawValue > maxDate) dobInput.value = maxDate;
+      if (nextDob === lastSavedDob) return;
+      setStatus('dob', 'Saving date of birth…', 'working');
+      const ok = await submitForm(dobForm);
+      if (!ok) {
+        setStatus('dob', 'Could not save date of birth.', 'error');
+        return;
+      }
+      lastSavedDob = nextDob;
+      setStatus('dob', nextDob ? 'Date of birth saved.' : 'Date of birth cleared.', 'success');
     };
 
-    dobInput.addEventListener('input', clampDobValue);
-    dobInput.addEventListener('change', clampDobValue);
+    [dobYear, dobMonth, dobDay].forEach((field) => {
+      field.addEventListener('change', () => {
+        saveDob().catch(() => setStatus('dob', 'Could not save date of birth.', 'error'));
+      });
+    });
+    dobForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
   }
 })();
 </script>`;
