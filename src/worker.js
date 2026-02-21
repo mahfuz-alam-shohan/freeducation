@@ -80,6 +80,7 @@ import {
   publicSubjectNodePage,
   publicChapterContentPage,
   publicContentEntriesPage,
+  publicMcqEntriesPage,
   setupPage,
   subjectNodeListPage,
   subjectsPage,
@@ -797,7 +798,15 @@ async function handleDynamicPages(url, env, user) {
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const shortNotesNode = contentNodes.find((item) => item.content_kind === 'Short Notes');
-    const notes = shortNotesNode ? await listNotes(env.DB, shortNotesNode.id, chapter.id, null) : [];
+    const noteNodeIds = Array.from(new Set([shortNotesNode?.id, node.id].filter(Boolean)));
+    const notes = [];
+    for (const noteNodeId of noteNodeIds) {
+      const scoped = await listNotes(env.DB, noteNodeId, chapter.id, null);
+      for (const entry of scoped) {
+        if (!notes.some((item) => item.id === entry.id)) notes.push(entry);
+      }
+    }
+    notes.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     return html(publicChapterContentPage(user, subject, node, chapter, notes, contentNodes));
   }
 
@@ -813,7 +822,15 @@ async function handleDynamicPages(url, env, user) {
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const shortNotesNode = contentNodes.find((item) => item.content_kind === 'Short Notes');
-    const notes = shortNotesNode ? await listNotes(env.DB, shortNotesNode.id, chapter.id, topic.id) : [];
+    const noteNodeIds = Array.from(new Set([shortNotesNode?.id, node.id].filter(Boolean)));
+    const notes = [];
+    for (const noteNodeId of noteNodeIds) {
+      const scoped = await listNotes(env.DB, noteNodeId, chapter.id, topic.id);
+      for (const entry of scoped) {
+        if (!notes.some((item) => item.id === entry.id)) notes.push(entry);
+      }
+    }
+    notes.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     return html(publicChapterContentPage(user, subject, node, topic, notes, contentNodes, topic.id));
   }
 
@@ -827,7 +844,31 @@ async function handleDynamicPages(url, env, user) {
       getChapter(env.DB, publicContentMatch[3]),
     ]);
     if (!subject || !node || !chapter || !contentKind) return new Response('Not Found', { status: 404 });
-    const entries = await listContentEntries(env.DB, node.id, chapter.id, topicId || null, contentKind);
+
+    const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    const targetContentNode = contentNodes.find((item) => item.content_kind === contentKind);
+    const nodeIds = Array.from(new Set([targetContentNode?.id, node.id].filter(Boolean)));
+
+    if (contentKind === 'MCQ Bank') {
+      const mcqs = [];
+      for (const contentNodeId of nodeIds) {
+        const scoped = await listMcqs(env.DB, contentNodeId, chapter.id, topicId || null);
+        for (const item of scoped) {
+          if (!mcqs.some((entry) => entry.id === item.id)) mcqs.push(item);
+        }
+      }
+      mcqs.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+      return html(publicMcqEntriesPage(user, subject, chapter, mcqs));
+    }
+
+    const entries = [];
+    for (const contentNodeId of nodeIds) {
+      const scoped = await listContentEntries(env.DB, contentNodeId, chapter.id, topicId || null, contentKind);
+      for (const item of scoped) {
+        if (!entries.some((entry) => entry.id === item.id)) entries.push(item);
+      }
+    }
+    entries.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     return html(publicContentEntriesPage(user, subject, chapter, contentKind, entries));
   }
 

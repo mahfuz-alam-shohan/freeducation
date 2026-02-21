@@ -102,3 +102,33 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
     publicHomeStyles
   );
 }
+
+export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
+  const list = mcqs
+    .map(
+      (item, index) => `<li>
+      <h3 class="public-note-title">${index + 1}. MCQ</h3>
+      <div class="public-note-body">${item.question_html}</div>
+      <ul>
+        <li><strong>A.</strong> ${h(item.option_a)}</li>
+        <li><strong>B.</strong> ${h(item.option_b)}</li>
+        <li><strong>C.</strong> ${h(item.option_c)}</li>
+        <li><strong>D.</strong> ${h(item.option_d)}</li>
+      </ul>
+    </li>`
+    )
+    .join('');
+
+  return publicShell(
+    'home',
+    user,
+    `${chapter.name} · MCQ Bank`,
+    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes', href: '/classes' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: 'MCQ Bank' }])}<section class="public-stack">
+      <h1 class="public-stack-title">MCQ Bank</h1>
+      <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
+      <ol class="public-note-list">${list || '<li>No MCQs yet.</li>'}</ol>
+    </section>`,
+    '',
+    publicHomeStyles
+  );
+}

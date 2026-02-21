@@ -278,7 +278,7 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
     )
     .join('');
 
-  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
+  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Open</th><th>Name</th><th>Edit</th><th>Image</th><th>Rename</th><th>Image Upload</th><th>Sync</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 7, 'No nodes found.')}</tbody>
@@ -302,8 +302,8 @@ export function chaptersPage(user, subject, node, chapters) {
     )
     .join('');
 
-  const content = `<section class="card">
-    <a class="back-link" href="/subjects/${subject.id}/nodes/${node.parent_subject_node_id}">← Back</a>
+  const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.parent_subject_node_id}">← Back</a></div>
+  <section class="card">
     <form method="post" action="/api/chapters" enctype="multipart/form-data" class="toolbar-group section-gap-sm">
       <input type="hidden" name="subjectNodeId" value="${node.id}" />
       <input type="hidden" name="subjectId" value="${subject.id}" />
@@ -334,8 +334,8 @@ export function topicsPage(user, subject, node, chapter, topics) {
     )
     .join('');
 
-  const content = `<section class="card">
-    <a class="back-link" href="/subjects/${subject.id}/nodes/${node.id}">← Back</a>
+  const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.id}">← Back</a></div>
+  <section class="card">
     <form method="post" action="/api/topics" enctype="multipart/form-data" class="toolbar-group section-gap-sm">
       <input type="hidden" name="chapterId" value="${chapter.id}" />
       <input type="hidden" name="subjectId" value="${subject.id}" />
@@ -358,12 +358,14 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
   const detectedKinds = childNodes.filter((n) => n.node_type === 'content').map((n) => n.content_kind || n.display_name);
   const fallbackKinds = node.content_kind ? [node.content_kind] : ['CQ Bank', 'MCQ Bank', 'Short Notes', 'Videos', 'Summary'];
   const kinds = Array.from(new Set((detectedKinds.length ? detectedKinds : fallbackKinds).filter(Boolean)));
+  const nodeIdByKind = new Map(childNodes.filter((n) => n.node_type === 'content').map((n) => [n.content_kind || n.display_name, n.id]));
 
   const hrefForKind = (kind) => {
-    if (kind === 'Short Notes') return `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
-    if (kind === 'MCQ Bank') return `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
+    const targetNodeId = nodeIdByKind.get(kind) || node.id;
+    if (kind === 'Short Notes') return `/subjects/${subject.id}/notes?node=${targetNodeId}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
+    if (kind === 'MCQ Bank') return `/subjects/${subject.id}/mcqs?node=${targetNodeId}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
     if (disabledKinds.has(kind)) return '';
-    return `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}&kind=${encodeURIComponent(kind)}`;
+    return `/subjects/${subject.id}/content?node=${targetNodeId}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}&kind=${encodeURIComponent(kind)}`;
   };
 
   const rows = kinds
@@ -377,19 +379,13 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     : node.supports_chapters
       ? `/subjects/${subject.id}/nodes/${node.id}`
       : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
-  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
-  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th>Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, 'No content types found.')}</tbody></table></div></section>`;
+  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
+  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th class="table-action-open-cell">Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, 'No content types found.')}</tbody></table></div></section>`;
   return appShell('subjects', user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content, { pageStyles: modulesStyles });
 }
 
 function richTextEditor(fieldName, value, placeholder, required = false) {
   return `<div class="rich-editor" data-rich-editor>
-      <div class="editor-header">
-        <div class="editor-mode-tabs" role="tablist" aria-label="Editor view mode">
-          <button type="button" class="editor-mode-tab active" data-editor-tab="write" role="tab" aria-selected="true">Write</button>
-          <button type="button" class="editor-mode-tab" data-editor-tab="preview" role="tab" aria-selected="false">Preview</button>
-        </div>
-      </div>
       <div class="editor-tools">
         <button type="button" class="btn btn-secondary" data-editor-command="bold" title="Bold"><strong>B</strong></button>
         <button type="button" class="btn btn-secondary" data-editor-command="italic" title="Italic"><em>I</em></button>
@@ -409,7 +405,6 @@ function richTextEditor(fieldName, value, placeholder, required = false) {
         <button type="button" class="btn btn-secondary" data-editor-command="removeFormat">Clear</button>
       </div>
       <div class="rich-editor-input" data-editor-input data-editor-placeholder="${h(placeholder)}" contenteditable="true">${value || ''}</div>
-      <div class="rich-editor-preview" data-editor-preview hidden></div>
       <textarea class="input" name="${fieldName}" data-editor-storage hidden ${required ? 'required' : ''}>${h(value || '')}</textarea>
     </div>`;
 }
@@ -508,7 +503,7 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
-  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
+  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
       <h3 class="card-title">Short notes</h3>
@@ -593,7 +588,7 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
     </article>`;
   }).join('');
 
-  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
+  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
   <section class="card content-form-shell" data-add-form-shell><div class="content-form-head"><h3 class="card-title">${isSummary ? 'Summary editor' : `Add ${h(contentKind)} item`}</h3><button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="${h(contentKind)}" aria-expanded="false">${isSummary ? 'Edit Summary' : `Add ${h(contentKind)}`}</button></div><div data-add-form-panel>${entryForm((isSummary && entries[0]) ? { ...entries[0], page: safePage } : { page: safePage })}</div></section>
   <section class="content-list">${items}</section>
   ${!pageItems.length ? '<p class="muted">No content yet.</p>' : ''}
@@ -647,7 +642,7 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : `/subjects/${subject.id}/nodes/${node.id}`;
 
-  const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
+  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
   <section class="card content-form-shell" data-add-form-shell>
     <div class="content-form-head">
       <h3 class="card-title">Add question</h3>
@@ -679,7 +674,7 @@ export function classSubjectsPage(user, classItem, subjects) {
     )
     .join('');
 
-  const content = `<section class="card flat-card"><a class="back-link" href="/classes/manage">← Back to classes</a></section>
+  const content = `<div class="back-link-row"><a class="back-link" href="/classes/manage">← Back to classes</a></div>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
       <thead><tr><th>Subject</th><th>Template</th><th>Created</th><th>Open</th></tr></thead>
