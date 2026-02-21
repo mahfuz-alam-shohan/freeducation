@@ -1,6 +1,6 @@
-import { appShell } from '../templates/shell.js';
+import { appShell } from '../../templates/shell.js';
 import { profileStyles } from './profileStyles.js';
-import { imageUrlFromKey } from '../imageUrl.js';
+import { imageUrlFromKey } from '../../imageUrl.js';
 
 function h(value) {
   return String(value ?? '')
