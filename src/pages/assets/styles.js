@@ -895,7 +895,9 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .profile-form-grid > * { min-width: 0; }
 .profile-form-grid label { display: flex; align-items: center; gap: 6px; }
 .profile-form-grid input[type="date"] {
-  width: 100%;
+  display: block;
+  width: min(100%, 20rem);
+  min-width: 0;
   max-width: 100%;
 }
 .profile-form-actions { display: flex; justify-content: flex-start; margin-top: 2px; }
@@ -973,6 +975,9 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .grid-2 { grid-template-columns: 1fr; }
   .plain-two-column { grid-template-columns: 1fr; }
   .profile-security-row { flex-direction: column; align-items: flex-start; }
+  .profile-form-grid input[type="date"] {
+    width: 100%;
+  }
   .subject-node-actions-row {
     grid-template-columns: 1fr;
     align-items: stretch;
