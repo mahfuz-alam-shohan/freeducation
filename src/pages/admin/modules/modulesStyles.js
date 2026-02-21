@@ -1,9 +1,10 @@
 export const modulesStyles = `
-.table-excel { table-layout: fixed; min-width: 860px; }
+.table-excel { table-layout: auto; width: 100%; }
 .flat-card { border-radius: 0; border-color: #d5dde7; padding: 6px; }
-.flat-grid-table { border-collapse: collapse; min-width: 860px; }
-.flat-grid-table thead th { background: #fff; color: #334155; font-size: 11px; border: 1px solid #d5dde7; padding: 5px 6px; text-transform: none; white-space: nowrap; line-height: 1.2; vertical-align: middle; }
-.flat-grid-table tbody td { border: 1px solid #d5dde7; padding: 3px 6px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; }
+.flat-grid-table { border-collapse: collapse; width: 100%; }
+.flat-grid-table thead th { width: auto; background: #fff; color: #334155; font-size: 11px; border: 1px solid #d5dde7; padding: 5px 6px; text-transform: none; white-space: nowrap; line-height: 1.2; vertical-align: middle; }
+.flat-grid-table tbody td { width: auto; border: 1px solid #d5dde7; padding: 3px 6px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; }
+.table-action-open-cell { width: 1%; white-space: nowrap; }
 .file-indicator-cell { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 2px 6px; min-width: 156px; }
 .file-indicator-status { grid-column: 1 / -1; font-size: 11px; }
 .image-slot { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
@@ -15,8 +16,11 @@ export const modulesStyles = `
 .table-text-cell-button { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; font: inherit; color: inherit; }
 .table-text-ellipsis { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-text-full { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 13px; }
-.content-modal { border: 0; padding: 0; background: transparent; max-width: 900px; width: min(900px, 96vw); }
-.content-modal-inner { max-height: 88vh; overflow: auto; border-radius: 10px; padding: 12px; }
+.content-modal { border: 0; padding: 0; background: transparent; max-width: none; width: min(720px, 94vw); }
+.content-modal::backdrop { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px); }
+.content-modal[open] { display: grid; place-items: center; }
+.content-modal-inner { width: 100%; max-height: min(86vh, 760px); overflow: auto; border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.content-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: sticky; top: 0; background: inherit; z-index: 1; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
 .image-slot-preview-large { width: min(260px, 100%); max-height: 260px; object-fit: contain; display: block; margin: 0 auto; }
 .content-form-shell,.content-form-shell [data-add-form-panel],.content-list { display: grid; gap: 8px; }
 .plain-two-column { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -32,6 +36,6 @@ export const modulesStyles = `
 @media (max-width: 840px) {
   .plain-two-column { grid-template-columns: 1fr; }
   .subject-node-actions-row { grid-template-columns: 1fr; align-items: stretch; }
-  .table-excel { min-width: 700px; }
+  .table-wrap { overflow-x: auto; }
 }
 `;

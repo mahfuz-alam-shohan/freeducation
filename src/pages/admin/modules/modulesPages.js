@@ -354,6 +354,7 @@ export function topicsPage(user, subject, node, chapter, topics) {
 }
 
 export function contentKindsPage(user, subject, node, chapter, topic, childNodes = []) {
+  const disabledKinds = new Set(['CQ Bank', 'Videos']);
   const detectedKinds = childNodes.filter((n) => n.node_type === 'content').map((n) => n.content_kind || n.display_name);
   const fallbackKinds = node.content_kind ? [node.content_kind] : ['CQ Bank', 'MCQ Bank', 'Short Notes', 'Videos', 'Summary'];
   const kinds = Array.from(new Set((detectedKinds.length ? detectedKinds : fallbackKinds).filter(Boolean)));
@@ -361,17 +362,23 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
   const hrefForKind = (kind) => {
     if (kind === 'Short Notes') return `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
     if (kind === 'MCQ Bank') return `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}`;
+    if (disabledKinds.has(kind)) return '';
     return `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ''}&topic=${topic?.id || ''}&kind=${encodeURIComponent(kind)}`;
   };
 
-  const rows = kinds.map((kind) => `<tr><td>${h(kind)}</td><td><a href="${hrefForKind(kind)}">Open</a></td></tr>`).join('');
+  const rows = kinds
+    .map((kind) => {
+      const href = hrefForKind(kind);
+      return `<tr><td class="table-action-open-cell">${href ? `<a class="btn btn-secondary" href="${href}">Open</a>` : '<span class="muted">—</span>'}</td><td>${h(kind)}</td></tr>`;
+    })
+    .join('');
   const backHref = topic
     ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`
     : node.supports_chapters
       ? `/subjects/${subject.id}/nodes/${node.id}`
       : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
-  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th>Content Type</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th>Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, 'No content types found.')}</tbody></table></div></section>`;
   return appShell('subjects', user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content, { pageStyles: modulesStyles });
 }
 
