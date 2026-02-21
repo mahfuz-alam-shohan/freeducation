@@ -906,7 +906,7 @@ textarea,
   overflow: hidden;
   background: linear-gradient(120deg, #0f3ea8, #2563eb 52%, #3b82f6);
   color: #eff6ff;
-  min-height: 168px;
+  min-height: 184px;
   padding: 16px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1003,20 +1003,21 @@ textarea,
 
 .public-class-strip-title {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.2;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .public-class-see-all {
   color: #334155;
   text-decoration: none;
-  font-size: 22px;
+  font-size: 16px;
 }
 
 .public-class-row {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 180px;
+  grid-auto-columns: 148px;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
@@ -1024,13 +1025,13 @@ textarea,
 
 .public-class-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: 10px;
 }
 
 .class-card {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
@@ -1057,12 +1058,22 @@ textarea,
 
 .class-card-name {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.2;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
   color: #0f172a;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+
+.class-card-meta {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #475569;
 }
 
 .public-class-page {
@@ -1422,7 +1433,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .public-home-cover {
     grid-template-columns: 1fr;
     gap: 8px;
-    min-height: 138px;
+    min-height: 148px;
     padding: 12px 10px;
     text-align: center;
   }

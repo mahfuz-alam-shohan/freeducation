@@ -149,35 +149,38 @@ export async function ensureDefaultClasses(db) {
   const createdAt = nowIso();
   for (let i = 1; i <= 12; i += 1) {
     await db
-      .prepare('INSERT INTO classes (id, name, image_key, sort_order, created_at, updated_at) VALUES (?1, ?2, NULL, ?3, ?4, ?4)')
+      .prepare('INSERT INTO classes (id, name, image_key, show_on_home, sort_order, created_at, updated_at) VALUES (?1, ?2, NULL, 1, ?3, ?4, ?4)')
       .bind(crypto.randomUUID(), `Class ${i}`, i, createdAt)
       .run();
   }
 }
 
-export async function listClasses(db) {
-  const rows = await db.prepare('SELECT id, name, image_key, sort_order, created_at, updated_at FROM classes ORDER BY sort_order ASC, created_at ASC').all();
+export async function listClasses(db, options = {}) {
+  const whereClause = options.homepageOnly ? 'WHERE show_on_home = 1' : '';
+  const rows = await db
+    .prepare(`SELECT id, name, image_key, show_on_home, sort_order, created_at, updated_at FROM classes ${whereClause} ORDER BY sort_order ASC, created_at ASC`)
+    .all();
   return rows.results ?? [];
 }
 
 export async function getClassById(db, classId) {
-  return db.prepare('SELECT id, name, image_key, sort_order, created_at, updated_at FROM classes WHERE id = ?1').bind(classId).first();
+  return db.prepare('SELECT id, name, image_key, show_on_home, sort_order, created_at, updated_at FROM classes WHERE id = ?1').bind(classId).first();
 }
 
 export async function createClass(db, input) {
   const id = crypto.randomUUID();
   const createdAt = nowIso();
   await db
-    .prepare('INSERT INTO classes (id, name, image_key, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?5)')
-    .bind(id, input.name, input.imageKey || null, input.sortOrder, createdAt)
+    .prepare('INSERT INTO classes (id, name, image_key, show_on_home, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)')
+    .bind(id, input.name, input.imageKey || null, input.showOnHome ? 1 : 0, input.sortOrder, createdAt)
     .run();
   return id;
 }
 
 export async function updateClass(db, classId, input) {
   await db
-    .prepare('UPDATE classes SET name = ?2, image_key = ?3, sort_order = ?4, updated_at = ?5 WHERE id = ?1')
-    .bind(classId, input.name, input.imageKey || null, input.sortOrder, nowIso())
+    .prepare('UPDATE classes SET name = ?2, image_key = ?3, show_on_home = ?4, sort_order = ?5, updated_at = ?6 WHERE id = ?1')
+    .bind(classId, input.name, input.imageKey || null, input.showOnHome ? 1 : 0, input.sortOrder, nowIso())
     .run();
 }
 

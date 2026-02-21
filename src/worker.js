@@ -237,7 +237,7 @@ const pageRoutes = [
   {
     path: '/',
     access: ACCESS.PUBLIC,
-    handle: async ({ env, user }) => html(publicHomePage(user, await listClasses(env.DB))),
+    handle: async ({ env, user }) => html(publicHomePage(user, await listClasses(env.DB, { homepageOnly: true }))),
   },
   {
     path: '/classes',
@@ -349,9 +349,10 @@ async function handleAdminPost(request, env, url) {
     const form = await request.formData();
     const name = String(form.get('name') || '').trim();
     const sortOrder = Number.parseInt(String(form.get('sortOrder') || '0'), 10);
+    const showOnHome = form.get('showOnHome') === '1';
     if (!name) return redirect('/classes/manage');
     const imageKey = await uploadImage(env, 'classes', form.get('image'));
-    await createClass(env.DB, { name, sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0, imageKey });
+    await createClass(env.DB, { name, sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0, imageKey, showOnHome });
     return redirect('/classes/manage');
   }
 
@@ -368,6 +369,7 @@ async function handleAdminPost(request, env, url) {
     const name = String(form.get('name') || '').trim();
     if (!name) return redirect('/classes/manage');
     const sortOrder = Number.parseInt(String(form.get('sortOrder') || current.sort_order || 0), 10);
+    const showOnHome = form.get('showOnHome') === '1';
     const removeImage = form.get('removeImage') === '1';
     const uploaded = await uploadImage(env, 'classes', form.get('image'));
     const imageKey = removeImage ? null : uploaded || current.image_key;
@@ -375,6 +377,7 @@ async function handleAdminPost(request, env, url) {
       name,
       sortOrder: Number.isFinite(sortOrder) ? sortOrder : Number(current.sort_order || 0),
       imageKey,
+      showOnHome,
     });
     return redirect('/classes/manage');
   }

@@ -109,6 +109,7 @@ export function classesPage(user, classes) {
       <td>${imageCell(item.image_key)}</td>
       <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data"><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
       <td><input class="input" type="number" name="sortOrder" form="class-update-${item.id}" value="${h(item.sort_order)}" /></td>
+      <td><label><input type="checkbox" name="showOnHome" value="1" form="class-update-${item.id}" ${item.show_on_home ? 'checked' : ''} /> Show</label></td>
       <td><input class="input" type="file" name="image" form="class-update-${item.id}" accept="image/*" /></td>
       <td><label><input type="checkbox" name="removeImage" value="1" form="class-update-${item.id}" /> Remove</label></td>
       <td><button class="btn btn-secondary" form="class-update-${item.id}" name="intent" value="update" type="submit">Save</button></td>
@@ -143,6 +144,7 @@ export function classesPage(user, classes) {
           <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
         </div>
         <form method="post" action="/api/classes" class="grid grid-4" enctype="multipart/form-data">
+          <label><input type="checkbox" name="showOnHome" value="1" checked /> Show on homepage</label>
           <input class="input" name="name" placeholder="Class name" required />
           <input class="input" type="number" name="sortOrder" value="0" />
           <input class="input" type="file" name="image" accept="image/*" />
@@ -153,8 +155,8 @@ export function classesPage(user, classes) {
   </section>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Class</th><th>Order</th><th>Image</th><th>Rename</th><th>Sort</th><th>Upload Image</th><th>Remove Image</th><th>Save</th><th>Delete</th></tr></thead>
-      <tbody>${tableRowsOrEmpty(rows, 9, 'No classes yet.')}</tbody>
+      <thead><tr><th>Class</th><th>Order</th><th>Image</th><th>Rename</th><th>Sort</th><th>Homepage</th><th>Upload Image</th><th>Remove Image</th><th>Save</th><th>Delete</th></tr></thead>
+      <tbody>${tableRowsOrEmpty(rows, 10, 'No classes yet.')}</tbody>
     </table></div>
   </section>`;
 

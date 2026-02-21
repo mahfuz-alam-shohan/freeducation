@@ -93,6 +93,7 @@ const TABLES = {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       image_key TEXT,
+      show_on_home INTEGER NOT NULL DEFAULT 1,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -101,6 +102,7 @@ const TABLES = {
       id: 'TEXT',
       name: 'TEXT',
       image_key: 'TEXT',
+      show_on_home: 'INTEGER NOT NULL DEFAULT 1',
       sort_order: 'INTEGER',
       created_at: 'TEXT',
       updated_at: 'TEXT',
