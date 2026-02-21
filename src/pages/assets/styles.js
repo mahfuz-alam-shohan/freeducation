@@ -317,10 +317,18 @@ a { color: inherit; }
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
 }
 .profile-popup[hidden] { display: none; }
+.profile-popup .muted {
+  color: #475569;
+  text-align: center;
+}
 
 .profile-popup-login-btn {
+  display: inline-flex;
+  align-items: center;
   width: 100%;
   justify-content: center;
+  text-align: center;
+  text-decoration: none;
   border-radius: 10px;
   border: 1px solid #1d4ed8;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
@@ -395,12 +403,16 @@ a { color: inherit; }
 .table .toolbar-group > * { flex-shrink: 0; }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 6px;
   border: 1px solid transparent;
   min-height: 34px;
   padding: 0 10px;
   font-weight: 600;
   font-size: 13px;
+  text-decoration: none;
   cursor: pointer;
   transition: all 120ms ease;
 }
@@ -903,10 +915,10 @@ textarea,
 .public-cover-quote-wrap {
   justify-self: end;
   width: min(560px, 100%);
-  padding: 10px 12px;
-  border: 1px solid rgba(219, 234, 254, 0.42);
-  background: rgba(15, 23, 42, 0.16);
-  backdrop-filter: blur(2px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .public-cover-quote {
@@ -1261,7 +1273,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .public-cover-quote-wrap {
     justify-self: center;
     width: min(100%, 620px);
-    padding: 8px 9px;
+    padding: 0;
   }
   .public-cover-quote {
     font-size: clamp(12px, 3.4vw, 15px);
