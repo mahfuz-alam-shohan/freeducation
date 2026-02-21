@@ -43,7 +43,8 @@ export const profileStyles = `
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  min-width: 200px;
+  min-width: 180px;
+  max-width: min(220px, calc(100vw - 16px));
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -51,7 +52,7 @@ export const profileStyles = `
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   display: none;
 }
-.profile-avatar-control .profile-photo-actions { right: -4px; }
+.profile-avatar-control .profile-photo-actions { left: 0; right: auto; }
 .profile-photo-control.menu-open .profile-photo-actions { display: grid; gap: 4px; }
 .profile-photo-action {
   border: 0;
