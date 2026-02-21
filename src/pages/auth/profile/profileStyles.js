@@ -89,9 +89,11 @@ export const profileStyles = `
 .profile-inline-edit-btn .icon svg { width: 16px; height: 16px; }
 .profile-inline-edit-btn.is-open { color: #1d4ed8; border-color: #9bb6ee; }
 .profile-bio-label { margin: 0; color: #64748b; font-size: 18px; font-weight: 500; }
-.profile-inline-input { max-width: 560px; margin-top: 6px; }
+.profile-inline-input { max-width: 560px; margin-top: 6px; min-width: 0; }
+.profile-dob-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 560px; }
 .profile-field-label { font-size: 13px; color: #64748b; margin-top: 2px; }
 .profile-inline-editor { display: grid; gap: 8px; margin-top: 4px; max-width: 560px; }
+.profile-inline-editor[hidden] { display: none; }
 .profile-inline-actions { display: flex; gap: 8px; align-items: center; }
 .profile-form-grid { display: grid; gap: 10px; max-width: 520px; }
 
@@ -122,5 +124,6 @@ export const profileStyles = `
   .profile-name-row { margin-top: 36px; }
   .profile-photo-actions { min-width: 182px; }
   .profile-grid-flat { gap: 12px; }
+  .profile-dob-grid { grid-template-columns: 1fr; }
 }
 `;

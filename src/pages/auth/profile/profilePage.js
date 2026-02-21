@@ -77,7 +77,22 @@ function profileHeader(user) {
 
 function profileMain(user) {
   const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || '')) ? String(user.dateOfBirth) : '';
+  const dobYearValue = dobValue ? Number(dobValue.slice(0, 4)) : '';
+  const dobMonthValue = dobValue ? Number(dobValue.slice(5, 7)) : '';
+  const dobDayValue = dobValue ? Number(dobValue.slice(8, 10)) : '';
   const maxDob = new Date().toISOString().slice(0, 10);
+  const maxYear = Number(maxDob.slice(0, 4));
+  const monthOptions = [
+    'January','February','March','April','May','June','July','August','September','October','November','December',
+  ].map((month, index) => `<option value="${index + 1}" ${dobMonthValue === index + 1 ? 'selected' : ''}>${month}</option>`).join('');
+  const dayOptions = Array.from({ length: 31 }, (_, index) => {
+    const day = index + 1;
+    return `<option value="${day}" ${dobDayValue === day ? 'selected' : ''}>${day}</option>`;
+  }).join('');
+  const yearOptions = Array.from({ length: maxYear - 1899 }, (_, index) => {
+    const year = maxYear - index;
+    return `<option value="${year}" ${dobYearValue === year ? 'selected' : ''}>${year}</option>`;
+  }).join('');
 
   return `<section class="profile-body-flat">
     <nav class="profile-tabs" aria-label="Profile sections" role="tablist">
@@ -112,8 +127,19 @@ function profileMain(user) {
           </div>
           <p class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</p>
           <form id="profile-dob-editor" class="profile-inline-editor" data-profile-inline-editor="dob" method="post" action="/api/profile/dob" hidden>
-            <label for="profile-dob" class="profile-field-label">Date of birth</label>
-            <input id="profile-dob" class="input profile-inline-input" type="date" name="dateOfBirth" value="${h(dobValue)}" max="${maxDob}" />
+            <label for="profile-dob-day" class="profile-field-label">Date of birth</label>
+            <input id="profile-dob" type="hidden" name="dateOfBirth" value="${h(dobValue)}" />
+            <div class="profile-dob-grid">
+              <select id="profile-dob-day" class="input profile-inline-input" name="dobDay" data-profile-dob-day aria-label="Day of birth">
+                <option value="">Day</option>${dayOptions}
+              </select>
+              <select id="profile-dob-month" class="input profile-inline-input" name="dobMonth" data-profile-dob-month aria-label="Month of birth">
+                <option value="">Month</option>${monthOptions}
+              </select>
+              <select id="profile-dob-year" class="input profile-inline-input" name="dobYear" data-profile-dob-year aria-label="Year of birth">
+                <option value="">Year</option>${yearOptions}
+              </select>
+            </div>
             <div class="profile-inline-actions">
               <button class="btn btn-primary" type="submit">Save</button>
               <button class="btn btn-secondary" type="button" data-profile-inline-cancel="dob">Cancel</button>
@@ -284,6 +310,9 @@ function profilePageScript() {
 
   const nameInput = document.getElementById('profile-name');
   const dobInput = document.getElementById('profile-dob');
+  const dobDayInput = document.querySelector('[data-profile-dob-day]');
+  const dobMonthInput = document.querySelector('[data-profile-dob-month]');
+  const dobYearInput = document.querySelector('[data-profile-dob-year]');
   const nameTitle = document.querySelector('[data-profile-name-title]');
   const nameValue = document.querySelector('[data-profile-name-value]');
   const dobText = document.querySelector('[data-profile-dob-text]');
@@ -292,28 +321,58 @@ function profilePageScript() {
   let lastSavedDob = String(dobInput?.value || '');
 
   const setEditorOpen = (key, open) => {
-    const editor = document.querySelector('[data-profile-inline-editor="' + key + '"]');
-    const toggle = document.querySelector('[data-profile-inline-toggle="' + key + '"]');
-    const value = key === 'name' ? nameValue : dobText;
-    if (editor) editor.hidden = !open;
-    if (toggle) {
-      toggle.setAttribute('aria-expanded', String(open));
-      toggle.classList.toggle('is-open', open);
+    document.querySelectorAll('[data-profile-inline-editor]').forEach((editorNode) => {
+      const editorKey = editorNode.getAttribute('data-profile-inline-editor');
+      const active = open && editorKey === key;
+      editorNode.hidden = !active;
+      const toggleNode = document.querySelector('[data-profile-inline-toggle="' + editorKey + '"]');
+      if (toggleNode) {
+        toggleNode.setAttribute('aria-expanded', String(active));
+        toggleNode.classList.toggle('is-open', active);
+      }
+      const valueNode = editorKey === 'name' ? nameValue : dobText;
+      if (valueNode) valueNode.hidden = active;
+    });
+
+    if (!open) return;
+    if (key === 'dob') {
+      dobDayInput?.focus();
+      return;
     }
-    if (value) value.hidden = open;
-    if (open) editor?.querySelector('input')?.focus();
+    document.querySelector('[data-profile-inline-editor="' + key + '"] input')?.focus();
+  };
+
+  const syncDobSelectors = (isoDate) => {
+    if (!dobDayInput || !dobMonthInput || !dobYearInput) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate || ''))) {
+      dobDayInput.value = '';
+      dobMonthInput.value = '';
+      dobYearInput.value = '';
+      return;
+    }
+    dobYearInput.value = String(Number(isoDate.slice(0, 4)));
+    dobMonthInput.value = String(Number(isoDate.slice(5, 7)));
+    dobDayInput.value = String(Number(isoDate.slice(8, 10)));
   };
 
   const updateDobValue = () => {
     if (!dobInput) return '';
-    const candidate = String(dobInput.value || '');
-    if (!candidate) return '';
+    const year = String(dobYearInput?.value || '').trim();
+    const month = String(dobMonthInput?.value || '').trim();
+    const day = String(dobDayInput?.value || '').trim();
+    if (!year && !month && !day) {
+      dobInput.value = '';
+      return '';
+    }
+    if (!year || !month || !day) return null;
+    const candidate = year.padStart(4, '0') + '-' + month.padStart(2, '0') + '-' + day.padStart(2, '0');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return null;
     const date = new Date(candidate + 'T00:00:00.000Z');
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) return null;
     const today = new Date();
     const max = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
     if (date.getUTCFullYear() < 1900 || date > max) return null;
+    dobInput.value = candidate;
     return candidate;
   };
 
@@ -326,7 +385,10 @@ function profilePageScript() {
       setEditorOpen(key, opening);
       setFieldStatus(key, '', 'idle');
       if (!opening && key === 'name' && nameInput) nameInput.value = lastSavedName;
-      if (!opening && key === 'dob' && dobInput) dobInput.value = lastSavedDob;
+      if (!opening && key === 'dob' && dobInput) {
+        dobInput.value = lastSavedDob;
+        syncDobSelectors(lastSavedDob);
+      }
     });
   });
 
@@ -335,7 +397,10 @@ function profilePageScript() {
       const key = button.getAttribute('data-profile-inline-cancel');
       if (!key) return;
       if (key === 'name' && nameInput) nameInput.value = lastSavedName;
-      if (key === 'dob' && dobInput) dobInput.value = lastSavedDob;
+      if (key === 'dob' && dobInput) {
+        dobInput.value = lastSavedDob;
+        syncDobSelectors(lastSavedDob);
+      }
       setFieldStatus(key, '', 'idle');
       setEditorOpen(key, false);
     });
@@ -397,6 +462,12 @@ function profilePageScript() {
     setEditorOpen('dob', false);
     setTimeout(() => setFieldStatus('dob', '', 'idle'), 1200);
   };
+
+  syncDobSelectors(lastSavedDob);
+  setEditorOpen('', false);
+  [dobDayInput, dobMonthInput, dobYearInput].forEach((input) => {
+    input?.addEventListener('change', () => setFieldStatus('dob', '', 'idle'));
+  });
 
   document.querySelector('[data-profile-inline-editor="name"]')?.addEventListener('submit', submitName);
   document.querySelector('[data-profile-inline-editor="dob"]')?.addEventListener('submit', submitDob);
