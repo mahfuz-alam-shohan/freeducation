@@ -583,15 +583,15 @@ function initializeFormHandlers() {
 
 async function readImageDimensions(file) {
   if (typeof createImageBitmap === 'function') {
-    const bitmap = await createImageBitmap(file);
+    const sourceBitmap = await createImageBitmap(file);
     return {
-      width: bitmap.width,
-      height: bitmap.height,
+      width: sourceBitmap.width,
+      height: sourceBitmap.height,
       release: () => {
-        if (typeof bitmap.close === 'function') bitmap.close();
+        if (typeof sourceBitmap.close === 'function') sourceBitmap.close();
       },
       draw(ctx, width, height) {
-        ctx.drawImage(bitmap, 0, 0, width, height);
+        ctx.drawImage(sourceBitmap, 0, 0, width, height);
       },
     };
   }
@@ -618,10 +618,10 @@ async function readImageDimensions(file) {
 
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
-  if (file.type === 'image/webp' && file.size <= 220 * 1024) return file;
+  if (file.type === 'image/webp' && file.size <= 160 * 1024) return file;
 
+  const maxEdge = 240;
   const source = await readImageDimensions(file);
-  const maxEdge = 360;
   const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
   const width = Math.max(1, Math.round(source.width * scale));
@@ -636,11 +636,11 @@ async function downscaleImageFile(file) {
   }
 
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = 'low';
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.46));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.35));
   if (!blob || blob.size >= file.size) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
