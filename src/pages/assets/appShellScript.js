@@ -9,6 +9,8 @@ const profileTrigger = profileMenu?.querySelector('[data-profile-trigger]');
 const profilePopup = profileMenu?.querySelector('[data-profile-popup]');
 const sidebarStateKey = 'freeducation.sidebar.collapsed';
 const mobileViewport = window.matchMedia('(max-width: 840px)');
+const prefetchedNavigationUrls = new Set();
+const maxPrefetchCount = 40;
 
 function readSidebarCollapsedState() {
   try {
@@ -251,6 +253,75 @@ function initializeFileIndicators() {
     input.addEventListener('change', syncStatus);
     syncStatus();
     input.dataset.boundFileIndicator = '1';
+  });
+}
+
+function isInternalNavigationLink(link) {
+  if (!link || !link.href) return false;
+  if (link.target && link.target !== '_self') return false;
+  if (link.hasAttribute('download') || link.getAttribute('rel') === 'external') return false;
+
+  const href = String(link.getAttribute('href') || '').trim();
+  if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
+
+  try {
+    const url = new URL(link.href, window.location.href);
+    if (url.origin !== window.location.origin) return false;
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function prefetchNavigationUrl(url) {
+  if (!url || prefetchedNavigationUrls.has(url) || prefetchedNavigationUrls.size >= maxPrefetchCount) return;
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'document';
+  link.href = url;
+  document.head.appendChild(link);
+  prefetchedNavigationUrls.add(url);
+}
+
+function initializeNavigationBoost() {
+  const navLinks = Array.from(document.querySelectorAll('a')).filter(isInternalNavigationLink);
+  if (navLinks.length === 0) return;
+
+  const onNavigate = () => {
+    document.body.classList.add('page-nav-pending');
+  };
+
+  navLinks.forEach((link) => {
+    const url = link.href;
+    const warmup = () => prefetchNavigationUrl(url);
+    link.addEventListener('pointerenter', warmup, { passive: true });
+    link.addEventListener('focus', warmup, { passive: true });
+    link.addEventListener('touchstart', warmup, { passive: true });
+    link.addEventListener('click', onNavigate);
+  });
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const link = entry.target;
+        if (!(link instanceof HTMLAnchorElement)) return;
+        prefetchNavigationUrl(link.href);
+        observer.unobserve(link);
+      });
+    }, { rootMargin: '180px 0px' });
+    navLinks.forEach((link) => observer.observe(link));
+  }
+}
+
+function initializePageMotion() {
+  const body = document.body;
+  if (!body) return;
+  body.classList.add('page-entering');
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      body.classList.remove('page-entering');
+    });
   });
 }
 
@@ -817,5 +888,7 @@ if (!shell) {
   initializeImageSlots();
   initializeClassMoveControls();
   initializeFormHandlers();
+  initializeNavigationBoost();
+  initializePageMotion();
 }
 `;
