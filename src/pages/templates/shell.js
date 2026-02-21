@@ -37,8 +37,8 @@ function renderNavigationGroup(group, active) {
   return `<p class="nav-group-title">${group.title}</p>${items}`;
 }
 
-function sidebar(active, role) {
-  const nav = getNavigation(role);
+function sidebar(active, user) {
+  const nav = getNavigation(user.role);
   return `<aside class="sidebar">
     <header class="sidebar-head">
       <span class="brand">
@@ -50,6 +50,7 @@ function sidebar(active, role) {
       </button>
     </header>
     <div class="sidebar-scroll">
+      <p class="muted sidebar-login-note">Logged in as <strong class="login-name">${user.name}</strong> (${user.role})</p>
       ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
       <a href="/api/logout" class="menu-item logout-item"><span class="icon">${iconLogout}</span><span class="label">Log out</span></a>
     </div>
@@ -62,7 +63,12 @@ function topbar(user) {
   return `<header class="topbar">
       <div class="topbar-left">
         <button class="icon-btn mobile-only mobile-menu-btn" data-mobile-toggle aria-label="Open navigation menu" aria-expanded="false"><span class="mobile-icon mobile-icon-menu" aria-hidden="true">${iconMenu}</span><span class="mobile-icon mobile-icon-close" aria-hidden="true">${iconClose}</span></button>
-        <p class="muted login-note">Logged in as <strong class="login-name">${user.name}</strong> (${user.role})</p>
+      </div>
+      <div class="topbar-center">
+        <span class="brand topbar-brand">
+          <span class="brand-logo" aria-hidden="true">${siteLogo}</span>
+          <span class="brand-name">freeducation</span>
+        </span>
       </div>
       <div class="topbar-right">
         <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" />` : initials(user.name)}</span>
@@ -74,7 +80,7 @@ export function appShell(active, user, pageTitle, subtitle, content) {
   return basePage(
     pageTitle,
     `<div class="app-shell" data-shell>
-      ${sidebar(active, user.role)}
+      ${sidebar(active, user)}
       <div class="mobile-overlay" data-overlay></div>
       <main class="main-shell">
         ${topbar(user)}
