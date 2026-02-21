@@ -60,7 +60,7 @@ export const publicHomeStyles = `
 .public-note-title { margin: 0 0 2px; font-size: 15px; }
 .public-note-body :first-child { margin-top: 0; }
 .public-note-body :last-child { margin-bottom: 0; }
-.public-mcq-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.public-mcq-head { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 4px; }
 .public-mcq-answer-toggle { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; border-radius: 3px; font-size: 11px; line-height: 1.2; padding: 2px 6px; cursor: pointer; }
 .public-mcq-options { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 2px; }
 .public-mcq-option-correct { background: #ecfdf5; color: #065f46; }

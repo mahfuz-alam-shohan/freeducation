@@ -108,7 +108,6 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     .map(
       (item) => `<li class="public-mcq-item" data-correct-option="${h(item.correct_option)}">
       <div class="public-mcq-head">
-        <h3 class="public-note-title">MCQ</h3>
         <button class="public-mcq-answer-toggle" type="button" data-answer-toggle>See answer</button>
       </div>
       <div class="public-note-body">${item.question_html}</div>
