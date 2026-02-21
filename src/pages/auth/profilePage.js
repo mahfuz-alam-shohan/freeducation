@@ -35,10 +35,23 @@ function initialsForUser(user) {
     .join('');
 }
 
+function formatDate(isoDate) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate || ''))) return 'Not set';
+  const date = new Date(`${isoDate}T00:00:00.000Z`);
+  if (!Number.isFinite(date.getTime())) return 'Not set';
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+}
+
+function formatJoined(isoDateTime) {
+  const date = new Date(String(isoDateTime || ''));
+  if (!Number.isFinite(date.getTime())) return 'Unknown';
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+}
+
 function photoMenu(type, hasImage) {
   const target = type === 'cover' ? 'Cover image' : 'Profile picture';
   const fileId = `${type}-upload`;
-  return `<div class="profile-photo-actions">
+  return `<div class="profile-photo-actions" data-profile-photo-actions="${type}">
     <button type="button" class="profile-photo-action" data-profile-view="${type}" ${hasImage ? '' : 'disabled'}>See ${target}</button>
     <button type="button" class="profile-photo-action" data-profile-upload-trigger="${fileId}">${hasImage ? `Change ${target}` : `Upload ${target}`}</button>
   </div>`;
@@ -70,7 +83,7 @@ function profileHeader(user) {
         </div>
       </div>
     </div>
-    <div class="profile-name-row"><h2>${h(user.name)}</h2></div>
+    <div class="profile-name-row"><h2 data-profile-name-title>${h(user.name)}</h2></div>
     <p class="muted profile-upload-status" data-profile-upload-status aria-live="polite"></p>
   </section>`;
 }
@@ -98,19 +111,32 @@ function profileMain(user) {
   }).join('');
 
   return `<section class="profile-body-flat">
-    <nav class="profile-tabs" aria-label="Profile sections">
-      <button type="button" class="profile-tab is-active" data-profile-tab="about">About Me</button>
-      <button type="button" class="profile-tab" data-profile-tab="security">Security</button>
+    <nav class="profile-tabs" aria-label="Profile sections" role="tablist">
+      <button type="button" class="profile-tab is-active" role="tab" aria-selected="true" aria-controls="profile-about-panel" id="profile-about-tab" data-profile-tab="about">About Me</button>
+      <button type="button" class="profile-tab" role="tab" aria-selected="false" aria-controls="profile-security-panel" id="profile-security-tab" data-profile-tab="security">Security</button>
     </nav>
 
-    <div class="profile-tab-panel" data-profile-panel="about">
-      <div class="profile-readonly-row"><p class="muted">Email</p><p class="profile-fixed-value">${h(user.email)}</p></div>
-      <form method="post" action="/api/profile/name" class="profile-form-grid" data-profile-name-form>
-        <label for="profile-name">Full name</label>
+    <div class="profile-tab-panel" id="profile-about-panel" role="tabpanel" aria-labelledby="profile-about-tab" data-profile-panel="about">
+      <div class="profile-panel-head">
+        <h3 class="card-title">About Me</h3>
+        <button type="button" class="btn btn-secondary" data-profile-edit-toggle>Edit</button>
+      </div>
+
+      <div class="profile-bio" data-profile-about-view>
+        <div class="profile-readonly-row"><p class="muted">Name</p><p class="profile-fixed-value" data-profile-name-value>${h(user.name)}</p></div>
+        <div class="profile-readonly-row"><p class="muted">Email</p><p class="profile-fixed-value">${h(user.email)}</p></div>
+        <div class="profile-readonly-row"><p class="muted">Role</p><p class="profile-fixed-value">${h(user.role || 'user')}</p></div>
+        <div class="profile-readonly-row"><p class="muted">Date of birth</p><p class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</p></div>
+        <div class="profile-readonly-row"><p class="muted">Joined</p><p class="profile-fixed-value">${h(formatJoined(user.createdAt))}</p></div>
+      </div>
+
+      <form class="profile-form-grid" data-profile-about-edit-form hidden>
+        <label for="profile-name">Name</label>
         <input id="profile-name" class="input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" />
-        <p class="muted profile-autosave-status" data-profile-status="name" aria-live="polite">Saved.</p>
-      </form>
-      <form method="post" action="/api/profile/dob" class="profile-form-grid" data-profile-dob-form>
+
+        <label>Email</label>
+        <input class="input" value="${h(user.email)}" disabled aria-disabled="true" />
+
         <label for="profile-dob-year">Date of birth</label>
         <div class="profile-dob-fields">
           <select class="input" name="dobYear" id="profile-dob-year" aria-label="Birth year"><option value="">Year</option>${yearOptions}</select>
@@ -118,11 +144,16 @@ function profileMain(user) {
           <select class="input" name="dobDay" id="profile-dob-day" aria-label="Birth day"><option value="">Day</option>${dayOptions}</select>
         </div>
         <input type="hidden" name="dateOfBirth" value="${h(dobValue)}" data-profile-dob-value />
-        <p class="muted profile-autosave-status" data-profile-status="dob" aria-live="polite">Saved.</p>
+
+        <div class="profile-form-actions">
+          <button type="button" class="btn btn-secondary" data-profile-edit-cancel>Cancel</button>
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </div>
+        <p class="muted profile-autosave-status" data-profile-status="about" aria-live="polite"></p>
       </form>
     </div>
 
-    <div class="profile-tab-panel" data-profile-panel="security" hidden>
+    <div class="profile-tab-panel" id="profile-security-panel" role="tabpanel" aria-labelledby="profile-security-tab" data-profile-panel="security" hidden>
       <form method="post" action="/api/profile/password" class="profile-form-grid">
         <label for="profile-current-password">Current password</label>
         <input id="profile-current-password" class="input" type="password" name="currentPassword" minlength="8" maxlength="120" required autocomplete="current-password" />
@@ -133,7 +164,7 @@ function profileMain(user) {
     </div>
 
     <dialog class="content-modal" data-profile-photo-modal>
-      <div class="modal content-modal-inner">
+      <div class="modal content-modal-inner profile-photo-modal-card">
         <div class="content-modal-head"><h3 class="card-title" data-profile-photo-modal-title>Image</h3><button type="button" class="btn btn-secondary" data-profile-photo-modal-close>Close</button></div>
         <div class="profile-photo-modal-image" data-profile-photo-modal-image></div>
       </div>
@@ -268,82 +299,137 @@ function profilePageScript() {
   document.querySelectorAll('[data-profile-tab]').forEach((tab) => {
     tab.addEventListener('click', () => {
       const key = tab.getAttribute('data-profile-tab');
-      document.querySelectorAll('[data-profile-tab]').forEach((item) => item.classList.toggle('is-active', item === tab));
+      document.querySelectorAll('[data-profile-tab]').forEach((item) => {
+        const active = item === tab;
+        item.classList.toggle('is-active', active);
+        item.setAttribute('aria-selected', String(active));
+      });
       document.querySelectorAll('[data-profile-panel]').forEach((panel) => {
         panel.hidden = panel.getAttribute('data-profile-panel') !== key;
       });
     });
   });
 
-  let nameTimer = null;
-  let nameSaving = false;
-  let lastSavedName = '';
-  const nameForm = document.querySelector('[data-profile-name-form]');
-  const nameInput = document.getElementById('profile-name');
-  const saveName = async () => {
-    if (!nameForm || !nameInput || nameSaving) return;
-    const nextName = String(nameInput.value || '').trim();
-    if (!nextName || nextName.length > 100) return setFieldStatus('name', 'Name must be between 1 and 100 characters.', 'error');
-    if (nextName === lastSavedName) return setFieldStatus('name', 'Saved.', 'success');
-    setFieldStatus('name', 'Saving…', 'working');
-    nameSaving = true;
-    const result = await submitForm(nameForm);
-    nameSaving = false;
-    if (!result.ok) return setFieldStatus('name', 'Could not save name.', 'error');
-    lastSavedName = nextName;
-    setFieldStatus('name', 'Saved.', 'success');
-  };
-  if (nameForm && nameInput) {
-    lastSavedName = String(nameInput.value || '').trim();
-    nameInput.addEventListener('input', () => {
-      clearTimeout(nameTimer);
-      nameTimer = setTimeout(() => { saveName().catch(() => setFieldStatus('name', 'Could not save name.', 'error')); }, 250);
-    });
-    nameInput.addEventListener('blur', () => saveName().catch(() => setFieldStatus('name', 'Could not save name.', 'error')));
-    nameForm.addEventListener('submit', (event) => event.preventDefault());
-  }
+  const aboutView = document.querySelector('[data-profile-about-view]');
+  const aboutFormShell = document.querySelector('[data-profile-about-edit-form]');
+  const toggleEditButton = document.querySelector('[data-profile-edit-toggle]');
+  const cancelEditButton = document.querySelector('[data-profile-edit-cancel]');
+  const nameForm = document.createElement('form');
+  nameForm.method = 'post';
+  nameForm.action = '/api/profile/name';
+  const dobForm = document.createElement('form');
+  dobForm.method = 'post';
+  dobForm.action = '/api/profile/dob';
 
-  const dobForm = document.querySelector('[data-profile-dob-form]');
+  const nameInput = document.getElementById('profile-name');
   const dobYear = document.getElementById('profile-dob-year');
   const dobMonth = document.getElementById('profile-dob-month');
   const dobDay = document.getElementById('profile-dob-day');
   const dobValue = document.querySelector('[data-profile-dob-value]');
+  const nameTitle = document.querySelector('[data-profile-name-title]');
+  const nameValue = document.querySelector('[data-profile-name-value]');
+  const dobText = document.querySelector('[data-profile-dob-text]');
+
+  let editing = false;
+  let lastSavedName = String(nameInput?.value || '').trim();
+  let lastSavedDob = String(dobValue?.value || '');
+
+  const setEditing = (nextEditing) => {
+    editing = Boolean(nextEditing);
+    if (!aboutView || !aboutFormShell || !toggleEditButton) return;
+    aboutView.hidden = editing;
+    aboutFormShell.hidden = !editing;
+    toggleEditButton.textContent = editing ? 'Editing…' : 'Edit';
+    toggleEditButton.disabled = editing;
+    if (editing) nameInput?.focus();
+  };
+
+  const resetAboutForm = () => {
+    if (nameInput) nameInput.value = lastSavedName;
+    if (dobValue) dobValue.value = lastSavedDob;
+    if (dobYear && dobMonth && dobDay) {
+      const [year = '', month = '', day = ''] = lastSavedDob ? lastSavedDob.split('-') : ['', '', ''];
+      dobYear.value = year;
+      dobMonth.value = month;
+      dobDay.value = day;
+    }
+    setFieldStatus('about', '', 'idle');
+  };
+
   const updateDobValue = () => {
     if (!dobYear || !dobMonth || !dobDay || !dobValue) return null;
     const year = dobYear.value;
     const month = dobMonth.value;
     const day = dobDay.value;
     if (!year && !month && !day) return (dobValue.value = '');
-    if (!year || !month || !day) return (dobValue.value = '', null);
+    if (!year || !month || !day) return null;
     const candidate = year + '-' + month + '-' + day;
     const date = new Date(candidate + 'T00:00:00.000Z');
-    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) return (dobValue.value = '', null);
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) return null;
     const today = new Date();
     const max = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-    if (date.getUTCFullYear() < 1900 || date > max) return (dobValue.value = '', null);
+    if (date.getUTCFullYear() < 1900 || date > max) return null;
     dobValue.value = candidate;
     return candidate;
   };
 
-  if (dobForm && dobYear && dobMonth && dobDay && dobValue) {
-    let lastSavedDob = dobValue.value;
-    let dobSaving = false;
-    const saveDob = async () => {
-      if (dobSaving) return;
-      const nextDob = updateDobValue();
-      if (nextDob === null) return setFieldStatus('dob', 'Please select a valid date.', 'error');
-      if (nextDob === lastSavedDob) return;
-      setFieldStatus('dob', 'Saving…', 'working');
-      dobSaving = true;
-      const result = await submitForm(dobForm);
-      dobSaving = false;
-      if (!result.ok) return setFieldStatus('dob', 'Could not save date of birth.', 'error');
-      lastSavedDob = nextDob;
-      setFieldStatus('dob', 'Saved.', 'success');
-    };
-    [dobYear, dobMonth, dobDay].forEach((field) => field.addEventListener('change', () => saveDob().catch(() => setFieldStatus('dob', 'Could not save date of birth.', 'error'))));
-    dobForm.addEventListener('submit', (event) => event.preventDefault());
-  }
+  toggleEditButton?.addEventListener('click', () => setEditing(true));
+  cancelEditButton?.addEventListener('click', () => {
+    resetAboutForm();
+    setEditing(false);
+  });
+
+  aboutFormShell?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!nameInput || !dobValue) return;
+
+    const nextName = String(nameInput.value || '').trim();
+    if (!nextName || nextName.length > 100) {
+      setFieldStatus('about', 'Name must be between 1 and 100 characters.', 'error');
+      return;
+    }
+
+    const nextDob = updateDobValue();
+    if (nextDob === null) {
+      setFieldStatus('about', 'Please select a valid date of birth.', 'error');
+      return;
+    }
+
+    setFieldStatus('about', 'Saving…', 'working');
+
+    let ok = true;
+    if (nextName !== lastSavedName) {
+      const payload = new FormData();
+      payload.set('name', nextName);
+      const response = await fetch(nameForm.action, { method: 'POST', body: payload, credentials: 'same-origin' }).catch(() => null);
+      ok = Boolean(response?.ok);
+    }
+
+    if (ok && nextDob !== lastSavedDob) {
+      const payload = new FormData();
+      payload.set('dateOfBirth', nextDob || '');
+      const response = await fetch(dobForm.action, { method: 'POST', body: payload, credentials: 'same-origin' }).catch(() => null);
+      ok = Boolean(response?.ok);
+    }
+
+    if (!ok) {
+      setFieldStatus('about', 'Could not save profile details.', 'error');
+      return;
+    }
+
+    lastSavedName = nextName;
+    lastSavedDob = nextDob || '';
+
+    if (nameTitle) nameTitle.textContent = nextName;
+    if (nameValue) nameValue.textContent = nextName;
+    if (dobText) dobText.textContent = nextDob
+      ? new Date(nextDob + 'T00:00:00.000Z').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
+      : 'Not set';
+
+    setFieldStatus('about', 'Saved.', 'success');
+    setTimeout(() => setFieldStatus('about', '', 'idle'), 1200);
+    setEditing(false);
+  });
 })();
 </script>`;
 }

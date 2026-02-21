@@ -41,7 +41,7 @@ export async function createSession(db, session) {
 export async function findSessionWithUser(db, sessionId) {
   return db
     .prepare(
-      `SELECT s.id as session_id, s.expires_at, u.id, u.email, u.name, u.role, u.image_key, u.cover_image_key, u.date_of_birth
+      `SELECT s.id as session_id, s.expires_at, u.id, u.email, u.name, u.role, u.image_key, u.cover_image_key, u.date_of_birth, u.created_at
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.id = ?1`
