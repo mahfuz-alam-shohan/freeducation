@@ -59,8 +59,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
   const notes = shortNotes
     .map(
       (entry, index) => `<li>
-      <h3 class="public-note-title">${index + 1}. ${h(entry.title || 'Short note')}</h3>
-      <div class="public-note-body">${entry.content_html}</div>
+      <div class="public-note-body"><strong>${index + 1}.</strong> ${entry.content_html}</div>
     </li>`
     )
     .join('');

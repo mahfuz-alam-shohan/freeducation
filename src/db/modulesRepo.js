@@ -443,8 +443,8 @@ export async function createNote(db, input) {
   const createdAt = nowIso();
   await db
     .prepare(
-      `INSERT INTO short_notes (id, subject_id, subject_node_id, chapter_id, topic_id, title, content_html, image_key, created_at, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
+      `INSERT INTO short_notes (id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`
     )
     .bind(
       crypto.randomUUID(),
@@ -452,7 +452,6 @@ export async function createNote(db, input) {
       input.subjectNodeId,
       input.chapterId || null,
       input.topicId || null,
-      input.title || '',
       input.contentHtml,
       input.imageKey,
       createdAt
@@ -462,8 +461,8 @@ export async function createNote(db, input) {
 
 export async function updateNote(db, input) {
   await db
-    .prepare('UPDATE short_notes SET title = ?2, content_html = ?3, image_key = ?4, updated_at = ?5 WHERE id = ?1')
-    .bind(input.id, input.title || '', input.contentHtml, input.imageKey, nowIso())
+    .prepare('UPDATE short_notes SET content_html = ?2, image_key = ?3, updated_at = ?4 WHERE id = ?1')
+    .bind(input.id, input.contentHtml, input.imageKey, nowIso())
     .run();
 }
 
