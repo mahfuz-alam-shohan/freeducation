@@ -479,7 +479,7 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
           ${noteDeleteForm(subject.id, node.id, chapter?.id, topic?.id, n.id, safePage)}
         </div>
       </div>
-      ${n.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${itemIndex}" loading="lazy" /></figure>` : ''}
+      ${n.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(n.image_key) || '')}" alt="Note image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ''}
       <dialog class="content-modal" data-content-modal="${modalId}">
         <div class="modal content-modal-inner">
           <div class="content-modal-head">
@@ -578,7 +578,7 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
           <form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="topicId" value="${topic?.id || ''}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">🗑</button></form>
         </div>
       </div>
-      ${entry.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(entry.image_key) || '')}" alt="${h(contentKind)} image ${itemIndex}" loading="lazy" /></figure>` : ''}
+      ${entry.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(entry.image_key) || '')}" alt="${h(contentKind)} image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ''}
       <div>${entry.content_html}</div>
       <dialog class="content-modal" data-content-modal="${modalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Edit ${h(contentKind)}</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${entryForm({ ...entry, page: safePage })}</div></dialog>
     </article>`;
@@ -612,7 +612,7 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
           <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ''}" /><input type="hidden" name="topicId" value="${topic?.id || ''}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">🗑</button></form>
         </div>
       </div>
-      ${m.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(m.image_key) || '')}" alt="MCQ image ${itemIndex}" loading="lazy" /></figure>` : ''}
+      ${m.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(m.image_key) || '')}" alt="MCQ image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ''}
       <div class="mcq-options-grid" role="list" aria-label="Options for MCQ ${index + 1}">
         <p class="mcq-option ${m.correct_option === 'A' ? 'mcq-option-correct' : ''}" role="listitem"><span class="mcq-option-label">A.</span><span>${h(m.option_a)}</span></p>
         <p class="mcq-option ${m.correct_option === 'B' ? 'mcq-option-correct' : ''}" role="listitem"><span class="mcq-option-label">B.</span><span>${h(m.option_b)}</span></p>
