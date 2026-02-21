@@ -34,8 +34,9 @@ function imageUploadCell({ id, formId, disabled = false }) {
 
 function imageSlotCell({ id, formId, imageKey, disabled = false }) {
   const imageUrl = imageUrlFromKey(imageKey);
+  const hasImage = Boolean(imageUrl);
   const defaultIcon = '<span class="image-slot-icon" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><rect x="2.25" y="3.25" width="15.5" height="13.5" rx="2" /><circle cx="7" cy="8" r="1.6" /><path d="M4.75 14l3.6-3.9 2.35 2.45 2.35-2.95 2.2 4.4" /></svg></span>';
-  return `<div class="image-slot" data-image-slot>
+  return `<div class="image-slot" data-image-slot data-image-slot-has-image="${hasImage ? '1' : '0'}" data-image-slot-src="${h(imageUrl || '')}">
     <button class="image-slot-trigger" type="button" data-image-slot-trigger ${disabled ? 'disabled' : ''} aria-label="Manage image" data-content-modal-open="${h(id)}-actions">
       ${imageUrl ? `<img src="${h(imageUrl)}" alt="Uploaded image" loading="lazy" decoding="async" />` : defaultIcon}
     </button>
@@ -48,16 +49,16 @@ function imageSlotCell({ id, formId, imageKey, disabled = false }) {
           <button type="button" class="btn btn-secondary" data-content-modal-close>Close</button>
         </div>
         <div class="image-slot-actions">
-          <button class="btn btn-secondary" type="button" data-image-slot-see data-content-modal-open="${h(id)}-preview" ${imageUrl ? '' : 'hidden'}>See image</button>
-          <button class="btn btn-primary" type="button" data-image-slot-upload>${imageUrl ? 'Change image' : 'Upload image'}</button>
-          <button class="btn btn-danger" type="button" data-image-slot-remove-action ${imageUrl ? '' : 'hidden'}>Remove image</button>
+          <button class="btn btn-secondary" type="button" data-image-slot-see data-content-modal-open="${h(id)}-preview" ${hasImage ? '' : 'hidden'}>See image</button>
+          <button class="btn btn-primary" type="button" data-image-slot-upload>${hasImage ? 'Change image' : 'Upload image'}</button>
+          <button class="btn btn-danger" type="button" data-image-slot-remove-action ${hasImage ? '' : 'hidden'}>Remove image</button>
         </div>
       </div>
     </dialog>
     <dialog class="content-modal" data-content-modal="${h(id)}-preview">
       <div class="modal content-modal-inner">
         <div class="content-modal-head"><h3 class="card-title">Image preview</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>
-        <img class="image-slot-preview-large" src="${h(imageUrl || '')}" alt="Uploaded image preview" loading="lazy" decoding="async" ${imageUrl ? '' : 'hidden'} />
+        <img class="image-slot-preview-large" src="${h(imageUrl || '')}" alt="Uploaded image preview" loading="lazy" decoding="async" ${hasImage ? '' : 'hidden'} />
       </div>
     </dialog>
   </div>`;
