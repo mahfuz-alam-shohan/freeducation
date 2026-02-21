@@ -1,5 +1,25 @@
 import { publicShell } from '../templates/publicShell.js';
 import { siteLogo } from '../templates/icons.js';
+import { imageUrlFromKey } from '../imageUrl.js';
+
+function h(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function classCardsMarkup(classes = []) {
+  return classes
+    .map(
+      (item) => `<article class="class-card">
+        <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.name)}" loading="lazy" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
+        <p class="class-card-name">${h(item.name)}</p>
+      </article>`
+    )
+    .join('');
+}
 
 const quoteScript = `
 (() => {
@@ -22,7 +42,7 @@ const quoteScript = `
 })();
 `;
 
-export function publicHomePage(user = null) {
+export function publicHomePage(user = null, classes = []) {
   return publicShell(
     'home',
     user,
@@ -35,7 +55,28 @@ export function publicHomePage(user = null) {
       <div class="public-cover-quote-wrap">
         <p class="public-cover-quote" data-education-quote></p>
       </div>
+    </section>
+    <section class="public-class-strip">
+      <div class="public-class-strip-head">
+        <h2 class="public-class-strip-title">Academic Classes</h2>
+        <a class="public-class-see-all" href="/classes">See all</a>
+      </div>
+      <div class="public-class-row">${classCardsMarkup(classes)}</div>
     </section>`,
     quoteScript
+  );
+}
+
+export function publicClassesPage(user = null, classes = []) {
+  return publicShell(
+    'home',
+    user,
+    'All Classes',
+    `<section class="public-class-strip public-class-page">
+      <div class="public-class-strip-head">
+        <h1 class="public-class-strip-title">All Classes</h1>
+      </div>
+      <div class="public-class-grid">${classCardsMarkup(classes)}</div>
+    </section>`
   );
 }
