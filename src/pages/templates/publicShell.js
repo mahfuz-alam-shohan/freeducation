@@ -39,7 +39,7 @@ function publicTopbar(user) {
   const avatarUrl = imageUrlFromKey(user?.imageKey);
   const avatarLabel = user ? `${user.name} avatar` : 'Profile';
   const triggerAvatar = user
-    ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" />` : initials(user.name)}</span>`
+    ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>`
     : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
   const action = user
     ? triggerAvatar
