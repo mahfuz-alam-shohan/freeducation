@@ -543,6 +543,11 @@ textarea,
   border-spacing: 0;
   min-width: 860px;
 }
+
+.table-excel {
+  table-layout: fixed;
+  min-width: 980px;
+}
 .table thead th {
   position: sticky;
   top: 0;
@@ -581,16 +586,61 @@ textarea,
   text-transform: none;
   letter-spacing: normal;
   color: #334155;
-  font-size: 13px;
+  font-size: 11px;
   border: 1px solid #d5dde7;
 }
 
 .flat-grid-table tbody td {
   border: 1px solid #d5dde7;
-  padding: 6px 8px;
+  padding: 4px 6px;
+  font-size: 12px;
 }
 
 .flat-grid-table tbody tr:hover { background: transparent; }
+
+.table-excel th,
+.table-excel td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  vertical-align: middle;
+}
+
+.table-text-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.table-text-ellipsis {
+  display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-text-expand {
+  min-height: 24px;
+  min-width: 24px;
+  padding: 0;
+  font-size: 12px;
+}
+
+.table-inline-link {
+  margin-left: 4px;
+  font-size: 11px;
+  color: #1d4ed8;
+}
+
+.table-text-full {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 13px;
+}
 
 .subject-row-actions {
   display: flex;
@@ -1041,6 +1091,7 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   text-overflow: ellipsis;
 }
 .subject-node-name-cell { max-width: 280px; }
+.subject-node-name-cell .table-text-cell { max-width: calc(100% - 44px); }
 .subject-node-actions-cell { width: 1%; white-space: nowrap; }
 .subject-node-actions-row {
   display: grid;
@@ -1254,6 +1305,14 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .mcq-option {
     padding: 6px;
     font-size: 13px;
+  }
+  .table-excel {
+    min-width: 760px;
+  }
+  .table-excel th,
+  .table-excel td {
+    max-width: 130px;
+    font-size: 11px;
   }
   .entry-media img {
     max-height: 210px;

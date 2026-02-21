@@ -9,6 +9,12 @@ function h(value) {
     .replaceAll('"', '&quot;');
 }
 
+function fullTextCell(value, modalId, title = 'Full text') {
+  const text = value ?? '-';
+  return `<div class="table-text-cell"><span class="table-text-ellipsis" title="${h(text)}">${h(text)}</span><button class="btn btn-ghost table-text-expand" type="button" data-content-modal-open="${modalId}" aria-label="View full text">…</button></div>
+  <dialog class="content-modal" data-content-modal="${modalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">${h(title)}</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div><pre class="table-text-full">${h(text)}</pre></div></dialog>`;
+}
+
 function yesNo(v) {
   return v ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-warn">No</span>';
 }
@@ -29,9 +35,9 @@ export function templatesPage(user, templates) {
   const rows = templates
     .map(
       (t) => `<tr>
-      <td><a href="/templates/${t.id}">${h(t.name)}</a></td>
-      <td>${h(t.code)}</td>
-      <td>${h(t.description || '-')}</td>
+      <td>${fullTextCell(t.name, `template-name-${t.id}`, 'Template name')}<a href="/templates/${t.id}" class="table-inline-link">Open</a></td>
+      <td>${fullTextCell(t.code, `template-code-${t.id}`, 'Template code')}</td>
+      <td>${fullTextCell(t.description || '-', `template-desc-${t.id}`, 'Template description')}</td>
       <td>${new Date(t.created_at).toLocaleDateString()}</td>
       <td>
         <span class="muted">View only</span>
@@ -41,7 +47,7 @@ export function templatesPage(user, templates) {
     .join('');
 
   const content = `<section class="card">
-    <div class="table-wrap"><table class="table">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel">
       <thead><tr><th>Template</th><th>Code</th><th>Description</th><th>Created</th><th>Actions</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 5, 'No templates yet.')}</tbody>
     </table></div>
@@ -85,7 +91,7 @@ export function templateDetailsPage(user, template, nodes) {
   const content = `<section class="card">
     <a class="back-link" href="/templates">← Back to templates</a>
     <p class="muted">Template code: <strong>${h(template.code)}</strong></p>
-    <div class="table-wrap"><table class="table">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel">
       <thead><tr><th>Hierarchy</th><th>Type</th><th>Editable Name</th><th>Image Upload</th><th>Chapter Based</th></tr></thead>
       <tbody>${tableRowsOrEmpty(walk(null), 5, 'No hierarchy nodes found.')}</tbody>
     </table></div>
@@ -98,9 +104,9 @@ export function subjectsPage(user, subjects, templates) {
   const rows = subjects
     .map(
       (s) => `<tr>
-      <td><a href="/subjects/${s.id}">${h(s.name)}</a></td>
+      <td>${fullTextCell(s.name, `subject-name-${s.id}`, 'Subject name')}<a href="/subjects/${s.id}" class="table-inline-link">Open</a></td>
       <td>Class ${s.class_level}</td>
-      <td>${h(s.template_name)}</td>
+      <td>${fullTextCell(s.template_name, `subject-template-${s.id}`, 'Template name')}</td>
       <td>${new Date(s.created_at).toLocaleDateString()}</td>
       <td>
         <form method="post" action="/api/subjects/${s.id}" class="subject-row-actions" enctype="multipart/form-data">
@@ -148,7 +154,7 @@ export function subjectsPage(user, subjects, templates) {
     </dialog>
   </section>
   <section class="card flat-card">
-    <div class="table-wrap"><table class="table flat-grid-table">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel">
       <thead><tr><th>Subject</th><th>Class</th><th>Template</th><th>Created</th><th>Actions</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 5, 'No subjects yet.')}</tbody>
     </table></div>
@@ -161,7 +167,7 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
   const rows = nodes
     .map(
       (n) => `<tr>
-      <td class="subject-node-name-cell"><a href="/subjects/${subject.id}/nodes/${n.id}" class="truncate-one-line">${h(n.display_name)}</a><div class="muted truncate-one-line">Server key: ${h(n.server_name)}</div></td>
+      <td class="subject-node-name-cell">${fullTextCell(`${n.display_name} (Server key: ${n.server_name})`, `subject-node-${n.id}`, 'Subject node')}<a href="/subjects/${subject.id}/nodes/${n.id}" class="table-inline-link">Open</a></td>
       <td>${yesNo(n.supports_edit)}</td>
       <td>${yesNo(n.supports_image)}</td>
       <td>${imageCell(n.image_key)}</td>
@@ -179,7 +185,7 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
     .join('');
 
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
-  <section class="card"><div class="table-wrap"><table class="table">
+  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Name</th><th>Edit</th><th>Image</th><th>Current Image</th><th>Actions</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 5, 'No nodes found.')}</tbody>
   </table></div></section>`;
@@ -221,7 +227,7 @@ export function chaptersPage(user, subject, node, chapters) {
       <button class="btn btn-primary" type="submit">Add Chapter</button>
     </form>
   </section>
-  <section class="card"><div class="table-wrap"><table class="table">
+  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Chapter</th><th>Image</th><th>Topics Enabled</th><th>Actions</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 4, 'No chapters yet.')}</tbody>
   </table></div></section>`;
@@ -262,7 +268,7 @@ export function topicsPage(user, subject, node, chapter, topics) {
       <button class="btn btn-primary" type="submit">Add Topic</button>
     </form>
   </section>
-  <section class="card"><div class="table-wrap"><table class="table">
+  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Topic</th><th>Image</th><th>Actions</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 3, 'No topics yet.')}</tbody>
   </table></div></section>`;
@@ -288,7 +294,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       ? `/subjects/${subject.id}/nodes/${node.id}`
       : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
-  <section class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Content Type</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th>Content Type</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   return appShell('subjects', user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, 'Choose any content type defined in your template.', content);
 }
 
