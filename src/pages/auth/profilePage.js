@@ -1,4 +1,5 @@
 import { appShell } from '../templates/shell.js';
+import { profileStyles } from './profileStyles.js';
 import { imageUrlFromKey } from '../imageUrl.js';
 
 function h(value) {
@@ -474,5 +475,5 @@ function profilePageScript() {
 
 export function profilePage(user) {
   const content = `${profileHeader(user)}${profileMain(user)}${profilePageScript()}`;
-  return appShell('profile', user, 'Profile', '', content, { hidePageHead: true });
+  return appShell('profile', user, 'Profile', '', content, { hidePageHead: true, pageStyles: profileStyles });
 }

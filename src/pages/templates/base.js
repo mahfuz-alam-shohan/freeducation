@@ -25,7 +25,7 @@ const noZoomScript = `
 })();
 `;
 
-export function basePage(title, body, script = '') {
+export function basePage(title, body, script = '', pageStyles = '') {
   const mergedScript = `${noZoomScript}\n${script || ''}`;
-  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"/><title>${title}</title><style>${styles}</style></head><body>${body}<script>${mergedScript}</script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"/><title>${title}</title><style>${styles}\n${pageStyles}</style></head><body>${body}<script>${mergedScript}</script></body></html>`;
 }

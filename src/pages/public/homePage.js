@@ -1,6 +1,7 @@
 import { publicShell } from '../templates/publicShell.js';
 import { siteLogo } from '../templates/icons.js';
 import { imageUrlFromKey } from '../imageUrl.js';
+import { publicHomeStyles } from './homeStyles.js';
 
 function h(value) {
   return String(value ?? '')
@@ -64,7 +65,8 @@ export function publicHomePage(user = null, classes = []) {
       </div>
       <div class="public-class-row">${classCardsMarkup(classes)}</div>
     </section>`,
-    quoteScript
+    quoteScript,
+    publicHomeStyles
   );
 }
 
@@ -78,6 +80,8 @@ export function publicClassesPage(user = null, classes = []) {
         <h1 class="public-class-strip-title">All Classes</h1>
       </div>
       <div class="public-class-grid">${classCardsMarkup(classes)}</div>
-    </section>`
+    </section>`,
+    '',
+    publicHomeStyles
   );
 }

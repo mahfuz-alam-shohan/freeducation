@@ -78,6 +78,7 @@ export function appShell(active, user, pageTitle, subtitle, content, options = {
         </div>
       </main>
     </div>`,
-    appScript
+    appScript,
+    options.pageStyles || ''
   );
 }
