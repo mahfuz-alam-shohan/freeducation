@@ -567,6 +567,13 @@ textarea,
   border-bottom: 1px solid var(--line);
   font-size: 14px;
 }
+.table th,
+.table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
 .table tbody tr:hover { background: #f8fafc; }
 
 

@@ -94,6 +94,7 @@ const TABLES = {
       name TEXT NOT NULL,
       class_level INTEGER NOT NULL,
       template_id TEXT NOT NULL,
+      image_key TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (template_id) REFERENCES subject_templates(id)
@@ -103,6 +104,7 @@ const TABLES = {
       name: 'TEXT',
       class_level: 'INTEGER',
       template_id: 'TEXT',
+      image_key: 'TEXT',
       created_at: 'TEXT',
       updated_at: 'TEXT',
     },

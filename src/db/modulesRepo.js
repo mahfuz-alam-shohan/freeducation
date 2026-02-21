@@ -168,7 +168,7 @@ export async function listTemplateNodes(db, templateId) {
 export async function listSubjects(db) {
   const rows = await db
     .prepare(
-      `SELECT s.id, s.name, s.class_level, s.created_at, t.name template_name
+      `SELECT s.id, s.name, s.class_level, s.image_key, s.created_at, t.name template_name
        FROM subjects s
        JOIN subject_templates t ON t.id = s.template_id
        ORDER BY s.created_at DESC`
@@ -181,8 +181,8 @@ export async function createSubject(db, input) {
   const id = crypto.randomUUID();
   const createdAt = nowIso();
   await db
-    .prepare('INSERT INTO subjects (id, name, class_level, template_id, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?5)')
-    .bind(id, input.name, input.classLevel, input.templateId, createdAt)
+    .prepare('INSERT INTO subjects (id, name, class_level, template_id, image_key, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)')
+    .bind(id, input.name, input.classLevel, input.templateId, input.imageKey || null, createdAt)
     .run();
 
   const templateNodes = await listTemplateNodes(db, input.templateId);
@@ -219,8 +219,8 @@ export async function createSubject(db, input) {
 }
 
 
-export async function updateSubject(db, subjectId, name) {
-  await db.prepare('UPDATE subjects SET name = ?2, updated_at = ?3 WHERE id = ?1').bind(subjectId, name, nowIso()).run();
+export async function updateSubject(db, subjectId, name, imageKey) {
+  await db.prepare('UPDATE subjects SET name = ?2, image_key = ?3, updated_at = ?4 WHERE id = ?1').bind(subjectId, name, imageKey, nowIso()).run();
 }
 
 export async function deleteSubject(db, subjectId) {
@@ -230,7 +230,7 @@ export async function deleteSubject(db, subjectId) {
 export async function getSubject(db, subjectId) {
   return db
     .prepare(
-      `SELECT s.id, s.name, s.class_level, s.template_id, s.created_at, t.name template_name
+      `SELECT s.id, s.name, s.class_level, s.template_id, s.image_key, s.created_at, t.name template_name
        FROM subjects s
        JOIN subject_templates t ON t.id = s.template_id
        WHERE s.id = ?1`

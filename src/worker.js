@@ -327,7 +327,8 @@ async function handleAdminPost(request, env, url) {
     const classLevel = Number(form.get('classLevel'));
     const templateId = String(form.get('templateId') || '');
     if (!name || !templateId || classLevel < 1 || classLevel > 12) return redirect('/subjects');
-    await createSubject(env.DB, { name, classLevel, templateId });
+    const imageKey = await uploadImage(env, 'subjects', form.get('image'));
+    await createSubject(env.DB, { name, classLevel, templateId, imageKey });
     return redirect('/subjects');
   }
 
@@ -343,7 +344,10 @@ async function handleAdminPost(request, env, url) {
     }
     const name = String(form.get('name') || '').trim();
     if (!name) return redirect('/subjects');
-    await updateSubject(env.DB, subjectId, name);
+    const removeImage = form.get('removeImage') === '1';
+    const uploaded = await uploadImage(env, 'subjects', form.get('image'));
+    const imageKey = removeImage ? null : uploaded || current.image_key;
+    await updateSubject(env.DB, subjectId, name, imageKey);
     return redirect('/subjects');
   }
 
