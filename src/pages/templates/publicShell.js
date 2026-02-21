@@ -1,12 +1,21 @@
 import { appScript } from '../assets.js';
+import { getNavigation } from '../navigation.js';
+import { imageUrlFromKey } from '../imageUrl.js';
 import { basePage } from './base.js';
-import { iconClose, iconMenu, siteLogo } from './icons.js';
+import { appShell } from './shell.js';
+import { iconClose, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
 
-function publicSidebar(active) {
-  const navItems = [
-    { key: 'home', label: 'Home', href: '/' },
-    { key: 'login', label: 'Login', href: '/login' },
-  ];
+function initials(name) {
+  return String(name || 'A')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('');
+}
+
+function publicSidebar(active, user) {
+  const nav = getNavigation(user?.role);
 
   return `<aside class="sidebar public-sidebar">
     <header class="sidebar-head">
@@ -16,21 +25,37 @@ function publicSidebar(active) {
       </span>
     </header>
     <div class="sidebar-scroll">
-      <p class="nav-group-title">Public</p>
-      ${navItems
+      ${nav
         .map(
-          (item) =>
-            `<a href="${item.href}" class="menu-item ${active === item.key ? 'active' : ''}"><span class="label">${item.label}</span></a>`
+          (group) => `<p class="nav-group-title">${group.title}</p>${group.items
+            .map(
+              (item) =>
+                `<a href="${item.href}" class="menu-item ${active === item.key ? 'active' : ''}"><span class="icon">${item.icon || ''}</span><span class="label">${item.label}</span></a>`
+            )
+            .join('')}`
         )
         .join('')}
+      <a href="${user ? '/api/logout' : '/login'}" class="menu-item ${user ? 'logout-item' : 'sidebar-login-item'}"><span class="icon">${user ? iconLogout : iconProfile}</span><span class="label">${user ? 'Log out' : 'Login'}</span></a>
     </div>
   </aside>`;
 }
 
 function publicTopbar(user) {
+  const avatarUrl = imageUrlFromKey(user?.imageKey);
+  const avatarLabel = user ? `${user.name} avatar` : 'Profile';
+  const triggerAvatar = user
+    ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" />` : initials(user.name)}</span>`
+    : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
   const action = user
-    ? '<a class="btn btn-primary" href="/dashboard">Workspace</a>'
-    : '<a class="btn btn-primary" href="/login">Login</a>';
+    ? triggerAvatar
+    : `<div class="profile-menu" data-profile-menu>
+        <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-profile-trigger>${triggerAvatar}</button>
+        <div class="profile-popup" data-profile-popup hidden>
+          <span class="avatar">${iconProfile}</span>
+          <p class="muted">Login to get full access.</p>
+          <a class="btn btn-primary" href="/login">Login</a>
+        </div>
+      </div>`;
   return `<header class="topbar">
       <div class="topbar-left">
         <button class="icon-btn mobile-only mobile-menu-btn" data-mobile-toggle aria-label="Open navigation menu" aria-expanded="false"><span class="mobile-icon mobile-icon-menu" aria-hidden="true">${iconMenu}</span><span class="mobile-icon mobile-icon-close" aria-hidden="true">${iconClose}</span></button>
@@ -46,10 +71,14 @@ function publicTopbar(user) {
 }
 
 export function publicShell(active, user, title, content, script = '') {
+  if (user) {
+    return appShell(active, user, title, 'Public page', content);
+  }
+
   return basePage(
     title,
     `<div class="app-shell" data-shell>
-      ${publicSidebar(active)}
+      ${publicSidebar(active, user)}
       <div class="mobile-overlay" data-overlay></div>
       <main class="main-shell public-main-shell">
         ${publicTopbar(user)}
