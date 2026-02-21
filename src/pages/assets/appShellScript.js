@@ -170,7 +170,11 @@ function initializeTemplateBuilder() {
     const addBtn = form.querySelector('[data-template-builder-add]');
     const storage = form.querySelector('[data-template-builder-storage]');
     const treeHost = form.querySelector('[data-template-builder-tree]');
+    const healthHost = form.querySelector('[data-template-builder-health]');
     const presetSelect = form.querySelector('[data-template-builder-preset]');
+    const generateBtn = form.querySelector('[data-template-builder-generate]');
+    const focusInput = form.querySelector('[data-template-builder-focus]');
+    const depthSelect = form.querySelector('[data-template-builder-depth]');
     if (!rowsHost || !addBtn || !storage) return;
 
     const presetSeeds = {
@@ -189,6 +193,58 @@ function initializeTemplateBuilder() {
         { serverName: 'Grammar', nodeKey: 'grammar', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true },
         { serverName: 'Comprehension', nodeKey: 'comprehension', nodeType: 'content', contentKind: 'Short Notes' },
       ],
+    };
+
+    const smartTemplateBlueprint = (focus, depthTarget = 5) => {
+      const safeFocus = focus || 'Subject';
+      const depth = Math.max(3, Math.min(Number(depthTarget || 5), 6));
+      const rootId = 'node_' + Math.random().toString(36).slice(2, 9);
+      const unitId = 'node_' + Math.random().toString(36).slice(2, 9);
+      const lessonId = 'node_' + Math.random().toString(36).slice(2, 9);
+      const nodes = [
+        { clientId: rootId, serverName: safeFocus + ' Foundations', nodeKey: slugifyTemplateKey(safeFocus + '_foundations'), nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true },
+        { clientId: unitId, parentClientId: rootId, serverName: 'Core Units', nodeKey: 'core_units', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true },
+        { clientId: lessonId, parentClientId: unitId, serverName: 'Lesson Concepts', nodeKey: 'lesson_concepts', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: depth >= 5 },
+      ];
+
+      const contentMatrix = [
+        { name: 'Short Notes', key: 'short_notes' },
+        { name: 'CQ Bank', key: 'cq_bank' },
+        { name: 'MCQ Bank', key: 'mcq_bank' },
+        { name: 'Worked Examples', key: 'worked_examples' },
+      ];
+
+      contentMatrix.forEach((entry) => {
+        nodes.push({
+          clientId: 'node_' + Math.random().toString(36).slice(2, 9),
+          parentClientId: lessonId,
+          serverName: entry.name,
+          nodeKey: entry.key,
+          nodeType: 'content',
+          contentKind: entry.name,
+          supportsEdit: true,
+          supportsImage: true,
+          supportsChapters: false,
+        });
+      });
+
+      if (depth >= 5) {
+        const practiceId = 'node_' + Math.random().toString(36).slice(2, 9);
+        nodes.push({ clientId: practiceId, parentClientId: unitId, serverName: 'Practice Ladder', nodeKey: 'practice_ladder', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true });
+        ['Drills', 'Mixed Review', 'Previous Questions'].forEach((name) => {
+          nodes.push({ clientId: 'node_' + Math.random().toString(36).slice(2, 9), parentClientId: practiceId, serverName: name, nodeKey: slugifyTemplateKey(name), nodeType: 'content', contentKind: name, supportsEdit: true, supportsImage: true, supportsChapters: false });
+        });
+      }
+
+      if (depth >= 6) {
+        const masteryId = 'node_' + Math.random().toString(36).slice(2, 9);
+        nodes.push({ clientId: masteryId, parentClientId: rootId, serverName: 'Mastery + Diagnostics', nodeKey: 'mastery_diagnostics', nodeType: 'section', supportsEdit: true, supportsImage: true, supportsChapters: true });
+        ['Skill Gaps', 'Revision Tracker', 'Challenge Tasks'].forEach((name) => {
+          nodes.push({ clientId: 'node_' + Math.random().toString(36).slice(2, 9), parentClientId: masteryId, serverName: name, nodeKey: slugifyTemplateKey(name), nodeType: 'content', contentKind: name, supportsEdit: true, supportsImage: true, supportsChapters: false });
+        });
+      }
+
+      return nodes;
     };
 
     const rowTemplate = (id) => {
@@ -261,6 +317,52 @@ function initializeTemplateBuilder() {
       treeHost.innerHTML = renderLevel('root') || '<li class="muted">No root nodes found.</li>';
     };
 
+    const analyzeTemplate = () => {
+      if (!healthHost) return;
+      const nodes = serializeRows();
+      if (!nodes.length) {
+        healthHost.innerHTML = '<li class="muted">No nodes yet.</li>';
+        return;
+      }
+      const childrenByParent = new Map();
+      nodes.forEach((node) => {
+        const key = node.parentClientId || 'root';
+        const list = childrenByParent.get(key) || [];
+        list.push(node.clientId);
+        childrenByParent.set(key, list);
+      });
+
+      const depthFor = (id, seen = new Set()) => {
+        if (seen.has(id)) return 0;
+        seen.add(id);
+        const children = childrenByParent.get(id) || [];
+        if (!children.length) return 1;
+        return 1 + Math.max(...children.map((child) => depthFor(child, new Set(seen))));
+      };
+
+      const rootNodes = childrenByParent.get('root') || [];
+      const maxDepth = rootNodes.length ? Math.max(...rootNodes.map((id) => depthFor(id))) : 0;
+      const contentNodes = nodes.filter((node) => node.nodeType === 'content');
+      const chapterNodes = nodes.filter((node) => node.supportsChapters);
+      const duplicateKeys = new Set();
+      const seenKeys = new Set();
+      nodes.forEach((node) => {
+        if (!node.nodeKey) return;
+        if (seenKeys.has(node.nodeKey)) duplicateKeys.add(node.nodeKey);
+        seenKeys.add(node.nodeKey);
+      });
+
+      const messages = [];
+      messages.push('Nodes: ' + nodes.length + ' | Content nodes: ' + contentNodes.length + ' | Max depth: ' + maxDepth);
+      if (maxDepth < 4) messages.push('Increase hierarchy depth to at least 4 levels for richer navigation.');
+      if (contentNodes.length < 4) messages.push('Add more content branches (notes, CQ, MCQ, examples) for balanced coverage.');
+      if (!chapterNodes.length) messages.push('No chapter-enabled node found. Consider enabling chapters for large subjects.');
+      if (duplicateKeys.size) messages.push('Duplicate node keys detected: ' + Array.from(duplicateKeys).join(', '));
+      if (messages.length === 1) messages.push('Good structure. You can still add mastery/revision branches for deeper intelligence.');
+
+      healthHost.innerHTML = messages.map((msg) => '<li>' + msg.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</li>').join('');
+    };
+
     const refreshParentOptions = () => {
       const rows = Array.from(rowsHost.querySelectorAll('[data-builder-row]'));
       rows.forEach((row) => {
@@ -279,6 +381,7 @@ function initializeTemplateBuilder() {
         if (selected && selected !== rowId) parentSelect.value = selected;
       });
       renderTree();
+      analyzeTemplate();
     };
 
     const duplicateFromRow = (row) => {
@@ -329,12 +432,19 @@ function initializeTemplateBuilder() {
       keyInput?.addEventListener('blur', () => {
         keyInput.value = slugifyTemplateKey(keyInput.value);
       });
-      keyInput?.addEventListener('input', renderTree);
+      keyInput?.addEventListener('input', () => {
+        renderTree();
+        analyzeTemplate();
+      });
       typeInput?.addEventListener('change', () => {
         updateTypeState(row);
         renderTree();
+        analyzeTemplate();
       });
-      parentInput?.addEventListener('change', renderTree);
+      parentInput?.addEventListener('change', () => {
+        renderTree();
+        analyzeTemplate();
+      });
       updateTypeState(row);
     };
 
@@ -379,6 +489,27 @@ function initializeTemplateBuilder() {
     };
 
     addBtn.addEventListener('click', () => addRow());
+    generateBtn?.addEventListener('click', () => {
+      const focus = focusInput?.value?.trim();
+      if (!focus) {
+        window.alert('Add a blueprint focus (example: Class 10 Biology) before generating.');
+        return;
+      }
+      if (rowsHost.querySelectorAll('[data-builder-row]').length > 0 && !window.confirm('Replace current nodes with an intelligent deep blueprint?')) {
+        return;
+      }
+      rowsHost.innerHTML = '';
+      const seeds = smartTemplateBlueprint(focus, Number(depthSelect?.value || 5));
+      seeds.forEach((seed) => addRow(seed));
+      rowsHost.querySelectorAll('[data-builder-row]').forEach((row) => {
+        const seedParent = row.getAttribute('data-parent-id-seed');
+        if (!seedParent) return;
+        const parent = row.querySelector('[data-field="parent"]');
+        if (parent) parent.value = seedParent;
+      });
+      renderTree();
+      analyzeTemplate();
+    });
     presetSelect?.addEventListener('change', () => {
       const preset = presetSeeds[presetSelect.value];
       if (!preset) return;
@@ -398,10 +529,23 @@ function initializeTemplateBuilder() {
         window.alert('Add at least one node in your template.');
         return;
       }
+      const duplicateKeys = new Set();
+      const seenKeys = new Set();
+      nodes.forEach((node) => {
+        if (!node.nodeKey) return;
+        if (seenKeys.has(node.nodeKey)) duplicateKeys.add(node.nodeKey);
+        seenKeys.add(node.nodeKey);
+      });
+      if (duplicateKeys.size) {
+        event.preventDefault();
+        window.alert('Duplicate node keys found: ' + Array.from(duplicateKeys).join(', ') + '. Please make keys unique.');
+        return;
+      }
       storage.value = JSON.stringify(nodes);
     });
 
     if (!loadInitialRows()) addRow();
+    analyzeTemplate();
     form.dataset.bound = '1';
   });
 }

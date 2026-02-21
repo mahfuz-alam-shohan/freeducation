@@ -760,6 +760,8 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
 .template-live-tree,
 .template-live-tree ol { margin: 6px 0 0 16px; padding: 0; }
 .template-live-tree li { margin: 2px 0; }
+.template-health { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: #fff; }
+.template-health-list { margin: 4px 0 0 18px; padding: 0; display: grid; gap: 2px; }
 .toolbar-group form { margin: 0; }
 
 .template-tree-row {

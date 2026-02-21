@@ -57,6 +57,13 @@ function templateBuilderForm({ action, submitLabel, template = null, nodes = [] 
         <option value="concept">Concept + activities</option>
         <option value="language">Language + literature</option>
       </select>
+      <input class="input" type="text" maxlength="140" data-template-builder-focus placeholder="Blueprint focus (ex: Class 9 Physics)">
+      <select class="select" data-template-builder-depth>
+        <option value="4">Depth target: standard</option>
+        <option value="5" selected>Depth target: deep</option>
+        <option value="6">Depth target: very deep</option>
+      </select>
+      <button class="btn btn-secondary" type="button" data-template-builder-generate>Generate intelligent blueprint</button>
       <button class="btn btn-secondary" type="button" data-template-builder-add>Add Node</button>
       <button class="btn btn-primary" type="submit">${submitLabel}</button>
     </div>
@@ -68,6 +75,10 @@ function templateBuilderForm({ action, submitLabel, template = null, nodes = [] 
     <div class="template-live-hierarchy">
       <div class="muted">Live hierarchy preview</div>
       <ol data-template-builder-tree class="template-live-tree"></ol>
+    </div>
+    <div class="template-health section-gap-sm">
+      <div class="muted">Template intelligence report</div>
+      <ul class="template-health-list" data-template-builder-health></ul>
     </div>
     <p class="muted">Deep template designer: add unlimited nested nodes, custom content kinds, and tune every node for name editing, image support, and chapter mode.</p>
   </form>`;
