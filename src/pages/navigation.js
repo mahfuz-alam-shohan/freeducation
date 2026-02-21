@@ -12,7 +12,10 @@ export function getNavigation(role) {
   const nav = [
     {
       title: 'Public',
-      items: [{ key: 'home', href: '/', label: 'Home', icon: iconHome }],
+      items: [
+        { key: 'home', href: '/', label: 'Home', icon: iconHome },
+        { key: 'classes', href: '/classes', label: 'Classes', icon: iconSubjects },
+      ],
     },
   ];
 

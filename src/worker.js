@@ -44,6 +44,7 @@ import {
   listNotes,
   listSubjectNodesByParent,
   listSubjects,
+  listSubjectsByClass,
   listTemplateNodes,
   listTemplates,
   listTopics,
@@ -75,6 +76,10 @@ import {
   profilePage,
   publicHomePage,
   publicClassesPage,
+  publicClassSubjectsPage,
+  publicSubjectNodesPage,
+  publicChapterContentPage,
+  publicContentEntriesListPage,
   setupPage,
   subjectNodeListPage,
   subjectsPage,
@@ -726,6 +731,149 @@ async function serveMedia(request, url, env, user, ctx) {
 
 
 async function handleDynamicPages(url, env, user) {
+  const classPageMatch = url.pathname.match(/^\/classes\/([^/]+)$/);
+  if (classPageMatch) {
+    const classItem = await getClassById(env.DB, classPageMatch[1]);
+    if (!classItem) return new Response('Not Found', { status: 404 });
+    const subjects = await listSubjectsByClass(env.DB, classItem.id);
+    return html(publicClassSubjectsPage(user, classItem, subjects));
+  }
+
+  const publicSubjectRootMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)$/);
+  if (publicSubjectRootMatch) {
+    const subject = await getSubject(env.DB, publicSubjectRootMatch[1]);
+    if (!subject) return new Response('Not Found', { status: 404 });
+    const nodes = await listSubjectNodesByParent(env.DB, subject.id, null);
+    return html(publicSubjectNodesPage(user, subject, subject.name, 'Select a section', nodes, subject.class_id ? `/classes/${subject.class_id}` : '/classes'));
+  }
+
+  const publicSubjectNodeMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)$/);
+  if (publicSubjectNodeMatch) {
+    const [subject, node] = await Promise.all([getSubject(env.DB, publicSubjectNodeMatch[1]), getSubjectNode(env.DB, publicSubjectNodeMatch[2])]);
+    if (!subject || !node) return new Response('Not Found', { status: 404 });
+
+    if (node.supports_chapters) {
+      const chapters = await listChapters(env.DB, node.id);
+      return html(
+        publicSubjectNodesPage(
+          user,
+          subject,
+          `${subject.name} · ${node.display_name}`,
+          'Select a chapter',
+          chapters.map((chapter) => ({
+            ...chapter,
+            display_name: chapter.name,
+            href: `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`,
+          })),
+          `/learn/subjects/${subject.id}`
+        )
+      );
+    }
+
+    const children = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    return html(publicSubjectNodesPage(user, subject, `${subject.name} · ${node.display_name}`, 'Select a section', children, `/learn/subjects/${subject.id}`));
+  }
+
+  const publicChapterMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
+  if (publicChapterMatch) {
+    const [subject, node, chapter] = await Promise.all([
+      getSubject(env.DB, publicChapterMatch[1]),
+      getSubjectNode(env.DB, publicChapterMatch[2]),
+      getChapter(env.DB, publicChapterMatch[3]),
+    ]);
+    if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
+
+    if (chapter.has_topics) {
+      const topics = await listTopics(env.DB, chapter.id);
+      return html(
+        publicSubjectNodesPage(
+          user,
+          subject,
+          `${subject.name} · ${chapter.name}`,
+          'Select a topic',
+          topics.map((topic) => ({
+            ...topic,
+            display_name: topic.name,
+            href: `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`,
+          })),
+          `/learn/subjects/${subject.id}/nodes/${node.id}`
+        )
+      );
+    }
+
+    const childNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    const shortNoteNode = childNodes.find((item) => item.content_kind === 'Short Notes');
+    const actionNodes = childNodes.filter((item) => item.node_type === 'content' && item.content_kind !== 'Short Notes');
+    const notes = shortNoteNode ? await listNotes(env.DB, shortNoteNode.id, chapter.id, null) : [];
+    return html(
+      publicChapterContentPage(user, {
+        subject,
+        parentNode: node,
+        chapter,
+        topic: null,
+        actionNodes,
+        notes,
+        backHref: `/learn/subjects/${subject.id}/nodes/${node.id}`,
+      })
+    );
+  }
+
+  const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
+  if (publicTopicMatch) {
+    const [subject, node, chapter, topic] = await Promise.all([
+      getSubject(env.DB, publicTopicMatch[1]),
+      getSubjectNode(env.DB, publicTopicMatch[2]),
+      getChapter(env.DB, publicTopicMatch[3]),
+      getTopic(env.DB, publicTopicMatch[4]),
+    ]);
+    if (!subject || !node || !chapter || !topic) return new Response('Not Found', { status: 404 });
+    const childNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
+    const shortNoteNode = childNodes.find((item) => item.content_kind === 'Short Notes');
+    const actionNodes = childNodes.filter((item) => item.node_type === 'content' && item.content_kind !== 'Short Notes');
+    const notes = shortNoteNode ? await listNotes(env.DB, shortNoteNode.id, chapter.id, topic.id) : [];
+    return html(
+      publicChapterContentPage(user, {
+        subject,
+        parentNode: node,
+        chapter,
+        topic,
+        actionNodes,
+        notes,
+        backHref: `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`,
+      })
+    );
+  }
+
+  const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/content$/);
+  if (publicContentMatch) {
+    const subjectId = publicContentMatch[1];
+    const nodeId = String(url.searchParams.get('node') || '');
+    const chapterId = String(url.searchParams.get('chapter') || '');
+    const topicId = String(url.searchParams.get('topic') || '');
+    const [subject, node, chapter, topic] = await Promise.all([
+      getSubject(env.DB, subjectId),
+      getSubjectNode(env.DB, nodeId),
+      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
+      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
+    ]);
+    if (!subject || !node) return new Response('Not Found', { status: 404 });
+    const entries = await listContentEntries(env.DB, node.id, chapter?.id, topic?.id, node.content_kind);
+    return html(
+      publicContentEntriesListPage(
+        user,
+        `${subject.name} · ${node.display_name}`,
+        entries,
+        topic
+          ? `/learn/subjects/${subject.id}/nodes/${node.parent_subject_node_id}/chapters/${chapter.id}/topics/${topic.id}`
+          : `/learn/subjects/${subject.id}/nodes/${node.parent_subject_node_id}/chapters/${chapter?.id || ''}`
+      )
+    );
+  }
+
+  if ((url.pathname.startsWith('/templates') || url.pathname.startsWith('/subjects')) && (!user || user.role !== 'admin')) {
+    return null;
+  }
+
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
   if (templateMatch) {
     const template = await getTemplate(env.DB, templateMatch[1]);
@@ -897,12 +1045,12 @@ export default {
 
     const route = pageRoutes.find((item) => item.path === url.pathname);
     if (!route) {
+      const dynamic = await handleDynamicPages(url, env, user);
+      if (dynamic) return dynamic;
       if (!user) return redirect('/login');
       if ((url.pathname.startsWith('/subjects') || url.pathname.startsWith('/templates')) && user.role !== 'admin') {
         return html(forbiddenPage(), 403);
       }
-      const dynamic = await handleDynamicPages(url, env, user);
-      if (dynamic) return dynamic;
       return new Response('Not Found', { status: 404 });
     }
 
