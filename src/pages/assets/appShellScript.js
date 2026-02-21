@@ -243,22 +243,86 @@ async function refreshLiveRegion(regionName) {
   initializeFormHandlers();
 }
 
+function setAutoSaveStatus(form, message, tone) {
+  const formId = form.getAttribute('id');
+  if (!formId) return;
+  const status = document.querySelector('[data-auto-save-status][form="' + formId + '"]');
+  if (!status) return;
+  status.textContent = message;
+  status.dataset.tone = tone || 'idle';
+}
+
+async function submitLiveForm(form) {
+  await prepareImageInputs(form).catch(() => null);
+  form.querySelectorAll('[data-rich-editor]').forEach((editor) => {
+    const input = editor.querySelector('[data-editor-input]');
+    const storage = editor.querySelector('[data-editor-storage]');
+    if (input && storage) storage.value = input.innerHTML.trim();
+  });
+
+  const body = new FormData(form);
+  const response = await fetch(form.action, {
+    method: (form.method || 'POST').toUpperCase(),
+    body,
+    credentials: 'same-origin',
+    redirect: 'follow',
+  }).catch(() => null);
+
+  if (!response || !response.ok) return false;
+  const regionName = String(body.get('liveRegion') || '').trim();
+  if (regionName) {
+    await refreshLiveRegion(regionName).catch(() => null);
+  }
+  return true;
+}
+
 function initializeFormHandlers() {
+  const scheduleAutoSave = (form, delayMs = 700) => {
+    const timerKey = Number(form.dataset.autoSaveTimer || '0');
+    if (timerKey) {
+      window.clearTimeout(timerKey);
+    }
+    setAutoSaveStatus(form, 'Saving…', 'working');
+    const nextTimer = window.setTimeout(async () => {
+      form.dataset.autoSaveTimer = '0';
+      if (form.dataset.submitting === '1') return;
+      form.dataset.submitting = '1';
+      const ok = await submitLiveForm(form);
+      form.dataset.submitting = '0';
+      setAutoSaveStatus(form, ok ? 'Synced' : 'Retry needed', ok ? 'success' : 'error');
+    }, delayMs);
+    form.dataset.autoSaveTimer = String(nextTimer);
+  };
+
   document.querySelectorAll('form[enctype="multipart/form-data"], form').forEach((form) => {
     if (form.dataset.bound === '1') return;
+    const isAutoSaveForm = form.dataset.autoSave === 'true';
+
+    if (isAutoSaveForm) {
+      form.querySelectorAll('input, textarea, select').forEach((field) => {
+        if (field.matches('input[type="file"], input[type="checkbox"], select')) {
+          field.addEventListener('change', () => scheduleAutoSave(form, 0));
+          return;
+        }
+        field.addEventListener('input', () => scheduleAutoSave(form));
+        field.addEventListener('blur', () => scheduleAutoSave(form, 0));
+      });
+      setAutoSaveStatus(form, 'Synced', 'idle');
+    }
+
     form.addEventListener('submit', async (event) => {
       if (form.dataset.submitting === '1') return;
+      if (isAutoSaveForm) {
+        event.preventDefault();
+        scheduleAutoSave(form, 0);
+        return;
+      }
+
       const hasLiveButton = Boolean(form.querySelector('[data-live-form="true"]'));
       if (!hasLiveButton && !form.matches('[enctype="multipart/form-data"]')) return;
 
       event.preventDefault();
       form.dataset.submitting = '1';
-      await prepareImageInputs(form).catch(() => null);
-      form.querySelectorAll('[data-rich-editor]').forEach((editor) => {
-        const input = editor.querySelector('[data-editor-input]');
-        const storage = editor.querySelector('[data-editor-storage]');
-        if (input && storage) storage.value = input.innerHTML.trim();
-      });
 
       if (!hasLiveButton) {
         form.dataset.submitting = '0';
@@ -266,23 +330,11 @@ function initializeFormHandlers() {
         return;
       }
 
-      const body = new FormData(form);
-      const response = await fetch(form.action, {
-        method: (form.method || 'POST').toUpperCase(),
-        body,
-        credentials: 'same-origin',
-        redirect: 'follow',
-      }).catch(() => null);
+      const ok = await submitLiveForm(form);
 
       form.dataset.submitting = '0';
-      if (!response || !response.ok) {
+      if (!ok) {
         form.submit();
-        return;
-      }
-
-      const regionName = String(body.get('liveRegion') || '').trim();
-      if (regionName) {
-        await refreshLiveRegion(regionName).catch(() => null);
       }
     });
     form.dataset.bound = '1';

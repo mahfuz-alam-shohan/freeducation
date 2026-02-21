@@ -107,12 +107,12 @@ export function classesPage(user, classes) {
       <td>${fullTextCell(item.name, `class-name-${item.id}`, 'Class name')}</td>
       <td>${h(item.sort_order)}</td>
       <td>${imageCell(item.image_key)}</td>
-      <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data"><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
+      <td><form id="class-update-${item.id}" method="post" action="/api/classes/${item.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(item.name)}" required maxlength="120" /></form></td>
       <td><input class="input" type="number" name="sortOrder" form="class-update-${item.id}" value="${h(item.sort_order)}" /></td>
       <td><label><input type="checkbox" name="showOnHome" value="1" form="class-update-${item.id}" ${item.show_on_home ? 'checked' : ''} /> Show</label></td>
       <td><input class="input" type="file" name="image" form="class-update-${item.id}" accept="image/*" /></td>
       <td><label><input type="checkbox" name="removeImage" value="1" form="class-update-${item.id}" /> Remove</label></td>
-      <td><button class="btn btn-secondary" form="class-update-${item.id}" name="intent" value="update" type="submit">Save</button></td>
+      <td><small class="muted" data-auto-save-status form="class-update-${item.id}">Synced</small></td>
       <td>
         <button class="btn btn-danger" type="button" data-content-modal-open="class-delete-${item.id}">Delete</button>
         <dialog class="content-modal" data-content-modal="class-delete-${item.id}">
@@ -155,7 +155,7 @@ export function classesPage(user, classes) {
   </section>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Class</th><th>Order</th><th>Image</th><th>Rename</th><th>Sort</th><th>Homepage</th><th>Upload Image</th><th>Remove Image</th><th>Save</th><th>Delete</th></tr></thead>
+      <thead><tr><th>Class</th><th>Order</th><th>Image</th><th>Rename</th><th>Sort</th><th>Homepage</th><th>Upload Image</th><th>Remove Image</th><th>Sync</th><th>Delete</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 10, 'No classes yet.')}</tbody>
     </table></div>
   </section>`;
@@ -173,10 +173,10 @@ export function subjectsPage(user, subjects, templates, classes) {
       <td>${fullTextCell(s.template_name, `subject-template-${s.id}`, 'Template name')}</td>
       <td>${imageCell(s.image_key)}</td>
       <td>${new Date(s.created_at).toLocaleDateString()}</td>
-      <td><form id="subject-update-${s.id}" method="post" action="/api/subjects/${s.id}" enctype="multipart/form-data"><input class="input" name="name" value="${h(s.name)}" required maxlength="120" /></form></td>
+      <td><form id="subject-update-${s.id}" method="post" action="/api/subjects/${s.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(s.name)}" required maxlength="120" /></form></td>
       <td><input class="input" type="file" name="image" form="subject-update-${s.id}" accept="image/*" /></td>
       <td><label><input type="checkbox" name="removeImage" value="1" form="subject-update-${s.id}" /> Remove</label></td>
-      <td><button class="btn btn-secondary" form="subject-update-${s.id}" name="intent" value="update" type="submit">Save</button></td>
+      <td><small class="muted" data-auto-save-status form="subject-update-${s.id}">Synced</small></td>
       <td>
         <button class="btn btn-danger" type="button" data-content-modal-open="subject-delete-${s.id}">Delete</button>
         <dialog class="content-modal" data-content-modal="subject-delete-${s.id}">
@@ -221,7 +221,7 @@ export function subjectsPage(user, subjects, templates, classes) {
   </section>
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
-      <thead><tr><th>Open</th><th>Subject</th><th>Class</th><th>Template</th><th>Image</th><th>Created</th><th>Rename</th><th>Upload Image</th><th>Remove Image</th><th>Save</th><th>Delete</th></tr></thead>
+      <thead><tr><th>Open</th><th>Subject</th><th>Class</th><th>Template</th><th>Image</th><th>Created</th><th>Rename</th><th>Upload Image</th><th>Remove Image</th><th>Sync</th><th>Delete</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 11, 'No subjects yet.')}</tbody>
     </table></div>
   </section>`;
@@ -238,17 +238,17 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
       <td>${yesNo(n.supports_edit)}</td>
       <td>${yesNo(n.supports_image)}</td>
       <td>${imageCell(n.image_key)}</td>
-      <td><form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data"><input type="hidden" name="redirect" value="${h(backHref)}" /><input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} maxlength="120" /></form></td>
+      <td><form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="redirect" value="${h(backHref)}" /><input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? '' : 'disabled'} maxlength="120" /></form></td>
       <td><input class="input" name="image" type="file" accept="image/*" form="subject-node-update-${n.id}" ${n.supports_image ? '' : 'disabled'} /></td>
       <td><label class="subject-node-checkbox"><input type="checkbox" name="removeImage" value="1" form="subject-node-update-${n.id}" ${n.supports_image ? '' : 'disabled'} /> Remove image</label></td>
-      <td><button class="btn btn-secondary" form="subject-node-update-${n.id}" type="submit">Save</button></td>
+      <td><small class="muted" data-auto-save-status form="subject-node-update-${n.id}">Synced</small></td>
     </tr>`
     )
     .join('');
 
   const content = `<section class="card"><a class="back-link" href="${backHref}">← Back</a></section>
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Open</th><th>Name</th><th>Edit</th><th>Image</th><th>Current Image</th><th>Rename</th><th>Upload Image</th><th>Remove Image</th><th>Save</th></tr></thead>
+    <thead><tr><th>Open</th><th>Name</th><th>Edit</th><th>Image</th><th>Current Image</th><th>Rename</th><th>Upload Image</th><th>Remove Image</th><th>Sync</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 9, 'No nodes found.')}</tbody>
   </table></div></section>`;
 
@@ -262,11 +262,11 @@ export function chaptersPage(user, subject, node, chapters) {
       <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${c.sort_order}. ${h(c.name)}</a></td>
       <td>${imageCell(c.image_key)}</td>
       <td>${yesNo(c.has_topics)}</td>
-      <td><form id="chapter-update-${c.id}" method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data"><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="nodeId" value="${node.id}" /><input class="input" name="name" value="${h(c.name)}" required /></form></td>
+      <td><form id="chapter-update-${c.id}" method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="nodeId" value="${node.id}" /><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(c.name)}" required /></form></td>
       <td><input class="input" type="file" name="image" accept="image/*" form="chapter-update-${c.id}" /></td>
       <td><label><input type="checkbox" name="hasTopics" value="1" form="chapter-update-${c.id}" ${c.has_topics ? 'checked' : ''} /> Enable topics</label></td>
       <td><label><input type="checkbox" name="removeImage" value="1" form="chapter-update-${c.id}" /> Remove image</label></td>
-      <td><button class="btn btn-secondary" form="chapter-update-${c.id}" name="intent" value="update" type="submit">Update</button></td>
+      <td><small class="muted" data-auto-save-status form="chapter-update-${c.id}">Synced</small></td>
       <td><button class="btn btn-danger" form="chapter-update-${c.id}" name="intent" value="delete" type="submit">Delete</button></td>
     </tr>`
     )
@@ -284,7 +284,7 @@ export function chaptersPage(user, subject, node, chapters) {
     </form>
   </section>
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Chapter</th><th>Image</th><th>Topics Enabled</th><th>Rename</th><th>Upload Image</th><th>Topics Toggle</th><th>Remove Image</th><th>Update</th><th>Delete</th></tr></thead>
+    <thead><tr><th>Chapter</th><th>Image</th><th>Topics Enabled</th><th>Rename</th><th>Upload Image</th><th>Topics Toggle</th><th>Remove Image</th><th>Sync</th><th>Delete</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 9, 'No chapters yet.')}</tbody>
   </table></div></section>`;
 
@@ -297,10 +297,10 @@ export function topicsPage(user, subject, node, chapter, topics) {
       (t) => `<tr>
       <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}">${t.sort_order}. ${h(t.name)}</a></td>
       <td>${imageCell(t.image_key)}</td>
-      <td><form id="topic-update-${t.id}" method="post" action="/api/topics/${t.id}" enctype="multipart/form-data"><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="nodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter.id}" /><input class="input" name="name" value="${h(t.name)}" required /></form></td>
+      <td><form id="topic-update-${t.id}" method="post" action="/api/topics/${t.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="nodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter.id}" /><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(t.name)}" required /></form></td>
       <td><input class="input" type="file" name="image" accept="image/*" form="topic-update-${t.id}" /></td>
       <td><label><input type="checkbox" name="removeImage" value="1" form="topic-update-${t.id}" /> Remove image</label></td>
-      <td><button class="btn btn-secondary" form="topic-update-${t.id}" name="intent" value="update" type="submit">Update</button></td>
+      <td><small class="muted" data-auto-save-status form="topic-update-${t.id}">Synced</small></td>
       <td><button class="btn btn-danger" form="topic-update-${t.id}" name="intent" value="delete" type="submit">Delete</button></td>
     </tr>`
     )
@@ -318,7 +318,7 @@ export function topicsPage(user, subject, node, chapter, topics) {
     </form>
   </section>
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Topic</th><th>Image</th><th>Rename</th><th>Upload Image</th><th>Remove Image</th><th>Update</th><th>Delete</th></tr></thead>
+    <thead><tr><th>Topic</th><th>Image</th><th>Rename</th><th>Upload Image</th><th>Remove Image</th><th>Sync</th><th>Delete</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 7, 'No topics yet.')}</tbody>
   </table></div></section>`;
 
