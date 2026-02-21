@@ -767,6 +767,74 @@ textarea,
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 .center-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+
+.public-main-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.public-content-shell {
+  flex: 1;
+}
+
+.public-home-cover {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 12px 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.public-cover-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.public-cover-logo {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.public-cover-logo svg {
+  width: 100%;
+  height: 100%;
+}
+
+.public-cover-name {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+}
+
+.public-cover-quote {
+  margin: 0;
+  font-size: clamp(14px, 2vw, 19px);
+  color: #334155;
+  min-height: 28px;
+}
+
+.public-login-shell {
+  padding: 10px 8px;
+}
+
+.public-auth-card {
+  width: min(420px, 100%);
+  border-radius: 6px;
+}
+
+.public-footer {
+  border-top: 1px solid var(--line);
+  padding: 6px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
 .auth-card {
   width: min(500px, 100%);
   background: var(--surface);
@@ -1076,5 +1144,6 @@ label { font-size: 13px; color: #334155; font-weight: 600; }
   .kpi { font-size: 36px; }
   .page-title { font-size: 24px; }
   .auth-card { padding: 16px; }
+  .public-home-cover { padding: 12px 10px; }
 }
 `;
