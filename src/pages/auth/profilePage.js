@@ -118,8 +118,6 @@ function profileMain(user) {
     </nav>
 
     <div class="profile-tab-panel" id="profile-about-panel" role="tabpanel" aria-labelledby="profile-about-tab" data-profile-panel="about">
-      <div class="profile-panel-head"><h3 class="card-title">About Me</h3></div>
-
       <div class="profile-bio" data-profile-about-view>
         <div class="profile-readonly-row" data-profile-inline-field="name">
           <div class="profile-readonly-head">
