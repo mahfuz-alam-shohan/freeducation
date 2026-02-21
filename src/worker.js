@@ -646,7 +646,6 @@ async function handleAdminPost(request, env, url) {
 
 
 async function serveMedia(request, url, env, user, ctx) {
-  if (!user) return redirect('/login');
   const encodedKey = url.pathname.slice('/media/'.length);
   if (!encodedKey) return new Response('Not Found', { status: 404 });
 
@@ -658,6 +657,9 @@ async function serveMedia(request, url, env, user, ctx) {
   }
 
   if (!key || key.includes('..')) return new Response('Not Found', { status: 404 });
+
+  const isUserSpecificMedia = key.startsWith('profiles/');
+  if (isUserSpecificMedia && !user) return redirect('/login');
 
   const method = request.method.toUpperCase();
   const canUseCache = method === 'GET';
@@ -675,14 +677,17 @@ async function serveMedia(request, url, env, user, ctx) {
   if (etag && ifNoneMatch && ifNoneMatch === etag) {
     return new Response(null, {
       status: 304,
-      headers: { etag, 'cache-control': 'private, max-age=2592000, stale-while-revalidate=86400' },
+      headers: {
+        etag,
+        'cache-control': `${isUserSpecificMedia ? 'private' : 'public'}, max-age=2592000, stale-while-revalidate=86400`,
+      },
     });
   }
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   if (etag) headers.set('etag', etag);
-  headers.set('cache-control', 'private, max-age=2592000, stale-while-revalidate=86400');
+  headers.set('cache-control', `${isUserSpecificMedia ? 'private' : 'public'}, max-age=2592000, stale-while-revalidate=86400`);
   headers.set('accept-ranges', 'bytes');
 
   if (method === 'HEAD') return new Response(null, { headers });
