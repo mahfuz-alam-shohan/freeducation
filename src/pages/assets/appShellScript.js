@@ -91,6 +91,31 @@ function initializeRichEditors() {
       });
     });
 
+    editor.querySelectorAll('[data-editor-image-float]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const mode = button.getAttribute('data-editor-image-float') || 'none';
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        let node = selection.anchorNode;
+        if (!node) return;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        const image = node?.closest ? node.closest('img') : null;
+        if (!image) return;
+        if (mode === 'left') {
+          image.style.cssFloat = 'left';
+          image.style.margin = '0 12px 8px 0';
+        } else if (mode === 'right') {
+          image.style.cssFloat = 'right';
+          image.style.margin = '0 0 8px 12px';
+        } else {
+          image.style.cssFloat = 'none';
+          image.style.margin = '8px 0';
+          image.style.display = 'inline-block';
+        }
+        sync();
+      });
+    });
+
     editor.querySelectorAll('[data-editor-tab]').forEach((tab) => {
       tab.addEventListener('click', () => {
         activateTab(tab.getAttribute('data-editor-tab') || 'write');

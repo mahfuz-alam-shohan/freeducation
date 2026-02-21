@@ -2,7 +2,7 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-const CODE_TEMPLATE_CODES = ['BANGLA-1ST-NCTB2010'];
+const CODE_TEMPLATE_CODES = ['BANGLA-1ST-NCTB2010', 'PHY-CHEM-BIO-NCTB2010'];
 
 async function removeNonCodeTemplates(db) {
   const placeholders = CODE_TEMPLATE_CODES.map((_, i) => `?${i + 1}`).join(', ');
@@ -64,6 +64,56 @@ export async function ensureDefaultTemplate(db) {
 
   const idByKey = new Map();
   for (const node of all) {
+    const id = crypto.randomUUID();
+    idByKey.set(node.key, id);
+    await db
+      .prepare(
+        `INSERT INTO template_nodes (
+          id, template_id, parent_id, node_key, server_name, node_type, supports_edit, supports_image,
+          supports_chapters, content_kind, sort_order
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`
+      )
+      .bind(
+        id,
+        templateId,
+        node.parent ? idByKey.get(node.parent) : null,
+        node.key,
+        node.name,
+        node.type,
+        node.edit,
+        node.image,
+        node.chapter,
+        node.contentKind,
+        node.sort
+      )
+      .run();
+  }
+
+  return templateId;
+}
+
+export async function ensurePhyChemBioTemplate(db) {
+  const existing = await db.prepare("SELECT id FROM subject_templates WHERE code = 'PHY-CHEM-BIO-NCTB2010'").first();
+  if (existing?.id) return existing.id;
+
+  const templateId = crypto.randomUUID();
+  const createdAt = nowIso();
+  await db
+    .prepare('INSERT INTO subject_templates (id, code, name, description, created_at) VALUES (?1, ?2, ?3, ?4, ?5)')
+    .bind(templateId, 'PHY-CHEM-BIO-NCTB2010', 'PHY-CHEM-BIO-NCTB2010', 'Single main book with chapter/topic support.', createdAt)
+    .run();
+
+  const nodes = [
+    { key: 'main_book', parent: null, name: 'Main Book', type: 'section', edit: 1, image: 1, sort: 1, chapter: 1, contentKind: null },
+    { key: 'cq_bank', parent: 'main_book', name: 'CQ Bank', type: 'content', edit: 0, image: 0, sort: 10, chapter: 0, contentKind: 'CQ Bank' },
+    { key: 'mcq_bank', parent: 'main_book', name: 'MCQ Bank', type: 'content', edit: 0, image: 0, sort: 11, chapter: 0, contentKind: 'MCQ Bank' },
+    { key: 'short_notes', parent: 'main_book', name: 'Short Notes', type: 'content', edit: 0, image: 0, sort: 12, chapter: 0, contentKind: 'Short Notes' },
+    { key: 'videos', parent: 'main_book', name: 'Videos', type: 'content', edit: 0, image: 0, sort: 13, chapter: 0, contentKind: 'Videos' },
+    { key: 'summary', parent: 'main_book', name: 'Summary', type: 'content', edit: 0, image: 0, sort: 14, chapter: 0, contentKind: 'Summary' },
+  ];
+
+  const idByKey = new Map();
+  for (const node of nodes) {
     const id = crypto.randomUUID();
     idByKey.set(node.key, id);
     await db
@@ -217,20 +267,23 @@ export async function listChapters(db, subjectNodeId) {
   return rows.results ?? [];
 }
 
-export async function createChapter(db, subjectNodeId, name, imageKey) {
+export async function createChapter(db, subjectNodeId, name, imageKey, hasTopics = 0) {
   const id = crypto.randomUUID();
   const createdAt = nowIso();
   const max = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) maxSort FROM chapters WHERE subject_node_id = ?1').bind(subjectNodeId).first();
   await db
     .prepare(
-      'INSERT INTO chapters (id, subject_node_id, name, image_key, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)'
+      'INSERT INTO chapters (id, subject_node_id, name, image_key, has_topics, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)'
     )
-    .bind(id, subjectNodeId, name, imageKey, Number(max?.maxSort ?? 0) + 1, createdAt)
+    .bind(id, subjectNodeId, name, imageKey, hasTopics ? 1 : 0, Number(max?.maxSort ?? 0) + 1, createdAt)
     .run();
 }
 
-export async function updateChapter(db, chapterId, name, imageKey) {
-  await db.prepare('UPDATE chapters SET name = ?2, image_key = ?3, updated_at = ?4 WHERE id = ?1').bind(chapterId, name, imageKey, nowIso()).run();
+export async function updateChapter(db, chapterId, name, imageKey, hasTopics) {
+  await db
+    .prepare('UPDATE chapters SET name = ?2, image_key = ?3, has_topics = ?4, updated_at = ?5 WHERE id = ?1')
+    .bind(chapterId, name, imageKey, hasTopics ? 1 : 0, nowIso())
+    .run();
 }
 
 export async function deleteChapter(db, chapterId) {
@@ -241,10 +294,39 @@ export async function getChapter(db, chapterId) {
   return db.prepare('SELECT * FROM chapters WHERE id = ?1').bind(chapterId).first();
 }
 
-export async function listNotes(db, subjectNodeId, chapterId) {
+export async function listTopics(db, chapterId) {
+  const rows = await db.prepare('SELECT * FROM topics WHERE chapter_id = ?1 ORDER BY sort_order ASC, created_at ASC').bind(chapterId).all();
+  return rows.results ?? [];
+}
+
+export async function getTopic(db, topicId) {
+  return db.prepare('SELECT * FROM topics WHERE id = ?1').bind(topicId).first();
+}
+
+export async function createTopic(db, chapterId, name, imageKey) {
+  const id = crypto.randomUUID();
+  const createdAt = nowIso();
+  const max = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) maxSort FROM topics WHERE chapter_id = ?1').bind(chapterId).first();
+  await db
+    .prepare('INSERT INTO topics (id, chapter_id, name, image_key, sort_order, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)')
+    .bind(id, chapterId, name, imageKey, Number(max?.maxSort ?? 0) + 1, createdAt)
+    .run();
+}
+
+export async function updateTopic(db, topicId, name, imageKey) {
+  await db.prepare('UPDATE topics SET name = ?2, image_key = ?3, updated_at = ?4 WHERE id = ?1').bind(topicId, name, imageKey, nowIso()).run();
+}
+
+export async function deleteTopic(db, topicId) {
+  await db.prepare('DELETE FROM topics WHERE id = ?1').bind(topicId).run();
+}
+
+export async function listNotes(db, subjectNodeId, chapterId, topicId = null) {
   const rows = await db
-    .prepare('SELECT * FROM short_notes WHERE subject_node_id = ?1 AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2) ORDER BY created_at DESC')
-    .bind(subjectNodeId, chapterId || null)
+    .prepare(
+      'SELECT * FROM short_notes WHERE subject_node_id = ?1 AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2) AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3) ORDER BY created_at DESC'
+    )
+    .bind(subjectNodeId, chapterId || null, topicId || null)
     .all();
   return rows.results ?? [];
 }
@@ -253,10 +335,20 @@ export async function createNote(db, input) {
   const createdAt = nowIso();
   await db
     .prepare(
-      `INSERT INTO short_notes (id, subject_id, subject_node_id, chapter_id, title, content_html, image_key, created_at, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`
+      `INSERT INTO short_notes (id, subject_id, subject_node_id, chapter_id, topic_id, title, content_html, image_key, created_at, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
     )
-    .bind(crypto.randomUUID(), input.subjectId, input.subjectNodeId, input.chapterId || null, input.title || '', input.contentHtml, input.imageKey, createdAt)
+    .bind(
+      crypto.randomUUID(),
+      input.subjectId,
+      input.subjectNodeId,
+      input.chapterId || null,
+      input.topicId || null,
+      input.title || '',
+      input.contentHtml,
+      input.imageKey,
+      createdAt
+    )
     .run();
 }
 
@@ -271,10 +363,12 @@ export async function deleteNote(db, noteId) {
   await db.prepare('DELETE FROM short_notes WHERE id = ?1').bind(noteId).run();
 }
 
-export async function listMcqs(db, subjectNodeId, chapterId) {
+export async function listMcqs(db, subjectNodeId, chapterId, topicId = null) {
   const rows = await db
-    .prepare('SELECT * FROM mcq_bank WHERE subject_node_id = ?1 AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2) ORDER BY created_at DESC')
-    .bind(subjectNodeId, chapterId || null)
+    .prepare(
+      'SELECT * FROM mcq_bank WHERE subject_node_id = ?1 AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2) AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3) ORDER BY created_at DESC'
+    )
+    .bind(subjectNodeId, chapterId || null, topicId || null)
     .all();
   return rows.results ?? [];
 }
@@ -284,15 +378,16 @@ export async function createMcq(db, input) {
   await db
     .prepare(
       `INSERT INTO mcq_bank (
-        id, subject_id, subject_node_id, chapter_id, question_html,
+        id, subject_id, subject_node_id, chapter_id, topic_id, question_html,
         option_a, option_b, option_c, option_d, correct_option, image_key, created_at, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12)`
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?13)`
     )
     .bind(
       crypto.randomUUID(),
       input.subjectId,
       input.subjectNodeId,
       input.chapterId || null,
+      input.topicId || null,
       input.questionHtml,
       input.optionA,
       input.optionB,
@@ -322,16 +417,17 @@ export async function deleteMcq(db, mcqId) {
 }
 
 
-export async function listContentEntries(db, subjectNodeId, chapterId, contentKind) {
+export async function listContentEntries(db, subjectNodeId, chapterId, topicId, contentKind) {
   const rows = await db
     .prepare(
       `SELECT * FROM content_entries
        WHERE subject_node_id = ?1
          AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2)
-         AND content_kind = ?3
+         AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3)
+         AND content_kind = ?4
        ORDER BY created_at DESC`
     )
-    .bind(subjectNodeId, chapterId || null, contentKind)
+    .bind(subjectNodeId, chapterId || null, topicId || null, contentKind)
     .all();
   return rows.results ?? [];
 }
@@ -341,15 +437,16 @@ export async function createContentEntry(db, input) {
   await db
     .prepare(
       `INSERT INTO content_entries (
-        id, subject_id, subject_node_id, chapter_id, content_kind,
+        id, subject_id, subject_node_id, chapter_id, topic_id, content_kind,
         title, content_html, image_key, created_at, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?10)`
     )
     .bind(
       crypto.randomUUID(),
       input.subjectId,
       input.subjectNodeId,
       input.chapterId || null,
+      input.topicId || null,
       input.contentKind,
       input.title || '',
       input.contentHtml,
@@ -357,6 +454,37 @@ export async function createContentEntry(db, input) {
       createdAt
     )
     .run();
+}
+
+export async function upsertSummaryEntry(db, input) {
+  const existing = await db
+    .prepare(
+      `SELECT id FROM content_entries
+       WHERE subject_node_id = ?1
+         AND ((chapter_id IS NULL AND ?2 IS NULL) OR chapter_id = ?2)
+         AND ((topic_id IS NULL AND ?3 IS NULL) OR topic_id = ?3)
+         AND content_kind = 'Summary'
+       LIMIT 1`
+    )
+    .bind(input.subjectNodeId, input.chapterId || null, input.topicId || null)
+    .first();
+
+  if (existing?.id) {
+    await updateContentEntry(db, { id: existing.id, title: '', contentHtml: input.contentHtml, imageKey: input.imageKey || null });
+    return existing.id;
+  }
+
+  await createContentEntry(db, {
+    subjectId: input.subjectId,
+    subjectNodeId: input.subjectNodeId,
+    chapterId: input.chapterId,
+    topicId: input.topicId,
+    contentKind: 'Summary',
+    title: '',
+    contentHtml: input.contentHtml,
+    imageKey: input.imageKey || null,
+  });
+  return null;
 }
 
 export async function updateContentEntry(db, input) {

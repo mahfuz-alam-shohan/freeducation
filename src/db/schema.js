@@ -148,6 +148,7 @@ const TABLES = {
       subject_node_id TEXT NOT NULL,
       name TEXT NOT NULL,
       image_key TEXT,
+      has_topics INTEGER NOT NULL DEFAULT 0,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
@@ -156,6 +157,28 @@ const TABLES = {
     columns: {
       id: 'TEXT',
       subject_node_id: 'TEXT',
+      name: 'TEXT',
+      image_key: 'TEXT',
+      has_topics: 'INTEGER',
+      sort_order: 'INTEGER',
+      created_at: 'TEXT',
+      updated_at: 'TEXT',
+    },
+  },
+  topics: {
+    create: `CREATE TABLE IF NOT EXISTS topics (
+      id TEXT PRIMARY KEY,
+      chapter_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      image_key TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+    )`,
+    columns: {
+      id: 'TEXT',
+      chapter_id: 'TEXT',
       name: 'TEXT',
       image_key: 'TEXT',
       sort_order: 'INTEGER',
@@ -169,6 +192,7 @@ const TABLES = {
       subject_id TEXT NOT NULL,
       subject_node_id TEXT NOT NULL,
       chapter_id TEXT,
+      topic_id TEXT,
       title TEXT NOT NULL,
       content_html TEXT NOT NULL,
       image_key TEXT,
@@ -176,13 +200,15 @@ const TABLES = {
       updated_at TEXT NOT NULL,
       FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
       FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE,
-      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
     )`,
     columns: {
       id: 'TEXT',
       subject_id: 'TEXT',
       subject_node_id: 'TEXT',
       chapter_id: 'TEXT',
+      topic_id: 'TEXT',
       title: 'TEXT',
       content_html: 'TEXT',
       image_key: 'TEXT',
@@ -196,6 +222,7 @@ const TABLES = {
       subject_id TEXT NOT NULL,
       subject_node_id TEXT NOT NULL,
       chapter_id TEXT,
+      topic_id TEXT,
       question_html TEXT NOT NULL,
       option_a TEXT NOT NULL,
       option_b TEXT NOT NULL,
@@ -207,13 +234,15 @@ const TABLES = {
       updated_at TEXT NOT NULL,
       FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
       FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE,
-      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
     )`,
     columns: {
       id: 'TEXT',
       subject_id: 'TEXT',
       subject_node_id: 'TEXT',
       chapter_id: 'TEXT',
+      topic_id: 'TEXT',
       question_html: 'TEXT',
       option_a: 'TEXT',
       option_b: 'TEXT',
@@ -231,6 +260,7 @@ const TABLES = {
       subject_id TEXT NOT NULL,
       subject_node_id TEXT NOT NULL,
       chapter_id TEXT,
+      topic_id TEXT,
       content_kind TEXT NOT NULL,
       title TEXT NOT NULL,
       content_html TEXT NOT NULL,
@@ -239,13 +269,15 @@ const TABLES = {
       updated_at TEXT NOT NULL,
       FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
       FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE,
-      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+      FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
     )`,
     columns: {
       id: 'TEXT',
       subject_id: 'TEXT',
       subject_node_id: 'TEXT',
       chapter_id: 'TEXT',
+      topic_id: 'TEXT',
       content_kind: 'TEXT',
       title: 'TEXT',
       content_html: 'TEXT',
@@ -300,6 +332,7 @@ export async function ensureSchema(db, options = {}) {
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_parent ON subject_nodes(parent_subject_node_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_topics_chapter ON topics(chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_content_entries_lookup ON content_entries(subject_node_id, chapter_id, content_kind)');

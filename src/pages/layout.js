@@ -11,6 +11,7 @@ export {
   subjectsPage,
   subjectNodeListPage,
   chaptersPage,
+  topicsPage,
   contentKindsPage,
   contentEntriesPage,
   notesPage,
