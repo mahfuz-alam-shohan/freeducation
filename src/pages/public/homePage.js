@@ -32,7 +32,9 @@ export function publicHomePage(user = null) {
         <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
         <h1 class="public-cover-name">freeducation</h1>
       </div>
-      <p class="public-cover-quote" data-education-quote></p>
+      <div class="public-cover-quote-wrap">
+        <p class="public-cover-quote" data-education-quote></p>
+      </div>
     </section>`,
     quoteScript
   );
