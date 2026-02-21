@@ -1,4 +1,5 @@
 import { appShell } from '../../templates/shell.js';
+import { modulesStyles } from '../modules/modulesStyles.js';
 
 export function usersPage(user, rows) {
   const bodyRows = rows.length
@@ -12,12 +13,12 @@ export function usersPage(user, rows) {
 
   const content = `<section class="card">
       <div class="table-wrap">
-        <table class="table">
+        <table class="table flat-grid-table table-excel">
           <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th></tr></thead>
           <tbody>${bodyRows}</tbody>
         </table>
       </div>
     </section>`;
 
-  return appShell('users', user, 'User management', 'Current users in the database.', content);
+  return appShell('users', user, 'User management', 'Current users in the database.', content, { pageStyles: modulesStyles });
 }
