@@ -3,7 +3,7 @@ import { getNavigation } from '../navigation.js';
 import { imageUrlFromKey } from '../imageUrl.js';
 import { basePage } from './base.js';
 import { renderNavigationGroup } from './navigationMarkup.js';
-import { iconClose, iconLogin, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
+import { iconClose, iconCollapse, iconLogin, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
 import { sidebarIdentityMarkup } from './sidebarIdentity.js';
 
 function initials(name) {
@@ -24,6 +24,9 @@ function publicSidebar(active, user) {
         <span class="brand-logo" aria-hidden="true">${siteLogo}</span>
         <span class="brand-name">freeducation</span>
       </span>
+      <button class="sidebar-toggle desktop-only" data-sidebar-toggle aria-label="Collapse sidebar" aria-expanded="true">
+        <span class="toggle-icon" aria-hidden="true">${iconCollapse}</span>
+      </button>
     </header>
     <div class="sidebar-scroll">
       ${sidebarIdentityMarkup(user)}
