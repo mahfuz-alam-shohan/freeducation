@@ -295,10 +295,6 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
         </div>
         <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
       </div>
-      <div class="subject-flow-meta-row">
-        <span><strong>Edit:</strong> ${yesNo(n.supports_edit)}</span>
-        <span><strong>Image:</strong> ${yesNo(n.supports_image)}</span>
-      </div>
       <form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true" class="subject-flow-edit-row">
         <input type="hidden" name="redirect" value="${h(backHref)}" />
         <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? "" : "disabled"} maxlength="120" />
@@ -318,17 +314,27 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
 }
 
 export function chaptersPage(user, subject, node, chapters) {
-  const rows = chapters
+  const cards = chapters
     .map(
-      (c) => `<tr>
-      <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${c.sort_order}. ${h(c.name)}</a></td>
-      <td>${yesNo(c.has_topics)}</td>
-      <td><form id="chapter-update-${c.id}" method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="nodeId" value="${node.id}" /><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(c.name)}" required /></form></td>
-      <td><label><input type="checkbox" name="hasTopics" value="1" form="chapter-update-${c.id}" ${c.has_topics ? "checked" : ""} /> Enable topics</label></td>
-      <td>${imageSlotCell({ id: `chapter-image-${c.id}`, formId: `chapter-update-${c.id}`, imageKey: c.image_key })}</td>
-      <td><small class="muted" data-auto-save-status form="chapter-update-${c.id}">Synced</small></td>
-      <td><button class="btn btn-danger" form="chapter-update-${c.id}" name="intent" value="delete" type="submit">Delete</button></td>
-    </tr>`,
+      (c) => `<article class="subject-flow-card card flat-card chapter-flow-card">
+      <div class="subject-flow-card-head">
+        <div>
+          <h3 class="card-title"><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${c.sort_order}. ${h(c.name)}</a></h3>
+          <p class="muted">Topics enabled: ${c.has_topics ? "Yes" : "No"}</p>
+        </div>
+        <a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}" class="btn btn-secondary">Open</a>
+      </div>
+      <form id="chapter-update-${c.id}" method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data" data-auto-save="true" class="chapter-flow-edit-row">
+        <input type="hidden" name="subjectId" value="${subject.id}" />
+        <input type="hidden" name="nodeId" value="${node.id}" />
+        <input type="hidden" name="intent" value="update" />
+        <input class="input" name="name" value="${h(c.name)}" required maxlength="140" />
+        <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" ${c.has_topics ? "checked" : ""} /> Enable topics</label>
+        ${imageSlotCell({ id: `chapter-image-${c.id}`, formId: `chapter-update-${c.id}`, imageKey: c.image_key })}
+        <small class="muted" data-auto-save-status form="chapter-update-${c.id}">Synced</small>
+        <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
+      </form>
+    </article>`,
     )
     .join("");
 
@@ -357,24 +363,32 @@ export function chaptersPage(user, subject, node, chapters) {
 
   const content = `${floatingBackButton(subjectNodeBackHref(subject.id, node), "Back to previous page")}
   ${addChapterPanel}
-  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Chapter</th><th>Topics Enabled</th><th>Rename</th><th>Topics Toggle</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
-    <tbody>${tableRowsOrEmpty(rows, 7, "No chapters yet.")}</tbody>
-  </table></div></section>`;
+  <section class="subject-flow-card-grid chapter-flow-card-grid">
+    ${cards || '<section class="card flat-card"><p class="muted">No chapters yet.</p></section>'}
+  </section>`;
 
   return appShell("subjects", user, `${subject.name} · ${node.display_name}`, "Manage chapters.", content, { pageStyles: modulesStyles });
 }
 
 export function topicsPage(user, subject, node, chapter, topics) {
-  const rows = topics
+  const cards = topics
     .map(
-      (t) => `<tr>
-      <td><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}">${t.sort_order}. ${h(t.name)}</a></td>
-      <td><form id="topic-update-${t.id}" method="post" action="/api/topics/${t.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="nodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter.id}" /><input type="hidden" name="intent" value="update" /><input class="input" name="name" value="${h(t.name)}" required /></form></td>
-      <td>${imageSlotCell({ id: `topic-image-${t.id}`, formId: `topic-update-${t.id}`, imageKey: t.image_key })}</td>
-      <td><small class="muted" data-auto-save-status form="topic-update-${t.id}">Synced</small></td>
-      <td><button class="btn btn-danger" form="topic-update-${t.id}" name="intent" value="delete" type="submit">Delete</button></td>
-    </tr>`,
+      (t) => `<article class="subject-flow-card card flat-card chapter-flow-card">
+      <div class="subject-flow-card-head">
+        <h3 class="card-title"><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}">${t.sort_order}. ${h(t.name)}</a></h3>
+        <a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}" class="btn btn-secondary">Open</a>
+      </div>
+      <form id="topic-update-${t.id}" method="post" action="/api/topics/${t.id}" enctype="multipart/form-data" data-auto-save="true" class="chapter-flow-edit-row">
+        <input type="hidden" name="subjectId" value="${subject.id}" />
+        <input type="hidden" name="nodeId" value="${node.id}" />
+        <input type="hidden" name="chapterId" value="${chapter.id}" />
+        <input type="hidden" name="intent" value="update" />
+        <input class="input" name="name" value="${h(t.name)}" required maxlength="140" />
+        ${imageSlotCell({ id: `topic-image-${t.id}`, formId: `topic-update-${t.id}`, imageKey: t.image_key })}
+        <small class="muted" data-auto-save-status form="topic-update-${t.id}">Synced</small>
+        <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
+      </form>
+    </article>`,
     )
     .join("");
 
@@ -402,10 +416,9 @@ export function topicsPage(user, subject, node, chapter, topics) {
     <p class="muted">Use short titles so learners can navigate quickly on mobile.</p>
   </section>
   ${addTopicPanel}
-  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Topic</th><th>Rename</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
-    <tbody>${tableRowsOrEmpty(rows, 5, "No topics yet.")}</tbody>
-  </table></div></section>`;
+  <section class="subject-flow-card-grid chapter-flow-card-grid">
+    ${cards || '<section class="card flat-card"><p class="muted">No topics yet.</p></section>'}
+  </section>`;
 
   return appShell("subjects", user, `${subject.name} · ${chapter.name}`, "Manage topics for this chapter.", content, {
     pageStyles: modulesStyles,
