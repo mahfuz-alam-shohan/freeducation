@@ -1,5 +1,5 @@
 import { ensureSchema } from "./db/schema.js";
-import { createAdmin, createSession, deleteSession, findUserByEmail, findUserById, getAdminCount, listUsers, updateUserCoverImage, updateUserImage, updateUserName, updateUserPassword, updateUserDateOfBirth } from "./db/adminRepo.js";
+import { createAdmin, createSession, createUser, deleteSession, findUserByEmail, findUserById, getAdminCount, listUsers, updateUserCoverImage, updateUserImage, updateUserName, updateUserPassword, updateUserDateOfBirth } from "./db/adminRepo.js";
 import { createChapter, createClass, createContentEntry, createMcq, createNote, createSubject, createTopic, deleteChapter, deleteClass, deleteContentEntry, deleteMcq, deleteNote, deleteSubject, deleteTopic, ensureDefaultClasses, ensureDefaultTemplate, ensurePhyChemBioTemplate, getChapter, getClassById, getSubject, getSubjectNode, getTemplate, getTopic, listChapters, listClasses, listContentEntries, listMcqs, listNotes, listSubjectNodesByParent, listSubjects, listSubjectsByClass, listTemplateNodes, listTemplates, listTopics, moveClass, updateChapter, updateClass, updateContentEntry, updateMcq, updateNote, updateSubject, updateSubjectNode, updateTopic, upsertSummaryEntry } from "./db/modulesRepo.js";
 import { hashPassword, verifyPassword } from "./security/password.js";
 import { buildSessionCookie, clearSessionCookie, createSignedToken } from "./security/session.js";
@@ -45,6 +45,10 @@ function id() {
 
 function isEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isSupportedRole(role) {
+  return role === "admin" || role === "teacher";
 }
 
 async function uploadImage(env, folder, file) {
@@ -326,6 +330,36 @@ async function handleProfilePost(request, env, url, user) {
 }
 
 async function handleAdminPost(request, env, url) {
+  if (url.pathname === "/api/users" && request.method === "POST") {
+    const form = await request.formData();
+    const name = String(form.get("name") || "").trim();
+    const email = String(form.get("email") || "")
+      .trim()
+      .toLowerCase();
+    const password = String(form.get("password") || "");
+    const role = String(form.get("role") || "").trim().toLowerCase();
+
+    if (!name || name.length > 100 || !isEmail(email) || password.length < 8 || password.length > 120 || !isSupportedRole(role)) {
+      return redirect("/users");
+    }
+
+    const existing = await findUserByEmail(env.DB, email);
+    if (existing) return redirect("/users");
+
+    const hashed = await hashPassword(password);
+    await createUser(env.DB, {
+      id: id(),
+      email,
+      name,
+      role,
+      passwordHash: hashed.hash,
+      passwordSalt: hashed.salt,
+      passwordIterations: hashed.iterations,
+      createdAt: new Date().toISOString(),
+    });
+    return redirect("/users");
+  }
+
   if (url.pathname === "/api/classes" && request.method === "POST") {
     const form = await request.formData();
     const name = String(form.get("name") || "").trim();

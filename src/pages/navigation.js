@@ -10,13 +10,21 @@ export function getNavigation(role) {
 
   if (!role) return nav;
 
-  nav.push({
-    title: "Workspace",
-    items: [
-      { key: "dashboard", href: "/dashboard", label: "Dashboard", icon: iconDashboard },
-      { key: "profile", href: "/profile", label: "Profile", icon: iconProfile },
-    ],
-  });
+  if (role === "admin") {
+    nav.push({
+      title: "Workspace",
+      items: [
+        { key: "dashboard", href: "/dashboard", label: "Dashboard", icon: iconDashboard },
+        { key: "profile", href: "/profile", label: "Profile", icon: iconProfile },
+      ],
+    });
+
+  } else if (role === "teacher") {
+    nav.push({
+      title: "Workspace",
+      items: [{ key: "profile", href: "/profile", label: "Profile", icon: iconProfile }],
+    });
+  }
 
   if (role === "admin") {
     nav.push({
