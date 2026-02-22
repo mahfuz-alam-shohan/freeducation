@@ -446,6 +446,61 @@ function initializeImageSlots() {
   });
 }
 
+
+function initializeInlineImagePickers() {
+  document.querySelectorAll('[data-inline-image-picker]').forEach((picker) => {
+    if (picker.dataset.boundInlineImage === '1') return;
+    const input = picker.querySelector('[data-inline-image-input]');
+    const preview = picker.querySelector('[data-inline-image-preview]');
+    const image = picker.querySelector('[data-inline-image-preview-img]');
+    const removeButton = picker.querySelector('[data-inline-image-remove-btn]');
+    const removeInput = picker.closest('form')?.querySelector('[data-inline-image-remove]');
+    if (!input || !preview || !image || !removeButton || !removeInput) return;
+
+    const persistedSrc = (picker.dataset.inlineImageSrc || '').trim();
+    let currentSrc = persistedSrc;
+    let objectUrl = '';
+
+    const sync = (src) => {
+      const hasImage = Boolean(src);
+      preview.hidden = !hasImage;
+      image.src = hasImage ? src : '';
+      picker.dataset.inlineImageHas = hasImage ? '1' : '0';
+    };
+
+    removeButton.addEventListener('click', () => {
+      removeInput.value = '1';
+      input.value = '';
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = '';
+      }
+      currentSrc = '';
+      sync('');
+    });
+
+    input.addEventListener('change', () => {
+      if (input.files && input.files[0]) {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = URL.createObjectURL(input.files[0]);
+        currentSrc = objectUrl;
+        removeInput.value = '0';
+        sync(currentSrc);
+        return;
+      }
+      if (removeInput.value === '1') {
+        sync('');
+      } else {
+        currentSrc = persistedSrc;
+        sync(currentSrc);
+      }
+    });
+
+    sync(currentSrc);
+    picker.dataset.boundInlineImage = '1';
+  });
+}
+
 function initializeClassMoveControls() {
   document.querySelectorAll('[data-class-move]').forEach((button) => {
     if (button.dataset.boundClassMove === '1') return;
@@ -500,6 +555,7 @@ async function refreshLiveRegion(regionName) {
   initializeContentModals();
   initializeFileIndicators();
   initializeImageSlots();
+  initializeInlineImagePickers();
   initializeClassMoveControls();
   initializeFormHandlers();
 }
@@ -906,6 +962,7 @@ if (!shell) {
   initializeContentModals();
   initializeFileIndicators();
   initializeImageSlots();
+  initializeInlineImagePickers();
   initializeClassMoveControls();
   initializeFormHandlers();
   initializeNavigationBoost();
