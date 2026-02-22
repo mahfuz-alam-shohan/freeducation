@@ -57,7 +57,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
   const notes = shortNotes
     .map(
       (entry) => `<li>
-      <div class="public-note-body">${entry.content_html}</div>
+      <div class="public-note-body">${h(entry.content_html)}</div>
     </li>`,
     )
     .join("");
@@ -148,7 +148,7 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
   const list = mcqs
     .map(
       (item) => `<li class="public-mcq-item">
-      <div class="public-note-body">${item.question_html}</div>
+      <div class="public-note-body">${h(item.question_html)}</div>
       <ul class="public-mcq-options">
         <li data-option="A"><strong>A.</strong> ${h(item.option_a)}</li>
         <li data-option="B"><strong>B.</strong> ${h(item.option_b)}</li>
