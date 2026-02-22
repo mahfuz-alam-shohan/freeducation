@@ -39,6 +39,20 @@ function mergeUniqueById(items) {
   return Array.from(map.values());
 }
 
+async function resolveScopedNodeIds(db, subjectId, node) {
+  const ids = new Set([node?.id].filter(Boolean));
+  if (!node?.parent_subject_node_id) return Array.from(ids);
+
+  ids.add(node.parent_subject_node_id);
+  if (!node.content_kind) return Array.from(ids);
+
+  const siblings = await listSubjectNodesByParent(db, subjectId, node.parent_subject_node_id);
+  for (const sibling of siblings) {
+    if (sibling?.content_kind === node.content_kind) ids.add(sibling.id);
+  }
+  return Array.from(ids);
+}
+
 function id() {
   return crypto.randomUUID();
 }
@@ -885,8 +899,14 @@ async function handleDynamicPages(url, env, user) {
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, subjectId), getSubjectNode(env.DB, nodeId), chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null), topicId ? getTopic(env.DB, topicId) : Promise.resolve(null)]);
     if (!subject || !node || !contentKind) return new Response("Not Found", { status: 404 });
-    const entries = await listContentEntries(env.DB, node.id, chapter?.id, topic?.id, contentKind);
-    return html(contentEntriesPage(user, subject, node, chapter, topic, contentKind, entries, safePage));
+    const scopedNodeIds = await resolveScopedNodeIds(env.DB, subject.id, node);
+    const entries = [];
+    for (const scopedNodeId of scopedNodeIds) {
+      const scopedEntries = await listContentEntries(env.DB, scopedNodeId, chapter?.id, topic?.id, contentKind);
+      entries.push(...scopedEntries);
+    }
+    const uniqueEntries = mergeUniqueById(entries).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    return html(contentEntriesPage(user, subject, node, chapter, topic, contentKind, uniqueEntries, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/notes$/)) {
@@ -898,8 +918,14 @@ async function handleDynamicPages(url, env, user) {
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, subjectId), getSubjectNode(env.DB, nodeId), chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null), topicId ? getTopic(env.DB, topicId) : Promise.resolve(null)]);
     if (!subject || !node) return new Response("Not Found", { status: 404 });
-    const notes = await listNotes(env.DB, node.id, chapter?.id, topic?.id);
-    return html(notesPage(user, subject, node, chapter, topic, notes, safePage));
+    const scopedNodeIds = await resolveScopedNodeIds(env.DB, subject.id, node);
+    const notes = [];
+    for (const scopedNodeId of scopedNodeIds) {
+      const scopedNotes = await listNotes(env.DB, scopedNodeId, chapter?.id, topic?.id);
+      notes.push(...scopedNotes);
+    }
+    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    return html(notesPage(user, subject, node, chapter, topic, uniqueNotes, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/mcqs$/)) {
@@ -911,8 +937,14 @@ async function handleDynamicPages(url, env, user) {
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, subjectId), getSubjectNode(env.DB, nodeId), chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null), topicId ? getTopic(env.DB, topicId) : Promise.resolve(null)]);
     if (!subject || !node) return new Response("Not Found", { status: 404 });
-    const mcqs = await listMcqs(env.DB, node.id, chapter?.id, topic?.id);
-    return html(mcqsPage(user, subject, node, chapter, topic, mcqs, safePage));
+    const scopedNodeIds = await resolveScopedNodeIds(env.DB, subject.id, node);
+    const mcqs = [];
+    for (const scopedNodeId of scopedNodeIds) {
+      const scopedMcqs = await listMcqs(env.DB, scopedNodeId, chapter?.id, topic?.id);
+      mcqs.push(...scopedMcqs);
+    }
+    const uniqueMcqs = mergeUniqueById(mcqs).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    return html(mcqsPage(user, subject, node, chapter, topic, uniqueMcqs, safePage));
   }
 
   return null;
