@@ -154,8 +154,14 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     .join('');
 
   const mcqScript = `<script>
-  document.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-answer-toggle]');
+  (() => {
+    const mcqList = document.querySelector('[data-mcq-list]');
+    if (!mcqList) return;
+
+    mcqList.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest('[data-answer-toggle]');
     if (!button) return;
 
     const container = button.closest('.public-mcq-item');
@@ -178,7 +184,8 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     });
     answerRow.innerHTML = '<p class="public-mcq-answer-text"><strong>Answer:</strong> ' + answer + '</p>';
     answerRow.dataset.revealed = 'true';
-  });
+    });
+  })();
   </script>`;
 
   return publicShell(
@@ -188,7 +195,7 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: 'MCQ Bank' }])}<section class="public-stack">
       <h1 class="public-stack-title">MCQ Bank</h1>
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list">${list || '<li>No MCQs yet.</li>'}</ol>
+      <ol class="public-note-list" data-mcq-list>${list || '<li>No MCQs yet.</li>'}</ol>
     </section>`,
     mcqScript,
     publicHomeStyles
