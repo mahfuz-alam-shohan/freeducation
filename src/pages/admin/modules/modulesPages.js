@@ -295,10 +295,6 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
         </div>
         <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
       </div>
-      <div class="subject-flow-meta-row">
-        <span><strong>Edit:</strong> ${yesNo(n.supports_edit)}</span>
-        <span><strong>Image:</strong> ${yesNo(n.supports_image)}</span>
-      </div>
       <form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true" class="subject-flow-edit-row">
         <input type="hidden" name="redirect" value="${h(backHref)}" />
         <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? "" : "disabled"} maxlength="120" />

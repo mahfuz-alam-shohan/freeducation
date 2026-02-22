@@ -37,7 +37,6 @@ export const modulesStyles = `
 .subject-flow-card-head .card-title { margin: 0; font-size: 14px; }
 .subject-flow-card-head .card-title a { color: inherit; text-decoration: none; }
 .subject-flow-card-head p { margin: 2px 0 0; font-size: 11px; }
-.subject-flow-meta-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; }
 .subject-flow-edit-row { display: grid; grid-template-columns: minmax(160px, 1fr) auto auto; align-items: center; gap: 6px; }
 .subject-flow-edit-row .input { height: 30px; }
 .chapter-flow-edit-row { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto auto auto; align-items: center; gap: 6px; }
