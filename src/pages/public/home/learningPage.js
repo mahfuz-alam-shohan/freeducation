@@ -33,6 +33,13 @@ function cardGrid(items, hrefBuilder) {
     .join("");
 }
 
+function renderEntryImage(imageKey, altText) {
+  if (!imageKey) return "";
+  const src = imageUrlFromKey(imageKey);
+  if (!src) return "";
+  return `<figure class="public-entry-image-frame"><img class="public-entry-image" src="${h(src)}" alt="${h(altText)}" loading="lazy" decoding="async" /></figure>`;
+}
+
 export function publicSubjectNodePage(user, subject, title, subtitle, items, hrefBuilder) {
   return publicShell(
     "home",
@@ -57,6 +64,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
   const notes = shortNotes
     .map(
       (entry) => `<li>
+      ${renderEntryImage(entry.image_key, `${chapter.name} short note image`)}
       <div class="public-note-body">${h(entry.content_html)}</div>
     </li>`,
     )
@@ -81,6 +89,7 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
   const list = entries
     .map(
       (entry, index) => `<li>
+      ${renderEntryImage(entry.image_key, `${kind} image ${index + 1}`)}
       <h3 class="public-note-title">${index + 1}. ${h(entry.title || kind)}</h3>
       <div class="public-note-body">${entry.content_html}</div>
     </li>`,
@@ -148,6 +157,7 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
   const list = mcqs
     .map(
       (item) => `<li class="public-mcq-item">
+      ${renderEntryImage(item.image_key, `MCQ image`)}
       <div class="public-note-body">${h(item.question_html)}</div>
       <ul class="public-mcq-options">
         <li data-option="A"><strong>A.</strong> ${h(item.option_a)}</li>
