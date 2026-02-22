@@ -69,20 +69,6 @@ function imageSlotCell({ id, formId, imageKey, disabled = false }) {
   </div>`;
 }
 
-function structuredAddPanel({ title, description, formAction, hiddenFields, submitLabel, fields }) {
-  return `<section class="card flat-card entry-shell">
-    <div class="entry-shell-head">
-      <h3 class="card-title">${h(title)}</h3>
-      ${description ? `<p class="muted">${h(description)}</p>` : ""}
-    </div>
-    <form method="post" action="${h(formAction)}" enctype="multipart/form-data" class="entry-form-grid">
-      ${hiddenFields}
-      ${fields}
-      <button class="btn btn-primary" type="submit">${h(submitLabel)}</button>
-    </form>
-  </section>`;
-}
-
 export function templatesPage(user, templates) {
   const rows = templates
     .map(
@@ -288,19 +274,25 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
   const cards = nodes
     .map(
       (n) => `<article class="subject-flow-card card flat-card">
-      <div class="subject-flow-card-head">
-        <div>
-          <h3 class="card-title">${h(n.display_name)}</h3>
-          <p class="muted">Server key: ${h(n.server_name)}</p>
+      <div class="subject-flow-card-main">
+        <div class="subject-flow-card-media">
+          ${imageSlotCell({ id: `subject-node-image-${n.id}`, formId: `subject-node-update-${n.id}`, imageKey: n.image_key, disabled: !n.supports_image })}
         </div>
-        <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
+        <div class="subject-flow-card-body">
+          <div class="subject-flow-card-head">
+            <div>
+              <h3 class="card-title">${h(n.display_name)}</h3>
+              <p class="muted">Server key: ${h(n.server_name)}</p>
+            </div>
+            <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
+          </div>
+          <form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true" class="subject-flow-edit-row">
+            <input type="hidden" name="redirect" value="${h(backHref)}" />
+            <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? "" : "disabled"} maxlength="120" />
+            <small class="muted" data-auto-save-status form="subject-node-update-${n.id}">Synced</small>
+          </form>
+        </div>
       </div>
-      <form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true" class="subject-flow-edit-row">
-        <input type="hidden" name="redirect" value="${h(backHref)}" />
-        <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? "" : "disabled"} maxlength="120" />
-        ${imageSlotCell({ id: `subject-node-image-${n.id}`, formId: `subject-node-update-${n.id}`, imageKey: n.image_key, disabled: !n.supports_image })}
-        <small class="muted" data-auto-save-status form="subject-node-update-${n.id}">Synced</small>
-      </form>
     </article>`,
     )
     .join("");
@@ -317,52 +309,61 @@ export function chaptersPage(user, subject, node, chapters) {
   const cards = chapters
     .map(
       (c) => `<article class="subject-flow-card card flat-card chapter-flow-card">
-      <div class="subject-flow-card-head">
-        <div>
-          <h3 class="card-title"><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${c.sort_order}. ${h(c.name)}</a></h3>
-          <p class="muted">Topics enabled: ${c.has_topics ? "Yes" : "No"}</p>
+      <div class="subject-flow-card-main">
+        <div class="subject-flow-card-media">
+          ${imageSlotCell({ id: `chapter-image-${c.id}`, formId: `chapter-update-${c.id}`, imageKey: c.image_key })}
         </div>
-        <a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}" class="btn btn-secondary">Open</a>
+        <div class="subject-flow-card-body">
+          <div class="subject-flow-card-head">
+            <div>
+              <h3 class="card-title"><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}">${c.sort_order}. ${h(c.name)}</a></h3>
+              <p class="muted">Topics enabled: ${c.has_topics ? "Yes" : "No"}</p>
+            </div>
+            <a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${c.id}" class="btn btn-secondary">Open</a>
+          </div>
+          <form id="chapter-update-${c.id}" method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data" data-auto-save="true" class="chapter-flow-edit-row">
+            <input type="hidden" name="subjectId" value="${subject.id}" />
+            <input type="hidden" name="nodeId" value="${node.id}" />
+            <input type="hidden" name="intent" value="update" />
+            <input class="input" name="name" value="${h(c.name)}" required maxlength="140" />
+            <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" ${c.has_topics ? "checked" : ""} /> Enable topics</label>
+            <small class="muted" data-auto-save-status form="chapter-update-${c.id}">Synced</small>
+            <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
+          </form>
+        </div>
       </div>
-      <form id="chapter-update-${c.id}" method="post" action="/api/chapters/${c.id}" enctype="multipart/form-data" data-auto-save="true" class="chapter-flow-edit-row">
-        <input type="hidden" name="subjectId" value="${subject.id}" />
-        <input type="hidden" name="nodeId" value="${node.id}" />
-        <input type="hidden" name="intent" value="update" />
-        <input class="input" name="name" value="${h(c.name)}" required maxlength="140" />
-        <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" ${c.has_topics ? "checked" : ""} /> Enable topics</label>
-        ${imageSlotCell({ id: `chapter-image-${c.id}`, formId: `chapter-update-${c.id}`, imageKey: c.image_key })}
-        <small class="muted" data-auto-save-status form="chapter-update-${c.id}">Synced</small>
-        <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
-      </form>
     </article>`,
     )
     .join("");
 
-  const addChapterPanel = structuredAddPanel({
-    title: "Add chapter",
-    description: "",
-    formAction: "/api/chapters",
-    hiddenFields: `<input type="hidden" name="subjectNodeId" value="${node.id}" />
-      <input type="hidden" name="subjectId" value="${subject.id}" />
-      <input type="hidden" name="removeImage" value="0" data-inline-image-remove />`,
-    submitLabel: "Add chapter",
-    fields: `<div>
-        <label class="field-label" for="chapter-name">Chapter name</label>
-        <input id="chapter-name" class="input" name="name" placeholder="Example: Algebra Basics" required maxlength="140" />
-      </div>
-      <div class="inline-image-picker chapter-image-picker" data-inline-image-picker data-inline-image-src="" data-inline-image-has="0">
-        <label class="chapter-image-upload-btn" for="chapter-image">+ Add thumbnail</label>
-        <input id="chapter-image" class="input inline-image-input" type="file" name="image" accept="image/*" data-inline-image-input />
-        <div class="inline-image-preview chapter-image-preview" data-inline-image-preview hidden>
-          <img src="" alt="Chapter thumbnail preview" loading="lazy" decoding="async" data-inline-image-preview-img />
-          <button class="btn btn-icon btn-icon-danger inline-image-remove-btn" type="button" data-inline-image-remove-btn aria-label="Remove thumbnail" title="Remove thumbnail">✕</button>
-        </div>
-      </div>
-      <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topics</label>`,
-  });
-
   const content = `${floatingBackButton(subjectNodeBackHref(subject.id, node), "Back to previous page")}
-  ${addChapterPanel}
+  <section class="card flat-card entry-shell">
+    <div class="toolbar-group"><button class="btn btn-primary" type="button" data-content-modal-open="chapter-add-modal">Add chapter</button></div>
+    <dialog class="content-modal" data-content-modal="chapter-add-modal">
+      <div class="modal content-modal-inner">
+        <div class="content-modal-head"><h3 class="card-title">Add chapter</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>
+        <form method="post" action="/api/chapters" enctype="multipart/form-data" class="entry-form-grid">
+          <input type="hidden" name="subjectNodeId" value="${node.id}" />
+          <input type="hidden" name="subjectId" value="${subject.id}" />
+          <input type="hidden" name="removeImage" value="0" data-inline-image-remove />
+          <div>
+            <label class="field-label" for="chapter-name">Chapter name</label>
+            <input id="chapter-name" class="input" name="name" placeholder="Example: Algebra Basics" required maxlength="140" />
+          </div>
+          <div class="inline-image-picker chapter-image-picker" data-inline-image-picker data-inline-image-src="" data-inline-image-has="0">
+            <label class="chapter-image-upload-btn" for="chapter-image">+ Add thumbnail</label>
+            <input id="chapter-image" class="input inline-image-input" type="file" name="image" accept="image/*" data-inline-image-input />
+            <div class="inline-image-preview chapter-image-preview" data-inline-image-preview hidden>
+              <img src="" alt="Chapter thumbnail preview" loading="lazy" decoding="async" data-inline-image-preview-img />
+              <button class="btn btn-icon btn-icon-danger inline-image-remove-btn" type="button" data-inline-image-remove-btn aria-label="Remove thumbnail" title="Remove thumbnail">✕</button>
+            </div>
+          </div>
+          <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topics</label>
+          <button class="btn btn-primary" type="submit">Add chapter</button>
+        </form>
+      </div>
+    </dialog>
+  </section>
   <section class="subject-flow-card-grid chapter-flow-card-grid">
     ${cards || '<section class="card flat-card"><p class="muted">No chapters yet.</p></section>'}
   </section>`;
@@ -374,48 +375,56 @@ export function topicsPage(user, subject, node, chapter, topics) {
   const cards = topics
     .map(
       (t) => `<article class="subject-flow-card card flat-card chapter-flow-card">
-      <div class="subject-flow-card-head">
-        <h3 class="card-title"><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}">${t.sort_order}. ${h(t.name)}</a></h3>
-        <a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}" class="btn btn-secondary">Open</a>
-      </div>
-      <form id="topic-update-${t.id}" method="post" action="/api/topics/${t.id}" enctype="multipart/form-data" data-auto-save="true" class="chapter-flow-edit-row">
+      <div class="subject-flow-card-main">
+        <div class="subject-flow-card-media">${imageSlotCell({ id: `topic-image-${t.id}`, formId: `topic-update-${t.id}`, imageKey: t.image_key })}</div>
+        <div class="subject-flow-card-body">
+          <div class="subject-flow-card-head">
+            <h3 class="card-title"><a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}">${t.sort_order}. ${h(t.name)}</a></h3>
+            <a href="/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${t.id}" class="btn btn-secondary">Open</a>
+          </div>
+          <form id="topic-update-${t.id}" method="post" action="/api/topics/${t.id}" enctype="multipart/form-data" data-auto-save="true" class="chapter-flow-edit-row">
         <input type="hidden" name="subjectId" value="${subject.id}" />
         <input type="hidden" name="nodeId" value="${node.id}" />
         <input type="hidden" name="chapterId" value="${chapter.id}" />
         <input type="hidden" name="intent" value="update" />
         <input class="input" name="name" value="${h(t.name)}" required maxlength="140" />
-        ${imageSlotCell({ id: `topic-image-${t.id}`, formId: `topic-update-${t.id}`, imageKey: t.image_key })}
         <small class="muted" data-auto-save-status form="topic-update-${t.id}">Synced</small>
         <button class="btn btn-danger" name="intent" value="delete" type="submit">Delete</button>
-      </form>
+          </form>
+        </div>
+      </div>
     </article>`,
     )
     .join("");
-
-  const addTopicPanel = structuredAddPanel({
-    title: `Add topic in ${chapter.name}`,
-    description: "Topics help split long chapters into focused lesson blocks.",
-    formAction: "/api/topics",
-    hiddenFields: `<input type="hidden" name="chapterId" value="${chapter.id}" />
-      <input type="hidden" name="subjectId" value="${subject.id}" />
-      <input type="hidden" name="nodeId" value="${node.id}" />`,
-    submitLabel: "Add topic",
-    fields: `<div>
-        <label class="field-label" for="topic-name">Topic name</label>
-        <input id="topic-name" class="input" name="name" placeholder="Example: Solving Linear Equations" required maxlength="140" />
-      </div>
-      <div>
-        <label class="field-label" for="topic-image">Thumbnail (optional)</label>
-        <input id="topic-image" class="input" type="file" name="image" accept="image/*" />
-      </div>`,
-  });
 
   const content = `${floatingBackButton(`/subjects/${subject.id}/nodes/${node.id}`, "Back to previous page")}
   <section class="card flat-card section-summary-row">
     <p><strong>${topics.length}</strong> topics in this chapter.</p>
     <p class="muted">Use short titles so learners can navigate quickly on mobile.</p>
   </section>
-  ${addTopicPanel}
+  <section class="card flat-card entry-shell">
+    <div class="toolbar-group"><button class="btn btn-primary" type="button" data-content-modal-open="topic-add-modal">Add topic</button></div>
+    <dialog class="content-modal" data-content-modal="topic-add-modal">
+      <div class="modal content-modal-inner">
+        <div class="content-modal-head"><h3 class="card-title">Add topic in ${h(chapter.name)}</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>
+        <p class="muted">Topics help split long chapters into focused lesson blocks.</p>
+        <form method="post" action="/api/topics" enctype="multipart/form-data" class="entry-form-grid">
+          <input type="hidden" name="chapterId" value="${chapter.id}" />
+          <input type="hidden" name="subjectId" value="${subject.id}" />
+          <input type="hidden" name="nodeId" value="${node.id}" />
+          <div>
+            <label class="field-label" for="topic-name">Topic name</label>
+            <input id="topic-name" class="input" name="name" placeholder="Example: Solving Linear Equations" required maxlength="140" />
+          </div>
+          <div>
+            <label class="field-label" for="topic-image">Thumbnail (optional)</label>
+            <input id="topic-image" class="input" type="file" name="image" accept="image/*" />
+          </div>
+          <button class="btn btn-primary" type="submit">Add topic</button>
+        </form>
+      </div>
+    </dialog>
+  </section>
   <section class="subject-flow-card-grid chapter-flow-card-grid">
     ${cards || '<section class="card flat-card"><p class="muted">No topics yet.</p></section>'}
   </section>`;
@@ -562,10 +571,9 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
   <section class="card content-form-shell">
     <div class="content-form-head">
       <h3 class="card-title">Short notes</h3>
+      <button type="button" class="btn btn-secondary" data-content-modal-open="note-add-modal">Add short note</button>
     </div>
-    <div>
-      ${noteForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}
-    </div>
+    <dialog class="content-modal" data-content-modal="note-add-modal"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Add short note</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${noteForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}</div></dialog>
   </section>
   <section class="content-list plain-two-column" data-live-region="notes-page">
     <div>${renderNoteItems(leftColumn, 0) || ""}</div>
@@ -706,10 +714,9 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
   <section class="card content-form-shell">
     <div class="content-form-head">
       <h3 class="card-title">MCQ slots</h3>
+      <button type="button" class="btn btn-secondary" data-content-modal-open="mcq-add-modal">Add MCQ</button>
     </div>
-    <div>
-      ${mcqForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}
-    </div>
+    <dialog class="content-modal" data-content-modal="mcq-add-modal"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Add MCQ</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${mcqForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })}</div></dialog>
   </section>
   <section class="content-list plain-two-column">
     <div>${renderMcqItems(leftColumn, 0) || ""}</div>
