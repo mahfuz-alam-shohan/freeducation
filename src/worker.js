@@ -91,7 +91,7 @@ import {
   topicsPage,
   usersPage,
 } from './pages/layout.js';
-import { MAX_IMAGE_BYTES } from './env.js';
+import { MAX_IMAGE_BYTES, SESSION_COOKIE } from './env.js';
 
 const MAX_BOOTSTRAP_BODY_BYTES = 4 * 1024 * 1024;
 const ACCESS = {
@@ -100,6 +100,28 @@ const ACCESS = {
 };
 let appReadyPromise = null;
 let hasAdminCache = null;
+
+function hasSessionCookie(request) {
+  const cookie = request.headers.get('cookie') || '';
+  return cookie.includes(`${SESSION_COOKIE}=`);
+}
+
+function shouldResolveUser(request, route, pathname) {
+  if (hasSessionCookie(request)) return true;
+  if (route?.access === ACCESS.AUTHENTICATED) return true;
+  if (pathname.startsWith('/api/') || pathname.startsWith('/media/')) return true;
+  if (pathname.startsWith('/subjects') || pathname.startsWith('/templates') || pathname.startsWith('/classes/manage')) return true;
+  return false;
+}
+
+function mergeUniqueById(items) {
+  const map = new Map();
+  for (const item of items) {
+    if (!item?.id || map.has(item.id)) continue;
+    map.set(item.id, item);
+  }
+  return Array.from(map.values());
+}
 
 function id() {
   return crypto.randomUUID();
@@ -802,12 +824,10 @@ async function handleDynamicPages(url, env, user) {
     const notes = [];
     for (const noteNodeId of noteNodeIds) {
       const scoped = await listNotes(env.DB, noteNodeId, chapter.id, null);
-      for (const entry of scoped) {
-        if (!notes.some((item) => item.id === entry.id)) notes.push(entry);
-      }
+      notes.push(...scoped);
     }
-    notes.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    return html(publicChapterContentPage(user, subject, node, chapter, notes, contentNodes));
+    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    return html(publicChapterContentPage(user, subject, node, chapter, uniqueNotes, contentNodes));
   }
 
   const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
@@ -826,12 +846,10 @@ async function handleDynamicPages(url, env, user) {
     const notes = [];
     for (const noteNodeId of noteNodeIds) {
       const scoped = await listNotes(env.DB, noteNodeId, chapter.id, topic.id);
-      for (const entry of scoped) {
-        if (!notes.some((item) => item.id === entry.id)) notes.push(entry);
-      }
+      notes.push(...scoped);
     }
-    notes.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    return html(publicChapterContentPage(user, subject, node, topic, notes, contentNodes, topic.id));
+    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    return html(publicChapterContentPage(user, subject, node, topic, uniqueNotes, contentNodes, topic.id));
   }
 
   const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/content\/([^/]+)$/);
@@ -853,23 +871,19 @@ async function handleDynamicPages(url, env, user) {
       const mcqs = [];
       for (const contentNodeId of nodeIds) {
         const scoped = await listMcqs(env.DB, contentNodeId, chapter.id, topicId || null);
-        for (const item of scoped) {
-          if (!mcqs.some((entry) => entry.id === item.id)) mcqs.push(item);
-        }
+        mcqs.push(...scoped);
       }
-      mcqs.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-      return html(publicMcqEntriesPage(user, subject, chapter, mcqs));
+      const uniqueMcqs = mergeUniqueById(mcqs).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      return html(publicMcqEntriesPage(user, subject, chapter, uniqueMcqs));
     }
 
     const entries = [];
     for (const contentNodeId of nodeIds) {
       const scoped = await listContentEntries(env.DB, contentNodeId, chapter.id, topicId || null, contentKind);
-      for (const item of scoped) {
-        if (!entries.some((entry) => entry.id === item.id)) entries.push(item);
-      }
+      entries.push(...scoped);
     }
-    entries.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    return html(publicContentEntriesPage(user, subject, chapter, contentKind, entries));
+    const uniqueEntries = mergeUniqueById(entries).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    return html(publicContentEntriesPage(user, subject, chapter, contentKind, uniqueEntries));
   }
 
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
@@ -1027,7 +1041,8 @@ export default {
       return redirect('/setup');
     }
 
-    const user = await requireAuth(request, env);
+    const route = pageRoutes.find((item) => item.path === url.pathname);
+    const user = shouldResolveUser(request, route, url.pathname) ? await requireAuth(request, env) : null;
 
     if (url.pathname.startsWith('/media/')) return serveMedia(request, url, env, user, ctx);
 
@@ -1045,12 +1060,15 @@ export default {
       if (protectedPost) return protectedPost;
     }
 
-    const route = pageRoutes.find((item) => item.path === url.pathname);
     if (!route) {
-      if (!user) return redirect('/login');
-      if ((url.pathname.startsWith('/subjects') || url.pathname.startsWith('/templates') || url.pathname.startsWith('/classes/manage')) && user.role !== 'admin') {
-        return html(forbiddenPage(), 403);
+      const isAdminDynamicPath =
+        url.pathname.startsWith('/subjects') || url.pathname.startsWith('/templates') || url.pathname.startsWith('/classes/manage');
+
+      if (isAdminDynamicPath) {
+        if (!user) return redirect('/login');
+        if (user.role !== 'admin') return html(forbiddenPage(), 403);
       }
+
       const dynamic = await handleDynamicPages(url, env, user);
       if (dynamic) return dynamic;
       return new Response('Not Found', { status: 404 });

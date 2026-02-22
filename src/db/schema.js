@@ -383,11 +383,17 @@ export async function ensureSchema(db, options = {}) {
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_template ON template_nodes(template_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_parent_sort ON template_nodes(template_id, parent_id, sort_order)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_classes_sort ON classes(sort_order, created_at)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_classes_home_sort ON classes(show_on_home, sort_order, created_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_parent ON subject_nodes(parent_subject_node_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject_parent_sort ON subject_nodes(subject_id, parent_subject_node_id, sort_order)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node_sort ON chapters(subject_node_id, sort_order, created_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_topics_chapter ON topics(chapter_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_topics_chapter_sort ON topics(chapter_id, sort_order, created_at)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subjects_class_sort ON subjects(class_id, name, created_at)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup_fast ON short_notes(subject_node_id, chapter_id, topic_id, created_at DESC)');
   await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)');
