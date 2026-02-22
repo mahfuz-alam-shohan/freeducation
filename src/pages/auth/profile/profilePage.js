@@ -1,45 +1,45 @@
-import { appShell } from '../../templates/shell.js';
-import { profileStyles } from './profileStyles.js';
-import { imageUrlFromKey } from '../../imageUrl.js';
+import { appShell } from "../../templates/shell.js";
+import { profileStyles } from "./profileStyles.js";
+import { imageUrlFromKey } from "../../imageUrl.js";
 
 function h(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 const iconCamera = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5a2 2 0 0 1 2-2h2.05c.46 0 .9-.22 1.18-.6l.8-1.09A2 2 0 0 1 11.14 4h1.72a2 2 0 0 1 1.61.81l.8 1.09c.28.38.72.6 1.18.6h2.05a2 2 0 0 1 2 2v8.75a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.75"/><path d="M17.35 10.25h.01"/></svg>`;
 const iconEdit = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h5.2a2 2 0 0 0 1.42-.59L20 10.03a1.9 1.9 0 0 0 0-2.69l-3.32-3.32a1.9 1.9 0 0 0-2.69 0L3.59 14.42A2 2 0 0 0 3 15.84z"/><path d="m12.6 5.4 6 6"/></svg>`;
 
 function initialsForUser(user) {
-  return (user.name || user.email || 'U')
+  return (user.name || user.email || "U")
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || '')
-    .join('');
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
 }
 
 function formatDate(isoDate) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate || ''))) return 'Not set';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate || ""))) return "Not set";
   const date = new Date(`${isoDate}T00:00:00.000Z`);
-  if (!Number.isFinite(date.getTime())) return 'Not set';
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+  if (!Number.isFinite(date.getTime())) return "Not set";
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 }
 
 function formatJoined(isoDateTime) {
-  const date = new Date(String(isoDateTime || ''));
-  if (!Number.isFinite(date.getTime())) return 'Unknown';
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+  const date = new Date(String(isoDateTime || ""));
+  if (!Number.isFinite(date.getTime())) return "Unknown";
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 }
 
 function photoMenu(type, hasImage) {
-  const target = type === 'cover' ? 'Cover image' : 'Profile picture';
+  const target = type === "cover" ? "Cover image" : "Profile picture";
   const fileId = `${type}-upload`;
   return `<div class="profile-photo-actions" data-profile-photo-actions="${type}">
-    <button type="button" class="profile-photo-action" data-profile-view="${type}" ${hasImage ? '' : 'disabled'}>See ${target}</button>
+    <button type="button" class="profile-photo-action" data-profile-view="${type}" ${hasImage ? "" : "disabled"}>See ${target}</button>
     <button type="button" class="profile-photo-action" data-profile-upload-trigger="${fileId}">${hasImage ? `Change ${target}` : `Upload ${target}`}</button>
   </div>`;
 }
@@ -54,16 +54,16 @@ function profileHeader(user) {
       <div class="profile-cover-media" data-profile-cover-media>${coverUrl ? `<img src="${coverUrl}" alt="${h(user.name)} cover image" loading="lazy" decoding="async" />` : '<div class="profile-cover-placeholder">Upload cover image</div>'}</div>
       <div class="profile-photo-control profile-cover-control">
         <button class="btn btn-secondary profile-photo-icon-btn" type="button" data-profile-photo-menu-toggle="cover" aria-expanded="false" aria-haspopup="true"><span class="icon">${iconCamera}</span></button>
-        ${photoMenu('cover', Boolean(coverUrl))}
+        ${photoMenu("cover", Boolean(coverUrl))}
         <form method="post" action="/api/profile/cover" enctype="multipart/form-data" data-profile-upload-form="cover">
           <input id="cover-upload" name="cover" type="file" accept="image/png,image/jpeg,image/webp" class="profile-file-input" />
         </form>
       </div>
       <div class="profile-avatar-row">
-        <div class="profile-avatar-shell" data-profile-avatar>${avatarUrl ? `<img src="${avatarUrl}" alt="${h(user.name)} avatar" loading="lazy" decoding="async" />` : h(initials || 'U')}</div>
+        <div class="profile-avatar-shell" data-profile-avatar>${avatarUrl ? `<img src="${avatarUrl}" alt="${h(user.name)} avatar" loading="lazy" decoding="async" />` : h(initials || "U")}</div>
         <div class="profile-photo-control profile-avatar-control">
           <button class="btn btn-secondary profile-photo-icon-btn" type="button" data-profile-photo-menu-toggle="avatar" aria-expanded="false" aria-haspopup="true"><span class="icon">${iconCamera}</span></button>
-          ${photoMenu('avatar', Boolean(avatarUrl))}
+          ${photoMenu("avatar", Boolean(avatarUrl))}
           <form method="post" action="/api/profile/avatar" enctype="multipart/form-data" data-profile-upload-form="avatar">
             <input id="avatar-upload" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" class="profile-file-input" />
           </form>
@@ -76,23 +76,21 @@ function profileHeader(user) {
 }
 
 function profileMain(user) {
-  const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || '')) ? String(user.dateOfBirth) : '';
-  const dobYearValue = dobValue ? Number(dobValue.slice(0, 4)) : '';
-  const dobMonthValue = dobValue ? Number(dobValue.slice(5, 7)) : '';
-  const dobDayValue = dobValue ? Number(dobValue.slice(8, 10)) : '';
+  const dobValue = /^\d{4}-\d{2}-\d{2}$/.test(String(user.dateOfBirth || "")) ? String(user.dateOfBirth) : "";
+  const dobYearValue = dobValue ? Number(dobValue.slice(0, 4)) : "";
+  const dobMonthValue = dobValue ? Number(dobValue.slice(5, 7)) : "";
+  const dobDayValue = dobValue ? Number(dobValue.slice(8, 10)) : "";
   const maxDob = new Date().toISOString().slice(0, 10);
   const maxYear = Number(maxDob.slice(0, 4));
-  const monthOptions = [
-    'January','February','March','April','May','June','July','August','September','October','November','December',
-  ].map((month, index) => `<option value="${index + 1}" ${dobMonthValue === index + 1 ? 'selected' : ''}>${month}</option>`).join('');
+  const monthOptions = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((month, index) => `<option value="${index + 1}" ${dobMonthValue === index + 1 ? "selected" : ""}>${month}</option>`).join("");
   const dayOptions = Array.from({ length: 31 }, (_, index) => {
     const day = index + 1;
-    return `<option value="${day}" ${dobDayValue === day ? 'selected' : ''}>${day}</option>`;
-  }).join('');
+    return `<option value="${day}" ${dobDayValue === day ? "selected" : ""}>${day}</option>`;
+  }).join("");
   const yearOptions = Array.from({ length: maxYear - 1899 }, (_, index) => {
     const year = maxYear - index;
-    return `<option value="${year}" ${dobYearValue === year ? 'selected' : ''}>${year}</option>`;
-  }).join('');
+    return `<option value="${year}" ${dobYearValue === year ? "selected" : ""}>${year}</option>`;
+  }).join("");
 
   return `<section class="profile-body-flat">
     <div class="profile-snapshot" aria-label="Profile overview">
@@ -102,7 +100,7 @@ function profileMain(user) {
       </article>
       <article class="profile-snapshot-item">
         <p class="profile-snapshot-label">Role</p>
-        <p class="profile-snapshot-value">${h(user.role || 'user')}</p>
+        <p class="profile-snapshot-value">${h(user.role || "user")}</p>
       </article>
       <article class="profile-snapshot-item">
         <p class="profile-snapshot-label">Joined</p>
@@ -491,5 +489,5 @@ function profilePageScript() {
 
 export function profilePage(user) {
   const content = `${profileHeader(user)}${profileMain(user)}${profilePageScript()}`;
-  return appShell('profile', user, 'Profile', '', content, { hidePageHead: true, pageStyles: profileStyles });
+  return appShell("profile", user, "Profile", "", content, { hidePageHead: true, pageStyles: profileStyles });
 }

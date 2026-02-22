@@ -1,15 +1,8 @@
-import { appShell } from '../../templates/shell.js';
-import { modulesStyles } from '../modules/modulesStyles.js';
+import { appShell } from "../../templates/shell.js";
+import { modulesStyles } from "../modules/modulesStyles.js";
 
 export function usersPage(user, rows) {
-  const bodyRows = rows.length
-    ? rows
-        .map(
-          (r) =>
-            `<tr><td>${r.name}</td><td>${r.email}</td><td>${r.role}</td><td><span class="badge badge-success">Active</span></td><td>${new Date(r.created_at).toLocaleString()}</td></tr>`
-        )
-        .join('')
-    : '<tr><td colspan="5" class="table-empty">No users found.</td></tr>';
+  const bodyRows = rows.length ? rows.map((r) => `<tr><td>${r.name}</td><td>${r.email}</td><td>${r.role}</td><td><span class="badge badge-success">Active</span></td><td>${new Date(r.created_at).toLocaleString()}</td></tr>`).join("") : '<tr><td colspan="5" class="table-empty">No users found.</td></tr>';
 
   const content = `<section class="card">
       <div class="table-wrap">
@@ -20,5 +13,5 @@ export function usersPage(user, rows) {
       </div>
     </section>`;
 
-  return appShell('users', user, 'User management', 'Current users in the database.', content, { pageStyles: modulesStyles });
+  return appShell("users", user, "User management", "Current users in the database.", content, { pageStyles: modulesStyles });
 }

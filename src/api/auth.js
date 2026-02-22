@@ -1,7 +1,7 @@
-import { SESSION_COOKIE } from '../env.js';
-import { parseCookies } from '../http/request.js';
-import { verifySignedToken } from '../security/session.js';
-import { deleteSession, findSessionWithUser } from '../db/adminRepo.js';
+import { SESSION_COOKIE } from "../env.js";
+import { parseCookies } from "../http/request.js";
+import { verifySignedToken } from "../security/session.js";
+import { deleteSession, findSessionWithUser } from "../db/adminRepo.js";
 
 export async function requireAuth(request, env) {
   const cookies = parseCookies(request);

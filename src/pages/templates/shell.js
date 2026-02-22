@@ -1,20 +1,19 @@
-import { appScript } from '../assets.js';
-import { getNavigation } from '../navigation.js';
-import { basePage } from './base.js';
-import { imageUrlFromKey } from '../imageUrl.js';
-import { renderNavigationGroup } from './navigationMarkup.js';
-import { iconClose, iconCollapse, iconLogout, iconMenu, siteLogo } from './icons.js';
-import { sidebarIdentityMarkup } from './sidebarIdentity.js';
+import { appScript } from "../assets.js";
+import { getNavigation } from "../navigation.js";
+import { basePage } from "./base.js";
+import { imageUrlFromKey } from "../imageUrl.js";
+import { renderNavigationGroup } from "./navigationMarkup.js";
+import { iconClose, iconCollapse, iconLogout, iconMenu, siteLogo } from "./icons.js";
+import { sidebarIdentityMarkup } from "./sidebarIdentity.js";
 
 function initials(name) {
-  return String(name || 'A')
+  return String(name || "A")
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || '')
-    .join('');
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
 }
-
 
 function sidebar(active, user) {
   const nav = getNavigation(user.role);
@@ -30,7 +29,7 @@ function sidebar(active, user) {
     </header>
     <div class="sidebar-scroll">
       ${sidebarIdentityMarkup(user)}
-      ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
+      ${nav.map((group) => renderNavigationGroup(group, active)).join("")}
     </div>
     <div class="sidebar-foot">
       <a href="/api/logout" class="menu-item logout-item"><span class="icon">${iconLogout}</span><span class="label">Log out</span></a>
@@ -59,7 +58,7 @@ function topbar(user) {
 
 export function appShell(active, user, pageTitle, subtitle, content, options = {}) {
   const hidePageHead = Boolean(options.hidePageHead);
-  const containerClass = `container${options.fullBleed ? ' container-full-bleed' : ''}`;
+  const containerClass = `container${options.fullBleed ? " container-full-bleed" : ""}`;
   return basePage(
     pageTitle,
     `<div class="app-shell" data-shell>
@@ -68,17 +67,19 @@ export function appShell(active, user, pageTitle, subtitle, content, options = {
       <main class="main-shell">
         ${topbar(user)}
         <div class="${containerClass}">
-          ${hidePageHead
-            ? ''
-            : `<section class="page-head">
+          ${
+            hidePageHead
+              ? ""
+              : `<section class="page-head">
             <h1 class="page-title">${pageTitle}</h1>
             <p class="page-subtitle">${subtitle}</p>
-          </section>`}
+          </section>`
+          }
           ${content}
         </div>
       </main>
     </div>`,
     appScript,
-    options.pageStyles || ''
+    options.pageStyles || "",
   );
 }

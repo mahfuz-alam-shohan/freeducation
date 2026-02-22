@@ -15,18 +15,18 @@ const TABLES = {
       updated_at TEXT NOT NULL
     )`,
     columns: {
-      id: 'TEXT',
-      email: 'TEXT',
-      name: 'TEXT',
-      role: 'TEXT',
-      image_key: 'TEXT',
-      cover_image_key: 'TEXT',
-      date_of_birth: 'TEXT',
-      password_hash: 'TEXT',
-      password_salt: 'TEXT',
-      password_iterations: 'INTEGER',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      email: "TEXT",
+      name: "TEXT",
+      role: "TEXT",
+      image_key: "TEXT",
+      cover_image_key: "TEXT",
+      date_of_birth: "TEXT",
+      password_hash: "TEXT",
+      password_salt: "TEXT",
+      password_iterations: "INTEGER",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   sessions: {
@@ -38,10 +38,10 @@ const TABLES = {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      user_id: 'TEXT',
-      expires_at: 'INTEGER',
-      created_at: 'TEXT',
+      id: "TEXT",
+      user_id: "TEXT",
+      expires_at: "INTEGER",
+      created_at: "TEXT",
     },
   },
   subject_templates: {
@@ -53,11 +53,11 @@ const TABLES = {
       created_at TEXT NOT NULL
     )`,
     columns: {
-      id: 'TEXT',
-      code: 'TEXT',
-      name: 'TEXT',
-      description: 'TEXT',
-      created_at: 'TEXT',
+      id: "TEXT",
+      code: "TEXT",
+      name: "TEXT",
+      description: "TEXT",
+      created_at: "TEXT",
     },
   },
   template_nodes: {
@@ -77,17 +77,17 @@ const TABLES = {
       FOREIGN KEY (parent_id) REFERENCES template_nodes(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      template_id: 'TEXT',
-      parent_id: 'TEXT',
-      node_key: 'TEXT',
-      server_name: 'TEXT',
-      node_type: 'TEXT',
-      supports_edit: 'INTEGER',
-      supports_image: 'INTEGER',
-      supports_chapters: 'INTEGER',
-      content_kind: 'TEXT',
-      sort_order: 'INTEGER',
+      id: "TEXT",
+      template_id: "TEXT",
+      parent_id: "TEXT",
+      node_key: "TEXT",
+      server_name: "TEXT",
+      node_type: "TEXT",
+      supports_edit: "INTEGER",
+      supports_image: "INTEGER",
+      supports_chapters: "INTEGER",
+      content_kind: "TEXT",
+      sort_order: "INTEGER",
     },
   },
   classes: {
@@ -101,13 +101,13 @@ const TABLES = {
       updated_at TEXT NOT NULL
     )`,
     columns: {
-      id: 'TEXT',
-      name: 'TEXT',
-      image_key: 'TEXT',
-      show_on_home: 'INTEGER NOT NULL DEFAULT 1',
-      sort_order: 'INTEGER',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      name: "TEXT",
+      image_key: "TEXT",
+      show_on_home: "INTEGER NOT NULL DEFAULT 1",
+      sort_order: "INTEGER",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   subjects: {
@@ -124,14 +124,14 @@ const TABLES = {
       FOREIGN KEY (template_id) REFERENCES subject_templates(id)
     )`,
     columns: {
-      id: 'TEXT',
-      name: 'TEXT',
-      class_level: 'INTEGER',
-      class_id: 'TEXT',
-      template_id: 'TEXT',
-      image_key: 'TEXT',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      name: "TEXT",
+      class_level: "INTEGER",
+      class_id: "TEXT",
+      template_id: "TEXT",
+      image_key: "TEXT",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   subject_nodes: {
@@ -154,19 +154,19 @@ const TABLES = {
       FOREIGN KEY (parent_subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      subject_id: 'TEXT',
-      template_node_id: 'TEXT',
-      parent_subject_node_id: 'TEXT',
-      server_name: 'TEXT',
-      display_name: 'TEXT',
-      image_key: 'TEXT',
-      supports_edit: 'INTEGER',
-      supports_image: 'INTEGER',
-      supports_chapters: 'INTEGER',
-      node_type: 'TEXT',
-      content_kind: 'TEXT',
-      sort_order: 'INTEGER',
+      id: "TEXT",
+      subject_id: "TEXT",
+      template_node_id: "TEXT",
+      parent_subject_node_id: "TEXT",
+      server_name: "TEXT",
+      display_name: "TEXT",
+      image_key: "TEXT",
+      supports_edit: "INTEGER",
+      supports_image: "INTEGER",
+      supports_chapters: "INTEGER",
+      node_type: "TEXT",
+      content_kind: "TEXT",
+      sort_order: "INTEGER",
     },
   },
   chapters: {
@@ -182,14 +182,14 @@ const TABLES = {
       FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      subject_node_id: 'TEXT',
-      name: 'TEXT',
-      image_key: 'TEXT',
-      has_topics: 'INTEGER',
-      sort_order: 'INTEGER',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      subject_node_id: "TEXT",
+      name: "TEXT",
+      image_key: "TEXT",
+      has_topics: "INTEGER",
+      sort_order: "INTEGER",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   topics: {
@@ -204,13 +204,13 @@ const TABLES = {
       FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      chapter_id: 'TEXT',
-      name: 'TEXT',
-      image_key: 'TEXT',
-      sort_order: 'INTEGER',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      chapter_id: "TEXT",
+      name: "TEXT",
+      image_key: "TEXT",
+      sort_order: "INTEGER",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   short_notes: {
@@ -230,15 +230,15 @@ const TABLES = {
       FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      subject_id: 'TEXT',
-      subject_node_id: 'TEXT',
-      chapter_id: 'TEXT',
-      topic_id: 'TEXT',
-      content_html: 'TEXT',
-      image_key: 'TEXT',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      subject_id: "TEXT",
+      subject_node_id: "TEXT",
+      chapter_id: "TEXT",
+      topic_id: "TEXT",
+      content_html: "TEXT",
+      image_key: "TEXT",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   mcq_bank: {
@@ -263,20 +263,20 @@ const TABLES = {
       FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      subject_id: 'TEXT',
-      subject_node_id: 'TEXT',
-      chapter_id: 'TEXT',
-      topic_id: 'TEXT',
-      question_html: 'TEXT',
-      option_a: 'TEXT',
-      option_b: 'TEXT',
-      option_c: 'TEXT',
-      option_d: 'TEXT',
-      correct_option: 'TEXT',
-      image_key: 'TEXT',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      subject_id: "TEXT",
+      subject_node_id: "TEXT",
+      chapter_id: "TEXT",
+      topic_id: "TEXT",
+      question_html: "TEXT",
+      option_a: "TEXT",
+      option_b: "TEXT",
+      option_c: "TEXT",
+      option_d: "TEXT",
+      correct_option: "TEXT",
+      image_key: "TEXT",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
   content_entries: {
@@ -298,17 +298,17 @@ const TABLES = {
       FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
     )`,
     columns: {
-      id: 'TEXT',
-      subject_id: 'TEXT',
-      subject_node_id: 'TEXT',
-      chapter_id: 'TEXT',
-      topic_id: 'TEXT',
-      content_kind: 'TEXT',
-      title: 'TEXT',
-      content_html: 'TEXT',
-      image_key: 'TEXT',
-      created_at: 'TEXT',
-      updated_at: 'TEXT',
+      id: "TEXT",
+      subject_id: "TEXT",
+      subject_node_id: "TEXT",
+      chapter_id: "TEXT",
+      topic_id: "TEXT",
+      content_kind: "TEXT",
+      title: "TEXT",
+      content_html: "TEXT",
+      image_key: "TEXT",
+      created_at: "TEXT",
+      updated_at: "TEXT",
     },
   },
 };
@@ -320,11 +320,13 @@ async function runSql(db, sql) {
 }
 
 async function migrateShortNotesDropTitle(db) {
-  const info = await db.prepare('PRAGMA table_info(short_notes)').all();
-  const hasTitle = (info.results ?? []).some((row) => row.name === 'title');
+  const info = await db.prepare("PRAGMA table_info(short_notes)").all();
+  const hasTitle = (info.results ?? []).some((row) => row.name === "title");
   if (!hasTitle) return;
 
-  await runSql(db, `CREATE TABLE short_notes__migrated (
+  await runSql(
+    db,
+    `CREATE TABLE short_notes__migrated (
     id TEXT PRIMARY KEY,
     subject_id TEXT NOT NULL,
     subject_node_id TEXT NOT NULL,
@@ -338,21 +340,23 @@ async function migrateShortNotesDropTitle(db) {
     FOREIGN KEY (subject_node_id) REFERENCES subject_nodes(id) ON DELETE CASCADE,
     FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
     FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
-  )`);
-  await runSql(db, `INSERT INTO short_notes__migrated (id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at)
-    SELECT id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at FROM short_notes`);
-  await runSql(db, 'DROP TABLE short_notes');
-  await runSql(db, 'ALTER TABLE short_notes__migrated RENAME TO short_notes');
+  )`,
+  );
+  await runSql(
+    db,
+    `INSERT INTO short_notes__migrated (id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at)
+    SELECT id, subject_id, subject_node_id, chapter_id, topic_id, content_html, image_key, created_at, updated_at FROM short_notes`,
+  );
+  await runSql(db, "DROP TABLE short_notes");
+  await runSql(db, "ALTER TABLE short_notes__migrated RENAME TO short_notes");
 }
 
 export async function ensureSchema(db, options = {}) {
   if (schemaInitialized) return;
 
-  await runSql(db, 'PRAGMA foreign_keys = ON');
+  await runSql(db, "PRAGMA foreign_keys = ON");
 
-  const existing = await db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
-    .all();
+  const existing = await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
   const existingNames = new Set((existing.results ?? []).map((r) => r.name));
 
   for (const tableName of Object.keys(TABLES)) {
@@ -379,26 +383,26 @@ export async function ensureSchema(db, options = {}) {
     }
   }
 
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_template ON template_nodes(template_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_template_nodes_parent_sort ON template_nodes(template_id, parent_id, sort_order)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_classes_sort ON classes(sort_order, created_at)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_classes_home_sort ON classes(show_on_home, sort_order, created_at)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_parent ON subject_nodes(parent_subject_node_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject_parent_sort ON subject_nodes(subject_id, parent_subject_node_id, sort_order)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_chapters_node_sort ON chapters(subject_node_id, sort_order, created_at)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_topics_chapter ON topics(chapter_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_topics_chapter_sort ON topics(chapter_id, sort_order, created_at)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_subjects_class_sort ON subjects(class_id, name, created_at)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_notes_lookup_fast ON short_notes(subject_node_id, chapter_id, topic_id, created_at DESC)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_mcq_lookup_fast ON mcq_bank(subject_node_id, chapter_id, topic_id, created_at DESC)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_content_entries_lookup ON content_entries(subject_node_id, chapter_id, content_kind)');
-  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_content_entries_lookup_fast ON content_entries(subject_node_id, chapter_id, topic_id, content_kind, created_at DESC)');
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_template_nodes_template ON template_nodes(template_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_template_nodes_parent_sort ON template_nodes(template_id, parent_id, sort_order)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_classes_sort ON classes(sort_order, created_at)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_classes_home_sort ON classes(show_on_home, sort_order, created_at)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject ON subject_nodes(subject_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_subject_nodes_parent ON subject_nodes(parent_subject_node_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_subject_nodes_subject_parent_sort ON subject_nodes(subject_id, parent_subject_node_id, sort_order)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_chapters_node ON chapters(subject_node_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_chapters_node_sort ON chapters(subject_node_id, sort_order, created_at)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_topics_chapter ON topics(chapter_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_topics_chapter_sort ON topics(chapter_id, sort_order, created_at)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_subjects_class_sort ON subjects(class_id, name, created_at)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_notes_lookup ON short_notes(subject_node_id, chapter_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_notes_lookup_fast ON short_notes(subject_node_id, chapter_id, topic_id, created_at DESC)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_mcq_lookup ON mcq_bank(subject_node_id, chapter_id)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_mcq_lookup_fast ON mcq_bank(subject_node_id, chapter_id, topic_id, created_at DESC)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_content_entries_lookup ON content_entries(subject_node_id, chapter_id, content_kind)");
+  await runSql(db, "CREATE INDEX IF NOT EXISTS idx_content_entries_lookup_fast ON content_entries(subject_node_id, chapter_id, topic_id, content_kind, created_at DESC)");
   schemaInitialized = true;
 }

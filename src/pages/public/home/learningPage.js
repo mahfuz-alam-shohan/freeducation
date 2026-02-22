@@ -1,17 +1,17 @@
-import { publicShell } from '../../templates/publicShell.js';
-import { imageUrlFromKey } from '../../imageUrl.js';
-import { publicHomeStyles } from './homeStyles.js';
+import { publicShell } from "../../templates/publicShell.js";
+import { imageUrlFromKey } from "../../imageUrl.js";
+import { publicHomeStyles } from "./homeStyles.js";
 
 function h(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function pathBar(items = []) {
-  if (!items.length) return '';
+  if (!items.length) return "";
   const links = items
     .map((item, index) => {
       const label = h(item.label);
@@ -28,54 +28,52 @@ function cardGrid(items, hrefBuilder) {
       (item) => `<article class="class-card"><a class="public-card-link" href="${h(hrefBuilder(item))}">
         <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.display_name || item.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
         <p class="class-card-name">${h(item.display_name || item.name)}</p>
-      </a></article>`
+      </a></article>`,
     )
-    .join('');
+    .join("");
 }
 
 export function publicSubjectNodePage(user, subject, title, subtitle, items, hrefBuilder) {
   return publicShell(
-    'home',
+    "home",
     user,
     `${subject.name} · ${title}`,
-    `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: title }])}<section class="public-stack">
+    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: title }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(title)}</h1>
       <p class="public-stack-subtitle">${h(subtitle)}</p>
       <div class="public-flat-grid">${cardGrid(items, hrefBuilder)}</div>
     </section>`,
-    '',
-    publicHomeStyles
+    "",
+    publicHomeStyles,
   );
 }
 
 export function publicChapterContentPage(user, subject, node, chapter, shortNotes = [], contentNodes = [], topicId = null) {
   const actions = contentNodes
-    .filter((item) => item.content_kind !== 'Short Notes')
-    .map(
-      (item) => `<a class="public-cta-card" href="/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent(item.content_kind || '')}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ''}">${h(item.display_name)}</a>`
-    )
-    .join('');
+    .filter((item) => item.content_kind !== "Short Notes")
+    .map((item) => `<a class="public-cta-card" href="/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent(item.content_kind || "")}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ""}">${h(item.display_name)}</a>`)
+    .join("");
 
   const notes = shortNotes
     .map(
       (entry) => `<li>
       <div class="public-note-body">${entry.content_html}</div>
-    </li>`
+    </li>`,
     )
-    .join('');
+    .join("");
 
   return publicShell(
-    'home',
+    "home",
     user,
     `${chapter.name} · ${node.display_name}`,
-    `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: node.display_name, href: `/learn/subjects/${subject.id}/nodes/${node.id}` }, { label: chapter.name }])}<section class="public-stack">
+    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: node.display_name, href: `/learn/subjects/${subject.id}/nodes/${node.id}` }, { label: chapter.name }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(chapter.name)}</h1>
       <p class="public-stack-subtitle">${h(node.display_name)}</p>
       <div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
-      <ol class="public-note-list">${notes || '<li>No short notes yet.</li>'}</ol>
+      <ol class="public-note-list">${notes || "<li>No short notes yet.</li>"}</ol>
     </section>`,
-    '',
-    publicHomeStyles
+    "",
+    publicHomeStyles,
   );
 }
 
@@ -85,40 +83,42 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
       (entry, index) => `<li>
       <h3 class="public-note-title">${index + 1}. ${h(entry.title || kind)}</h3>
       <div class="public-note-body">${entry.content_html}</div>
-    </li>`
+    </li>`,
     )
-    .join('');
+    .join("");
 
   return publicShell(
-    'home',
+    "home",
     user,
     `${chapter.name} · ${kind}`,
-    `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: kind }])}<section class="public-stack">
+    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: kind }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(kind)}</h1>
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list">${list || '<li>No content yet.</li>'}</ol>
+      <ol class="public-note-list">${list || "<li>No content yet.</li>"}</ol>
     </section>`,
-    '',
-    publicHomeStyles
+    "",
+    publicHomeStyles,
   );
 }
 
 export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
   const resolveOption = (item) => {
-    const normalized = String(item?.correct_option || '').trim().toUpperCase();
+    const normalized = String(item?.correct_option || "")
+      .trim()
+      .toUpperCase();
     const exactMatch = {
-      A: 'A',
-      B: 'B',
-      C: 'C',
-      D: 'D',
-      '1': 'A',
-      '2': 'B',
-      '3': 'C',
-      '4': 'D',
-      OPTION_A: 'A',
-      OPTION_B: 'B',
-      OPTION_C: 'C',
-      OPTION_D: 'D',
+      A: "A",
+      B: "B",
+      C: "C",
+      D: "D",
+      1: "A",
+      2: "B",
+      3: "C",
+      4: "D",
+      OPTION_A: "A",
+      OPTION_B: "B",
+      OPTION_C: "C",
+      OPTION_D: "D",
     }[normalized];
     if (exactMatch) return exactMatch;
 
@@ -126,13 +126,23 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     if (inlineMatch) return inlineMatch[0];
 
     const optionTextByLetter = {
-      A: String(item?.option_a || '').trim().toLowerCase(),
-      B: String(item?.option_b || '').trim().toLowerCase(),
-      C: String(item?.option_c || '').trim().toLowerCase(),
-      D: String(item?.option_d || '').trim().toLowerCase(),
+      A: String(item?.option_a || "")
+        .trim()
+        .toLowerCase(),
+      B: String(item?.option_b || "")
+        .trim()
+        .toLowerCase(),
+      C: String(item?.option_c || "")
+        .trim()
+        .toLowerCase(),
+      D: String(item?.option_d || "")
+        .trim()
+        .toLowerCase(),
     };
-    const textAnswer = String(item?.correct_option || '').trim().toLowerCase();
-    return Object.entries(optionTextByLetter).find(([, optionText]) => optionText && optionText === textAnswer)?.[0] || '';
+    const textAnswer = String(item?.correct_option || "")
+      .trim()
+      .toLowerCase();
+    return Object.entries(optionTextByLetter).find(([, optionText]) => optionText && optionText === textAnswer)?.[0] || "";
   };
 
   const list = mcqs
@@ -145,21 +155,21 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
         <li data-option="C"><strong>C.</strong> ${h(item.option_c)}</li>
         <li data-option="D"><strong>D.</strong> ${h(item.option_d)}</li>
       </ul>
-      <p class="public-mcq-answer-text"><strong>Ans:</strong> ${resolveOption(item) || 'N/A'}</p>
-    </li>`
+      <p class="public-mcq-answer-text"><strong>Ans:</strong> ${resolveOption(item) || "N/A"}</p>
+    </li>`,
     )
-    .join('');
+    .join("");
 
   return publicShell(
-    'home',
+    "home",
     user,
     `${chapter.name} · MCQ Bank`,
-    `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: 'MCQ Bank' }])}<section class="public-stack">
+    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: "MCQ Bank" }])}<section class="public-stack">
       <h1 class="public-stack-title">MCQ Bank</h1>
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list">${list || '<li>No MCQs yet.</li>'}</ol>
+      <ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>
     </section>`,
-    '',
-    publicHomeStyles
+    "",
+    publicHomeStyles,
   );
 }

@@ -1,18 +1,18 @@
-import { publicShell } from '../../templates/publicShell.js';
-import { siteLogo } from '../../templates/icons.js';
-import { imageUrlFromKey } from '../../imageUrl.js';
-import { publicHomeStyles } from './homeStyles.js';
+import { publicShell } from "../../templates/publicShell.js";
+import { siteLogo } from "../../templates/icons.js";
+import { imageUrlFromKey } from "../../imageUrl.js";
+import { publicHomeStyles } from "./homeStyles.js";
 
 function h(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function pathBar(items = []) {
-  if (!items.length) return '';
+  if (!items.length) return "";
   const links = items
     .map((item, index) => {
       const label = h(item.label);
@@ -32,9 +32,9 @@ function classCardsMarkup(classes = [], makeHref = (item) => `/classes/${item.id
           <p class="class-card-name">${h(item.name)}</p>
           <p class="class-card-meta">Tap to start lessons</p>
         </a>
-      </article>`
+      </article>`,
     )
-    .join('');
+    .join("");
 }
 
 function subjectCardsMarkup(subjects = []) {
@@ -45,9 +45,9 @@ function subjectCardsMarkup(subjects = []) {
           <div class="class-card-poster-wrap">${subject.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(subject.image_key)}" alt="${h(subject.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
           <p class="class-card-name">${h(subject.name)}</p>
         </a>
-      </article>`
+      </article>`,
     )
-    .join('');
+    .join("");
 }
 
 const quoteScript = `
@@ -73,9 +73,9 @@ const quoteScript = `
 
 export function publicHomePage(user = null, classes = []) {
   return publicShell(
-    'home',
+    "home",
     user,
-    'Freeducation',
+    "Freeducation",
     `<section class="public-home-cover">
       <div class="public-cover-brand-row">
         <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
@@ -93,37 +93,37 @@ export function publicHomePage(user = null, classes = []) {
       <div class="public-class-row">${classCardsMarkup(classes)}</div>
     </section>`,
     quoteScript,
-    publicHomeStyles
+    publicHomeStyles,
   );
 }
 
 export function publicClassesPage(user = null, classes = []) {
   return publicShell(
-    'home',
+    "home",
     user,
-    'All Classes',
-    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes' }])}<section class="public-class-strip public-class-page">
+    "All Classes",
+    `${pathBar([{ label: "Home", href: "/" }, { label: "Classes" }])}<section class="public-class-strip public-class-page">
       <div class="public-class-strip-head">
         <h1 class="public-class-strip-title">All Classes</h1>
       </div>
       <div class="public-class-grid">${classCardsMarkup(classes)}</div>
     </section>`,
-    '',
-    publicHomeStyles
+    "",
+    publicHomeStyles,
   );
 }
 
 export function publicClassSubjectsPage(user = null, classItem, subjects = []) {
   return publicShell(
-    'home',
+    "home",
     user,
     `${classItem.name} Subjects`,
-    `${pathBar([{ label: 'Home', href: '/' }, { label: 'Classes', href: '/classes' }, { label: classItem.name }])}<section class="public-stack">
+    `${pathBar([{ label: "Home", href: "/" }, { label: "Classes", href: "/classes" }, { label: classItem.name }])}<section class="public-stack">
       <h1 class="public-stack-title">${h(classItem.name)}</h1>
       <p class="public-stack-subtitle">Select a subject.</p>
       <div class="public-flat-grid">${subjectCardsMarkup(subjects)}</div>
     </section>`,
-    '',
-    publicHomeStyles
+    "",
+    publicHomeStyles,
   );
 }
