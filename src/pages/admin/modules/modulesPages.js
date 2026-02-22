@@ -73,7 +73,7 @@ function structuredAddPanel({ title, description, formAction, hiddenFields, subm
   return `<section class="card flat-card entry-shell">
     <div class="entry-shell-head">
       <h3 class="card-title">${h(title)}</h3>
-      <p class="muted">${h(description)}</p>
+      ${description ? `<p class="muted">${h(description)}</p>` : ""}
     </div>
     <form method="post" action="${h(formAction)}" enctype="multipart/form-data" class="entry-form-grid">
       ${hiddenFields}
@@ -325,27 +325,28 @@ export function chaptersPage(user, subject, node, chapters) {
 
   const addChapterPanel = structuredAddPanel({
     title: "Add chapter",
-    description: "Keep titles clean and short so students can scan chapter lists quickly.",
+    description: "",
     formAction: "/api/chapters",
     hiddenFields: `<input type="hidden" name="subjectNodeId" value="${node.id}" />
-      <input type="hidden" name="subjectId" value="${subject.id}" />`,
+      <input type="hidden" name="subjectId" value="${subject.id}" />
+      <input type="hidden" name="removeImage" value="0" data-inline-image-remove />`,
     submitLabel: "Add chapter",
     fields: `<div>
         <label class="field-label" for="chapter-name">Chapter name</label>
         <input id="chapter-name" class="input" name="name" placeholder="Example: Algebra Basics" required maxlength="140" />
       </div>
-      <div>
-        <label class="field-label" for="chapter-image">Thumbnail (optional)</label>
-        <input id="chapter-image" class="input" type="file" name="image" accept="image/*" />
+      <div class="inline-image-picker chapter-image-picker" data-inline-image-picker data-inline-image-src="" data-inline-image-has="0">
+        <label class="chapter-image-upload-btn" for="chapter-image">+ Add thumbnail</label>
+        <input id="chapter-image" class="input inline-image-input" type="file" name="image" accept="image/*" data-inline-image-input />
+        <div class="inline-image-preview chapter-image-preview" data-inline-image-preview hidden>
+          <img src="" alt="Chapter thumbnail preview" loading="lazy" decoding="async" data-inline-image-preview-img />
+          <button class="btn btn-icon btn-icon-danger inline-image-remove-btn" type="button" data-inline-image-remove-btn aria-label="Remove thumbnail" title="Remove thumbnail">✕</button>
+        </div>
       </div>
-      <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topic breakdown for this chapter</label>`,
+      <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topics</label>`,
   });
 
   const content = `${floatingBackButton(subjectNodeBackHref(subject.id, node), "Back to previous page")}
-  <section class="card flat-card section-summary-row">
-    <p><strong>${chapters.length}</strong> chapters in this section.</p>
-    <p class="muted">Use inline rename and image controls to keep the list updated quickly.</p>
-  </section>
   ${addChapterPanel}
   <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Chapter</th><th>Topics Enabled</th><th>Rename</th><th>Topics Toggle</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
