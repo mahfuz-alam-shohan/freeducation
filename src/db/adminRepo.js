@@ -12,12 +12,16 @@ export async function findUserByEmail(db, email) {
 }
 
 export async function createAdmin(db, user) {
+  return createUser(db, { ...user, role: "admin" });
+}
+
+export async function createUser(db, user) {
   await db
     .prepare(
       `INSERT INTO users (id, email, name, role, image_key, cover_image_key, date_of_birth, password_hash, password_salt, password_iterations, created_at, updated_at)
-       VALUES (?1, ?2, ?3, 'admin', ?4, NULL, NULL, ?5, ?6, ?7, ?8, ?8)`,
+       VALUES (?1, ?2, ?3, ?4, ?5, NULL, NULL, ?6, ?7, ?8, ?9, ?9)`,
     )
-    .bind(user.id, user.email.toLowerCase(), user.name, user.imageKey, user.passwordHash, user.passwordSalt, user.passwordIterations, user.createdAt)
+    .bind(user.id, user.email.toLowerCase(), user.name, user.role, user.imageKey || null, user.passwordHash, user.passwordSalt, user.passwordIterations, user.createdAt)
     .run();
 }
 
