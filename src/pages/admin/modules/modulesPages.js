@@ -406,7 +406,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
   const disabledKinds = new Set(["CQ Bank", "Videos"]);
   const detectedKinds = childNodes.filter((n) => n.node_type === "content").map((n) => n.content_kind || n.display_name);
   const fallbackKinds = node.content_kind ? [node.content_kind] : ["CQ Bank", "MCQ Bank", "Short Notes", "Videos", "Summary"];
-  const kinds = Array.from(new Set((detectedKinds.length ? detectedKinds : fallbackKinds).filter(Boolean)));
+  const kinds = Array.from(new Set([...fallbackKinds, ...detectedKinds].filter(Boolean)));
   const nodeIdByKind = new Map(childNodes.filter((n) => n.node_type === "content").map((n) => [n.content_kind || n.display_name, n.id]));
 
   const hrefForKind = (kind) => {
@@ -425,11 +425,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     .join("");
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
   const content = `${floatingBackButton(backHref, "Back to previous page")}
-  <section class="card flat-card section-summary-row">
-    <p><strong>${kinds.length}</strong> content lanes available.</p>
-    <p class="muted">Open a lane to add notes, MCQs, summaries, or other learning assets.</p>
-  </section>
-  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th class="table-action-open-cell">Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
+  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel content-kinds-table"><thead><tr><th class="table-action-open-cell">Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
   return appShell("subjects", user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, "Choose any content type defined in your template.", content, { pageStyles: modulesStyles });
 }
 
@@ -549,7 +545,9 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
 }
 
 function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {
-  const submitLabel = mcq ? "Save changes" : "Save question";
+  const imageUrl = imageUrlFromKey(mcq?.image_key);
+  const hasImage = Boolean(imageUrl);
+  const submitLabel = mcq ? "Update MCQ" : "Add MCQ";
   return `<form method="post" action="/api/mcqs" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="id" value="${mcq?.id || ""}" />
     <input type="hidden" name="subjectId" value="${subjectId}" />
@@ -557,8 +555,16 @@ function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {
     <input type="hidden" name="chapterId" value="${chapterId || ""}" />
     <input type="hidden" name="topicId" value="${topicId || ""}" />
     <input type="hidden" name="page" value="${mcq?.page || 1}" />
+    <input type="hidden" name="removeImage" value="0" data-inline-image-remove />
     ${richTextEditor("questionHtml", mcq?.question_html || "", "Write the MCQ question…", true)}
-    <input class="input" type="file" name="image" accept="image/*" />
+    <div class="inline-image-picker" data-inline-image-picker data-inline-image-src="${h(imageUrl || "")}" data-inline-image-has="${hasImage ? "1" : "0"}">
+      <label class="btn btn-secondary inline-image-upload-btn" for="mcq-image-${h(mcq?.id || "new")}">${hasImage ? "Change image" : "Upload image"}</label>
+      <input id="mcq-image-${h(mcq?.id || "new")}" class="input inline-image-input" type="file" name="image" accept="image/*" data-inline-image-input />
+      <div class="inline-image-preview" data-inline-image-preview ${hasImage ? "" : "hidden"}>
+        <img src="${h(imageUrl || "")}" alt="MCQ image preview" loading="lazy" decoding="async" data-inline-image-preview-img />
+        <button class="btn btn-icon btn-icon-danger inline-image-remove-btn" type="button" data-inline-image-remove-btn aria-label="Remove image" title="Remove image">✕</button>
+      </div>
+    </div>
     <input class="input" name="optionA" placeholder="Option A" value="${h(mcq?.option_a || "")}" required />
     <input class="input" name="optionB" placeholder="Option B" value="${h(mcq?.option_b || "")}" required />
     <input class="input" name="optionC" placeholder="Option C" value="${h(mcq?.option_c || "")}" required />
@@ -566,7 +572,7 @@ function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {
     <select class="select" name="correctOption" required>
       ${["A", "B", "C", "D"].map((v) => `<option value="${v}" ${mcq?.correct_option === v ? "selected" : ""}>Correct: ${v}</option>`).join("")}
     </select>
-    <div>${mcq ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ""}<button class="btn btn-primary" type="submit">${submitLabel}</button></div>
+    <div><button class="btn btn-primary" type="submit">${submitLabel}</button></div>
   </form>`;
 }
 
