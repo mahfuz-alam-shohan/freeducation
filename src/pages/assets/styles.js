@@ -16,6 +16,10 @@ export const styles = `
   --secondary: #22c55e;
   --danger: #dc2626;
   --shadow-soft: 0 8px 30px rgba(36, 53, 107, 0.08);
+  --glass-surface: linear-gradient(150deg, rgba(255, 255, 255, 0.9) 0%, rgba(238, 248, 255, 0.72) 55%, rgba(230, 255, 244, 0.72) 100%);
+  --glass-edge: rgba(255, 255, 255, 0.7);
+  --glass-shadow: 0 18px 38px rgba(35, 67, 125, 0.14);
+  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.86), inset 0 -10px 18px rgba(162, 191, 255, 0.14);
   --sidebar-open: 248px;
   --sidebar-collapse: 74px;
   --font-body: Inter, 'Noto Sans Bengali', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -76,9 +80,10 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-open);
-  background: linear-gradient(180deg, #f8fbff 0%, #f0f6ff 100%);
-  border-right: 1px solid var(--line-strong);
-  box-shadow: 6px 0 20px rgba(34, 55, 108, 0.06);
+  background: linear-gradient(185deg, rgba(250, 253, 255, 0.9) 0%, rgba(235, 245, 255, 0.84) 55%, rgba(233, 255, 247, 0.8) 100%);
+  border-right: 1px solid rgba(194, 211, 245, 0.85);
+  box-shadow: 12px 0 30px rgba(44, 67, 126, 0.1), inset -1px 0 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px) saturate(120%);
   display: flex;
   flex-direction: column;
   transition: width 160ms ease;
@@ -94,8 +99,8 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
   justify-content: space-between;
   padding: 0 10px;
   border-bottom: 1px solid var(--line);
-  background: #ffffffd9;
-  backdrop-filter: blur(4px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(244, 250, 255, 0.76) 100%);
+  backdrop-filter: blur(10px);
 }
 .brand { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
 .brand-logo { width: 34px; height: 34px; display: inline-grid; place-items: center; }
@@ -104,7 +109,7 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
 .sidebar-toggle { border: 1px solid var(--line); background: #fff; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: inline-grid; place-items: center; }
 .sidebar-toggle .toggle-icon { width: 16px; height: 16px; color: var(--text); display: inline-grid; }
 .sidebar-scroll { overflow: auto; padding: 8px 6px; height: calc(100vh - 58px - 52px); }
-.sidebar-foot { flex: 0 0 52px; padding: 6px; border-top: 1px solid var(--line); background: #ffffffd9; }
+.sidebar-foot { flex: 0 0 52px; padding: 6px; border-top: 1px solid var(--line); background: linear-gradient(180deg, rgba(244, 250, 255, 0.76) 0%, rgba(255, 255, 255, 0.86) 100%); }
 .sidebar-foot .menu-item { margin: 0; }
 .sidebar-login-note { padding: 2px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
 .nav-group-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 10px 10px 8px; }
@@ -144,13 +149,24 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
 .menu-block.open .submenu-wrap { grid-template-rows: 1fr; }
 .main-shell { grid-column: 2; min-width: 0; position: relative; overflow: hidden; transition: transform 190ms ease, opacity 190ms ease; }
 
-.container { width: min(1500px, 100%); margin: 0 auto; padding: 6px; position: relative; z-index: 1; }
+.container {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  padding: 6px;
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+  backdrop-filter: blur(8px) saturate(115%);
+}
 .container-full-bleed { width: 100%; max-width: none; margin: 0; padding: 0; }
-.page-head { margin-bottom: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(90deg, #ffffff 0%, #f8fbff 100%); }
+.page-head { margin-bottom: 8px; padding: 8px; border: 1px solid rgba(202, 218, 247, 0.95); border-radius: 10px; background: linear-gradient(110deg, rgba(255, 255, 255, 0.88) 0%, rgba(243, 251, 255, 0.8) 48%, rgba(233, 255, 247, 0.82) 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 8px 24px rgba(51, 73, 133, 0.08); }
 .page-title { margin: 0; font-size: clamp(22px, 3vw, 30px); line-height: 1.15; font-weight: 700; color: #16264d; }
 .page-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 
-.topbar { position: sticky; top: 0; z-index: 30; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid var(--line); background: #fffffff2; backdrop-filter: blur(6px); }
+.topbar { position: sticky; top: 0; z-index: 30; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid rgba(197, 214, 247, 0.85); background: linear-gradient(140deg, rgba(255, 255, 255, 0.86) 0%, rgba(241, 250, 255, 0.8) 100%); backdrop-filter: blur(12px) saturate(120%); box-shadow: 0 4px 16px rgba(56, 80, 140, 0.08); }
 .topbar-left,.topbar-right { display: flex; align-items: center; gap: 10px; }
 .topbar-center { display: none; }
 .icon-btn { border: 1px solid var(--line); background: #fff; border-radius: 10px; width: 36px; height: 36px; cursor: pointer; display: inline-grid; place-items: center; }
@@ -172,7 +188,7 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px; box-shadow: var(--shadow-soft); }
+.card { background: linear-gradient(152deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 249, 255, 0.78) 60%, rgba(232, 255, 246, 0.76) 100%); border: 1px solid rgba(202, 220, 248, 0.9); border-radius: 10px; padding: 8px; box-shadow: 0 14px 28px rgba(43, 71, 137, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
 .card-title { margin: 0 0 6px; font-size: 15px; }
 .section-stack { display: grid; gap: 8px; }
 .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
