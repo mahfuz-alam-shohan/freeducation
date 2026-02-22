@@ -60,11 +60,8 @@ export const publicHomeStyles = `
 .public-note-title { margin: 0 0 2px; font-size: 15px; }
 .public-note-body :first-child { margin-top: 0; }
 .public-note-body :last-child { margin-bottom: 0; }
-.public-mcq-answer-row { margin-top: 6px; }
-.public-mcq-answer-toggle { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; border-radius: 3px; font-size: 11px; line-height: 1.2; padding: 2px 6px; cursor: pointer; }
-.public-mcq-options { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 2px; }
-.public-mcq-option-correct { background: #ecfdf5; color: #065f46; }
-.public-mcq-answer-text { margin: 0; font-size: 12px; color: #065f46; }
+.public-mcq-options { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.public-mcq-answer-text { margin: 6px 0 0; font-size: 12px; color: #065f46; }
 
 @media (max-width: 840px) {
   .public-home-cover { grid-template-columns: 1fr; gap: 8px; min-height: 136px; padding: 10px 8px; }
