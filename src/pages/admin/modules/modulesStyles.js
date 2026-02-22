@@ -51,6 +51,10 @@ export const modulesStyles = `
 .inline-image-preview { position: relative; width: fit-content; }
 .inline-image-preview img { width: 76px; height: 76px; object-fit: cover; border: 1px solid var(--line); border-radius: 6px; display: block; }
 .inline-image-remove-btn { position: absolute; top: -8px; right: -8px; }
+.chapter-image-picker { min-height: 34px; align-items: center; }
+.chapter-image-upload-btn { min-height: 30px; padding: 0 12px; border: 1px dashed #94a3b8; border-radius: 8px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); color: #0f172a; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer; }
+.chapter-image-upload-btn:hover { border-color: #64748b; background: #f8fafc; }
+.chapter-image-preview img { width: 84px; height: 84px; border-radius: 8px; }
 .field-label { display: block; margin-bottom: 3px; font-size: 11px; color: #475569; }
 .inline-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #0f172a; min-height: 28px; }
 .section-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; }
