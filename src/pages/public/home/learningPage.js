@@ -106,16 +106,21 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
 export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
   const resolveOption = (value) => {
     const normalized = String(value || '').trim().toUpperCase();
-    const matched = normalized.match(/[ABCD]/);
-    return matched ? matched[0] : '';
+    if (!normalized) return '';
+
+    const numberMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
+    if (numberMap[normalized]) return numberMap[normalized];
+
+    const matched = normalized.match(/\b([ABCD])\b/);
+    if (matched) return matched[1];
+
+    const fallbackMatch = normalized.match(/[ABCD]/);
+    return fallbackMatch ? fallbackMatch[0] : '';
   };
 
   const list = mcqs
     .map(
       (item) => `<li class="public-mcq-item" data-correct-option="${resolveOption(item.correct_option)}">
-      <div class="public-mcq-head">
-        <button class="public-mcq-answer-toggle" type="button" data-answer-toggle>See answer</button>
-      </div>
       <div class="public-note-body">${item.question_html}</div>
       <ul class="public-mcq-options">
         <li data-option="A"><strong>A.</strong> ${h(item.option_a)}</li>
@@ -123,6 +128,9 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
         <li data-option="C"><strong>C.</strong> ${h(item.option_c)}</li>
         <li data-option="D"><strong>D.</strong> ${h(item.option_d)}</li>
       </ul>
+      <div class="public-mcq-answer-row">
+        <button class="public-mcq-answer-toggle" type="button" data-answer-toggle>See answer</button>
+      </div>
     </li>`
     )
     .join('');
@@ -136,16 +144,22 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     if (!container) return;
 
     const answer = String(container.dataset.correctOption || '').trim().toUpperCase();
+    const answerRow = container.querySelector('.public-mcq-answer-row');
+    if (!answerRow) return;
+
+    if (answerRow.dataset.revealed === 'true') return;
+
     if (!answer) {
-      button.textContent = 'Answer unavailable';
+      answerRow.innerHTML = '<p class="public-mcq-answer-text">Answer unavailable</p>';
+      answerRow.dataset.revealed = 'true';
       return;
     }
 
-    const isVisible = container.classList.toggle('show-answer');
     container.querySelectorAll('.public-mcq-options li').forEach((option) => {
-      option.classList.toggle('public-mcq-option-correct', isVisible && option.dataset.option === answer);
+      option.classList.toggle('public-mcq-option-correct', option.dataset.option === answer);
     });
-    button.textContent = isVisible ? 'Hide answer' : 'See answer';
+    answerRow.innerHTML = '<p class="public-mcq-answer-text"><strong>Answer:</strong> ' + answer + '</p>';
+    answerRow.dataset.revealed = 'true';
   });
   </script>`;
 
