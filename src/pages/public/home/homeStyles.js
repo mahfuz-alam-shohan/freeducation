@@ -46,6 +46,8 @@ export const publicHomeStyles = `
 .public-note-title { margin: 0 0 2px; font-size: 15px; color: #1f2f56; }
 .public-note-body :first-child { margin-top: 0; }
 .public-note-body :last-child { margin-bottom: 0; }
+.public-entry-image-frame { margin: 0 0 6px; width: min(320px, 100%); aspect-ratio: 4 / 3; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #e2e8f0; }
+.public-entry-image { width: 100%; height: 100%; object-fit: cover; display: block; }
 .public-mcq-options { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; }
 .public-mcq-answer-text { margin: 6px 0 0; font-size: 12px; color: #166534; }
 
