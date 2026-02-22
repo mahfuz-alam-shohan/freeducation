@@ -39,10 +39,20 @@ export const modulesStyles = `
 .rich-editor-preview { background: #f8fbff; border-top: 1px dashed var(--line); }
 .mcq-option { margin: 0; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 .mcq-option-correct { background: #ecfdf5; border-color: #86efac; }
+.entry-shell { display: grid; gap: 6px; }
+.entry-shell-head { display: grid; gap: 1px; }
+.entry-shell-head .card-title { margin: 0; font-size: 14px; }
+.entry-form-grid { display: grid; grid-template-columns: minmax(180px, 1.4fr) minmax(140px, 1fr) auto; gap: 6px; align-items: end; }
+.field-label { display: block; margin-bottom: 3px; font-size: 11px; color: #475569; }
+.inline-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #0f172a; min-height: 28px; }
+.section-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; }
+.section-summary-row p { margin: 0; font-size: 12px; }
 
 @media (max-width: 840px) {
   .plain-two-column { grid-template-columns: 1fr; }
   .subject-node-actions-row { grid-template-columns: 1fr; align-items: stretch; }
+  .entry-form-grid { grid-template-columns: 1fr; }
+  .section-summary-row { flex-direction: column; align-items: flex-start; }
   .table-wrap { overflow-x: auto; }
 }
 `;

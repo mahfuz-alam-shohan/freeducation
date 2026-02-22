@@ -64,6 +64,20 @@ function imageSlotCell({ id, formId, imageKey, disabled = false }) {
   </div>`;
 }
 
+function structuredAddPanel({ title, description, formAction, hiddenFields, submitLabel, fields }) {
+  return `<section class="card flat-card entry-shell">
+    <div class="entry-shell-head">
+      <h3 class="card-title">${h(title)}</h3>
+      <p class="muted">${h(description)}</p>
+    </div>
+    <form method="post" action="${h(formAction)}" enctype="multipart/form-data" class="entry-form-grid">
+      ${hiddenFields}
+      ${fields}
+      <button class="btn btn-primary" type="submit">${h(submitLabel)}</button>
+    </form>
+  </section>`;
+}
+
 export function templatesPage(user, templates) {
   const rows = templates
     .map(
@@ -304,18 +318,31 @@ export function chaptersPage(user, subject, node, chapters) {
     )
     .join("");
 
+  const addChapterPanel = structuredAddPanel({
+    title: "Add chapter",
+    description: "Keep titles clean and short so students can scan chapter lists quickly.",
+    formAction: "/api/chapters",
+    hiddenFields: `<input type="hidden" name="subjectNodeId" value="${node.id}" />
+      <input type="hidden" name="subjectId" value="${subject.id}" />`,
+    submitLabel: "Add chapter",
+    fields: `<div>
+        <label class="field-label" for="chapter-name">Chapter name</label>
+        <input id="chapter-name" class="input" name="name" placeholder="Example: Algebra Basics" required maxlength="140" />
+      </div>
+      <div>
+        <label class="field-label" for="chapter-image">Thumbnail (optional)</label>
+        <input id="chapter-image" class="input" type="file" name="image" accept="image/*" />
+      </div>
+      <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topic breakdown for this chapter</label>`,
+  });
+
   const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.parent_subject_node_id}">← Back</a></div>
-  <section class="card">
-    <form method="post" action="/api/chapters" enctype="multipart/form-data" class="toolbar-group section-gap-sm">
-      <input type="hidden" name="subjectNodeId" value="${node.id}" />
-      <input type="hidden" name="subjectId" value="${subject.id}" />
-      <input class="input" name="name" placeholder="Chapter name" required />
-      <input class="input" type="file" name="image" accept="image/*" />
-      <label><input type="checkbox" name="hasTopics" value="1" /> Enable topics</label>
-      <button class="btn btn-primary" type="submit">Add Chapter</button>
-    </form>
+  <section class="card flat-card section-summary-row">
+    <p><strong>${chapters.length}</strong> chapters in this section.</p>
+    <p class="muted">Use inline rename and image controls to keep the list updated quickly.</p>
   </section>
-  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
+  ${addChapterPanel}
+  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Chapter</th><th>Topics Enabled</th><th>Rename</th><th>Topics Toggle</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 7, "No chapters yet.")}</tbody>
   </table></div></section>`;
@@ -336,18 +363,31 @@ export function topicsPage(user, subject, node, chapter, topics) {
     )
     .join("");
 
-  const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.id}">← Back</a></div>
-  <section class="card">
-    <form method="post" action="/api/topics" enctype="multipart/form-data" class="toolbar-group section-gap-sm">
-      <input type="hidden" name="chapterId" value="${chapter.id}" />
+  const addTopicPanel = structuredAddPanel({
+    title: `Add topic in ${chapter.name}`,
+    description: "Topics help split long chapters into focused lesson blocks.",
+    formAction: "/api/topics",
+    hiddenFields: `<input type="hidden" name="chapterId" value="${chapter.id}" />
       <input type="hidden" name="subjectId" value="${subject.id}" />
-      <input type="hidden" name="nodeId" value="${node.id}" />
-      <input class="input" name="name" placeholder="Topic name" required />
-      <input class="input" type="file" name="image" accept="image/*" />
-      <button class="btn btn-primary" type="submit">Add Topic</button>
-    </form>
+      <input type="hidden" name="nodeId" value="${node.id}" />`,
+    submitLabel: "Add topic",
+    fields: `<div>
+        <label class="field-label" for="topic-name">Topic name</label>
+        <input id="topic-name" class="input" name="name" placeholder="Example: Solving Linear Equations" required maxlength="140" />
+      </div>
+      <div>
+        <label class="field-label" for="topic-image">Thumbnail (optional)</label>
+        <input id="topic-image" class="input" type="file" name="image" accept="image/*" />
+      </div>`,
+  });
+
+  const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.id}">← Back</a></div>
+  <section class="card flat-card section-summary-row">
+    <p><strong>${topics.length}</strong> topics in this chapter.</p>
+    <p class="muted">Use short titles so learners can navigate quickly on mobile.</p>
   </section>
-  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
+  ${addTopicPanel}
+  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Topic</th><th>Rename</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 5, "No topics yet.")}</tbody>
   </table></div></section>`;
@@ -380,7 +420,11 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     .join("");
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
   const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
-  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th class="table-action-open-cell">Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
+  <section class="card flat-card section-summary-row">
+    <p><strong>${kinds.length}</strong> content lanes available.</p>
+    <p class="muted">Open a lane to add notes, MCQs, summaries, or other learning assets.</p>
+  </section>
+  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel"><thead><tr><th class="table-action-open-cell">Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
   return appShell("subjects", user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, "Choose any content type defined in your template.", content, { pageStyles: modulesStyles });
 }
 
