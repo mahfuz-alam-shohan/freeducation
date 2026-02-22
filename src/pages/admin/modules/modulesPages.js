@@ -138,8 +138,8 @@ export function templateDetailsPage(user, template, nodes) {
       .join("");
   }
 
-  const content = `<section class="card">
-    <a class="back-link" href="/templates">← Back to templates</a>
+  const content = `${floatingBackButton("/templates", "Back to templates")}
+  <section class="card">
     <p class="muted">Template code: <strong>${h(template.code)}</strong></p>
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
       <thead><tr><th>Hierarchy</th><th>Type</th><th>Editable Name</th><th>Image Upload</th><th>Chapter Based</th></tr></thead>
@@ -299,7 +299,7 @@ export function subjectNodeListPage(user, subject, title, subtitle, nodes, backH
     )
     .join("");
 
-  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
+  const content = `${floatingBackButton(backHref, "Back to previous page")}
   <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
     <thead><tr><th>Open</th><th>Name</th><th>Edit</th><th>Image</th><th>Rename</th><th>Image Upload</th><th>Sync</th></tr></thead>
     <tbody>${tableRowsOrEmpty(rows, 7, "No nodes found.")}</tbody>
@@ -341,7 +341,7 @@ export function chaptersPage(user, subject, node, chapters) {
       <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topic breakdown for this chapter</label>`,
   });
 
-  const content = `<div class="back-link-row"><a class="back-link" href="${subjectNodeBackHref(subject.id, node)}">← Back</a></div>
+  const content = `${floatingBackButton(subjectNodeBackHref(subject.id, node), "Back to previous page")}
   <section class="card flat-card section-summary-row">
     <p><strong>${chapters.length}</strong> chapters in this section.</p>
     <p class="muted">Use inline rename and image controls to keep the list updated quickly.</p>
@@ -386,7 +386,7 @@ export function topicsPage(user, subject, node, chapter, topics) {
       </div>`,
   });
 
-  const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.id}">← Back</a></div>
+  const content = `${floatingBackButton(`/subjects/${subject.id}/nodes/${node.id}`, "Back to previous page")}
   <section class="card flat-card section-summary-row">
     <p><strong>${topics.length}</strong> topics in this chapter.</p>
     <p class="muted">Use short titles so learners can navigate quickly on mobile.</p>
@@ -424,7 +424,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     })
     .join("");
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
-  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
+  const content = `${floatingBackButton(backHref, "Back to previous page")}
   <section class="card flat-card section-summary-row">
     <p><strong>${kinds.length}</strong> content lanes available.</p>
     <p class="muted">Open a lane to add notes, MCQs, summaries, or other learning assets.</p>
@@ -609,7 +609,7 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
     })
     .join("");
 
-  const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
+  const content = `${floatingBackButton(backHref, "Back to previous page")}
   <section class="card content-form-shell" data-add-form-shell><div class="content-form-head"><h3 class="card-title">${isSummary ? "Summary editor" : `Add ${h(contentKind)} item`}</h3><button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="${h(contentKind)}" aria-expanded="false">${isSummary ? "Edit Summary" : `Add ${h(contentKind)}`}</button></div><div data-add-form-panel>${entryForm(isSummary && entries[0] ? { ...entries[0], page: safePage } : { page: safePage })}</div></section>
   <section class="content-list">${items}</section>
   ${!pageItems.length ? '<p class="muted">No content yet.</p>' : ""}
@@ -690,7 +690,7 @@ export function classSubjectsPage(user, classItem, subjects) {
     )
     .join("");
 
-  const content = `<div class="back-link-row"><a class="back-link" href="/classes/manage">← Back to classes</a></div>
+  const content = `${floatingBackButton("/classes/manage", "Back to classes")}
   <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel">
       <thead><tr><th>Subject</th><th>Template</th><th>Created</th><th>Open</th></tr></thead>
