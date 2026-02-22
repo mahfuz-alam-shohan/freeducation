@@ -104,23 +104,41 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
 }
 
 export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
-  const resolveOption = (value) => {
-    const normalized = String(value || '').trim().toUpperCase();
+  const resolveOption = (item) => {
+    const normalized = String(item?.correct_option || '').trim().toUpperCase();
     if (!normalized) return '';
 
     const numberMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
     if (numberMap[normalized]) return numberMap[normalized];
 
+    const aliasMap = {
+      OPTION_A: 'A',
+      OPTION_B: 'B',
+      OPTION_C: 'C',
+      OPTION_D: 'D',
+    };
+    if (aliasMap[normalized]) return aliasMap[normalized];
+
     const matched = normalized.match(/\b([ABCD])\b/);
     if (matched) return matched[1];
 
     const fallbackMatch = normalized.match(/[ABCD]/);
-    return fallbackMatch ? fallbackMatch[0] : '';
+    if (fallbackMatch) return fallbackMatch[0];
+
+    const answerByText = {
+      A: String(item?.option_a || '').trim().toLowerCase(),
+      B: String(item?.option_b || '').trim().toLowerCase(),
+      C: String(item?.option_c || '').trim().toLowerCase(),
+      D: String(item?.option_d || '').trim().toLowerCase(),
+    };
+    const textAnswer = String(item?.correct_option || '').trim().toLowerCase();
+    const byExactText = Object.entries(answerByText).find(([, optionText]) => optionText && optionText === textAnswer);
+    return byExactText ? byExactText[0] : '';
   };
 
   const list = mcqs
     .map(
-      (item) => `<li class="public-mcq-item" data-correct-option="${resolveOption(item.correct_option)}">
+      (item) => `<li class="public-mcq-item" data-correct-option="${resolveOption(item)}">
       <div class="public-note-body">${item.question_html}</div>
       <ul class="public-mcq-options">
         <li data-option="A"><strong>A.</strong> ${h(item.option_a)}</li>
@@ -136,8 +154,14 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     .join('');
 
   const mcqScript = `<script>
-  document.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-answer-toggle]');
+  (() => {
+    const mcqList = document.querySelector('[data-mcq-list]');
+    if (!mcqList) return;
+
+    mcqList.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest('[data-answer-toggle]');
     if (!button) return;
 
     const container = button.closest('.public-mcq-item');
@@ -160,7 +184,8 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     });
     answerRow.innerHTML = '<p class="public-mcq-answer-text"><strong>Answer:</strong> ' + answer + '</p>';
     answerRow.dataset.revealed = 'true';
-  });
+    });
+  })();
   </script>`;
 
   return publicShell(
@@ -170,7 +195,7 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: 'MCQ Bank' }])}<section class="public-stack">
       <h1 class="public-stack-title">MCQ Bank</h1>
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list">${list || '<li>No MCQs yet.</li>'}</ol>
+      <ol class="public-note-list" data-mcq-list>${list || '<li>No MCQs yet.</li>'}</ol>
     </section>`,
     mcqScript,
     publicHomeStyles
