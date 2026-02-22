@@ -10,6 +10,14 @@ function h(value) {
     .replaceAll('"', "&quot;");
 }
 
+function iconEdit() {
+  return `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M13.9 3.6a1.5 1.5 0 0 1 2.1 0l.4.4a1.5 1.5 0 0 1 0 2.1l-7.6 7.6-3.4.9.9-3.4 7.6-7.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="m12.9 4.6 2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+}
+
+function iconDelete() {
+  return `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3.8 5.4h12.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7.2 5.4V4.2A1.2 1.2 0 0 1 8.4 3h3.2a1.2 1.2 0 0 1 1.2 1.2v1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.2 7.1 7 16a1.2 1.2 0 0 0 1.2 1.1h3.6A1.2 1.2 0 0 0 13 16l.8-8.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8.7 8.6v5.4M11.3 8.6v5.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+}
+
 function fullTextCell(value, modalId, title = "Full text") {
   const text = value ?? "-";
   return `<button class="table-text-cell table-text-cell-button" type="button" data-content-modal-open="${modalId}" aria-label="View full ${h(title).toLowerCase()}"><span class="table-text-ellipsis" title="${h(text)}">${h(text)}</span></button>
@@ -505,7 +513,7 @@ function noteDeleteForm(subjectId, subjectNodeId, chapterId, topicId, noteId, pa
     <input type="hidden" name="chapterId" value="${chapterId || ""}" />
     <input type="hidden" name="topicId" value="${topicId || ""}" />
     <input type="hidden" name="page" value="${page}" />
-    <button class="btn btn-icon btn-icon-danger" type="submit" data-live-form="true" aria-label="Delete note" title="Delete note">🗑</button>
+    <button class="btn btn-icon btn-icon-danger" type="submit" data-live-form="true" aria-label="Delete note" title="Delete note">${iconDelete()}</button>
   </form>`;
 }
 
@@ -547,7 +555,7 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
       <div class="plain-line-wrap">
         <div class="note-content"><span class="note-index">${itemIndex}.</span> <span>${h(n.content_html)}</span></div>
         <div class="note-actions-inline">
-          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit note" title="Edit note">✎</button>
+          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit note" title="Edit note">${iconEdit()}</button>
           ${noteDeleteForm(subject.id, node.id, chapter?.id, topic?.id, n.id, safePage)}
         </div>
       </div>
@@ -648,8 +656,8 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
       <div class="plain-line-wrap">
         <div class="mcq-question"><strong>${itemIndex}.</strong> ${h(entry.title || (isSummary ? "Summary" : `${contentKind} entry`))}</div>
         <div class="mcq-actions-inline">
-          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit content" title="Edit content">✎</button>
-          <form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">🗑</button></form>
+          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit content" title="Edit content">${iconEdit()}</button>
+          <form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">${iconDelete()}</button></form>
         </div>
       </div>
       ${entry.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(entry.image_key) || "")}" alt="${h(contentKind)} image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ""}
@@ -683,8 +691,8 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
       <div class="plain-line-wrap">
         <div class="mcq-question">${itemIndex}. ${h(m.question_html)}</div>
         <div class="mcq-actions-inline">
-          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit MCQ" title="Edit MCQ">✎</button>
-          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">🗑</button></form>
+          <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit MCQ" title="Edit MCQ">${iconEdit()}</button>
+          <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${m.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">${iconDelete()}</button></form>
         </div>
       </div>
       ${m.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(m.image_key) || "")}" alt="MCQ image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ""}
