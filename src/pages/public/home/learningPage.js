@@ -106,39 +106,38 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
 export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
   const resolveOption = (item) => {
     const normalized = String(item?.correct_option || '').trim().toUpperCase();
-    if (!normalized) return '';
-
-    const numberMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
-    if (numberMap[normalized]) return numberMap[normalized];
-
-    const aliasMap = {
+    const exactMatch = {
+      A: 'A',
+      B: 'B',
+      C: 'C',
+      D: 'D',
+      '1': 'A',
+      '2': 'B',
+      '3': 'C',
+      '4': 'D',
       OPTION_A: 'A',
       OPTION_B: 'B',
       OPTION_C: 'C',
       OPTION_D: 'D',
-    };
-    if (aliasMap[normalized]) return aliasMap[normalized];
+    }[normalized];
+    if (exactMatch) return exactMatch;
 
-    const matched = normalized.match(/\b([ABCD])\b/);
-    if (matched) return matched[1];
+    const inlineMatch = normalized.match(/[ABCD]/);
+    if (inlineMatch) return inlineMatch[0];
 
-    const fallbackMatch = normalized.match(/[ABCD]/);
-    if (fallbackMatch) return fallbackMatch[0];
-
-    const answerByText = {
+    const optionTextByLetter = {
       A: String(item?.option_a || '').trim().toLowerCase(),
       B: String(item?.option_b || '').trim().toLowerCase(),
       C: String(item?.option_c || '').trim().toLowerCase(),
       D: String(item?.option_d || '').trim().toLowerCase(),
     };
     const textAnswer = String(item?.correct_option || '').trim().toLowerCase();
-    const byExactText = Object.entries(answerByText).find(([, optionText]) => optionText && optionText === textAnswer);
-    return byExactText ? byExactText[0] : '';
+    return Object.entries(optionTextByLetter).find(([, optionText]) => optionText && optionText === textAnswer)?.[0] || '';
   };
 
   const list = mcqs
     .map(
-      (item) => `<li class="public-mcq-item" data-correct-option="${resolveOption(item)}">
+      (item) => `<li class="public-mcq-item">
       <div class="public-note-body">${item.question_html}</div>
       <ul class="public-mcq-options">
         <li data-option="A"><strong>A.</strong> ${h(item.option_a)}</li>
@@ -146,47 +145,10 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
         <li data-option="C"><strong>C.</strong> ${h(item.option_c)}</li>
         <li data-option="D"><strong>D.</strong> ${h(item.option_d)}</li>
       </ul>
-      <div class="public-mcq-answer-row">
-        <button class="public-mcq-answer-toggle" type="button" data-answer-toggle>See answer</button>
-      </div>
+      <p class="public-mcq-answer-text"><strong>Ans:</strong> ${resolveOption(item) || 'N/A'}</p>
     </li>`
     )
     .join('');
-
-  const mcqScript = `<script>
-  (() => {
-    const mcqList = document.querySelector('[data-mcq-list]');
-    if (!mcqList) return;
-
-    mcqList.addEventListener('click', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-    const button = target.closest('[data-answer-toggle]');
-    if (!button) return;
-
-    const container = button.closest('.public-mcq-item');
-    if (!container) return;
-
-    const answer = String(container.dataset.correctOption || '').trim().toUpperCase();
-    const answerRow = container.querySelector('.public-mcq-answer-row');
-    if (!answerRow) return;
-
-    if (answerRow.dataset.revealed === 'true') return;
-
-    if (!answer) {
-      answerRow.innerHTML = '<p class="public-mcq-answer-text">Answer unavailable</p>';
-      answerRow.dataset.revealed = 'true';
-      return;
-    }
-
-    container.querySelectorAll('.public-mcq-options li').forEach((option) => {
-      option.classList.toggle('public-mcq-option-correct', option.dataset.option === answer);
-    });
-    answerRow.innerHTML = '<p class="public-mcq-answer-text"><strong>Answer:</strong> ' + answer + '</p>';
-    answerRow.dataset.revealed = 'true';
-    });
-  })();
-  </script>`;
 
   return publicShell(
     'home',
@@ -195,9 +157,9 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     `${pathBar([{ label: 'Home', href: '/' }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: 'MCQ Bank' }])}<section class="public-stack">
       <h1 class="public-stack-title">MCQ Bank</h1>
       <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list" data-mcq-list>${list || '<li>No MCQs yet.</li>'}</ol>
+      <ol class="public-note-list">${list || '<li>No MCQs yet.</li>'}</ol>
     </section>`,
-    mcqScript,
+    '',
     publicHomeStyles
   );
 }
