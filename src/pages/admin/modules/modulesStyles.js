@@ -31,15 +31,20 @@ export const modulesStyles = `
 .content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { overflow: hidden; text-overflow: ellipsis; }
 .subject-flow-card-grid { display: grid; gap: 6px; }
 .subject-flow-card { padding: 8px; display: grid; gap: 6px; }
+.subject-flow-card-main { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; align-items: start; }
+.subject-flow-card-media { width: 56px; min-height: 56px; border: 1px solid var(--line); border-radius: 6px; display: grid; place-items: center; background: #f8fafc; }
+.subject-flow-card-media .image-slot,.subject-flow-card-media .image-slot-trigger { width: 46px; height: 46px; }
+.subject-flow-card-media .image-slot-trigger img { width: 44px; height: 44px; border-radius: 5px; }
+.subject-flow-card-body { display: grid; gap: 6px; min-width: 0; }
 .chapter-flow-card-grid { margin-top: 6px; }
 .chapter-flow-card { padding: 7px; }
 .subject-flow-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .subject-flow-card-head .card-title { margin: 0; font-size: 14px; }
 .subject-flow-card-head .card-title a { color: inherit; text-decoration: none; }
 .subject-flow-card-head p { margin: 2px 0 0; font-size: 11px; }
-.subject-flow-edit-row { display: grid; grid-template-columns: minmax(160px, 1fr) auto auto; align-items: center; gap: 6px; }
+.subject-flow-edit-row { display: grid; grid-template-columns: minmax(160px, 1fr) auto; align-items: center; gap: 6px; }
 .subject-flow-edit-row .input { height: 30px; }
-.chapter-flow-edit-row { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto auto auto; align-items: center; gap: 6px; }
+.chapter-flow-edit-row { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto auto; align-items: center; gap: 6px; }
 .chapter-flow-edit-row .input { height: 30px; }
 .plain-two-column { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .mcq-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; margin-left: 16px; }
@@ -82,6 +87,8 @@ export const modulesStyles = `
   .content-kinds-table .content-kind-col { width: 132px; max-width: 132px; }
   .subject-flow-edit-row { grid-template-columns: 1fr; align-items: flex-start; }
   .chapter-flow-edit-row { grid-template-columns: 1fr; align-items: flex-start; }
+  .subject-flow-card-main { grid-template-columns: 1fr; }
+  .subject-flow-card-media { width: 100%; min-height: 44px; justify-content: start; padding: 5px; }
 }
 
 `;
