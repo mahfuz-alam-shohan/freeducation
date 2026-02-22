@@ -1,6 +1,6 @@
 import { publicShell } from "../../templates/publicShell.js";
 import { imageUrlFromKey } from "../../imageUrl.js";
-import { publicHomeStyles } from "./homeStyles.js";
+import { learningPageStyles } from "./learningPageStyles.js";
 
 function h(value) {
   return String(value ?? "")
@@ -51,7 +51,7 @@ export function publicSubjectNodePage(user, subject, title, subtitle, items, hre
       <div class="public-flat-grid">${cardGrid(items, hrefBuilder)}</div>
     </section>`,
     "",
-    publicHomeStyles,
+    learningPageStyles,
   );
 }
 
@@ -81,7 +81,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
       <ol class="public-note-list">${notes || "<li>No short notes yet.</li>"}</ol>
     </section>`,
     "",
-    publicHomeStyles,
+    learningPageStyles,
   );
 }
 
@@ -106,7 +106,7 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
       <ol class="public-note-list">${list || "<li>No content yet.</li>"}</ol>
     </section>`,
     "",
-    publicHomeStyles,
+    learningPageStyles,
   );
 }
 
@@ -180,6 +180,6 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
       <ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>
     </section>`,
     "",
-    publicHomeStyles,
+    learningPageStyles,
   );
 }

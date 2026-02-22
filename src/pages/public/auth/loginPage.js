@@ -1,6 +1,6 @@
 import { loginScript } from "../../assets.js";
 import { publicShell } from "../../templates/publicShell.js";
-import { authPageStyles } from "./authStyles.js";
+import { loginPageStyles } from "./loginPageStyles.js";
 
 export function loginPage() {
   return publicShell(
@@ -12,6 +12,6 @@ export function loginPage() {
       <label>Password</label><input required class="input" name="password" type="password" />
       <button class="btn btn-primary" type="submit">Login</button></form></section></section>`,
     loginScript,
-    authPageStyles,
+    loginPageStyles,
   );
 }

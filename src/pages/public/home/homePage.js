@@ -1,7 +1,7 @@
 import { publicShell } from "../../templates/publicShell.js";
 import { siteLogo } from "../../templates/icons.js";
 import { imageUrlFromKey } from "../../imageUrl.js";
-import { publicHomeStyles } from "./homeStyles.js";
+import { homePageStyles } from "./homePageStyles.js";
 
 function h(value) {
   return String(value ?? "")
@@ -93,7 +93,7 @@ export function publicHomePage(user = null, classes = []) {
       <div class="public-class-row">${classCardsMarkup(classes)}</div>
     </section>`,
     quoteScript,
-    publicHomeStyles,
+    homePageStyles,
   );
 }
 
@@ -109,7 +109,7 @@ export function publicClassesPage(user = null, classes = []) {
       <div class="public-class-grid">${classCardsMarkup(classes)}</div>
     </section>`,
     "",
-    publicHomeStyles,
+    homePageStyles,
   );
 }
 
@@ -124,6 +124,6 @@ export function publicClassSubjectsPage(user = null, classItem, subjects = []) {
       <div class="public-flat-grid">${subjectCardsMarkup(subjects)}</div>
     </section>`,
     "",
-    publicHomeStyles,
+    homePageStyles,
   );
 }
