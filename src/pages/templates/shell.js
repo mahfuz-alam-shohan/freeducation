@@ -59,6 +59,7 @@ function topbar(user) {
 export function appShell(active, user, pageTitle, subtitle, content, options = {}) {
   const hidePageHead = Boolean(options.hidePageHead);
   const containerClass = `container${options.fullBleed ? " container-full-bleed" : ""}`;
+  const pageHeadClass = `page-head${user.role === "admin" ? " admin-page-head" : ""}`;
   return basePage(
     pageTitle,
     `<div class="app-shell" data-shell>
@@ -70,7 +71,7 @@ export function appShell(active, user, pageTitle, subtitle, content, options = {
           ${
             hidePageHead
               ? ""
-              : `<section class="page-head">
+              : `<section class="${pageHeadClass}">
             <h1 class="page-title">${pageTitle}</h1>
             <p class="page-subtitle">${subtitle}</p>
           </section>`
