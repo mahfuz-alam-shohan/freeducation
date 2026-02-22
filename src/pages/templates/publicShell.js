@@ -1,18 +1,18 @@
-import { appScript } from '../assets.js';
-import { getNavigation } from '../navigation.js';
-import { imageUrlFromKey } from '../imageUrl.js';
-import { basePage } from './base.js';
-import { renderNavigationGroup } from './navigationMarkup.js';
-import { iconClose, iconCollapse, iconLogin, iconLogout, iconMenu, iconProfile, siteLogo } from './icons.js';
-import { sidebarIdentityMarkup } from './sidebarIdentity.js';
+import { appScript } from "../assets.js";
+import { getNavigation } from "../navigation.js";
+import { imageUrlFromKey } from "../imageUrl.js";
+import { basePage } from "./base.js";
+import { renderNavigationGroup } from "./navigationMarkup.js";
+import { iconClose, iconCollapse, iconLogin, iconLogout, iconMenu, iconProfile, siteLogo } from "./icons.js";
+import { sidebarIdentityMarkup } from "./sidebarIdentity.js";
 
 function initials(name) {
-  return String(name || 'A')
+  return String(name || "A")
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || '')
-    .join('');
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
 }
 
 function publicSidebar(active, user) {
@@ -30,20 +30,18 @@ function publicSidebar(active, user) {
     </header>
     <div class="sidebar-scroll">
       ${sidebarIdentityMarkup(user)}
-      ${nav.map((group) => renderNavigationGroup(group, active)).join('')}
+      ${nav.map((group) => renderNavigationGroup(group, active)).join("")}
     </div>
     <div class="sidebar-foot">
-      <a href="${user ? '/api/logout' : '/login'}" class="menu-item ${user ? 'logout-item' : 'sidebar-login-item'}"><span class="icon">${user ? iconLogout : iconLogin}</span><span class="label">${user ? 'Log out' : 'Login'}</span></a>
+      <a href="${user ? "/api/logout" : "/login"}" class="menu-item ${user ? "logout-item" : "sidebar-login-item"}"><span class="icon">${user ? iconLogout : iconLogin}</span><span class="label">${user ? "Log out" : "Login"}</span></a>
     </div>
   </aside>`;
 }
 
 function publicTopbar(user) {
   const avatarUrl = imageUrlFromKey(user?.imageKey);
-  const avatarLabel = user ? `${user.name} avatar` : 'Profile';
-  const triggerAvatar = user
-    ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>`
-    : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
+  const avatarLabel = user ? `${user.name} avatar` : "Profile";
+  const triggerAvatar = user ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>` : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
   const action = user
     ? triggerAvatar
     : `<div class="profile-menu" data-profile-menu>
@@ -68,7 +66,7 @@ function publicTopbar(user) {
     </header>`;
 }
 
-export function publicShell(active, user, title, content, script = '', pageStyles = '') {
+export function publicShell(active, user, title, content, script = "", pageStyles = "") {
   return basePage(
     title,
     `<div class="app-shell" data-shell>
@@ -77,10 +75,10 @@ export function publicShell(active, user, title, content, script = '', pageStyle
       <main class="main-shell public-main-shell">
         ${publicTopbar(user)}
         <div class="public-content-shell">${content}</div>
-        ${active === 'home' ? '' : '<footer class="public-footer">Freeducation</footer>'}
+        ${active === "home" ? "" : '<footer class="public-footer">Freeducation</footer>'}
       </main>
     </div>`,
-    `${appScript}\n${script || ''}`,
-    pageStyles
+    `${appScript}\n${script || ""}`,
+    pageStyles,
   );
 }

@@ -1,116 +1,32 @@
-import { ensureSchema } from './db/schema.js';
-import {
-  createAdmin,
-  createSession,
-  deleteSession,
-  findUserByEmail,
-  findUserById,
-  getAdminCount,
-  listUsers,
-  updateUserCoverImage,
-  updateUserImage,
-  updateUserName,
-  updateUserPassword,
-  updateUserDateOfBirth,
-} from './db/adminRepo.js';
-import {
-  createChapter,
-  createClass,
-  createContentEntry,
-  createMcq,
-  createNote,
-  createSubject,
-  createTopic,
-  deleteChapter,
-  deleteClass,
-  deleteContentEntry,
-  deleteMcq,
-  deleteNote,
-  deleteSubject,
-  deleteTopic,
-  ensureDefaultClasses,
-  ensureDefaultTemplate,
-  ensurePhyChemBioTemplate,
-  getChapter,
-  getClassById,
-  getSubject,
-  getSubjectNode,
-  getTemplate,
-  getTopic,
-  listChapters,
-  listClasses,
-  listContentEntries,
-  listMcqs,
-  listNotes,
-  listSubjectNodesByParent,
-  listSubjects,
-  listSubjectsByClass,
-  listTemplateNodes,
-  listTemplates,
-  listTopics,
-  moveClass,
-  updateChapter,
-  updateClass,
-  updateContentEntry,
-  updateMcq,
-  updateNote,
-  updateSubject,
-  updateSubjectNode,
-  updateTopic,
-  upsertSummaryEntry,
-} from './db/modulesRepo.js';
-import { hashPassword, verifyPassword } from './security/password.js';
-import { buildSessionCookie, clearSessionCookie, createSignedToken } from './security/session.js';
-import { html, json, redirect } from './http/response.js';
-import { methodNotAllowed } from './http/request.js';
-import { requireAuth } from './api/auth.js';
-import {
-  chaptersPage,
-  contentEntriesPage,
-  contentKindsPage,
-  dashboardPage,
-  forbiddenPage,
-  loginPage,
-  mcqsPage,
-  notesPage,
-  profilePage,
-  publicHomePage,
-  publicClassesPage,
-  publicClassSubjectsPage,
-  publicSubjectNodePage,
-  publicChapterContentPage,
-  publicContentEntriesPage,
-  publicMcqEntriesPage,
-  setupPage,
-  subjectNodeListPage,
-  subjectsPage,
-  classesPage,
-  classSubjectsPage,
-  templateDetailsPage,
-  templatesPage,
-  topicsPage,
-  usersPage,
-} from './pages/layout.js';
-import { MAX_IMAGE_BYTES, SESSION_COOKIE } from './env.js';
+import { ensureSchema } from "./db/schema.js";
+import { createAdmin, createSession, deleteSession, findUserByEmail, findUserById, getAdminCount, listUsers, updateUserCoverImage, updateUserImage, updateUserName, updateUserPassword, updateUserDateOfBirth } from "./db/adminRepo.js";
+import { createChapter, createClass, createContentEntry, createMcq, createNote, createSubject, createTopic, deleteChapter, deleteClass, deleteContentEntry, deleteMcq, deleteNote, deleteSubject, deleteTopic, ensureDefaultClasses, ensureDefaultTemplate, ensurePhyChemBioTemplate, getChapter, getClassById, getSubject, getSubjectNode, getTemplate, getTopic, listChapters, listClasses, listContentEntries, listMcqs, listNotes, listSubjectNodesByParent, listSubjects, listSubjectsByClass, listTemplateNodes, listTemplates, listTopics, moveClass, updateChapter, updateClass, updateContentEntry, updateMcq, updateNote, updateSubject, updateSubjectNode, updateTopic, upsertSummaryEntry } from "./db/modulesRepo.js";
+import { hashPassword, verifyPassword } from "./security/password.js";
+import { buildSessionCookie, clearSessionCookie, createSignedToken } from "./security/session.js";
+import { html, json, redirect } from "./http/response.js";
+import { methodNotAllowed } from "./http/request.js";
+import { requireAuth } from "./api/auth.js";
+import { chaptersPage, contentEntriesPage, contentKindsPage, dashboardPage, forbiddenPage, loginPage, mcqsPage, notesPage, profilePage, publicHomePage, publicClassesPage, publicClassSubjectsPage, publicSubjectNodePage, publicChapterContentPage, publicContentEntriesPage, publicMcqEntriesPage, setupPage, subjectNodeListPage, subjectsPage, classesPage, classSubjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage } from "./pages/layout.js";
+import { MAX_IMAGE_BYTES, SESSION_COOKIE } from "./env.js";
 
 const MAX_BOOTSTRAP_BODY_BYTES = 4 * 1024 * 1024;
 const ACCESS = {
-  PUBLIC: 'public',
-  AUTHENTICATED: 'authenticated',
+  PUBLIC: "public",
+  AUTHENTICATED: "authenticated",
 };
 let appReadyPromise = null;
 let hasAdminCache = null;
 
 function hasSessionCookie(request) {
-  const cookie = request.headers.get('cookie') || '';
+  const cookie = request.headers.get("cookie") || "";
   return cookie.includes(`${SESSION_COOKIE}=`);
 }
 
 function shouldResolveUser(request, route, pathname) {
   if (hasSessionCookie(request)) return true;
   if (route?.access === ACCESS.AUTHENTICATED) return true;
-  if (pathname.startsWith('/api/') || pathname.startsWith('/media/')) return true;
-  if (pathname.startsWith('/subjects') || pathname.startsWith('/templates') || pathname.startsWith('/classes/manage')) return true;
+  if (pathname.startsWith("/api/") || pathname.startsWith("/media/")) return true;
+  if (pathname.startsWith("/subjects") || pathname.startsWith("/templates") || pathname.startsWith("/classes/manage")) return true;
   return false;
 }
 
@@ -132,12 +48,12 @@ function isEmail(value) {
 }
 
 async function uploadImage(env, folder, file) {
-  if (!file || file.size === 0 || typeof file.arrayBuffer !== 'function') return null;
-  if (file.size > MAX_IMAGE_BYTES) throw new Error('Image too large (max 5MB).');
-  const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/png' ? 'png' : file.type === 'image/jpeg' ? 'jpg' : 'bin';
+  if (!file || file.size === 0 || typeof file.arrayBuffer !== "function") return null;
+  if (file.size > MAX_IMAGE_BYTES) throw new Error("Image too large (max 5MB).");
+  const ext = file.type === "image/webp" ? "webp" : file.type === "image/png" ? "png" : file.type === "image/jpeg" ? "jpg" : "bin";
   const key = `${folder}/${id()}.${ext}`;
   await env.BUCKET.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+    httpMetadata: { contentType: file.type || "application/octet-stream" },
   });
   return key;
 }
@@ -155,27 +71,29 @@ async function createAndSetSession(env, userId) {
 }
 
 async function apiBootstrap(request, env) {
-  if (request.method !== 'POST') return methodNotAllowed();
-  const contentLength = Number(request.headers.get('content-length') || 0);
-  if (contentLength > MAX_BOOTSTRAP_BODY_BYTES) return json({ error: 'Request too large.' }, 413);
-  if ((await getAdminCount(env.DB)) > 0) return json({ error: 'Admin already exists.' }, 409);
+  if (request.method !== "POST") return methodNotAllowed();
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > MAX_BOOTSTRAP_BODY_BYTES) return json({ error: "Request too large." }, 413);
+  if ((await getAdminCount(env.DB)) > 0) return json({ error: "Admin already exists." }, 409);
 
   try {
     const form = await request.formData();
-    const name = String(form.get('name') || '').trim();
-    const email = String(form.get('email') || '').trim().toLowerCase();
-    const password = String(form.get('password') || '');
-    const image = form.get('image');
+    const name = String(form.get("name") || "").trim();
+    const email = String(form.get("email") || "")
+      .trim()
+      .toLowerCase();
+    const password = String(form.get("password") || "");
+    const image = form.get("image");
 
     if (!name || name.length > 100 || !isEmail(email) || password.length < 8 || password.length > 120) {
-      return json({ error: 'Invalid setup form.' }, 400);
+      return json({ error: "Invalid setup form." }, 400);
     }
 
     const existing = await findUserByEmail(env.DB, email);
-    if (existing) return json({ error: 'Email already in use.' }, 409);
+    if (existing) return json({ error: "Email already in use." }, 409);
 
     const hashed = await hashPassword(password);
-    const imageKey = await uploadImage(env, 'profiles', image);
+    const imageKey = await uploadImage(env, "profiles", image);
     const userId = id();
     await createAdmin(env.DB, {
       id: userId,
@@ -190,16 +108,16 @@ async function apiBootstrap(request, env) {
     hasAdminCache = true;
 
     const cookie = await createAndSetSession(env, userId);
-    return json({ ok: true }, 200, { 'Set-Cookie': cookie });
+    return json({ ok: true }, 200, { "Set-Cookie": cookie });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Unable to create admin.' }, 500);
+    return json({ error: error instanceof Error ? error.message : "Unable to create admin." }, 500);
   }
 }
 
 async function ensureAppReady(env) {
   if (!appReadyPromise) {
     appReadyPromise = (async () => {
-      await ensureSchema(env.DB, { cleanUnknownTables: env.CLEAN_UNKNOWN_TABLES === 'true' });
+      await ensureSchema(env.DB, { cleanUnknownTables: env.CLEAN_UNKNOWN_TABLES === "true" });
       await ensureDefaultTemplate(env.DB);
       await ensurePhyChemBioTemplate(env.DB);
       await ensureDefaultClasses(env.DB);
@@ -222,37 +140,35 @@ async function hasAdmin(env) {
 }
 
 async function apiLogin(request, env) {
-  if (request.method !== 'POST') return methodNotAllowed();
+  if (request.method !== "POST") return methodNotAllowed();
   const body = await request.json().catch(() => null);
-  if (!body) return json({ error: 'Invalid request.' }, 400);
-  const email = String(body.email || '').trim().toLowerCase();
-  const password = String(body.password || '');
+  if (!body) return json({ error: "Invalid request." }, 400);
+  const email = String(body.email || "")
+    .trim()
+    .toLowerCase();
+  const password = String(body.password || "");
 
   const user = await findUserByEmail(env.DB, email);
-  if (!user) return json({ error: 'Invalid credentials.' }, 401);
+  if (!user) return json({ error: "Invalid credentials." }, 401);
 
   const valid = await verifyPassword(password, {
     salt: user.password_salt,
     hash: user.password_hash,
     iterations: user.password_iterations,
   });
-  if (!valid) return json({ error: 'Invalid credentials.' }, 401);
+  if (!valid) return json({ error: "Invalid credentials." }, 401);
 
   const cookie = await createAndSetSession(env, user.id);
-  return json({ ok: true }, 200, { 'Set-Cookie': cookie });
+  return json({ ok: true }, 200, { "Set-Cookie": cookie });
 }
 
 async function apiLogout(env, user) {
   await deleteSession(env.DB, user.sessionId);
-  return redirect('/login', { 'Set-Cookie': clearSessionCookie() });
+  return redirect("/login", { "Set-Cookie": clearSessionCookie() });
 }
 
 async function getStats(db) {
-  const [userCount, adminCount, sessionCount] = await Promise.all([
-    db.prepare('SELECT COUNT(*) count FROM users').first(),
-    db.prepare("SELECT COUNT(*) count FROM users WHERE role = 'admin'").first(),
-    db.prepare('SELECT COUNT(*) count FROM sessions WHERE expires_at > ?1').bind(Date.now()).first(),
-  ]);
+  const [userCount, adminCount, sessionCount] = await Promise.all([db.prepare("SELECT COUNT(*) count FROM users").first(), db.prepare("SELECT COUNT(*) count FROM users WHERE role = 'admin'").first(), db.prepare("SELECT COUNT(*) count FROM sessions WHERE expires_at > ?1").bind(Date.now()).first()]);
   return {
     userCount: Number(userCount.count ?? 0),
     adminCount: Number(adminCount.count ?? 0),
@@ -266,50 +182,50 @@ function routeRequiresRole(route, user) {
 
 const pageRoutes = [
   {
-    path: '/',
+    path: "/",
     access: ACCESS.PUBLIC,
     handle: async ({ env, user }) => html(publicHomePage(user, await listClasses(env.DB, { homepageOnly: true }))),
   },
   {
-    path: '/classes',
+    path: "/classes",
     access: ACCESS.PUBLIC,
     handle: async ({ env, user }) => html(publicClassesPage(user, await listClasses(env.DB))),
   },
-  { path: '/login', access: ACCESS.PUBLIC, handle: () => html(loginPage()) },
+  { path: "/login", access: ACCESS.PUBLIC, handle: () => html(loginPage()) },
   {
-    path: '/dashboard',
+    path: "/dashboard",
     access: ACCESS.AUTHENTICATED,
-    roles: ['admin'],
+    roles: ["admin"],
     handle: async ({ env, user }) => html(dashboardPage(user, await getStats(env.DB))),
   },
-  { path: '/profile', access: ACCESS.AUTHENTICATED, handle: ({ user }) => html(profilePage(user)) },
+  { path: "/profile", access: ACCESS.AUTHENTICATED, handle: ({ user }) => html(profilePage(user)) },
   {
-    path: '/users',
+    path: "/users",
     access: ACCESS.AUTHENTICATED,
-    roles: ['admin'],
+    roles: ["admin"],
     handle: async ({ env, user }) => html(usersPage(user, await listUsers(env.DB))),
   },
   {
-    path: '/templates',
+    path: "/templates",
     access: ACCESS.AUTHENTICATED,
-    roles: ['admin'],
+    roles: ["admin"],
     handle: async ({ env, user }) => html(templatesPage(user, await listTemplates(env.DB))),
   },
   {
-    path: '/classes/manage',
+    path: "/classes/manage",
     access: ACCESS.AUTHENTICATED,
-    roles: ['admin'],
+    roles: ["admin"],
     handle: async ({ env, user }) => html(classesPage(user, await listClasses(env.DB))),
   },
   {
-    path: '/learn',
+    path: "/learn",
     access: ACCESS.PUBLIC,
-    handle: () => redirect('/'),
+    handle: () => redirect("/"),
   },
   {
-    path: '/subjects',
+    path: "/subjects",
     access: ACCESS.AUTHENTICATED,
-    roles: ['admin'],
+    roles: ["admin"],
     handle: async ({ env, user }) => {
       const [subjects, templates, classes] = await Promise.all([listSubjects(env.DB), listTemplates(env.DB), listClasses(env.DB)]);
       return html(subjectsPage(user, subjects, templates, classes));
@@ -317,84 +233,82 @@ const pageRoutes = [
   },
 ];
 
-
 async function handleProfilePost(request, env, url, user) {
-  if (request.method !== 'POST') return null;
+  if (request.method !== "POST") return null;
 
-  if (url.pathname === '/api/profile/name') {
+  if (url.pathname === "/api/profile/name") {
     const form = await request.formData();
-    const name = String(form.get('name') || '').trim();
-    if (!name || name.length > 100) return redirect('/profile');
+    const name = String(form.get("name") || "").trim();
+    if (!name || name.length > 100) return redirect("/profile");
     await updateUserName(env.DB, user.id, name);
-    return redirect('/profile');
+    return redirect("/profile");
   }
 
-  if (url.pathname === '/api/profile/avatar') {
+  if (url.pathname === "/api/profile/avatar") {
     const form = await request.formData();
-    const imageKey = await uploadImage(env, 'profiles', form.get('avatar'));
+    const imageKey = await uploadImage(env, "profiles", form.get("avatar"));
     if (imageKey) await updateUserImage(env.DB, user.id, imageKey);
 
-    const wantsJson = request.headers.get('accept')?.includes('application/json');
+    const wantsJson = request.headers.get("accept")?.includes("application/json");
     if (wantsJson) {
       return json({ ok: true, imageKey, imageUrl: imageKey ? `/media/${encodeURIComponent(imageKey)}` : null });
     }
 
-    return redirect('/profile');
+    return redirect("/profile");
   }
 
-
-  if (url.pathname === '/api/profile/cover') {
+  if (url.pathname === "/api/profile/cover") {
     const form = await request.formData();
-    const imageKey = await uploadImage(env, 'profile-covers', form.get('cover'));
+    const imageKey = await uploadImage(env, "profile-covers", form.get("cover"));
     if (imageKey) await updateUserCoverImage(env.DB, user.id, imageKey);
 
-    const wantsJson = request.headers.get('accept')?.includes('application/json');
+    const wantsJson = request.headers.get("accept")?.includes("application/json");
     if (wantsJson) {
       return json({ ok: true, imageKey, imageUrl: imageKey ? `/media/${encodeURIComponent(imageKey)}` : null });
     }
 
-    return redirect('/profile');
+    return redirect("/profile");
   }
 
-  if (url.pathname === '/api/profile/password') {
+  if (url.pathname === "/api/profile/password") {
     const form = await request.formData();
-    const currentPassword = String(form.get('currentPassword') || '');
-    const newPassword = String(form.get('newPassword') || '');
+    const currentPassword = String(form.get("currentPassword") || "");
+    const newPassword = String(form.get("newPassword") || "");
 
-    if (newPassword.length < 8 || newPassword.length > 120) return redirect('/profile');
+    if (newPassword.length < 8 || newPassword.length > 120) return redirect("/profile");
     const currentUser = await findUserById(env.DB, user.id);
-    if (!currentUser) return redirect('/profile');
+    if (!currentUser) return redirect("/profile");
 
     const valid = await verifyPassword(currentPassword, {
       salt: currentUser.password_salt,
       hash: currentUser.password_hash,
       iterations: currentUser.password_iterations,
     });
-    if (!valid) return redirect('/profile');
+    if (!valid) return redirect("/profile");
 
     const hashed = await hashPassword(newPassword);
     await updateUserPassword(env.DB, user.id, hashed.hash, hashed.salt, hashed.iterations);
-    return redirect('/profile');
+    return redirect("/profile");
   }
 
-  if (url.pathname === '/api/profile/dob') {
+  if (url.pathname === "/api/profile/dob") {
     const form = await request.formData();
-    let dateOfBirthRaw = String(form.get('dateOfBirth') || '').trim();
+    let dateOfBirthRaw = String(form.get("dateOfBirth") || "").trim();
 
     if (!dateOfBirthRaw) {
-      const day = String(form.get('dobDay') || '').trim();
-      const month = String(form.get('dobMonth') || '').trim();
-      const year = String(form.get('dobYear') || '').trim();
+      const day = String(form.get("dobDay") || "").trim();
+      const month = String(form.get("dobMonth") || "").trim();
+      const year = String(form.get("dobYear") || "").trim();
       if (!day && !month && !year) {
         await updateUserDateOfBirth(env.DB, user.id, null);
-        return redirect('/profile');
+        return redirect("/profile");
       }
       if (day && month && year) {
-        dateOfBirthRaw = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        dateOfBirthRaw = `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
     }
 
-    if (!dateOfBirthRaw) return redirect('/profile');
+    if (!dateOfBirthRaw) return redirect("/profile");
 
     const dobMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirthRaw);
     const dobDate = new Date(`${dateOfBirthRaw}T00:00:00.000Z`);
@@ -402,177 +316,177 @@ async function handleProfilePost(request, env, url, user) {
     const earliest = new Date(Date.UTC(1900, 0, 1));
     const today = new Date();
     const latest = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-    if (!dobMatch || !isValidDate || dobDate < earliest || dobDate > latest) return redirect('/profile');
+    if (!dobMatch || !isValidDate || dobDate < earliest || dobDate > latest) return redirect("/profile");
 
     await updateUserDateOfBirth(env.DB, user.id, dateOfBirthRaw);
-    return redirect('/profile');
+    return redirect("/profile");
   }
 
   return null;
 }
 
 async function handleAdminPost(request, env, url) {
-  if (url.pathname === '/api/classes' && request.method === 'POST') {
+  if (url.pathname === "/api/classes" && request.method === "POST") {
     const form = await request.formData();
-    const name = String(form.get('name') || '').trim();
-    const showOnHome = form.get('showOnHome') === '1';
-    if (!name) return redirect('/classes/manage');
-    const imageKey = await uploadImage(env, 'classes', form.get('image'));
+    const name = String(form.get("name") || "").trim();
+    const showOnHome = form.get("showOnHome") === "1";
+    if (!name) return redirect("/classes/manage");
+    const imageKey = await uploadImage(env, "classes", form.get("image"));
     await createClass(env.DB, { name, imageKey, showOnHome });
-    return redirect('/classes/manage');
+    return redirect("/classes/manage");
   }
 
-  if (url.pathname.startsWith('/api/classes/') && request.method === 'POST') {
-    const classId = url.pathname.split('/').pop();
+  if (url.pathname.startsWith("/api/classes/") && request.method === "POST") {
+    const classId = url.pathname.split("/").pop();
     const current = await getClassById(env.DB, classId);
-    if (!current) return new Response('Not found', { status: 404 });
+    if (!current) return new Response("Not found", { status: 404 });
     const form = await request.formData();
-    const intent = String(form.get('intent') || 'update');
-    if (intent === 'delete') {
+    const intent = String(form.get("intent") || "update");
+    if (intent === "delete") {
       await deleteClass(env.DB, classId);
-      return redirect('/classes/manage');
+      return redirect("/classes/manage");
     }
-    if (intent === 'move-up' || intent === 'move-down') {
-      await moveClass(env.DB, classId, intent === 'move-up' ? 'up' : 'down');
-      return redirect('/classes/manage');
+    if (intent === "move-up" || intent === "move-down") {
+      await moveClass(env.DB, classId, intent === "move-up" ? "up" : "down");
+      return redirect("/classes/manage");
     }
 
-    const name = String(form.get('name') || '').trim();
-    if (!name) return redirect('/classes/manage');
-    const showOnHome = form.get('showOnHome') === '1';
-    const removeImage = form.get('removeImage') === '1';
-    const uploaded = await uploadImage(env, 'classes', form.get('image'));
+    const name = String(form.get("name") || "").trim();
+    if (!name) return redirect("/classes/manage");
+    const showOnHome = form.get("showOnHome") === "1";
+    const removeImage = form.get("removeImage") === "1";
+    const uploaded = await uploadImage(env, "classes", form.get("image"));
     const imageKey = removeImage ? null : uploaded || current.image_key;
     await updateClass(env.DB, classId, {
       name,
       imageKey,
       showOnHome,
     });
-    return redirect('/classes/manage');
+    return redirect("/classes/manage");
   }
 
-  if (url.pathname === '/api/subjects' && request.method === 'POST') {
+  if (url.pathname === "/api/subjects" && request.method === "POST") {
     const form = await request.formData();
-    const name = String(form.get('name') || '').trim();
-    const classId = String(form.get('classId') || '');
-    const templateId = String(form.get('templateId') || '');
-    if (!name || !templateId || !classId) return redirect('/subjects');
+    const name = String(form.get("name") || "").trim();
+    const classId = String(form.get("classId") || "");
+    const templateId = String(form.get("templateId") || "");
+    if (!name || !templateId || !classId) return redirect("/subjects");
     const selectedClass = await getClassById(env.DB, classId);
-    if (!selectedClass) return redirect('/subjects');
+    if (!selectedClass) return redirect("/subjects");
     const classLevelMatch = String(selectedClass.name).match(/(\d+)/);
     const classLevel = classLevelMatch ? Number(classLevelMatch[1]) : 0;
-    const imageKey = await uploadImage(env, 'subjects', form.get('image'));
+    const imageKey = await uploadImage(env, "subjects", form.get("image"));
     await createSubject(env.DB, { name, classId, classLevel, templateId, imageKey });
-    return redirect('/subjects');
+    return redirect("/subjects");
   }
 
-  if (url.pathname.startsWith('/api/subjects/') && request.method === 'POST') {
-    const subjectId = url.pathname.split('/').pop();
+  if (url.pathname.startsWith("/api/subjects/") && request.method === "POST") {
+    const subjectId = url.pathname.split("/").pop();
     const form = await request.formData();
-    const intent = String(form.get('intent') || 'update');
+    const intent = String(form.get("intent") || "update");
     const current = await getSubject(env.DB, subjectId);
-    if (!current) return new Response('Not found', { status: 404 });
-    if (intent === 'delete') {
+    if (!current) return new Response("Not found", { status: 404 });
+    if (intent === "delete") {
       await deleteSubject(env.DB, subjectId);
-      return redirect('/subjects');
+      return redirect("/subjects");
     }
-    const name = String(form.get('name') || '').trim();
-    if (!name) return redirect('/subjects');
-    const removeImage = form.get('removeImage') === '1';
-    const uploaded = await uploadImage(env, 'subjects', form.get('image'));
+    const name = String(form.get("name") || "").trim();
+    if (!name) return redirect("/subjects");
+    const removeImage = form.get("removeImage") === "1";
+    const uploaded = await uploadImage(env, "subjects", form.get("image"));
     const imageKey = removeImage ? null : uploaded || current.image_key;
     await updateSubject(env.DB, subjectId, name, imageKey);
-    return redirect('/subjects');
+    return redirect("/subjects");
   }
 
-  if (url.pathname.startsWith('/api/subject-nodes/') && request.method === 'POST') {
-    const nodeId = url.pathname.split('/').pop();
+  if (url.pathname.startsWith("/api/subject-nodes/") && request.method === "POST") {
+    const nodeId = url.pathname.split("/").pop();
     const node = await getSubjectNode(env.DB, nodeId);
-    if (!node) return new Response('Not found', { status: 404 });
+    if (!node) return new Response("Not found", { status: 404 });
     const form = await request.formData();
-    const displayName = node.supports_edit ? String(form.get('displayName') || node.display_name).trim() : node.display_name;
-    const removeImage = form.get('removeImage') === '1';
-    const image = form.get('image');
-    const uploaded = node.supports_image ? await uploadImage(env, 'subject-nodes', image) : null;
+    const displayName = node.supports_edit ? String(form.get("displayName") || node.display_name).trim() : node.display_name;
+    const removeImage = form.get("removeImage") === "1";
+    const image = form.get("image");
+    const uploaded = node.supports_image ? await uploadImage(env, "subject-nodes", image) : null;
     const imageKey = removeImage ? null : uploaded || node.image_key;
     await updateSubjectNode(env.DB, nodeId, displayName || node.display_name, imageKey);
-    return redirect(String(form.get('redirect') || '/subjects'));
+    return redirect(String(form.get("redirect") || "/subjects"));
   }
 
-  if (url.pathname === '/api/chapters' && request.method === 'POST') {
+  if (url.pathname === "/api/chapters" && request.method === "POST") {
     const form = await request.formData();
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const name = String(form.get('name') || '').trim();
-    if (!subjectNodeId || !name) return redirect('/subjects');
-    const imageKey = await uploadImage(env, 'chapters', form.get('image'));
-    const hasTopics = form.get('hasTopics') === '1' ? 1 : 0;
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const name = String(form.get("name") || "").trim();
+    if (!subjectNodeId || !name) return redirect("/subjects");
+    const imageKey = await uploadImage(env, "chapters", form.get("image"));
+    const hasTopics = form.get("hasTopics") === "1" ? 1 : 0;
     await createChapter(env.DB, subjectNodeId, name, imageKey, hasTopics);
     return redirect(`/subjects/${subjectId}/nodes/${subjectNodeId}`);
   }
 
-  if (url.pathname.startsWith('/api/chapters/') && request.method === 'POST') {
-    const chapterId = url.pathname.split('/').pop();
+  if (url.pathname.startsWith("/api/chapters/") && request.method === "POST") {
+    const chapterId = url.pathname.split("/").pop();
     const current = await getChapter(env.DB, chapterId);
-    if (!current) return new Response('Not found', { status: 404 });
+    if (!current) return new Response("Not found", { status: 404 });
     const form = await request.formData();
-    const intent = String(form.get('intent') || 'update');
-    const subjectId = String(form.get('subjectId') || '');
-    const nodeId = String(form.get('nodeId') || current.subject_node_id);
-    if (intent === 'delete') {
+    const intent = String(form.get("intent") || "update");
+    const subjectId = String(form.get("subjectId") || "");
+    const nodeId = String(form.get("nodeId") || current.subject_node_id);
+    if (intent === "delete") {
       await deleteChapter(env.DB, chapterId);
     } else {
-      const uploaded = await uploadImage(env, 'chapters', form.get('image'));
-      const removeImage = form.get('removeImage') === '1';
+      const uploaded = await uploadImage(env, "chapters", form.get("image"));
+      const removeImage = form.get("removeImage") === "1";
       const imageKey = removeImage ? null : uploaded || current.image_key;
-      const hasTopics = form.get('hasTopics') === '1' ? 1 : 0;
-      await updateChapter(env.DB, chapterId, String(form.get('name') || current.name), imageKey, hasTopics);
+      const hasTopics = form.get("hasTopics") === "1" ? 1 : 0;
+      await updateChapter(env.DB, chapterId, String(form.get("name") || current.name), imageKey, hasTopics);
     }
     return redirect(`/subjects/${subjectId}/nodes/${nodeId}`);
   }
 
-  if (url.pathname === '/api/topics' && request.method === 'POST') {
+  if (url.pathname === "/api/topics" && request.method === "POST") {
     const form = await request.formData();
-    const chapterId = String(form.get('chapterId') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const nodeId = String(form.get('nodeId') || '');
-    const name = String(form.get('name') || '').trim();
-    if (!chapterId || !name) return redirect('/subjects');
-    const imageKey = await uploadImage(env, 'topics', form.get('image'));
+    const chapterId = String(form.get("chapterId") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const nodeId = String(form.get("nodeId") || "");
+    const name = String(form.get("name") || "").trim();
+    if (!chapterId || !name) return redirect("/subjects");
+    const imageKey = await uploadImage(env, "topics", form.get("image"));
     await createTopic(env.DB, chapterId, name, imageKey);
     return redirect(`/subjects/${subjectId}/nodes/${nodeId}/chapters/${chapterId}`);
   }
 
-  if (url.pathname.startsWith('/api/topics/') && request.method === 'POST') {
-    const topicId = url.pathname.split('/').pop();
+  if (url.pathname.startsWith("/api/topics/") && request.method === "POST") {
+    const topicId = url.pathname.split("/").pop();
     const current = await getTopic(env.DB, topicId);
-    if (!current) return new Response('Not found', { status: 404 });
+    if (!current) return new Response("Not found", { status: 404 });
     const form = await request.formData();
-    const intent = String(form.get('intent') || 'update');
-    const subjectId = String(form.get('subjectId') || '');
-    const nodeId = String(form.get('nodeId') || '');
-    const chapterId = String(form.get('chapterId') || current.chapter_id);
-    if (intent === 'delete') {
+    const intent = String(form.get("intent") || "update");
+    const subjectId = String(form.get("subjectId") || "");
+    const nodeId = String(form.get("nodeId") || "");
+    const chapterId = String(form.get("chapterId") || current.chapter_id);
+    if (intent === "delete") {
       await deleteTopic(env.DB, topicId);
     } else {
-      const uploaded = await uploadImage(env, 'topics', form.get('image'));
-      const removeImage = form.get('removeImage') === '1';
+      const uploaded = await uploadImage(env, "topics", form.get("image"));
+      const removeImage = form.get("removeImage") === "1";
       const imageKey = removeImage ? null : uploaded || current.image_key;
-      await updateTopic(env.DB, topicId, String(form.get('name') || current.name), imageKey);
+      await updateTopic(env.DB, topicId, String(form.get("name") || current.name), imageKey);
     }
     return redirect(`/subjects/${subjectId}/nodes/${nodeId}/chapters/${chapterId}`);
   }
 
-  if (url.pathname === '/api/notes' && request.method === 'POST') {
+  if (url.pathname === "/api/notes" && request.method === "POST") {
     const form = await request.formData();
-    const idVal = String(form.get('id') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const chapterId = String(form.get('chapterId') || '');
-    const topicId = String(form.get('topicId') || '');
-    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const idVal = String(form.get("id") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const chapterId = String(form.get("chapterId") || "");
+    const topicId = String(form.get("topicId") || "");
+    const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const contentHtml = String(form.get('contentHtml') || '').trim();
+    const contentHtml = String(form.get("contentHtml") || "").trim();
     const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
     if (!contentHtml) return redirect(redirectUrl);
     if (!idVal) {
@@ -583,27 +497,27 @@ async function handleAdminPost(request, env, url) {
     return redirect(redirectUrl);
   }
 
-  if (url.pathname === '/api/notes/delete' && request.method === 'POST') {
+  if (url.pathname === "/api/notes/delete" && request.method === "POST") {
     const form = await request.formData();
-    const idVal = String(form.get('id') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const chapterId = String(form.get('chapterId') || '');
-    const topicId = String(form.get('topicId') || '');
-    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const idVal = String(form.get("id") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const chapterId = String(form.get("chapterId") || "");
+    const topicId = String(form.get("topicId") || "");
+    const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteNote(env.DB, idVal);
     return redirect(`/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
   }
 
-  if (url.pathname === '/api/mcqs' && request.method === 'POST') {
+  if (url.pathname === "/api/mcqs" && request.method === "POST") {
     const form = await request.formData();
-    const idVal = String(form.get('id') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const chapterId = String(form.get('chapterId') || '');
-    const topicId = String(form.get('topicId') || '');
-    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const idVal = String(form.get("id") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const chapterId = String(form.get("chapterId") || "");
+    const topicId = String(form.get("topicId") || "");
+    const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const payload = {
       id: idVal,
@@ -611,71 +525,69 @@ async function handleAdminPost(request, env, url) {
       subjectNodeId,
       chapterId,
       topicId,
-      questionHtml: String(form.get('questionHtml') || '').trim(),
-      optionA: String(form.get('optionA') || '').trim(),
-      optionB: String(form.get('optionB') || '').trim(),
-      optionC: String(form.get('optionC') || '').trim(),
-      optionD: String(form.get('optionD') || '').trim(),
-      correctOption: String(form.get('correctOption') || 'A'),
+      questionHtml: String(form.get("questionHtml") || "").trim(),
+      optionA: String(form.get("optionA") || "").trim(),
+      optionB: String(form.get("optionB") || "").trim(),
+      optionC: String(form.get("optionC") || "").trim(),
+      optionD: String(form.get("optionD") || "").trim(),
+      correctOption: String(form.get("correctOption") || "A"),
     };
     const redirectUrl = `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
     if (!payload.questionHtml || !payload.optionA || !payload.optionB || !payload.optionC || !payload.optionD) return redirect(redirectUrl);
     if (!idVal) {
-      payload.imageKey = await uploadImage(env, 'mcq', form.get('image'));
+      payload.imageKey = await uploadImage(env, "mcq", form.get("image"));
       await createMcq(env.DB, payload);
     } else {
       const existing = (await listMcqs(env.DB, subjectNodeId, chapterId, topicId)).find((m) => m.id === idVal);
-      const uploaded = await uploadImage(env, 'mcq', form.get('image'));
-      payload.imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
+      const uploaded = await uploadImage(env, "mcq", form.get("image"));
+      payload.imageKey = form.get("removeImage") === "1" ? null : uploaded || existing?.image_key || null;
       await updateMcq(env.DB, payload);
     }
     return redirect(redirectUrl);
   }
 
-  if (url.pathname === '/api/mcqs/delete' && request.method === 'POST') {
+  if (url.pathname === "/api/mcqs/delete" && request.method === "POST") {
     const form = await request.formData();
-    const idVal = String(form.get('id') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const chapterId = String(form.get('chapterId') || '');
-    const topicId = String(form.get('topicId') || '');
-    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const idVal = String(form.get("id") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const chapterId = String(form.get("chapterId") || "");
+    const topicId = String(form.get("topicId") || "");
+    const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteMcq(env.DB, idVal);
     return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
   }
 
-
-
-  if (url.pathname === '/api/content-entries' && request.method === 'POST') {
+  if (url.pathname === "/api/content-entries" && request.method === "POST") {
     const form = await request.formData();
-    const idVal = String(form.get('id') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const chapterId = String(form.get('chapterId') || '');
-    const topicId = String(form.get('topicId') || '');
-    const contentKind = String(form.get('contentKind') || '').trim();
-    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const idVal = String(form.get("id") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const chapterId = String(form.get("chapterId") || "");
+    const topicId = String(form.get("topicId") || "");
+    const contentKind = String(form.get("contentKind") || "").trim();
+    const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const title = String(form.get('title') || '').trim();
-    const contentHtml = String(form.get('contentHtml') || '').trim();
+    const title = String(form.get("title") || "").trim();
+    const contentHtml = String(form.get("contentHtml") || "").trim();
     const redirectUrl = `/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&kind=${encodeURIComponent(contentKind)}&page=${safePage}`;
     if (!contentKind || !contentHtml) return redirect(redirectUrl);
 
     if (!idVal) {
-      if (contentKind === 'Summary') {
+      if (contentKind === "Summary") {
         await upsertSummaryEntry(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentHtml });
       } else {
-        const imageKey = await uploadImage(env, 'content', form.get('image'));
+        const imageKey = await uploadImage(env, "content", form.get("image"));
         await createContentEntry(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentKind, title, contentHtml, imageKey });
       }
     } else {
-      if (contentKind === 'Summary') {
+      if (contentKind === "Summary") {
         await upsertSummaryEntry(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentHtml });
       } else {
         const existing = (await listContentEntries(env.DB, subjectNodeId, chapterId, topicId, contentKind)).find((entry) => entry.id === idVal);
-        const uploaded = await uploadImage(env, 'content', form.get('image'));
-        const imageKey = form.get('removeImage') === '1' ? null : uploaded || existing?.image_key || null;
+        const uploaded = await uploadImage(env, "content", form.get("image"));
+        const imageKey = form.get("removeImage") === "1" ? null : uploaded || existing?.image_key || null;
         await updateContentEntry(env.DB, { id: idVal, title, contentHtml, imageKey });
       }
     }
@@ -683,15 +595,15 @@ async function handleAdminPost(request, env, url) {
     return redirect(redirectUrl);
   }
 
-  if (url.pathname === '/api/content-entries/delete' && request.method === 'POST') {
+  if (url.pathname === "/api/content-entries/delete" && request.method === "POST") {
     const form = await request.formData();
-    const idVal = String(form.get('id') || '');
-    const subjectId = String(form.get('subjectId') || '');
-    const subjectNodeId = String(form.get('subjectNodeId') || '');
-    const chapterId = String(form.get('chapterId') || '');
-    const topicId = String(form.get('topicId') || '');
-    const kind = String(form.get('kind') || '').trim();
-    const page = Number.parseInt(String(form.get('page') || '1'), 10);
+    const idVal = String(form.get("id") || "");
+    const subjectId = String(form.get("subjectId") || "");
+    const subjectNodeId = String(form.get("subjectNodeId") || "");
+    const chapterId = String(form.get("chapterId") || "");
+    const topicId = String(form.get("topicId") || "");
+    const kind = String(form.get("kind") || "").trim();
+    const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteContentEntry(env.DB, idVal);
     return redirect(`/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&kind=${encodeURIComponent(kind)}&page=${safePage}`);
@@ -699,53 +611,52 @@ async function handleAdminPost(request, env, url) {
   return null;
 }
 
-
 async function serveMedia(request, url, env, user, ctx) {
-  const encodedKey = url.pathname.slice('/media/'.length);
-  if (!encodedKey) return new Response('Not Found', { status: 404 });
+  const encodedKey = url.pathname.slice("/media/".length);
+  if (!encodedKey) return new Response("Not Found", { status: 404 });
 
   let key;
   try {
     key = decodeURIComponent(encodedKey);
   } catch {
-    return new Response('Not Found', { status: 404 });
+    return new Response("Not Found", { status: 404 });
   }
 
-  if (!key || key.includes('..')) return new Response('Not Found', { status: 404 });
+  if (!key || key.includes("..")) return new Response("Not Found", { status: 404 });
 
-  const isUserSpecificMedia = key.startsWith('profiles/');
-  if (isUserSpecificMedia && !user) return redirect('/login');
+  const isUserSpecificMedia = key.startsWith("profiles/");
+  if (isUserSpecificMedia && !user) return redirect("/login");
 
   const method = request.method.toUpperCase();
-  const canUseCache = method === 'GET';
-  const cacheKey = new Request(`https://media-cache.local/${encodeURIComponent(key)}`, { method: 'GET' });
+  const canUseCache = method === "GET";
+  const cacheKey = new Request(`https://media-cache.local/${encodeURIComponent(key)}`, { method: "GET" });
   if (canUseCache) {
     const cached = await caches.default.match(cacheKey);
     if (cached) return cached;
   }
 
   const object = await env.BUCKET.get(key);
-  if (!object) return new Response('Not Found', { status: 404 });
+  if (!object) return new Response("Not Found", { status: 404 });
 
   const etag = object.httpEtag;
-  const ifNoneMatch = request.headers.get('if-none-match');
+  const ifNoneMatch = request.headers.get("if-none-match");
   if (etag && ifNoneMatch && ifNoneMatch === etag) {
     return new Response(null, {
       status: 304,
       headers: {
         etag,
-        'cache-control': `${isUserSpecificMedia ? 'private' : 'public'}, max-age=2592000, stale-while-revalidate=86400`,
+        "cache-control": `${isUserSpecificMedia ? "private" : "public"}, max-age=2592000, stale-while-revalidate=86400`,
       },
     });
   }
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
-  if (etag) headers.set('etag', etag);
-  headers.set('cache-control', `${isUserSpecificMedia ? 'private' : 'public'}, max-age=2592000, stale-while-revalidate=86400`);
-  headers.set('accept-ranges', 'bytes');
+  if (etag) headers.set("etag", etag);
+  headers.set("cache-control", `${isUserSpecificMedia ? "private" : "public"}, max-age=2592000, stale-while-revalidate=86400`);
+  headers.set("accept-ranges", "bytes");
 
-  if (method === 'HEAD') return new Response(null, { headers });
+  if (method === "HEAD") return new Response(null, { headers });
   const response = new Response(object.body, { headers });
   if (canUseCache) {
     ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
@@ -753,13 +664,12 @@ async function serveMedia(request, url, env, user, ctx) {
   return response;
 }
 
-
 async function handleDynamicPages(url, env, user) {
   const adminClassMatch = url.pathname.match(/^\/classes\/manage\/([^/]+)$/);
   if (adminClassMatch) {
     const classItem = await getClassById(env.DB, adminClassMatch[1]);
-    if (!classItem) return new Response('Not Found', { status: 404 });
-    if (!user || user.role !== 'admin') return html(forbiddenPage(), 403);
+    if (!classItem) return new Response("Not Found", { status: 404 });
+    if (!user || user.role !== "admin") return html(forbiddenPage(), 403);
     const subjects = await listSubjectsByClass(env.DB, classItem.id);
     return html(classSubjectsPage(user, classItem, subjects));
   }
@@ -767,7 +677,7 @@ async function handleDynamicPages(url, env, user) {
   const publicClassMatch = url.pathname.match(/^\/classes\/([^/]+)$/);
   if (publicClassMatch) {
     const classItem = await getClassById(env.DB, publicClassMatch[1]);
-    if (!classItem) return new Response('Not Found', { status: 404 });
+    if (!classItem) return new Response("Not Found", { status: 404 });
     const subjects = await listSubjectsByClass(env.DB, classItem.id);
     return html(publicClassSubjectsPage(user, classItem, subjects));
   }
@@ -775,105 +685,92 @@ async function handleDynamicPages(url, env, user) {
   const publicSubjectRootMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)$/);
   if (publicSubjectRootMatch) {
     const subject = await getSubject(env.DB, publicSubjectRootMatch[1]);
-    if (!subject) return new Response('Not Found', { status: 404 });
+    if (!subject) return new Response("Not Found", { status: 404 });
     const nodes = await listSubjectNodesByParent(env.DB, subject.id, null);
     if (nodes.length === 1 && nodes[0].supports_chapters) {
       const rootNode = nodes[0];
       const chapters = await listChapters(env.DB, rootNode.id);
-      return html(publicSubjectNodePage(user, subject, subject.name, 'Choose a chapter.', chapters, (chapter) => `/learn/subjects/${subject.id}/nodes/${rootNode.id}/chapters/${chapter.id}`));
+      return html(publicSubjectNodePage(user, subject, subject.name, "Choose a chapter.", chapters, (chapter) => `/learn/subjects/${subject.id}/nodes/${rootNode.id}/chapters/${chapter.id}`));
     }
-    return html(publicSubjectNodePage(user, subject, subject.name, 'Select a book.', nodes, (node) => `/learn/subjects/${subject.id}/nodes/${node.id}`));
+    return html(publicSubjectNodePage(user, subject, subject.name, "Select a book.", nodes, (node) => `/learn/subjects/${subject.id}/nodes/${node.id}`));
   }
 
   const publicSubjectNodeMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)$/);
   if (publicSubjectNodeMatch) {
     const [subject, node] = await Promise.all([getSubject(env.DB, publicSubjectNodeMatch[1]), getSubjectNode(env.DB, publicSubjectNodeMatch[2])]);
-    if (!subject || !node) return new Response('Not Found', { status: 404 });
+    if (!subject || !node) return new Response("Not Found", { status: 404 });
 
     if (node.supports_chapters) {
       const chapters = await listChapters(env.DB, node.id);
-      return html(publicSubjectNodePage(user, subject, node.display_name, 'Choose a chapter.', chapters, (chapter) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`));
+      return html(publicSubjectNodePage(user, subject, node.display_name, "Choose a chapter.", chapters, (chapter) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}`));
     }
 
     const children = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const sectionChildren = children.filter((child) => child.node_type !== 'content');
+    const sectionChildren = children.filter((child) => child.node_type !== "content");
     if (sectionChildren.length > 0) {
-      return html(publicSubjectNodePage(user, subject, node.display_name, 'Choose a section.', sectionChildren, (child) => `/learn/subjects/${subject.id}/nodes/${child.id}`));
+      return html(publicSubjectNodePage(user, subject, node.display_name, "Choose a section.", sectionChildren, (child) => `/learn/subjects/${subject.id}/nodes/${child.id}`));
     }
 
-    return new Response('Not Found', { status: 404 });
+    return new Response("Not Found", { status: 404 });
   }
 
   const publicChapterMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
   if (publicChapterMatch) {
-    const [subject, node, chapter] = await Promise.all([
-      getSubject(env.DB, publicChapterMatch[1]),
-      getSubjectNode(env.DB, publicChapterMatch[2]),
-      getChapter(env.DB, publicChapterMatch[3]),
-    ]);
-    if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter] = await Promise.all([getSubject(env.DB, publicChapterMatch[1]), getSubjectNode(env.DB, publicChapterMatch[2]), getChapter(env.DB, publicChapterMatch[3])]);
+    if (!subject || !node || !chapter) return new Response("Not Found", { status: 404 });
 
     if (chapter.has_topics) {
       const topics = await listTopics(env.DB, chapter.id);
-      return html(publicSubjectNodePage(user, subject, chapter.name, 'Choose a topic.', topics, (topic) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`));
+      return html(publicSubjectNodePage(user, subject, chapter.name, "Choose a topic.", topics, (topic) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`));
     }
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const shortNotesNode = contentNodes.find((item) => item.content_kind === 'Short Notes');
+    const shortNotesNode = contentNodes.find((item) => item.content_kind === "Short Notes");
     const noteNodeIds = Array.from(new Set([shortNotesNode?.id, node.id].filter(Boolean)));
     const notes = [];
     for (const noteNodeId of noteNodeIds) {
       const scoped = await listNotes(env.DB, noteNodeId, chapter.id, null);
       notes.push(...scoped);
     }
-    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     return html(publicChapterContentPage(user, subject, node, chapter, uniqueNotes, contentNodes));
   }
 
   const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
   if (publicTopicMatch) {
-    const [subject, node, chapter, topic] = await Promise.all([
-      getSubject(env.DB, publicTopicMatch[1]),
-      getSubjectNode(env.DB, publicTopicMatch[2]),
-      getChapter(env.DB, publicTopicMatch[3]),
-      getTopic(env.DB, publicTopicMatch[4]),
-    ]);
-    if (!subject || !node || !chapter || !topic) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, publicTopicMatch[1]), getSubjectNode(env.DB, publicTopicMatch[2]), getChapter(env.DB, publicTopicMatch[3]), getTopic(env.DB, publicTopicMatch[4])]);
+    if (!subject || !node || !chapter || !topic) return new Response("Not Found", { status: 404 });
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const shortNotesNode = contentNodes.find((item) => item.content_kind === 'Short Notes');
+    const shortNotesNode = contentNodes.find((item) => item.content_kind === "Short Notes");
     const noteNodeIds = Array.from(new Set([shortNotesNode?.id, node.id].filter(Boolean)));
     const notes = [];
     for (const noteNodeId of noteNodeIds) {
       const scoped = await listNotes(env.DB, noteNodeId, chapter.id, topic.id);
       notes.push(...scoped);
     }
-    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     return html(publicChapterContentPage(user, subject, node, topic, uniqueNotes, contentNodes, topic.id));
   }
 
   const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/content\/([^/]+)$/);
   if (publicContentMatch) {
     const contentKind = decodeURIComponent(publicContentMatch[4]);
-    const topicId = url.searchParams.get('topic');
-    const [subject, node, chapter] = await Promise.all([
-      getSubject(env.DB, publicContentMatch[1]),
-      getSubjectNode(env.DB, publicContentMatch[2]),
-      getChapter(env.DB, publicContentMatch[3]),
-    ]);
-    if (!subject || !node || !chapter || !contentKind) return new Response('Not Found', { status: 404 });
+    const topicId = url.searchParams.get("topic");
+    const [subject, node, chapter] = await Promise.all([getSubject(env.DB, publicContentMatch[1]), getSubjectNode(env.DB, publicContentMatch[2]), getChapter(env.DB, publicContentMatch[3])]);
+    if (!subject || !node || !chapter || !contentKind) return new Response("Not Found", { status: 404 });
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const targetContentNode = contentNodes.find((item) => item.content_kind === contentKind);
     const nodeIds = Array.from(new Set([targetContentNode?.id, node.id].filter(Boolean)));
 
-    if (contentKind === 'MCQ Bank') {
+    if (contentKind === "MCQ Bank") {
       const mcqs = [];
       for (const contentNodeId of nodeIds) {
         const scoped = await listMcqs(env.DB, contentNodeId, chapter.id, topicId || null);
         mcqs.push(...scoped);
       }
-      const uniqueMcqs = mergeUniqueById(mcqs).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      const uniqueMcqs = mergeUniqueById(mcqs).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
       return html(publicMcqEntriesPage(user, subject, chapter, uniqueMcqs));
     }
 
@@ -882,14 +779,14 @@ async function handleDynamicPages(url, env, user) {
       const scoped = await listContentEntries(env.DB, contentNodeId, chapter.id, topicId || null, contentKind);
       entries.push(...scoped);
     }
-    const uniqueEntries = mergeUniqueById(entries).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    const uniqueEntries = mergeUniqueById(entries).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     return html(publicContentEntriesPage(user, subject, chapter, contentKind, uniqueEntries));
   }
 
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
   if (templateMatch) {
     const template = await getTemplate(env.DB, templateMatch[1]);
-    if (!template) return new Response('Not Found', { status: 404 });
+    if (!template) return new Response("Not Found", { status: 404 });
     const nodes = await listTemplateNodes(env.DB, template.id);
     return html(templateDetailsPage(user, template, nodes));
   }
@@ -897,38 +794,29 @@ async function handleDynamicPages(url, env, user) {
   const subjectRootMatch = url.pathname.match(/^\/subjects\/([^/]+)$/);
   if (subjectRootMatch) {
     const subject = await getSubject(env.DB, subjectRootMatch[1]);
-    if (!subject) return new Response('Not Found', { status: 404 });
+    if (!subject) return new Response("Not Found", { status: 404 });
     const nodes = await listSubjectNodesByParent(env.DB, subject.id, null);
     if (nodes.length === 1 && nodes[0].supports_chapters) {
       const rootNode = nodes[0];
       return html(chaptersPage(user, subject, rootNode, await listChapters(env.DB, rootNode.id)));
     }
-    return html(subjectNodeListPage(user, subject, `${subject.name} · Top Categories`, 'Manage Main Book and Assisting Book.', nodes, '/subjects'));
+    return html(subjectNodeListPage(user, subject, `${subject.name} · Top Categories`, "Manage Main Book and Assisting Book.", nodes, "/subjects"));
   }
 
   const subjectNodeMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)$/);
   if (subjectNodeMatch) {
     const [subject, node] = await Promise.all([getSubject(env.DB, subjectNodeMatch[1]), getSubjectNode(env.DB, subjectNodeMatch[2])]);
-    if (!subject || !node) return new Response('Not Found', { status: 404 });
+    if (!subject || !node) return new Response("Not Found", { status: 404 });
 
     if (node.supports_chapters) {
       return html(chaptersPage(user, subject, node, await listChapters(env.DB, node.id)));
     }
 
     const children = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const contentChildren = children.filter((child) => child.node_type === 'content');
-    const sectionChildren = children.filter((child) => child.node_type !== 'content');
+    const contentChildren = children.filter((child) => child.node_type === "content");
+    const sectionChildren = children.filter((child) => child.node_type !== "content");
     if (sectionChildren.length > 0) {
-      return html(
-        subjectNodeListPage(
-          user,
-          subject,
-          `${subject.name} · ${node.display_name}`,
-          'Rename items and upload template images.',
-          sectionChildren,
-          `/subjects/${subject.id}`
-        )
-      );
+      return html(subjectNodeListPage(user, subject, `${subject.name} · ${node.display_name}`, "Rename items and upload template images.", sectionChildren, `/subjects/${subject.id}`));
     }
 
     return html(contentKindsPage(user, subject, node, null, null, contentChildren));
@@ -936,12 +824,8 @@ async function handleDynamicPages(url, env, user) {
 
   const chapterPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
   if (chapterPageMatch) {
-    const [subject, node, chapter] = await Promise.all([
-      getSubject(env.DB, chapterPageMatch[1]),
-      getSubjectNode(env.DB, chapterPageMatch[2]),
-      getChapter(env.DB, chapterPageMatch[3]),
-    ]);
-    if (!subject || !node || !chapter) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter] = await Promise.all([getSubject(env.DB, chapterPageMatch[1]), getSubjectNode(env.DB, chapterPageMatch[2]), getChapter(env.DB, chapterPageMatch[3])]);
+    if (!subject || !node || !chapter) return new Response("Not Found", { status: 404 });
     if (chapter.has_topics) {
       return html(topicsPage(user, subject, node, chapter, await listTopics(env.DB, chapter.id)));
     }
@@ -951,68 +835,48 @@ async function handleDynamicPages(url, env, user) {
 
   const topicPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
   if (topicPageMatch) {
-    const [subject, node, chapter, topic] = await Promise.all([
-      getSubject(env.DB, topicPageMatch[1]),
-      getSubjectNode(env.DB, topicPageMatch[2]),
-      getChapter(env.DB, topicPageMatch[3]),
-      getTopic(env.DB, topicPageMatch[4]),
-    ]);
-    if (!subject || !node || !chapter || !topic) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, topicPageMatch[1]), getSubjectNode(env.DB, topicPageMatch[2]), getChapter(env.DB, topicPageMatch[3]), getTopic(env.DB, topicPageMatch[4])]);
+    if (!subject || !node || !chapter || !topic) return new Response("Not Found", { status: 404 });
     const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     return html(contentKindsPage(user, subject, node, chapter, topic, contentChildren));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/content$/)) {
-    const subjectId = url.pathname.split('/')[2];
-    const nodeId = url.searchParams.get('node');
-    const chapterId = url.searchParams.get('chapter');
-    const topicId = url.searchParams.get('topic');
-    const contentKind = String(url.searchParams.get('kind') || '').trim();
-    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const subjectId = url.pathname.split("/")[2];
+    const nodeId = url.searchParams.get("node");
+    const chapterId = url.searchParams.get("chapter");
+    const topicId = url.searchParams.get("topic");
+    const contentKind = String(url.searchParams.get("kind") || "").trim();
+    const page = Number.parseInt(url.searchParams.get("page") || "1", 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const [subject, node, chapter, topic] = await Promise.all([
-      getSubject(env.DB, subjectId),
-      getSubjectNode(env.DB, nodeId),
-      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
-      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
-    ]);
-    if (!subject || !node || !contentKind) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, subjectId), getSubjectNode(env.DB, nodeId), chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null), topicId ? getTopic(env.DB, topicId) : Promise.resolve(null)]);
+    if (!subject || !node || !contentKind) return new Response("Not Found", { status: 404 });
     const entries = await listContentEntries(env.DB, node.id, chapter?.id, topic?.id, contentKind);
     return html(contentEntriesPage(user, subject, node, chapter, topic, contentKind, entries, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/notes$/)) {
-    const subjectId = url.pathname.split('/')[2];
-    const nodeId = url.searchParams.get('node');
-    const chapterId = url.searchParams.get('chapter');
-    const topicId = url.searchParams.get('topic');
-    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const subjectId = url.pathname.split("/")[2];
+    const nodeId = url.searchParams.get("node");
+    const chapterId = url.searchParams.get("chapter");
+    const topicId = url.searchParams.get("topic");
+    const page = Number.parseInt(url.searchParams.get("page") || "1", 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const [subject, node, chapter, topic] = await Promise.all([
-      getSubject(env.DB, subjectId),
-      getSubjectNode(env.DB, nodeId),
-      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
-      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
-    ]);
-    if (!subject || !node) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, subjectId), getSubjectNode(env.DB, nodeId), chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null), topicId ? getTopic(env.DB, topicId) : Promise.resolve(null)]);
+    if (!subject || !node) return new Response("Not Found", { status: 404 });
     const notes = await listNotes(env.DB, node.id, chapter?.id, topic?.id);
     return html(notesPage(user, subject, node, chapter, topic, notes, safePage));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/mcqs$/)) {
-    const subjectId = url.pathname.split('/')[2];
-    const nodeId = url.searchParams.get('node');
-    const chapterId = url.searchParams.get('chapter');
-    const topicId = url.searchParams.get('topic');
-    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const subjectId = url.pathname.split("/")[2];
+    const nodeId = url.searchParams.get("node");
+    const chapterId = url.searchParams.get("chapter");
+    const topicId = url.searchParams.get("topic");
+    const page = Number.parseInt(url.searchParams.get("page") || "1", 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    const [subject, node, chapter, topic] = await Promise.all([
-      getSubject(env.DB, subjectId),
-      getSubjectNode(env.DB, nodeId),
-      chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null),
-      topicId ? getTopic(env.DB, topicId) : Promise.resolve(null),
-    ]);
-    if (!subject || !node) return new Response('Not Found', { status: 404 });
+    const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, subjectId), getSubjectNode(env.DB, nodeId), chapterId ? getChapter(env.DB, chapterId) : Promise.resolve(null), topicId ? getTopic(env.DB, topicId) : Promise.resolve(null)]);
+    if (!subject || !node) return new Response("Not Found", { status: 404 });
     const mcqs = await listMcqs(env.DB, node.id, chapter?.id, topic?.id);
     return html(mcqsPage(user, subject, node, chapter, topic, mcqs, safePage));
   }
@@ -1022,61 +886,60 @@ async function handleDynamicPages(url, env, user) {
 
 export default {
   async fetch(request, env, ctx) {
-    if (!env.AUTH_SECRET) return new Response('AUTH_SECRET is required', { status: 500 });
+    if (!env.AUTH_SECRET) return new Response("AUTH_SECRET is required", { status: 500 });
 
     try {
       await ensureAppReady(env);
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : 'Schema initialization failed.' }, 500);
+      return json({ error: error instanceof Error ? error.message : "Schema initialization failed." }, 500);
     }
 
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/bootstrap') return apiBootstrap(request, env);
-    if (url.pathname === '/api/login') return apiLogin(request, env);
+    if (url.pathname === "/api/bootstrap") return apiBootstrap(request, env);
+    if (url.pathname === "/api/login") return apiLogin(request, env);
 
     if (!(await hasAdmin(env))) {
-      if (url.pathname === '/api/logout') return redirect('/setup');
-      if (url.pathname === '/' || url.pathname === '/setup') return html(setupPage());
-      return redirect('/setup');
+      if (url.pathname === "/api/logout") return redirect("/setup");
+      if (url.pathname === "/" || url.pathname === "/setup") return html(setupPage());
+      return redirect("/setup");
     }
 
     const route = pageRoutes.find((item) => item.path === url.pathname);
     const user = shouldResolveUser(request, route, url.pathname) ? await requireAuth(request, env) : null;
 
-    if (url.pathname.startsWith('/media/')) return serveMedia(request, url, env, user, ctx);
+    if (url.pathname.startsWith("/media/")) return serveMedia(request, url, env, user, ctx);
 
-    if (url.pathname === '/api/logout') {
-      if (!user) return redirect('/login');
+    if (url.pathname === "/api/logout") {
+      if (!user) return redirect("/login");
       return apiLogout(env, user);
     }
 
-    if (url.pathname.startsWith('/api/') && request.method === 'POST' && !['/api/bootstrap', '/api/login'].includes(url.pathname)) {
-      if (!user) return redirect('/login');
+    if (url.pathname.startsWith("/api/") && request.method === "POST" && !["/api/bootstrap", "/api/login"].includes(url.pathname)) {
+      if (!user) return redirect("/login");
       const profilePost = await handleProfilePost(request, env, url, user);
       if (profilePost) return profilePost;
-      if (user.role !== 'admin') return html(forbiddenPage(), 403);
+      if (user.role !== "admin") return html(forbiddenPage(), 403);
       const protectedPost = await handleAdminPost(request, env, url);
       if (protectedPost) return protectedPost;
     }
 
     if (!route) {
-      const isAdminDynamicPath =
-        url.pathname.startsWith('/subjects') || url.pathname.startsWith('/templates') || url.pathname.startsWith('/classes/manage');
+      const isAdminDynamicPath = url.pathname.startsWith("/subjects") || url.pathname.startsWith("/templates") || url.pathname.startsWith("/classes/manage");
 
       if (isAdminDynamicPath) {
-        if (!user) return redirect('/login');
-        if (user.role !== 'admin') return html(forbiddenPage(), 403);
+        if (!user) return redirect("/login");
+        if (user.role !== "admin") return html(forbiddenPage(), 403);
       }
 
       const dynamic = await handleDynamicPages(url, env, user);
       if (dynamic) return dynamic;
-      return new Response('Not Found', { status: 404 });
+      return new Response("Not Found", { status: 404 });
     }
 
     if (route.access === ACCESS.AUTHENTICATED && !user) {
-      if (url.pathname.startsWith('/api/')) return json({ error: 'Unauthorized' }, 401);
-      return redirect('/login');
+      if (url.pathname.startsWith("/api/")) return json({ error: "Unauthorized" }, 401);
+      return redirect("/login");
     }
 
     if (route.access === ACCESS.AUTHENTICATED && routeRequiresRole(route, user)) return html(forbiddenPage(), 403);
