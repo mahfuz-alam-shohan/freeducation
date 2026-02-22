@@ -285,25 +285,34 @@ export function subjectsPage(user, subjects, templates, classes) {
 }
 
 export function subjectNodeListPage(user, subject, title, subtitle, nodes, backHref) {
-  const rows = nodes
+  const cards = nodes
     .map(
-      (n) => `<tr>
-      <td class="table-action-open-cell"><a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a></td>
-      <td class="subject-node-name-cell">${fullTextCell(`${n.display_name} (Server key: ${n.server_name})`, `subject-node-${n.id}`, "Subject node")}</td>
-      <td>${yesNo(n.supports_edit)}</td>
-      <td>${yesNo(n.supports_image)}</td>
-      <td><form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true"><input type="hidden" name="redirect" value="${h(backHref)}" /><input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? "" : "disabled"} maxlength="120" /></form></td>
-      <td>${imageSlotCell({ id: `subject-node-image-${n.id}`, formId: `subject-node-update-${n.id}`, imageKey: n.image_key, disabled: !n.supports_image })}</td>
-      <td><small class="muted" data-auto-save-status form="subject-node-update-${n.id}">Synced</small></td>
-    </tr>`,
+      (n) => `<article class="subject-flow-card card flat-card">
+      <div class="subject-flow-card-head">
+        <div>
+          <h3 class="card-title">${h(n.display_name)}</h3>
+          <p class="muted">Server key: ${h(n.server_name)}</p>
+        </div>
+        <a href="/subjects/${subject.id}/nodes/${n.id}" class="btn btn-secondary">Open</a>
+      </div>
+      <div class="subject-flow-meta-row">
+        <span><strong>Edit:</strong> ${yesNo(n.supports_edit)}</span>
+        <span><strong>Image:</strong> ${yesNo(n.supports_image)}</span>
+      </div>
+      <form id="subject-node-update-${n.id}" method="post" action="/api/subject-nodes/${n.id}" enctype="multipart/form-data" data-auto-save="true" class="subject-flow-edit-row">
+        <input type="hidden" name="redirect" value="${h(backHref)}" />
+        <input class="input" name="displayName" value="${h(n.display_name)}" ${n.supports_edit ? "" : "disabled"} maxlength="120" />
+        ${imageSlotCell({ id: `subject-node-image-${n.id}`, formId: `subject-node-update-${n.id}`, imageKey: n.image_key, disabled: !n.supports_image })}
+        <small class="muted" data-auto-save-status form="subject-node-update-${n.id}">Synced</small>
+      </form>
+    </article>`,
     )
     .join("");
 
   const content = `${floatingBackButton(backHref, "Back to previous page")}
-  <section class="card"><div class="table-wrap"><table class="table flat-grid-table table-excel">
-    <thead><tr><th>Open</th><th>Name</th><th>Edit</th><th>Image</th><th>Rename</th><th>Image Upload</th><th>Sync</th></tr></thead>
-    <tbody>${tableRowsOrEmpty(rows, 7, "No nodes found.")}</tbody>
-  </table></div></section>`;
+  <section class="subject-flow-card-grid">
+    ${cards || '<section class="card flat-card"><p class="muted">No nodes found.</p></section>'}
+  </section>`;
 
   return appShell("subjects", user, title, subtitle, content, { pageStyles: modulesStyles });
 }
@@ -418,15 +427,22 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     return `/subjects/${subject.id}/content?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}&kind=${encodeURIComponent(kind)}`;
   };
 
-  const rows = kinds
+  const cards = kinds
     .map((kind) => {
       const href = hrefForKind(kind);
-      return `<tr><td class="table-action-open-cell">${href ? `<a class="btn btn-secondary" href="${href}">Open</a>` : '<span class="muted">—</span>'}</td><td class="content-kind-col">${h(kind)}</td></tr>`;
+      return `<article class="subject-flow-card card flat-card">
+        <div class="subject-flow-card-head">
+          <h3 class="card-title">${h(kind)}</h3>
+          ${href ? `<a class="btn btn-secondary" href="${href}">Open</a>` : '<span class="muted">Unavailable</span>'}
+        </div>
+      </article>`;
     })
     .join("");
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
   const content = `${floatingBackButton(backHref, "Back to previous page")}
-  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel content-kinds-table"><thead><tr><th class="table-action-open-cell">Open</th><th class="content-kind-col">Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
+  <section class="subject-flow-card-grid">
+    ${cards || '<section class="card flat-card"><p class="muted">No content types found.</p></section>'}
+  </section>`;
   return appShell("subjects", user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, "Choose any content type defined in your template.", content, { pageStyles: modulesStyles });
 }
 
