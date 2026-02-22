@@ -420,12 +420,12 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
   const rows = kinds
     .map((kind) => {
       const href = hrefForKind(kind);
-      return `<tr><td class="table-action-open-cell">${href ? `<a class="btn btn-secondary" href="${href}">Open</a>` : '<span class="muted">—</span>'}</td><td>${h(kind)}</td></tr>`;
+      return `<tr><td class="table-action-open-cell">${href ? `<a class="btn btn-secondary" href="${href}">Open</a>` : '<span class="muted">—</span>'}</td><td class="content-kind-col">${h(kind)}</td></tr>`;
     })
     .join("");
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
   const content = `${floatingBackButton(backHref, "Back to previous page")}
-  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel content-kinds-table"><thead><tr><th class="table-action-open-cell">Open</th><th>Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
+  <section class="card flat-card"><div class="table-wrap"><table class="table flat-grid-table table-excel content-kinds-table"><thead><tr><th class="table-action-open-cell">Open</th><th class="content-kind-col">Content Type</th></tr></thead><tbody>${tableRowsOrEmpty(rows, 2, "No content types found.")}</tbody></table></div></section>`;
   return appShell("subjects", user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, "Choose any content type defined in your template.", content, { pageStyles: modulesStyles });
 }
 
@@ -435,6 +435,10 @@ function richTextEditor(fieldName, value, placeholder, required = false) {
 
 function floatingBackButton(backHref, label = "Back") {
   return `<a class="floating-back-btn" href="${backHref}" aria-label="${h(label)}" title="${h(label)}"><span aria-hidden="true">←</span></a>`;
+}
+
+function parentAwareNodeId(node) {
+  return node?.node_type === "content" && node?.parent_subject_node_id ? node.parent_subject_node_id : node?.id;
 }
 
 function noteForm(subjectId, subjectNodeId, chapterId, topicId, note) {
@@ -521,7 +525,8 @@ export function notesPage(user, subject, node, chapter, topic, notes, currentPag
       })
       .join("");
 
-  const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${node.id}`;
+  const rootNodeId = parentAwareNodeId(node);
+  const backHref = topic ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${rootNodeId}`;
 
   const content = `${floatingBackButton(backHref, "Back to previous page")}
   <section class="card content-form-shell">
@@ -579,7 +584,8 @@ function mcqForm(subjectId, subjectNodeId, chapterId, topicId, mcq) {
 export function contentEntriesPage(user, subject, node, chapter, topic, contentKind, entries, currentPage = 1) {
   const baseHref = `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}&kind=${encodeURIComponent(contentKind)}`;
   const { totalPages, safePage, pageItems } = getPagedItems(entries, currentPage, 20);
-  const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${node.id}`;
+  const rootNodeId = parentAwareNodeId(node);
+  const backHref = topic ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${rootNodeId}`;
 
   const isSummary = contentKind === "Summary";
   const entryForm = (entry) => `<form method="post" action="/api/content-entries" enctype="multipart/form-data" class="grid grid-2">
@@ -663,7 +669,8 @@ export function mcqsPage(user, subject, node, chapter, topic, mcqs, currentPage 
       })
       .join("");
 
-  const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${node.id}`;
+  const rootNodeId = parentAwareNodeId(node);
+  const backHref = topic ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${rootNodeId}`;
 
   const content = `${floatingBackButton(backHref, "Back to previous page")}
   <section class="card content-form-shell">

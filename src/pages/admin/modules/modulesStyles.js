@@ -27,6 +27,8 @@ export const modulesStyles = `
 .floating-back-btn:hover { background: #f8fafc; }
 .content-kinds-table { width: auto; max-width: 100%; }
 .content-kinds-table th,.content-kinds-table td { white-space: nowrap; }
+.content-kinds-table .content-kind-col { width: clamp(110px, 40vw, 180px); max-width: 180px; }
+.content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { overflow: hidden; text-overflow: ellipsis; }
 .plain-two-column { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .mcq-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; margin-left: 16px; }
 .subject-node-actions-row { display: grid; grid-template-columns: auto minmax(120px, 1fr) minmax(150px, 1fr) auto auto; gap: 5px; align-items: center; }
@@ -61,5 +63,7 @@ export const modulesStyles = `
   .entry-form-grid { grid-template-columns: 1fr; }
   .section-summary-row { flex-direction: column; align-items: flex-start; }
   .table-wrap { overflow-x: auto; }
+  .content-kinds-table .content-kind-col { width: 132px; max-width: 132px; }
 }
+
 `;
