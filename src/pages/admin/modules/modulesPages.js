@@ -24,6 +24,11 @@ function tableRowsOrEmpty(rows, colSpan, label) {
   return rows || `<tr><td colspan="${colSpan}" class="table-empty">${h(label)}</td></tr>`;
 }
 
+function subjectNodeBackHref(subjectId, node) {
+  if (!node?.parent_subject_node_id) return `/subjects/${subjectId}`;
+  return `/subjects/${subjectId}/nodes/${node.parent_subject_node_id}`;
+}
+
 function imageUploadCell({ id, formId, disabled = false }) {
   return `<div class="file-indicator-cell">
     <span class="file-indicator-icon" aria-hidden="true">🖼️</span>
@@ -336,7 +341,7 @@ export function chaptersPage(user, subject, node, chapters) {
       <label class="inline-check"><input type="checkbox" name="hasTopics" value="1" /> Enable topic breakdown for this chapter</label>`,
   });
 
-  const content = `<div class="back-link-row"><a class="back-link" href="/subjects/${subject.id}/nodes/${node.parent_subject_node_id}">← Back</a></div>
+  const content = `<div class="back-link-row"><a class="back-link" href="${subjectNodeBackHref(subject.id, node)}">← Back</a></div>
   <section class="card flat-card section-summary-row">
     <p><strong>${chapters.length}</strong> chapters in this section.</p>
     <p class="muted">Use inline rename and image controls to keep the list updated quickly.</p>
@@ -418,7 +423,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       return `<tr><td class="table-action-open-cell">${href ? `<a class="btn btn-secondary" href="${href}">Open</a>` : '<span class="muted">—</span>'}</td><td>${h(kind)}</td></tr>`;
     })
     .join("");
-  const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : `/subjects/${subject.id}/nodes/${node.parent_subject_node_id}`;
+  const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
   const content = `<div class="back-link-row"><a class="back-link" href="${backHref}">← Back</a></div>
   <section class="card flat-card section-summary-row">
     <p><strong>${kinds.length}</strong> content lanes available.</p>
