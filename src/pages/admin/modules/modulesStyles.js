@@ -31,12 +31,17 @@ export const modulesStyles = `
 .content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { overflow: hidden; text-overflow: ellipsis; }
 .subject-flow-card-grid { display: grid; gap: 6px; }
 .subject-flow-card { padding: 8px; display: grid; gap: 6px; }
+.chapter-flow-card-grid { margin-top: 6px; }
+.chapter-flow-card { padding: 7px; }
 .subject-flow-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .subject-flow-card-head .card-title { margin: 0; font-size: 14px; }
+.subject-flow-card-head .card-title a { color: inherit; text-decoration: none; }
 .subject-flow-card-head p { margin: 2px 0 0; font-size: 11px; }
 .subject-flow-meta-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; }
 .subject-flow-edit-row { display: grid; grid-template-columns: minmax(160px, 1fr) auto auto; align-items: center; gap: 6px; }
 .subject-flow-edit-row .input { height: 30px; }
+.chapter-flow-edit-row { display: grid; grid-template-columns: minmax(220px, 1fr) auto auto auto auto; align-items: center; gap: 6px; }
+.chapter-flow-edit-row .input { height: 30px; }
 .plain-two-column { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .mcq-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; margin-left: 16px; }
 .subject-node-actions-row { display: grid; grid-template-columns: auto minmax(120px, 1fr) minmax(150px, 1fr) auto auto; gap: 5px; align-items: center; }
@@ -77,6 +82,7 @@ export const modulesStyles = `
   .table-wrap { overflow-x: auto; }
   .content-kinds-table .content-kind-col { width: 132px; max-width: 132px; }
   .subject-flow-edit-row { grid-template-columns: 1fr; align-items: flex-start; }
+  .chapter-flow-edit-row { grid-template-columns: 1fr; align-items: flex-start; }
 }
 
 `;
