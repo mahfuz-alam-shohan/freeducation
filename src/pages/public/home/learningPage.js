@@ -104,9 +104,15 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
 }
 
 export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
+  const resolveOption = (value) => {
+    const normalized = String(value || '').trim().toUpperCase();
+    const matched = normalized.match(/[ABCD]/);
+    return matched ? matched[0] : '';
+  };
+
   const list = mcqs
     .map(
-      (item) => `<li class="public-mcq-item" data-correct-option="${h(item.correct_option)}">
+      (item) => `<li class="public-mcq-item" data-correct-option="${resolveOption(item.correct_option)}">
       <div class="public-mcq-head">
         <button class="public-mcq-answer-toggle" type="button" data-answer-toggle>See answer</button>
       </div>
@@ -122,17 +128,24 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     .join('');
 
   const mcqScript = `<script>
-  document.querySelectorAll('[data-answer-toggle]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const container = button.closest('.public-mcq-item');
-      if (!container) return;
-      const answer = String(container.dataset.correctOption || '').toUpperCase();
-      const isVisible = container.classList.toggle('show-answer');
-      container.querySelectorAll('.public-mcq-options li').forEach((option) => {
-        option.classList.toggle('public-mcq-option-correct', isVisible && option.dataset.option === answer);
-      });
-      button.textContent = isVisible ? 'Hide answer' : 'See answer';
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-answer-toggle]');
+    if (!button) return;
+
+    const container = button.closest('.public-mcq-item');
+    if (!container) return;
+
+    const answer = String(container.dataset.correctOption || '').trim().toUpperCase();
+    if (!answer) {
+      button.textContent = 'Answer unavailable';
+      return;
+    }
+
+    const isVisible = container.classList.toggle('show-answer');
+    container.querySelectorAll('.public-mcq-options li').forEach((option) => {
+      option.classList.toggle('public-mcq-option-correct', isVisible && option.dataset.option === answer);
     });
+    button.textContent = isVisible ? 'Hide answer' : 'See answer';
   });
   </script>`;
 
