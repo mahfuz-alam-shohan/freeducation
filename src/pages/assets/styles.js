@@ -215,6 +215,8 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
   .sidebar { transform: translateX(-100%); transition: transform 170ms ease; width: min(84vw, 310px); }
   .app-shell.mobile-open .sidebar { transform: translateX(0); }
   .main-shell { grid-column: 1; }
+  .admin-page-head { text-align: center; }
+  .admin-page-head .page-subtitle { margin-top: 4px; }
   .desktop-only { display: none !important; }
   .mobile-only { display: inline-flex; }
   .topbar-center { display: flex; position: absolute; left: 50%; transform: translateX(-50%); }
