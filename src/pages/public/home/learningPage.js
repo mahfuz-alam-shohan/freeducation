@@ -1,37 +1,7 @@
 import { publicShell } from "../../templates/publicShell.js";
 import { imageUrlFromKey } from "../../imageUrl.js";
 import { learningPageStyles } from "./learningPageStyles.js";
-
-function h(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function pathBar(items = []) {
-  if (!items.length) return "";
-  const links = items
-    .map((item, index) => {
-      const label = h(item.label);
-      if (!item.href || index === items.length - 1) return `<span class="public-path-current">${label}</span>`;
-      return `<a href="${h(item.href)}">${label}</a>`;
-    })
-    .join('<span class="public-path-sep" aria-hidden="true">/</span>');
-  return `<nav class="public-path-bar" aria-label="Breadcrumb">${links}</nav>`;
-}
-
-function cardGrid(items, hrefBuilder) {
-  return items
-    .map(
-      (item) => `<article class="class-card"><a class="public-card-link" href="${h(hrefBuilder(item))}">
-        <div class="class-card-poster-wrap">${item.image_key ? `<img class="class-card-poster" src="${imageUrlFromKey(item.image_key)}" alt="${h(item.display_name || item.name)}" loading="lazy" decoding="async" />` : '<div class="class-card-poster class-card-poster-empty">No image</div>'}</div>
-        <p class="class-card-name">${h(item.display_name || item.name)}</p>
-      </a></article>`,
-    )
-    .join("");
-}
+import { h, renderCardGrid, renderFlatPage } from "./publicUi.js";
 
 function renderEntryImage(imageKey, altText) {
   if (!imageKey) return "";
@@ -45,11 +15,11 @@ export function publicSubjectNodePage(user, subject, title, subtitle, items, hre
     "home",
     user,
     `${subject.name} · ${title}`,
-    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: title }])}<section class="public-stack">
-      <h1 class="public-stack-title">${h(title)}</h1>
-      <p class="public-stack-subtitle">${h(subtitle)}</p>
-      <div class="public-flat-grid">${cardGrid(items, hrefBuilder)}</div>
-    </section>`,
+    renderFlatPage({
+      title,
+      subtitle,
+      content: `<div class="public-flat-grid">${renderCardGrid(items, hrefBuilder)}</div>`,
+    }),
     "",
     learningPageStyles,
   );
@@ -74,12 +44,12 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
     "home",
     user,
     `${chapter.name} · ${node.display_name}`,
-    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: node.display_name, href: `/learn/subjects/${subject.id}/nodes/${node.id}` }, { label: chapter.name }])}<section class="public-stack">
-      <h1 class="public-stack-title">${h(chapter.name)}</h1>
-      <p class="public-stack-subtitle">${h(node.display_name)}</p>
-      <div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
-      <ol class="public-note-list">${notes || "<li>No short notes yet.</li>"}</ol>
-    </section>`,
+    renderFlatPage({
+      title: chapter.name,
+      subtitle: node.display_name,
+      content: `<div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
+      <ol class="public-note-list">${notes || "<li>No short notes yet.</li>"}</ol>`,
+    }),
     "",
     learningPageStyles,
   );
@@ -100,11 +70,11 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
     "home",
     user,
     `${chapter.name} · ${kind}`,
-    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: kind }])}<section class="public-stack">
-      <h1 class="public-stack-title">${h(kind)}</h1>
-      <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list">${list || "<li>No content yet.</li>"}</ol>
-    </section>`,
+    renderFlatPage({
+      title: kind,
+      subtitle: `${subject.name} · ${chapter.name}`,
+      content: `<ol class="public-note-list">${list || "<li>No content yet.</li>"}</ol>`,
+    }),
     "",
     learningPageStyles,
   );
@@ -174,11 +144,11 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     "home",
     user,
     `${chapter.name} · MCQ Bank`,
-    `${pathBar([{ label: "Home", href: "/" }, { label: subject.name, href: `/learn/subjects/${subject.id}` }, { label: chapter.name }, { label: "MCQ Bank" }])}<section class="public-stack">
-      <h1 class="public-stack-title">MCQ Bank</h1>
-      <p class="public-stack-subtitle">${h(subject.name)} · ${h(chapter.name)}</p>
-      <ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>
-    </section>`,
+    renderFlatPage({
+      title: "MCQ Bank",
+      subtitle: `${subject.name} · ${chapter.name}`,
+      content: `<ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>`,
+    }),
     "",
     learningPageStyles,
   );
