@@ -49,6 +49,9 @@ export const publicHomeStyles = `
   padding-bottom: 0;
   margin-bottom: 0;
   overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
 }
 .public-tab {
   border: 1px solid #cbd5e1;
@@ -75,9 +78,10 @@ export const publicHomeStyles = `
   padding: 4px 0 0;
   background: #fff;
 }
-.public-note-list { margin: 0; padding-left: 16px; }
+.public-note-list { margin: 0; padding-left: 8px; list-style-position: inside; }
 .public-note-list li { margin-bottom: 0; padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
 .public-note-list li:last-child { border-bottom: 0; }
+.public-note-list li.public-note-empty { list-style: none; padding-left: 0; }
 .public-note-title { margin: 0 0 2px; font-size: 14px; color: #1f2f56; }
 .public-note-body :first-child { margin-top: 0; }
 .public-note-body :last-child { margin-bottom: 0; }

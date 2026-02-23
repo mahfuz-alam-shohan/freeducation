@@ -97,7 +97,7 @@ export function publicChapterContentPage(user, subject, node, chapter, tabState 
       content: `<div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
       <section class="public-content-panel">
       ${adminQuickAdd}
-      <ol class="public-note-list">${notes || `<li>No ${h(selectedTab)} yet.</li>`}</ol>
+      <ol class="public-note-list">${notes || `<li class="public-note-empty">No ${h(selectedTab)} yet.</li>`}</ol>
       </section>`,
     }),
     "",
@@ -123,7 +123,7 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
     renderFlatPage({
       title: kind,
       subtitle: `${subject.name} · ${chapter.name}`,
-      content: `<ol class="public-note-list">${list || "<li>No content yet.</li>"}</ol>`,
+      content: `<ol class="public-note-list">${list || "<li class='public-note-empty'>No content yet.</li>"}</ol>`,
     }),
     "",
     learningPageStyles,
@@ -253,7 +253,7 @@ export function publicMcqEntriesPage(user, subject, node, chapter, topicId, mcqs
     renderFlatPage({
       title: "MCQ Bank",
       subtitle: `${subject.name} · ${chapter.name}`,
-      content: `${adminQuickAdd}<ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>`,
+      content: `${adminQuickAdd}<ol class="public-note-list">${list || "<li class='public-note-empty'>No MCQs yet.</li>"}</ol>`,
     }),
     "",
     learningPageStyles,

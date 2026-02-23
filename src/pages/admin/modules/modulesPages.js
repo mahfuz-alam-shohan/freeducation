@@ -470,13 +470,26 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
         return `<article class="plain-entry"><p class="mcq-question">${index + 1}. ${h(item.question_html || "MCQ")}</p><div class="mcq-options-grid"><p class="mcq-option ${item.correct_option === "A" ? "mcq-option-correct" : ""}">A. ${h(item.option_a || "-")}</p><p class="mcq-option ${item.correct_option === "B" ? "mcq-option-correct" : ""}">B. ${h(item.option_b || "-")}</p><p class="mcq-option ${item.correct_option === "C" ? "mcq-option-correct" : ""}">C. ${h(item.option_c || "-")}</p><p class="mcq-option ${item.correct_option === "D" ? "mcq-option-correct" : ""}">D. ${h(item.option_d || "-")}</p></div></article>`;
       }
       const text = item.title || item.name || item.content_html || `${selectedKind} ${index + 1}`;
-      return `<article class="plain-entry"><p class="note-content">${h(text)}</p></article>`;
+      return `<article class="plain-entry"><p class="note-content"><span class="note-index">${index + 1}.</span><span>${h(text)}</span></p></article>`;
     })
     .join("");
+  const selectedKindHref = selectedKind === "Short Notes"
+    ? `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`
+    : selectedKind === "MCQ Bank"
+      ? `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`
+      : `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}&kind=${encodeURIComponent(selectedKind)}`;
+  const selectedKindActionLabel = selectedKind === "Short Notes"
+    ? "Manage short notes"
+    : selectedKind === "MCQ Bank"
+      ? "Manage MCQs"
+      : `Manage ${selectedKind}`;
   const tabPanel = `<section class="card flat-card content-tab-panel">
     <nav class="content-tab-nav" role="tablist" aria-label="Content tabs">${tabLinks}</nav>
     <div class="content-tab-head">
       <p class="muted"><strong>${h(selectedKind)}</strong> · ${tabState?.items?.length || 0} item(s)</p>
+      <div class="content-tab-head-actions">
+        <a class="btn btn-secondary" href="${selectedKindHref}">${h(selectedKindActionLabel)}</a>
+      </div>
     </div>
     <section class="content-tab-preview-list">${listItems || `<p class="muted">No ${h(selectedKind)} yet.</p>`}</section>
   </section>`;

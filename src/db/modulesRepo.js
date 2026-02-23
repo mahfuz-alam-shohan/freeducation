@@ -429,7 +429,7 @@ export async function deleteTopic(db, topicId) {
 export async function listNotes(db, subjectNodeId, chapterId, topicId = null) {
   const scope = buildNodeScopeClause(subjectNodeId, chapterId || null, topicId || null);
   const rows = await db
-    .prepare(`SELECT * FROM short_notes WHERE ${scope.whereSql} ORDER BY created_at DESC`)
+    .prepare(`SELECT * FROM short_notes WHERE ${scope.whereSql} ORDER BY created_at ASC, id ASC`)
     .bind(...scope.params)
     .all();
   return rows.results ?? [];
