@@ -2,18 +2,11 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-export async function getAdminCount(db) {
-  const row = await db.prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'").first();
-  return Number(row?.count ?? 0);
-}
 
 export async function findUserByEmail(db, email) {
   return db.prepare("SELECT * FROM users WHERE email = ?1").bind(email.toLowerCase()).first();
 }
 
-export async function createAdmin(db, user) {
-  return createUser(db, { ...user, role: "admin" });
-}
 
 export async function createUser(db, user) {
   await db

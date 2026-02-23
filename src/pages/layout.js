@@ -1,4 +1,3 @@
-export { setupPage } from "./public/auth/setupPage.js";
 export { loginPage } from "./public/auth/loginPage.js";
 export { publicHomePage, publicClassesPage, publicClassSubjectsPage } from "./public/home/homePage.js";
 export { publicSubjectNodePage, publicChapterContentPage, publicContentEntriesPage, publicMcqEntriesPage } from "./public/home/learningPage.js";

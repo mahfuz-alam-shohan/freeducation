@@ -1,21 +1,19 @@
 import { ensureSchema } from "./db/schema.js";
-import { createAdmin, createSession, createUser, deleteSession, findUserByEmail, findUserById, getAdminCount, listUsers, updateUserCoverImage, updateUserImage, updateUserName, updateUserPassword, updateUserDateOfBirth } from "./db/adminRepo.js";
+import { createSession, createUser, deleteSession, findUserByEmail, findUserById, listUsers, updateUserCoverImage, updateUserImage, updateUserName, updateUserPassword, updateUserDateOfBirth } from "./db/adminRepo.js";
 import { createChapter, createClass, createContentEntry, createMcq, createNote, createSubject, createTopic, deleteChapter, deleteClass, deleteContentEntry, deleteMcq, deleteNote, deleteSubject, deleteTopic, ensureDefaultClasses, ensureDefaultTemplate, ensurePhyChemBioTemplate, getChapter, getClassById, getSubject, getSubjectNode, getTemplate, getTopic, listChapters, listClasses, listContentEntries, listMcqs, listNotes, listSubjectNodesByParent, listSubjects, listSubjectsByClass, listTemplateNodes, listTemplates, listTopics, moveClass, updateChapter, updateClass, updateContentEntry, updateMcq, updateNote, updateSubject, updateSubjectNode, updateTopic, upsertSummaryEntry } from "./db/modulesRepo.js";
 import { hashPassword, verifyPassword } from "./security/password.js";
 import { buildSessionCookie, clearSessionCookie, createSignedToken } from "./security/session.js";
 import { html, json, redirect } from "./http/response.js";
 import { methodNotAllowed } from "./http/request.js";
 import { requireAuth } from "./api/auth.js";
-import { chaptersPage, contentEntriesPage, contentKindsPage, dashboardPage, forbiddenPage, loginPage, mcqsPage, notesPage, profilePage, publicHomePage, publicClassesPage, publicClassSubjectsPage, publicSubjectNodePage, publicChapterContentPage, publicContentEntriesPage, publicMcqEntriesPage, setupPage, subjectNodeListPage, subjectsPage, classesPage, classSubjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage } from "./pages/layout.js";
+import { chaptersPage, contentEntriesPage, contentKindsPage, dashboardPage, forbiddenPage, loginPage, mcqsPage, notesPage, profilePage, publicHomePage, publicClassesPage, publicClassSubjectsPage, publicSubjectNodePage, publicChapterContentPage, publicContentEntriesPage, publicMcqEntriesPage, subjectNodeListPage, subjectsPage, classesPage, classSubjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage } from "./pages/layout.js";
 import { MAX_IMAGE_BYTES, SESSION_COOKIE } from "./env.js";
 
-const MAX_BOOTSTRAP_BODY_BYTES = 4 * 1024 * 1024;
 const ACCESS = {
   PUBLIC: "public",
   AUTHENTICATED: "authenticated",
 };
 let appReadyPromise = null;
-let hasAdminCache = null;
 
 function hasSessionCookie(request) {
   const cookie = request.headers.get("cookie") || "";
@@ -88,50 +86,6 @@ async function createAndSetSession(env, userId) {
   return buildSessionCookie(token);
 }
 
-async function apiBootstrap(request, env) {
-  if (request.method !== "POST") return methodNotAllowed();
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > MAX_BOOTSTRAP_BODY_BYTES) return json({ error: "Request too large." }, 413);
-  if ((await getAdminCount(env.DB)) > 0) return json({ error: "Admin already exists." }, 409);
-
-  try {
-    const form = await request.formData();
-    const name = String(form.get("name") || "").trim();
-    const email = String(form.get("email") || "")
-      .trim()
-      .toLowerCase();
-    const password = String(form.get("password") || "");
-    const image = form.get("image");
-
-    if (!name || name.length > 100 || !isEmail(email) || password.length < 8 || password.length > 120) {
-      return json({ error: "Invalid setup form." }, 400);
-    }
-
-    const existing = await findUserByEmail(env.DB, email);
-    if (existing) return json({ error: "Email already in use." }, 409);
-
-    const hashed = await hashPassword(password);
-    const imageKey = await uploadImage(env, "profiles", image);
-    const userId = id();
-    await createAdmin(env.DB, {
-      id: userId,
-      email,
-      name,
-      imageKey,
-      passwordHash: hashed.hash,
-      passwordSalt: hashed.salt,
-      passwordIterations: hashed.iterations,
-      createdAt: new Date().toISOString(),
-    });
-    hasAdminCache = true;
-
-    const cookie = await createAndSetSession(env, userId);
-    return json({ ok: true }, 200, { "Set-Cookie": cookie });
-  } catch (error) {
-    return json({ error: error instanceof Error ? error.message : "Unable to create admin." }, 500);
-  }
-}
-
 async function ensureAppReady(env) {
   if (!appReadyPromise) {
     appReadyPromise = (async () => {
@@ -148,13 +102,6 @@ async function ensureAppReady(env) {
     appReadyPromise = null;
     throw error;
   }
-}
-
-async function hasAdmin(env) {
-  if (hasAdminCache === true) return true;
-  const adminCount = await getAdminCount(env.DB);
-  hasAdminCache = adminCount > 0;
-  return hasAdminCache;
 }
 
 async function apiLogin(request, env) {
@@ -962,14 +909,8 @@ export default {
 
     const url = new URL(request.url);
 
-    if (url.pathname === "/api/bootstrap") return apiBootstrap(request, env);
     if (url.pathname === "/api/login") return apiLogin(request, env);
 
-    if (!(await hasAdmin(env))) {
-      if (url.pathname === "/api/logout") return redirect("/setup");
-      if (url.pathname === "/" || url.pathname === "/setup") return html(setupPage());
-      return redirect("/setup");
-    }
 
     const route = pageRoutes.find((item) => item.path === url.pathname);
     const user = shouldResolveUser(request, route, url.pathname) ? await requireAuth(request, env) : null;
@@ -981,7 +922,7 @@ export default {
       return apiLogout(env, user);
     }
 
-    if (url.pathname.startsWith("/api/") && request.method === "POST" && !["/api/bootstrap", "/api/login"].includes(url.pathname)) {
+    if (url.pathname.startsWith("/api/") && request.method === "POST" && url.pathname !== "/api/login") {
       if (!user) return redirect("/login");
       const profilePost = await handleProfilePost(request, env, url, user);
       if (profilePost) return profilePost;
