@@ -290,6 +290,32 @@ function routeRequiresRole(route, user) {
   return Array.isArray(route.roles) && !route.roles.includes(user.role);
 }
 
+
+function isPrivatePagePath(pathname, route) {
+  if (route?.access === ACCESS.AUTHENTICATED) return true;
+  if (pathname === "/login") return true;
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/profile") || pathname.startsWith("/users")) return true;
+  if (pathname.startsWith("/admin/") || pathname.startsWith("/subjects") || pathname.startsWith("/templates") || pathname.startsWith("/classes/manage")) return true;
+  return false;
+}
+
+function resolvePageCacheControl(pathname, route) {
+  if (isPrivatePagePath(pathname, route)) return "private, no-store, max-age=0, must-revalidate";
+  if (pathname === "/" || pathname === "/classes") return "public, max-age=300, stale-while-revalidate=900";
+  if (pathname.startsWith("/learn/") || pathname.startsWith("/classes/")) return "public, max-age=600, stale-while-revalidate=1800";
+  return "public, max-age=120, stale-while-revalidate=600";
+}
+
+function applyHtmlPageCaching(response, pathname, route) {
+  if (!(response instanceof Response)) return response;
+  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+  if (!contentType.includes("text/html")) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("cache-control", resolvePageCacheControl(pathname, route));
+  return new Response(response.body, { status: response.status, headers });
+}
+
 const pageRoutes = [
   {
     path: "/",
@@ -1103,7 +1129,7 @@ export default {
       if (!user) return redirect("/login");
       const profilePost = await handleProfilePost(request, env, url, user);
       if (profilePost) return profilePost;
-      if (user.role !== "admin") return html(forbiddenPage(), 403);
+      if (user.role !== "admin") return applyHtmlPageCaching(html(forbiddenPage(), 403), url.pathname, route);
       const protectedPost = await handleAdminPost(request, env, url);
       if (protectedPost) return protectedPost;
     }
@@ -1113,11 +1139,11 @@ export default {
 
       if (isAdminDynamicPath) {
         if (!user) return redirect("/login");
-        if (user.role !== "admin") return html(forbiddenPage(), 403);
+        if (user.role !== "admin") return applyHtmlPageCaching(html(forbiddenPage(), 403), url.pathname, route);
       }
 
       const dynamic = await handleDynamicPages(url, env, user);
-      if (dynamic) return dynamic;
+      if (dynamic) return applyHtmlPageCaching(dynamic, url.pathname, route);
       return new Response("Not Found", { status: 404 });
     }
 
@@ -1126,7 +1152,8 @@ export default {
       return redirect("/login");
     }
 
-    if (route.access === ACCESS.AUTHENTICATED && routeRequiresRole(route, user)) return html(forbiddenPage(), 403);
-    return route.handle({ request, env, user, url });
+    if (route.access === ACCESS.AUTHENTICATED && routeRequiresRole(route, user)) return applyHtmlPageCaching(html(forbiddenPage(), 403), url.pathname, route);
+    const routeResponse = await route.handle({ request, env, user, url });
+    return applyHtmlPageCaching(routeResponse, url.pathname, route);
   },
 };

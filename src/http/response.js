@@ -9,12 +9,13 @@ export function json(data, status = 200, headers = {}) {
   });
 }
 
-export function html(body, status = 200) {
+export function html(body, status = 200, headers = {}) {
   return new Response(body, {
     status,
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "private, no-cache, max-age=0, must-revalidate",
+      ...headers,
     },
   });
 }
