@@ -95,8 +95,10 @@ export function publicChapterContentPage(user, subject, node, chapter, tabState 
       title: chapter.name,
       subtitle: node.display_name,
       content: `<div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
+      <section class="public-content-panel">
       ${adminQuickAdd}
-      <ol class="public-note-list">${notes || `<li>No ${h(selectedTab)} yet.</li>`}</ol>`,
+      <ol class="public-note-list">${notes || `<li>No ${h(selectedTab)} yet.</li>`}</ol>
+      </section>`,
     }),
     "",
     learningPageStyles,
