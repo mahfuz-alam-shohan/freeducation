@@ -5,4 +5,5 @@ export { forbiddenPage } from "./shared/forbidden/forbiddenPage.js";
 export { dashboardPage } from "./admin/dashboard/dashboardPage.js";
 export { profilePage } from "./auth/profile/profilePage.js";
 export { usersPage } from "./admin/users/usersPage.js";
+export { mediaManagerPage } from "./admin/media/mediaManagerPage.js";
 export { templatesPage, templateDetailsPage, subjectsPage, classesPage, subjectNodeListPage, chaptersPage, topicsPage, contentKindsPage, contentEntriesPage, notesPage, mcqsPage, classSubjectsPage } from "./admin/modules/modulesPages.js";
