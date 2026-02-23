@@ -162,6 +162,63 @@ async function uploadImage(env, folder, file) {
   return key;
 }
 
+function sanitizeMediaKey(value) {
+  const key = String(value || "").trim();
+  if (!key || key.includes("..")) return null;
+  return key;
+}
+
+async function deleteBucketObjects(env, keys) {
+  const safeKeys = Array.from(new Set(keys.map((key) => sanitizeMediaKey(key)).filter(Boolean)));
+  await Promise.allSettled(safeKeys.map((key) => env.BUCKET.delete(key)));
+}
+
+async function replaceMediaKey(env, previousKey, nextKey) {
+  const previous = sanitizeMediaKey(previousKey);
+  const next = sanitizeMediaKey(nextKey);
+  if (!previous || previous === next) return;
+  await deleteBucketObjects(env, [previous]);
+}
+
+async function listImageKeys(db, sql, ...params) {
+  const rows = await db.prepare(sql).bind(...params).all();
+  return (rows.results || []).map((row) => row.image_key).filter(Boolean);
+}
+
+async function collectSubjectImageKeys(db, subjectId) {
+  const queries = await Promise.all([
+    listImageKeys(db, "SELECT image_key FROM subjects WHERE id = ?1", subjectId),
+    listImageKeys(db, "SELECT image_key FROM subject_nodes WHERE subject_id = ?1", subjectId),
+    listImageKeys(db, "SELECT c.image_key FROM chapters c JOIN subject_nodes sn ON sn.id = c.subject_node_id WHERE sn.subject_id = ?1", subjectId),
+    listImageKeys(db, "SELECT t.image_key FROM topics t JOIN chapters c ON c.id = t.chapter_id JOIN subject_nodes sn ON sn.id = c.subject_node_id WHERE sn.subject_id = ?1", subjectId),
+    listImageKeys(db, "SELECT m.image_key FROM mcq_bank m JOIN subject_nodes sn ON sn.id = m.subject_node_id WHERE sn.subject_id = ?1", subjectId),
+    listImageKeys(db, "SELECT e.image_key FROM content_entries e JOIN subject_nodes sn ON sn.id = e.subject_node_id WHERE sn.subject_id = ?1", subjectId),
+    listImageKeys(db, "SELECT image_key FROM short_notes WHERE subject_id = ?1", subjectId),
+  ]);
+  return queries.flat();
+}
+
+async function collectChapterImageKeys(db, chapterId) {
+  const queries = await Promise.all([
+    listImageKeys(db, "SELECT image_key FROM chapters WHERE id = ?1", chapterId),
+    listImageKeys(db, "SELECT image_key FROM topics WHERE chapter_id = ?1", chapterId),
+    listImageKeys(db, "SELECT image_key FROM mcq_bank WHERE chapter_id = ?1", chapterId),
+    listImageKeys(db, "SELECT image_key FROM content_entries WHERE chapter_id = ?1", chapterId),
+    listImageKeys(db, "SELECT image_key FROM short_notes WHERE chapter_id = ?1", chapterId),
+  ]);
+  return queries.flat();
+}
+
+async function collectTopicImageKeys(db, topicId) {
+  const queries = await Promise.all([
+    listImageKeys(db, "SELECT image_key FROM topics WHERE id = ?1", topicId),
+    listImageKeys(db, "SELECT image_key FROM mcq_bank WHERE topic_id = ?1", topicId),
+    listImageKeys(db, "SELECT image_key FROM content_entries WHERE topic_id = ?1", topicId),
+    listImageKeys(db, "SELECT image_key FROM short_notes WHERE topic_id = ?1", topicId),
+  ]);
+  return queries.flat();
+}
+
 async function createAndSetSession(env, userId) {
   const session = {
     id: id(),
@@ -325,7 +382,10 @@ async function handleProfilePost(request, env, url, user) {
   if (url.pathname === "/api/profile/avatar") {
     const form = await request.formData();
     const imageKey = await uploadImage(env, "profiles", form.get("avatar"));
-    if (imageKey) await updateUserImage(env.DB, user.id, imageKey);
+    if (imageKey) {
+      await updateUserImage(env.DB, user.id, imageKey);
+      await replaceMediaKey(env, user.image_key, imageKey);
+    }
 
     const wantsJson = request.headers.get("accept")?.includes("application/json");
     if (wantsJson) {
@@ -338,7 +398,10 @@ async function handleProfilePost(request, env, url, user) {
   if (url.pathname === "/api/profile/cover") {
     const form = await request.formData();
     const imageKey = await uploadImage(env, "profile-covers", form.get("cover"));
-    if (imageKey) await updateUserCoverImage(env.DB, user.id, imageKey);
+    if (imageKey) {
+      await updateUserCoverImage(env.DB, user.id, imageKey);
+      await replaceMediaKey(env, user.cover_image_key, imageKey);
+    }
 
     const wantsJson = request.headers.get("accept")?.includes("application/json");
     if (wantsJson) {
@@ -451,6 +514,7 @@ async function handleAdminPost(request, env, url) {
     const form = await request.formData();
     const intent = String(form.get("intent") || "update");
     if (intent === "delete") {
+      await deleteBucketObjects(env, [current.image_key]);
       await deleteClass(env.DB, classId);
       return redirect("/classes/manage");
     }
@@ -465,6 +529,7 @@ async function handleAdminPost(request, env, url) {
     const removeImage = form.get("removeImage") === "1";
     const uploaded = await uploadImage(env, "classes", form.get("image"));
     const imageKey = removeImage ? null : uploaded || current.image_key;
+    if (imageKey !== current.image_key) await replaceMediaKey(env, current.image_key, imageKey);
     await updateClass(env.DB, classId, {
       name,
       imageKey,
@@ -495,6 +560,7 @@ async function handleAdminPost(request, env, url) {
     const current = await getSubject(env.DB, subjectId);
     if (!current) return new Response("Not found", { status: 404 });
     if (intent === "delete") {
+      await deleteBucketObjects(env, await collectSubjectImageKeys(env.DB, subjectId));
       await deleteSubject(env.DB, subjectId);
       return redirect("/subjects");
     }
@@ -503,6 +569,7 @@ async function handleAdminPost(request, env, url) {
     const removeImage = form.get("removeImage") === "1";
     const uploaded = await uploadImage(env, "subjects", form.get("image"));
     const imageKey = removeImage ? null : uploaded || current.image_key;
+    if (imageKey !== current.image_key) await replaceMediaKey(env, current.image_key, imageKey);
     await updateSubject(env.DB, subjectId, name, imageKey);
     return redirect("/subjects");
   }
@@ -517,6 +584,7 @@ async function handleAdminPost(request, env, url) {
     const image = form.get("image");
     const uploaded = node.supports_image ? await uploadImage(env, "subject-nodes", image) : null;
     const imageKey = removeImage ? null : uploaded || node.image_key;
+    if (imageKey !== node.image_key) await replaceMediaKey(env, node.image_key, imageKey);
     await updateSubjectNode(env.DB, nodeId, displayName || node.display_name, imageKey);
     return redirect(String(form.get("redirect") || "/subjects"));
   }
@@ -542,11 +610,13 @@ async function handleAdminPost(request, env, url) {
     const subjectId = String(form.get("subjectId") || "");
     const nodeId = String(form.get("nodeId") || current.subject_node_id);
     if (intent === "delete") {
+      await deleteBucketObjects(env, await collectChapterImageKeys(env.DB, chapterId));
       await deleteChapter(env.DB, chapterId);
     } else {
       const uploaded = await uploadImage(env, "chapters", form.get("image"));
       const removeImage = form.get("removeImage") === "1";
       const imageKey = removeImage ? null : uploaded || current.image_key;
+      if (imageKey !== current.image_key) await replaceMediaKey(env, current.image_key, imageKey);
       const hasTopics = form.get("hasTopics") === "1" ? 1 : 0;
       await updateChapter(env.DB, chapterId, String(form.get("name") || current.name), imageKey, hasTopics);
     }
@@ -575,11 +645,13 @@ async function handleAdminPost(request, env, url) {
     const nodeId = String(form.get("nodeId") || "");
     const chapterId = String(form.get("chapterId") || current.chapter_id);
     if (intent === "delete") {
+      await deleteBucketObjects(env, await collectTopicImageKeys(env.DB, topicId));
       await deleteTopic(env.DB, topicId);
     } else {
       const uploaded = await uploadImage(env, "topics", form.get("image"));
       const removeImage = form.get("removeImage") === "1";
       const imageKey = removeImage ? null : uploaded || current.image_key;
+      if (imageKey !== current.image_key) await replaceMediaKey(env, current.image_key, imageKey);
       await updateTopic(env.DB, topicId, String(form.get("name") || current.name), imageKey);
     }
     return redirect(`/subjects/${subjectId}/nodes/${nodeId}/chapters/${chapterId}`);
@@ -649,6 +721,7 @@ async function handleAdminPost(request, env, url) {
       const existing = (await listMcqs(env.DB, subjectNodeId, chapterId, topicId)).find((m) => m.id === idVal);
       const uploaded = await uploadImage(env, "mcq", form.get("image"));
       payload.imageKey = form.get("removeImage") === "1" ? null : uploaded || existing?.image_key || null;
+      if (payload.imageKey !== (existing?.image_key || null)) await replaceMediaKey(env, existing?.image_key, payload.imageKey);
       await updateMcq(env.DB, payload);
     }
     return redirect(redirectUrl);
@@ -663,7 +736,11 @@ async function handleAdminPost(request, env, url) {
     const topicId = String(form.get("topicId") || "");
     const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    if (idVal) await deleteMcq(env.DB, idVal);
+    if (idVal) {
+      const existing = (await listMcqs(env.DB, subjectNodeId, chapterId, topicId)).find((m) => m.id === idVal);
+      await deleteBucketObjects(env, [existing?.image_key]);
+      await deleteMcq(env.DB, idVal);
+    }
     return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
   }
 
@@ -696,6 +773,7 @@ async function handleAdminPost(request, env, url) {
         const existing = (await listContentEntries(env.DB, subjectNodeId, chapterId, topicId, contentKind)).find((entry) => entry.id === idVal);
         const uploaded = await uploadImage(env, "content", form.get("image"));
         const imageKey = form.get("removeImage") === "1" ? null : uploaded || existing?.image_key || null;
+        if (imageKey !== (existing?.image_key || null)) await replaceMediaKey(env, existing?.image_key, imageKey);
         await updateContentEntry(env.DB, { id: idVal, title, contentHtml, imageKey });
       }
     }
@@ -705,10 +783,10 @@ async function handleAdminPost(request, env, url) {
 
   if (url.pathname === "/api/media/delete" && request.method === "POST") {
     const form = await request.formData();
-    const key = String(form.get("key") || "").trim();
+    const key = sanitizeMediaKey(form.get("key"));
     const redirectTo = String(form.get("redirect") || "/admin/file-manager");
-    if (!key || key.includes("..")) return redirect(redirectTo || "/admin/file-manager");
-    await env.BUCKET.delete(key);
+    if (!key) return redirect(redirectTo || "/admin/file-manager");
+    await deleteBucketObjects(env, [key]);
     return redirect(redirectTo || "/admin/file-manager");
   }
 
@@ -722,7 +800,11 @@ async function handleAdminPost(request, env, url) {
     const kind = String(form.get("kind") || "").trim();
     const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-    if (idVal) await deleteContentEntry(env.DB, idVal);
+    if (idVal) {
+      const existing = (await listContentEntries(env.DB, subjectNodeId, chapterId, topicId, kind)).find((entry) => entry.id === idVal);
+      await deleteBucketObjects(env, [existing?.image_key]);
+      await deleteContentEntry(env.DB, idVal);
+    }
     return redirect(`/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&kind=${encodeURIComponent(kind)}&page=${safePage}`);
   }
   return null;
