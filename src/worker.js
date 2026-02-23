@@ -37,6 +37,42 @@ function mergeUniqueById(items) {
   return Array.from(map.values());
 }
 
+function sortByCreatedAtDesc(items) {
+  return mergeUniqueById(items).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+}
+
+function resolvePublicContentNodeIds(contentNodes, fallbackNodeId, contentKind) {
+  const targetNode = contentKind ? contentNodes.find((item) => item.content_kind === contentKind) : null;
+  return Array.from(new Set([targetNode?.id, fallbackNodeId].filter(Boolean)));
+}
+
+async function collectPublicNotes(db, contentNodes, fallbackNodeId, chapterId, topicId = null) {
+  const nodeIds = resolvePublicContentNodeIds(contentNodes, fallbackNodeId, "Short Notes");
+  const notes = [];
+  for (const nodeId of nodeIds) {
+    notes.push(...(await listNotes(db, nodeId, chapterId, topicId)));
+  }
+  return sortByCreatedAtDesc(notes);
+}
+
+async function collectPublicContent(db, contentNodes, fallbackNodeId, chapterId, topicId, contentKind) {
+  const nodeIds = resolvePublicContentNodeIds(contentNodes, fallbackNodeId, contentKind);
+
+  if (contentKind === "MCQ Bank") {
+    const mcqs = [];
+    for (const nodeId of nodeIds) {
+      mcqs.push(...(await listMcqs(db, nodeId, chapterId, topicId || null)));
+    }
+    return { type: "mcq", items: sortByCreatedAtDesc(mcqs) };
+  }
+
+  const entries = [];
+  for (const nodeId of nodeIds) {
+    entries.push(...(await listContentEntries(db, nodeId, chapterId, topicId || null, contentKind)));
+  }
+  return { type: "content", items: sortByCreatedAtDesc(entries) };
+}
+
 async function resolveScopedNodeIds(db, subjectId, node) {
   const ids = new Set([node?.id].filter(Boolean));
   if (!node?.parent_subject_node_id) return Array.from(ids);
@@ -720,15 +756,8 @@ async function handleDynamicPages(url, env, user) {
     }
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const shortNotesNode = contentNodes.find((item) => item.content_kind === "Short Notes");
-    const noteNodeIds = Array.from(new Set([shortNotesNode?.id, node.id].filter(Boolean)));
-    const notes = [];
-    for (const noteNodeId of noteNodeIds) {
-      const scoped = await listNotes(env.DB, noteNodeId, chapter.id, null);
-      notes.push(...scoped);
-    }
-    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    return html(publicChapterContentPage(user, subject, node, chapter, uniqueNotes, contentNodes));
+    const notes = await collectPublicNotes(env.DB, contentNodes, node.id, chapter.id);
+    return html(publicChapterContentPage(user, subject, node, chapter, notes, contentNodes));
   }
 
   const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
@@ -737,15 +766,8 @@ async function handleDynamicPages(url, env, user) {
     if (!subject || !node || !chapter || !topic) return new Response("Not Found", { status: 404 });
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const shortNotesNode = contentNodes.find((item) => item.content_kind === "Short Notes");
-    const noteNodeIds = Array.from(new Set([shortNotesNode?.id, node.id].filter(Boolean)));
-    const notes = [];
-    for (const noteNodeId of noteNodeIds) {
-      const scoped = await listNotes(env.DB, noteNodeId, chapter.id, topic.id);
-      notes.push(...scoped);
-    }
-    const uniqueNotes = mergeUniqueById(notes).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    return html(publicChapterContentPage(user, subject, node, topic, uniqueNotes, contentNodes, topic.id));
+    const notes = await collectPublicNotes(env.DB, contentNodes, node.id, chapter.id, topic.id);
+    return html(publicChapterContentPage(user, subject, node, topic, notes, contentNodes, topic.id));
   }
 
   const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/content\/([^/]+)$/);
@@ -756,26 +778,13 @@ async function handleDynamicPages(url, env, user) {
     if (!subject || !node || !chapter || !contentKind) return new Response("Not Found", { status: 404 });
 
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const targetContentNode = contentNodes.find((item) => item.content_kind === contentKind);
-    const nodeIds = Array.from(new Set([targetContentNode?.id, node.id].filter(Boolean)));
+    const contentResult = await collectPublicContent(env.DB, contentNodes, node.id, chapter.id, topicId, contentKind);
 
-    if (contentKind === "MCQ Bank") {
-      const mcqs = [];
-      for (const contentNodeId of nodeIds) {
-        const scoped = await listMcqs(env.DB, contentNodeId, chapter.id, topicId || null);
-        mcqs.push(...scoped);
-      }
-      const uniqueMcqs = mergeUniqueById(mcqs).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-      return html(publicMcqEntriesPage(user, subject, chapter, uniqueMcqs));
+    if (contentResult.type === "mcq") {
+      return html(publicMcqEntriesPage(user, subject, chapter, contentResult.items));
     }
 
-    const entries = [];
-    for (const contentNodeId of nodeIds) {
-      const scoped = await listContentEntries(env.DB, contentNodeId, chapter.id, topicId || null, contentKind);
-      entries.push(...scoped);
-    }
-    const uniqueEntries = mergeUniqueById(entries).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    return html(publicContentEntriesPage(user, subject, chapter, contentKind, uniqueEntries));
+    return html(publicContentEntriesPage(user, subject, chapter, contentKind, contentResult.items));
   }
 
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
