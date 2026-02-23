@@ -82,6 +82,7 @@ export const publicHomeStyles = `
 .public-note-list li { margin-bottom: 0; padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
 .public-note-list li:last-child { border-bottom: 0; }
 .public-note-list li.public-note-empty { list-style: none; padding-left: 0; }
+.public-note-list.is-plain { list-style: none; padding-left: 0; }
 .public-note-title { margin: 0 0 2px; font-size: 14px; color: #1f2f56; }
 .public-note-body :first-child { margin-top: 0; }
 .public-note-body :last-child { margin-bottom: 0; }
