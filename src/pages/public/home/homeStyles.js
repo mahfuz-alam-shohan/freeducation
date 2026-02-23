@@ -41,9 +41,39 @@ export const publicHomeStyles = `
 .public-stack-subtitle { margin: 2px 0 0; color: #475569; font-size: 12px; }
 .public-wide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; margin-bottom: 8px; }
 .public-cta-card { border: 1px solid var(--line); background: #fff; text-decoration: none; color: #0f172a; font-weight: 600; padding: 8px 6px; display: block; border-radius: 6px; }
-.public-tab-row { display: flex; flex-wrap: wrap; gap: 5px; }
-.public-tab { border: 1px solid var(--line); background: #fff; text-decoration: none; color: #0f172a; font-size: 12px; padding: 4px 8px; border-radius: 6px; }
-.public-tab.is-active { background: #e8f0ff; border-color: #93c5fd; color: #1d4ed8; }
+.public-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+.public-tab {
+  border: 1px solid #cbd5e1;
+  border-bottom: 0;
+  background: #f8fafc;
+  text-decoration: none;
+  color: #334155;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  top: 1px;
+}
+.public-tab:hover { background: #f1f5f9; }
+.public-tab.is-active {
+  background: #fff;
+  color: #0f172a;
+  border-color: #94a3b8;
+  font-weight: 600;
+}
+.public-content-panel {
+  border: 1px solid #cbd5e1;
+  border-top: 0;
+  padding: 6px 6px 0;
+  background: #fff;
+}
 .public-note-list { margin: 0; padding-left: 16px; }
 .public-note-list li { margin-bottom: 8px; }
 .public-note-title { margin: 0 0 2px; font-size: 14px; color: #1f2f56; }
