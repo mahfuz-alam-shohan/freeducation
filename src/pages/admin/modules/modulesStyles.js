@@ -80,11 +80,14 @@ export const modulesStyles = `
 .inline-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #0f172a; min-height: 28px; }
 .section-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; }
 .section-summary-row p { margin: 0; font-size: 12px; }
-.content-tab-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
-.content-tab { border: 1px solid var(--line); padding: 4px 8px; border-radius: 6px; text-decoration: none; color: #0f172a; font-size: 12px; background: #fff; }
-.content-tab.is-active { background: #e8f0ff; border-color: #93c5fd; color: #1d4ed8; }
-.content-tab-panel { display: grid; gap: 6px; margin-bottom: 8px; }
-.content-tab-preview-list { margin: 0; padding-left: 16px; }
+.content-tab-panel { display: grid; gap: 8px; margin-bottom: 8px; }
+.content-tab-nav { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.content-tab-link { border: 1px solid transparent; border-radius: 999px; padding: 5px 12px; text-decoration: none; color: #334155; font-size: 12px; font-weight: 600; background: #f8fafc; }
+.content-tab-link:hover { border-color: #cbd5e1; color: #0f172a; }
+.content-tab-link.is-active { background: #dbeafe; border-color: #60a5fa; color: #1d4ed8; box-shadow: inset 0 0 0 1px #93c5fd; }
+.content-tab-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.content-tab-head p { margin: 0; }
+.content-tab-preview-list { display: grid; gap: 6px; margin: 0; }
 
 @media (max-width: 840px) {
   .floating-back-btn { top: calc(env(safe-area-inset-top, 0px) + 58px); left: 8px; }
@@ -96,6 +99,7 @@ export const modulesStyles = `
   .section-summary-row { flex-direction: column; align-items: flex-start; }
   .table-wrap { overflow-x: auto; }
   .content-kinds-table .content-kind-col { width: 132px; max-width: 132px; }
+  .content-tab-head { flex-direction: column; align-items: flex-start; }
   .subject-flow-edit-row { grid-template-columns: 1fr; align-items: flex-start; }
   .chapter-flow-edit-row { grid-template-columns: 1fr; align-items: flex-start; }
   .subject-flow-card-main { grid-template-columns: 52px minmax(0, 1fr); }
