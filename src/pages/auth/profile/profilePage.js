@@ -197,9 +197,75 @@ function profilePageScript() {
   };
 
   const submitForm = async (form, options) => {
+    const buildProfileUploadFormData = async () => {
+      const body = new FormData(form);
+      const fileInput = form.querySelector('input[type="file"]');
+      const file = fileInput?.files?.[0];
+      if (!file || !file.type?.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return body;
+
+      const decode = async () => {
+        if (typeof createImageBitmap === 'function') {
+          const bitmap = await createImageBitmap(file);
+          return {
+            width: bitmap.width,
+            height: bitmap.height,
+            draw: (ctx, width, height) => ctx.drawImage(bitmap, 0, 0, width, height),
+            release: () => typeof bitmap.close === 'function' && bitmap.close(),
+          };
+        }
+
+        const src = URL.createObjectURL(file);
+        const image = new Image();
+        image.decoding = 'async';
+        await new Promise((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error('decode-failed'));
+          image.src = src;
+        });
+        return {
+          width: image.naturalWidth || image.width,
+          height: image.naturalHeight || image.height,
+          draw: (ctx, width, height) => ctx.drawImage(image, 0, 0, width, height),
+          release: () => URL.revokeObjectURL(src),
+        };
+      };
+
+      const type = form.getAttribute('data-profile-upload-form');
+      const maxEdge = type === 'cover' ? 1600 : 512;
+      const quality = type === 'cover' ? 0.5 : 0.42;
+      const source = await decode().catch(() => null);
+      if (!source) return body;
+
+      const longestEdge = Math.max(source.width, source.height);
+      const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
+      const width = Math.max(1, Math.round(source.width * scale));
+      const height = Math.max(1, Math.round(source.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        source.release();
+        return body;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      source.draw(ctx, width, height);
+      source.release();
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
+      if (!blob || blob.size >= file.size) return body;
+
+      const name = (file.name || 'image').replace(/\.[^.]+$/, '') + '.webp';
+      const optimized = new File([blob], name, { type: 'image/webp', lastModified: Date.now() });
+      body.set(fileInput.name || 'file', optimized);
+      return body;
+    };
+
     const response = await fetch(form.action, {
       method: (form.method || 'POST').toUpperCase(),
-      body: new FormData(form),
+      body: await buildProfileUploadFormData(),
       credentials: 'same-origin',
       redirect: 'follow',
       headers: options?.headers || undefined,

@@ -770,13 +770,41 @@ async function readImageDimensions(file) {
   };
 }
 
-async function downscaleImageFile(file) {
+function resolveImageOptimizationProfile(form, fieldName) {
+  const path = (() => {
+    try {
+      return new URL(form.action, window.location.origin).pathname;
+    } catch {
+      return String(form.getAttribute('action') || '');
+    }
+  })();
+
+  if (path === '/api/profile/avatar' || fieldName === 'avatar') {
+    return { maxEdge: 512, quality: 0.42 };
+  }
+  if (path === '/api/profile/cover' || fieldName === 'cover') {
+    return { maxEdge: 1600, quality: 0.5 };
+  }
+  if (path.startsWith('/api/classes') || path.startsWith('/api/subjects') || path.startsWith('/api/subject-nodes')) {
+    return { maxEdge: 900, quality: 0.44 };
+  }
+  if (path.startsWith('/api/chapters') || path.startsWith('/api/topics')) {
+    return { maxEdge: 1200, quality: 0.46 };
+  }
+  if (path.startsWith('/api/notes') || path.startsWith('/api/mcqs') || path.startsWith('/api/content-entries')) {
+    return { maxEdge: 1400, quality: 0.48 };
+  }
+  return { maxEdge: 960, quality: 0.5 };
+}
+
+async function downscaleImageFile(file, profile) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
 
   if (file.size <= 64 * 1024) return file;
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
 
-  const maxEdge = 960;
+  const maxEdge = Number(profile?.maxEdge || 960);
+  const quality = Number(profile?.quality || 0.5);
   const source = await readImageDimensions(file);
   const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
@@ -796,8 +824,10 @@ async function downscaleImageFile(file) {
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.56));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
   if (!blob) return file;
+
+  if (blob.size >= file.size) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
   return new File([blob], targetName + '.webp', { type: 'image/webp', lastModified: Date.now() });
@@ -814,7 +844,8 @@ async function buildOptimizedFormData(form) {
     const fieldName = String(input.getAttribute('name') || '').trim();
     const selected = Array.from(input.files || []);
     if (!fieldName || selected.length === 0) continue;
-    const optimized = await Promise.all(selected.map((file) => downscaleImageFile(file).catch(() => file)));
+    const profile = resolveImageOptimizationProfile(form, fieldName);
+    const optimized = await Promise.all(selected.map((file) => downscaleImageFile(file, profile).catch(() => file)));
     replacements.push({ fieldName, files: optimized });
   }
 
