@@ -79,7 +79,7 @@ export function appShell(active, user, pageTitle, subtitle, content, options = {
             <p class="page-subtitle">${subtitle}</p>
           </section>`
           }
-          ${content}
+          <div data-live-region="page-content">${content}</div>
         </div>
       </main>
     </div>`,

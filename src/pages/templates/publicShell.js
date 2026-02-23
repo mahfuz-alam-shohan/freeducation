@@ -75,7 +75,7 @@ export function publicShell(active, user, title, content, script = "", pageStyle
       <div class="mobile-overlay" data-overlay></div>
       <main class="main-shell public-main-shell">
         ${publicTopbar(user)}
-        <div class="public-content-shell">${content}</div>
+        <div class="public-content-shell" data-live-region="page-content">${content}</div>
         ${active === "home" ? "" : '<footer class="public-footer">Freeducation</footer>'}
       </main>
     </div>`,
