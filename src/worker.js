@@ -205,6 +205,26 @@ async function listAllReferencedMediaKeys(db) {
   return Array.from(new Set(results.flat().map((key) => sanitizeMediaKey(key)).filter(Boolean)));
 }
 
+async function clearMediaReferences(db, key) {
+  const safeKey = sanitizeMediaKey(key);
+  if (!safeKey) return;
+
+  const cleanupQueries = [
+    "UPDATE users SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE users SET cover_image_key = NULL WHERE cover_image_key = ?1",
+    "UPDATE classes SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE subjects SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE subject_nodes SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE chapters SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE topics SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE short_notes SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE mcq_bank SET image_key = NULL WHERE image_key = ?1",
+    "UPDATE content_entries SET image_key = NULL WHERE image_key = ?1",
+  ];
+
+  await Promise.all(cleanupQueries.map((sql) => db.prepare(sql).bind(safeKey).run()));
+}
+
 function mergeMediaRows(bucketRows, databaseKeys) {
   const rowMap = new Map(bucketRows.map((row) => [row.key, row]));
 
@@ -854,6 +874,7 @@ async function handleAdminPost(request, env, url) {
     const redirectTo = String(form.get("redirect") || "/admin/file-manager");
     if (!key) return redirect(redirectTo || "/admin/file-manager");
     await deleteBucketObjects(env, [key]);
+    await clearMediaReferences(env.DB, key);
     return redirect(redirectTo || "/admin/file-manager");
   }
 
