@@ -41,6 +41,10 @@ function sortByCreatedAtDesc(items) {
   return mergeUniqueById(items).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
 }
 
+function sortByCreatedAtAsc(items) {
+  return mergeUniqueById(items).sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
+}
+
 function resolvePublicContentNodeIds(contentNodes, fallbackNodeId, contentKind) {
   const targetNode = contentKind ? contentNodes.find((item) => item.content_kind === contentKind) : null;
   return Array.from(new Set([targetNode?.id, fallbackNodeId].filter(Boolean)));
@@ -52,7 +56,7 @@ async function collectPublicNotes(db, contentNodes, fallbackNodeId, chapterId, t
   for (const nodeId of nodeIds) {
     notes.push(...(await listNotes(db, nodeId, chapterId, topicId)));
   }
-  return sortByCreatedAtDesc(notes);
+  return sortByCreatedAtAsc(notes);
 }
 
 async function collectTabItems(db, subjectId, node, chapterId, topicId, selectedTab, contentNodes = []) {
@@ -66,7 +70,7 @@ async function collectTabItems(db, subjectId, node, chapterId, topicId, selected
   if (selectedTab === "Short Notes") {
     const rows = [];
     for (const scopedNodeId of scopedNodeIds) rows.push(...(await listNotes(db, scopedNodeId, chapterId || null, topicId || null)));
-    return sortByCreatedAtDesc(rows);
+    return sortByCreatedAtAsc(rows);
   }
   if (selectedTab === "MCQ Bank") {
     const rows = [];
