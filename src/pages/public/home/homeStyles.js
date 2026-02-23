@@ -43,11 +43,12 @@ export const publicHomeStyles = `
 .public-cta-card { border: 1px solid var(--line); background: #fff; text-decoration: none; color: #0f172a; font-weight: 600; padding: 8px 6px; display: block; border-radius: 6px; }
 .public-tab-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
+  flex-wrap: nowrap;
+  gap: 0;
   border-bottom: 1px solid #cbd5e1;
   padding-bottom: 0;
   margin-bottom: 0;
+  overflow-x: auto;
 }
 .public-tab {
   border: 1px solid #cbd5e1;
@@ -56,10 +57,10 @@ export const publicHomeStyles = `
   text-decoration: none;
   color: #334155;
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 6px 6px 0 0;
-  position: relative;
-  top: 1px;
+  white-space: nowrap;
+  margin-bottom: -1px;
 }
 .public-tab:hover { background: #f1f5f9; }
 .public-tab.is-active {
@@ -71,11 +72,12 @@ export const publicHomeStyles = `
 .public-content-panel {
   border: 1px solid #cbd5e1;
   border-top: 0;
-  padding: 6px 6px 0;
+  padding: 4px 0 0;
   background: #fff;
 }
 .public-note-list { margin: 0; padding-left: 16px; }
-.public-note-list li { margin-bottom: 8px; }
+.public-note-list li { margin-bottom: 0; padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
+.public-note-list li:last-child { border-bottom: 0; }
 .public-note-title { margin: 0 0 2px; font-size: 14px; color: #1f2f56; }
 .public-note-body :first-child { margin-top: 0; }
 .public-note-body :last-child { margin-bottom: 0; }

@@ -55,8 +55,14 @@ async function collectPublicNotes(db, contentNodes, fallbackNodeId, chapterId, t
   return sortByCreatedAtDesc(notes);
 }
 
-async function collectTabItems(db, subjectId, node, chapterId, topicId, selectedTab) {
-  const scopedNodeIds = await resolveScopedNodeIds(db, subjectId, node);
+async function collectTabItems(db, subjectId, node, chapterId, topicId, selectedTab, contentNodes = []) {
+  const targetContentNodes = contentNodes.filter((item) => (item.content_kind || item.display_name) === selectedTab);
+  const candidateNodes = [node, ...targetContentNodes];
+  const scopedNodeIdSet = new Set();
+  for (const candidateNode of candidateNodes) {
+    for (const scopedNodeId of await resolveScopedNodeIds(db, subjectId, candidateNode)) scopedNodeIdSet.add(scopedNodeId);
+  }
+  const scopedNodeIds = Array.from(scopedNodeIdSet);
   if (selectedTab === "Short Notes") {
     const rows = [];
     for (const scopedNodeId of scopedNodeIds) rows.push(...(await listNotes(db, scopedNodeId, chapterId || null, topicId || null)));
@@ -1037,7 +1043,7 @@ async function handleDynamicPages(url, env, user) {
 
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab);
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab, contentNodes);
     return html(publicChapterContentPage(user, subject, node, chapter, { selectedTab, items: tabItems }, contentNodes));
   }
 
@@ -1048,7 +1054,7 @@ async function handleDynamicPages(url, env, user) {
 
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab);
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab, contentNodes);
     return html(publicChapterContentPage(user, subject, node, topic, { selectedTab, items: tabItems }, contentNodes, topic.id));
   }
 
@@ -1097,7 +1103,7 @@ async function handleDynamicPages(url, env, user) {
     }
 
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
-    const tabItems = await collectTabItems(env.DB, subject.id, node, null, null, selectedTab);
+    const tabItems = await collectTabItems(env.DB, subject.id, node, null, null, selectedTab, contentChildren);
     return html(contentKindsPage(user, subject, node, null, null, contentChildren, { selectedKind: selectedTab, items: tabItems }));
   }
 
@@ -1110,7 +1116,7 @@ async function handleDynamicPages(url, env, user) {
     }
     const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
-    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab);
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab, contentChildren);
     return html(contentKindsPage(user, subject, node, chapter, null, contentChildren, { selectedKind: selectedTab, items: tabItems }));
   }
 
@@ -1120,7 +1126,7 @@ async function handleDynamicPages(url, env, user) {
     if (!subject || !node || !chapter || !topic) return new Response("Not Found", { status: 404 });
     const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
-    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab);
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab, contentChildren);
     return html(contentKindsPage(user, subject, node, chapter, topic, contentChildren, { selectedKind: selectedTab, items: tabItems }));
   }
 

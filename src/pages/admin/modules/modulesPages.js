@@ -443,7 +443,6 @@ export function topicsPage(user, subject, node, chapter, topics) {
 }
 
 export function contentKindsPage(user, subject, node, chapter, topic, childNodes = [], tabState = null) {
-  const disabledKinds = new Set(["CQ Bank", "Videos"]);
   const preferredOrder = ["Short Notes", "MCQ Bank", "Summary", "CQ Bank", "Videos"];
   const detectedKinds = childNodes.filter((n) => n.node_type === "content").map((n) => n.content_kind || n.display_name);
   const fallbackKinds = node.content_kind ? [node.content_kind] : ["CQ Bank", "MCQ Bank", "Short Notes", "Videos", "Summary"];
@@ -455,16 +454,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     if (indexB === -1) return -1;
     return indexA - indexB;
   });
-  const nodeIdByKind = new Map(childNodes.filter((n) => n.node_type === "content").map((n) => [n.content_kind || n.display_name, n.id]));
   const selectedKind = tabState?.selectedKind && kinds.includes(tabState.selectedKind) ? tabState.selectedKind : (kinds.includes("Short Notes") ? "Short Notes" : kinds[0] || "Short Notes");
-
-  const hrefForKind = (kind) => {
-    const targetNodeId = nodeIdByKind.get(kind) || node.id;
-    if (kind === "Short Notes") return `/subjects/${subject.id}/notes?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`;
-    if (kind === "MCQ Bank") return `/subjects/${subject.id}/mcqs?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`;
-    if (disabledKinds.has(kind)) return "";
-    return `/subjects/${subject.id}/content?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}&kind=${encodeURIComponent(kind)}`;
-  };
 
   const tabLinks = kinds
     .map((kind) => {
@@ -483,12 +473,10 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       return `<article class="plain-entry"><p class="note-content">${h(text)}</p></article>`;
     })
     .join("");
-  const manageHref = hrefForKind(selectedKind);
   const tabPanel = `<section class="card flat-card content-tab-panel">
     <nav class="content-tab-nav" role="tablist" aria-label="Content tabs">${tabLinks}</nav>
     <div class="content-tab-head">
       <p class="muted"><strong>${h(selectedKind)}</strong> · ${tabState?.items?.length || 0} item(s)</p>
-      ${manageHref ? `<a class="btn btn-secondary" href="${manageHref}">Manage ${h(selectedKind)}</a>` : '<span class="muted">Unavailable in current template.</span>'}
     </div>
     <section class="content-tab-preview-list">${listItems || `<p class="muted">No ${h(selectedKind)} yet.</p>`}</section>
   </section>`;
@@ -656,6 +644,7 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
   const backHref = topic ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}/topics/${topic.id}` : chapter ? `/subjects/${subject.id}/nodes/${rootNodeId}/chapters/${chapter.id}` : `/subjects/${subject.id}/nodes/${rootNodeId}`;
 
   const isSummary = contentKind === "Summary";
+  const hasSummary = isSummary && entries.length > 0;
   const entryForm = (entry) => `<form method="post" action="/api/content-entries" enctype="multipart/form-data" class="grid grid-2">
     <input type="hidden" name="id" value="${entry?.id || ""}" />
     <input type="hidden" name="subjectId" value="${subject.id}" />
@@ -667,19 +656,20 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
     ${isSummary ? "" : `<input class="input" name="title" placeholder="Title" value="${h(entry?.title || "")}" maxlength="180" />`}
     ${isSummary ? "" : '<input class="input" type="file" name="image" accept="image/*" />'}
     ${richTextEditor("contentHtml", entry?.content_html || "", `Write ${h(contentKind)} content here…`, true)}
-    <div>${entry && !isSummary ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ""}<button class="btn btn-primary" type="submit">${entry || isSummary ? "Update Entry" : "Add Entry"}</button></div>
+    <div>${entry && !isSummary ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ""}<button class="btn btn-primary" type="submit">${isSummary ? (entry?.id ? "Save Summary" : "Add Summary") : (entry ? "Update Entry" : "Add Entry")}</button></div>
   </form>`;
 
   const items = pageItems
     .map((entry, idx) => {
       const modalId = `content-entry-edit-${entry.id}`;
       const itemIndex = (safePage - 1) * 20 + idx + 1;
+      const itemLabel = isSummary ? "Summary" : `${itemIndex}. ${entry.title || `${contentKind} entry`}`;
       return `<article class="plain-entry" id="content-entry-${entry.id}">
       <div class="plain-line-wrap">
-        <div class="mcq-question"><strong>${itemIndex}.</strong> ${h(entry.title || (isSummary ? "Summary" : `${contentKind} entry`))}</div>
+        <div class="mcq-question">${h(itemLabel)}</div>
         <div class="mcq-actions-inline">
           <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit content" title="Edit content">${iconEdit()}</button>
-          <form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">${iconDelete()}</button></form>
+          ${isSummary ? "" : `<form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${entry.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="kind" value="${h(contentKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">${iconDelete()}</button></form>`}
         </div>
       </div>
       ${entry.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(entry.image_key) || "")}" alt="${h(contentKind)} image ${itemIndex}" loading="lazy" decoding="async" /></figure>` : ""}
@@ -689,10 +679,16 @@ export function contentEntriesPage(user, subject, node, chapter, topic, contentK
     })
     .join("");
 
+  const summaryAddSection = !hasSummary
+    ? `<section class="card content-form-shell"><div class="content-form-head"><h3 class="card-title">Summary</h3><button type="button" class="btn btn-secondary" data-content-modal-open="summary-add-modal">Add Summary</button></div><dialog class="content-modal" data-content-modal="summary-add-modal"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Add Summary</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${entryForm({ page: safePage })}</div></dialog></section>`
+    : "";
+
+  const defaultAddSection = `<section class="card content-form-shell" data-add-form-shell><div class="content-form-head"><h3 class="card-title">Add ${h(contentKind)} item</h3><button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="${h(contentKind)}" aria-expanded="false">Add ${h(contentKind)}</button></div><div data-add-form-panel>${entryForm({ page: safePage })}</div></section>`;
+
   const content = `${floatingBackButton(backHref, "Back to previous page")}
-  <section class="card content-form-shell" data-add-form-shell><div class="content-form-head"><h3 class="card-title">${isSummary ? "Summary editor" : `Add ${h(contentKind)} item`}</h3><button type="button" class="btn btn-secondary" data-add-form-toggle data-add-form-label="${h(contentKind)}" aria-expanded="false">${isSummary ? "Edit Summary" : `Add ${h(contentKind)}`}</button></div><div data-add-form-panel>${entryForm(isSummary && entries[0] ? { ...entries[0], page: safePage } : { page: safePage })}</div></section>
+  ${isSummary ? summaryAddSection : defaultAddSection}
   <section class="content-list">${items}</section>
-  ${!pageItems.length ? '<p class="muted">No content yet.</p>' : ""}
+  ${!pageItems.length ? `<p class="muted">No ${h(contentKind)} yet.</p>` : ""}
   ${renderPagination(baseHref, safePage, totalPages)}`;
 
   return appShell("subjects", user, `${subject.name} · ${h(contentKind)}`, "Flexible content editor for any custom content type.", content, { pageStyles: modulesStyles });
