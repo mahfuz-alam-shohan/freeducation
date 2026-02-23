@@ -6,7 +6,7 @@ import { buildSessionCookie, clearSessionCookie, createSignedToken } from "./sec
 import { html, json, redirect } from "./http/response.js";
 import { methodNotAllowed } from "./http/request.js";
 import { requireAuth } from "./api/auth.js";
-import { chaptersPage, contentEntriesPage, contentKindsPage, dashboardPage, forbiddenPage, loginPage, mcqsPage, notesPage, profilePage, publicHomePage, publicClassesPage, publicClassSubjectsPage, publicSubjectNodePage, publicChapterContentPage, publicContentEntriesPage, publicMcqEntriesPage, subjectNodeListPage, subjectsPage, classesPage, classSubjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage } from "./pages/layout.js";
+import { chaptersPage, classSubjectsPage, classesPage, contentEntriesPage, contentKindsPage, dashboardPage, forbiddenPage, loginPage, mcqsPage, mediaManagerPage, notesPage, profilePage, publicChapterContentPage, publicClassesPage, publicClassSubjectsPage, publicContentEntriesPage, publicHomePage, publicMcqEntriesPage, publicSubjectNodePage, subjectNodeListPage, subjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage } from "./pages/layout.js";
 import { MAX_IMAGE_BYTES, SESSION_COOKIE } from "./env.js";
 
 const ACCESS = {
@@ -97,6 +97,57 @@ function isEmail(value) {
 
 function isSupportedRole(role) {
   return role === "admin" || role === "teacher";
+}
+
+
+function inferMediaTypeFromKey(key) {
+  const ext = String(key.split(".").pop() || "").toLowerCase();
+  const imageExt = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "avif", "bmp"]);
+  const videoExt = new Set(["mp4", "webm", "mov", "m4v", "avi", "mkv", "wmv", "3gp", "m3u8"]);
+  if (imageExt.has(ext)) return { mediaType: "image", ext };
+  if (videoExt.has(ext)) return { mediaType: "video", ext };
+  return { mediaType: "other", ext };
+}
+
+function inferSourceFromKey(key) {
+  const firstSegment = String(key || "").split("/").filter(Boolean)[0] || "root";
+  return firstSegment;
+}
+
+async function listBucketObjects(bucket) {
+  const rows = [];
+  let cursor;
+
+  do {
+    const listing = await bucket.list({ limit: 1000, cursor });
+    for (const object of listing.objects || []) {
+      const typeInfo = inferMediaTypeFromKey(object.key);
+      rows.push({
+        key: object.key,
+        size: Number(object.size || 0),
+        uploaded: object.uploaded || null,
+        mediaType: typeInfo.mediaType,
+        ext: typeInfo.ext,
+        source: inferSourceFromKey(object.key),
+      });
+    }
+    cursor = listing.truncated ? listing.cursor : undefined;
+  } while (cursor);
+
+  return rows.sort((a, b) => String(b.uploaded || "").localeCompare(String(a.uploaded || "")));
+}
+
+function filterMediaRows(rows, filters) {
+  const type = filters.type === "image" || filters.type === "video" || filters.type === "other" ? filters.type : "all";
+  const source = String(filters.source || "all").trim();
+  const search = String(filters.search || "").trim().toLowerCase();
+
+  return rows.filter((row) => {
+    if (type !== "all" && row.mediaType !== type) return false;
+    if (source !== "all" && row.source !== source) return false;
+    if (search && !row.key.toLowerCase().includes(search)) return false;
+    return true;
+  });
 }
 
 async function uploadImage(env, folder, file) {
@@ -205,6 +256,35 @@ const pageRoutes = [
     access: ACCESS.AUTHENTICATED,
     roles: ["admin"],
     handle: async ({ env, user }) => html(usersPage(user, await listUsers(env.DB))),
+  },
+  {
+    path: "/admin/file-manager",
+    access: ACCESS.AUTHENTICATED,
+    roles: ["admin"],
+    handle: async ({ env, user, url }) => {
+      const allRows = await listBucketObjects(env.BUCKET);
+      const filters = {
+        type: String(url.searchParams.get("type") || "all"),
+        source: String(url.searchParams.get("source") || "all"),
+        search: String(url.searchParams.get("search") || ""),
+      };
+      const filteredRows = filterMediaRows(allRows, filters);
+      const totals = {
+        allCount: allRows.length,
+        allSizeBytes: allRows.reduce((sum, row) => sum + row.size, 0),
+        filteredCount: filteredRows.length,
+        filteredSizeBytes: filteredRows.reduce((sum, row) => sum + row.size, 0),
+      };
+
+      return html(
+        mediaManagerPage(user, {
+          rows: filteredRows,
+          filters,
+          totals,
+          availableSources: Array.from(new Set(allRows.map((row) => row.source))).sort((a, b) => a.localeCompare(b)),
+        }),
+      );
+    },
   },
   {
     path: "/templates",
@@ -959,6 +1039,6 @@ export default {
     }
 
     if (route.access === ACCESS.AUTHENTICATED && routeRequiresRole(route, user)) return html(forbiddenPage(), 403);
-    return route.handle({ request, env, user });
+    return route.handle({ request, env, user, url });
   },
 };

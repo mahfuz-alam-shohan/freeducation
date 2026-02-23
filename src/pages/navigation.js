@@ -1,4 +1,4 @@
-import { iconClasses, iconDashboard, iconHome, iconManagement, iconProfile, iconSubjects, iconTemplates, iconUsers } from "./templates/icons.js";
+import { iconClasses, iconDashboard, iconFiles, iconHome, iconManagement, iconProfile, iconSubjects, iconTemplates, iconUsers } from "./templates/icons.js";
 
 export function getNavigation(role) {
   const nav = [
@@ -43,10 +43,10 @@ export function getNavigation(role) {
     nav.push({
       title: "Management",
       collapsible: true,
-      expandedKeys: ["users"],
+      expandedKeys: ["users", "file-manager"],
       key: "management",
       icon: iconManagement,
-      items: [{ key: "users", href: "/users", label: "Users", icon: iconUsers }],
+      items: [{ key: "users", href: "/users", label: "Users", icon: iconUsers }, { key: "file-manager", href: "/admin/file-manager", label: "File manager", icon: iconFiles }],
     });
   }
 
