@@ -80,6 +80,11 @@ export const modulesStyles = `
 .inline-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #0f172a; min-height: 28px; }
 .section-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; }
 .section-summary-row p { margin: 0; font-size: 12px; }
+.content-tab-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.content-tab { border: 1px solid var(--line); padding: 4px 8px; border-radius: 6px; text-decoration: none; color: #0f172a; font-size: 12px; background: #fff; }
+.content-tab.is-active { background: #e8f0ff; border-color: #93c5fd; color: #1d4ed8; }
+.content-tab-panel { display: grid; gap: 6px; margin-bottom: 8px; }
+.content-tab-preview-list { margin: 0; padding-left: 16px; }
 
 @media (max-width: 840px) {
   .floating-back-btn { top: calc(env(safe-area-inset-top, 0px) + 58px); left: 8px; }

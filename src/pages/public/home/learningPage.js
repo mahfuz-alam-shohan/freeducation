@@ -25,8 +25,10 @@ export function publicSubjectNodePage(user, subject, title, subtitle, items, hre
   );
 }
 
-export function publicChapterContentPage(user, subject, node, chapter, shortNotes = [], contentNodes = [], topicId = null) {
+export function publicChapterContentPage(user, subject, node, chapter, tabState = {}, contentNodes = [], topicId = null) {
   const isAdmin = user?.role === "admin";
+  const selectedTab = tabState?.selectedTab || "Short Notes";
+  const tabItems = tabState?.items || [];
   const adminMetaInputs = `
     <input type="hidden" name="subjectId" value="${h(subject.id)}" />
     <input type="hidden" name="subjectNodeId" value="${h(node.id)}" />
@@ -34,16 +36,22 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
     <input type="hidden" name="topicId" value="${h(topicId || "")}" />
     <input type="hidden" name="redirect" value="${h(`/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}${topicId ? `/topics/${topicId}` : ""}`)}" />
   `;
-  const actions = contentNodes
-    .filter((item) => item.content_kind !== "Short Notes")
-    .map((item) => `<a class="public-cta-card" href="/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent(item.content_kind || "")}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ""}">${h(item.display_name)}</a>`)
-    .join("");
+  const tabs = Array.from(new Set(["Short Notes", "MCQ Bank", "Summary", "CQ Bank", ...contentNodes.map((item) => item.content_kind || item.display_name)])).filter(Boolean);
+  const tabPath = `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}${topicId ? `/topics/${topicId}` : ""}`;
+  const actions = `<div class="public-tab-row">${tabs
+    .map((tab) => `<a class="public-tab ${tab === selectedTab ? "is-active" : ""}" href="${tabPath}?tab=${encodeURIComponent(tab)}" ${tab === selectedTab ? 'aria-current="page"' : ""}>${h(tab)}</a>`)
+    .join("")}</div>`;
 
-  const notes = shortNotes
+  const notes = tabItems
     .map(
       (entry) => `<li>
       ${renderEntryImage(entry.image_key, `${chapter.name} short note image`)}
-      <div class="public-note-body">${h(entry.content_html)}</div>
+      <div class="public-note-body">${selectedTab === "MCQ Bank" ? h(entry.question_html) : h(entry.content_html || entry.title || "")}</div>
+      ${
+        selectedTab === "MCQ Bank"
+          ? `<ul class="public-mcq-options"><li><strong>A.</strong> ${h(entry.option_a || "-")}</li><li><strong>B.</strong> ${h(entry.option_b || "-")}</li><li><strong>C.</strong> ${h(entry.option_c || "-")}</li><li><strong>D.</strong> ${h(entry.option_d || "-")}</li></ul>`
+          : ""
+      }
       ${
         isAdmin
           ? `<div class="public-admin-inline-actions">
@@ -68,7 +76,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
     )
     .join("");
 
-  const adminQuickAdd = isAdmin
+  const adminQuickAdd = isAdmin && selectedTab === "Short Notes"
     ? `<section class="public-admin-panel">
       <h3>Admin quick add: Short note</h3>
       <form method="post" action="/api/notes" class="public-admin-inline-form">
@@ -88,7 +96,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
       subtitle: node.display_name,
       content: `<div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
       ${adminQuickAdd}
-      <ol class="public-note-list">${notes || "<li>No short notes yet.</li>"}</ol>`,
+      <ol class="public-note-list">${notes || `<li>No ${h(selectedTab)} yet.</li>`}</ol>`,
     }),
     "",
     learningPageStyles,
