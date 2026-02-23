@@ -443,7 +443,6 @@ export function topicsPage(user, subject, node, chapter, topics) {
 }
 
 export function contentKindsPage(user, subject, node, chapter, topic, childNodes = [], tabState = null) {
-  const disabledKinds = new Set(["CQ Bank", "Videos"]);
   const preferredOrder = ["Short Notes", "MCQ Bank", "Summary", "CQ Bank", "Videos"];
   const detectedKinds = childNodes.filter((n) => n.node_type === "content").map((n) => n.content_kind || n.display_name);
   const fallbackKinds = node.content_kind ? [node.content_kind] : ["CQ Bank", "MCQ Bank", "Short Notes", "Videos", "Summary"];
@@ -455,16 +454,7 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
     if (indexB === -1) return -1;
     return indexA - indexB;
   });
-  const nodeIdByKind = new Map(childNodes.filter((n) => n.node_type === "content").map((n) => [n.content_kind || n.display_name, n.id]));
   const selectedKind = tabState?.selectedKind && kinds.includes(tabState.selectedKind) ? tabState.selectedKind : (kinds.includes("Short Notes") ? "Short Notes" : kinds[0] || "Short Notes");
-
-  const hrefForKind = (kind) => {
-    const targetNodeId = nodeIdByKind.get(kind) || node.id;
-    if (kind === "Short Notes") return `/subjects/${subject.id}/notes?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`;
-    if (kind === "MCQ Bank") return `/subjects/${subject.id}/mcqs?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`;
-    if (disabledKinds.has(kind)) return "";
-    return `/subjects/${subject.id}/content?node=${targetNodeId}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}&kind=${encodeURIComponent(kind)}`;
-  };
 
   const tabLinks = kinds
     .map((kind) => {
@@ -483,12 +473,10 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       return `<article class="plain-entry"><p class="note-content">${h(text)}</p></article>`;
     })
     .join("");
-  const manageHref = hrefForKind(selectedKind);
   const tabPanel = `<section class="card flat-card content-tab-panel">
     <nav class="content-tab-nav" role="tablist" aria-label="Content tabs">${tabLinks}</nav>
     <div class="content-tab-head">
       <p class="muted"><strong>${h(selectedKind)}</strong> · ${tabState?.items?.length || 0} item(s)</p>
-      ${manageHref ? `<a class="btn btn-secondary" href="${manageHref}">Manage ${h(selectedKind)}</a>` : '<span class="muted">Unavailable in current template.</span>'}
     </div>
     <section class="content-tab-preview-list">${listItems || `<p class="muted">No ${h(selectedKind)} yet.</p>`}</section>
   </section>`;

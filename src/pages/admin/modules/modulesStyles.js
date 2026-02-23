@@ -37,7 +37,7 @@ export const modulesStyles = `
 .subject-flow-card-media .image-slot-trigger img { width: 44px; height: 44px; border-radius: 5px; }
 .subject-flow-card-body { display: grid; gap: 6px; min-width: 0; }
 .chapter-flow-card-grid { margin-top: 6px; }
-.plain-entry { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: #fff; margin-bottom: 8px; display: grid; gap: 7px; }
+.plain-entry { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 6px 0; background: transparent; margin-bottom: 0; display: grid; gap: 5px; }
 .chapter-flow-card { padding: 7px; }
 .subject-flow-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .subject-flow-card-head .card-title { margin: 0; font-size: 14px; }
@@ -81,10 +81,10 @@ export const modulesStyles = `
 .section-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; }
 .section-summary-row p { margin: 0; font-size: 12px; }
 .content-tab-panel { display: grid; gap: 8px; margin-bottom: 8px; }
-.content-tab-nav { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
-.content-tab-link { border: 1px solid transparent; border-radius: 999px; padding: 5px 12px; text-decoration: none; color: #334155; font-size: 12px; font-weight: 600; background: #f8fafc; }
-.content-tab-link:hover { border-color: #cbd5e1; color: #0f172a; }
-.content-tab-link.is-active { background: #dbeafe; border-color: #60a5fa; color: #1d4ed8; box-shadow: inset 0 0 0 1px #93c5fd; }
+.content-tab-nav { display: flex; flex-wrap: nowrap; align-items: flex-end; gap: 0; border-bottom: 1px solid var(--line); padding-bottom: 0; overflow-x: auto; }
+.content-tab-link { border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; padding: 6px 10px; text-decoration: none; color: #334155; font-size: 12px; font-weight: 600; background: #f8fafc; white-space: nowrap; margin-bottom: -1px; }
+.content-tab-link:hover { background: #f1f5f9; color: #0f172a; }
+.content-tab-link.is-active { background: #fff; border-color: #94a3b8; color: #0f172a; box-shadow: none; }
 .content-tab-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .content-tab-head p { margin: 0; }
 .content-tab-preview-list { display: grid; gap: 6px; margin: 0; }
