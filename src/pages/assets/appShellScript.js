@@ -773,10 +773,10 @@ async function readImageDimensions(file) {
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
 
-  if (file.size <= 220 * 1024) return file;
+  if (file.size <= 64 * 1024) return file;
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
 
-  const maxEdge = 1440;
+  const maxEdge = 960;
   const source = await readImageDimensions(file);
   const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
@@ -796,7 +796,7 @@ async function downscaleImageFile(file) {
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.62));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.56));
   if (!blob) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
