@@ -28,17 +28,17 @@ export const profileStyles = `
 .profile-name-row { margin-top: 36px; }
 .profile-name-row h2 { margin: 0; font-size: clamp(24px, 4vw, 32px); line-height: 1.1; }
 
-.profile-bio { display: grid; gap: 10px; }
+.profile-bio { display: grid; gap: 6px; }
 .profile-panel-title { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #64748b; font-weight: 700; }
-.profile-field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.profile-inline-edit-btn { width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: #5f7194; display: grid; place-items: center; cursor: pointer; padding: 0; }
-.profile-inline-edit-btn .icon,.profile-inline-edit-btn .icon svg { width: 15px; height: 15px; }
+.profile-field-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.profile-inline-edit-btn { width: 20px; height: 20px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: #5f7194; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.profile-inline-edit-btn .icon,.profile-inline-edit-btn .icon svg { width: 11px; height: 11px; }
 .profile-inline-edit-btn.is-open { color: #1d4ed8; }
-.profile-bio-label { margin: 0; color: #64748b; font-size: 14px; font-weight: 500; }
-.profile-inline-input { max-width: 560px; margin-top: 4px; min-width: 0; }
+.profile-bio-label { margin: 0; color: #475569; font-size: 16px; font-weight: 500; }
+.profile-inline-input { max-width: 560px; margin-top: 0; min-width: 0; }
 .profile-dob-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-width: 560px; }
 .profile-field-label { font-size: 12px; color: #64748b; margin-top: 2px; }
-.profile-inline-editor { display: grid; gap: 6px; margin-top: 4px; max-width: 560px; }
+.profile-inline-editor { display: grid; gap: 6px; margin: 2px 0 0 84px; max-width: 560px; }
 .profile-inline-editor[hidden] { display: none; }
 .profile-inline-actions { display: flex; gap: 6px; align-items: center; }
 .profile-form-grid { display: grid; gap: 8px; max-width: 520px; }
@@ -58,8 +58,8 @@ export const profileStyles = `
 
 .profile-grid-flat { display: grid; gap: 10px; }
 .profile-form-actions { display: flex; justify-content: flex-end; gap: 6px; }
-.profile-fixed-value { margin: 0; color: #0f172a; font-size: 16px; line-height: 1.25; font-weight: 700; }
-.profile-readonly-row { display: grid; gap: 2px; }
+.profile-fixed-value { margin: 0; color: #0f172a; font-size: 16px; line-height: 1.25; font-weight: 600; }
+.profile-readonly-row { display: grid; gap: 2px; border-bottom: 1px solid #e2e8f0; padding: 2px 0 8px; }
 .profile-readonly-row .muted { margin: 0; }
 
 .profile-photo-modal-card { max-width: min(860px, 96vw); }
@@ -73,5 +73,8 @@ export const profileStyles = `
   .profile-photo-actions { min-width: 170px; }
   .profile-grid-flat { gap: 8px; }
   .profile-dob-grid,.profile-snapshot { grid-template-columns: 1fr; }
+  .profile-inline-editor { margin-left: 0; }
+  .profile-field-head { grid-template-columns: 1fr auto; }
+  .profile-field-head .profile-fixed-value { grid-column: 1 / -1; }
 }
 `;

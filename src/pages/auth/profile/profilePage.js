@@ -115,16 +115,14 @@ function profileMain(user) {
 
     <div class="profile-tab-panel" id="profile-about-panel" role="tabpanel" aria-labelledby="profile-about-tab" data-profile-panel="about">
       <div class="profile-bio" data-profile-about-view>
-        <p class="profile-panel-title">Personal details</p>
         <div class="profile-readonly-row" data-profile-inline-field="name">
           <div class="profile-field-head">
-            <p class="profile-bio-label" id="profile-name-label">Name</p>
+            <p class="profile-bio-label" id="profile-name-label">Name:</p>
+            <p class="profile-fixed-value" data-profile-name-value>${h(user.name)}</p>
             <button type="button" class="profile-inline-edit-btn" data-profile-inline-toggle="name" aria-expanded="false" aria-controls="profile-name-editor" aria-label="Edit name"><span class="icon">${iconEdit}</span></button>
           </div>
-          <p class="profile-fixed-value" data-profile-name-value>${h(user.name)}</p>
           <form id="profile-name-editor" class="profile-inline-editor" data-profile-inline-editor="name" method="post" action="/api/profile/name" hidden>
-            <label for="profile-name" class="profile-field-label">Name</label>
-            <input id="profile-name" class="input profile-inline-input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" />
+            <input id="profile-name" class="input profile-inline-input" name="name" maxlength="100" required value="${h(user.name)}" autocomplete="name" aria-label="Name" />
             <div class="profile-inline-actions">
               <button class="btn btn-primary" type="submit">Save</button>
               <button class="btn btn-secondary" type="button" data-profile-inline-cancel="name">Cancel</button>
@@ -134,12 +132,11 @@ function profileMain(user) {
         </div>
         <div class="profile-readonly-row" data-profile-inline-field="dob">
           <div class="profile-field-head">
-            <p class="profile-bio-label" id="profile-dob-label">Date of birth</p>
+            <p class="profile-bio-label" id="profile-dob-label">Date of Birth:</p>
+            <p class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</p>
             <button type="button" class="profile-inline-edit-btn" data-profile-inline-toggle="dob" aria-expanded="false" aria-controls="profile-dob-editor" aria-label="Edit date of birth"><span class="icon">${iconEdit}</span></button>
           </div>
-          <p class="profile-fixed-value" data-profile-dob-text>${h(formatDate(user.dateOfBirth))}</p>
           <form id="profile-dob-editor" class="profile-inline-editor" data-profile-inline-editor="dob" method="post" action="/api/profile/dob" hidden>
-            <label for="profile-dob-day" class="profile-field-label">Date of birth</label>
             <input id="profile-dob" type="hidden" name="dateOfBirth" value="${h(dobValue)}" />
             <div class="profile-dob-grid">
               <select id="profile-dob-day" class="input profile-inline-input" name="dobDay" data-profile-dob-day aria-label="Day of birth">
