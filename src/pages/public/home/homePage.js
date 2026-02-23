@@ -30,11 +30,15 @@ export function publicHomePage(user = null, classes = []) {
     user,
     "Freeducation",
     `<section class="public-home-cover">
-      <div class="public-cover-brand-row">
-        <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
-        <h1 class="public-cover-name">freeducation</h1>
+      <div class="public-cover-brand-block">
+        <div class="public-cover-brand-row">
+          <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
+          <h1 class="public-cover-name">freeducation</h1>
+        </div>
+        <p class="public-cover-subtitle">Learn by class, continue by subject, and keep your study flow simple on every device.</p>
       </div>
       <div class="public-cover-quote-wrap">
+        <span class="public-cover-quote-label">Daily quote</span>
         <p class="public-cover-quote" data-education-quote></p>
       </div>
     </section>

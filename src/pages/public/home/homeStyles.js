@@ -1,21 +1,24 @@
 export const publicHomeStyles = `
 .public-home-cover {
   width: 100%;
-  background: linear-gradient(130deg, #253b87 0%, #3d57cc 45%, #1fa36b 100%);
+  background: linear-gradient(120deg, #1f3379 0%, #324eb4 52%, #24885f 100%);
   color: #f8fafc;
-  min-height: 220px;
-  padding: 12px 8px;
+  min-height: 165px;
+  padding: 10px 12px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: end;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
   border-bottom: 1px solid #b8c6eb;
 }
+.public-cover-brand-block { display: grid; gap: 6px; }
 .public-cover-brand-row { display: flex; align-items: center; gap: 10px; }
-.public-cover-logo { width: 56px; height: 56px; display: inline-grid; place-items: center; }
-.public-cover-name { margin: 0; font-size: clamp(30px, 6vw, 58px); line-height: 1; text-transform: lowercase; font-family: var(--font-public-brand); letter-spacing: 0.03em; }
-.public-cover-quote-wrap { justify-self: end; width: min(620px, 100%); border-left: 2px solid rgba(226, 232, 240, 0.45); padding-left: 8px; }
-.public-cover-quote { margin: 0; font-size: clamp(13px, 1.5vw, 19px); color: #eff5ff; line-height: 1.35; font-family: var(--font-public-heading); }
+.public-cover-logo { width: 48px; height: 48px; display: inline-grid; place-items: center; }
+.public-cover-name { margin: 0; font-size: clamp(28px, 4vw, 50px); line-height: 1; text-transform: lowercase; font-family: var(--font-public-brand); letter-spacing: 0.02em; }
+.public-cover-subtitle { margin: 0; max-width: 54ch; font-size: clamp(12px, 1.1vw, 15px); line-height: 1.35; color: #dbe8ff; }
+.public-cover-quote-wrap { justify-self: end; width: min(560px, 100%); border-left: 2px solid rgba(226, 232, 240, 0.42); padding-left: 10px; display: grid; gap: 4px; }
+.public-cover-quote-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #d5e2fa; }
+.public-cover-quote { margin: 0; font-size: clamp(12px, 1.3vw, 18px); color: #eff5ff; line-height: 1.35; font-family: var(--font-public-heading); }
 
 .public-class-strip,.public-stack { padding: 8px 5px; }
 .public-stack-flat { padding-top: 10px; }
@@ -54,9 +57,11 @@ export const publicHomeStyles = `
   .public-class-grid,.public-flat-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
   .class-card-name { font-size: 12px; }
   .class-card-meta { font-size: 10px; }
-  .public-cover-logo { width: 50px; height: 50px; }
+  .public-cover-logo { width: 44px; height: 44px; }
   .public-cover-name { font-size: clamp(23px, 10vw, 36px); }
+  .public-cover-subtitle { font-size: 12px; max-width: none; }
   .public-cover-quote-wrap { justify-self: start; width: 100%; border-left: 0; padding-left: 0; border-top: 1px solid rgba(226, 232, 240, 0.35); padding-top: 6px; }
+  .public-cover-quote-label { font-size: 9px; }
   .public-cover-quote { font-size: clamp(12px, 3.2vw, 14px); }
   .public-card-link { padding: 4px; }
 }
