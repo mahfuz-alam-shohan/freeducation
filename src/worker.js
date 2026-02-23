@@ -55,6 +55,23 @@ async function collectPublicNotes(db, contentNodes, fallbackNodeId, chapterId, t
   return sortByCreatedAtDesc(notes);
 }
 
+async function collectTabItems(db, subjectId, node, chapterId, topicId, selectedTab) {
+  const scopedNodeIds = await resolveScopedNodeIds(db, subjectId, node);
+  if (selectedTab === "Short Notes") {
+    const rows = [];
+    for (const scopedNodeId of scopedNodeIds) rows.push(...(await listNotes(db, scopedNodeId, chapterId || null, topicId || null)));
+    return sortByCreatedAtDesc(rows);
+  }
+  if (selectedTab === "MCQ Bank") {
+    const rows = [];
+    for (const scopedNodeId of scopedNodeIds) rows.push(...(await listMcqs(db, scopedNodeId, chapterId || null, topicId || null)));
+    return sortByCreatedAtDesc(rows);
+  }
+  const rows = [];
+  for (const scopedNodeId of scopedNodeIds) rows.push(...(await listContentEntries(db, scopedNodeId, chapterId || null, topicId || null, selectedTab)));
+  return sortByCreatedAtDesc(rows);
+}
+
 async function collectPublicContent(db, contentNodes, fallbackNodeId, chapterId, topicId, contentKind) {
   const nodeIds = resolvePublicContentNodeIds(contentNodes, fallbackNodeId, contentKind);
 
@@ -1017,9 +1034,10 @@ async function handleDynamicPages(url, env, user) {
       return html(publicSubjectNodePage(user, subject, chapter.name, "Choose a topic.", topics, (topic) => `/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/topics/${topic.id}`));
     }
 
+    const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const notes = await collectPublicNotes(env.DB, contentNodes, node.id, chapter.id);
-    return html(publicChapterContentPage(user, subject, node, chapter, notes, contentNodes));
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab);
+    return html(publicChapterContentPage(user, subject, node, chapter, { selectedTab, items: tabItems }, contentNodes));
   }
 
   const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
@@ -1027,26 +1045,18 @@ async function handleDynamicPages(url, env, user) {
     const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, publicTopicMatch[1]), getSubjectNode(env.DB, publicTopicMatch[2]), getChapter(env.DB, publicTopicMatch[3]), getTopic(env.DB, publicTopicMatch[4])]);
     if (!subject || !node || !chapter || !topic) return new Response("Not Found", { status: 404 });
 
+    const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const notes = await collectPublicNotes(env.DB, contentNodes, node.id, chapter.id, topic.id);
-    return html(publicChapterContentPage(user, subject, node, topic, notes, contentNodes, topic.id));
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab);
+    return html(publicChapterContentPage(user, subject, node, topic, { selectedTab, items: tabItems }, contentNodes, topic.id));
   }
 
   const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/content\/([^/]+)$/);
   if (publicContentMatch) {
     const contentKind = decodeURIComponent(publicContentMatch[4]);
     const topicId = url.searchParams.get("topic");
-    const [subject, node, chapter] = await Promise.all([getSubject(env.DB, publicContentMatch[1]), getSubjectNode(env.DB, publicContentMatch[2]), getChapter(env.DB, publicContentMatch[3])]);
-    if (!subject || !node || !chapter || !contentKind) return new Response("Not Found", { status: 404 });
-
-    const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    const contentResult = await collectPublicContent(env.DB, contentNodes, node.id, chapter.id, topicId, contentKind);
-
-    if (contentResult.type === "mcq") {
-      return html(publicMcqEntriesPage(user, subject, node, chapter, topicId, contentResult.items));
-    }
-
-    return html(publicContentEntriesPage(user, subject, chapter, contentKind, contentResult.items));
+    const basePath = `/learn/subjects/${publicContentMatch[1]}/nodes/${publicContentMatch[2]}/chapters/${publicContentMatch[3]}`;
+    return redirect(`${basePath}${topicId ? `/topics/${topicId}` : ""}?tab=${encodeURIComponent(contentKind)}`);
   }
 
   const templateMatch = url.pathname.match(/^\/templates\/([^/]+)$/);
@@ -1085,7 +1095,9 @@ async function handleDynamicPages(url, env, user) {
       return html(subjectNodeListPage(user, subject, `${subject.name} · ${node.display_name}`, "Rename items and upload template images.", sectionChildren, `/subjects/${subject.id}`));
     }
 
-    return html(contentKindsPage(user, subject, node, null, null, contentChildren));
+    const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
+    const tabItems = await collectTabItems(env.DB, subject.id, node, null, null, selectedTab);
+    return html(contentKindsPage(user, subject, node, null, null, contentChildren, { selectedKind: selectedTab, items: tabItems }));
   }
 
   const chapterPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)$/);
@@ -1096,7 +1108,9 @@ async function handleDynamicPages(url, env, user) {
       return html(topicsPage(user, subject, node, chapter, await listTopics(env.DB, chapter.id)));
     }
     const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    return html(contentKindsPage(user, subject, node, chapter, null, contentChildren));
+    const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab);
+    return html(contentKindsPage(user, subject, node, chapter, null, contentChildren, { selectedKind: selectedTab, items: tabItems }));
   }
 
   const topicPageMatch = url.pathname.match(/^\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
@@ -1104,7 +1118,9 @@ async function handleDynamicPages(url, env, user) {
     const [subject, node, chapter, topic] = await Promise.all([getSubject(env.DB, topicPageMatch[1]), getSubjectNode(env.DB, topicPageMatch[2]), getChapter(env.DB, topicPageMatch[3]), getTopic(env.DB, topicPageMatch[4])]);
     if (!subject || !node || !chapter || !topic) return new Response("Not Found", { status: 404 });
     const contentChildren = await listSubjectNodesByParent(env.DB, subject.id, node.id);
-    return html(contentKindsPage(user, subject, node, chapter, topic, contentChildren));
+    const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
+    const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab);
+    return html(contentKindsPage(user, subject, node, chapter, topic, contentChildren, { selectedKind: selectedTab, items: tabItems }));
   }
 
   if (url.pathname.match(/^\/subjects\/([^/]+)\/content$/)) {

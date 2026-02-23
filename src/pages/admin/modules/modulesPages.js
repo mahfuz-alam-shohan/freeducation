@@ -442,12 +442,13 @@ export function topicsPage(user, subject, node, chapter, topics) {
   });
 }
 
-export function contentKindsPage(user, subject, node, chapter, topic, childNodes = []) {
+export function contentKindsPage(user, subject, node, chapter, topic, childNodes = [], tabState = null) {
   const disabledKinds = new Set(["CQ Bank", "Videos"]);
   const detectedKinds = childNodes.filter((n) => n.node_type === "content").map((n) => n.content_kind || n.display_name);
   const fallbackKinds = node.content_kind ? [node.content_kind] : ["CQ Bank", "MCQ Bank", "Short Notes", "Videos", "Summary"];
   const kinds = Array.from(new Set([...fallbackKinds, ...detectedKinds].filter(Boolean)));
   const nodeIdByKind = new Map(childNodes.filter((n) => n.node_type === "content").map((n) => [n.content_kind || n.display_name, n.id]));
+  const selectedKind = tabState?.selectedKind && kinds.includes(tabState.selectedKind) ? tabState.selectedKind : "Short Notes";
 
   const hrefForKind = (kind) => {
     const targetNodeId = nodeIdByKind.get(kind) || node.id;
@@ -468,8 +469,27 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       </article>`;
     })
     .join("");
+  const tabLinks = kinds
+    .map((kind) => {
+      const isActive = kind === selectedKind;
+      const href = `?tab=${encodeURIComponent(kind)}`;
+      return `<a class="content-tab ${isActive ? "is-active" : ""}" href="${href}" ${isActive ? 'aria-current="page"' : ""}>${h(kind)}</a>`;
+    })
+    .join("");
+  const itemPreview = (tabState?.items || [])
+    .slice(0, 12)
+    .map((item, index) => `<li>${h(item.title || item.name || item.content_html || item.question_html || `${selectedKind} ${index + 1}`)}</li>`)
+    .join("");
+  const manageHref = hrefForKind(selectedKind);
+  const tabPanel = `<section class="card flat-card content-tab-panel">
+    <div class="content-tab-row">${tabLinks}</div>
+    <p class="muted">Only the active tab data is queried server-side to keep loading fast at scale.</p>
+    ${manageHref ? `<a class="btn btn-secondary" href="${manageHref}">Open ${h(selectedKind)} editor</a>` : ""}
+    <ol class="content-tab-preview-list">${itemPreview || `<li>No ${h(selectedKind)} yet.</li>`}</ol>
+  </section>`;
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
   const content = `${floatingBackButton(backHref, "Back to previous page")}
+  ${tabPanel}
   <section class="subject-flow-card-grid">
     ${cards || '<section class="card flat-card"><p class="muted">No content types found.</p></section>'}
   </section>`;
