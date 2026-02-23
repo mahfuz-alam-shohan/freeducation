@@ -51,7 +51,19 @@ function topbar(user) {
         </span>
       </div>
       <div class="topbar-right">
-        <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>
+        <div class="profile-menu" data-profile-menu>
+          <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-profile-trigger>
+            <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>
+          </button>
+          <div class="profile-popup" data-profile-popup hidden>
+            <p class="profile-popup-name">${user.name}</p>
+            <p class="profile-popup-email">${user.email}</p>
+            <div class="profile-popup-actions">
+              <a class="btn btn-secondary profile-popup-btn" href="/profile">Show profile</a>
+              <a class="btn btn-danger profile-popup-btn" href="/api/logout">Log out</a>
+            </div>
+          </div>
+        </div>
       </div>
     </header>`;
 }

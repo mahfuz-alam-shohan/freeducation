@@ -181,7 +181,10 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
 .profile-trigger { border: 0; background: transparent; padding: 0; border-radius: 999px; cursor: pointer; }
 .profile-popup { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; min-width: 220px; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
 .profile-popup[hidden] { display: none; }
-.profile-popup-login-btn { width: 100%; }
+.profile-popup-name { margin: 0; font-size: 13px; font-weight: 700; color: var(--text); }
+.profile-popup-email { margin: 0; font-size: 12px; color: var(--muted); word-break: break-word; }
+.profile-popup-actions { display: grid; gap: 6px; }
+.profile-popup-btn,.profile-popup-login-btn { width: 100%; }
 .sidebar-login-item { margin-top: auto; }
 
 .grid { display: grid; gap: 8px; }

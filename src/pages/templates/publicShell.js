@@ -43,7 +43,17 @@ function publicTopbar(user) {
   const avatarLabel = user ? `${user.name} avatar` : "Profile";
   const triggerAvatar = user ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>` : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
   const action = user
-    ? triggerAvatar
+    ? `<div class="profile-menu" data-profile-menu>
+        <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-profile-trigger>${triggerAvatar}</button>
+        <div class="profile-popup" data-profile-popup hidden>
+          <p class="profile-popup-name">${user.name}</p>
+          <p class="profile-popup-email">${user.email}</p>
+          <div class="profile-popup-actions">
+            <a class="btn btn-secondary profile-popup-btn" href="/profile">Show profile</a>
+            <a class="btn btn-danger profile-popup-btn" href="/api/logout">Log out</a>
+          </div>
+        </div>
+      </div>`
     : `<div class="profile-menu" data-profile-menu>
         <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-profile-trigger>${triggerAvatar}</button>
         <div class="profile-popup" data-profile-popup hidden>
