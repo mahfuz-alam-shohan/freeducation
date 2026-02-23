@@ -114,27 +114,28 @@ function inferSourceFromKey(key) {
   return firstSegment;
 }
 
-async function listBucketObjects(bucket) {
-  const rows = [];
-  let cursor;
+async function listBucketObjectsPage(bucket, options = {}) {
+  const requestedLimit = Number(options.limit || 24);
+  const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(48, requestedLimit)) : 24;
+  const cursor = options.cursor ? String(options.cursor) : undefined;
+  const listing = await bucket.list({ limit, cursor });
 
-  do {
-    const listing = await bucket.list({ limit: 1000, cursor });
-    for (const object of listing.objects || []) {
-      const typeInfo = inferMediaTypeFromKey(object.key);
-      rows.push({
-        key: object.key,
-        size: Number(object.size || 0),
-        uploaded: object.uploaded || null,
-        mediaType: typeInfo.mediaType,
-        ext: typeInfo.ext,
-        source: inferSourceFromKey(object.key),
-      });
-    }
-    cursor = listing.truncated ? listing.cursor : undefined;
-  } while (cursor);
+  const rows = (listing.objects || []).map((object) => {
+    const typeInfo = inferMediaTypeFromKey(object.key);
+    return {
+      key: object.key,
+      size: Number(object.size || 0),
+      uploaded: object.uploaded || null,
+      mediaType: typeInfo.mediaType,
+      ext: typeInfo.ext,
+      source: inferSourceFromKey(object.key),
+    };
+  });
 
-  return rows.sort((a, b) => String(b.uploaded || "").localeCompare(String(a.uploaded || "")));
+  return {
+    rows: rows.sort((a, b) => String(b.uploaded || "").localeCompare(String(a.uploaded || ""))),
+    nextCursor: listing.truncated ? listing.cursor : null,
+  };
 }
 
 function filterMediaRows(rows, filters) {
@@ -262,26 +263,22 @@ const pageRoutes = [
     access: ACCESS.AUTHENTICATED,
     roles: ["admin"],
     handle: async ({ env, user, url }) => {
-      const allRows = await listBucketObjects(env.BUCKET);
       const filters = {
         type: String(url.searchParams.get("type") || "all"),
         source: String(url.searchParams.get("source") || "all"),
         search: String(url.searchParams.get("search") || ""),
       };
-      const filteredRows = filterMediaRows(allRows, filters);
-      const totals = {
-        allCount: allRows.length,
-        allSizeBytes: allRows.reduce((sum, row) => sum + row.size, 0),
-        filteredCount: filteredRows.length,
-        filteredSizeBytes: filteredRows.reduce((sum, row) => sum + row.size, 0),
-      };
+      const cursor = String(url.searchParams.get("cursor") || "").trim();
+      const { rows, nextCursor } = await listBucketObjectsPage(env.BUCKET, { cursor, limit: 24 });
+      const filteredRows = filterMediaRows(rows, filters);
 
       return html(
         mediaManagerPage(user, {
           rows: filteredRows,
           filters,
-          totals,
-          availableSources: Array.from(new Set(allRows.map((row) => row.source))).sort((a, b) => a.localeCompare(b)),
+          nextCursor,
+          loadedCount: filteredRows.length,
+          pageSize: rows.length,
         }),
       );
     },
@@ -704,6 +701,15 @@ async function handleAdminPost(request, env, url) {
     }
 
     return redirect(redirectUrl);
+  }
+
+  if (url.pathname === "/api/media/delete" && request.method === "POST") {
+    const form = await request.formData();
+    const key = String(form.get("key") || "").trim();
+    const redirectTo = String(form.get("redirect") || "/admin/file-manager");
+    if (!key || key.includes("..")) return redirect(redirectTo || "/admin/file-manager");
+    await env.BUCKET.delete(key);
+    return redirect(redirectTo || "/admin/file-manager");
   }
 
   if (url.pathname === "/api/content-entries/delete" && request.method === "POST") {
