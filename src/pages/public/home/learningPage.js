@@ -26,6 +26,14 @@ export function publicSubjectNodePage(user, subject, title, subtitle, items, hre
 }
 
 export function publicChapterContentPage(user, subject, node, chapter, shortNotes = [], contentNodes = [], topicId = null) {
+  const isAdmin = user?.role === "admin";
+  const adminMetaInputs = `
+    <input type="hidden" name="subjectId" value="${h(subject.id)}" />
+    <input type="hidden" name="subjectNodeId" value="${h(node.id)}" />
+    <input type="hidden" name="chapterId" value="${h(chapter.id || "")}" />
+    <input type="hidden" name="topicId" value="${h(topicId || "")}" />
+    <input type="hidden" name="redirect" value="${h(`/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}${topicId ? `/topics/${topicId}` : ""}`)}" />
+  `;
   const actions = contentNodes
     .filter((item) => item.content_kind !== "Short Notes")
     .map((item) => `<a class="public-cta-card" href="/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent(item.content_kind || "")}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ""}">${h(item.display_name)}</a>`)
@@ -36,9 +44,40 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
       (entry) => `<li>
       ${renderEntryImage(entry.image_key, `${chapter.name} short note image`)}
       <div class="public-note-body">${h(entry.content_html)}</div>
+      ${
+        isAdmin
+          ? `<div class="public-admin-inline-actions">
+          <details class="public-admin-inline-card">
+            <summary>Edit note</summary>
+            <form method="post" action="/api/notes" class="public-admin-inline-form">
+              ${adminMetaInputs}
+              <input type="hidden" name="id" value="${h(entry.id)}" />
+              <textarea class="input" name="contentHtml" rows="4" required>${h(entry.content_html || "")}</textarea>
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </details>
+          <form method="post" action="/api/notes/delete">
+            ${adminMetaInputs}
+            <input type="hidden" name="id" value="${h(entry.id)}" />
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        </div>`
+          : ""
+      }
     </li>`,
     )
     .join("");
+
+  const adminQuickAdd = isAdmin
+    ? `<section class="public-admin-panel">
+      <h3>Admin quick add: Short note</h3>
+      <form method="post" action="/api/notes" class="public-admin-inline-form">
+        ${adminMetaInputs}
+        <textarea class="input" name="contentHtml" rows="4" placeholder="Write a short note" required></textarea>
+        <button class="btn" type="submit">Add note</button>
+      </form>
+    </section>`
+    : "";
 
   return publicShell(
     "home",
@@ -48,6 +87,7 @@ export function publicChapterContentPage(user, subject, node, chapter, shortNote
       title: chapter.name,
       subtitle: node.display_name,
       content: `<div class="public-wide-grid">${actions || '<p class="muted">No extra sections yet.</p>'}</div>
+      ${adminQuickAdd}
       <ol class="public-note-list">${notes || "<li>No short notes yet.</li>"}</ol>`,
     }),
     "",
@@ -80,7 +120,15 @@ export function publicContentEntriesPage(user, subject, chapter, kind, entries =
   );
 }
 
-export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
+export function publicMcqEntriesPage(user, subject, node, chapter, topicId, mcqs = []) {
+  const isAdmin = user?.role === "admin";
+  const adminMetaInputs = `
+    <input type="hidden" name="subjectId" value="${h(subject.id)}" />
+    <input type="hidden" name="subjectNodeId" value="${h(node.id)}" />
+    <input type="hidden" name="chapterId" value="${h(chapter.id)}" />
+    <input type="hidden" name="topicId" value="${h(topicId || "")}" />
+    <input type="hidden" name="redirect" value="${h(`/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent("MCQ Bank")}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ""}`)}" />
+  `;
   const resolveOption = (item) => {
     const normalized = String(item?.correct_option || "")
       .trim()
@@ -136,9 +184,57 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
         <li data-option="D"><strong>D.</strong> ${h(item.option_d)}</li>
       </ul>
       <p class="public-mcq-answer-text"><strong>Ans:</strong> ${resolveOption(item) || "N/A"}</p>
+      ${
+        isAdmin
+          ? `<div class="public-admin-inline-actions">
+          <details class="public-admin-inline-card">
+            <summary>Edit MCQ</summary>
+            <form method="post" action="/api/mcqs" class="public-admin-inline-form">
+              ${adminMetaInputs}
+              <input type="hidden" name="id" value="${h(item.id)}" />
+              <textarea class="input" name="questionHtml" rows="3" placeholder="Question" required>${h(item.question_html || "")}</textarea>
+              <input class="input" name="optionA" value="${h(item.option_a || "")}" required />
+              <input class="input" name="optionB" value="${h(item.option_b || "")}" required />
+              <input class="input" name="optionC" value="${h(item.option_c || "")}" required />
+              <input class="input" name="optionD" value="${h(item.option_d || "")}" required />
+              <select class="input" name="correctOption">
+                ${["A", "B", "C", "D"].map((v) => `<option value="${v}" ${resolveOption(item) === v ? "selected" : ""}>Correct: ${v}</option>`).join("")}
+              </select>
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </details>
+          <form method="post" action="/api/mcqs/delete">
+            ${adminMetaInputs}
+            <input type="hidden" name="id" value="${h(item.id)}" />
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        </div>`
+          : ""
+      }
     </li>`,
     )
     .join("");
+
+  const adminQuickAdd = isAdmin
+    ? `<section class="public-admin-panel">
+      <h3>Admin quick add: MCQ</h3>
+      <form method="post" action="/api/mcqs" class="public-admin-inline-form">
+        ${adminMetaInputs}
+        <textarea class="input" name="questionHtml" rows="3" placeholder="Question" required></textarea>
+        <input class="input" name="optionA" placeholder="Option A" required />
+        <input class="input" name="optionB" placeholder="Option B" required />
+        <input class="input" name="optionC" placeholder="Option C" required />
+        <input class="input" name="optionD" placeholder="Option D" required />
+        <select class="input" name="correctOption">
+          <option value="A">Correct: A</option>
+          <option value="B">Correct: B</option>
+          <option value="C">Correct: C</option>
+          <option value="D">Correct: D</option>
+        </select>
+        <button class="btn" type="submit">Add MCQ</button>
+      </form>
+    </section>`
+    : "";
 
   return publicShell(
     "home",
@@ -147,7 +243,7 @@ export function publicMcqEntriesPage(user, subject, chapter, mcqs = []) {
     renderFlatPage({
       title: "MCQ Bank",
       subtitle: `${subject.name} · ${chapter.name}`,
-      content: `<ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>`,
+      content: `${adminQuickAdd}<ol class="public-note-list">${list || "<li>No MCQs yet.</li>"}</ol>`,
     }),
     "",
     learningPageStyles,

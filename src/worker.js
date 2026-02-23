@@ -455,6 +455,12 @@ const pageRoutes = [
   },
 ];
 
+function resolveSafeRedirectTarget(value, fallback) {
+  const target = String(value || "").trim();
+  if (!target || !target.startsWith("/") || target.startsWith("//") || target.startsWith("/api/")) return fallback;
+  return target;
+}
+
 async function handleProfilePost(request, env, url, user) {
   if (request.method !== "POST") return null;
 
@@ -754,7 +760,7 @@ async function handleAdminPost(request, env, url) {
     const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const contentHtml = String(form.get("contentHtml") || "").trim();
-    const redirectUrl = `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
+    const redirectUrl = resolveSafeRedirectTarget(form.get("redirect"), `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
     if (!contentHtml) return redirect(redirectUrl);
     if (!idVal) {
       await createNote(env.DB, { subjectId, subjectNodeId, chapterId, topicId, contentHtml, imageKey: null });
@@ -774,7 +780,7 @@ async function handleAdminPost(request, env, url) {
     const page = Number.parseInt(String(form.get("page") || "1"), 10);
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     if (idVal) await deleteNote(env.DB, idVal);
-    return redirect(`/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
+    return redirect(resolveSafeRedirectTarget(form.get("redirect"), `/subjects/${subjectId}/notes?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`));
   }
 
   if (url.pathname === "/api/mcqs" && request.method === "POST") {
@@ -799,7 +805,7 @@ async function handleAdminPost(request, env, url) {
       optionD: String(form.get("optionD") || "").trim(),
       correctOption: String(form.get("correctOption") || "A"),
     };
-    const redirectUrl = `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`;
+    const redirectUrl = resolveSafeRedirectTarget(form.get("redirect"), `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
     if (!payload.questionHtml || !payload.optionA || !payload.optionB || !payload.optionC || !payload.optionD) return redirect(redirectUrl);
     if (!idVal) {
       payload.imageKey = await uploadImage(env, "mcq", form.get("image"));
@@ -828,7 +834,7 @@ async function handleAdminPost(request, env, url) {
       await deleteBucketObjects(env, [existing?.image_key]);
       await deleteMcq(env.DB, idVal);
     }
-    return redirect(`/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`);
+    return redirect(resolveSafeRedirectTarget(form.get("redirect"), `/subjects/${subjectId}/mcqs?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&page=${safePage}`));
   }
 
   if (url.pathname === "/api/content-entries" && request.method === "POST") {
@@ -1037,7 +1043,7 @@ async function handleDynamicPages(url, env, user) {
     const contentResult = await collectPublicContent(env.DB, contentNodes, node.id, chapter.id, topicId, contentKind);
 
     if (contentResult.type === "mcq") {
-      return html(publicMcqEntriesPage(user, subject, chapter, contentResult.items));
+      return html(publicMcqEntriesPage(user, subject, node, chapter, topicId, contentResult.items));
     }
 
     return html(publicContentEntriesPage(user, subject, chapter, contentKind, contentResult.items));
