@@ -36,7 +36,7 @@ function mediaPreview(item) {
 }
 
 export function mediaManagerPage(user, payload) {
-  const { rows, filters, loadedCount, pageSize, nextCursor } = payload;
+  const { rows, filters, loadedCount, totalCount, bucketCount, databaseOnlyCount } = payload;
 
   const typeOptions = [
     { value: "all", label: "All" },
@@ -57,7 +57,10 @@ export function mediaManagerPage(user, payload) {
           const mediaUrl = `/media/${encodeURIComponent(item.key)}`;
           return `<article class="media-card">
             <div class="media-card-actions">
-              <span class="media-type media-type-${h(item.mediaType)}">${h(item.mediaType)}</span>
+              <div class="media-card-tags">
+                <span class="media-type media-type-${h(item.mediaType)}">${h(item.mediaType)}</span>
+                ${item.storageStatus === "database_only" ? `<span class="media-type media-type-missing">db only</span>` : ""}
+              </div>
               <div class="media-card-buttons">
                 <a class="btn btn-secondary" href="${mediaUrl}" target="_blank" rel="noreferrer">Open</a>
                 <form method="post" action="/api/media/delete" onsubmit="return confirm('Delete this file? This action cannot be undone.');">
@@ -80,8 +83,6 @@ export function mediaManagerPage(user, payload) {
         .join("")
     : '<div class="table-empty">No files found for this filter on this page.</div>';
 
-  const loadMoreHref = nextCursor ? `/admin/file-manager?${h(new URLSearchParams({ ...Object.fromEntries(filterQuery.entries()), cursor: nextCursor }).toString())}` : "";
-
   const content = `<section class="card media-manager-card">
       <h3 class="media-manager-title">File manager</h3>
       <form method="get" action="/admin/file-manager" class="media-filters" autocomplete="off">
@@ -103,17 +104,12 @@ export function mediaManagerPage(user, payload) {
 
       <div class="media-stats-grid">
         <div class="media-stat-card"><span>Visible cards</span><strong>${loadedCount}</strong></div>
-        <div class="media-stat-card"><span>Fetched this page</span><strong>${pageSize}</strong></div>
-        <div class="media-stat-card"><span>Loading mode</span><strong>Paginated</strong></div>
+        <div class="media-stat-card"><span>Total media records</span><strong>${totalCount}</strong></div>
+        <div class="media-stat-card"><span>Files in bucket</span><strong>${bucketCount}</strong></div>
+        <div class="media-stat-card"><span>Referenced in DB only</span><strong>${databaseOnlyCount}</strong></div>
       </div>
 
       <div class="media-cards-grid">${cardsMarkup}</div>
-
-      ${
-        nextCursor
-          ? `<div class="media-load-more"><a href="${loadMoreHref}" class="btn btn-primary">Load more</a><p>Loads next page only. Keeps server load lower.</p></div>`
-          : '<p class="media-end-note">You are at the end of the current file list.</p>'
-      }
     </section>`;
 
   return appShell("file-manager", user, "File manager", "Browse files as cards, preview quickly, and delete directly.", content, { pageStyles: mediaManagerStyles });
@@ -132,6 +128,7 @@ export const mediaManagerStyles = `
 .media-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .media-card { border: 1px solid var(--line); border-radius: 6px; background: #fff; display: grid; gap: 6px; padding: 6px; }
 .media-card-actions { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.media-card-tags { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .media-card-buttons { display: flex; gap: 4px; }
 .media-card-buttons form { margin: 0; }
 .media-card-preview { display: block; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #f8fafc; aspect-ratio: 4 / 3; }
@@ -144,8 +141,7 @@ export const mediaManagerStyles = `
 .media-type-image { background: #eefbf3; border-color: #b4ebc8; color: #136f3b; }
 .media-type-video { background: #eef5ff; border-color: #bdd6ff; color: #1e4cb8; }
 .media-type-other { background: #f8fafc; border-color: #e2e8f0; color: #475569; }
-.media-load-more { display: grid; gap: 4px; justify-items: start; }
-.media-load-more p,.media-end-note { margin: 0; font-size: 11px; color: var(--muted); }
+.media-type-missing { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
 @media (max-width: 900px) {
   .media-filters { grid-template-columns: 1fr 1fr; }
   .media-stats-grid { grid-template-columns: 1fr; }

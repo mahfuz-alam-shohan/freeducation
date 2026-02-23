@@ -114,28 +114,30 @@ function inferSourceFromKey(key) {
   return firstSegment;
 }
 
-async function listBucketObjectsPage(bucket, options = {}) {
-  const requestedLimit = Number(options.limit || 24);
-  const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(48, requestedLimit)) : 24;
-  const cursor = options.cursor ? String(options.cursor) : undefined;
-  const listing = await bucket.list({ limit, cursor });
+async function listAllBucketObjects(bucket) {
+  const rows = [];
+  let cursor;
 
-  const rows = (listing.objects || []).map((object) => {
-    const typeInfo = inferMediaTypeFromKey(object.key);
-    return {
-      key: object.key,
-      size: Number(object.size || 0),
-      uploaded: object.uploaded || null,
-      mediaType: typeInfo.mediaType,
-      ext: typeInfo.ext,
-      source: inferSourceFromKey(object.key),
-    };
-  });
+  while (true) {
+    const listing = await bucket.list({ limit: 1000, cursor });
+    for (const object of listing.objects || []) {
+      const typeInfo = inferMediaTypeFromKey(object.key);
+      rows.push({
+        key: object.key,
+        size: Number(object.size || 0),
+        uploaded: object.uploaded || null,
+        mediaType: typeInfo.mediaType,
+        ext: typeInfo.ext,
+        source: inferSourceFromKey(object.key),
+        storageStatus: "bucket",
+      });
+    }
 
-  return {
-    rows: rows.sort((a, b) => String(b.uploaded || "").localeCompare(String(a.uploaded || ""))),
-    nextCursor: listing.truncated ? listing.cursor : null,
-  };
+    if (!listing.truncated || !listing.cursor) break;
+    cursor = listing.cursor;
+  }
+
+  return rows.sort((a, b) => String(b.uploaded || "").localeCompare(String(a.uploaded || "")));
 }
 
 function filterMediaRows(rows, filters) {
@@ -183,6 +185,44 @@ async function replaceMediaKey(env, previousKey, nextKey) {
 async function listImageKeys(db, sql, ...params) {
   const rows = await db.prepare(sql).bind(...params).all();
   return (rows.results || []).map((row) => row.image_key).filter(Boolean);
+}
+
+async function listAllReferencedMediaKeys(db) {
+  const queries = [
+    "SELECT image_key FROM users",
+    "SELECT cover_image_key AS image_key FROM users",
+    "SELECT image_key FROM classes",
+    "SELECT image_key FROM subjects",
+    "SELECT image_key FROM subject_nodes",
+    "SELECT image_key FROM chapters",
+    "SELECT image_key FROM topics",
+    "SELECT image_key FROM short_notes",
+    "SELECT image_key FROM mcq_bank",
+    "SELECT image_key FROM content_entries",
+  ];
+
+  const results = await Promise.all(queries.map((sql) => listImageKeys(db, sql)));
+  return Array.from(new Set(results.flat().map((key) => sanitizeMediaKey(key)).filter(Boolean)));
+}
+
+function mergeMediaRows(bucketRows, databaseKeys) {
+  const rowMap = new Map(bucketRows.map((row) => [row.key, row]));
+
+  for (const key of databaseKeys) {
+    if (rowMap.has(key)) continue;
+    const typeInfo = inferMediaTypeFromKey(key);
+    rowMap.set(key, {
+      key,
+      size: 0,
+      uploaded: null,
+      mediaType: typeInfo.mediaType,
+      ext: typeInfo.ext,
+      source: inferSourceFromKey(key),
+      storageStatus: "database_only",
+    });
+  }
+
+  return Array.from(rowMap.values()).sort((a, b) => String(b.uploaded || "").localeCompare(String(a.uploaded || "")));
 }
 
 async function collectSubjectImageKeys(db, subjectId) {
@@ -351,17 +391,18 @@ const pageRoutes = [
         source: String(url.searchParams.get("source") || "all"),
         search: String(url.searchParams.get("search") || ""),
       };
-      const cursor = String(url.searchParams.get("cursor") || "").trim();
-      const { rows, nextCursor } = await listBucketObjectsPage(env.BUCKET, { cursor, limit: 24 });
+      const [bucketRows, databaseKeys] = await Promise.all([listAllBucketObjects(env.BUCKET), listAllReferencedMediaKeys(env.DB)]);
+      const rows = mergeMediaRows(bucketRows, databaseKeys);
       const filteredRows = filterMediaRows(rows, filters);
 
       return html(
         mediaManagerPage(user, {
           rows: filteredRows,
           filters,
-          nextCursor,
           loadedCount: filteredRows.length,
-          pageSize: rows.length,
+          totalCount: rows.length,
+          bucketCount: bucketRows.length,
+          databaseOnlyCount: rows.filter((row) => row.storageStatus === "database_only").length,
         }),
       );
     },
