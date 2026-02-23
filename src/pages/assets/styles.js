@@ -177,6 +177,7 @@ body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
 .app-shell.mobile-open .mobile-icon-close { display: inline-grid; }
 .avatar { width: 36px; height: 36px; border-radius: 999px; border: 1px solid #c5d6ff; background: #e9efff; color: var(--primary-strong); display: inline-grid; place-items: center; font-size: 12px; font-weight: 700; overflow: hidden; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
+.avatar svg { width: 18px; height: 18px; }
 .profile-menu { position: relative; }
 .profile-trigger { border: 0; background: transparent; padding: 0; border-radius: 999px; cursor: pointer; }
 .profile-popup { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; min-width: 220px; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 10px; display: grid; gap: 8px; }

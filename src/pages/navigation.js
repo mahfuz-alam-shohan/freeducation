@@ -1,4 +1,4 @@
-import { iconDashboard, iconHome, iconManagement, iconProfile, iconSubjects, iconTemplates, iconUsers } from "./templates/icons.js";
+import { iconClasses, iconDashboard, iconHome, iconManagement, iconProfile, iconSubjects, iconTemplates, iconUsers } from "./templates/icons.js";
 
 export function getNavigation(role) {
   const nav = [
@@ -35,7 +35,7 @@ export function getNavigation(role) {
       icon: iconManagement,
       items: [
         { key: "templates", href: "/templates", label: "Templates", icon: iconTemplates },
-        { key: "classes", href: "/classes/manage", label: "Classes", icon: iconSubjects },
+        { key: "classes", href: "/classes/manage", label: "Classes", icon: iconClasses },
         { key: "subjects", href: "/subjects", label: "Subjects", icon: iconSubjects },
       ],
     });
