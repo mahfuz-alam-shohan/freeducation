@@ -50,6 +50,13 @@ export const publicHomeStyles = `
 .public-entry-image { width: 100%; height: 100%; object-fit: cover; display: block; }
 .public-mcq-options { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; }
 .public-mcq-answer-text { margin: 6px 0 0; font-size: 12px; color: #166534; }
+.public-admin-panel { border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 6px; margin-bottom: 8px; }
+.public-admin-panel h3 { margin: 0 0 4px; font-size: 13px; color: #1f2f56; }
+.public-admin-inline-form { display: grid; gap: 4px; }
+.public-admin-inline-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.public-admin-inline-card { border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; background: #fff; }
+.public-admin-inline-card summary { cursor: pointer; font-size: 12px; color: #1d4ed8; }
+.public-admin-inline-card[open] summary { margin-bottom: 4px; }
 
 @media (max-width: 840px) {
   .public-home-cover { grid-template-columns: 1fr; gap: 8px; min-height: 150px; padding: 9px 7px; }
