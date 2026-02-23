@@ -3,17 +3,8 @@ import { getNavigation } from "../navigation.js";
 import { basePage } from "./base.js";
 import { imageUrlFromKey } from "../imageUrl.js";
 import { renderNavigationGroup } from "./navigationMarkup.js";
-import { iconClose, iconCollapse, iconLogout, iconMenu, siteLogo } from "./icons.js";
+import { iconClose, iconCollapse, iconLogout, iconMenu, iconProfile, siteLogo } from "./icons.js";
 import { sidebarIdentityMarkup } from "./sidebarIdentity.js";
-
-function initials(name) {
-  return String(name || "A")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
-}
 
 function sidebar(active, user) {
   const nav = getNavigation(user.role);
@@ -53,7 +44,7 @@ function topbar(user) {
       <div class="topbar-right">
         <div class="profile-menu" data-profile-menu>
           <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-profile-trigger>
-            <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>
+            <span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : iconProfile}</span>
           </button>
           <div class="profile-popup" data-profile-popup hidden>
             <p class="profile-popup-name">${user.name}</p>

@@ -6,15 +6,6 @@ import { renderNavigationGroup } from "./navigationMarkup.js";
 import { iconClose, iconCollapse, iconLogin, iconLogout, iconMenu, iconProfile, siteLogo } from "./icons.js";
 import { sidebarIdentityMarkup } from "./sidebarIdentity.js";
 
-function initials(name) {
-  return String(name || "A")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
-}
-
 function publicSidebar(active, user) {
   const nav = getNavigation(user?.role);
 
@@ -41,7 +32,7 @@ function publicSidebar(active, user) {
 function publicTopbar(user) {
   const avatarUrl = imageUrlFromKey(user?.imageKey);
   const avatarLabel = user ? `${user.name} avatar` : "Profile";
-  const triggerAvatar = user ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : initials(user.name)}</span>` : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
+  const triggerAvatar = user ? `<span class="avatar" aria-label="Profile">${avatarUrl ? `<img src="${avatarUrl}" alt="${avatarLabel}" loading="lazy" decoding="async" />` : iconProfile}</span>` : `<span class="avatar" aria-hidden="true">${iconProfile}</span>`;
   const action = user
     ? `<div class="profile-menu" data-profile-menu>
         <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-profile-trigger>${triggerAvatar}</button>
