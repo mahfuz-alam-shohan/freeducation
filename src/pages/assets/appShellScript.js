@@ -10,7 +10,7 @@ const profilePopup = profileMenu?.querySelector('[data-profile-popup]');
 const sidebarStateKey = 'freeducation.sidebar.collapsed';
 const mobileViewport = window.matchMedia('(max-width: 840px)');
 const prefetchedNavigationUrls = new Set();
-const maxPrefetchCount = 40;
+const maxPrefetchCount = 12;
 
 function readSidebarCollapsedState() {
   try {
@@ -293,12 +293,20 @@ function prefetchNavigationUrl(rawUrl) {
   const href = url.toString();
   if (prefetchedNavigationUrls.has(href)) return;
 
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.as = 'document';
-  link.href = href;
-  document.head.appendChild(link);
-  prefetchedNavigationUrls.add(href);
+  const insertPrefetch = () => {
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as = 'document';
+    link.href = href;
+    document.head.appendChild(link);
+    prefetchedNavigationUrls.add(href);
+  };
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(insertPrefetch, { timeout: 280 });
+  } else {
+    window.setTimeout(insertPrefetch, 0);
+  }
 }
 
 function initializeNavigationBoost() {
@@ -308,30 +316,19 @@ function initializeNavigationBoost() {
   const onNavigate = (event) => {
     if (event.defaultPrevented) return;
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    document.body.classList.add('page-nav-pending');
+    document.body.classList.add('page-nav-pending', 'page-leaving');
   };
 
   navLinks.forEach((link) => {
-    const url = link.href;
-    const warmup = () => prefetchNavigationUrl(url);
+    const warmup = () => prefetchNavigationUrl(link.href);
     link.addEventListener('pointerenter', warmup, { passive: true });
-    link.addEventListener('focus', warmup);
-    link.addEventListener('touchstart', warmup, { passive: true });
+    link.addEventListener('focus', warmup, { passive: true });
     link.addEventListener('click', onNavigate);
   });
 
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const link = entry.target;
-        if (!(link instanceof HTMLAnchorElement)) return;
-        prefetchNavigationUrl(link.href);
-        observer.unobserve(link);
-      });
-    }, { rootMargin: '180px 0px' });
-    navLinks.forEach((link) => observer.observe(link));
-  }
+  window.addEventListener('pageshow', () => {
+    document.body.classList.remove('page-nav-pending', 'page-leaving');
+  });
 }
 
 function initializePageMotion() {
@@ -339,9 +336,7 @@ function initializePageMotion() {
   if (!body) return;
   body.classList.add('page-entering');
   window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      body.classList.remove('page-entering');
-    });
+    body.classList.remove('page-entering');
   });
 }
 
@@ -778,7 +773,10 @@ async function readImageDimensions(file) {
 async function downscaleImageFile(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
 
-  const maxEdge = 256;
+  if (file.size <= 64 * 1024) return file;
+  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+
+  const maxEdge = 960;
   const source = await readImageDimensions(file);
   const longestEdge = Math.max(source.width, source.height);
   const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1;
@@ -798,7 +796,7 @@ async function downscaleImageFile(file) {
   source.draw(ctx, width, height);
   source.release();
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.62));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.56));
   if (!blob) return file;
 
   const targetName = file.name.replace(/\.[^.]+$/, '') || 'image';
