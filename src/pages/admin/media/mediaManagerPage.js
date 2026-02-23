@@ -150,4 +150,40 @@ export const mediaManagerStyles = `
   .media-filters { grid-template-columns: 1fr 1fr; }
   .media-stats-grid { grid-template-columns: 1fr; }
 }
+@media (max-width: 640px) {
+  .media-manager-card { gap: 6px; }
+  .media-cards-grid { grid-template-columns: 1fr; gap: 6px; }
+  .media-card {
+    grid-template-columns: 82px minmax(0, 1fr);
+    grid-template-areas:
+      "preview actions"
+      "preview meta";
+    gap: 4px 6px;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  .media-card-preview {
+    grid-area: preview;
+    aspect-ratio: 1 / 1;
+    border-radius: 4px;
+  }
+  .media-card-actions {
+    grid-area: actions;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .media-card-buttons { gap: 3px; }
+  .media-card-buttons .btn {
+    min-height: 24px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+  .media-card-meta {
+    grid-area: meta;
+    gap: 1px;
+  }
+  .media-card-meta p { font-size: 10px; line-height: 1.2; }
+  .media-key { font-size: 11px !important; }
+  .media-type { padding: 0 6px; font-size: 9px; line-height: 16px; }
+}
 `;
