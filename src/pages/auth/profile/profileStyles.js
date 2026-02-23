@@ -74,7 +74,10 @@ export const profileStyles = `
   .profile-grid-flat { gap: 8px; }
   .profile-dob-grid,.profile-snapshot { grid-template-columns: 1fr; }
   .profile-inline-editor { margin-left: 0; }
-  .profile-field-head { grid-template-columns: 1fr auto; }
-  .profile-field-head .profile-fixed-value { grid-column: 1 / -1; }
+  .profile-field-head { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+  .profile-bio-label,.profile-fixed-value { font-size: 14px; line-height: 1.15; white-space: nowrap; }
+  .profile-inline-edit-btn { width: 18px; height: 18px; flex: 0 0 auto; }
+  .profile-inline-edit-btn .icon,.profile-inline-edit-btn .icon svg { width: 10px; height: 10px; }
+  .profile-fixed-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 `;
