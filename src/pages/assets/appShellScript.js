@@ -529,7 +529,9 @@ function initializeClassMoveControls() {
         return;
       }
 
-      window.location.reload();
+      const regionName = button.getAttribute('data-live-region') || 'page-content';
+      const refreshed = await refreshLiveRegion(regionName).then(() => true).catch(() => false);
+      if (!refreshed) window.location.reload();
     });
     button.dataset.boundClassMove = '1';
   });
@@ -569,18 +571,22 @@ async function submitLiveForm(form) {
   return submitLiveBody(form, body);
 }
 
-async function submitStandardForm(form) {
-  const body = await buildOptimizedFormData(form);
-  const response = await fetch(form.action, {
-    method: (form.method || 'POST').toUpperCase(),
-    body,
-    credentials: 'same-origin',
-    redirect: 'follow',
-  }).catch(() => null);
+function resolveLiveRegionName(form, body) {
+  const explicitRegion = String(body.get('liveRegion') || "").trim();
+  if (explicitRegion) return explicitRegion;
 
-  if (!response || !response.ok) return false;
-  window.location.assign(response.url || window.location.href);
-  return true;
+  const targetRegion = String(form.getAttribute('data-live-region') || "").trim();
+  if (targetRegion) {
+    body.set('liveRegion', targetRegion);
+    return targetRegion;
+  }
+
+  if (document.querySelector('[data-live-region="page-content"]')) {
+    body.set('liveRegion', 'page-content');
+    return 'page-content';
+  }
+
+  return "";
 }
 
 function syncRichEditorStorage(form) {
@@ -600,7 +606,7 @@ async function submitLiveBody(form, body) {
   }).catch(() => null);
 
   if (!response || !response.ok) return false;
-  const regionName = String(body.get('liveRegion') || '').trim();
+  const regionName = resolveLiveRegionName(form, body);
   if (regionName) {
     await refreshLiveRegion(regionName).catch(() => null);
   }
@@ -706,23 +712,15 @@ function initializeFormHandlers() {
         return;
       }
 
+      const method = (form.method || 'GET').toUpperCase();
       const hasLiveButton = Boolean(form.querySelector('[data-live-form="true"]'));
-      const isMultipartForm = form.matches('[enctype="multipart/form-data"]');
-      if (!hasLiveButton && !isMultipartForm) return;
+      const isHardSubmit = form.dataset.hardSubmit === 'true';
+      const shouldSubmitLive = !isHardSubmit && method !== 'GET';
+
+      if (!hasLiveButton && !shouldSubmitLive) return;
 
       event.preventDefault();
       form.dataset.submitting = '1';
-
-      if (!hasLiveButton) {
-        form.dataset.submitting = '0';
-        if (isMultipartForm) {
-          const ok = await submitStandardForm(form);
-          if (!ok) form.submit();
-          return;
-        }
-        form.submit();
-        return;
-      }
 
       const ok = await submitLiveForm(form);
 
