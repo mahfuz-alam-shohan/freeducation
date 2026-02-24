@@ -7,7 +7,7 @@ export const modulesStyles = `
 .flat-card { border-radius: 8px; border-color: var(--line); padding: 4px; background: #fff; }
 .flat-grid-table { border-collapse: collapse; width: 100%; min-width: 0; table-layout: fixed; }
 .flat-grid-table thead th { width: auto; background: #f2f6ff; color: #334155; font-size: 10px; border: 1px solid var(--line); padding: 4px 5px; text-transform: none; white-space: normal; line-height: 1.2; vertical-align: middle; overflow-wrap: anywhere; }
-.flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
+.flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .table-action-open-cell { width: 1%; white-space: nowrap; }
 .flat-grid-table th.table-action-open-cell,.flat-grid-table td.table-action-open-cell { width: 1%; min-width: 58px; max-width: 78px; }
 .file-indicator-cell { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 1px 5px; min-width: 140px; }
@@ -19,7 +19,7 @@ export const modulesStyles = `
 .image-slot-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; }
 .image-slot-input { display: none; }
 .table-text-cell-button { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; font: inherit; color: inherit; }
-.table-text-ellipsis { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-text-ellipsis { display: block; width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .table-text-full { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 12px; }
 .content-modal { border: 0; padding: 0; background: transparent; max-width: none; width: min(720px, 94vw); }
 .content-modal::backdrop { background: rgba(15, 23, 42, 0.5); }
