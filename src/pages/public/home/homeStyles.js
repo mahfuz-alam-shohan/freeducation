@@ -6,12 +6,12 @@ export const publicHomeStyles = `
     radial-gradient(circle at 6% 12%, rgba(255, 242, 167, 0.56), transparent 30%),
     radial-gradient(circle at 88% 6%, rgba(176, 249, 255, 0.5), transparent 28%),
     radial-gradient(circle at 82% 84%, rgba(195, 176, 255, 0.45), transparent 33%),
-    linear-gradient(140deg, #54c948 0%, #3eb93f 36%, #2ba84c 58%, #1f965f 100%);
+    linear-gradient(135deg, #3f4bdc 0%, #5e5cf4 38%, #22b8c6 72%, #3fc983 100%);
   color: #f8fbff;
   min-height: 170px;
   padding: 10px 12px;
   display: grid;
-  grid-template-columns: auto minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   align-items: center;
   gap: 14px;
   border-bottom: 1px solid #9db6ef;
@@ -31,37 +31,6 @@ export const publicHomeStyles = `
 }
 .public-cover-name { margin: 0; font-size: clamp(28px, 4vw, 52px); line-height: 1; text-transform: lowercase; font-family: var(--font-public-brand); letter-spacing: 0.02em; }
 .public-cover-subtitle { margin: 0; max-width: 54ch; font-size: clamp(12px, 1.1vw, 15px); line-height: 1.35; color: #e6efff; }
-.public-cover-motion { display: grid; justify-items: center; gap: 8px; align-self: end; margin-bottom: 2px; position: relative; z-index: 1; }
-.public-mascot-shell {
-  position: relative;
-  width: 82px;
-  aspect-ratio: 1;
-  border-radius: 24px 24px 32px 32px;
-  background: linear-gradient(180deg, #88ef62 0%, #67d84e 68%, #4cbc3d 100%);
-  border: 2px solid #d7ffd2;
-  box-shadow: 0 12px 0 rgba(14, 117, 40, 0.24), 0 16px 26px rgba(6, 56, 21, 0.3);
-  animation: mascotBounce 2.8s ease-in-out infinite;
-}
-.public-mascot-eye { position: absolute; top: 25px; width: 14px; height: 16px; border-radius: 99px; background: #fff; }
-.public-mascot-eye::after { content: ""; position: absolute; left: 4px; top: 4px; width: 6px; height: 8px; border-radius: 99px; background: #1f2937; }
-.public-mascot-eye-left { left: 20px; }
-.public-mascot-eye-right { right: 20px; }
-.public-mascot-wing { position: absolute; top: 31px; width: 16px; height: 22px; border-radius: 99px; background: rgba(208, 253, 198, 0.88); }
-.public-mascot-wing-left { left: -8px; transform: rotate(-26deg); }
-.public-mascot-wing-right { right: -8px; transform: rotate(26deg); }
-.public-progress-path { display: flex; align-items: center; gap: 5px; }
-.public-progress-node {
-  width: 11px;
-  height: 11px;
-  border-radius: 999px;
-  background: rgba(226, 255, 230, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-}
-.public-progress-node.is-active {
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
-  animation: mascotPulse 1.8s ease-in-out infinite;
-}
 .public-cover-quote-wrap {
   justify-self: end;
   width: min(560px, 100%);
@@ -97,28 +66,28 @@ export const publicHomeStyles = `
 .public-stack-flat { padding-top: 10px; }
 .public-stack-head,.public-class-strip-head { margin-bottom: 8px; border-bottom: 1px solid #c7d7fb; padding-bottom: 6px; }
 .public-class-strip-head { display: flex; align-items: end; justify-content: space-between; }
-.public-class-strip-title,.public-stack-title { margin: 0; font-size: clamp(18px, 3.6vw, 24px); font-family: var(--font-public-heading); color: #3c8f34; }
+.public-class-strip-title,.public-stack-title { margin: 0; font-size: clamp(18px, 3.6vw, 24px); font-family: var(--font-public-heading); color: #223885; }
 .public-class-see-all { font-size: 12px; color: #4558dc; text-decoration: none; font-weight: 700; }
 .public-class-row { display: grid; grid-auto-flow: column; grid-auto-columns: 152px; gap: 7px; overflow-x: auto; padding-bottom: 3px; }
 
 .public-class-grid,.public-flat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 7px; }
 .class-card {
   min-width: 0;
-  border: 1px solid #d4efcd;
+  border: 1px solid #c6d8ff;
   border-radius: 12px;
   overflow: hidden;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fff5 100%);
-  box-shadow: 0 8px 0 #d8eccf, 0 13px 20px rgba(62, 126, 43, 0.14);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%);
+  box-shadow: 0 10px 22px rgba(44, 64, 138, 0.12);
   transition: transform 210ms ease, box-shadow 220ms ease, border-color 200ms ease;
 }
 .public-card-link:hover .class-card,
-.public-card-link:focus-visible .class-card { transform: translateY(-3px); box-shadow: 0 10px 0 #c4e6b8, 0 20px 26px rgba(54, 120, 42, 0.18); border-color: #9fd18f; }
+.public-card-link:focus-visible .class-card { transform: translateY(-3px); box-shadow: 0 18px 30px rgba(42, 66, 145, 0.18); border-color: #9db9f4; }
 .class-card-poster-wrap { aspect-ratio: 4 / 5; width: 100%; overflow: hidden; background: #dde6f8; }
 .class-card-poster { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 270ms ease; }
 .public-card-link:hover .class-card-poster,.public-card-link:focus-visible .class-card-poster { transform: scale(1.04); }
 .class-card-poster-empty { display: grid; place-items: center; color: #475569; font-size: 11px; }
 .class-card-name { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-public-heading); color: #1f2f56; }
-.class-card-meta { margin: 0; font-size: 11px; color: #476147; }
+.class-card-meta { margin: 0; font-size: 11px; color: #4f6287; }
 .public-card-link { color: inherit; text-decoration: none; display: grid; gap: 3px; padding: 5px; }
 
 .public-class-page { padding-top: 8px; }
@@ -152,10 +121,6 @@ export const publicHomeStyles = `
 
 @media (max-width: 840px) {
   .public-home-cover { grid-template-columns: 1fr; gap: 8px; min-height: 152px; padding: 9px 7px; }
-  .public-cover-motion { justify-items: start; margin-bottom: 0; }
-  .public-mascot-shell { width: 64px; border-radius: 20px 20px 25px 25px; }
-  .public-mascot-eye { top: 18px; }
-  .public-mascot-wing { top: 23px; }
   .public-class-row { grid-auto-columns: 114px; gap: 6px; }
   .public-class-grid,.public-flat-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
   .class-card-name { font-size: 12px; }
@@ -175,24 +140,9 @@ export const publicHomeStyles = `
   50% { transform: translate3d(0, 8px, 0) scale(1.07); }
 }
 
-@keyframes mascotBounce {
-  0%,
-  100% { transform: translateY(0) scale(1); }
-  40% { transform: translateY(-5px) scale(1.02); }
-  70% { transform: translateY(-2px) scale(1); }
-}
-
-@keyframes mascotPulse {
-  0%,
-  100% { transform: scale(1); }
-  50% { transform: scale(1.12); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .public-cover-orb-left,
   .public-cover-orb-right,
-  .public-mascot-shell,
-  .public-progress-node.is-active,
   .class-card,
   .class-card-poster,
   .public-cover-quote { animation: none !important; transition: none !important; }
