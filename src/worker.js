@@ -1,13 +1,12 @@
 import { ensureSchema } from "./db/schema.js";
 import { createSession, createUser, deleteSession, findUserByEmail, findUserById, listUsers, updateUserCoverImage, updateUserImage, updateUserName, updateUserPassword, updateUserDateOfBirth } from "./db/adminRepo.js";
 import { createChapter, createClass, createContentEntry, createMcq, createNote, createSubject, createTopic, deleteChapter, deleteClass, deleteContentEntry, deleteMcq, deleteNote, deleteSubject, deleteTopic, ensureDefaultClasses, ensureDefaultTemplate, ensurePhyChemBioTemplate, getChapter, getClassById, getSubject, getSubjectNode, getTemplate, getTopic, listChapters, listClasses, listContentEntries, listMcqs, listNotes, listSubjectNodesByParent, listSubjects, listSubjectsByClass, listTemplateNodes, listTemplates, listTopics, moveClass, updateChapter, updateClass, updateContentEntry, updateMcq, updateNote, updateSubject, updateSubjectNode, updateTopic, upsertSummaryEntry } from "./db/modulesRepo.js";
-import { attachExamQuestions, countScopedMcqs, createExamSession, expireAndSubmitIfNeeded, getActiveExamByUser, getExamQuestionMcqIds, getExamSession, getMcqsByIds, listAttemptsForRoot, listExamQuestionsWithAnswers, listResultRoots, listScopedMcqs, saveAnswer, submitExam } from "./db/examRepo.js";
 import { hashPassword, verifyPassword } from "./security/password.js";
 import { buildSessionCookie, clearSessionCookie, createSignedToken } from "./security/session.js";
 import { html, json, redirect } from "./http/response.js";
 import { methodNotAllowed } from "./http/request.js";
 import { requireAuth } from "./api/auth.js";
-import { chaptersPage, classSubjectsPage, classesPage, contentEntriesPage, contentKindsPage, dashboardPage, examResultPage, examSetupPage, examTakePage, forbiddenPage, loginPage, mcqsPage, mediaManagerPage, notesPage, profilePage, publicChapterContentPage, publicClassesPage, publicClassSubjectsPage, publicContentEntriesPage, publicHomePage, publicMcqEntriesPage, publicSubjectNodePage, resultsListPage, subjectNodeListPage, subjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage, withFloatingExamButton } from "./pages/layout.js";
+import { chaptersPage, classSubjectsPage, classesPage, contentEntriesPage, contentKindsPage, dashboardPage, forbiddenPage, loginPage, mcqsPage, mediaManagerPage, notesPage, profilePage, publicChapterContentPage, publicClassesPage, publicClassSubjectsPage, publicContentEntriesPage, publicHomePage, publicMcqEntriesPage, publicSubjectNodePage, subjectNodeListPage, subjectsPage, templateDetailsPage, templatesPage, topicsPage, usersPage } from "./pages/layout.js";
 import { MAX_IMAGE_BYTES, SESSION_COOKIE } from "./env.js";
 
 const ACCESS = {
@@ -384,7 +383,6 @@ function isPrivatePagePath(pathname, route) {
   if (pathname === "/login") return true;
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/profile") || pathname.startsWith("/users")) return true;
   if (pathname.startsWith("/admin/") || pathname.startsWith("/subjects") || pathname.startsWith("/templates") || pathname.startsWith("/classes/manage")) return true;
-  if (pathname.startsWith("/exam/") || pathname.startsWith("/results")) return true;
   return false;
 }
 
@@ -491,14 +489,6 @@ function resolveSafeRedirectTarget(value, fallback) {
   return target;
 }
 
-function buildQuestionCountOptions(totalCount) {
-  const safeTotal = Math.max(0, Number(totalCount || 0));
-  const options = [];
-  for (let count = 5; count <= safeTotal; count += 5) options.push(count);
-  if (options.length === 0 && safeTotal > 0) options.push(safeTotal);
-  return options;
-}
-
 async function handleProfilePost(request, env, url, user) {
   if (request.method !== "POST") return null;
 
@@ -597,7 +587,7 @@ async function handleProfilePost(request, env, url, user) {
   return null;
 }
 
-async function handleAdminPost(request, env, url, user = null) {
+async function handleAdminPost(request, env, url) {
   if (url.pathname === "/api/users" && request.method === "POST") {
     const form = await request.formData();
     const name = String(form.get("name") || "").trim();
@@ -939,87 +929,6 @@ async function handleAdminPost(request, env, url, user = null) {
     }
     return redirect(`/subjects/${subjectId}/content?node=${subjectNodeId}&chapter=${chapterId}&topic=${topicId}&kind=${encodeURIComponent(kind)}&page=${safePage}`);
   }
-
-  if (url.pathname === "/api/exams/start" && request.method === "POST") {
-    const form = await request.formData();
-    const subjectId = String(form.get("subjectId") || "");
-    const subjectNodeId = String(form.get("subjectNodeId") || "");
-    const chapterId = String(form.get("chapterId") || "").trim() || null;
-    const scope = String(form.get("scope") || "subject");
-    const topicId = scope === "topic" ? String(form.get("topicId") || "").trim() || null : null;
-    const count = Number.parseInt(String(form.get("questionCount") || "0"), 10);
-    const timeMode = String(form.get("timeMode") || "unlimited");
-    const timeLimitMinutes = timeMode === "limited" ? Number.parseInt(String(form.get("timeLimitMinutes") || "0"), 10) : null;
-    const scopeForQuery = { subjectId, subjectNodeId, chapterId: scope === "subject" ? null : chapterId, topicId: scope === "topic" ? topicId : null };
-    const mcqs = await listScopedMcqs(env.DB, scopeForQuery);
-    const maxCount = mcqs.length;
-    const safeCount = Number.isFinite(count) && count > 0 ? Math.min(count, maxCount) : Math.min(5, maxCount);
-    if (!safeCount) return redirect(`/learn/subjects/${subjectId}/exam`);
-    const picked = [...mcqs].sort(() => Math.random() - 0.5).slice(0, safeCount);
-    const exam = await createExamSession(env.DB, {
-      userId: user.id,
-      subjectId,
-      subjectNodeId,
-      chapterId: scope === "subject" ? null : chapterId,
-      topicId: scope === "topic" ? topicId : null,
-      examScope: scope,
-      questionCount: safeCount,
-      timeLimitMinutes: Number.isFinite(timeLimitMinutes) && timeLimitMinutes > 0 ? timeLimitMinutes : null,
-    });
-    await attachExamQuestions(env.DB, exam.id, picked);
-    return redirect(`/exam/${exam.id}/take`);
-  }
-
-  const answerMatch = url.pathname.match(/^\/api\/exams\/([^/]+)\/answer$/);
-  if (answerMatch && request.method === "POST") {
-    const exam = await expireAndSubmitIfNeeded(env.DB, await getExamSession(env.DB, answerMatch[1], user.id), user.id);
-    if (!exam || exam.status !== "in_progress") return json({ error: "Exam not active" }, 400);
-    const form = await request.formData();
-    const questionOrder = Number.parseInt(String(form.get("questionOrder") || "0"), 10);
-    const selectedOption = String(form.get("selectedOption") || "").trim().toUpperCase();
-    if (!questionOrder) return json({ error: "Invalid question" }, 400);
-    if (selectedOption && !["A", "B", "C", "D"].includes(selectedOption)) return json({ error: "Invalid option" }, 400);
-    await saveAnswer(env.DB, exam.id, questionOrder, selectedOption || null);
-    return json({ ok: true });
-  }
-
-  const submitMatch = url.pathname.match(/^\/api\/exams\/([^/]+)\/submit$/);
-  if (submitMatch && request.method === "POST") {
-    const exam = await expireAndSubmitIfNeeded(env.DB, await getExamSession(env.DB, submitMatch[1], user.id), user.id);
-    if (!exam) return new Response("Not found", { status: 404 });
-    if (exam.status === "in_progress") await submitExam(env.DB, exam.id, user.id, "submit");
-    return redirect(`/results/${exam.id}`);
-  }
-
-  const exitMatch = url.pathname.match(/^\/api\/exams\/([^/]+)\/exit$/);
-  if (exitMatch && request.method === "GET") {
-    const exam = await getExamSession(env.DB, exitMatch[1], user.id);
-    if (!exam) return new Response("Not found", { status: 404 });
-    if (exam.status === "in_progress") await submitExam(env.DB, exam.id, user.id, "manual_exit");
-    return redirect(`/results/${exam.id}`);
-  }
-
-  const retakeMatch = url.pathname.match(/^\/api\/exams\/([^/]+)\/retake$/);
-  if (retakeMatch && request.method === "GET") {
-    const baseExam = await getExamSession(env.DB, retakeMatch[1], user.id);
-    if (!baseExam) return new Response("Not found", { status: 404 });
-    const rootId = baseExam.parent_exam_id || baseExam.id;
-    const sourceIds = await getExamQuestionMcqIds(env.DB, rootId);
-    const sourceMcqs = await getMcqsByIds(env.DB, sourceIds);
-    const next = await createExamSession(env.DB, {
-      parentExamId: rootId,
-      userId: user.id,
-      subjectId: baseExam.subject_id,
-      subjectNodeId: baseExam.subject_node_id,
-      chapterId: baseExam.chapter_id,
-      topicId: baseExam.topic_id,
-      examScope: baseExam.exam_scope,
-      questionCount: sourceMcqs.length,
-      timeLimitMinutes: baseExam.time_limit_minutes,
-    });
-    await attachExamQuestions(env.DB, next.id, sourceMcqs);
-    return redirect(`/exam/${next.id}/take`);
-  }
   return null;
 }
 
@@ -1139,7 +1048,7 @@ async function handleDynamicPages(url, env, user) {
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, null, selectedTab, contentNodes);
-    return html(withFloatingExamButton(publicChapterContentPage(user, subject, node, chapter, { selectedTab, items: tabItems }, contentNodes), `/learn/subjects/${subject.id}/exam?node=${node.id}&chapter=${chapter.id}`));
+    return html(publicChapterContentPage(user, subject, node, chapter, { selectedTab, items: tabItems }, contentNodes));
   }
 
   const publicTopicMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/topics\/([^/]+)$/);
@@ -1150,58 +1059,7 @@ async function handleDynamicPages(url, env, user) {
     const selectedTab = String(url.searchParams.get("tab") || "Short Notes").trim() || "Short Notes";
     const contentNodes = await listSubjectNodesByParent(env.DB, subject.id, node.id);
     const tabItems = await collectTabItems(env.DB, subject.id, node, chapter.id, topic.id, selectedTab, contentNodes);
-    return html(withFloatingExamButton(publicChapterContentPage(user, subject, node, topic, { selectedTab, items: tabItems }, contentNodes, topic.id), `/learn/subjects/${subject.id}/exam?node=${node.id}&chapter=${chapter.id}&topic=${topic.id}`));
-  }
-
-  const examSetupMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/exam$/);
-  if (examSetupMatch) {
-    if (!user) return redirect("/login");
-    const subject = await getSubject(env.DB, examSetupMatch[1]);
-    if (!subject) return new Response("Not Found", { status: 404 });
-    const requestedNodeId = String(url.searchParams.get("node") || "").trim();
-    const topNodes = await listSubjectNodesByParent(env.DB, subject.id, null);
-    const books = topNodes.filter((node) => node.node_type !== "content");
-    const selectedNode = requestedNodeId ? books.find((node) => node.id === requestedNodeId) : books[0];
-    if (!selectedNode) return new Response("Not Found", { status: 404 });
-    const chapters = await listChapters(env.DB, selectedNode.id);
-    const selectedChapterId = String(url.searchParams.get("chapter") || "").trim();
-    const selectedChapter = selectedChapterId ? chapters.find((chapter) => chapter.id === selectedChapterId) : null;
-    const topics = selectedChapter ? await listTopics(env.DB, selectedChapter.id) : [];
-    const selectedTopicId = String(url.searchParams.get("topic") || "").trim();
-
-    const [subjectCount, chapterCount, topicCount] = await Promise.all([
-      countScopedMcqs(env.DB, { subjectId: subject.id, subjectNodeId: selectedNode.id, chapterId: null, topicId: null }),
-      selectedChapter ? countScopedMcqs(env.DB, { subjectId: subject.id, subjectNodeId: selectedNode.id, chapterId: selectedChapter.id, topicId: null }) : Promise.resolve(0),
-      selectedTopicId ? countScopedMcqs(env.DB, { subjectId: subject.id, subjectNodeId: selectedNode.id, chapterId: selectedChapter?.id || null, topicId: selectedTopicId }) : Promise.resolve(0),
-    ]);
-    const questionOptions = buildQuestionCountOptions(Math.max(subjectCount, chapterCount, topicCount));
-    return html(examSetupPage(user, { subject, books, chapters, topics, counts: { subject: subjectCount, chapter: chapterCount, topic: topicCount }, questionOptions }));
-  }
-
-  const takeExamMatch = url.pathname.match(/^\/exam\/([^/]+)\/take$/);
-  if (takeExamMatch) {
-    if (!user) return redirect("/login");
-    const exam = await expireAndSubmitIfNeeded(env.DB, await getExamSession(env.DB, takeExamMatch[1], user.id), user.id);
-    if (!exam) return new Response("Not Found", { status: 404 });
-    if (exam.status !== "in_progress") return redirect(`/results/${exam.id}`);
-    const questions = await listExamQuestionsWithAnswers(env.DB, exam.id);
-    return html(examTakePage(user, exam, questions));
-  }
-
-  if (url.pathname === "/results") {
-    if (!user) return redirect("/login");
-    return html(resultsListPage(user, await listResultRoots(env.DB, user.id)));
-  }
-
-  const resultMatch = url.pathname.match(/^\/results\/([^/]+)$/);
-  if (resultMatch) {
-    if (!user) return redirect("/login");
-    const exam = await getExamSession(env.DB, resultMatch[1], user.id);
-    if (!exam) return new Response("Not Found", { status: 404 });
-    const questions = await listExamQuestionsWithAnswers(env.DB, exam.id);
-    const rootId = exam.parent_exam_id || exam.id;
-    const attempts = (await listAttemptsForRoot(env.DB, user.id, rootId)).filter((item) => item.id !== exam.id);
-    return html(examResultPage(user, exam, questions, attempts));
+    return html(publicChapterContentPage(user, subject, node, topic, { selectedTab, items: tabItems }, contentNodes, topic.id));
   }
 
   const publicContentMatch = url.pathname.match(/^\/learn\/subjects\/([^/]+)\/nodes\/([^/]+)\/chapters\/([^/]+)\/content\/([^/]+)$/);
@@ -1362,29 +1220,13 @@ export default {
       return apiLogout(env, user);
     }
 
-    if (url.pathname.startsWith("/api/exams/")) {
-      if (!user) return redirect("/login");
-      const examApiResponse = await handleAdminPost(request, env, url, user);
-      if (examApiResponse) return examApiResponse;
-    }
-
     if (url.pathname.startsWith("/api/") && request.method === "POST" && url.pathname !== "/api/login") {
       if (!user) return redirect("/login");
       const profilePost = await handleProfilePost(request, env, url, user);
       if (profilePost) return profilePost;
-      if (url.pathname.startsWith("/api/exams/")) {
-        const examPost = await handleAdminPost(request, env, url, user);
-        if (examPost) return examPost;
-      }
       if (user.role !== "admin") return applyHtmlPageCaching(html(forbiddenPage(), 403), url.pathname, route, user);
       const protectedPost = await handleAdminPost(request, env, url);
       if (protectedPost) return protectedPost;
-    }
-
-    if (user) {
-      const active = await expireAndSubmitIfNeeded(env.DB, await getActiveExamByUser(env.DB, user.id), user.id);
-      const isExamPath = url.pathname.startsWith("/exam/") || url.pathname.startsWith("/results") || url.pathname.startsWith("/api/exams/") || url.pathname === "/api/logout" || url.pathname.startsWith("/media/");
-      if (active?.status === "in_progress" && !isExamPath) return redirect(`/exam/${active.id}/take`);
     }
 
     if (!route) {
