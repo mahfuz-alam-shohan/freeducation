@@ -17,9 +17,14 @@ const quoteScript = `
 
   let index = 0;
   quoteElement.textContent = quotes[index];
+  quoteElement.classList.add('is-visible');
   setInterval(() => {
+    quoteElement.classList.remove('is-visible');
     index = (index + 1) % quotes.length;
-    quoteElement.textContent = quotes[index];
+    setTimeout(() => {
+      quoteElement.textContent = quotes[index];
+      quoteElement.classList.add('is-visible');
+    }, 170);
   }, 3600);
 })();
 `;
@@ -30,6 +35,8 @@ export function publicHomePage(user = null, classes = []) {
     user,
     "Freeducation",
     `<section class="public-home-cover">
+      <span class="public-cover-orb public-cover-orb-left" aria-hidden="true"></span>
+      <span class="public-cover-orb public-cover-orb-right" aria-hidden="true"></span>
       <div class="public-cover-brand-block">
         <div class="public-cover-brand-row">
           <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
