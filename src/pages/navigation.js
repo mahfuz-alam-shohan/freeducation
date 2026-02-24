@@ -16,13 +16,14 @@ export function getNavigation(role) {
       items: [
         { key: "dashboard", href: "/dashboard", label: "Dashboard", icon: iconDashboard },
         { key: "profile", href: "/profile", label: "Profile", icon: iconProfile },
+        { key: "results", href: "/results", label: "Results", icon: iconDashboard },
       ],
     });
 
   } else if (role === "teacher") {
     nav.push({
       title: "Workspace",
-      items: [{ key: "profile", href: "/profile", label: "Profile", icon: iconProfile }],
+      items: [{ key: "profile", href: "/profile", label: "Profile", icon: iconProfile }, { key: "results", href: "/results", label: "Results", icon: iconDashboard }],
     });
   }
 
