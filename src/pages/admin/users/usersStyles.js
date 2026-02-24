@@ -13,4 +13,7 @@ export const usersStyles = `
 .users-modal[open] { display: grid; place-items: center; }
 .users-modal-inner { width: 100%; max-height: min(86vh, 760px); overflow: auto; border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: #fff; box-shadow: var(--shadow-soft); }
 .users-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; position: sticky; top: 0; background: inherit; z-index: 1; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+.users-modal-inner { border: 1px solid #c8d8f8; box-shadow: 0 16px 30px rgba(56, 79, 157, 0.16); background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }
+.users-table thead th { background: #ecf2ff; color: #2c4388; }
+.users-form input,.users-form select { border-color: #c6d6f8; border-radius: 8px; }
 `;
