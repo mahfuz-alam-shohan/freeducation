@@ -91,7 +91,7 @@ export function templatesPage(user, templates) {
     .join("");
 
   const content = `<section class="card">
-    <div class="table-wrap"><table class="table flat-grid-table table-excel">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel template-admin-table">
       <thead><tr><th>Open</th><th>Template</th><th>Code</th><th>Description</th><th>Created</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 5, "No templates yet.")}</tbody>
     </table></div>
@@ -267,7 +267,7 @@ export function subjectsPage(user, subjects, templates, classes) {
     </dialog>
   </section>
   <section class="card flat-card">
-    <div class="table-wrap"><table class="table flat-grid-table table-excel">
+    <div class="table-wrap"><table class="table flat-grid-table table-excel subjects-admin-table">
       <thead><tr><th>Open</th><th>Subject</th><th>Class</th><th>Template</th><th>Created</th><th>Rename</th><th>Image</th><th>Sync</th><th>Delete</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 9, "No subjects yet.")}</tbody>
     </table></div>
