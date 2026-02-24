@@ -1,7 +1,6 @@
 export { loginPage } from "./public/auth/loginPage.js";
 export { publicHomePage, publicClassesPage, publicClassSubjectsPage } from "./public/home/homePage.js";
 export { publicSubjectNodePage, publicChapterContentPage, publicContentEntriesPage, publicMcqEntriesPage } from "./public/home/learningPage.js";
-export { examSetupPage, examTakePage, examResultPage, resultsListPage, withFloatingExamButton } from "./public/home/examPages.js";
 export { forbiddenPage } from "./shared/forbidden/forbiddenPage.js";
 export { dashboardPage } from "./admin/dashboard/dashboardPage.js";
 export { profilePage } from "./auth/profile/profilePage.js";
