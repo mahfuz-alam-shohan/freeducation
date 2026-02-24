@@ -7,7 +7,7 @@ export const modulesStyles = `
 .flat-card { border-radius: 8px; border-color: var(--line); padding: 4px; background: #fff; }
 .flat-grid-table { border-collapse: collapse; width: 100%; min-width: 0; table-layout: fixed; }
 .flat-grid-table thead th { width: auto; background: #f2f6ff; color: #334155; font-size: 10px; border: 1px solid var(--line); padding: 4px 5px; text-transform: none; white-space: normal; line-height: 1.2; vertical-align: middle; overflow-wrap: anywhere; }
-.flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
+.flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .table-action-open-cell { width: 1%; white-space: nowrap; }
 .flat-grid-table th.table-action-open-cell,.flat-grid-table td.table-action-open-cell { width: 1%; min-width: 58px; max-width: 78px; }
 .file-indicator-cell { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 1px 5px; min-width: 140px; }
@@ -19,7 +19,7 @@ export const modulesStyles = `
 .image-slot-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; }
 .image-slot-input { display: none; }
 .table-text-cell-button { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; font: inherit; color: inherit; }
-.table-text-ellipsis { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-text-ellipsis { display: block; width: 100%; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .table-text-full { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 12px; }
 .content-modal { border: 0; padding: 0; background: transparent; max-width: none; width: min(720px, 94vw); }
 .content-modal::backdrop { background: rgba(15, 23, 42, 0.5); }
@@ -30,9 +30,9 @@ export const modulesStyles = `
 .floating-back-btn { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: 10px; z-index: 80; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #0f172a; display: inline-grid; place-items: center; text-decoration: none; font-size: 18px; box-shadow: var(--shadow-soft); }
 .floating-back-btn:hover { background: #f8fafc; }
 .content-kinds-table { width: auto; max-width: 100%; }
-.content-kinds-table th,.content-kinds-table td { white-space: nowrap; }
+.content-kinds-table th,.content-kinds-table td { white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .content-kinds-table .content-kind-col { width: clamp(110px, 40vw, 180px); max-width: 180px; }
-.content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { overflow: hidden; text-overflow: ellipsis; }
+.content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .subject-flow-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 260px)); gap: 6px; justify-content: start; }
 .subject-flow-card { width: min(100%, 260px); padding: 6px; display: grid; gap: 5px; }
 .subject-flow-card-main { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px; align-items: start; }
