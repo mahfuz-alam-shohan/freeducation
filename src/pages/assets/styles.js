@@ -29,6 +29,7 @@ body {
   font-size: 14px;
   line-height: 1.45;
   color: var(--text);
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 8% 12%, #fff4cc 0%, transparent 22%),
     radial-gradient(circle at 84% 18%, #d6f7ff 0%, transparent 22%),
@@ -174,9 +175,9 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .app-shell.collapsed.hover-expanded .main-shell { margin-left: var(--sidebar-open); }
 .container { padding: 6px; display: grid; gap: 8px; }
 .container-full-bleed { padding: 0; }
-.page-head { border: 1px solid #ccdafb; border-radius: 9px; background: #f7f9ff; padding: 6px 8px; box-shadow: none; }
-.page-title { margin: 0; font-size: clamp(18px, 2vw, 24px); line-height: 1.15; color: #1f3078; }
-.page-subtitle { margin: 1px 0 0; color: #4c5f8f; font-size: 12px; }
+.page-head { border: 1px solid #ccdafb; border-radius: 7px; background: #f7f9ff; padding: 4px 6px; box-shadow: none; }
+.page-title { margin: 0; font-size: clamp(16px, 1.8vw, 22px); line-height: 1.15; color: #1f3078; }
+.page-subtitle { margin: 1px 0 0; color: #4c5f8f; font-size: 11px; line-height: 1.3; }
 
 .topbar { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #c5d3f7; background: rgba(255, 255, 255, 0.74); backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 20; }
 .topbar-left,.topbar-right { display: flex; align-items: center; gap: 10px; }
@@ -271,8 +272,10 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
   .admin-page-head .page-subtitle { margin-top: 2px; }
   .desktop-only { display: none !important; }
   .mobile-only { display: inline-flex; }
-  .topbar-center { display: flex; position: absolute; left: 50%; transform: translateX(-50%); }
-  .topbar-brand { display: inline-flex; align-items: center; gap: 8px; }
+  .topbar-center { display: flex; position: absolute; left: 50%; transform: translateX(-50%); max-width: calc(100% - 78px); min-width: 0; }
+  .topbar-brand { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
+  .topbar-brand .brand-logo { width: 31px; height: 31px; }
+  .topbar-brand .brand-name { font-size: 17px; overflow: hidden; text-overflow: ellipsis; }
   .grid-4,.grid-3,.grid-2 { grid-template-columns: 1fr; }
   .container { padding: 4px; }
 }
