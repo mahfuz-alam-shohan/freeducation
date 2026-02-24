@@ -90,8 +90,7 @@ body.page-nav-pending::after { transform: scale(1); }
 body.page-entering .main-shell { opacity: 0; transform: translateY(8px); }
 body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 
-.app-shell { display: grid; grid-template-columns: var(--sidebar-open) 1fr; min-height: 100vh; }
-.app-shell.collapsed { grid-template-columns: var(--sidebar-collapse) 1fr; }
+.app-shell { min-height: 100vh; }
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
@@ -153,7 +152,6 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .app-shell.collapsed .brand-name,.app-shell.collapsed .label,.app-shell.collapsed .nav-group-title,.app-shell.collapsed .chevron,.app-shell.collapsed .sidebar-login-note { opacity: 0; width: 0; display: none; }
 .app-shell.collapsed .brand { justify-content: center; width: 100%; }
 .app-shell.collapsed .menu-item,.app-shell.collapsed .submenu-item,.app-shell.collapsed .menu-expand { justify-content: center; padding: 8px; }
-.app-shell.collapsed.hover-expanded { grid-template-columns: var(--sidebar-open) 1fr; }
 .app-shell.collapsed.hover-expanded .sidebar { width: var(--sidebar-open); }
 .app-shell.collapsed.hover-expanded .sidebar-toggle { display: inline-grid; }
 .app-shell.collapsed.hover-expanded .brand-name,.app-shell.collapsed.hover-expanded .label,.app-shell.collapsed.hover-expanded .nav-group-title,.app-shell.collapsed.hover-expanded .chevron,.app-shell.collapsed.hover-expanded .sidebar-login-note { opacity: 1; width: auto; display: inline; }
@@ -264,7 +262,6 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
   .grid-4,.grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 840px) {
-  .app-shell,.app-shell.collapsed,.app-shell.collapsed.hover-expanded { grid-template-columns: 1fr; }
   .sidebar { transform: translateX(-100%); transition: transform 170ms ease; width: min(84vw, 310px); }
   .app-shell.mobile-open .sidebar { transform: translateX(0); }
   .main-shell { grid-column: 1; margin-left: 0; }

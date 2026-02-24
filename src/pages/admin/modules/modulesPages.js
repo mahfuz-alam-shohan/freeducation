@@ -33,13 +33,7 @@ function tableRowsOrEmpty(rows, colSpan, label) {
 }
 
 function adminFlowHeader(title, subtitle, actionMarkup = "") {
-  return `<section class="admin-flow-head" aria-label="${h(title)} page summary">
-    <div>
-      <h1 class="admin-flow-title">${h(title)}</h1>
-      <p class="admin-flow-subtitle">${h(subtitle)}</p>
-    </div>
-    ${actionMarkup ? `<div class="admin-flow-head-action">${actionMarkup}</div>` : ""}
-  </section>`;
+  return "";
 }
 
 function subjectNodeBackHref(subjectId, node) {
