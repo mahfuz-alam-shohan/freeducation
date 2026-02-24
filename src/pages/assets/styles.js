@@ -223,8 +223,8 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 
 .table-wrap { border: 1px solid #c8d7f9; border-radius: 8px; overflow: auto; background: #fff; }
 .table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 860px; }
-.table thead th { position: sticky; top: 0; z-index: 1; background: #f0f5ff; color: #5b6fa4; text-transform: uppercase; font-size: 10px; padding: 6px 8px; border-bottom: 1px solid #cad8fa; text-align: left; }
-.table tbody td { padding: 6px 8px; border-bottom: 1px solid #dce5fb; font-size: 12px; }
+.table thead th { position: sticky; top: 0; z-index: 1; background: #f0f5ff; color: #5b6fa4; text-transform: uppercase; font-size: 10px; padding: 6px 8px; border-bottom: 1px solid #cad8fa; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.table tbody td { padding: 6px 8px; border-bottom: 1px solid #dce5fb; font-size: 12px; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 
 .dropdown,.modal,.toast { border: 1px solid #cad8f9; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow-soft); }
 .modal { padding: 20px; max-width: 460px; }

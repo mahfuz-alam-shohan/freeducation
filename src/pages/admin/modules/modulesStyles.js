@@ -30,9 +30,9 @@ export const modulesStyles = `
 .floating-back-btn { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: 10px; z-index: 80; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #0f172a; display: inline-grid; place-items: center; text-decoration: none; font-size: 18px; box-shadow: var(--shadow-soft); }
 .floating-back-btn:hover { background: #f8fafc; }
 .content-kinds-table { width: auto; max-width: 100%; }
-.content-kinds-table th,.content-kinds-table td { white-space: nowrap; }
+.content-kinds-table th,.content-kinds-table td { white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .content-kinds-table .content-kind-col { width: clamp(110px, 40vw, 180px); max-width: 180px; }
-.content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { overflow: hidden; text-overflow: ellipsis; }
+.content-kinds-table .content-kind-col .table-text-ellipsis,.content-kinds-table td.content-kind-col { white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
 .subject-flow-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 260px)); gap: 6px; justify-content: start; }
 .subject-flow-card { width: min(100%, 260px); padding: 6px; display: grid; gap: 5px; }
 .subject-flow-card-main { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px; align-items: start; }
