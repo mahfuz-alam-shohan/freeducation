@@ -37,6 +37,19 @@ export function publicHomePage(user = null, classes = []) {
     `<section class="public-home-cover">
       <span class="public-cover-orb public-cover-orb-left" aria-hidden="true"></span>
       <span class="public-cover-orb public-cover-orb-right" aria-hidden="true"></span>
+      <div class="public-cover-motion" aria-hidden="true">
+        <div class="public-mascot-shell">
+          <span class="public-mascot-eye public-mascot-eye-left"></span>
+          <span class="public-mascot-eye public-mascot-eye-right"></span>
+          <span class="public-mascot-wing public-mascot-wing-left"></span>
+          <span class="public-mascot-wing public-mascot-wing-right"></span>
+        </div>
+        <div class="public-progress-path">
+          <span class="public-progress-node is-active"></span>
+          <span class="public-progress-node"></span>
+          <span class="public-progress-node"></span>
+        </div>
+      </div>
       <div class="public-cover-brand-block">
         <div class="public-cover-brand-row">
           <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
