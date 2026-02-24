@@ -463,40 +463,97 @@ export function contentKindsPage(user, subject, node, chapter, topic, childNodes
       return `<a class="content-tab-link ${isActive ? "is-active" : ""}" href="${href}" role="tab" aria-selected="${isActive ? "true" : "false"}" ${isActive ? 'aria-current="page"' : ""}>${h(kind)}</a>`;
     })
     .join("");
-  const itemPreview = (tabState?.items || []).slice(0, 40);
-  const listItems = itemPreview
+
+  const safePage = 1;
+  const items = tabState?.items || [];
+  const previewItems = items.slice(0, 40);
+  const addModalId = `tab-add-${selectedKind.replaceAll(/[^a-z0-9]/gi, "-").toLowerCase()}`;
+
+  const renderDefaultEntryForm = (entry = null) => {
+    const isSummary = selectedKind === "Summary";
+    return `<form method="post" action="/api/content-entries" enctype="multipart/form-data" class="grid grid-2">
+      <input type="hidden" name="id" value="${entry?.id || ""}" />
+      <input type="hidden" name="subjectId" value="${subject.id}" />
+      <input type="hidden" name="subjectNodeId" value="${node.id}" />
+      <input type="hidden" name="chapterId" value="${chapter?.id || ""}" />
+      <input type="hidden" name="topicId" value="${topic?.id || ""}" />
+      <input type="hidden" name="contentKind" value="${h(selectedKind)}" />
+      <input type="hidden" name="page" value="${safePage}" />
+      ${isSummary ? "" : `<input class="input" name="title" placeholder="Title" value="${h(entry?.title || "")}" maxlength="180" />`}
+      ${isSummary ? "" : '<input class="input" type="file" name="image" accept="image/*" />'}
+      ${richTextEditor("contentHtml", entry?.content_html || "", `Write ${h(selectedKind)} content here…`, true)}
+      <div>${entry && !isSummary ? '<label><input type="checkbox" name="removeImage" value="1" /> Remove image</label>' : ""}<button class="btn btn-primary" type="submit">${isSummary ? (entry?.id ? "Save Summary" : "Add Summary") : (entry ? "Update Entry" : `Add ${h(selectedKind)}`)}</button></div>
+    </form>`;
+  };
+
+  const addForm = selectedKind === "Short Notes"
+    ? noteForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })
+    : selectedKind === "MCQ Bank"
+      ? mcqForm(subject.id, node.id, chapter?.id, topic?.id, { page: safePage })
+      : renderDefaultEntryForm();
+
+  const entryRows = previewItems
     .map((item, index) => {
-      if (selectedKind === "MCQ Bank") {
-        return `<article class="plain-entry"><p class="mcq-question">${index + 1}. ${h(item.question_html || "MCQ")}</p><div class="mcq-options-grid"><p class="mcq-option ${item.correct_option === "A" ? "mcq-option-correct" : ""}">A. ${h(item.option_a || "-")}</p><p class="mcq-option ${item.correct_option === "B" ? "mcq-option-correct" : ""}">B. ${h(item.option_b || "-")}</p><p class="mcq-option ${item.correct_option === "C" ? "mcq-option-correct" : ""}">C. ${h(item.option_c || "-")}</p><p class="mcq-option ${item.correct_option === "D" ? "mcq-option-correct" : ""}">D. ${h(item.option_d || "-")}</p></div></article>`;
+      if (selectedKind === "Short Notes") {
+        const modalId = `note-edit-${item.id}`;
+        return `<article class="plain-entry" id="note-${item.id}">
+          <div class="plain-line-wrap">
+            <div class="note-content"><span class="note-index">${index + 1}.</span> <span>${h(item.content_html || "")}</span></div>
+            <div class="note-actions-inline">
+              <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit note" title="Edit note">${iconEdit()}</button>
+              ${noteDeleteForm(subject.id, node.id, chapter?.id, topic?.id, item.id, safePage)}
+            </div>
+          </div>
+          <dialog class="content-modal" data-content-modal="${modalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Edit note</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${noteForm(subject.id, node.id, chapter?.id, topic?.id, { ...item, page: safePage })}</div></dialog>
+        </article>`;
       }
-      const text = item.title || item.name || item.content_html || `${selectedKind} ${index + 1}`;
-      return `<article class="plain-entry"><p class="note-content"><span class="note-index">${index + 1}.</span><span>${h(text)}</span></p></article>`;
+      if (selectedKind === "MCQ Bank") {
+        const modalId = `mcq-edit-${item.id}`;
+        return `<article class="plain-entry" id="mcq-${item.id}">
+          <div class="plain-line-wrap">
+            <div class="mcq-question">${index + 1}. ${h(item.question_html || "")}</div>
+            <div class="mcq-actions-inline">
+              <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit MCQ" title="Edit MCQ">${iconEdit()}</button>
+              <form method="post" action="/api/mcqs/delete"><input type="hidden" name="id" value="${item.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete MCQ" title="Delete MCQ">${iconDelete()}</button></form>
+            </div>
+          </div>
+          <div class="mcq-options-grid"><p class="mcq-option ${item.correct_option === "A" ? "mcq-option-correct" : ""}">A. ${h(item.option_a || "-")}</p><p class="mcq-option ${item.correct_option === "B" ? "mcq-option-correct" : ""}">B. ${h(item.option_b || "-")}</p><p class="mcq-option ${item.correct_option === "C" ? "mcq-option-correct" : ""}">C. ${h(item.option_c || "-")}</p><p class="mcq-option ${item.correct_option === "D" ? "mcq-option-correct" : ""}">D. ${h(item.option_d || "-")}</p></div>
+          <dialog class="content-modal" data-content-modal="${modalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Edit MCQ</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${mcqForm(subject.id, node.id, chapter?.id, topic?.id, { ...item, page: safePage })}</div></dialog>
+        </article>`;
+      }
+
+      const modalId = `content-entry-edit-${item.id}`;
+      const isSummary = selectedKind === "Summary";
+      const label = isSummary ? "Summary" : `${index + 1}. ${item.title || `${selectedKind} entry`}`;
+      return `<article class="plain-entry" id="content-entry-${item.id}">
+        <div class="plain-line-wrap">
+          <div class="mcq-question">${h(label)}</div>
+          <div class="mcq-actions-inline">
+            <button type="button" class="btn btn-icon" data-content-modal-open="${modalId}" aria-label="Edit content" title="Edit content">${iconEdit()}</button>
+            ${isSummary ? "" : `<form method="post" action="/api/content-entries/delete"><input type="hidden" name="id" value="${item.id}" /><input type="hidden" name="subjectId" value="${subject.id}" /><input type="hidden" name="subjectNodeId" value="${node.id}" /><input type="hidden" name="chapterId" value="${chapter?.id || ""}" /><input type="hidden" name="topicId" value="${topic?.id || ""}" /><input type="hidden" name="kind" value="${h(selectedKind)}" /><input type="hidden" name="page" value="${safePage}" /><button class="btn btn-icon btn-icon-danger" type="submit" aria-label="Delete content" title="Delete content">${iconDelete()}</button></form>`}
+          </div>
+        </div>
+        ${item.image_key ? `<figure class="entry-media plain-media"><img src="${h(imageUrlFromKey(item.image_key) || "")}" alt="${h(selectedKind)} image ${index + 1}" loading="lazy" decoding="async" /></figure>` : ""}
+        <div class="note-content">${item.content_html || ""}</div>
+        <dialog class="content-modal" data-content-modal="${modalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Edit ${h(selectedKind)}</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${renderDefaultEntryForm(item)}</div></dialog>
+      </article>`;
     })
     .join("");
-  const selectedKindHref = selectedKind === "Short Notes"
-    ? `/subjects/${subject.id}/notes?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`
-    : selectedKind === "MCQ Bank"
-      ? `/subjects/${subject.id}/mcqs?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}`
-      : `/subjects/${subject.id}/content?node=${node.id}&chapter=${chapter?.id || ""}&topic=${topic?.id || ""}&kind=${encodeURIComponent(selectedKind)}`;
-  const selectedKindActionLabel = selectedKind === "Short Notes"
-    ? "Manage short notes"
-    : selectedKind === "MCQ Bank"
-      ? "Manage MCQs"
-      : `Manage ${selectedKind}`;
+
   const tabPanel = `<section class="card flat-card content-tab-panel">
     <nav class="content-tab-nav" role="tablist" aria-label="Content tabs">${tabLinks}</nav>
     <div class="content-tab-head">
-      <p class="muted"><strong>${h(selectedKind)}</strong> · ${tabState?.items?.length || 0} item(s)</p>
-      <div class="content-tab-head-actions">
-        <a class="btn btn-secondary" href="${selectedKindHref}">${h(selectedKindActionLabel)}</a>
-      </div>
+      <p class="muted"><strong>${h(selectedKind)}</strong> · ${items.length} item(s)</p>
+      <button class="btn btn-secondary" type="button" data-content-modal-open="${addModalId}">Add ${h(selectedKind)}</button>
     </div>
-    <section class="content-tab-preview-list">${listItems || `<p class="muted">No ${h(selectedKind)} yet.</p>`}</section>
+    <dialog class="content-modal" data-content-modal="${addModalId}"><div class="modal content-modal-inner"><div class="content-modal-head"><h3 class="card-title">Add ${h(selectedKind)}</h3><button type="button" class="btn btn-secondary" data-content-modal-close>Close</button></div>${addForm}</div></dialog>
+    <section class="content-tab-preview-list">${entryRows || `<p class="muted">No ${h(selectedKind)} yet.</p>`}</section>
   </section>`;
+
   const backHref = topic ? `/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}` : node.supports_chapters ? `/subjects/${subject.id}/nodes/${node.id}` : subjectNodeBackHref(subject.id, node);
   const content = `${floatingBackButton(backHref, "Back to previous page")}
   ${tabPanel}`;
-  return appShell("subjects", user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, "Choose any content type defined in your template.", content, { pageStyles: modulesStyles });
+  return appShell("subjects", user, `${subject.name} · ${topic ? topic.name : chapter ? chapter.name : node.display_name}`, "Manage content directly from tabs.", content, { pageStyles: modulesStyles });
 }
 
 function richTextEditor(fieldName, value, placeholder, required = false) {
