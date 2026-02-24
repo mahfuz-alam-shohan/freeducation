@@ -5,9 +5,9 @@ export const modulesStyles = `
 .admin-flow-head-action { display: inline-flex; }
 .table-excel { table-layout: auto; width: 100%; }
 .flat-card { border-radius: 8px; border-color: var(--line); padding: 4px; background: #fff; }
-.flat-grid-table { border-collapse: collapse; width: 100%; min-width: 680px; table-layout: auto; }
+.flat-grid-table { border-collapse: collapse; width: 100%; min-width: 0; table-layout: fixed; }
 .flat-grid-table thead th { width: auto; background: #f2f6ff; color: #334155; font-size: 10px; border: 1px solid var(--line); padding: 4px 5px; text-transform: none; white-space: normal; line-height: 1.2; vertical-align: middle; overflow-wrap: anywhere; }
-.flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow-wrap: anywhere; }
+.flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
 .table-action-open-cell { width: 1%; white-space: nowrap; }
 .flat-grid-table th.table-action-open-cell,.flat-grid-table td.table-action-open-cell { width: 1%; min-width: 58px; max-width: 78px; }
 .file-indicator-cell { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 1px 5px; min-width: 140px; }
@@ -103,14 +103,14 @@ export const modulesStyles = `
   .subject-node-actions-row { grid-template-columns: 1fr; align-items: stretch; }
   .entry-form-grid { grid-template-columns: 1fr; }
   .section-summary-row { flex-direction: column; align-items: flex-start; }
-  .table-wrap { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+  .table-wrap { overflow-x: auto; }
   .admin-flow-head { align-items: flex-start; }
   .admin-flow-title { font-size: 17px; }
   .admin-flow-subtitle { font-size: 11px; }
   .admin-flow-head-action .btn { min-width: 132px; }
-  .subjects-admin-table { min-width: 100%; }
+  .subjects-admin-table { min-width: 0; }
   .subjects-admin-table :is(th:nth-child(5), td:nth-child(5), th:nth-child(8), td:nth-child(8)) { display: none; }
-  .template-admin-table { min-width: 100%; }
+  .template-admin-table { min-width: 0; }
   .template-admin-table :is(th:nth-child(3), td:nth-child(3)) { display: none; }
   .content-kinds-table .content-kind-col { width: 132px; max-width: 132px; }
   .content-tab-head { flex-direction: column; align-items: flex-start; }
