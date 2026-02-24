@@ -32,6 +32,16 @@ function tableRowsOrEmpty(rows, colSpan, label) {
   return rows || `<tr><td colspan="${colSpan}" class="table-empty">${h(label)}</td></tr>`;
 }
 
+function adminFlowHeader(title, subtitle, actionMarkup = "") {
+  return `<section class="admin-flow-head" aria-label="${h(title)} page summary">
+    <div>
+      <h1 class="admin-flow-title">${h(title)}</h1>
+      <p class="admin-flow-subtitle">${h(subtitle)}</p>
+    </div>
+    ${actionMarkup ? `<div class="admin-flow-head-action">${actionMarkup}</div>` : ""}
+  </section>`;
+}
+
 function subjectNodeBackHref(subjectId, node) {
   if (!node?.parent_subject_node_id) return `/subjects/${subjectId}`;
   return `/subjects/${subjectId}/nodes/${node.parent_subject_node_id}`;
@@ -90,14 +100,18 @@ export function templatesPage(user, templates) {
     )
     .join("");
 
-  const content = `<section class="card">
+  const content = `${adminFlowHeader("Subject Templates", "View available subject structures.")}
+  <section class="card flat-card">
     <div class="table-wrap"><table class="table flat-grid-table table-excel template-admin-table">
       <thead><tr><th>Open</th><th>Template</th><th>Code</th><th>Description</th><th>Created</th></tr></thead>
       <tbody>${tableRowsOrEmpty(rows, 5, "No templates yet.")}</tbody>
     </table></div>
   </section>`;
 
-  return appShell("templates", user, "Subject Templates", "View available subject structures.", content, { pageStyles: modulesStyles });
+  return appShell("templates", user, "Subject Templates", "View available subject structures.", content, {
+    hidePageHead: true,
+    pageStyles: modulesStyles,
+  });
 }
 
 export function templateDetailsPage(user, template, nodes) {
@@ -183,10 +197,12 @@ export function classesPage(user, classes) {
     )
     .join("");
 
-  const content = `<section class="card flat-card">
-    <div class="toolbar-group">
-      <button class="btn btn-primary" type="button" data-content-modal-open="class-add-modal">Add Class</button>
-    </div>
+  const content = `${adminFlowHeader(
+    "Classes",
+    "Manage class list and class card thumbnails.",
+    '<button class="btn btn-primary" type="button" data-content-modal-open="class-add-modal">Add Class</button>',
+  )}
+  <section class="card flat-card">
     <dialog class="content-modal" data-content-modal="class-add-modal">
       <div class="modal content-modal-inner">
         <div class="content-modal-head">
@@ -209,7 +225,10 @@ export function classesPage(user, classes) {
     </table></div>
   </section>`;
 
-  return appShell("classes", user, "Classes", "Manage class list and class card thumbnails.", content, { pageStyles: modulesStyles });
+  return appShell("classes", user, "Classes", "Manage class list and class card thumbnails.", content, {
+    hidePageHead: true,
+    pageStyles: modulesStyles,
+  });
 }
 
 export function subjectsPage(user, subjects, templates, classes) {
@@ -246,10 +265,12 @@ export function subjectsPage(user, subjects, templates, classes) {
 
   const templateOptions = templates.map((t) => `<option value="${t.id}">${h(t.name)}</option>`).join("");
 
-  const content = `<section class="card flat-card">
-    <div class="toolbar-group">
-      <button class="btn btn-primary" type="button" data-content-modal-open="subject-add-modal">Add Subject</button>
-    </div>
+  const content = `${adminFlowHeader(
+    "Subjects",
+    "Create subjects from templates and manage their content.",
+    '<button class="btn btn-primary" type="button" data-content-modal-open="subject-add-modal">Add Subject</button>',
+  )}
+  <section class="card flat-card">
     <dialog class="content-modal" data-content-modal="subject-add-modal">
       <div class="modal content-modal-inner">
         <div class="content-modal-head">
@@ -274,6 +295,7 @@ export function subjectsPage(user, subjects, templates, classes) {
   </section>`;
 
   return appShell("subjects", user, "Subjects", "Create subjects from templates and manage their content.", content, {
+    hidePageHead: true,
     pageStyles: modulesStyles,
   });
 }

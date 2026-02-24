@@ -1,6 +1,10 @@
 export const modulesStyles = `
+.admin-flow-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 0 0 6px; margin-bottom: 2px; }
+.admin-flow-title { margin: 0; font-size: 20px; line-height: 1.1; color: #1f3078; }
+.admin-flow-subtitle { margin: 2px 0 0; color: #4d6394; font-size: 12px; }
+.admin-flow-head-action { display: inline-flex; }
 .table-excel { table-layout: auto; width: 100%; }
-.flat-card { border-radius: 8px; border-color: var(--line); padding: 6px; background: #fff; }
+.flat-card { border-radius: 8px; border-color: var(--line); padding: 4px; background: #fff; }
 .flat-grid-table { border-collapse: collapse; width: 100%; min-width: 0; table-layout: fixed; }
 .flat-grid-table thead th { width: auto; background: #f2f6ff; color: #334155; font-size: 10px; border: 1px solid var(--line); padding: 4px 5px; text-transform: none; white-space: normal; line-height: 1.2; vertical-align: middle; overflow-wrap: anywhere; }
 .flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
@@ -20,7 +24,7 @@ export const modulesStyles = `
 .content-modal { border: 0; padding: 0; background: transparent; max-width: none; width: min(720px, 94vw); }
 .content-modal::backdrop { background: rgba(15, 23, 42, 0.5); }
 .content-modal[open] { display: grid; place-items: center; }
-.content-modal-inner { width: 100%; max-height: min(86vh, 760px); overflow: auto; border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: #fff; box-shadow: var(--shadow-soft); }
+.content-modal-inner { width: 100%; max-height: min(86vh, 760px); overflow: auto; border-radius: 8px; padding: 8px; display: grid; gap: 8px; background: #fff; box-shadow: var(--shadow-soft); }
 .content-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; position: sticky; top: 0; background: inherit; z-index: 1; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
 .content-form-shell,.content-form-shell [data-add-form-panel],.content-list { display: grid; gap: 6px; }
 .floating-back-btn { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 62px); left: 10px; z-index: 80; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #0f172a; display: inline-grid; place-items: center; text-decoration: none; font-size: 18px; box-shadow: var(--shadow-soft); }
@@ -100,6 +104,10 @@ export const modulesStyles = `
   .entry-form-grid { grid-template-columns: 1fr; }
   .section-summary-row { flex-direction: column; align-items: flex-start; }
   .table-wrap { overflow-x: auto; }
+  .admin-flow-head { align-items: flex-start; }
+  .admin-flow-title { font-size: 17px; }
+  .admin-flow-subtitle { font-size: 11px; }
+  .admin-flow-head-action .btn { min-width: 132px; }
   .subjects-admin-table { min-width: 0; }
   .subjects-admin-table :is(th:nth-child(5), td:nth-child(5), th:nth-child(8), td:nth-child(8)) { display: none; }
   .template-admin-table { min-width: 0; }
