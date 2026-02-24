@@ -10,6 +10,62 @@ function renderEntryImage(imageKey, altText) {
   return `<figure class="public-entry-image-frame"><img class="public-entry-image" src="${h(src)}" alt="${h(altText)}" loading="lazy" decoding="async" /></figure>`;
 }
 
+function resolveMcqAnswerLetter(item) {
+  const normalized = String(item?.correct_option || "")
+    .trim()
+    .toUpperCase();
+  const exactMatch = {
+    A: "A",
+    B: "B",
+    C: "C",
+    D: "D",
+    1: "A",
+    2: "B",
+    3: "C",
+    4: "D",
+    OPTION_A: "A",
+    OPTION_B: "B",
+    OPTION_C: "C",
+    OPTION_D: "D",
+  }[normalized];
+  if (exactMatch) return exactMatch;
+
+  const inlineMatch = normalized.match(/[ABCD]/);
+  if (inlineMatch) return inlineMatch[0];
+
+  const optionTextByLetter = {
+    A: String(item?.option_a || "")
+      .trim()
+      .toLowerCase(),
+    B: String(item?.option_b || "")
+      .trim()
+      .toLowerCase(),
+    C: String(item?.option_c || "")
+      .trim()
+      .toLowerCase(),
+    D: String(item?.option_d || "")
+      .trim()
+      .toLowerCase(),
+  };
+  const textAnswer = String(item?.correct_option || "")
+    .trim()
+    .toLowerCase();
+  return Object.entries(optionTextByLetter).find(([, optionText]) => optionText && optionText === textAnswer)?.[0] || "";
+}
+
+function renderMcqAnswer(item) {
+  const letter = resolveMcqAnswerLetter(item);
+  if (!letter) return "N/A";
+  const textByLetter = {
+    A: item?.option_a,
+    B: item?.option_b,
+    C: item?.option_c,
+    D: item?.option_d,
+  };
+  const optionText = String(textByLetter[letter] || "").trim();
+  return optionText ? `${letter}. ${h(optionText)}` : letter;
+}
+
 export function publicSubjectNodePage(user, subject, title, subtitle, items, hrefBuilder) {
   return publicShell(
     "home",
@@ -117,7 +173,7 @@ export function publicChapterContentPage(user, subject, node, chapter, tabState 
       <div class="public-note-body">${entryBody}</div>
       ${
         isMcqTab
-          ? `<ul class="public-mcq-options"><li><strong>A.</strong> ${h(entry.option_a || "-")}</li><li><strong>B.</strong> ${h(entry.option_b || "-")}</li><li><strong>C.</strong> ${h(entry.option_c || "-")}</li><li><strong>D.</strong> ${h(entry.option_d || "-")}</li></ul>`
+          ? `<ul class="public-mcq-options"><li><strong>A.</strong> ${h(entry.option_a || "-")}</li><li><strong>B.</strong> ${h(entry.option_b || "-")}</li><li><strong>C.</strong> ${h(entry.option_c || "-")}</li><li><strong>D.</strong> ${h(entry.option_d || "-")}</li></ul><p class="public-mcq-answer-text"><strong>Answer:</strong> ${renderMcqAnswer(entry)}</p>`
           : ""
       }
       ${adminActions}
@@ -215,49 +271,6 @@ export function publicMcqEntriesPage(user, subject, node, chapter, topicId, mcqs
     <input type="hidden" name="topicId" value="${h(topicId || "")}" />
     <input type="hidden" name="redirect" value="${h(`/learn/subjects/${subject.id}/nodes/${node.id}/chapters/${chapter.id}/content/${encodeURIComponent("MCQ Bank")}${topicId ? `?topic=${encodeURIComponent(topicId)}` : ""}`)}" />
   `;
-  const resolveOption = (item) => {
-    const normalized = String(item?.correct_option || "")
-      .trim()
-      .toUpperCase();
-    const exactMatch = {
-      A: "A",
-      B: "B",
-      C: "C",
-      D: "D",
-      1: "A",
-      2: "B",
-      3: "C",
-      4: "D",
-      OPTION_A: "A",
-      OPTION_B: "B",
-      OPTION_C: "C",
-      OPTION_D: "D",
-    }[normalized];
-    if (exactMatch) return exactMatch;
-
-    const inlineMatch = normalized.match(/[ABCD]/);
-    if (inlineMatch) return inlineMatch[0];
-
-    const optionTextByLetter = {
-      A: String(item?.option_a || "")
-        .trim()
-        .toLowerCase(),
-      B: String(item?.option_b || "")
-        .trim()
-        .toLowerCase(),
-      C: String(item?.option_c || "")
-        .trim()
-        .toLowerCase(),
-      D: String(item?.option_d || "")
-        .trim()
-        .toLowerCase(),
-    };
-    const textAnswer = String(item?.correct_option || "")
-      .trim()
-      .toLowerCase();
-    return Object.entries(optionTextByLetter).find(([, optionText]) => optionText && optionText === textAnswer)?.[0] || "";
-  };
-
   const list = mcqs
     .map(
       (item) => `<li class="public-mcq-item">
@@ -269,7 +282,7 @@ export function publicMcqEntriesPage(user, subject, node, chapter, topicId, mcqs
         <li data-option="C"><strong>C.</strong> ${h(item.option_c)}</li>
         <li data-option="D"><strong>D.</strong> ${h(item.option_d)}</li>
       </ul>
-      <p class="public-mcq-answer-text"><strong>Ans:</strong> ${resolveOption(item) || "N/A"}</p>
+      <p class="public-mcq-answer-text"><strong>Answer:</strong> ${renderMcqAnswer(item)}</p>
       ${
         isAdmin
           ? `<div class="public-admin-inline-actions">
@@ -284,7 +297,7 @@ export function publicMcqEntriesPage(user, subject, node, chapter, topicId, mcqs
               <input class="input" name="optionC" value="${h(item.option_c || "")}" required />
               <input class="input" name="optionD" value="${h(item.option_d || "")}" required />
               <select class="input" name="correctOption">
-                ${["A", "B", "C", "D"].map((v) => `<option value="${v}" ${resolveOption(item) === v ? "selected" : ""}>Correct: ${v}</option>`).join("")}
+                ${["A", "B", "C", "D"].map((v) => `<option value="${v}" ${resolveMcqAnswerLetter(item) === v ? "selected" : ""}>Correct: ${v}</option>`).join("")}
               </select>
               <button class="btn" type="submit">Save</button>
             </form>
