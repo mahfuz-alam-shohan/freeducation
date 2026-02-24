@@ -37,6 +37,24 @@ body {
 }
 a { color: inherit; }
 
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease;
+}
+
+::view-transition-old(root) {
+  animation-name: pageCrossFadeOut;
+}
+
+::view-transition-new(root) {
+  animation-name: pageCrossFadeIn;
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -220,6 +238,26 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 @keyframes pageLoaderSpin { to { transform: rotate(360deg); } }
+@keyframes pageCrossFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pageCrossFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(-4px);
+  }
+}
 
 @media (max-width: 1024px) {
   .grid-4,.grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -243,6 +281,10 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
   body::before, body::after, .main-shell, .sidebar, .mobile-overlay, .submenu-wrap {
     transition-duration: 0ms !important;
     animation-duration: 0ms !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
   }
   body.page-entering .main-shell { opacity: 1; transform: none; }
 }
