@@ -80,4 +80,9 @@ export const profileStyles = `
   .profile-inline-edit-btn .icon,.profile-inline-edit-btn .icon svg { width: 10px; height: 10px; }
   .profile-fixed-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+.profile-cover-media { border-radius: 10px; border-color: #c6d7fa; box-shadow: 0 12px 24px rgba(56, 77, 148, 0.12); }
+.profile-avatar-shell { border-color: #fffdf6; box-shadow: 0 10px 20px rgba(48, 69, 139, 0.16); }
+.profile-photo-icon-btn { border-color: #c7d7f8; background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%); }
+.profile-snapshot-item { border-color: #c8d8f7; border-radius: 8px; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }
+.profile-tab.is-active { color: #314db8; border-bottom-color: #314db8; }
 `;

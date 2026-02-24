@@ -113,4 +113,32 @@ export const modulesStyles = `
   .mcq-options-grid { grid-template-columns: 1fr; margin-left: 0; }
 }
 
+/* playful visual refresh */
+.card.subject-flow-card,
+.subject-node-card,
+.chapter-node-card,
+.content-editor-shell,
+.content-kind-card {
+  border-color: #c8d8f8;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(55, 78, 156, 0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+.subject-flow-card-main {
+  background: linear-gradient(120deg, rgba(235, 241, 255, 0.8) 0%, rgba(248, 255, 243, 0.75) 100%);
+  border-radius: 8px;
+}
+.subject-flow-card-media .image-slot,
+.subject-flow-card-media .image-slot-trigger,
+.chapter-image-preview img,
+.inline-image-preview img {
+  border-color: #bfd2fc;
+  border-radius: 10px;
+}
+.content-tab-link.is-active,
+.subject-node-tab.is-active {
+  border-color: #a8c0f2;
+  color: #273f95;
+}
 `;
+
