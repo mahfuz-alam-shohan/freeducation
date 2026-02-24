@@ -5,7 +5,7 @@ export const modulesStyles = `
 .admin-flow-head-action { display: inline-flex; }
 .table-excel { table-layout: auto; width: 100%; }
 .flat-card { border-radius: 8px; border-color: var(--line); padding: 4px; background: #fff; }
-.flat-grid-table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
+.flat-grid-table { border-collapse: collapse; width: 100%; min-width: 680px; table-layout: auto; }
 .flat-grid-table thead th { width: auto; background: #f2f6ff; color: #334155; font-size: 10px; border: 1px solid var(--line); padding: 4px 5px; text-transform: none; white-space: normal; line-height: 1.2; vertical-align: middle; overflow-wrap: anywhere; }
 .flat-grid-table tbody td { width: auto; border: 1px solid var(--line); padding: 3px 5px; font-size: 12px; vertical-align: middle; line-height: 1.25; overflow-wrap: anywhere; }
 .table-action-open-cell { width: 1%; white-space: nowrap; }
@@ -103,7 +103,7 @@ export const modulesStyles = `
   .subject-node-actions-row { grid-template-columns: 1fr; align-items: stretch; }
   .entry-form-grid { grid-template-columns: 1fr; }
   .section-summary-row { flex-direction: column; align-items: flex-start; }
-  .table-wrap { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+  .table-wrap { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
   .admin-flow-head { align-items: flex-start; }
   .admin-flow-title { font-size: 17px; }
   .admin-flow-subtitle { font-size: 11px; }

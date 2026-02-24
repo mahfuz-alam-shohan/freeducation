@@ -221,7 +221,7 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .badge-info { background: #e9efff; color: #3450b2; }
 .badge-warn { background: #fff8df; color: #9a6110; }
 
-.table-wrap { border: 1px solid #c8d7f9; border-radius: 8px; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; background: #fff; }
+.table-wrap { width: 100%; max-width: 100%; min-width: 0; border: 1px solid #c8d7f9; border-radius: 8px; overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; background: #fff; }
 .table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 860px; }
 .table thead th { position: sticky; top: 0; z-index: 1; background: #f0f5ff; color: #5b6fa4; text-transform: uppercase; font-size: 10px; padding: 6px 8px; border-bottom: 1px solid #cad8fa; text-align: left; }
 .table tbody td { padding: 6px 8px; border-bottom: 1px solid #dce5fb; font-size: 12px; }
