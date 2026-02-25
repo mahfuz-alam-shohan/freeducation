@@ -41,11 +41,32 @@ export function publicHomePage(user = null) {
           <span class="public-cover-logo" aria-hidden="true">${siteLogo}</span>
           <h1 class="public-cover-name">freeducation</h1>
         </div>
-        <p class="public-cover-subtitle">Learn clearly. Move steadily. Succeed daily.</p>
+        <p class="public-cover-subtitle">Simple learning flow with clear content, daily progress, and zero confusion.</p>
+        <div class="public-cover-pill-row" aria-label="platform highlights">
+          <span class="public-cover-pill">Fast dashboard</span>
+          <span class="public-cover-pill">Flat content view</span>
+          <span class="public-cover-pill">Daily learning rhythm</span>
+        </div>
+        <div class="public-cover-action-row">
+          <a class="public-cover-action public-cover-action-primary" href="/classes">Explore classes</a>
+          <a class="public-cover-action" href="/notes">Open notes</a>
+        </div>
       </div>
-      <div class="public-cover-quote-wrap">
-        <span class="public-cover-quote-label">Daily quote</span>
-        <p class="public-cover-quote" data-education-quote></p>
+      <div class="public-cover-side-column">
+        <div class="public-cover-quote-wrap">
+          <span class="public-cover-quote-label">Daily quote</span>
+          <p class="public-cover-quote" data-education-quote></p>
+        </div>
+        <div class="public-cover-metric-grid" aria-label="learning stats">
+          <article class="public-cover-metric-card">
+            <p class="public-cover-metric-value">24/7</p>
+            <p class="public-cover-metric-label">Learning access</p>
+          </article>
+          <article class="public-cover-metric-card">
+            <p class="public-cover-metric-value">Flat</p>
+            <p class="public-cover-metric-label">Book-like reading</p>
+          </article>
+        </div>
       </div>
     </section>`,
     quoteScript,
