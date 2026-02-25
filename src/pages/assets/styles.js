@@ -1,20 +1,20 @@
 export const styles = `
 :root {
   color-scheme: light;
-  --bg: #eff4ff;
-  --bg-accent: #e2ecff;
+  --bg: #f3f6ff;
+  --bg-accent: #e9efff;
   --surface: #ffffff;
-  --surface-soft: #f7faff;
-  --line: #cdd9f8;
-  --line-strong: #adc0f2;
-  --text: #13254f;
-  --muted: #4d6394;
-  --primary: #5b5cf9;
-  --primary-strong: #3d3fe0;
-  --secondary: #0eb98f;
-  --danger: #e23a62;
-  --shadow-soft: 0 10px 24px rgba(36, 50, 105, 0.1);
-  --shadow-pop: 0 14px 34px rgba(57, 75, 150, 0.16);
+  --surface-soft: #f7f9ff;
+  --line: #d6dff6;
+  --line-strong: #b9c8ee;
+  --text: #1a2750;
+  --muted: #53658e;
+  --primary: #5167ff;
+  --primary-strong: #3347ce;
+  --secondary: #0d9a7d;
+  --danger: #d43e62;
+  --shadow-soft: 0 8px 20px rgba(22, 38, 88, 0.08);
+  --shadow-pop: 0 12px 28px rgba(34, 54, 116, 0.12);
   --sidebar-open: 252px;
   --sidebar-collapse: 74px;
   --font-body: 'Noto Sans Bengali', Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -31,9 +31,8 @@ body {
   color: var(--text);
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 8% 12%, #fff4cc 0%, transparent 22%),
-    radial-gradient(circle at 84% 18%, #d6f7ff 0%, transparent 22%),
-    radial-gradient(circle at 78% 82%, #e3ddff 0%, transparent 28%),
+    radial-gradient(circle at 10% 12%, #edf3ff 0%, transparent 22%),
+    radial-gradient(circle at 82% 18%, #ebf6ff 0%, transparent 24%),
     var(--bg);
 }
 a { color: inherit; }
@@ -95,8 +94,8 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-open);
-  background: linear-gradient(180deg, #f9fbff 0%, #edf3ff 100%);
-  border-right: 1px solid #c3d2f6;
+  background: #f9fbff;
+  border-right: 1px solid #d5def4;
   box-shadow: var(--shadow-pop);
   display: flex;
   flex-direction: column;
@@ -142,7 +141,7 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .menu-expand { width: 100%; background: transparent; cursor: pointer; justify-content: space-between; }
 .menu-leading { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .menu-item:hover,.menu-expand:hover,.submenu-item:hover { background: #f0f5ff; border-color: #cfddff; }
-.menu-item.active,.submenu-item.active { background: linear-gradient(120deg, #ece8ff 0%, #e6f9ff 48%, #fef4cf 100%); border-color: #b8c8f6; color: var(--primary-strong); font-weight: 700; }
+.menu-item.active,.submenu-item.active { background: #eef2ff; border-color: #bdcbf0; color: var(--primary-strong); font-weight: 700; }
 .logout-item,.sidebar-login-item { border-width: 1px; border-style: solid; min-height: 38px; font-weight: 700; }
 .logout-item { border-color: #ffc6d1; color: #b6284b; background: #fff2f5; }
 .sidebar-login-item { border-color: #bccbff; color: var(--primary); background: #eef1ff; }
@@ -177,7 +176,7 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .page-title { margin: 0; font-size: clamp(15px, 1.6vw, 20px); line-height: 1.12; color: #1f3078; }
 .page-subtitle { margin: 0; color: #4c5f8f; font-size: 10.5px; line-height: 1.22; }
 
-.topbar { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #c5d3f7; background: rgba(255, 255, 255, 0.74); backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 20; }
+.topbar { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #d5def3; background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(6px); position: sticky; top: 0; z-index: 20; }
 .topbar-left,.topbar-right { display: flex; align-items: center; gap: 10px; }
 .topbar-center { display: none; }
 .icon-btn { border: 1px solid #cad7f8; background: #fff; border-radius: 10px; width: 36px; height: 36px; cursor: pointer; display: inline-grid; place-items: center; }
@@ -203,7 +202,7 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.card { background: #fff; border: 1px solid #cbd8f8; border-radius: 8px; padding: 5px; box-shadow: none; }
+.card { background: #fff; border: 1px solid #d4def7; border-radius: 10px; padding: 6px; box-shadow: var(--shadow-soft); }
 .card-title { margin: 0 0 6px; font-size: 15px; color: #253b86; }
 .section-stack { display: grid; gap: 8px; }
 .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -211,8 +210,8 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
 .table-empty { text-align: center; color: var(--muted); padding: 14px 10px; }
 
 .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid transparent; min-height: 32px; padding: 0 10px; font-weight: 700; font-size: 12px; text-decoration: none; cursor: pointer; }
-.btn-primary { background: linear-gradient(100deg, #5b5cf9 0%, #8268ff 55%, #3fc6db 100%); color: #fff; border-color: #5868ed; box-shadow: 0 7px 16px rgba(74, 93, 199, 0.2); }
-.btn-secondary { background: #eff5ff; color: #2f4f9d; border-color: #c6d6ff; }
+.btn-primary { background: linear-gradient(110deg, #4e67ff 0%, #5d88ff 100%); color: #fff; border-color: #4f67ea; box-shadow: 0 6px 14px rgba(63, 86, 182, 0.2); }
+.btn-secondary { background: #f2f6ff; color: #2f4f9d; border-color: #d0dcfa; }
 .btn-danger { background: #fff1f3; color: var(--danger); border-color: #ffc7d4; }
 .input,.select { height: 34px; border: 1px solid #c9d7f7; background: #fff; border-radius: 7px; padding: 0 8px; font-size: 13px; width: 100%; }
 
@@ -225,8 +224,8 @@ body.page-leaving .main-shell { opacity: 0.84; transform: translateY(-4px); }
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  border: 1px solid #c8d7f9;
-  border-radius: 8px;
+  border: 1px solid #d2dcf5;
+  border-radius: 10px;
   overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior-x: contain;
