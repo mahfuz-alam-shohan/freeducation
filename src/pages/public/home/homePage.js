@@ -1,7 +1,6 @@
 import { publicShell } from "../../templates/publicShell.js";
 import { siteLogo } from "../../templates/icons.js";
 import { homePageStyles } from "./homePageStyles.js";
-import { renderCardGrid, renderFlatPage } from "./publicUi.js";
 
 const quoteScript = `
 (() => {
@@ -29,7 +28,7 @@ const quoteScript = `
 })();
 `;
 
-export function publicHomePage(user = null, classes = []) {
+export function publicHomePage(user = null) {
   return publicShell(
     "home",
     user,
@@ -48,45 +47,8 @@ export function publicHomePage(user = null, classes = []) {
         <span class="public-cover-quote-label">Daily quote</span>
         <p class="public-cover-quote" data-education-quote></p>
       </div>
-    </section>
-    <section class="public-class-strip">
-      <div class="public-class-strip-head">
-        <h2 class="public-class-strip-title">Academic Classes</h2>
-        <a class="public-class-see-all" href="/classes">See all</a>
-      </div>
-      <div class="public-class-row">${renderCardGrid(classes, (item) => `/classes/${item.id}`, { metaBuilder: () => "Open" })}</div>
     </section>`,
     quoteScript,
-    homePageStyles,
-  );
-}
-
-export function publicClassesPage(user = null, classes = []) {
-  return publicShell(
-    "home",
-    user,
-    "All Classes",
-    renderFlatPage({
-      title: "All Classes",
-      subtitle: "Choose your class to continue.",
-      content: `<div class="public-class-grid">${renderCardGrid(classes, (item) => `/classes/${item.id}`)}</div>`,
-    }),
-    "",
-    homePageStyles,
-  );
-}
-
-export function publicClassSubjectsPage(user = null, classItem, subjects = []) {
-  return publicShell(
-    "home",
-    user,
-    `${classItem.name} Subjects`,
-    renderFlatPage({
-      title: classItem.name,
-      subtitle: "Select a subject.",
-      content: `<div class="public-flat-grid">${renderCardGrid(subjects, (subject) => `/learn/subjects/${subject.id}`)}</div>`,
-    }),
-    "",
     homePageStyles,
   );
 }
