@@ -1,4 +1,4 @@
-import { iconClasses, iconDashboard, iconFiles, iconHome, iconManagement, iconProfile, iconSubjects, iconTemplates, iconUsers } from "./templates/icons.js";
+import { iconFiles, iconHome, iconManagement, iconProfile, iconUsers } from "./templates/icons.js";
 
 export function getNavigation(role) {
   const nav = [
@@ -13,10 +13,7 @@ export function getNavigation(role) {
   if (role === "admin") {
     nav.push({
       title: "Workspace",
-      items: [
-        { key: "dashboard", href: "/dashboard", label: "Dashboard", icon: iconDashboard },
-        { key: "profile", href: "/profile", label: "Profile", icon: iconProfile },
-      ],
+      items: [{ key: "profile", href: "/profile", label: "Profile", icon: iconProfile }],
     });
 
   } else if (role === "teacher") {
@@ -27,19 +24,6 @@ export function getNavigation(role) {
   }
 
   if (role === "admin") {
-    nav.push({
-      title: "Modules",
-      collapsible: true,
-      expandedKeys: ["templates", "classes", "subjects"],
-      key: "modules",
-      icon: iconManagement,
-      items: [
-        { key: "templates", href: "/templates", label: "Templates", icon: iconTemplates },
-        { key: "classes", href: "/classes/manage", label: "Classes", icon: iconClasses },
-        { key: "subjects", href: "/subjects", label: "Subjects", icon: iconSubjects },
-      ],
-    });
-
     nav.push({
       title: "Management",
       collapsible: true,

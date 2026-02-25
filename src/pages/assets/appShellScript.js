@@ -497,45 +497,9 @@ function initializeInlineImagePickers() {
 }
 
 function initializeClassMoveControls() {
-  document.querySelectorAll('[data-class-move]').forEach((button) => {
-    if (button.dataset.boundClassMove === '1') return;
-    button.addEventListener('click', async () => {
-      if (button.disabled) return;
-      const classId = button.getAttribute('data-class-id');
-      const direction = button.getAttribute('data-class-move');
-      if (!classId || !direction) return;
-
-      const row = button.closest('[data-class-row]');
-      if (!row || !row.parentElement) return;
-      const targetRow = direction === 'up' ? row.previousElementSibling : row.nextElementSibling;
-      if (!targetRow) return;
-
-      if (direction === 'up') {
-        row.parentElement.insertBefore(row, targetRow);
-      } else {
-        row.parentElement.insertBefore(targetRow, row);
-      }
-
-      const body = new FormData();
-      body.set('intent', direction === 'up' ? 'move-up' : 'move-down');
-      const response = await fetch('/api/classes/' + classId, {
-        method: 'POST',
-        body,
-        credentials: 'same-origin',
-      }).catch(() => null);
-
-      if (!response || !response.ok) {
-        window.location.reload();
-        return;
-      }
-
-      const regionName = button.getAttribute('data-live-region') || 'page-content';
-      const refreshed = await refreshLiveRegion(regionName).then(() => true).catch(() => false);
-      if (!refreshed) window.location.reload();
-    });
-    button.dataset.boundClassMove = '1';
-  });
+  return;
 }
+
 
 async function refreshLiveRegion(regionName) {
   const response = await fetch(window.location.href, { method: 'GET', credentials: 'same-origin' });
@@ -553,7 +517,6 @@ async function refreshLiveRegion(regionName) {
   initializeFileIndicators();
   initializeImageSlots();
   initializeInlineImagePickers();
-  initializeClassMoveControls();
   initializeFormHandlers();
 }
 
@@ -783,15 +746,6 @@ function resolveImageOptimizationProfile(form, fieldName) {
   if (path === '/api/profile/cover' || fieldName === 'cover') {
     return { maxEdge: 1600, quality: 0.5 };
   }
-  if (path.startsWith('/api/classes') || path.startsWith('/api/subjects') || path.startsWith('/api/subject-nodes')) {
-    return { maxEdge: 900, quality: 0.44 };
-  }
-  if (path.startsWith('/api/chapters') || path.startsWith('/api/topics')) {
-    return { maxEdge: 1200, quality: 0.46 };
-  }
-  if (path.startsWith('/api/notes') || path.startsWith('/api/mcqs') || path.startsWith('/api/content-entries')) {
-    return { maxEdge: 1400, quality: 0.48 };
-  }
   return { maxEdge: 960, quality: 0.5 };
 }
 
@@ -990,7 +944,6 @@ if (!shell) {
   initializeFileIndicators();
   initializeImageSlots();
   initializeInlineImagePickers();
-  initializeClassMoveControls();
   initializeFormHandlers();
   initializeNavigationBoost();
   initializePageMotion();
