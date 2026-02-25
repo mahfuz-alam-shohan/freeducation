@@ -389,9 +389,9 @@ function isPrivatePagePath(pathname, route) {
 function resolvePageCacheControl(pathname, route, user) {
   if (user) return "private, no-store, max-age=0, must-revalidate";
   if (isPrivatePagePath(pathname, route)) return "private, no-store, max-age=0, must-revalidate";
-  if (pathname === "/" || pathname === "/classes") return "public, max-age=300, stale-while-revalidate=900";
-  if (pathname.startsWith("/learn/") || pathname.startsWith("/classes/")) return "public, max-age=600, stale-while-revalidate=1800";
-  return "public, max-age=120, stale-while-revalidate=600";
+  if (pathname === "/" || pathname === "/classes") return "public, max-age=1800, stale-while-revalidate=21600";
+  if (pathname.startsWith("/learn/") || pathname.startsWith("/classes/")) return "public, max-age=3600, stale-while-revalidate=43200";
+  return "public, max-age=600, stale-while-revalidate=3600";
 }
 
 function applyHtmlPageCaching(response, pathname, route, user = null) {
@@ -401,6 +401,45 @@ function applyHtmlPageCaching(response, pathname, route, user = null) {
 
   const headers = new Headers(response.headers);
   headers.set("cache-control", resolvePageCacheControl(pathname, route, user));
+  return new Response(response.body, { status: response.status, headers });
+}
+
+function canUsePublicHtmlEdgeCache(request, pathname, route, user) {
+  if (request.method !== "GET") return false;
+  if (user) return false;
+  if (hasSessionCookie(request)) return false;
+  return !isPrivatePagePath(pathname, route);
+}
+
+function buildPublicHtmlCacheKey(request, pathname, search) {
+  return new Request(`https://public-page-cache.local${pathname}${search}`, {
+    method: "GET",
+    headers: {
+      "accept-language": request.headers.get("accept-language") || "",
+    },
+  });
+}
+
+async function maybeServeCachedPublicHtml(request, pathname, search, route, user) {
+  if (!canUsePublicHtmlEdgeCache(request, pathname, route, user)) return null;
+  const cached = await caches.default.match(buildPublicHtmlCacheKey(request, pathname, search));
+  if (!cached) return null;
+  const headers = new Headers(cached.headers);
+  headers.set("x-edge-cache", "HIT");
+  return new Response(cached.body, { status: cached.status, headers });
+}
+
+function queuePublicHtmlEdgeCacheWrite(ctx, request, url, route, user, response) {
+  if (!canUsePublicHtmlEdgeCache(request, url.pathname, route, user)) return response;
+  if (!(response instanceof Response) || response.status !== 200) return response;
+  const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+  if (!contentType.includes("text/html")) return response;
+
+  const cacheable = response.clone();
+  ctx.waitUntil(caches.default.put(buildPublicHtmlCacheKey(request, url.pathname, url.search), cacheable));
+
+  const headers = new Headers(response.headers);
+  headers.set("x-edge-cache", "MISS");
   return new Response(response.body, { status: response.status, headers });
 }
 
@@ -1213,6 +1252,9 @@ export default {
     const route = pageRoutes.find((item) => item.path === url.pathname);
     const user = shouldResolveUser(request, route, url.pathname) ? await requireAuth(request, env) : null;
 
+    const cachedPublicPage = await maybeServeCachedPublicHtml(request, url.pathname, url.search, route, user);
+    if (cachedPublicPage) return cachedPublicPage;
+
     if (url.pathname.startsWith("/media/")) return serveMedia(request, url, env, user, ctx);
 
     if (url.pathname === "/api/logout") {
@@ -1238,7 +1280,7 @@ export default {
       }
 
       const dynamic = await handleDynamicPages(url, env, user);
-      if (dynamic) return applyHtmlPageCaching(dynamic, url.pathname, route, user);
+      if (dynamic) return queuePublicHtmlEdgeCacheWrite(ctx, request, url, route, user, applyHtmlPageCaching(dynamic, url.pathname, route, user));
       return new Response("Not Found", { status: 404 });
     }
 
@@ -1249,6 +1291,6 @@ export default {
 
     if (route.access === ACCESS.AUTHENTICATED && routeRequiresRole(route, user)) return applyHtmlPageCaching(html(forbiddenPage(), 403), url.pathname, route, user);
     const routeResponse = await route.handle({ request, env, user, url });
-    return applyHtmlPageCaching(routeResponse, url.pathname, route, user);
+    return queuePublicHtmlEdgeCacheWrite(ctx, request, url, route, user, applyHtmlPageCaching(routeResponse, url.pathname, route, user));
   },
 };
