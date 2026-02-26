@@ -11,9 +11,9 @@ export function loginHtml() {
           <label>Password<input name="password" type="password" required /></label>
           <button>Login</button>
         </form>
-        <p id="loginMsg" class="login-muted"></p>
+        <p id="loginMsg" class="login-muted" role="status" aria-live="polite"></p>
       </section>
-      <footer class="auth-footer">Use your administrator account credentials.</footer>
+      <footer class="auth-footer">Direct form access keeps sign-in immediate and distraction-free.</footer>
     </main>
   `;
 }

@@ -14,9 +14,9 @@ export function setupHtml() {
           <label>Password<input name="password" type="password" required minlength="8" maxlength="200" /></label>
           <button>Create first admin</button>
         </form>
-        <p id="setupMsg" class="setup-muted"></p>
+        <p id="setupMsg" class="setup-muted" role="status" aria-live="polite"></p>
       </section>
-      <footer class="auth-footer">After setup, use this account to invite additional administrators.</footer>
+      <footer class="auth-footer">Keep setup simple: one direct form with no modal interruptions.</footer>
     </main>
   `;
 }
