@@ -8,7 +8,7 @@ export async function findAdminByEmail(db, email) {
 }
 
 export async function findAdminById(db, id) {
-  return db.prepare("SELECT id, name, email, created_at FROM freeducation_admins WHERE id = ?1").bind(id).first();
+  return db.prepare("SELECT id, name, email, user_type, date_of_birth, gender, avatar_key, cover_key, created_at FROM freeducation_admins WHERE id = ?1").bind(id).first();
 }
 
 export async function createAdmin(db, { name, email, hash, salt }) {
@@ -20,8 +20,22 @@ export async function createAdmin(db, { name, email, hash, salt }) {
 }
 
 export async function listAdmins(db) {
-  const result = await db.prepare("SELECT id, name, email, created_at FROM freeducation_admins ORDER BY id DESC").all();
+  const result = await db.prepare("SELECT id, name, email, user_type, created_at FROM freeducation_admins ORDER BY id DESC").all();
   return result.results;
+}
+
+export async function updateAdminPassword(db, { adminId, hash, salt }) {
+  const now = new Date().toISOString();
+  await db.prepare(
+    `UPDATE freeducation_admins
+     SET password_hash = ?1, password_salt = ?2, updated_at = ?3
+     WHERE id = ?4`,
+  ).bind(hash, salt, now, adminId).run();
+}
+
+export async function updateAdminImageKey(db, { adminId, keyField, keyValue }) {
+  const now = new Date().toISOString();
+  await db.prepare(`UPDATE freeducation_admins SET ${keyField} = ?1, updated_at = ?2 WHERE id = ?3`).bind(keyValue, now, adminId).run();
 }
 
 export async function deleteAdminById(db, id) {
@@ -38,7 +52,7 @@ export async function createSession(db, { adminId, tokenHash, expiresAt }) {
 
 export async function findSession(db, tokenHash) {
   return db.prepare(
-    `SELECT s.admin_id, s.expires_at, a.name, a.email, a.id
+    `SELECT s.admin_id, s.expires_at, a.name, a.email, a.id, a.user_type, a.date_of_birth, a.gender, a.avatar_key, a.cover_key
      FROM freeducation_sessions s
      JOIN freeducation_admins a ON a.id = s.admin_id
      WHERE s.token_hash = ?1`,

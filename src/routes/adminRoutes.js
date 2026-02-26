@@ -1,7 +1,8 @@
 import { dashboardPage } from "../ui/pages/dashboard/index.js";
 import { usersPage } from "../ui/pages/users/index.js";
+import { profilePage } from "../ui/pages/profile/index.js";
 import { html, json } from "../core/response.js";
-import { createAdminUser, deleteAdminUser, listAdminUsers, overview } from "../controllers/adminController.js";
+import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminImage, getAdminProfile, listAdminUsers, overview, uploadAdminImage } from "../controllers/adminController.js";
 import { destroySession, getAuthenticatedAdmin } from "../core/auth.js";
 
 export async function handleAdminRoute(request, env, url) {
@@ -21,6 +22,10 @@ export async function handleAdminRoute(request, env, url) {
     return html(usersPage(admin));
   }
 
+  if (request.method === "GET" && url.pathname === "/admin/profile") {
+    return html(profilePage(admin));
+  }
+
   if (request.method === "GET" && url.pathname === "/api/admin/overview") {
     return json(await overview(env));
   }
@@ -29,9 +34,26 @@ export async function handleAdminRoute(request, env, url) {
     return json({ users: await listAdminUsers(env) });
   }
 
+  if (request.method === "GET" && url.pathname === "/api/admin/profile") {
+    return json({ profile: await getAdminProfile(env, admin.id) });
+  }
+
+  if (request.method === "GET" && (url.pathname === "/api/admin/profile/image/avatar" || url.pathname === "/api/admin/profile/image/cover")) {
+    const type = url.pathname.endsWith("/avatar") ? "avatar" : "cover";
+    return getAdminImage(env, admin.id, type);
+  }
+
   if (request.method === "POST" && url.pathname === "/api/admin/users") {
     const result = await createAdminUser(request, env);
     return json(result, 201);
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/admin/profile/image") {
+    return json(await uploadAdminImage(request, env, admin.id));
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/admin/change-password") {
+    return json(await changeAdminPassword(request, env, admin.id));
   }
 
   if (request.method === "DELETE" && url.pathname.startsWith("/api/admin/users/")) {

@@ -38,6 +38,9 @@ async function applyColumnBackfill(db, table, column) {
   if (column === "name") {
     await db.prepare(`UPDATE ${table} SET name = 'Administrator' WHERE name IS NULL OR name = ''`).run();
   }
+  if (column === "user_type") {
+    await db.prepare(`UPDATE ${table} SET user_type = 'Administrator' WHERE user_type IS NULL OR user_type = ''`).run();
+  }
 }
 
 async function rebuildTable(db, table, requiredColumns, keepColumns) {
@@ -70,6 +73,9 @@ function defaultExpressionForColumn(column, definition, now) {
     return `'${now}'`;
   }
   if (column === "name") {
+    return `'Administrator'`;
+  }
+  if (column === "user_type") {
     return `'Administrator'`;
   }
 

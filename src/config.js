@@ -1,6 +1,6 @@
 export const APP_NAME = "Freeducation";
 export const SESSION_COOKIE = "freeducation_session";
-export const MAX_BODY_SIZE = 10_000;
+export const MAX_BODY_SIZE = 800_000;
 
 export const ADMIN_SCHEMA = {
   freeducation_admins: [
@@ -9,6 +9,11 @@ export const ADMIN_SCHEMA = {
     ["email", "TEXT NOT NULL UNIQUE"],
     ["password_hash", "TEXT NOT NULL"],
     ["password_salt", "TEXT NOT NULL"],
+    ["date_of_birth", "TEXT NOT NULL DEFAULT ''"],
+    ["gender", "TEXT NOT NULL DEFAULT ''"],
+    ["user_type", "TEXT NOT NULL DEFAULT 'Administrator'"],
+    ["avatar_key", "TEXT NOT NULL DEFAULT ''"],
+    ["cover_key", "TEXT NOT NULL DEFAULT ''"],
     ["created_at", "TEXT NOT NULL"],
     ["updated_at", "TEXT NOT NULL"],
   ],
