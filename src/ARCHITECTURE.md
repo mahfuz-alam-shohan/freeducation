@@ -39,6 +39,13 @@ Current pages:
 - For scripted redirects, prefer `window.__appNavigate('/path')` and only fall back to `location.href` when the helper is unavailable.
 - UI updates should be data-driven (fetch + DOM update) rather than forcing page reloads.
 
+
+## Global SPA script safety contract
+
+- All page scripts are executed through the shared `runPageScript` helper in `src/ui/layout/document.js`.
+- The shared executor must isolate page-level declarations and handle script errors without breaking the admin shell.
+- Treat page script failures as recoverable: keep navigation, profile menu, and logout controls usable even when one page script fails.
+
 ## Rules for future contributors
 
 1. Never put multiple pages in one file.

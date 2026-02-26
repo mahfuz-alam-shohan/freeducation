@@ -67,10 +67,15 @@ window.__appPageScript = ${JSON.stringify(script || "")};
 
   const runPageScript = (source) => {
     if (!source || !source.trim()) return;
-    const scriptTag = document.createElement('script');
-    scriptTag.textContent = source;
-    document.body.appendChild(scriptTag);
-    scriptTag.remove();
+    try {
+      const executePageScript = new Function(source);
+      executePageScript();
+    } catch (error) {
+      console.error('Page script execution failed', error);
+      if (typeof window.__showAppStatus === 'function') {
+        window.__showAppStatus('Some page actions failed to initialize. Please retry.', 'error', 2800);
+      }
+    }
   };
 
   const replacePage = async (nextDoc) => {
