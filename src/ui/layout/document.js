@@ -51,11 +51,20 @@ window.__appPageScript = ${JSON.stringify(script || "")};
   document.addEventListener('focusout', resetViewport);
 
   let singleTouch = false;
+  let lastTouchEnd = 0;
   document.addEventListener('touchstart', (event) => {
     singleTouch = event.touches.length === 1;
   }, { passive: false });
   document.addEventListener('touchmove', (event) => {
     if (event.touches.length > 1 || !singleTouch) event.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', (event) => {
+    if (event.touches.length > 0 || event.changedTouches.length !== 1) return;
+    const now = Date.now();
+    if (now - lastTouchEnd <= 320) {
+      event.preventDefault();
+    }
+    lastTouchEnd = now;
   }, { passive: false });
 
   const parser = new DOMParser();
@@ -103,7 +112,7 @@ window.__appPageScript = ${JSON.stringify(script || "")};
     }
   };
 
-  const replacePage = async (nextDoc) => {
+  const replacePage = async (nextDoc, motion = 'forward') => {
     const nextBody = nextDoc.body;
     const nextTitle = nextDoc.querySelector('title');
     const nextStyle = nextDoc.querySelector('head style');
@@ -125,20 +134,24 @@ window.__appPageScript = ${JSON.stringify(script || "")};
     };
 
     if (document.startViewTransition) {
+      document.documentElement.setAttribute('data-nav-motion', motion);
+      document.body.classList.add('app-view-transitioning');
       await document.startViewTransition(() => commit()).finished.catch(() => {});
+      document.body.classList.remove('app-view-transitioning');
+      document.documentElement.removeAttribute('data-nav-motion');
     } else {
       commit();
     }
   };
 
-  const navigate = async (href, { push = true } = {}) => {
+  const navigate = async (href, { push = true, motion = push ? 'forward' : 'back' } = {}) => {
     document.body.classList.add('app-navigating');
     try {
       const response = await fetch(href, { headers: { 'x-app-navigation': '1' } });
       if (!response.ok) throw new Error('Navigation failed');
       const html = await response.text();
       const nextDoc = parser.parseFromString(html, 'text/html');
-      await replacePage(nextDoc);
+      await replacePage(nextDoc, motion);
       if (push) window.history.pushState({ href }, '', href);
     } catch {
       if (typeof window.__showAppStatus === 'function') window.__showAppStatus('Navigation failed. Retrying...', 'error', 1800);
@@ -162,7 +175,7 @@ window.__appPageScript = ${JSON.stringify(script || "")};
     navigate(url.pathname + url.search + url.hash);
   });
 
-  window.addEventListener('popstate', () => navigate(window.location.pathname + window.location.search + window.location.hash, { push: false }));
+  window.addEventListener('popstate', () => navigate(window.location.pathname + window.location.search + window.location.hash, { push: false, motion: 'back' }));
   runPageScript(window.__appPageScript || '');
 })();
 </script><script type="application/x.app-page-script" data-app-page-script>${script}</script></body>

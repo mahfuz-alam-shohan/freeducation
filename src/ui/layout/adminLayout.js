@@ -8,6 +8,11 @@ body[data-theme='light']{color-scheme:light;--bg:#f3f0ea;--surface:#fffdfa;--sur
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:17px/1.52 Inter,system-ui,sans-serif;transition:background .25s ease,color .25s ease}
 a{text-decoration:none;color:inherit}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.34s;animation-timing-function:cubic-bezier(.22,.61,.36,1)}
+::view-transition-old(root){animation-name:page-out-forward}
+::view-transition-new(root){animation-name:page-in-forward}
+html[data-nav-motion='back']::view-transition-old(root){animation-name:page-out-back}
+html[data-nav-motion='back']::view-transition-new(root){animation-name:page-in-back}
 .admin-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;position:relative}
 .admin-shell::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 50%);transition:opacity .4s ease;z-index:20}
 body.app-navigating .admin-shell::before{opacity:.42}
@@ -52,6 +57,8 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-profile-logout:hover{background:var(--surface-soft)}
 body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-events:auto}
 .admin-content{padding:9px 10px;display:grid;gap:8px;align-content:start;animation:section-in .22s ease both;transition:opacity .2s ease;min-height:220px}
+.admin-content > *{animation:content-float-in .28s ease both;animation-delay:calc(var(--content-seq,0) * 32ms)}
+.admin-content > *:nth-child(1){--content-seq:1}.admin-content > *:nth-child(2){--content-seq:2}.admin-content > *:nth-child(3){--content-seq:3}.admin-content > *:nth-child(4){--content-seq:4}.admin-content > *:nth-child(5){--content-seq:5}.admin-content > *:nth-child(n+6){--content-seq:6}
 .admin-footer{padding:8px 10px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.84rem}
 .admin-status-toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);min-width:min(320px,88vw);max-width:min(440px,92vw);padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:70;box-shadow:0 12px 30px rgba(0,0,0,.2)}
 .admin-status-toast.is-visible{opacity:1;transform:translate(-50%,0)}
@@ -65,8 +72,13 @@ body.app-navigating .admin-content{opacity:.78}
 body.app-navigating .admin-content::after{content:'Loading content...';display:block;border:1px dashed var(--border);background:var(--surface);color:var(--text-muted);font-size:.84rem;padding:6px 8px;border-radius:8px}
 .admin-logout:focus-visible,.admin-nav a:focus-visible,.admin-menu-toggle:focus-visible,.admin-sidebar-close:focus-visible,.admin-avatar:focus-visible,.admin-profile-logout:focus-visible,.admin-theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 @keyframes section-in{from{opacity:0}to{opacity:1}}
+@keyframes content-float-in{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes page-out-forward{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:.18;transform:translateX(-3.5%) scale(.99)}}
+@keyframes page-in-forward{from{opacity:0;transform:translateX(4.5%) scale(.995)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes page-out-back{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:.22;transform:translateX(3%) scale(.992)}}
+@keyframes page-in-back{from{opacity:0;transform:translateX(-4%) scale(.995)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes menu-item-in{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
-@media (prefers-reduced-motion:reduce){.admin-menu-toggle,.admin-avatar,.admin-nav-overlay,.admin-sidebar,.admin-nav a,.admin-profile-pop,.admin-content,.admin-shell::before{animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.admin-menu-toggle,.admin-avatar,.admin-nav-overlay,.admin-sidebar,.admin-nav a,.admin-profile-pop,.admin-content,.admin-content > *,.admin-shell::before,::view-transition-old(root),::view-transition-new(root){animation:none;transition:none}}
 @media (min-width:900px){
   .admin-shell{grid-template-columns:236px minmax(0,1fr);grid-template-rows:auto 1fr auto}
   .admin-header{grid-column:1 / -1;padding:10px 12px;min-height:62px}
