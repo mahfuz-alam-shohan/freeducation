@@ -1,4 +1,4 @@
-export const APP_NAME = "freeducation";
+export const APP_NAME = "Legacy";
 export const SESSION_COOKIE = "freeducation_session";
 export const MAX_BODY_SIZE = 10_000;
 
