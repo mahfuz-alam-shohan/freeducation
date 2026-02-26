@@ -6,7 +6,6 @@ const logoutButton = document.getElementById('logout');
 const userSearch = document.getElementById('userSearch');
 const addUserPanel = document.getElementById('addUserPanel');
 const toggleAddUser = document.getElementById('toggleAddUser');
-const closeAddUser = document.getElementById('closeAddUser');
 
 let allUsers = [];
 
@@ -48,19 +47,20 @@ const renderUsers = async () => {
 
 const setPanelOpen = (open) => {
   addUserPanel.classList.toggle('is-open', open);
+  toggleAddUser.classList.toggle('is-open', open);
   addUserPanel.setAttribute('aria-hidden', String(!open));
   toggleAddUser.setAttribute('aria-expanded', String(open));
+  toggleAddUser.setAttribute('aria-label', open ? 'Close add user form' : 'Open add user form');
   if (open) {
     requestAnimationFrame(() => addUserForm.querySelector('input[name="name"]')?.focus());
   }
 };
 
-toggleAddUser.addEventListener('click', () => {
+toggleAddUser.addEventListener('click', (event) => {
+  event.preventDefault();
   const open = !addUserPanel.classList.contains('is-open');
   setPanelOpen(open);
 });
-
-closeAddUser.addEventListener('click', () => setPanelOpen(false));
 
 userSearch.addEventListener('input', renderRows);
 

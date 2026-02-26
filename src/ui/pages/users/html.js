@@ -3,18 +3,18 @@ export function usersHtml() {
     <section class="users-card users-layout">
       <header class="users-toolbar">
         <h2>Users</h2>
-        <button id="toggleAddUser" class="users-primary" type="button" aria-expanded="false" aria-controls="addUserPanel">Add user</button>
+        <button id="toggleAddUser" class="users-primary users-toggle" type="button" aria-label="Open add user form" aria-expanded="false" aria-controls="addUserPanel">
+          <span class="users-toggle-label">Add user</span>
+          <span class="users-toggle-icon" aria-hidden="true"></span>
+        </button>
       </header>
 
       <section id="addUserPanel" class="users-panel" aria-hidden="true">
-        <header class="users-panel-head">
-          <h3>Add user</h3>
-          <button id="closeAddUser" class="users-ghost" type="button" aria-label="Close add user form">Close</button>
-        </header>
-        <form id="addUserForm" class="users-form">
-          <label>Name<input name="name" required maxlength="120" /></label>
-          <label>Email<input name="email" type="email" required maxlength="190" /></label>
-          <label>Password<input name="password" type="password" required minlength="8" maxlength="200" /></label>
+        <h3 class="users-panel-title">Add user</h3>
+        <form id="addUserForm" class="users-form" autocomplete="off">
+          <label>Name<input name="name" required maxlength="120" autocomplete="off" /></label>
+          <label>Email<input name="email" type="email" required maxlength="190" autocomplete="off" /></label>
+          <label>Password<input name="password" type="password" required minlength="8" maxlength="200" autocomplete="new-password" /></label>
           <button type="submit">Add user</button>
         </form>
       </section>
