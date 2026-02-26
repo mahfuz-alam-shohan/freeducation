@@ -3,19 +3,66 @@ const usersTableBody = document.getElementById('rows');
 const addUserForm = document.getElementById('addUserForm');
 const usersMsg = document.getElementById('usersMsg');
 const logoutButton = document.getElementById('logout');
+const userSearch = document.getElementById('userSearch');
+const addUserPanel = document.getElementById('addUserPanel');
+const toggleAddUser = document.getElementById('toggleAddUser');
+const closeAddUser = document.getElementById('closeAddUser');
+
+let allUsers = [];
 
 const showMessage = (message, isError = false) => {
   usersMsg.textContent = message;
   usersMsg.style.color = isError ? '#ff9ca1' : '';
 };
 
+const normalize = (value) => String(value || '').toLowerCase();
+
+const filteredUsers = () => {
+  const query = normalize(userSearch.value).trim();
+  if (!query) return allUsers;
+
+  return allUsers.filter((user) => {
+    const type = user.user_type || 'Administrator';
+    return normalize(user.name).includes(query) || normalize(user.email).includes(query) || normalize(type).includes(query);
+  });
+};
+
+const renderRows = () => {
+  const users = filteredUsers();
+  usersTableBody.innerHTML = users.length
+    ? users
+      .map((user) => {
+        const type = user.user_type || 'Administrator';
+        return '<tr><td>' + user.name + '</td><td>' + user.email + '</td><td>' + type + '</td><td>' + new Date(user.created_at).toLocaleString() + '</td></tr>';
+      })
+      .join('')
+    : '<tr><td colspan="4">No users found.</td></tr>';
+};
+
 const renderUsers = async () => {
   const response = await fetch('/api/admin/users');
   const data = await response.json();
-  usersTableBody.innerHTML = data.users
-    .map((user) => '<tr><td>' + user.name + '</td><td>' + user.email + '</td><td>' + new Date(user.created_at).toLocaleString() + '</td></tr>')
-    .join('');
+  allUsers = Array.isArray(data.users) ? data.users : [];
+  renderRows();
 };
+
+const setPanelOpen = (open) => {
+  addUserPanel.classList.toggle('is-open', open);
+  addUserPanel.setAttribute('aria-hidden', String(!open));
+  toggleAddUser.setAttribute('aria-expanded', String(open));
+  if (open) {
+    requestAnimationFrame(() => addUserForm.querySelector('input[name="name"]')?.focus());
+  }
+};
+
+toggleAddUser.addEventListener('click', () => {
+  const open = !addUserPanel.classList.contains('is-open');
+  setPanelOpen(open);
+});
+
+closeAddUser.addEventListener('click', () => setPanelOpen(false));
+
+userSearch.addEventListener('input', renderRows);
 
 addUserForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -41,9 +88,10 @@ addUserForm.addEventListener('submit', async (event) => {
       return;
     }
 
-    showMessage('Administrator added.');
+    showMessage('User added.');
     addUserForm.reset();
     await renderUsers();
+    setPanelOpen(false);
   } catch (error) {
     showMessage(error?.message || 'Network error', true);
   } finally {
