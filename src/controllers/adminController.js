@@ -1,7 +1,7 @@
 import { readBody, normalizeEmail } from "../core/request.js";
 import { validateAdminPayload } from "../core/validation.js";
 import { HttpError, mapDatabaseError } from "../core/errors.js";
-import { createAdmin, findAdminByEmail, listAdmins } from "../db/admins.js";
+import { createAdmin, deleteAdminById, findAdminByEmail, listAdmins } from "../db/admins.js";
 import { hashPassword } from "../security/password.js";
 
 export async function overview(env) {
@@ -32,5 +32,27 @@ export async function createAdminUser(request, env) {
   } catch (error) {
     throw mapDatabaseError(error, "Unable to create administrator");
   }
+  return { ok: true };
+}
+
+export async function deleteAdminUser(userId, env, currentAdminId) {
+  const id = Number.parseInt(String(userId || ""), 10);
+  if (!Number.isInteger(id) || id <= 0) throw new HttpError(400, "Invalid user id");
+
+  if (id === Number(currentAdminId)) {
+    throw new HttpError(409, "You cannot delete the account you are currently using");
+  }
+
+  const users = await listAdmins(env.DB);
+  const target = users.find((user) => Number(user.id) === id);
+  if (!target) throw new HttpError(404, "User not found");
+  if (users.length <= 1) throw new HttpError(409, "At least one administrator must remain");
+
+  try {
+    await deleteAdminById(env.DB, id);
+  } catch (error) {
+    throw mapDatabaseError(error, "Unable to delete administrator");
+  }
+
   return { ok: true };
 }

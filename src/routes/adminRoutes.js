@@ -1,7 +1,7 @@
 import { dashboardPage } from "../ui/pages/dashboard/index.js";
 import { usersPage } from "../ui/pages/users/index.js";
 import { html, json } from "../core/response.js";
-import { createAdminUser, listAdminUsers, overview } from "../controllers/adminController.js";
+import { createAdminUser, deleteAdminUser, listAdminUsers, overview } from "../controllers/adminController.js";
 import { destroySession, getAuthenticatedAdmin } from "../core/auth.js";
 
 export async function handleAdminRoute(request, env, url) {
@@ -32,6 +32,12 @@ export async function handleAdminRoute(request, env, url) {
   if (request.method === "POST" && url.pathname === "/api/admin/users") {
     const result = await createAdminUser(request, env);
     return json(result, 201);
+  }
+
+  if (request.method === "DELETE" && url.pathname.startsWith("/api/admin/users/")) {
+    const userId = url.pathname.slice("/api/admin/users/".length);
+    const result = await deleteAdminUser(userId, env, admin.id);
+    return json(result);
   }
 
   return undefined;

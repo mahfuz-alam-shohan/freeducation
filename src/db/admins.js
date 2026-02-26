@@ -24,6 +24,10 @@ export async function listAdmins(db) {
   return result.results;
 }
 
+export async function deleteAdminById(db, id) {
+  await db.prepare("DELETE FROM freeducation_admins WHERE id = ?1").bind(id).run();
+}
+
 export async function createSession(db, { adminId, tokenHash, expiresAt }) {
   const now = new Date().toISOString();
   await db.prepare(

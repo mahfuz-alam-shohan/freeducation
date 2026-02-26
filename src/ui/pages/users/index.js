@@ -1,7 +1,7 @@
 import { renderAdminLayout } from "../../layout/adminLayout.js";
 import { usersHtml } from "./html.js";
 import { USERS_STYLE } from "./style.js";
-import { USERS_SCRIPT } from "./script.js";
+import { usersScript } from "./script.js";
 
 export function usersPage(admin) {
   return renderAdminLayout({
@@ -11,6 +11,6 @@ export function usersPage(admin) {
     content: usersHtml(),
     pageClass: "page-users",
     pageStyles: USERS_STYLE,
-    script: USERS_SCRIPT,
+    script: usersScript(admin?.id),
   });
 }
