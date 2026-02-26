@@ -13,7 +13,16 @@ export async function getAuthenticatedAdmin(request, env) {
     return null;
   }
 
-  return { id: session.id, name: session.name, email: session.email };
+  return {
+    id: session.id,
+    name: session.name,
+    email: session.email,
+    user_type: session.user_type || "Administrator",
+    date_of_birth: session.date_of_birth || "",
+    gender: session.gender || "",
+    avatar_key: session.avatar_key || "",
+    cover_key: session.cover_key || "",
+  };
 }
 
 export async function destroySession(request, env) {
