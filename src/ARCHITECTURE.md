@@ -39,6 +39,13 @@ Current pages:
 - For scripted redirects, prefer `window.__appNavigate('/path')` and only fall back to `location.href` when the helper is unavailable.
 - UI updates should be data-driven (fetch + DOM update) rather than forcing page reloads.
 
+
+## Global SPA script safety contract
+
+- All page scripts are executed through the shared `runPageScript` helper in `src/ui/layout/document.js`.
+- The shared executor must isolate page-level declarations and handle script errors without breaking the admin shell.
+- Treat page script failures as recoverable: keep navigation, profile menu, and logout controls usable even when one page script fails.
+
 ## Rules for future contributors
 
 1. Never put multiple pages in one file.
@@ -57,3 +64,11 @@ Current pages:
 - Keep SPA page switches animated by the shared navigation layer in `src/ui/layout/document.js` (view transitions when supported, graceful fallback otherwise).
 - Async actions must provide user feedback without blocking the shell: keep inline status text (`.users-msg`) and the shared toast helper (`window.__showAppStatus`) in sync for success/error visibility.
 - If you add new async CRUD flows, include three states at minimum: in-progress, success, and failure.
+
+## SPA regression checklist (required before merge)
+
+- Revisit each admin page at least twice in the same session (Dashboard → Users → Dashboard → Users) to catch script re-execution issues.
+- Ensure every page script is safely re-runnable in SPA mode (wrap page-local variables/listeners in an IIFE or equivalent scoping guard).
+- Validate profile menu behavior on mobile-width viewports for every admin page, not only dashboard.
+- For table/data pages, verify loading state, success state, and failure state after in-app navigation.
+- If a page fetch fails, render an inline fallback row/message and keep shell interactions (menu/profile/logout) responsive.

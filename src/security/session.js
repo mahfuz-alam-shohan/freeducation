@@ -26,10 +26,12 @@ export function parseCookie(request) {
 }
 
 export function sessionCookie(value, expiresAt) {
-  const expires = new Date(expiresAt).toUTCString();
-  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Secure; SameSite=Strict; Path=/; Expires=${expires}`;
+  const expiryDate = new Date(expiresAt);
+  const expires = expiryDate.toUTCString();
+  const maxAgeSeconds = Math.max(0, Math.floor((expiryDate.getTime() - Date.now()) / 1000));
+  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Secure; SameSite=Lax; Path=/; Expires=${expires}; Max-Age=${maxAgeSeconds}`;
 }
 
 export function clearSessionCookie() {
-  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`;
+  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
 }

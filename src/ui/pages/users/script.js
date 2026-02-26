@@ -1,5 +1,6 @@
 export function usersScript(adminId = 0) {
   return `
+(() => {
 const usersTableBody = document.getElementById('rows');
 const addUserForm = document.getElementById('addUserForm');
 const usersMsg = document.getElementById('usersMsg');
@@ -16,6 +17,10 @@ const CURRENT_ADMIN_ID = ${Number(adminId) || 0};
 let allUsers = [];
 let deleteTarget = null;
 let lastTrigger = null;
+
+if (!usersTableBody || !addUserForm || !usersMsg || !logoutButton || !userSearch || !addUserPanel || !toggleAddUser || !deleteDialog || !deleteCancelButton || !deleteConfirmButton || !deleteSummary) {
+  return;
+}
 
 const showMessage = (message, isError = false) => {
   usersMsg.textContent = message;
@@ -60,10 +65,19 @@ const renderRows = () => {
 
 const renderUsers = async () => {
   usersTableBody.innerHTML = '<tr><td colspan="5">Loading users...</td></tr>';
-  const response = await fetch('/api/admin/users');
-  const data = await response.json();
-  allUsers = Array.isArray(data.users) ? data.users : [];
-  renderRows();
+  try {
+    const response = await fetch('/api/admin/users');
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to load users');
+    }
+    allUsers = Array.isArray(data.users) ? data.users : [];
+    renderRows();
+  } catch (error) {
+    allUsers = [];
+    usersTableBody.innerHTML = '<tr><td colspan="5">Unable to load users.</td></tr>';
+    showMessage(error?.message || 'Unable to load users.', true);
+  }
 };
 
 const setPanelOpen = (open) => {
@@ -196,5 +210,6 @@ logoutButton.onclick = async () => {
 };
 
 renderUsers();
+})();
 `;
 }
