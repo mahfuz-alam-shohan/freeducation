@@ -1,16 +1,48 @@
 export const USERS_SCRIPT = `
-const renderUsers=()=>fetch('/api/admin/users').then(r=>r.json()).then(d=>rows.innerHTML=d.users.map(u=>'<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+new Date(u.created_at).toLocaleString()+'</td></tr>').join(''));
-renderUsers();
-addUserForm.addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  usersMsg.textContent='';
-  const payload=Object.fromEntries(new FormData(addUserForm));
-  const r=await fetch('/api/admin/users',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
-  const j=await r.json();
-  if(!r.ok){usersMsg.textContent=j.error||'Request failed';return;}
-  usersMsg.textContent='Administrator added.';
+const usersTableBody = document.getElementById('rows');
+const addUserForm = document.getElementById('addUserForm');
+const usersMsg = document.getElementById('usersMsg');
+const logoutButton = document.getElementById('logout');
+
+const showMessage = (message, isError = false) => {
+  usersMsg.textContent = message;
+  usersMsg.style.color = isError ? '#ff9ca1' : '';
+};
+
+const renderUsers = async () => {
+  const response = await fetch('/api/admin/users');
+  const data = await response.json();
+  usersTableBody.innerHTML = data.users
+    .map((user) => '<tr><td>' + user.name + '</td><td>' + user.email + '</td><td>' + new Date(user.created_at).toLocaleString() + '</td></tr>')
+    .join('');
+};
+
+addUserForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  showMessage('');
+
+  const payload = Object.fromEntries(new FormData(addUserForm));
+  const response = await fetch('/api/admin/users', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    showMessage(result.error || 'Request failed', true);
+    return;
+  }
+
+  showMessage('Administrator added.');
   addUserForm.reset();
-  renderUsers();
+  await renderUsers();
 });
-document.getElementById('logout').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.href='/admin/login';};
+
+logoutButton.onclick = async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  location.href = '/admin/login';
+};
+
+renderUsers();
 `;
