@@ -51,7 +51,7 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-profile-logout{height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.9rem}
 .admin-profile-logout:hover{background:var(--surface-soft)}
 body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-events:auto}
-.admin-content{padding:9px 10px;display:grid;gap:8px;align-content:start;animation:section-in .32s ease both;transition:opacity .2s ease}
+.admin-content{padding:9px 10px;display:grid;gap:8px;align-content:start;animation:section-in .22s ease both;transition:opacity .2s ease;min-height:220px}
 .admin-footer{padding:8px 10px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.84rem}
 .admin-status-toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);min-width:min(320px,88vw);max-width:min(440px,92vw);padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:70;box-shadow:0 12px 30px rgba(0,0,0,.2)}
 .admin-status-toast.is-visible{opacity:1;transform:translate(-50%,0)}
@@ -61,7 +61,8 @@ body.menu-open{overflow:hidden}
 body.menu-open .admin-nav-overlay{opacity:1;visibility:visible}
 body.menu-open .admin-sidebar{transform:translateX(0);box-shadow:10px 0 30px rgba(0,0,0,.28)}
 body.menu-open .admin-nav a{animation:menu-item-in .56s cubic-bezier(.18,.75,.25,1) both;animation-delay:var(--menu-delay,0ms)}
-body.app-navigating .admin-content{opacity:.6;transform:translateY(4px)}
+body.app-navigating .admin-content{opacity:.78}
+body.app-navigating .admin-content::after{content:'Loading content...';display:block;border:1px dashed var(--border);background:var(--surface);color:var(--text-muted);font-size:.84rem;padding:6px 8px;border-radius:8px}
 .admin-logout:focus-visible,.admin-nav a:focus-visible,.admin-menu-toggle:focus-visible,.admin-sidebar-close:focus-visible,.admin-avatar:focus-visible,.admin-profile-logout:focus-visible,.admin-theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 @keyframes section-in{from{opacity:0}to{opacity:1}}
 @keyframes menu-item-in{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
@@ -91,6 +92,12 @@ const ICONS = {
 
 const ADMIN_LAYOUT_SCRIPT = `
 (() => {
+  const listenerController = new AbortController();
+  const { signal } = listenerController;
+  if (typeof window.__registerCleanup === 'function') {
+    window.__registerCleanup(() => listenerController.abort());
+  }
+
   const body = document.body;
   const openButton = document.getElementById('adminMenuOpen');
   const closeButton = document.getElementById('adminMenuClose');
@@ -124,14 +131,14 @@ const ADMIN_LAYOUT_SCRIPT = `
       const nextTheme = isLight ? 'dark' : 'light';
       applyTheme(nextTheme);
       window.localStorage.setItem(themeStorageKey, nextTheme);
-    });
+    }, { signal });
   }
 
   if (brandHome) {
     brandHome.addEventListener('click', () => {
       if (window.__appNavigate) window.__appNavigate('/admin/dashboard');
       else window.location.href = '/admin/dashboard';
-    });
+    }, { signal });
   }
 
   window.__showAppStatus = (message, kind = 'info', holdMs = 2600) => {
@@ -155,37 +162,39 @@ const ADMIN_LAYOUT_SCRIPT = `
     if (avatarButton) avatarButton.setAttribute('aria-expanded', open ? 'true' : 'false');
   };
 
-  openButton.addEventListener('click', () => setMenu(true));
-  closeButton.addEventListener('click', () => setMenu(false));
-  overlay.addEventListener('click', () => setMenu(false));
+  openButton.addEventListener('click', () => setMenu(true), { signal });
+  closeButton.addEventListener('click', () => setMenu(false), { signal });
+  overlay.addEventListener('click', () => setMenu(false), { signal });
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       setMenu(false);
       setProfile(false);
     }
-  });
-  window.matchMedia('(min-width: 900px)').addEventListener('change', () => setMenu(false));
+  }, { signal });
+
+  const desktopMedia = window.matchMedia('(min-width: 900px)');
+  desktopMedia.addEventListener('change', () => setMenu(false), { signal });
 
   if (avatarButton && profilePanel) {
-    avatarButton.addEventListener('click', () => setProfile(!body.classList.contains('profile-open')));
+    avatarButton.addEventListener('click', () => setProfile(!body.classList.contains('profile-open')), { signal });
     document.addEventListener('click', (event) => {
       if (!body.classList.contains('profile-open')) return;
       if (profilePanel.contains(event.target) || avatarButton.contains(event.target)) return;
       setProfile(false);
-    });
+    }, { signal });
   }
 
   if (profileLogout && mainLogout) {
     profileLogout.addEventListener('click', () => {
       setProfile(false);
       mainLogout.click();
-    });
+    }, { signal });
   }
 
   const setNavigating = () => body.classList.add('app-navigating');
 
   document.querySelectorAll('form').forEach((form) => {
-    form.addEventListener('submit', setNavigating);
+    form.addEventListener('submit', setNavigating, { signal });
   });
 
   document.addEventListener('click', (event) => {
@@ -196,7 +205,7 @@ const ADMIN_LAYOUT_SCRIPT = `
     setMenu(false);
     setProfile(false);
     body.classList.add('app-navigating');
-  });
+  }, { signal });
 
   body.classList.remove('app-navigating');
   body.classList.remove('profile-open');

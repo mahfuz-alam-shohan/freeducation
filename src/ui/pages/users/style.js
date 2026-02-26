@@ -1,6 +1,8 @@
 export const USERS_STYLE = `
 .users-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;display:grid;gap:8px;animation:section-in .28s ease both}
 .users-layout{overflow:hidden}
+.users-card.is-loading .users-table-wrap{position:relative}
+.users-card.is-loading .users-table-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 16%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
 .users-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .users-toolbar h2{margin:0;font-size:1rem}
 .users-primary,.users-form button,.users-secondary,.users-danger,.users-delete-btn{height:34px;font-size:.86rem;border-radius:8px;padding:0 10px;cursor:pointer;font-weight:600;border:1px solid var(--border)}
