@@ -73,7 +73,7 @@ window.__appPageScript = ${JSON.stringify(script || "")};
     scriptTag.remove();
   };
 
-  const replacePage = (nextDoc) => {
+  const replacePage = async (nextDoc) => {
     const nextBody = nextDoc.body;
     const nextTitle = nextDoc.querySelector('title');
     const nextStyle = nextDoc.querySelector('head style');
@@ -81,16 +81,24 @@ window.__appPageScript = ${JSON.stringify(script || "")};
 
     if (!nextBody || !nextTitle || !nextStyle) throw new Error('Incomplete page response.');
 
-    document.title = nextTitle.textContent || document.title;
-    document.body.className = nextBody.className;
-    document.body.innerHTML = nextBody.innerHTML;
+    const commit = () => {
+      document.title = nextTitle.textContent || document.title;
+      document.body.className = nextBody.className;
+      document.body.innerHTML = nextBody.innerHTML;
 
-    const styleEl = appStyle();
-    if (styleEl) styleEl.textContent = nextStyle.textContent || styleEl.textContent;
+      const styleEl = appStyle();
+      if (styleEl) styleEl.textContent = nextStyle.textContent || styleEl.textContent;
 
-    runPageScript(nextPageScript);
-    document.body.classList.remove('app-navigating');
-    syncTheme();
+      runPageScript(nextPageScript);
+      document.body.classList.remove('app-navigating');
+      syncTheme();
+    };
+
+    if (document.startViewTransition) {
+      await document.startViewTransition(() => commit()).finished.catch(() => {});
+    } else {
+      commit();
+    }
   };
 
   const navigate = async (href, { push = true } = {}) => {
@@ -100,9 +108,10 @@ window.__appPageScript = ${JSON.stringify(script || "")};
       if (!response.ok) throw new Error('Navigation failed');
       const html = await response.text();
       const nextDoc = parser.parseFromString(html, 'text/html');
-      replacePage(nextDoc);
+      await replacePage(nextDoc);
       if (push) window.history.pushState({ href }, '', href);
     } catch {
+      if (typeof window.__showAppStatus === 'function') window.__showAppStatus('Navigation failed. Retrying...', 'error', 1800);
       window.location.href = href;
     }
   };

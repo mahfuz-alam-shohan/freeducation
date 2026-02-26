@@ -27,7 +27,8 @@ export const USERS_STYLE = `
 .users-table{width:100%;border-collapse:collapse;min-width:640px;font-size:.89rem;table-layout:fixed}
 .users-table th,.users-table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
 .users-table th{color:var(--text-muted);font-weight:600;background:var(--surface-strong);position:sticky;top:0}
-.users-form{display:grid;gap:8px;max-width:500px}
+.users-form{display:grid;gap:8px;max-width:500px;position:relative}
+.users-form.is-submitting::after{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 22%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
 .users-form label{display:grid;gap:4px;color:var(--text-muted);font-size:.85rem}
 .users-form input{height:36px;font-size:16px;background:var(--surface-soft);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 10px;transition:border-color .2s ease,box-shadow .2s ease}
 .users-form button{border:1px solid var(--border);background:var(--accent);color:var(--accent-ink);transition:filter .2s ease}
@@ -36,4 +37,5 @@ export const USERS_STYLE = `
 .users-msg{margin:0;color:var(--text-muted);min-height:20px;font-size:.82rem}
 @media (max-width:700px){.users-card{padding:8px}.users-panel.is-open{max-height:420px}.users-table{min-width:560px}}
 @keyframes section-in{from{opacity:0}to{opacity:1}}
+@keyframes user-submit-pulse{0%{transform:translateX(-80%)}100%{transform:translateX(90%)}}
 `;

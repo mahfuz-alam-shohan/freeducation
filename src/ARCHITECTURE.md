@@ -48,3 +48,12 @@ Current pages:
 5. Keep schema/table changes fully code-driven.
 6. For a small page change, edit only that page folder unless a shared layout contract truly changes.
 7. Do not introduce full-page refreshes for internal navigation or routine UI changes.
+
+
+## UX and motion contract
+
+- The admin brand in the header is an explicit dashboard shortcut (`#adminBrandHome`). Keep the text static and animate only its lighting halo for readability and predictable tap behavior on mobile.
+- Sidebar menu reveal should remain intentionally staged (slower menu-item transitions) so mobile users can track context when opening navigation.
+- Keep SPA page switches animated by the shared navigation layer in `src/ui/layout/document.js` (view transitions when supported, graceful fallback otherwise).
+- Async actions must provide user feedback without blocking the shell: keep inline status text (`.users-msg`) and the shared toast helper (`window.__showAppStatus`) in sync for success/error visibility.
+- If you add new async CRUD flows, include three states at minimum: in-progress, success, and failure.
