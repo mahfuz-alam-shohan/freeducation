@@ -19,27 +19,43 @@ const renderUsers = async () => {
 
 addUserForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  showMessage('');
+  showMessage('Saving...');
 
-  const payload = Object.fromEntries(new FormData(addUserForm));
-  const response = await fetch('/api/admin/users', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const result = await response.json();
-  if (!response.ok) {
-    showMessage(result.error || 'Request failed', true);
-    return;
+  const submitBtn = addUserForm.querySelector('button[type="submit"],button:not([type])');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
   }
 
-  showMessage('Administrator added.');
-  addUserForm.reset();
-  await renderUsers();
+  try {
+    const payload = Object.fromEntries(new FormData(addUserForm));
+    const response = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      showMessage(result.error || 'Request failed', true);
+      return;
+    }
+
+    showMessage('Administrator added.');
+    addUserForm.reset();
+    await renderUsers();
+  } catch (error) {
+    showMessage(error?.message || 'Network error', true);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add user';
+    }
+  }
 });
 
 logoutButton.onclick = async () => {
+  showMessage('Signing out...');
   await fetch('/api/logout', { method: 'POST' });
   location.href = '/admin/login';
 };

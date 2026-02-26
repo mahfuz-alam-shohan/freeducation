@@ -7,7 +7,11 @@ export function renderDocument({ title, body, script = "", bodyClass = "", pageS
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
   <title>${title} - ${APP_NAME}</title>
-  <style>${pageStyles}</style>
+  <style>
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  input,select,textarea,button{font-size:16px}
+  ${pageStyles}
+  </style>
 </head>
 <body class="${bodyClass}">${body}<script>(() => {
   const blockZoomKeys = new Set(['+', '-', '=', '_']);
@@ -23,6 +27,21 @@ export function renderDocument({ title, body, script = "", bodyClass = "", pageS
   document.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
   document.addEventListener('gesturechange', (event) => event.preventDefault(), { passive: false });
   document.addEventListener('gestureend', (event) => event.preventDefault(), { passive: false });
+
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const viewportStatic = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
+  const viewportFocus = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
+  const lockViewport = () => {
+    if (viewportMeta) viewportMeta.setAttribute('content', viewportFocus);
+  };
+  const resetViewport = () => {
+    if (viewportMeta) viewportMeta.setAttribute('content', viewportStatic);
+  };
+
+  document.addEventListener('focusin', (event) => {
+    if (event.target && event.target.matches('input, textarea, select')) lockViewport();
+  });
+  document.addEventListener('focusout', resetViewport);
 
   let singleTouch = false;
   document.addEventListener('touchstart', (event) => {
