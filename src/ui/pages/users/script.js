@@ -105,7 +105,7 @@ addUserForm.addEventListener('submit', async (event) => {
 logoutButton.onclick = async () => {
   showMessage('Signing out...');
   await fetch('/api/logout', { method: 'POST' });
-  location.href = '/admin/login';
+  if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href='/admin/login'; }
 };
 
 renderUsers();

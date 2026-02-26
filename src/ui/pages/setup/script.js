@@ -31,7 +31,7 @@ export const SETUP_SCRIPT = `
       }
 
       setupMsg.textContent='Administrator created. Redirecting to login...';
-      setTimeout(()=>location.href='/admin/login',600);
+      setTimeout(()=>{ if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href='/admin/login'; } },600);
     }catch(error){
       setupMsg.textContent='Network or server error: '+(error?.message||'Unknown error');
     }finally{

@@ -10,7 +10,7 @@ loginForm.addEventListener('submit',async(e)=>{
     const j=await r.json();
     if(!r.ok){loginMsg.textContent=j.error||'Request failed';return;}
     loginMsg.textContent='Login successful. Redirecting...';
-    setTimeout(()=>location.href='/admin/dashboard',240);
+    setTimeout(()=>{ if (window.__appNavigate) { window.__appNavigate('/admin/dashboard'); } else { location.href='/admin/dashboard'; } },240);
   }finally{
     if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Login';}
   }
