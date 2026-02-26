@@ -46,10 +46,36 @@ async function rebuildTable(db, table, requiredColumns, keepColumns) {
   await db.prepare(`CREATE TABLE ${tempTable} (${schemaSql})`).run();
 
   if (keepColumns.length > 0) {
-    const cols = keepColumns.join(",");
-    await db.prepare(`INSERT INTO ${tempTable} (${cols}) SELECT ${cols} FROM ${table}`).run();
+    const now = new Date().toISOString();
+    const expressions = requiredColumns.map(([name, def]) => {
+      if (keepColumns.includes(name)) return name;
+      return defaultExpressionForColumn(name, def, now);
+    });
+    const targetColumns = requiredColumns.map(([name]) => name).join(",");
+    await db.prepare(
+      `INSERT INTO ${tempTable} (${targetColumns}) SELECT ${expressions.join(",")} FROM ${table}`,
+    ).run();
   }
 
   await db.prepare(`DROP TABLE ${table}`).run();
   await db.prepare(`ALTER TABLE ${tempTable} RENAME TO ${table}`).run();
+
+  for (const [name] of requiredColumns) {
+    await applyColumnBackfill(db, table, name);
+  }
+}
+
+function defaultExpressionForColumn(column, definition, now) {
+  if (column === "created_at" || column === "updated_at") {
+    return `'${now}'`;
+  }
+  if (column === "name") {
+    return `'Administrator'`;
+  }
+
+  const type = definition.split(/\s+/)[0]?.toUpperCase() || "TEXT";
+  if (type.includes("INT") || type.includes("REAL") || type.includes("NUM")) {
+    return "0";
+  }
+  return "''";
 }
