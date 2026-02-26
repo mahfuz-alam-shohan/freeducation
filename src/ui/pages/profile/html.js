@@ -2,15 +2,15 @@ export function profileHtml(admin) {
   return `
     <section class="profile-page">
       <article class="profile-hero">
-        <div id="coverPanel" class="profile-cover" role="button" tabindex="0" aria-label="Edit cover photo">
+        <div id="coverPanel" class="profile-cover" aria-label="Cover photo">
           <img id="coverImage" class="profile-cover-image" alt="Cover" hidden />
-          <button id="coverAction" class="profile-image-action" type="button">📷 Cover photo</button>
+          <button id="coverAction" class="profile-image-action" type="button" aria-label="Change cover photo" title="Change cover photo">📷</button>
         </div>
         <div class="profile-head">
-          <div id="avatarPanel" class="profile-avatar-wrap" role="button" tabindex="0" aria-label="Edit profile photo">
+          <div id="avatarPanel" class="profile-avatar-wrap" aria-label="Profile photo">
             <img id="avatarImage" class="profile-avatar-image" alt="Profile" hidden />
             <span id="avatarFallback" class="profile-avatar-fallback">${(admin?.name || "A").slice(0, 2).toUpperCase()}</span>
-            <button id="avatarAction" class="profile-image-action profile-image-action-avatar" type="button">📷</button>
+            <button id="avatarAction" class="profile-image-action profile-image-action-avatar" type="button" aria-label="Change profile photo" title="Change profile photo">📷</button>
           </div>
           <div class="profile-title">
             <h1>${admin?.name || "Administrator"}</h1>
@@ -50,6 +50,10 @@ export function profileHtml(admin) {
         <img id="imageModalPreview" class="profile-modal-preview" alt="Current image" hidden />
         <p id="imageModalEmpty">No image uploaded.</p>
         <label class="profile-upload-input">📤 Upload / change picture<input id="imageUploadInput" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+        <div id="uploadProgressWrap" class="profile-upload-progress" hidden>
+          <p id="uploadProgressText">Preparing upload…</p>
+          <progress id="uploadProgressBar" max="100" value="0"></progress>
+        </div>
         <div class="profile-modal-actions">
           <button id="viewImageButton" type="button">View picture</button>
           <button id="closeImageModal" type="button">Close</button>
