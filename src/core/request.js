@@ -22,3 +22,18 @@ export async function readJsonBody(request) {
     throw new HttpError(400, "Invalid JSON body");
   }
 }
+
+export async function readBody(request) {
+  const contentType = String(request.headers.get("content-type") || "").toLowerCase();
+
+  if (contentType.includes("application/json") || !contentType) {
+    return readJsonBody(request);
+  }
+
+  if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    return Object.fromEntries([...form.entries()].map(([key, value]) => [key, typeof value === "string" ? value : ""]));
+  }
+
+  throw new HttpError(415, "Unsupported content type");
+}

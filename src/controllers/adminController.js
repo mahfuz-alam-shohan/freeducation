@@ -1,4 +1,4 @@
-import { readJsonBody, normalizeEmail } from "../core/request.js";
+import { readBody, normalizeEmail } from "../core/request.js";
 import { validateAdminPayload } from "../core/validation.js";
 import { HttpError, mapDatabaseError } from "../core/errors.js";
 import { createAdmin, findAdminByEmail, listAdmins } from "../db/admins.js";
@@ -18,7 +18,7 @@ export async function listAdminUsers(env) {
 }
 
 export async function createAdminUser(request, env) {
-  const body = await readJsonBody(request);
+  const body = await readBody(request);
   const validationError = validateAdminPayload(body);
   if (validationError) throw new HttpError(400, validationError);
 
