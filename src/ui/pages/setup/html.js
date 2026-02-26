@@ -2,10 +2,12 @@ import { APP_NAME } from "../../../config.js";
 
 export function setupHtml() {
   return `
-    <main class="setup-page setup-shell">
-      <section class="setup-card">
+    <main class="setup-page">
+      <header class="auth-header">
         <h1>Initial admin setup</h1>
-        <p class="setup-muted">Create the first administrator account for ${APP_NAME}.</p>
+        <p class="auth-muted">Create the first administrator account for ${APP_NAME}.</p>
+      </header>
+      <section class="setup-card">
         <form id="setupForm" class="setup-form" method="post" action="/api/setup">
           <label>Name<input name="name" required maxlength="120" /></label>
           <label>Email<input name="email" type="email" required maxlength="190" /></label>
@@ -14,6 +16,7 @@ export function setupHtml() {
         </form>
         <p id="setupMsg" class="setup-muted"></p>
       </section>
+      <footer class="auth-footer">After setup, use this account to invite additional administrators.</footer>
     </main>
   `;
 }
