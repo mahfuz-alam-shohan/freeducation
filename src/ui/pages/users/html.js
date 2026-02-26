@@ -26,10 +26,23 @@ export function usersHtml() {
 
       <div class="users-table-wrap">
         <table class="users-table">
-          <thead><tr><th>Name</th><th>Email</th><th>User type</th><th>Created</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>User type</th><th>Created</th><th class="users-actions-col">Actions</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
+
+      <section id="deleteUserDialog" class="users-delete-dialog" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="deleteUserTitle" aria-describedby="deleteUserHint">
+        <div class="users-delete-surface">
+          <h3 id="deleteUserTitle" class="users-delete-title">Delete user?</h3>
+          <p id="deleteUserHint" class="users-delete-text">This action is permanent and removes access immediately.</p>
+          <p class="users-delete-target" id="deleteUserSummary"></p>
+          <div class="users-delete-actions">
+            <button id="deleteUserCancel" type="button" class="users-secondary">Cancel</button>
+            <button id="deleteUserConfirm" type="button" class="users-danger">Delete user</button>
+          </div>
+        </div>
+      </section>
+
       <p id="usersMsg" class="users-msg" role="status" aria-live="polite"></p>
     </section>
   `;
