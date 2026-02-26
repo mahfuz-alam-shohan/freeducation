@@ -1,15 +1,16 @@
-import { readBody, normalizeEmail } from "../core/request.js";
+import { readJsonBody } from "../core/request.js";
 import { validateAdminPayload } from "../core/validation.js";
 import { HttpError, mapDatabaseError } from "../core/errors.js";
 import { createAdmin, findAdminByEmail } from "../db/admins.js";
 import { hashPassword, verifyPassword } from "../security/password.js";
 import { createSession } from "../db/admins.js";
 import { createToken, sessionCookie, tokenHash } from "../security/session.js";
+import { normalizeEmail } from "../core/request.js";
 
 export async function setupFirstAdmin(request, env, hasAdmin) {
   if (hasAdmin) throw new HttpError(403, "Initial setup already completed");
 
-  const body = await readBody(request);
+  const body = await readJsonBody(request);
   const validationError = validateAdminPayload(body);
   if (validationError) throw new HttpError(400, validationError);
 
@@ -42,7 +43,7 @@ export async function setupFirstAdmin(request, env, hasAdmin) {
 export async function loginAdmin(request, env, hasAdmin) {
   if (!hasAdmin) throw new HttpError(403, "Initial setup required");
 
-  const body = await readBody(request);
+  const body = await readJsonBody(request);
   const email = normalizeEmail(body.email);
   const admin = await findAdminByEmail(env.DB, email);
   if (!admin) throw new HttpError(401, "Invalid login credentials");
