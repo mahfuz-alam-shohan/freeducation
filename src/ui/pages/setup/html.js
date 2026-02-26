@@ -6,7 +6,7 @@ export function setupHtml() {
       <section class="setup-card">
         <h1>Initial admin setup</h1>
         <p class="setup-muted">Create the first administrator account for ${APP_NAME}.</p>
-        <form id="setupForm" class="setup-form">
+        <form id="setupForm" class="setup-form" method="post" action="/api/setup">
           <label>Name<input name="name" required maxlength="120" /></label>
           <label>Email<input name="email" type="email" required maxlength="190" /></label>
           <label>Password<input name="password" type="password" required minlength="8" maxlength="200" /></label>

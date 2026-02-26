@@ -1,4 +1,6 @@
 const encoder = new TextEncoder();
+const PBKDF2_PRIMARY_ITERATIONS = 210_000;
+const PBKDF2_FALLBACK_ITERATIONS = 100_000;
 
 function toBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -14,14 +16,31 @@ function fromBase64(base64) {
   return bytes;
 }
 
-export async function hashPassword(password, saltBase64) {
-  const salt = saltBase64 ? fromBase64(saltBase64) : crypto.getRandomValues(new Uint8Array(16));
-  const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt, iterations: 210_000, hash: "SHA-256" },
+async function derivePasswordBits(keyMaterial, salt, iterations) {
+  return crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
     keyMaterial,
     256,
   );
+}
+
+function isIterationLimitError(error) {
+  const detail = String(error?.message || error || "").toLowerCase();
+  return detail.includes("iteration") && (detail.includes("not supported") || detail.includes("above"));
+}
+
+export async function hashPassword(password, saltBase64) {
+  const salt = saltBase64 ? fromBase64(saltBase64) : crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+
+  let bits;
+  try {
+    bits = await derivePasswordBits(keyMaterial, salt, PBKDF2_PRIMARY_ITERATIONS);
+  } catch (error) {
+    if (!isIterationLimitError(error)) throw error;
+    bits = await derivePasswordBits(keyMaterial, salt, PBKDF2_FALLBACK_ITERATIONS);
+  }
+
   return { salt: toBase64(salt), hash: toBase64(bits) };
 }
 
