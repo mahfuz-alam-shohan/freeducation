@@ -6,9 +6,9 @@ setupForm.addEventListener('submit',async(e)=>{
   const r=await fetch('/api/setup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   const j=await r.json();
   if(!r.ok){
-    const detail=j.detail?`\nDetails: \${j.detail}`:'';
-    const code=j.code?` [\${j.code}]`:'';
-    setupMsg.textContent=`\${j.error||'Request failed'}\${code}\${detail}`;
+    const detail=j.detail?'\nDetails: '+j.detail:'';
+    const code=j.code?' ['+j.code+']':'';
+    setupMsg.textContent=(j.error||'Request failed')+code+detail;
     return;
   }
   setupMsg.textContent='Administrator created. Redirecting to login...';
