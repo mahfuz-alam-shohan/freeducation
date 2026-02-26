@@ -3,7 +3,7 @@ export function loginHtml() {
     <main class="login-page login-shell">
       <section class="login-card">
         <h1>Admin login</h1>
-        <form id="loginForm" class="login-form" method="post" action="/api/login">
+        <form id="loginForm" class="login-form">
           <label>Email<input name="email" type="email" required /></label>
           <label>Password<input name="password" type="password" required /></label>
           <button>Login</button>
