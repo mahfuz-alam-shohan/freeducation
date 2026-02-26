@@ -12,14 +12,21 @@ const deleteDialog = document.getElementById('deleteUserDialog');
 const deleteCancelButton = document.getElementById('deleteUserCancel');
 const deleteConfirmButton = document.getElementById('deleteUserConfirm');
 const deleteSummary = document.getElementById('deleteUserSummary');
+const usersCard = document.querySelector('.users-card');
 const CURRENT_ADMIN_ID = ${Number(adminId) || 0};
 
 let allUsers = [];
 let deleteTarget = null;
 let lastTrigger = null;
 
-if (!usersTableBody || !addUserForm || !usersMsg || !logoutButton || !userSearch || !addUserPanel || !toggleAddUser || !deleteDialog || !deleteCancelButton || !deleteConfirmButton || !deleteSummary) {
+if (!usersTableBody || !addUserForm || !usersMsg || !logoutButton || !userSearch || !addUserPanel || !toggleAddUser || !deleteDialog || !deleteCancelButton || !deleteConfirmButton || !deleteSummary || !usersCard) {
   return;
+}
+
+const controller = new AbortController();
+const { signal } = controller;
+if (typeof window.__registerCleanup === 'function') {
+  window.__registerCleanup(() => controller.abort());
 }
 
 const showMessage = (message, isError = false) => {
@@ -63,10 +70,17 @@ const renderRows = () => {
     : '<tr><td colspan="5">No users found.</td></tr>';
 };
 
+const setLoading = (loading) => {
+  usersCard.classList.toggle('is-loading', loading);
+  if (loading) {
+    usersTableBody.innerHTML = '<tr><td colspan="5">Loading users...</td></tr>';
+  }
+};
+
 const renderUsers = async () => {
-  usersTableBody.innerHTML = '<tr><td colspan="5">Loading users...</td></tr>';
+  setLoading(true);
   try {
-    const response = await fetch('/api/admin/users');
+    const response = await fetch('/api/admin/users', { signal });
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data.error || 'Unable to load users');
@@ -74,9 +88,12 @@ const renderUsers = async () => {
     allUsers = Array.isArray(data.users) ? data.users : [];
     renderRows();
   } catch (error) {
+    if (error?.name === 'AbortError') return;
     allUsers = [];
     usersTableBody.innerHTML = '<tr><td colspan="5">Unable to load users.</td></tr>';
     showMessage(error?.message || 'Unable to load users.', true);
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -113,9 +130,9 @@ toggleAddUser.addEventListener('click', (event) => {
   event.preventDefault();
   const open = !addUserPanel.classList.contains('is-open');
   setPanelOpen(open);
-});
+}, { signal });
 
-userSearch.addEventListener('input', renderRows);
+userSearch.addEventListener('input', renderRows, { signal });
 
 usersTableBody.addEventListener('click', (event) => {
   const button = event.target.closest('[data-delete-user-id]');
@@ -127,15 +144,15 @@ usersTableBody.addEventListener('click', (event) => {
   };
   deleteSummary.textContent = deleteTarget.name + ' (' + deleteTarget.email + ')';
   setDeleteDialogOpen(true, button);
-});
+}, { signal });
 
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && deleteDialog.classList.contains('is-open')) {
     setDeleteDialogOpen(false);
   }
-});
+}, { signal });
 
-deleteCancelButton.addEventListener('click', () => setDeleteDialogOpen(false));
+deleteCancelButton.addEventListener('click', () => setDeleteDialogOpen(false), { signal });
 
 deleteConfirmButton.addEventListener('click', async () => {
   if (!deleteTarget) return;
@@ -145,7 +162,7 @@ deleteConfirmButton.addEventListener('click', async () => {
   deleteConfirmButton.textContent = 'Deleting...';
 
   try {
-    const response = await fetch('/api/admin/users/' + encodeURIComponent(deleteTarget.id), { method: 'DELETE' });
+    const response = await fetch('/api/admin/users/' + encodeURIComponent(deleteTarget.id), { method: 'DELETE', signal });
     const result = await response.json();
     if (!response.ok) {
       showMessage(result.error || 'Unable to delete user', true);
@@ -155,13 +172,14 @@ deleteConfirmButton.addEventListener('click', async () => {
     await renderUsers();
     setDeleteDialogOpen(false);
   } catch (error) {
+    if (error?.name === 'AbortError') return;
     showMessage(error?.message || 'Network error', true);
   } finally {
     deleteDialog.classList.remove('is-submitting');
     deleteConfirmButton.disabled = false;
     deleteConfirmButton.textContent = 'Delete user';
   }
-});
+}, { signal });
 
 addUserForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -180,6 +198,7 @@ addUserForm.addEventListener('submit', async (event) => {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
+      signal,
     });
 
     const result = await response.json();
@@ -193,6 +212,7 @@ addUserForm.addEventListener('submit', async (event) => {
     await renderUsers();
     setPanelOpen(false);
   } catch (error) {
+    if (error?.name === 'AbortError') return;
     showMessage(error?.message || 'Network error', true);
   } finally {
     if (submitBtn) {
@@ -201,13 +221,13 @@ addUserForm.addEventListener('submit', async (event) => {
     }
     addUserForm.classList.remove('is-submitting');
   }
-});
+}, { signal });
 
-logoutButton.onclick = async () => {
+logoutButton.addEventListener('click', async () => {
   showMessage('Signing out...');
-  await fetch('/api/logout', { method: 'POST' });
+  await fetch('/api/logout', { method: 'POST', signal });
   if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href='/admin/login'; }
-};
+}, { signal });
 
 renderUsers();
 })();
