@@ -11,7 +11,6 @@ const panelSecurity = document.getElementById('panelSecurity');
 const openPasswordForm = document.getElementById('openPasswordForm');
 const passwordForm = document.getElementById('passwordForm');
 const profileMsg = document.getElementById('profileMsg');
-const logoutButton = document.getElementById('logout');
 
 const imageUploadModal = document.getElementById('imageUploadModal');
 const imageViewModal = document.getElementById('imageViewModal');
@@ -35,7 +34,7 @@ const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
 
-if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !logoutButton) return;
+if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg) return;
 
 const controller = new AbortController();
 const { signal } = controller;
@@ -63,8 +62,24 @@ const switchTab = (showAbout) => {
   panelSecurity.hidden = showAbout;
 };
 
+const focusTab = (tab) => {
+  if (tab && typeof tab.focus === 'function') tab.focus();
+};
+
 tabAbout.addEventListener('click', () => switchTab(true), { signal });
 tabSecurity.addEventListener('click', () => switchTab(false), { signal });
+tabAbout.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowRight') {
+    switchTab(false);
+    focusTab(tabSecurity);
+  }
+}, { signal });
+tabSecurity.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowLeft') {
+    switchTab(true);
+    focusTab(tabAbout);
+  }
+}, { signal });
 
 openPasswordForm.addEventListener('click', () => {
   const shouldOpen = passwordForm.hidden;

@@ -21,25 +21,25 @@ export function profileHtml(admin) {
 
       <article class="profile-tabs-card">
         <div class="profile-tabs" role="tablist" aria-label="Profile tabs">
-          <button id="tabAbout" class="profile-tab is-active" type="button" role="tab" aria-selected="true">About me</button>
-          <button id="tabSecurity" class="profile-tab" type="button" role="tab" aria-selected="false">Security</button>
+          <button id="tabAbout" class="profile-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panelAbout">About me</button>
+          <button id="tabSecurity" class="profile-tab" type="button" role="tab" aria-selected="false" aria-controls="panelSecurity">Security</button>
         </div>
 
-        <div id="panelAbout" class="profile-panel is-active" role="tabpanel">
+        <section id="panelAbout" class="profile-panel is-active" role="tabpanel" aria-labelledby="tabAbout">
           <div class="profile-row"><span>Mail</span><strong id="aboutEmail">-</strong></div>
           <div class="profile-row"><span>Date of birth</span><strong id="aboutDob">-</strong></div>
           <div class="profile-row"><span>Gender</span><strong id="aboutGender">-</strong></div>
           <div class="profile-row"><span>Role</span><strong id="aboutRole">-</strong></div>
-        </div>
+        </section>
 
-        <div id="panelSecurity" class="profile-panel" role="tabpanel" hidden>
+        <section id="panelSecurity" class="profile-panel" role="tabpanel" aria-labelledby="tabSecurity" hidden>
           <button id="openPasswordForm" class="profile-open-password" type="button">Change password</button>
           <form id="passwordForm" class="profile-password-form" hidden>
             <label>Current password<input type="password" name="currentPassword" required minlength="8" /></label>
             <label>New password<input type="password" name="newPassword" required minlength="8" /></label>
             <button type="submit">Update password</button>
           </form>
-        </div>
+        </section>
         <p id="profileMsg" class="profile-msg" aria-live="polite"></p>
       </article>
     </section>

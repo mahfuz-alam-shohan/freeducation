@@ -17,6 +17,7 @@ export const PROFILE_STYLE = `
 .profile-tab.is-active{background:color-mix(in srgb,var(--accent) 30%,var(--surface-soft));border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
 .profile-panel{display:none;animation:slideIn .28s ease}
 .profile-panel.is-active{display:block}
+.profile-panel[hidden]{display:none!important}
 .profile-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
 .profile-row:last-child{border-bottom:0}
 .profile-row span{color:var(--text-muted)}
