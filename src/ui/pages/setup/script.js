@@ -9,7 +9,7 @@ export const SETUP_SCRIPT = `
     setupMsg.textContent='';
 
     const submitBtn=setupForm.querySelector('button[type="submit"],button:not([type])');
-    if(submitBtn) submitBtn.disabled=true;
+    if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Creating...';}
 
     try{
       const payload=Object.fromEntries(new FormData(setupForm));
@@ -35,7 +35,7 @@ export const SETUP_SCRIPT = `
     }catch(error){
       setupMsg.textContent='Network or server error: '+(error?.message||'Unknown error');
     }finally{
-      if(submitBtn) submitBtn.disabled=false;
+      if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Create first admin';}
     }
   });
 })();
