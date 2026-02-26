@@ -18,6 +18,9 @@ const imageModalTitle = document.getElementById('imageModalTitle');
 const imageModalPreview = document.getElementById('imageModalPreview');
 const imageModalEmpty = document.getElementById('imageModalEmpty');
 const imageUploadInput = document.getElementById('imageUploadInput');
+const uploadProgressWrap = document.getElementById('uploadProgressWrap');
+const uploadProgressText = document.getElementById('uploadProgressText');
+const uploadProgressBar = document.getElementById('uploadProgressBar');
 const closeImageModal = document.getElementById('closeImageModal');
 const viewImageButton = document.getElementById('viewImageButton');
 const closeViewModal = document.getElementById('closeViewModal');
@@ -25,6 +28,8 @@ const imageBigPreview = document.getElementById('imageBigPreview');
 
 const avatarPanel = document.getElementById('avatarPanel');
 const coverPanel = document.getElementById('coverPanel');
+const avatarAction = document.getElementById('avatarAction');
+const coverAction = document.getElementById('coverAction');
 const avatarImage = document.getElementById('avatarImage');
 const coverImage = document.getElementById('coverImage');
 const avatarFallback = document.getElementById('avatarFallback');
@@ -34,7 +39,7 @@ const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
 
-if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg) return;
+if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageUploadModal || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !imageUploadInput) return;
 
 const controller = new AbortController();
 const { signal } = controller;
@@ -42,6 +47,7 @@ if (typeof window.__registerCleanup === 'function') window.__registerCleanup(() 
 
 let currentImageType = 'avatar';
 const hasImage = { avatar: false, cover: false };
+let isUploadingImage = false;
 
 const showMessage = (message, isError = false) => {
   profileMsg.textContent = message;
@@ -60,6 +66,10 @@ const switchTab = (showAbout) => {
   panelSecurity.classList.toggle('is-active', !showAbout);
   panelAbout.hidden = !showAbout;
   panelSecurity.hidden = showAbout;
+  if (showAbout) {
+    passwordForm.hidden = true;
+    openPasswordForm.textContent = 'Change password';
+  }
 };
 
 const focusTab = (tab) => {
@@ -86,6 +96,20 @@ openPasswordForm.addEventListener('click', () => {
   passwordForm.hidden = !shouldOpen;
   openPasswordForm.textContent = shouldOpen ? 'Close password form' : 'Change password';
 }, { signal });
+
+const setUploadProgress = (value, label) => {
+  if (!uploadProgressWrap || !uploadProgressBar || !uploadProgressText) return;
+  uploadProgressWrap.hidden = false;
+  uploadProgressBar.value = value;
+  uploadProgressText.textContent = label;
+};
+
+const setUploadBusyState = (busy) => {
+  isUploadingImage = busy;
+  imageUploadInput.disabled = busy;
+  closeImageModal.disabled = busy;
+  viewImageButton.disabled = busy;
+};
 
 const formatDob = (value) => {
   if (!value) return '-';
@@ -120,6 +144,8 @@ coverImage.addEventListener('error', () => {
 }, { signal });
 
 const openImageModal = (imageType) => {
+  if (isUploadingImage) return;
+  if (imageViewModal.open) imageViewModal.close();
   currentImageType = imageType;
   imageModalTitle.textContent = imageType === 'avatar' ? 'Profile photo' : 'Cover photo';
   const imageSrc = imageType === 'avatar' ? avatarImage.src : coverImage.src;
@@ -127,23 +153,42 @@ const openImageModal = (imageType) => {
   imageModalPreview.hidden = !available;
   imageModalEmpty.hidden = available;
   viewImageButton.hidden = !available;
-  if (available) {
-    imageModalPreview.src = imageSrc;
-  }
+  if (available) imageModalPreview.src = imageSrc;
   imageUploadInput.value = '';
+  setUploadBusyState(false);
+  if (uploadProgressWrap) uploadProgressWrap.hidden = true;
   imageUploadModal.showModal();
 };
 
-avatarPanel.addEventListener('click', () => openImageModal('avatar'), { signal });
-coverPanel.addEventListener('click', () => openImageModal('cover'), { signal });
-avatarPanel.addEventListener('keydown', (event) => { if (event.key === 'Enter') openImageModal('avatar'); }, { signal });
-coverPanel.addEventListener('keydown', (event) => { if (event.key === 'Enter') openImageModal('cover'); }, { signal });
+avatarAction.addEventListener('click', (event) => {
+  event.stopPropagation();
+  openImageModal('avatar');
+}, { signal });
+coverAction.addEventListener('click', (event) => {
+  event.stopPropagation();
+  openImageModal('cover');
+}, { signal });
 
-closeImageModal.addEventListener('click', () => imageUploadModal.close(), { signal });
+avatarPanel.addEventListener('click', () => {
+  if (!hasImage.avatar || isUploadingImage) return;
+  imageBigPreview.src = avatarImage.src;
+  imageViewModal.showModal();
+}, { signal });
+coverPanel.addEventListener('click', () => {
+  if (!hasImage.cover || isUploadingImage) return;
+  imageBigPreview.src = coverImage.src;
+  imageViewModal.showModal();
+}, { signal });
+
+closeImageModal.addEventListener('click', () => {
+  if (!isUploadingImage) imageUploadModal.close();
+}, { signal });
 closeViewModal.addEventListener('click', () => imageViewModal.close(), { signal });
 viewImageButton.addEventListener('click', () => {
+  if (isUploadingImage) return;
   const source = currentImageType === 'avatar' ? avatarImage.src : coverImage.src;
   imageBigPreview.src = source;
+  imageUploadModal.close();
   imageViewModal.showModal();
 }, { signal });
 
@@ -152,8 +197,11 @@ imageUploadInput.addEventListener('change', async (event) => {
   if (!file) return;
 
   try {
+    setUploadBusyState(true);
+    setUploadProgress(10, 'Preparing image...');
     showMessage('Compressing image...');
     const imageData = await compressImageFile(file, currentImageType === 'avatar' ? 420 : 1280, 0.5);
+    setUploadProgress(55, 'Compression done. Uploading...');
     showMessage('Uploading image...');
 
     const response = await fetch('/api/admin/profile/image', {
@@ -165,12 +213,17 @@ imageUploadInput.addEventListener('change', async (event) => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Upload failed');
 
+    setUploadProgress(100, 'Upload complete. Refreshing preview...');
     showMessage('Image updated.');
-    imageUploadModal.close();
     refreshImages();
+    setTimeout(() => {
+      if (imageUploadModal.open) imageUploadModal.close();
+    }, 280);
   } catch (error) {
     if (error?.name === 'AbortError') return;
     showMessage(error?.message || 'Unable to upload image', true);
+  } finally {
+    setUploadBusyState(false);
   }
 }, { signal });
 
@@ -209,6 +262,7 @@ const loadProfile = async () => {
     aboutDob.textContent = formatDob(profile.date_of_birth);
     aboutGender.textContent = profile.gender || '-';
     aboutRole.textContent = profile.user_type || 'Administrator';
+    switchTab(true);
     refreshImages();
   } catch (error) {
     if (error?.name === 'AbortError') return;
