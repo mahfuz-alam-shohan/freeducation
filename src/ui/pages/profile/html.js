@@ -1,16 +1,21 @@
+const PROFILE_ICONS = {
+  camera: `<svg viewBox="0 0 24 24" class="profile-inline-icon" aria-hidden="true" focusable="false"><path d="M7.5 6.5h2.1l1-1.5h2.8l1 1.5h2.1A2.5 2.5 0 0 1 19 9v8a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 17V9a2.5 2.5 0 0 1 2.5-2.5Zm4.5 3.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 1.7a2.1 2.1 0 1 1 0 4.2 2.1 2.1 0 0 1 0-4.2Z" fill="currentColor"/></svg>`,
+  upload: `<svg viewBox="0 0 24 24" class="profile-inline-icon" aria-hidden="true" focusable="false"><path d="M12 4.5 7.7 8.8l1.2 1.2 2.2-2.2V15h1.8V7.8l2.2 2.2 1.2-1.2L12 4.5Zm-5.5 11h11a2 2 0 0 1 2 2v2H4.5v-2a2 2 0 0 1 2-2Z" fill="currentColor"/></svg>`,
+};
+
 export function profileHtml(admin) {
   return `
     <section class="profile-page">
       <article class="profile-hero">
         <div id="coverPanel" class="profile-cover" aria-label="Cover photo">
           <img id="coverImage" class="profile-cover-image" alt="Cover" hidden />
-          <button id="coverAction" class="profile-image-action" type="button" aria-label="Change cover photo" title="Change cover photo">📷</button>
+          <button id="coverAction" class="profile-image-action" type="button" aria-label="Change cover photo" title="Change cover photo">${PROFILE_ICONS.camera}</button>
         </div>
         <div class="profile-head">
           <div id="avatarPanel" class="profile-avatar-wrap" aria-label="Profile photo">
             <img id="avatarImage" class="profile-avatar-image" alt="Profile" hidden />
             <span id="avatarFallback" class="profile-avatar-fallback">${(admin?.name || "A").slice(0, 2).toUpperCase()}</span>
-            <button id="avatarAction" class="profile-image-action profile-image-action-avatar" type="button" aria-label="Change profile photo" title="Change profile photo">📷</button>
+            <button id="avatarAction" class="profile-image-action profile-image-action-avatar" type="button" aria-label="Change profile photo" title="Change profile photo">${PROFILE_ICONS.camera}</button>
           </div>
           <div class="profile-title">
             <h1>${admin?.name || "Administrator"}</h1>
@@ -49,7 +54,7 @@ export function profileHtml(admin) {
         <h3 id="imageModalTitle">Upload image</h3>
         <img id="imageModalPreview" class="profile-modal-preview" alt="Current image" hidden />
         <p id="imageModalEmpty">No image uploaded.</p>
-        <label class="profile-upload-input">📤 Upload / change picture<input id="imageUploadInput" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+        <label class="profile-upload-input">${PROFILE_ICONS.upload}<span>Upload / change picture</span><input id="imageUploadInput" type="file" accept="image/png,image/jpeg,image/webp" /></label>
         <div id="uploadProgressWrap" class="profile-upload-progress" hidden>
           <p id="uploadProgressText">Preparing upload…</p>
           <progress id="uploadProgressBar" max="100" value="0"></progress>
