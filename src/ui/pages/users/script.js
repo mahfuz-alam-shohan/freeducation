@@ -12,6 +12,9 @@ let allUsers = [];
 const showMessage = (message, isError = false) => {
   usersMsg.textContent = message;
   usersMsg.style.color = isError ? '#ff9ca1' : '';
+  if (typeof window.__showAppStatus === 'function' && message) {
+    window.__showAppStatus(message, isError ? 'error' : 'success');
+  }
 };
 
 const normalize = (value) => String(value || '').toLowerCase();
@@ -39,6 +42,7 @@ const renderRows = () => {
 };
 
 const renderUsers = async () => {
+  usersTableBody.innerHTML = '<tr><td colspan="4">Loading users...</td></tr>';
   const response = await fetch('/api/admin/users');
   const data = await response.json();
   allUsers = Array.isArray(data.users) ? data.users : [];
@@ -66,7 +70,8 @@ userSearch.addEventListener('input', renderRows);
 
 addUserForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  showMessage('Saving...');
+  showMessage('Saving user...');
+  addUserForm.classList.add('is-submitting');
 
   const submitBtn = addUserForm.querySelector('button[type="submit"],button:not([type])');
   if (submitBtn) {
@@ -88,7 +93,7 @@ addUserForm.addEventListener('submit', async (event) => {
       return;
     }
 
-    showMessage('User added.');
+    showMessage('User added successfully.');
     addUserForm.reset();
     await renderUsers();
     setPanelOpen(false);
@@ -99,6 +104,7 @@ addUserForm.addEventListener('submit', async (event) => {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Add user';
     }
+    addUserForm.classList.remove('is-submitting');
   }
 });
 
