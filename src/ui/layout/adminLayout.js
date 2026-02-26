@@ -36,7 +36,8 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .admin-sidebar-close{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:background .2s ease}
 .admin-nav{display:grid;gap:4px;align-content:start}
-.admin-nav a{padding:8px 10px;border-radius:8px;color:var(--text-muted);display:flex;align-items:center;gap:8px;transition:background .2s ease,color .2s ease}
+.admin-nav a{padding:8px 10px;border-radius:8px;color:var(--text-muted);display:flex;align-items:center;gap:8px;transition:background .2s ease,color .2s ease,transform .24s ease,opacity .24s ease;opacity:.92}
+.admin-nav a:nth-child(1){--menu-delay:40ms}.admin-nav a:nth-child(2){--menu-delay:90ms}.admin-nav a:nth-child(3){--menu-delay:140ms}.admin-nav a:nth-child(4){--menu-delay:190ms}.admin-nav a:nth-child(5){--menu-delay:240ms}
 .admin-nav a.active,.admin-nav a:hover{background:var(--surface);color:var(--text)}
 .admin-theme-wrap{border-top:1px solid var(--border);padding-top:10px}
 .admin-theme-toggle{width:100%;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:.86rem;font-weight:600;letter-spacing:.02em;transition:background .2s ease}
@@ -53,9 +54,11 @@ body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-e
 body.menu-open{overflow:hidden}
 body.menu-open .admin-nav-overlay{opacity:1;visibility:visible}
 body.menu-open .admin-sidebar{transform:translateX(0);box-shadow:10px 0 30px rgba(0,0,0,.28)}
+body.menu-open .admin-nav a{animation:menu-item-in .34s ease both;animation-delay:var(--menu-delay,0ms)}
 body.app-navigating .admin-content{opacity:.6}
 .admin-logout:focus-visible,.admin-nav a:focus-visible,.admin-menu-toggle:focus-visible,.admin-sidebar-close:focus-visible,.admin-avatar:focus-visible,.admin-profile-logout:focus-visible,.admin-theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 @keyframes section-in{from{opacity:0}to{opacity:1}}
+@keyframes menu-item-in{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 @media (prefers-reduced-motion:reduce){.admin-menu-toggle,.admin-avatar,.admin-nav-overlay,.admin-sidebar,.admin-nav a,.admin-profile-pop,.admin-content{animation:none;transition:none}}
 @media (min-width:900px){
   .admin-shell{grid-template-columns:236px minmax(0,1fr);grid-template-rows:auto 1fr auto}
@@ -66,7 +69,9 @@ body.app-navigating .admin-content{opacity:.6}
   .admin-footer{grid-column:1 / -1;padding:8px 12px}
   .admin-menu-toggle,.admin-sidebar-close{display:none}
   .admin-nav-overlay{display:none}
-  .admin-sidebar{position:sticky;top:62px;align-self:start;transform:none;height:calc(100vh - 62px);width:236px}
+  .admin-sidebar{position:sticky;top:62px;align-self:start;transform:none;height:calc(100vh - 62px);width:236px;animation:desktop-sidebar-in .45s ease both}
+  .admin-sidebar .admin-nav a{animation:menu-item-in .36s ease both;animation-delay:var(--menu-delay,0ms)}
+  @keyframes desktop-sidebar-in{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
 }
 `;
 
@@ -154,22 +159,21 @@ const ADMIN_LAYOUT_SCRIPT = `
 
   const setNavigating = () => body.classList.add('app-navigating');
 
-  document.querySelectorAll('a[href]').forEach((anchor) => {
-    anchor.addEventListener('click', () => {
-      const href = anchor.getAttribute('href') || '';
-      if (!href || href.startsWith('#') || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
-      setNavigating();
-    });
-  });
-
   document.querySelectorAll('form').forEach((form) => {
     form.addEventListener('submit', setNavigating);
   });
 
-  window.addEventListener('pageshow', () => {
-    body.classList.remove('app-navigating');
-    body.classList.remove('profile-open');
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    if (!href || href.startsWith('#') || link.target === '_blank' || link.hasAttribute('download')) return;
+    setMenu(false);
+    setProfile(false);
   });
+
+  body.classList.remove('app-navigating');
+  body.classList.remove('profile-open');
 })();
 `;
 
@@ -187,8 +191,10 @@ export function renderAdminLayout({ title, activeMenu, admin, content, script = 
   return renderDocument({
     title,
     bodyClass: pageClass,
-    pageStyles: `${ADMIN_BASE_STYLE}\n${pageStyles}`,
+    pageStyles: `${ADMIN_BASE_STYLE}
+${pageStyles}`,
     body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><div class="admin-brand admin-brand-signature" data-brand="${APP_NAME}">${APP_NAME}</div></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog">${initials}</button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" aria-pressed="false"><span>Theme</span><span id="themeToggleText">Use light theme</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer></div>`,
-    script: `${ADMIN_LAYOUT_SCRIPT}\n${script}`,
+    script: `${ADMIN_LAYOUT_SCRIPT}
+${script}`,
   });
 }

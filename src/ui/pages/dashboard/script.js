@@ -16,6 +16,6 @@ fetch('/api/admin/overview')
 document.getElementById('logout').onclick=async()=>{
   document.body.classList.add('app-navigating');
   await fetch('/api/logout',{method:'POST'});
-  location.href='/admin/login';
+  if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href='/admin/login'; }
 };
 `;

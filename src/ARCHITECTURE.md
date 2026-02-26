@@ -32,6 +32,13 @@ Current pages:
 - `src/ui/layout/adminLayout.js`: admin shell (header/sidebar/footer).
 - `src/ui/config/navigation.js`: admin menu metadata.
 
+
+## Navigation behavior contract
+
+- Internal page transitions must stay in-app (no full document refresh) by using the shared navigation helpers in `src/ui/layout/document.js`.
+- For scripted redirects, prefer `window.__appNavigate('/path')` and only fall back to `location.href` when the helper is unavailable.
+- UI updates should be data-driven (fetch + DOM update) rather than forcing page reloads.
+
 ## Rules for future contributors
 
 1. Never put multiple pages in one file.
@@ -40,3 +47,4 @@ Current pages:
 4. Keep mobile-first behavior by default and only enhance at larger breakpoints.
 5. Keep schema/table changes fully code-driven.
 6. For a small page change, edit only that page folder unless a shared layout contract truly changes.
+7. Do not introduce full-page refreshes for internal navigation or routine UI changes.
