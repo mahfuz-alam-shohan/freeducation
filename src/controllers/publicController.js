@@ -18,9 +18,21 @@ export async function setupFirstAdmin(request, env, hasAdmin) {
     throw new HttpError(409, "Email already in use");
   }
 
-  const { hash, salt } = await hashPassword(body.password);
+  let hash;
+  let salt;
   try {
-    await createAdmin(env.DB, { name: body.name, email: body.email, hash, salt });
+    const passwordData = await hashPassword(String(body.password || ""));
+    hash = passwordData.hash;
+    salt = passwordData.salt;
+  } catch (error) {
+    throw new HttpError(500, "Unable to secure password", {
+      code: "PASSWORD_HASH_FAILED",
+      detail: String(error?.message || error),
+    });
+  }
+
+  try {
+    await createAdmin(env.DB, { name: body.name, email: normalizeEmail(body.email), hash, salt });
   } catch (error) {
     throw mapDatabaseError(error, "Unable to create administrator");
   }
