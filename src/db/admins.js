@@ -1,5 +1,5 @@
 export async function getAdminCount(db) {
-  const row = await db.prepare("SELECT COUNT(*) AS total FROM freeducation_admins").first();
+  const row = await db.prepare("SELECT COUNT(*) AS total FROM freeducation_admins WHERE user_type = 'Administrator'").first();
   return Number(row?.total || 0);
 }
 
@@ -11,12 +11,12 @@ export async function findAdminById(db, id) {
   return db.prepare("SELECT id, name, email, user_type, date_of_birth, gender, avatar_key, cover_key, created_at FROM freeducation_admins WHERE id = ?1").bind(id).first();
 }
 
-export async function createAdmin(db, { name, email, hash, salt }) {
+export async function createAdmin(db, { name, email, hash, salt, userType = "Administrator" }) {
   const now = new Date().toISOString();
   await db.prepare(
-    `INSERT INTO freeducation_admins (name, email, password_hash, password_salt, created_at, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?5)`,
-  ).bind(name.trim(), email.toLowerCase(), hash, salt, now).run();
+    `INSERT INTO freeducation_admins (name, email, password_hash, password_salt, user_type, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)`,
+  ).bind(name.trim(), email.toLowerCase(), hash, salt, userType, now).run();
 }
 
 export async function listAdmins(db) {

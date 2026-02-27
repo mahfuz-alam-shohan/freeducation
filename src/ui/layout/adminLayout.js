@@ -1,5 +1,6 @@
 import { APP_NAME } from "../../config.js";
 import { ADMIN_NAV_ITEMS } from "../config/navigation.js";
+import { globalFooterText } from "./footer.js";
 import { renderDocument } from "./document.js";
 
 const ADMIN_BASE_STYLE = `
@@ -217,9 +218,10 @@ const ADMIN_LAYOUT_SCRIPT = `
   }, { signal });
 
   if (brandHome) {
+    const homeHref = brandHome.dataset.home || '/admin/dashboard';
     brandHome.addEventListener('click', () => {
-      if (window.__appNavigate) window.__appNavigate('/admin/dashboard');
-      else window.location.href = '/admin/dashboard';
+      if (window.__appNavigate) window.__appNavigate(homeHref);
+      else window.location.href = homeHref;
     }, { signal });
   }
 
@@ -354,8 +356,8 @@ const initialsFor = (name = "") => {
   return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
 };
 
-export function renderAdminLayout({ title, activeMenu, admin, content, script = "", footerText = "Free education admin panel.", pageClass = "", pageStyles = "" }) {
-  const nav = `<nav class="admin-nav">${ADMIN_NAV_ITEMS.map((item) => `<a class="${activeMenu === item.key ? "active" : ""}" href="${item.href}">${item.icon}${item.label}</a>`).join("")}</nav>`;
+export function renderAdminLayout({ title, activeMenu, admin, content, script = "", footerText = globalFooterText(), homePath = "/admin/dashboard", navItems = ADMIN_NAV_ITEMS, pageClass = "", pageStyles = "" }) {
+  const nav = `<nav class="admin-nav">${navItems.map((item) => `<a class="${activeMenu === item.key ? "active" : ""}" href="${item.href}">${item.icon}${item.label}</a>`).join("")}</nav>`;
   const initials = initialsFor(admin?.name);
   const avatarVersion = String(admin?.avatar_key || '').trim();
 
@@ -364,7 +366,7 @@ export function renderAdminLayout({ title, activeMenu, admin, content, script = 
     bodyClass: pageClass,
     pageStyles: `${ADMIN_BASE_STYLE}
 ${pageStyles}`,
-    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to dashboard" data-brand="${APP_NAME}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog" aria-busy="false"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${initials}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" aria-pressed="false"><span>Theme</span><span id="themeToggleText">Use light theme</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
+    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to dashboard" data-brand="${APP_NAME}" data-home="${homePath}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog" aria-busy="false"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${initials}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" aria-pressed="false"><span>Theme</span><span id="themeToggleText">Use light theme</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
     script: `${ADMIN_LAYOUT_SCRIPT}
 ${script}`,
   });

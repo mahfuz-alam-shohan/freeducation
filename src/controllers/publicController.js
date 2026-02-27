@@ -5,6 +5,7 @@ import { createAdmin, findAdminByEmail } from "../db/admins.js";
 import { hashPassword, verifyPassword } from "../security/password.js";
 import { createSession } from "../db/admins.js";
 import { createToken, sessionCookie, tokenHash } from "../security/session.js";
+import { dashboardPathForRole } from "../core/roles.js";
 
 export async function setupFirstAdmin(request, env, hasAdmin) {
   if (hasAdmin) throw new HttpError(403, "Initial setup already completed");
@@ -62,6 +63,7 @@ export async function loginAdmin(request, env, hasAdmin) {
   return {
     ok: true,
     status: 200,
+    redirectTo: dashboardPathForRole(admin.user_type),
     headers: { "set-cookie": sessionCookie(token, expiresAt) },
   };
 }

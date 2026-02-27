@@ -10,7 +10,8 @@ loginForm.addEventListener('submit',async(e)=>{
     const j=await r.json();
     if(!r.ok){loginMsg.textContent=j.error||'Request failed';return;}
     loginMsg.textContent='Login successful. Redirecting...';
-    setTimeout(()=>{ if (window.__appNavigate) { window.__appNavigate('/admin/dashboard'); } else { location.href='/admin/dashboard'; } },240);
+    const redirectTo=typeof j.redirectTo==='string'&&j.redirectTo?j.redirectTo:'/admin/dashboard';
+    setTimeout(()=>{ if (window.__appNavigate) { window.__appNavigate(redirectTo); } else { location.href=redirectTo; } },240);
   }finally{
     if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Login';}
   }
