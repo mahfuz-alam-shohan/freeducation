@@ -38,7 +38,7 @@ export const USERS_STYLE = `
 .users-form{display:grid;gap:8px;max-width:500px;position:relative;width:min(100%,var(--page-form-max,560px))}
 .users-form.is-submitting::after,.users-delete-dialog.is-submitting .users-delete-surface::after{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 22%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
 .users-form label{display:grid;gap:4px;color:var(--text-muted);font-size:.85rem}
-.users-form input{height:36px;font-size:16px;background:var(--surface-soft);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 10px;transition:border-color .2s ease,box-shadow .2s ease}
+.users-form input,.users-form select{height:36px;font-size:16px;background:var(--surface-soft);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 10px;transition:border-color .2s ease,box-shadow .2s ease}
 .users-form button{background:var(--accent);color:var(--accent-ink)}
 .users-delete-dialog{position:fixed;inset:0;background:color-mix(in srgb,var(--overlay) 92%,transparent);display:grid;place-items:end center;padding:12px;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s step-end;z-index:70}
 .users-delete-dialog.is-open{opacity:1;visibility:visible;transition:opacity .2s ease}
@@ -48,7 +48,7 @@ export const USERS_STYLE = `
 .users-delete-text{margin:0;color:var(--text-muted);font-size:.84rem}
 .users-delete-target{margin:0;font-size:.88rem}
 .users-delete-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-.users-form input:focus-visible,.users-form button:focus-visible,.users-primary:focus-visible,.users-search:focus-visible,.users-danger:focus-visible,.users-secondary:focus-visible,.users-delete-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.users-form input:focus-visible,.users-form select:focus-visible,.users-form button:focus-visible,.users-primary:focus-visible,.users-search:focus-visible,.users-danger:focus-visible,.users-secondary:focus-visible,.users-delete-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .users-msg{margin:0;color:var(--text-muted);min-height:20px;font-size:.82rem}
 @media (max-width:700px){.users-card{padding:8px}.users-panel.is-open{max-height:420px}.users-table{min-width:640px}.users-delete-dialog{place-items:end stretch}}
 @keyframes section-in{from{opacity:0;transform:translateY(8px);filter:blur(1.5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}

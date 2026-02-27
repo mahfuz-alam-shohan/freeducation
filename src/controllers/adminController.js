@@ -3,6 +3,7 @@ import { validateAdminPayload, validateProfileFieldUpdate } from "../core/valida
 import { HttpError, mapDatabaseError } from "../core/errors.js";
 import { createAdmin, deleteAdminById, findAdminByEmail, findAdminById, listAdmins, updateAdminImageKey, updateAdminPassword, updateAdminProfileField } from "../db/admins.js";
 import { hashPassword, verifyPassword } from "../security/password.js";
+import { USER_TYPES } from "../core/roles.js";
 
 export async function overview(env) {
   const users = await listAdmins(env.DB);
@@ -28,7 +29,7 @@ export async function createAdminUser(request, env) {
 
   const { hash, salt } = await hashPassword(body.password);
   try {
-    await createAdmin(env.DB, { name: body.name, email: body.email, hash, salt });
+    await createAdmin(env.DB, { name: body.name, email: body.email, hash, salt, userType: body.user_type || USER_TYPES.ADMINISTRATOR });
   } catch (error) {
     throw mapDatabaseError(error, "Unable to create administrator");
   }
@@ -46,7 +47,10 @@ export async function deleteAdminUser(userId, env, currentAdminId) {
   const users = await listAdmins(env.DB);
   const target = users.find((user) => Number(user.id) === id);
   if (!target) throw new HttpError(404, "User not found");
-  if (users.length <= 1) throw new HttpError(409, "At least one administrator must remain");
+  const adminUsers = users.filter((user) => user.user_type === USER_TYPES.ADMINISTRATOR);
+  if (target.user_type === USER_TYPES.ADMINISTRATOR && adminUsers.length <= 1) {
+    throw new HttpError(409, "At least one administrator must remain");
+  }
 
   try {
     await deleteAdminById(env.DB, id);

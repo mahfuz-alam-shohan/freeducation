@@ -27,13 +27,13 @@ export async function handlePublicRoute(request, env, url, hasAdmin) {
     const contentType = String(request.headers.get("content-type") || "").toLowerCase();
     const wantsHtml = contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data");
     if (wantsHtml) {
-      const response = redirect(new URL("/admin/dashboard", url), 303);
+      const response = redirect(new URL(result.redirectTo || "/admin/dashboard", url), 303);
       for (const [header, value] of Object.entries(result.headers || {})) {
         response.headers.set(header, value);
       }
       return response;
     }
-    return json({ ok: result.ok }, result.status || 200, result.headers || {});
+    return json({ ok: result.ok, redirectTo: result.redirectTo || "/admin/dashboard" }, result.status || 200, result.headers || {});
   }
 
   return null;

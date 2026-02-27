@@ -89,7 +89,7 @@ export default {
       const adminResponse = await handleAdminRoute(request, env, url);
       if (adminResponse !== undefined && adminResponse !== null) return adminResponse;
 
-      if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/api/admin")) {
+      if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/teacher") || url.pathname.startsWith("/student") || url.pathname.startsWith("/api/admin")) {
         return redirect(new URL("/admin/login", url), 302);
       }
 
