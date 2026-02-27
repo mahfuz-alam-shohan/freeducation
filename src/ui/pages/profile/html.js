@@ -22,10 +22,33 @@ export function profileHtml(admin) {
             <div class="profile-loader-shimmer profile-loader-shimmer-tab"></div>
             <div class="profile-loader-shimmer profile-loader-shimmer-tab"></div>
           </div>
-          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
-          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
-          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
-          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+          <div class="profile-loader-about-rows" aria-hidden="true">
+            <div class="profile-loader-about-row">
+              <div class="profile-loader-shimmer profile-loader-shimmer-label"></div>
+              <div class="profile-loader-shimmer profile-loader-shimmer-value"></div>
+            </div>
+            <div class="profile-loader-about-row">
+              <div class="profile-loader-shimmer profile-loader-shimmer-label"></div>
+              <div class="profile-loader-shimmer profile-loader-shimmer-value"></div>
+            </div>
+            <div class="profile-loader-about-row">
+              <div class="profile-loader-shimmer profile-loader-shimmer-label"></div>
+              <div class="profile-loader-shimmer profile-loader-shimmer-value"></div>
+            </div>
+            <div class="profile-loader-about-row">
+              <div class="profile-loader-shimmer profile-loader-shimmer-label"></div>
+              <div class="profile-loader-shimmer profile-loader-shimmer-value"></div>
+            </div>
+            <div class="profile-loader-about-row">
+              <div class="profile-loader-shimmer profile-loader-shimmer-label"></div>
+              <div class="profile-loader-shimmer profile-loader-shimmer-value"></div>
+            </div>
+          </div>
+          <div class="profile-loader-security" aria-hidden="true">
+            <div class="profile-loader-shimmer profile-loader-shimmer-row profile-loader-shimmer-row-short"></div>
+            <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+            <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+          </div>
         </div>
       </div>
       <article class="profile-hero">
