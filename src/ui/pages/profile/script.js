@@ -165,6 +165,18 @@ const hydrateAboutSection = () => {
   avatarFallback.textContent = (profileState.name || 'A').slice(0, 2).toUpperCase();
 };
 
+const getFieldFormControls = (field, form) => {
+  if (field === 'date_of_birth') {
+    return {
+      dayInput: form.elements.day,
+      monthInput: form.elements.month,
+      yearInput: form.elements.year,
+    };
+  }
+
+  return { valueInput: form.elements.value };
+};
+
 const closeInlineEdit = (field) => {
   const trigger = panelAbout.querySelector('[data-edit-trigger="' + field + '"]');
   const form = panelAbout.querySelector('[data-edit-form="' + field + '"]');
@@ -206,15 +218,17 @@ const openInlineEdit = (field) => {
     editAnimationTimers.delete(field);
   }
 
-  const input = form.elements.value;
-  if (!input) return;
+  const { valueInput, dayInput, monthInput, yearInput } = getFieldFormControls(field, form);
 
   if (field === 'date_of_birth') {
-    input.value = profileState.date_of_birth || '';
-  } else if (field === 'gender') {
-    input.value = profileState.gender && profileState.gender !== '-' ? profileState.gender : 'Prefer not to say';
-  } else {
-    input.value = profileState[field] && profileState[field] !== '-' ? profileState[field] : '';
+    const parts = (profileState.date_of_birth || '').split('-');
+    if (dayInput) dayInput.value = parts[2] ? String(Number(parts[2])) : '';
+    if (monthInput) monthInput.value = parts[1] || '';
+    if (yearInput) yearInput.value = parts[0] || '';
+  } else if (field === 'gender' && valueInput) {
+    valueInput.value = profileState.gender && profileState.gender !== '-' ? profileState.gender : 'Prefer not to say';
+  } else if (valueInput) {
+    valueInput.value = profileState[field] && profileState[field] !== '-' ? profileState[field] : '';
   }
 
   trigger.hidden = true;
@@ -223,8 +237,10 @@ const openInlineEdit = (field) => {
 
   requestAnimationFrame(() => {
     form.classList.add('is-visible');
-    input.focus();
-    if (typeof input.select === 'function' && input.type !== 'date') input.select();
+    const focusTarget = dayInput || valueInput;
+    if (!focusTarget) return;
+    focusTarget.focus();
+    if (typeof focusTarget.select === 'function' && focusTarget.type !== 'date') focusTarget.select();
   });
 
   activeEditField = field;
@@ -236,8 +252,13 @@ const setInlineEditBusy = (busy) => {
     button.disabled = busy;
   });
   editForms.forEach((form) => {
-    const input = form.elements.value;
-    if (input) input.disabled = busy;
+    const field = form.getAttribute('data-edit-form');
+    if (!field) return;
+    const { valueInput, dayInput, monthInput, yearInput } = getFieldFormControls(field, form);
+    if (valueInput) valueInput.disabled = busy;
+    if (dayInput) dayInput.disabled = busy;
+    if (monthInput) monthInput.disabled = busy;
+    if (yearInput) yearInput.disabled = busy;
     const submit = form.querySelector('button[type="submit"]');
     const cancel = form.querySelector('[data-edit-cancel]');
     if (submit) submit.disabled = busy;
@@ -322,9 +343,32 @@ editForms.forEach((form) => {
     if (isSavingInlineEdit) return;
 
     const field = form.getAttribute('data-edit-form');
-    const input = form.elements.value;
-    if (!field || !input) return;
-    await saveInlineEdit(field, String(input.value || '').trim());
+    if (!field) return;
+
+    const { valueInput, dayInput, monthInput, yearInput } = getFieldFormControls(field, form);
+
+    if (field === 'date_of_birth') {
+      const day = String(dayInput?.value || '').trim();
+      const month = String(monthInput?.value || '').trim();
+      const year = String(yearInput?.value || '').trim();
+      if (!day || !month || !year) {
+        showMessage('Enter day, month, and year for date of birth.', { type: 'error', inline: true });
+        return;
+      }
+
+      const dobValue = year.padStart(4, '0') + '-' + month.padStart(2, '0') + '-' + day.padStart(2, '0');
+      const parsedDob = new Date(dobValue);
+      if (Number.isNaN(parsedDob.getTime()) || parsedDob.toISOString().slice(0, 10) !== dobValue) {
+        showMessage('Enter a valid date of birth.', { type: 'error', inline: true });
+        return;
+      }
+
+      await saveInlineEdit(field, dobValue);
+      return;
+    }
+
+    if (!valueInput) return;
+    await saveInlineEdit(field, String(valueInput.value || '').trim());
   }, { signal });
 });
 
