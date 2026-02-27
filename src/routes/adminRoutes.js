@@ -1,8 +1,9 @@
 import { dashboardPage } from "../ui/pages/dashboard/index.js";
 import { usersPage } from "../ui/pages/users/index.js";
 import { profilePage } from "../ui/pages/profile/index.js";
+import { fileManagerPage } from "../ui/pages/file-manager/index.js";
 import { html, json } from "../core/response.js";
-import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminImage, getAdminProfile, listAdminUsers, overview, updateAdminProfile, uploadAdminImage } from "../controllers/adminController.js";
+import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminFileObject, getAdminImage, getAdminProfile, listAdminFiles, listAdminUsers, overview, updateAdminProfile, uploadAdminImage } from "../controllers/adminController.js";
 import { destroySession, getAuthenticatedAdmin } from "../core/auth.js";
 import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
 
@@ -42,6 +43,10 @@ export async function handleAdminRoute(request, env, url) {
     return html(profilePage(admin));
   }
 
+  if (request.method === "GET" && url.pathname === "/admin/file-manager") {
+    return html(fileManagerPage(admin));
+  }
+
   if (request.method === "GET" && url.pathname === "/api/admin/overview") {
     return json(await overview(env));
   }
@@ -57,6 +62,20 @@ export async function handleAdminRoute(request, env, url) {
   if (request.method === "GET" && (url.pathname === "/api/admin/profile/image/avatar" || url.pathname === "/api/admin/profile/image/cover")) {
     const type = url.pathname.endsWith("/avatar") ? "avatar" : "cover";
     return getAdminImage(env, admin.id, type);
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/admin/files") {
+    return json(await listAdminFiles(env, {
+      type: url.searchParams.get("type"),
+      usage: url.searchParams.get("usage"),
+      search: url.searchParams.get("search"),
+      cursor: url.searchParams.get("cursor"),
+      limit: url.searchParams.get("limit"),
+    }));
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/admin/files/object") {
+    return getAdminFileObject(env, url.searchParams.get("key"));
   }
 
   if (request.method === "POST" && url.pathname === "/api/admin/users") {
