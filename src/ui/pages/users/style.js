@@ -1,13 +1,13 @@
 export const USERS_STYLE = `
-.users-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;display:grid;gap:8px;animation:section-in .28s ease both}
+.users-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;display:grid;gap:8px;animation:section-in .34s cubic-bezier(.22,.61,.36,1) both}
 .users-layout{overflow:hidden}
 .users-card.is-loading .users-table-wrap{position:relative}
 .users-card.is-loading .users-table-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 16%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
 .users-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .users-toolbar h2{margin:0;font-size:1rem}
-.users-primary,.users-form button,.users-secondary,.users-danger,.users-delete-btn{height:34px;font-size:.86rem;border-radius:8px;padding:0 10px;cursor:pointer;font-weight:600;border:1px solid var(--border)}
-.users-primary{background:var(--accent);color:var(--accent-ink);transition:filter .2s ease}
-.users-primary:hover{filter:brightness(1.03)}
+.users-primary,.users-form button,.users-secondary,.users-danger,.users-delete-btn{height:34px;font-size:.86rem;border-radius:8px;padding:0 10px;cursor:pointer;font-weight:600;border:1px solid var(--border);transition:transform .28s cubic-bezier(.22,.82,.31,1),filter .22s ease,background .22s ease}
+.users-primary{background:var(--accent);color:var(--accent-ink)}
+.users-primary:hover,.users-form button:hover{filter:brightness(1.03);transform:translateY(-1px)}
 .users-secondary{background:var(--surface);color:var(--text)}
 .users-danger{background:color-mix(in srgb,#cb434a 78%,var(--surface));border-color:color-mix(in srgb,#cb434a 52%,var(--border));color:#fff5f6}
 .users-danger:hover,.users-delete-btn:hover{filter:brightness(1.04)}
@@ -21,8 +21,8 @@ export const USERS_STYLE = `
 .users-toggle.is-open .users-toggle-icon{opacity:1;transform:scale(1)}
 .users-toggle.is-open .users-toggle-icon::before{transform:translate(-50%,-50%) rotate(45deg)}
 .users-toggle.is-open .users-toggle-icon::after{transform:translate(-50%,-50%) rotate(-45deg)}
-.users-panel{display:grid;gap:8px;border:1px solid var(--border);border-radius:8px;padding:0 8px;max-height:0;opacity:0;overflow:hidden;transition:max-height .28s ease,opacity .2s ease,padding .2s ease}
-.users-panel.is-open{max-height:340px;opacity:1;padding:8px}
+.users-panel{display:grid;gap:8px;border:1px solid var(--border);border-radius:8px;padding:0 8px;max-height:0;opacity:0;overflow:hidden;transform:translateY(-3px);transition:max-height .34s cubic-bezier(.22,.82,.31,1),opacity .24s ease,padding .2s ease,transform .34s cubic-bezier(.22,.82,.31,1)}
+.users-panel.is-open{max-height:340px;opacity:1;padding:8px;transform:translateY(0)}
 .users-panel-title{margin:0;font-size:.95rem}
 .users-search-wrap{display:grid;gap:4px}
 .users-search-label{font-size:.83rem;color:var(--text-muted)}
@@ -39,11 +39,10 @@ export const USERS_STYLE = `
 .users-form.is-submitting::after,.users-delete-dialog.is-submitting .users-delete-surface::after{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 22%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
 .users-form label{display:grid;gap:4px;color:var(--text-muted);font-size:.85rem}
 .users-form input{height:36px;font-size:16px;background:var(--surface-soft);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 10px;transition:border-color .2s ease,box-shadow .2s ease}
-.users-form button{background:var(--accent);color:var(--accent-ink);transition:filter .2s ease}
-.users-form button:hover{filter:brightness(1.03)}
+.users-form button{background:var(--accent);color:var(--accent-ink)}
 .users-delete-dialog{position:fixed;inset:0;background:color-mix(in srgb,var(--overlay) 92%,transparent);display:grid;place-items:end center;padding:12px;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s step-end;z-index:70}
 .users-delete-dialog.is-open{opacity:1;visibility:visible;transition:opacity .2s ease}
-.users-delete-surface{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:min(460px,100%);padding:10px;display:grid;gap:8px;transform:translateY(8px) scale(.98);opacity:.9;transition:transform .25s ease,opacity .2s ease}
+.users-delete-surface{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:min(460px,100%);padding:10px;display:grid;gap:8px;transform:translateY(10px) scale(.97);opacity:.86;transition:transform .34s cubic-bezier(.22,.82,.31,1),opacity .24s ease}
 .users-delete-dialog.is-open .users-delete-surface{transform:translateY(0) scale(1);opacity:1}
 .users-delete-title{margin:0;font-size:.98rem}
 .users-delete-text{margin:0;color:var(--text-muted);font-size:.84rem}
@@ -52,6 +51,6 @@ export const USERS_STYLE = `
 .users-form input:focus-visible,.users-form button:focus-visible,.users-primary:focus-visible,.users-search:focus-visible,.users-danger:focus-visible,.users-secondary:focus-visible,.users-delete-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .users-msg{margin:0;color:var(--text-muted);min-height:20px;font-size:.82rem}
 @media (max-width:700px){.users-card{padding:8px}.users-panel.is-open{max-height:420px}.users-table{min-width:640px}.users-delete-dialog{place-items:end stretch}}
-@keyframes section-in{from{opacity:0}to{opacity:1}}
+@keyframes section-in{from{opacity:0;transform:translateY(8px);filter:blur(1.5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @keyframes user-submit-pulse{0%{transform:translateX(-80%)}100%{transform:translateX(90%)}}
 `;
