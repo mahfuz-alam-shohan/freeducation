@@ -5,9 +5,19 @@ export const PROFILE_STYLE = `
 .profile-page.is-loading .profile-page-loader{opacity:1;pointer-events:auto}
 .profile-loader-shimmer{position:relative;overflow:hidden;background:color-mix(in srgb,var(--surface-soft) 74%,var(--surface));border:1px solid var(--border);border-radius:10px}
 .profile-loader-shimmer::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 22%,transparent),transparent);animation:profileShimmer 1s linear infinite}
-.profile-loader-shimmer-cover{height:210px}
-.profile-loader-shimmer-avatar{width:108px;height:108px;border-radius:50%;margin-top:-56px;margin-left:12px}
-.profile-loader-shimmer-line{height:74px}
+.profile-loader-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px}
+.profile-loader-block-hero{padding:0;overflow:hidden}
+.profile-loader-shimmer-cover{height:210px;border:none;border-radius:0}
+.profile-loader-head{display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px}
+.profile-loader-shimmer-avatar{width:108px;height:108px;border-radius:50%}
+.profile-loader-lines{display:grid;gap:8px;padding-bottom:8px;flex:1}
+.profile-loader-shimmer-line{height:14px;border-radius:6px}
+.profile-loader-shimmer-line-title{max-width:170px}
+.profile-loader-shimmer-line-subtitle{max-width:120px}
+.profile-loader-block-tabs{display:grid;gap:8px}
+.profile-loader-tabs-row{display:flex;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.profile-loader-shimmer-tab{height:30px;width:94px;border-radius:8px}
+.profile-loader-shimmer-row{height:34px;border-radius:8px}
 .profile-hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .32s ease}
 .profile-cover{position:relative;height:210px;background:var(--surface-soft)}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -26,12 +36,15 @@ export const PROFILE_STYLE = `
 .profile-title h1{margin:0;font-size:1.3rem}
 .profile-title p{margin:2px 0 0;color:var(--text-muted)}
 .profile-tabs-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;animation:fadeUp .4s ease}
-.profile-tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px}
-.profile-tab{border:1px solid var(--border);background:var(--surface-soft);padding:5px 10px;border-radius:6px;cursor:pointer}
-.profile-tab.is-active{background:color-mix(in srgb,var(--accent) 30%,var(--surface-soft));border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
-.profile-panel{display:none;animation:slideIn .28s ease}
+.profile-tabs{position:relative;display:flex;gap:2px;border-bottom:1px solid var(--border);padding-bottom:0;margin-bottom:8px}
+.profile-tab{position:relative;z-index:2;border:none;background:transparent;color:var(--text-muted);padding:7px 10px 9px;border-radius:0;cursor:pointer;font-weight:600;transition:color .18s ease}
+.profile-tab:hover{color:var(--text)}
+.profile-tab.is-active{color:var(--text)}
+.profile-tab-indicator{position:absolute;left:0;bottom:-1px;height:2px;width:50%;background:var(--accent);border-radius:999px;transform:translateX(calc(var(--tab-index,0) * 100%));transition:transform .22s cubic-bezier(.22,.61,.36,1)}
+.profile-panel{display:none;animation:panelIn .26s cubic-bezier(.22,.61,.36,1)}
 .profile-panel.is-active{display:block}
 .profile-panel[hidden]{display:none!important}
+.profile-panel.is-leaving{display:block;animation:panelOut .16s ease forwards}
 .profile-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
 .profile-row:last-child{border-bottom:0}
 .profile-row span{color:var(--text-muted)}
@@ -56,6 +69,7 @@ export const PROFILE_STYLE = `
 .profile-modal-actions{display:flex;justify-content:flex-end;gap:6px}
 .profile-big-preview{width:100%;max-height:72vh;object-fit:contain;background:var(--surface-strong);border-radius:8px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-@keyframes slideIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes panelIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
 @keyframes profileShimmer{100%{transform:translateX(100%)}}
 `;

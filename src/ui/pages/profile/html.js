@@ -7,9 +7,26 @@ export function profileHtml(admin) {
   return `
     <section class="profile-page">
       <div id="profilePageLoader" class="profile-page-loader" role="status" aria-live="polite" aria-label="Loading profile" aria-busy="true">
-        <div class="profile-loader-shimmer profile-loader-shimmer-cover"></div>
-        <div class="profile-loader-shimmer profile-loader-shimmer-avatar"></div>
-        <div class="profile-loader-shimmer profile-loader-shimmer-line"></div>
+        <div class="profile-loader-block profile-loader-block-hero">
+          <div class="profile-loader-shimmer profile-loader-shimmer-cover"></div>
+          <div class="profile-loader-head">
+            <div class="profile-loader-shimmer profile-loader-shimmer-avatar"></div>
+            <div class="profile-loader-lines">
+              <div class="profile-loader-shimmer profile-loader-shimmer-line profile-loader-shimmer-line-title"></div>
+              <div class="profile-loader-shimmer profile-loader-shimmer-line profile-loader-shimmer-line-subtitle"></div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-loader-block profile-loader-block-tabs">
+          <div class="profile-loader-tabs-row">
+            <div class="profile-loader-shimmer profile-loader-shimmer-tab"></div>
+            <div class="profile-loader-shimmer profile-loader-shimmer-tab"></div>
+          </div>
+          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+          <div class="profile-loader-shimmer profile-loader-shimmer-row"></div>
+        </div>
       </div>
       <article class="profile-hero">
         <div id="coverPanel" class="profile-cover" aria-label="Cover photo">
@@ -33,6 +50,7 @@ export function profileHtml(admin) {
         <div class="profile-tabs" role="tablist" aria-label="Profile tabs">
           <button id="tabAbout" class="profile-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panelAbout">About me</button>
           <button id="tabSecurity" class="profile-tab" type="button" role="tab" aria-selected="false" aria-controls="panelSecurity">Security</button>
+          <span id="profileTabIndicator" class="profile-tab-indicator" aria-hidden="true"></span>
         </div>
 
         <section id="panelAbout" class="profile-panel is-active" role="tabpanel" aria-labelledby="tabAbout">
