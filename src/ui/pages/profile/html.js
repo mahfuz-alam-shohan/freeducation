@@ -91,7 +91,7 @@ export function profileHtml(admin) {
             <div class="profile-inline-edit">
               <strong id="aboutName">-</strong>
               <button class="profile-edit-trigger" type="button" data-edit-trigger="name" aria-label="Edit name" title="Edit name">${PROFILE_ICONS.edit}</button>
-              <form class="profile-edit-form" data-edit-form="name" hidden>
+              <form class="profile-edit-form profile-edit-form-compact" data-edit-form="name" hidden>
                 <input type="text" name="value" minlength="2" maxlength="120" required />
                 <button type="submit">Save</button>
                 <button type="button" data-edit-cancel="name">Cancel</button>
@@ -134,7 +134,7 @@ export function profileHtml(admin) {
             <div class="profile-inline-edit">
               <strong id="aboutGender">-</strong>
               <button class="profile-edit-trigger" type="button" data-edit-trigger="gender" aria-label="Edit gender" title="Edit gender">${PROFILE_ICONS.edit}</button>
-              <form class="profile-edit-form" data-edit-form="gender" hidden>
+              <form class="profile-edit-form profile-edit-form-compact" data-edit-form="gender" hidden>
                 <select name="value" required>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
