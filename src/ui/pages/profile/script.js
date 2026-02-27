@@ -139,7 +139,7 @@ const switchTab = (showAbout) => {
     outgoingPanel.hidden = true;
     outgoingPanel.classList.remove('is-leaving');
     tabSwitchTimer = null;
-  }, 150);
+  }, 280);
 
   if (showAbout) {
     passwordForm.hidden = true;
@@ -198,7 +198,7 @@ const closeInlineEdit = (field) => {
     trigger.hidden = false;
     row.classList.remove('is-editing');
     editAnimationTimers.delete(field);
-  }, 220);
+  }, 380);
   editAnimationTimers.set(field, hideTimer);
 
   if (activeEditField === field) activeEditField = null;
@@ -414,7 +414,7 @@ const closeImagePreview = () => {
     imageViewModal.classList.remove('is-closing');
     imageViewModal.close();
     imageModalCloseTimer = null;
-  }, 260);
+  }, 460);
 };
 
 const closeImageMenu = (animated = true) => {
@@ -437,7 +437,7 @@ const closeImageMenu = (animated = true) => {
     imageActionMenu.hidden = true;
     imageActionMenu.classList.remove('is-closing');
     imageMenuCloseTimer = null;
-  }, 230);
+  }, 400);
 };
 
 const openImageMenu = (imageType, anchor) => {
@@ -586,7 +586,7 @@ imageUploadInput.addEventListener('change', async (event) => {
     window.setTimeout(() => {
       closeImageMenu();
       resetUploadUi();
-    }, 280);
+    }, 480);
   } catch (error) {
     if (error?.name === 'AbortError') return;
     showMessage(error?.message || 'Unable to upload image', { type: 'error', inline: true });
