@@ -1,6 +1,5 @@
 const PROFILE_ICONS = {
   camera: `<svg viewBox="0 0 24 24" class="profile-inline-icon" aria-hidden="true" focusable="false"><path d="M7.5 6.5h2.1l1-1.5h2.8l1 1.5h2.1A2.5 2.5 0 0 1 19 9v8a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 17V9a2.5 2.5 0 0 1 2.5-2.5Zm4.5 3.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 1.7a2.1 2.1 0 1 1 0 4.2 2.1 2.1 0 0 1 0-4.2Z" fill="currentColor"/></svg>`,
-  upload: `<svg viewBox="0 0 24 24" class="profile-inline-icon" aria-hidden="true" focusable="false"><path d="M12 4.5 7.7 8.8l1.2 1.2 2.2-2.2V15h1.8V7.8l2.2 2.2 1.2-1.2L12 4.5Zm-5.5 11h11a2 2 0 0 1 2 2v2H4.5v-2a2 2 0 0 1 2-2Z" fill="currentColor"/></svg>`,
 };
 
 export function profileHtml(admin) {
@@ -44,6 +43,15 @@ export function profileHtml(admin) {
             <p>${admin?.user_type || "Administrator"}</p>
           </div>
         </div>
+        <div id="imageActionMenu" class="profile-image-menu" role="menu" hidden>
+          <button id="viewImageButton" class="profile-menu-btn" type="button" role="menuitem">View picture</button>
+          <button id="changeImageButton" class="profile-menu-btn" type="button" role="menuitem">Upload picture</button>
+          <div id="uploadProgressWrap" class="profile-upload-progress" hidden>
+            <p id="uploadProgressText">Preparing upload…</p>
+            <progress id="uploadProgressBar" max="100" value="0"></progress>
+          </div>
+        </div>
+        <input id="imageUploadInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
       </article>
 
       <article class="profile-tabs-card">
@@ -71,23 +79,6 @@ export function profileHtml(admin) {
         <p id="profileMsg" class="profile-msg" aria-live="polite"></p>
       </article>
     </section>
-
-    <dialog id="imageUploadModal" class="profile-modal">
-      <div class="profile-modal-card">
-        <h3 id="imageModalTitle">Upload image</h3>
-        <img id="imageModalPreview" class="profile-modal-preview" alt="Current image" hidden />
-        <p id="imageModalEmpty">No image uploaded.</p>
-        <label class="profile-upload-input">${PROFILE_ICONS.upload}<span>Upload / change picture</span><input id="imageUploadInput" type="file" accept="image/png,image/jpeg,image/webp" /></label>
-        <div id="uploadProgressWrap" class="profile-upload-progress" hidden>
-          <p id="uploadProgressText">Preparing upload…</p>
-          <progress id="uploadProgressBar" max="100" value="0"></progress>
-        </div>
-        <div class="profile-modal-actions">
-          <button id="viewImageButton" type="button">View picture</button>
-          <button id="closeImageModal" type="button">Close</button>
-        </div>
-      </div>
-    </dialog>
 
     <dialog id="imageViewModal" class="profile-modal">
       <div class="profile-modal-card profile-modal-large">
