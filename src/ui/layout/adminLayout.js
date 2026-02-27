@@ -29,7 +29,11 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-brand.admin-brand-signature::before{content:'';position:absolute;inset:-3px -6px;border:1px solid color-mix(in srgb,var(--accent) 60%,transparent);border-radius:10px;opacity:.48;pointer-events:none;animation:brandFrame 2.8s ease-in-out infinite}
 .admin-brand.admin-brand-signature::after{content:'';position:absolute;left:-2px;right:-2px;bottom:-2px;height:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 70%,#fff),transparent);opacity:.95;filter:blur(.2px);animation:brandGlow 2.4s ease-in-out infinite}
 .admin-brand-svg{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 6px color-mix(in srgb,var(--accent) 38%,transparent));overflow:visible}
-.admin-brand-word{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:3.6 1.9}
+.admin-brand-word{font-family:'Trebuchet MS','Avenir Next','Segoe UI',sans-serif;font-weight:800;letter-spacing:.6px}
+.admin-brand-word-shadow{fill:color-mix(in srgb,var(--accent) 24%,#000)}
+.admin-brand-word-extrude{fill:color-mix(in srgb,var(--accent) 62%,#2f2012)}
+.admin-brand-word-front{fill:url(#adminBrandWordGradient);stroke:color-mix(in srgb,var(--accent) 62%,#fff);stroke-width:.45;paint-order:stroke fill}
+.admin-brand-doodle{fill:none;stroke:color-mix(in srgb,var(--accent) 72%,#fff);stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
 .admin-brand-cube-top{fill:color-mix(in srgb,var(--accent) 32%,transparent)}
 .admin-brand-cube-side{fill:color-mix(in srgb,var(--accent) 54%,transparent)}
 .admin-brand-cube-front{fill:color-mix(in srgb,var(--accent) 72%,transparent)}
@@ -457,7 +461,7 @@ function normalizeNavSections(navItems = []) {
   return [{ title: "", items: navItems }];
 }
 
-const BRAND_SVG = `<svg class="admin-brand-svg" viewBox="0 0 184 42" aria-hidden="true" focusable="false"><g transform="translate(2 4)"><path class="admin-brand-cube-top" d="M12 6 20 2l8 4-8 4z"></path><path class="admin-brand-cube-side" d="M12 6v10l8 4V10z"></path><path class="admin-brand-cube-front" d="M28 6v10l-8 4V10z"></path></g><path class="admin-brand-word" d="M34 30V12m0 8h10m-10-8h12M49 22c0-4 2.8-6 6.2-6 3.8 0 6.3 2.3 6.3 6.3V24H49m20-2c0-3.7 2.3-6 5.8-6 2.8 0 5.2 1.3 5.8 4M83 30V16m0 8c0-4.2 2.6-7 6.4-7 3.8 0 6.1 2.7 6.1 6.8V30m7 0V16m0 8c0-4.2 2.6-7 6.4-7 3.8 0 6.1 2.7 6.1 6.8V30m7 0V16m0 8c0-4.4 2.5-7 6.1-7s6.1 2.6 6.1 7-2.5 7-6.1 7-6.1-2.6-6.1-7Zm18.4-8v14m0-12.1c1.3-1.3 2.8-1.9 4.7-1.9 3.7 0 5.9 2.7 5.9 6.9V30m6.4-18h11m-5.5 0V30"></path></svg>`;
+const BRAND_SVG = `<svg class="admin-brand-svg" viewBox="0 0 230 42" aria-hidden="true" focusable="false"><defs><linearGradient id="adminBrandWordGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="color-mix(in srgb,var(--accent) 94%,#fff)"/><stop offset="100%" stop-color="color-mix(in srgb,var(--accent) 58%,#3a2514)"/></linearGradient></defs><g transform="translate(2 4)"><path class="admin-brand-cube-top" d="M12 6 20 2l8 4-8 4z"></path><path class="admin-brand-cube-side" d="M12 6v10l8 4V10z"></path><path class="admin-brand-cube-front" d="M28 6v10l-8 4V10z"></path></g><text class="admin-brand-word admin-brand-word-shadow" x="38.8" y="29.7" font-size="22">Freeducation</text><text class="admin-brand-word admin-brand-word-extrude" x="37.2" y="28.4" font-size="22">Freeducation</text><text class="admin-brand-word admin-brand-word-front" x="36.4" y="27.6" font-size="22">Freeducation</text><path class="admin-brand-doodle" d="M38 31.5c7.8 4.6 18.2 4.3 28.1 1.1 10.7-3.5 20.7-4.4 30.9-.8m42.7-1.9c3.1 1.1 6.4 1.6 10 1.5m4.2-10.4c3.1-1.6 6.2-3.2 10.6-2.8"></path></svg>`;
 
 function renderNav(navItems = [], activeMenu = "") {
   const sections = normalizeNavSections(navItems);
