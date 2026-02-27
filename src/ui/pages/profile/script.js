@@ -13,6 +13,7 @@ const passwordForm = document.getElementById('passwordForm');
 const profileMsg = document.getElementById('profileMsg');
 const profilePage = document.querySelector('.profile-page');
 const profilePageLoader = document.getElementById('profilePageLoader');
+const profileTabIndicator = document.getElementById('profileTabIndicator');
 
 const imageUploadModal = document.getElementById('imageUploadModal');
 const imageViewModal = document.getElementById('imageViewModal');
@@ -41,7 +42,7 @@ const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
 
-if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageUploadModal || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !imageUploadInput || !profilePage || !profilePageLoader) return;
+if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageUploadModal || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !imageUploadInput || !profilePage || !profilePageLoader || !profileTabIndicator) return;
 
 const controller = new AbortController();
 const { signal } = controller;
@@ -50,6 +51,7 @@ if (typeof window.__registerCleanup === 'function') window.__registerCleanup(() 
 let currentImageType = 'avatar';
 const hasImage = { avatar: false, cover: false };
 let isUploadingImage = false;
+let tabSwitchTimer = null;
 
 const setPageLoading = (loading) => {
   profilePage.classList.toggle('is-loading', loading);
@@ -76,14 +78,27 @@ const showMessage = (message, isError = false) => {
 const switchTab = (showAbout) => {
   if (profilePage.classList.contains('is-loading')) return;
 
+  const incomingPanel = showAbout ? panelAbout : panelSecurity;
+  const outgoingPanel = showAbout ? panelSecurity : panelAbout;
+
   tabAbout.classList.toggle('is-active', showAbout);
   tabSecurity.classList.toggle('is-active', !showAbout);
   tabAbout.setAttribute('aria-selected', String(showAbout));
   tabSecurity.setAttribute('aria-selected', String(!showAbout));
-  panelAbout.classList.toggle('is-active', showAbout);
-  panelSecurity.classList.toggle('is-active', !showAbout);
-  panelAbout.hidden = !showAbout;
-  panelSecurity.hidden = showAbout;
+  profileTabIndicator.style.setProperty('--tab-index', showAbout ? '0' : '1');
+
+  outgoingPanel.classList.remove('is-active');
+  outgoingPanel.classList.add('is-leaving');
+  incomingPanel.hidden = false;
+  incomingPanel.classList.add('is-active');
+
+  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
+  tabSwitchTimer = window.setTimeout(() => {
+    outgoingPanel.hidden = true;
+    outgoingPanel.classList.remove('is-leaving');
+    tabSwitchTimer = null;
+  }, 150);
+
   if (showAbout) {
     passwordForm.hidden = true;
     openPasswordForm.textContent = 'Change password';
