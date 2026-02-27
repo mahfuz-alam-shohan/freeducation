@@ -51,6 +51,7 @@ if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordF
 const controller = new AbortController();
 const { signal } = controller;
 if (typeof window.__registerCleanup === 'function') window.__registerCleanup(() => controller.abort());
+const avatarVersionStorageKey = 'freeducation-avatar-version';
 
 let currentImageType = 'avatar';
 const hasImage = { avatar: false, cover: false };
@@ -507,6 +508,12 @@ imageUploadInput.addEventListener('change', async (event) => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Upload failed');
+
+    if (currentImageType === 'avatar') {
+      const avatarVersion = String(result.key || Date.now());
+      window.localStorage.setItem(avatarVersionStorageKey, avatarVersion);
+      window.dispatchEvent(new CustomEvent('freeducation:avatar-updated', { detail: { version: avatarVersion } }));
+    }
 
     setUploadProgress(100, 'Upload complete. Refreshing preview...');
     showMessage('Image updated.');
