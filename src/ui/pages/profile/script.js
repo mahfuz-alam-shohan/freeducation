@@ -58,6 +58,7 @@ let isUploadingImage = false;
 let tabSwitchTimer = null;
 let activeEditField = null;
 let isSavingInlineEdit = false;
+const editAnimationTimers = new Map();
 
 const profileState = {
   name: '-',
@@ -80,11 +81,25 @@ const resetUploadUi = () => {
   if (uploadProgressText) uploadProgressText.textContent = 'Preparing upload...';
 };
 
-const showMessage = (message, isError = false) => {
-  profileMsg.textContent = message;
-  profileMsg.style.color = isError ? '#ff9ca1' : '';
+const clearInlineMessage = () => {
+  profileMsg.hidden = true;
+  profileMsg.textContent = '';
+  profileMsg.style.color = '';
+};
+
+const showMessage = (message, options = {}) => {
+  const { type = 'success', inline = false } = options;
+
+  if (inline && message) {
+    profileMsg.hidden = false;
+    profileMsg.textContent = message;
+    profileMsg.style.color = type === 'error' ? '#ff9ca1' : '';
+  } else {
+    clearInlineMessage();
+  }
+
   if (typeof window.__showAppStatus === 'function' && message) {
-    window.__showAppStatus(message, isError ? 'error' : 'success');
+    window.__showAppStatus(message, type === 'error' ? 'error' : 'success');
   }
 };
 
@@ -156,10 +171,21 @@ const closeInlineEdit = (field) => {
   const row = panelAbout.querySelector('[data-field="' + field + '"]');
   if (!trigger || !form || !row) return;
 
-  form.hidden = true;
+  const existingTimer = editAnimationTimers.get(field);
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+    editAnimationTimers.delete(field);
+  }
+
   form.classList.remove('is-visible');
-  trigger.hidden = false;
-  row.classList.remove('is-editing');
+  const hideTimer = window.setTimeout(() => {
+    form.hidden = true;
+    trigger.hidden = false;
+    row.classList.remove('is-editing');
+    editAnimationTimers.delete(field);
+  }, 220);
+  editAnimationTimers.set(field, hideTimer);
+
   if (activeEditField === field) activeEditField = null;
 };
 
@@ -173,6 +199,12 @@ const openInlineEdit = (field) => {
   const form = panelAbout.querySelector('[data-edit-form="' + field + '"]');
   const row = panelAbout.querySelector('[data-field="' + field + '"]');
   if (!trigger || !form || !row) return;
+
+  const existingTimer = editAnimationTimers.get(field);
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+    editAnimationTimers.delete(field);
+  }
 
   const input = form.elements.value;
   if (!input) return;
@@ -239,7 +271,7 @@ const saveInlineEdit = async (field, value) => {
     showMessage('Profile updated.');
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to update profile', true);
+    showMessage(error?.message || 'Unable to update profile', { type: 'error', inline: true });
   } finally {
     setInlineEditBusy(false);
   }
@@ -432,7 +464,7 @@ imageUploadInput.addEventListener('change', async (event) => {
     }, 280);
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to upload image', true);
+    showMessage(error?.message || 'Unable to upload image', { type: 'error', inline: true });
   } finally {
     setUploadBusyState(false);
   }
@@ -458,7 +490,7 @@ passwordForm.addEventListener('submit', async (event) => {
     openPasswordForm.textContent = 'Change password';
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to update password', true);
+    showMessage(error?.message || 'Unable to update password', { type: 'error', inline: true });
   }
 }, { signal });
 
@@ -481,13 +513,14 @@ const loadProfile = async () => {
     refreshImages();
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to load profile', true);
+    showMessage(error?.message || 'Unable to load profile', { type: 'error', inline: true });
   } finally {
     setPageLoading(false);
   }
 };
 
 setPageLoading(true);
+clearInlineMessage();
 loadProfile();
 resetUploadUi();
 })();
