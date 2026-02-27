@@ -4,6 +4,7 @@ import { profilePage } from "../ui/pages/profile/index.js";
 import { html, json } from "../core/response.js";
 import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminImage, getAdminProfile, listAdminUsers, overview, updateAdminProfile, uploadAdminImage } from "../controllers/adminController.js";
 import { destroySession, getAuthenticatedAdmin } from "../core/auth.js";
+import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
 
 export async function handleAdminRoute(request, env, url) {
   if (request.method === "POST" && url.pathname === "/api/logout") {
@@ -13,6 +14,16 @@ export async function handleAdminRoute(request, env, url) {
 
   const admin = await getAuthenticatedAdmin(request, env);
   if (!admin) return null;
+
+  if (admin.user_type !== USER_TYPES.ADMINISTRATOR) {
+    if (url.pathname.startsWith("/admin")) {
+      return htmlResponseRedirect(dashboardPathForRole(admin.user_type));
+    }
+    if (url.pathname.startsWith("/api/admin")) {
+      return json({ error: "Forbidden" }, 403);
+    }
+    return undefined;
+  }
 
   if (request.method === "GET" && url.pathname === "/admin/dashboard") {
     return html(dashboardPage(admin));
@@ -67,4 +78,8 @@ export async function handleAdminRoute(request, env, url) {
   }
 
   return undefined;
+}
+
+function htmlResponseRedirect(location) {
+  return new Response(null, { status: 302, headers: { location } });
 }
