@@ -12,6 +12,7 @@ const deleteCancelButton = document.getElementById('deleteUserCancel');
 const deleteConfirmButton = document.getElementById('deleteUserConfirm');
 const deleteSummary = document.getElementById('deleteUserSummary');
 const usersCard = document.querySelector('.users-card');
+const logoutButton = document.getElementById('logout');
 const CURRENT_ADMIN_ID = ${Number(adminId) || 0};
 
 let allUsers = [];
@@ -80,6 +81,16 @@ const renderUsers = async () => {
   setLoading(true);
   try {
     const response = await fetch('/api/admin/users', { signal });
+    if (response.status === 401) {
+      showMessage('Session expired. Please sign in again.', true);
+      if (window.__appNavigate) {
+        window.__appNavigate('/admin/login');
+      } else {
+        location.href = '/admin/login';
+      }
+      return;
+    }
+
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data.error || 'Unable to load users');
@@ -222,11 +233,13 @@ addUserForm.addEventListener('submit', async (event) => {
   }
 }, { signal });
 
-logoutButton.addEventListener('click', async () => {
-  showMessage('Signing out...');
-  await fetch('/api/logout', { method: 'POST', signal });
-  if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href='/admin/login'; }
-}, { signal });
+if (logoutButton) {
+  logoutButton.addEventListener('click', async () => {
+    showMessage('Signing out...');
+    await fetch('/api/logout', { method: 'POST', signal });
+    if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href='/admin/login'; }
+  }, { signal });
+}
 
 renderUsers();
 })();
