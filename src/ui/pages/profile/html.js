@@ -14,7 +14,7 @@ export function profileHtml(admin) {
       <article class="profile-hero">
         <div id="coverPanel" class="profile-cover" aria-label="Cover photo">
           <img id="coverImage" class="profile-cover-image" alt="Cover" hidden />
-          <button id="coverAction" class="profile-image-action" type="button" aria-label="Change cover photo" title="Change cover photo">${PROFILE_ICONS.camera}</button>
+          <button id="coverAction" class="profile-image-action profile-image-action-cover" type="button" aria-label="Change cover photo" title="Change cover photo">${PROFILE_ICONS.camera}</button>
         </div>
         <div class="profile-head">
           <div id="avatarPanel" class="profile-avatar-wrap" aria-label="Profile photo">
