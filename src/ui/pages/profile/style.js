@@ -34,6 +34,7 @@ export const PROFILE_STYLE = `
 .profile-image-action-avatar{right:-2px;bottom:-2px;border-color:var(--surface);background:var(--surface-strong);color:var(--text)}
 .profile-image-action-avatar:hover{background:var(--surface-soft)}
 .profile-image-menu{position:absolute;z-index:12;min-width:176px;display:grid;gap:6px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.profile-image-menu[hidden]{display:none!important}
 .profile-menu-btn{display:flex;align-items:center;justify-content:flex-start;border:1px solid var(--border);background:var(--surface-soft);padding:7px 9px;border-radius:6px;cursor:pointer;color:var(--text)}
 .profile-menu-btn:hover{background:var(--surface-strong)}
 .profile-title h1{margin:0;font-size:1.3rem}
