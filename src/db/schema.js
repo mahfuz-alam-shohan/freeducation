@@ -1,9 +1,20 @@
 import { ADMIN_SCHEMA } from "../config.js";
 
+const ADMIN_INDEXES = [
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_admins_email ON freeducation_admins(email)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_sessions_token_hash ON freeducation_sessions(token_hash)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_sessions_expires_at ON freeducation_sessions(expires_at)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_sessions_admin_id ON freeducation_sessions(admin_id)",
+];
+
 export async function ensureSchema(db) {
   for (const [table, columns] of Object.entries(ADMIN_SCHEMA)) {
     await db.prepare(`CREATE TABLE IF NOT EXISTS ${table} (${columns.map(([name, def]) => `${name} ${def}`).join(",")})`).run();
     await alignColumns(db, table, columns);
+  }
+
+  for (const indexQuery of ADMIN_INDEXES) {
+    await db.prepare(indexQuery).run();
   }
 }
 

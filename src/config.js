@@ -1,6 +1,9 @@
 export const APP_NAME = "Freeducation";
 export const SESSION_COOKIE = "freeducation_session";
 export const MAX_BODY_SIZE = 800_000;
+export const SCHEMA_REVALIDATE_MS = 5 * 60 * 1000;
+export const SESSION_CLEANUP_INTERVAL_MS = 60 * 1000;
+export const ADMIN_COUNT_CACHE_MS = 30 * 1000;
 
 export const ADMIN_SCHEMA = {
   freeducation_admins: [
