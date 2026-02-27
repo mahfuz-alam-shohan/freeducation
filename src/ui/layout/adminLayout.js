@@ -24,16 +24,14 @@ body.app-navigating .admin-shell::before{opacity:.42}
 .admin-menu-toggle:hover{background:var(--surface-soft)}
 .admin-menu-toggle:active{transform:scale(.96)}
 body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
-.admin-brand{display:inline-flex;align-items:center;justify-content:center;width:176px;max-width:52vw;height:38px;max-height:42px}
-.admin-brand.admin-brand-signature{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;color:var(--accent);user-select:none;border:0;background:none;cursor:pointer}
-.admin-brand.admin-brand-signature::after{content:'';position:absolute;left:8px;right:8px;bottom:0;height:3px;background:radial-gradient(circle at center,color-mix(in srgb,var(--accent) 72%,#fff),transparent 68%);opacity:.9;filter:blur(1px);pointer-events:none;animation:brandGlow 2.4s ease-in-out infinite}
-.admin-brand-svg{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 7px color-mix(in srgb,var(--accent) 44%,transparent));overflow:visible}
-.admin-brand-word{font-family:'Trebuchet MS','Avenir Next','Segoe UI',sans-serif;font-weight:800;letter-spacing:.6px}
+.admin-brand{display:inline-flex;align-items:center;justify-content:center;width:212px;max-width:62vw;height:46px;max-height:50px}
+.admin-brand.admin-brand-signature{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;color:var(--accent);user-select:none;border:0;background:none;cursor:pointer}
+.admin-brand-svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 9px color-mix(in srgb,var(--accent) 40%,transparent));overflow:visible}
+.admin-brand-word{font-family:'Comic Sans MS','Trebuchet MS','Segoe Print','Avenir Next','Segoe UI',sans-serif;font-weight:800;letter-spacing:.75px}
 .admin-brand-word-shadow{fill:color-mix(in srgb,var(--accent) 24%,#000)}
 .admin-brand-word-extrude{fill:color-mix(in srgb,var(--accent) 62%,#2f2012)}
 .admin-brand-word-front{fill:url(#adminBrandWordGradient);stroke:color-mix(in srgb,var(--accent) 62%,#fff);stroke-width:.45;paint-order:stroke fill}
-.admin-brand-doodle{fill:none;stroke:color-mix(in srgb,var(--accent) 72%,#fff);stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
-@keyframes brandGlow{0%,100%{opacity:.7;transform:scaleX(.95)}50%{opacity:1;transform:scaleX(1.02)}}
+.admin-brand-doodle{fill:none;stroke:color-mix(in srgb,var(--accent) 78%,#fff);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.88}
 .admin-header-right{display:flex;align-items:center;gap:8px;position:relative}
 .admin-user-meta{display:none;min-width:0;text-align:right;line-height:1.2}
 .admin-user-name{display:block;font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
@@ -456,7 +454,7 @@ function normalizeNavSections(navItems = []) {
   return [{ title: "", items: navItems }];
 }
 
-const BRAND_SVG = `<svg class="admin-brand-svg" viewBox="0 0 230 42" aria-hidden="true" focusable="false"><defs><linearGradient id="adminBrandWordGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="color-mix(in srgb,var(--accent) 94%,#fff)"/><stop offset="100%" stop-color="color-mix(in srgb,var(--accent) 58%,#3a2514)"/></linearGradient></defs><text class="admin-brand-word admin-brand-word-shadow" x="10.8" y="29.7" font-size="22">Freeducation</text><text class="admin-brand-word admin-brand-word-extrude" x="9.2" y="28.4" font-size="22">Freeducation</text><text class="admin-brand-word admin-brand-word-front" x="8.4" y="27.6" font-size="22">Freeducation</text><path class="admin-brand-doodle" d="M8 31.5c7.8 4.6 18.2 4.3 28.1 1.1 10.7-3.5 20.7-4.4 30.9-.8m42.7-1.9c3.1 1.1 6.4 1.6 10 1.5m4.2-10.4c3.1-1.6 6.2-3.2 10.6-2.8"></path></svg>`;
+const BRAND_SVG = `<svg class="admin-brand-svg" viewBox="0 0 248 52" aria-hidden="true" focusable="false"><defs><linearGradient id="adminBrandWordGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="color-mix(in srgb,var(--accent) 95%,#fff)"/><stop offset="100%" stop-color="color-mix(in srgb,var(--accent) 56%,#3a2514)"/></linearGradient></defs><text class="admin-brand-word admin-brand-word-shadow" x="14.6" y="36.4" font-size="28">Freeducation</text><text class="admin-brand-word admin-brand-word-extrude" x="13.2" y="35" font-size="28">Freeducation</text><text class="admin-brand-word admin-brand-word-front" x="12" y="33.8" font-size="28">Freeducation</text><path class="admin-brand-doodle" d="M11 38.4c8.6 5.3 19.8 5.4 30.8 2.4 12.1-3.3 23.8-3.7 35.7 1.1m8-23.7c2.4 4.1 6.4 6.6 12.4 5.9 4.7-.6 8.8-2.6 13.2-1.8m12.8 18.6c8.8 4.3 18.5 4.2 28.2 1.5 9.6-2.7 18.7-2.8 27.9.9m12.1-20.6c4.2-3.8 10.4-5.6 15.8-4.6"></path></svg>`;
 
 function renderNav(navItems = [], activeMenu = "") {
   const sections = normalizeNavSections(navItems);
