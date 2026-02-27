@@ -342,6 +342,13 @@ const setUploadBusyState = (busy) => {
   viewImageButton.disabled = busy;
 };
 
+const openImagePreview = (src) => {
+  if (!src || isUploadingImage) return;
+  imageBigPreview.src = src;
+  if (imageViewModal.open) return;
+  imageViewModal.showModal();
+};
+
 const closeImageMenu = () => {
   imageActionMenu.hidden = true;
 };
@@ -399,9 +406,8 @@ coverAction.addEventListener('click', (event) => {
 
 viewImageButton.addEventListener('click', () => {
   if (isUploadingImage || !hasImage[currentImageType]) return;
-  imageBigPreview.src = currentImageType === 'avatar' ? avatarImage.src : coverImage.src;
   closeImageMenu();
-  imageViewModal.showModal();
+  openImagePreview(currentImageType === 'avatar' ? avatarImage.src : coverImage.src);
 }, { signal });
 
 changeImageButton.addEventListener('click', () => {
@@ -410,18 +416,21 @@ changeImageButton.addEventListener('click', () => {
   imageUploadInput.click();
 }, { signal });
 
-avatarPanel.addEventListener('click', () => {
+avatarPanel.addEventListener('click', (event) => {
+  if (avatarAction.contains(event.target)) return;
   if (!hasImage.avatar || isUploadingImage) return;
-  imageBigPreview.src = avatarImage.src;
-  imageViewModal.showModal();
+  openImagePreview(avatarImage.src);
 }, { signal });
-coverPanel.addEventListener('click', () => {
+coverPanel.addEventListener('click', (event) => {
+  if (coverAction.contains(event.target)) return;
   if (!hasImage.cover || isUploadingImage) return;
-  imageBigPreview.src = coverImage.src;
-  imageViewModal.showModal();
+  openImagePreview(coverImage.src);
 }, { signal });
 
 closeViewModal.addEventListener('click', () => imageViewModal.close(), { signal });
+imageViewModal.addEventListener('click', (event) => {
+  if (event.target === imageViewModal) imageViewModal.close();
+}, { signal });
 
 document.addEventListener('click', (event) => {
   if (!imageActionMenu.hidden && !imageActionMenu.contains(event.target) && event.target !== avatarAction && event.target !== coverAction && !avatarAction.contains(event.target) && !coverAction.contains(event.target)) {
