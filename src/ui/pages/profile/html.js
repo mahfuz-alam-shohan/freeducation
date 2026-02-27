@@ -82,7 +82,25 @@ export function profileHtml(admin) {
               <strong id="aboutDob">-</strong>
               <button class="profile-edit-trigger" type="button" data-edit-trigger="date_of_birth" aria-label="Edit date of birth" title="Edit date of birth">${PROFILE_ICONS.edit}</button>
               <form class="profile-edit-form" data-edit-form="date_of_birth" hidden>
-                <input type="date" name="value" required />
+                <div class="profile-dob-inputs">
+                  <input type="number" name="day" min="1" max="31" inputmode="numeric" placeholder="Day" required />
+                  <select name="month" required aria-label="Birth month">
+                    <option value="" selected disabled>Month</option>
+                    <option value="01">Jan</option>
+                    <option value="02">Feb</option>
+                    <option value="03">Mar</option>
+                    <option value="04">Apr</option>
+                    <option value="05">May</option>
+                    <option value="06">Jun</option>
+                    <option value="07">Jul</option>
+                    <option value="08">Aug</option>
+                    <option value="09">Sep</option>
+                    <option value="10">Oct</option>
+                    <option value="11">Nov</option>
+                    <option value="12">Dec</option>
+                  </select>
+                  <input type="number" name="year" min="1900" max="9999" inputmode="numeric" placeholder="Year" required />
+                </div>
                 <button type="submit">Save</button>
                 <button type="button" data-edit-cancel="date_of_birth">Cancel</button>
               </form>

@@ -60,8 +60,10 @@ export const PROFILE_STYLE = `
 .profile-edit-form[hidden]{display:none!important}
 .profile-edit-form.is-visible{opacity:1;transform:translateY(0) scale(1)}
 .profile-edit-form input,.profile-edit-form select{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:5px 6px;color:var(--text);min-width:0;max-width:100%;width:min(100%,220px)}
+.profile-dob-inputs{display:grid;grid-template-columns:1fr 1.2fr 1.3fr;gap:6px;width:min(100%,320px)}
+.profile-dob-inputs input,.profile-dob-inputs select{width:100%}
 .profile-edit-form button{border:1px solid var(--border);background:var(--surface-soft);padding:5px 8px;border-radius:6px;color:var(--text);cursor:pointer;transition:background .24s ease,transform .24s ease}
-.profile-row.is-editing strong{opacity:0;transform:translateY(-2px);pointer-events:none}
+.profile-row.is-editing strong{opacity:0;transform:translateY(-2px);pointer-events:none;display:none}
 .profile-open-password{border:1px solid var(--border);background:var(--surface-soft);padding:6px 10px;border-radius:6px;cursor:pointer}
 .profile-password-form{display:grid;gap:8px;max-width:360px;margin-top:10px;animation:fadeUp .24s ease}
 .profile-password-form[hidden]{display:none!important}
@@ -78,7 +80,7 @@ export const PROFILE_STYLE = `
 .profile-upload-progress p{margin:0;font-size:.88rem;color:var(--text-muted)}
 .profile-upload-progress progress{width:100%;height:8px}
 .profile-big-preview{width:100%;max-height:72vh;object-fit:contain;background:var(--surface-strong);border-radius:8px}
-@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}.profile-row{flex-direction:column;gap:6px}.profile-inline-edit{width:100%;justify-content:flex-start}.profile-inline-edit strong{text-align:left}.profile-edit-form{justify-content:flex-start}.profile-edit-form input,.profile-edit-form select{width:100%}}
+@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}.profile-row{flex-direction:column;gap:6px}.profile-inline-edit{width:100%;justify-content:flex-start}.profile-inline-edit strong{text-align:left}.profile-edit-form{justify-content:flex-start}.profile-edit-form input,.profile-edit-form select{width:100%}.profile-dob-inputs{grid-template-columns:1fr 1fr 1fr;width:100%}}
 @keyframes panelIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
 @keyframes profileShimmer{100%{transform:translateX(100%)}}
