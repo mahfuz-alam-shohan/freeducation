@@ -22,6 +22,8 @@ export async function handleStudentRoute(request, env, url) {
       homePath: "/student/dashboard",
       navItems: STUDENT_NAV_ITEMS,
       admin: user,
+      currentDeviceLabel: user.session_device_label || "",
+      loginAt: user.session_created_at || "",
     }));
   }
 

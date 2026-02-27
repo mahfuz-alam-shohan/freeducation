@@ -3,7 +3,6 @@ export const DASHBOARD_SCRIPT = `
 const totalAdmins = document.getElementById('totalAdmins');
 const activeSessions = document.getElementById('activeSessions');
 const dashboardGrid = document.querySelector('.dash-grid');
-const logoutButton = document.getElementById('logout');
 const dashboardCards = Array.from(document.querySelectorAll('.dash-card'));
 
 if (!totalAdmins || !activeSessions || !dashboardGrid) return;
@@ -39,14 +38,6 @@ fetch('/api/admin/overview', { signal: controller.signal })
     renderFallback();
   })
   .finally(() => setLoading(false));
-
-if (logoutButton) {
-  logoutButton.addEventListener('click', async () => {
-    document.body.classList.add('app-navigating');
-    await fetch('/api/logout', { method: 'POST' });
-    if (window.__appNavigate) { window.__appNavigate('/admin/login'); } else { location.href = '/admin/login'; }
-  }, { signal: controller.signal });
-}
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 if (dashboardCards.length && !reducedMotion.matches) {
