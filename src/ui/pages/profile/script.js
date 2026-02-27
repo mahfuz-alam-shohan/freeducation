@@ -20,9 +20,12 @@ const imageActionMenu = document.getElementById('imageActionMenu');
 const imageUploadInput = document.getElementById('imageUploadInput');
 const changeImageButton = document.getElementById('changeImageButton');
 const viewImageButton = document.getElementById('viewImageButton');
-const uploadProgressWrap = document.getElementById('uploadProgressWrap');
-const uploadProgressText = document.getElementById('uploadProgressText');
-const uploadProgressBar = document.getElementById('uploadProgressBar');
+const avatarUploadProgress = document.getElementById('avatarUploadProgress');
+const avatarUploadText = document.getElementById('avatarUploadText');
+const avatarUploadBar = document.getElementById('avatarUploadBar');
+const coverUploadProgress = document.getElementById('coverUploadProgress');
+const coverUploadText = document.getElementById('coverUploadText');
+const coverUploadBar = document.getElementById('coverUploadBar');
 
 const imageViewModal = document.getElementById('imageViewModal');
 const closeViewModal = document.getElementById('closeViewModal');
@@ -80,9 +83,15 @@ const setPageLoading = (loading) => {
 };
 
 const resetUploadUi = () => {
-  if (uploadProgressWrap) uploadProgressWrap.hidden = true;
-  if (uploadProgressBar) uploadProgressBar.value = 0;
-  if (uploadProgressText) uploadProgressText.textContent = 'Preparing upload...';
+  const entries = [
+    [avatarUploadProgress, avatarUploadText, avatarUploadBar],
+    [coverUploadProgress, coverUploadText, coverUploadBar],
+  ];
+  entries.forEach(([wrap, label, bar]) => {
+    if (wrap) wrap.hidden = true;
+    if (label) label.textContent = 'Preparing upload...';
+    if (bar) bar.style.width = '0%';
+  });
 };
 
 const clearInlineMessage = () => {
@@ -317,6 +326,15 @@ tabSecurity.addEventListener('keydown', (event) => {
   }
 }, { signal });
 
+const profileUrlParams = new URLSearchParams(window.location.search);
+if (profileUrlParams.get('tab') === 'security') {
+  switchTab(false);
+}
+if (profileUrlParams.get('openPassword') === '1') {
+  if (passwordForm.hidden) passwordForm.hidden = false;
+  openPasswordForm.textContent = 'Close password form';
+}
+
 openPasswordForm.addEventListener('click', () => {
   if (profilePage.classList.contains('is-loading')) return;
 
@@ -376,11 +394,19 @@ editForms.forEach((form) => {
   }, { signal });
 });
 
-const setUploadProgress = (value, label) => {
-  if (!uploadProgressWrap || !uploadProgressBar || !uploadProgressText) return;
-  uploadProgressWrap.hidden = false;
-  uploadProgressBar.value = value;
-  uploadProgressText.textContent = label;
+const setUploadProgress = (value, label, imageType = currentImageType) => {
+  const isAvatar = imageType === 'avatar';
+  const activeWrap = isAvatar ? avatarUploadProgress : coverUploadProgress;
+  const activeText = isAvatar ? avatarUploadText : coverUploadText;
+  const activeBar = isAvatar ? avatarUploadBar : coverUploadBar;
+  const otherWrap = isAvatar ? coverUploadProgress : avatarUploadProgress;
+
+  if (otherWrap) otherWrap.hidden = true;
+  if (!activeWrap || !activeText || !activeBar) return;
+
+  activeWrap.hidden = false;
+  activeText.textContent = label;
+  activeBar.style.width = Math.max(0, Math.min(100, value)) + '%';
 };
 
 const setUploadBusyState = (busy) => {
@@ -635,7 +661,8 @@ const loadProfile = async () => {
     profileState.user_type = profile.user_type || 'Administrator';
 
     hydrateAboutSection();
-    switchTab(true);
+    if (profileUrlParams.get('tab') === 'security') switchTab(false);
+    else switchTab(true);
     refreshImages();
   } catch (error) {
     if (error?.name === 'AbortError') return;

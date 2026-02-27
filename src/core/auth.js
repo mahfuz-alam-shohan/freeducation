@@ -22,6 +22,8 @@ export async function getAuthenticatedAdmin(request, env) {
     gender: session.gender || "",
     avatar_key: session.avatar_key || "",
     cover_key: session.cover_key || "",
+    session_device_label: session.device_label || "",
+    session_created_at: session.session_created_at || "",
   };
 }
 

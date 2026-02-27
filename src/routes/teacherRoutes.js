@@ -3,7 +3,7 @@ import { getAuthenticatedAdmin } from "../core/auth.js";
 import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
 import { TEACHER_NAV_ITEMS } from "../ui/config/navigation.js";
 import { profilePage } from "../ui/pages/profile/index.js";
-import { renderSimpleRoleDashboard } from "../ui/pages/shared/dashboardRenderer.js";
+import { renderTeacherDashboard } from "../ui/pages/shared/dashboardRenderer.js";
 import { getAdminImage, getAdminProfile, updateAdminProfile, uploadAdminImage, changeAdminPassword } from "../controllers/adminController.js";
 
 export async function handleTeacherRoute(request, env, url) {
@@ -17,11 +17,12 @@ export async function handleTeacherRoute(request, env, url) {
   }
 
   if (request.method === "GET" && url.pathname === "/teacher/dashboard") {
-    return html(renderSimpleRoleDashboard({
-      roleName: "Teacher",
+    return html(renderTeacherDashboard({
       homePath: "/teacher/dashboard",
       navItems: TEACHER_NAV_ITEMS,
       admin: user,
+      currentDeviceLabel: user.session_device_label || "Unknown device",
+      loginAt: user.session_created_at || "",
     }));
   }
 
