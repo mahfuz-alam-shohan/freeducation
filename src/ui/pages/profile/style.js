@@ -24,6 +24,7 @@ export const PROFILE_STYLE = `
 .profile-row span{color:var(--text-muted)}
 .profile-open-password{border:1px solid var(--border);background:var(--surface-soft);padding:6px 10px;border-radius:6px;cursor:pointer}
 .profile-password-form{display:grid;gap:8px;max-width:360px;margin-top:10px;animation:fadeUp .24s ease}
+.profile-password-form[hidden]{display:none!important}
 .profile-password-form label{display:grid;gap:4px;font-size:.92rem}
 .profile-password-form input{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text)}
 .profile-password-form button,.profile-modal-card button{border:1px solid var(--border);background:var(--surface-soft);padding:7px 10px;border-radius:6px;color:var(--text);cursor:pointer}
@@ -32,10 +33,11 @@ export const PROFILE_STYLE = `
 .profile-modal::backdrop{background:var(--overlay)}
 .profile-modal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:min(92vw,380px);display:grid;gap:8px}
 .profile-modal-large{min-width:min(92vw,720px)}
-.profile-modal-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+.profile-modal-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:zoom-in}
 .profile-upload-input{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--border);padding:7px;border-radius:8px;cursor:pointer}
 .profile-upload-input input{display:none}
 .profile-upload-progress{display:grid;gap:4px}
+.profile-upload-progress[hidden]{display:none!important}
 .profile-upload-progress p{margin:0;font-size:.88rem;color:var(--text-muted)}
 .profile-upload-progress progress{width:100%;height:8px}
 .profile-modal-actions{display:flex;justify-content:flex-end;gap:6px}

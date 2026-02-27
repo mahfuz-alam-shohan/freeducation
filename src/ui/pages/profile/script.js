@@ -49,6 +49,13 @@ let currentImageType = 'avatar';
 const hasImage = { avatar: false, cover: false };
 let isUploadingImage = false;
 
+const resetUploadUi = () => {
+  if (uploadProgressWrap) uploadProgressWrap.hidden = true;
+  if (uploadProgressBar) uploadProgressBar.value = 0;
+  if (uploadProgressText) uploadProgressText.textContent = 'Preparing upload...';
+  if (viewImageButton) viewImageButton.hidden = true;
+};
+
 const showMessage = (message, isError = false) => {
   profileMsg.textContent = message;
   profileMsg.style.color = isError ? '#ff9ca1' : '';
@@ -152,11 +159,11 @@ const openImageModal = (imageType) => {
   const available = hasImage[imageType];
   imageModalPreview.hidden = !available;
   imageModalEmpty.hidden = available;
-  viewImageButton.hidden = !available;
+  viewImageButton.hidden = true;
   if (available) imageModalPreview.src = imageSrc;
   imageUploadInput.value = '';
   setUploadBusyState(false);
-  if (uploadProgressWrap) uploadProgressWrap.hidden = true;
+  resetUploadUi();
   imageUploadModal.showModal();
 };
 
@@ -188,6 +195,13 @@ viewImageButton.addEventListener('click', () => {
   if (isUploadingImage) return;
   const source = currentImageType === 'avatar' ? avatarImage.src : coverImage.src;
   imageBigPreview.src = source;
+  imageUploadModal.close();
+  imageViewModal.showModal();
+}, { signal });
+
+imageModalPreview.addEventListener('click', () => {
+  if (isUploadingImage || imageModalPreview.hidden) return;
+  imageBigPreview.src = imageModalPreview.src;
   imageUploadModal.close();
   imageViewModal.showModal();
 }, { signal });
@@ -224,6 +238,7 @@ imageUploadInput.addEventListener('change', async (event) => {
     showMessage(error?.message || 'Unable to upload image', true);
   } finally {
     setUploadBusyState(false);
+    resetUploadUi();
   }
 }, { signal });
 
@@ -271,6 +286,7 @@ const loadProfile = async () => {
 };
 
 loadProfile();
+resetUploadUi();
 })();
 `;
 }
