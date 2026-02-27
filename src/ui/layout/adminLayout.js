@@ -39,7 +39,8 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-logout:hover{background:var(--surface-soft)}
 .admin-icon{width:17px;height:17px;display:inline-block;flex:0 0 auto}
 .admin-nav-overlay{position:fixed;inset:0;background:var(--overlay);opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s step-end;z-index:39}
-.admin-sidebar{position:fixed;z-index:40;left:0;top:0;bottom:0;width:min(272px,86vw);background:var(--surface-strong);border-right:1px solid var(--border);padding:10px;display:grid;grid-template-rows:auto 1fr auto;gap:10px;transform:translateX(-102%);transition:transform .3s ease,box-shadow .3s ease}
+.admin-sidebar{position:fixed;z-index:40;left:0;top:0;bottom:0;width:min(272px,86vw);background:var(--surface-strong);border-right:1px solid var(--border);padding:10px;display:grid;grid-template-rows:auto 1fr auto;gap:10px;transform:translate3d(-102%,0,0);transition:transform .3s cubic-bezier(.2,.8,.2,1);will-change:transform;backface-visibility:hidden;contain:paint}
+.admin-sidebar::after{content:'';position:absolute;inset:0 -22px 0 auto;width:22px;background:linear-gradient(90deg,rgba(0,0,0,.24),transparent);opacity:0;pointer-events:none;transition:opacity .22s ease}
 .admin-sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .admin-sidebar-close{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:background .2s ease}
 .admin-nav{display:grid;gap:4px;align-content:start}
@@ -66,7 +67,8 @@ body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-e
 .admin-status-toast[data-status='success']{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
 body.menu-open{overflow:hidden}
 body.menu-open .admin-nav-overlay{opacity:1;visibility:visible}
-body.menu-open .admin-sidebar{transform:translateX(0);box-shadow:10px 0 30px rgba(0,0,0,.28)}
+body.menu-open .admin-sidebar{transform:translate3d(0,0,0)}
+body.menu-open .admin-sidebar::after{opacity:1}
 body.menu-open .admin-nav a{animation:menu-item-in .56s cubic-bezier(.18,.75,.25,1) both;animation-delay:var(--menu-delay,0ms)}
 body.app-navigating .admin-content{opacity:.78}
 body.app-navigating .admin-content::after{content:'Loading content...';display:block;border:1px dashed var(--border);background:var(--surface);color:var(--text-muted);font-size:.84rem;padding:6px 8px;border-radius:8px}

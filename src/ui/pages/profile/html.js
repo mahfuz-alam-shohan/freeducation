@@ -6,6 +6,11 @@ const PROFILE_ICONS = {
 export function profileHtml(admin) {
   return `
     <section class="profile-page">
+      <div id="profilePageLoader" class="profile-page-loader" role="status" aria-live="polite" aria-label="Loading profile" aria-busy="true">
+        <div class="profile-loader-shimmer profile-loader-shimmer-cover"></div>
+        <div class="profile-loader-shimmer profile-loader-shimmer-avatar"></div>
+        <div class="profile-loader-shimmer profile-loader-shimmer-line"></div>
+      </div>
       <article class="profile-hero">
         <div id="coverPanel" class="profile-cover" aria-label="Cover photo">
           <img id="coverImage" class="profile-cover-image" alt="Cover" hidden />

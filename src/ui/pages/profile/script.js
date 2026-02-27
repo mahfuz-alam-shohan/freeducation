@@ -11,6 +11,8 @@ const panelSecurity = document.getElementById('panelSecurity');
 const openPasswordForm = document.getElementById('openPasswordForm');
 const passwordForm = document.getElementById('passwordForm');
 const profileMsg = document.getElementById('profileMsg');
+const profilePage = document.querySelector('.profile-page');
+const profilePageLoader = document.getElementById('profilePageLoader');
 
 const imageUploadModal = document.getElementById('imageUploadModal');
 const imageViewModal = document.getElementById('imageViewModal');
@@ -39,7 +41,7 @@ const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
 
-if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageUploadModal || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !imageUploadInput) return;
+if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageUploadModal || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !imageUploadInput || !profilePage || !profilePageLoader) return;
 
 const controller = new AbortController();
 const { signal } = controller;
@@ -48,6 +50,13 @@ if (typeof window.__registerCleanup === 'function') window.__registerCleanup(() 
 let currentImageType = 'avatar';
 const hasImage = { avatar: false, cover: false };
 let isUploadingImage = false;
+
+const setPageLoading = (loading) => {
+  profilePage.classList.toggle('is-loading', loading);
+  profilePage.setAttribute('aria-busy', loading ? 'true' : 'false');
+  profilePageLoader.setAttribute('aria-busy', loading ? 'true' : 'false');
+  profilePageLoader.hidden = !loading;
+};
 
 const resetUploadUi = () => {
   if (uploadProgressWrap) uploadProgressWrap.hidden = true;
@@ -65,6 +74,8 @@ const showMessage = (message, isError = false) => {
 };
 
 const switchTab = (showAbout) => {
+  if (profilePage.classList.contains('is-loading')) return;
+
   tabAbout.classList.toggle('is-active', showAbout);
   tabSecurity.classList.toggle('is-active', !showAbout);
   tabAbout.setAttribute('aria-selected', String(showAbout));
@@ -99,6 +110,8 @@ tabSecurity.addEventListener('keydown', (event) => {
 }, { signal });
 
 openPasswordForm.addEventListener('click', () => {
+  if (profilePage.classList.contains('is-loading')) return;
+
   const shouldOpen = passwordForm.hidden;
   passwordForm.hidden = !shouldOpen;
   openPasswordForm.textContent = shouldOpen ? 'Close password form' : 'Change password';
@@ -267,6 +280,7 @@ passwordForm.addEventListener('submit', async (event) => {
 }, { signal });
 
 const loadProfile = async () => {
+  setPageLoading(true);
   try {
     const response = await fetch('/api/admin/profile', { signal });
     const data = await response.json();
@@ -282,9 +296,12 @@ const loadProfile = async () => {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     showMessage(error?.message || 'Unable to load profile', true);
+  } finally {
+    setPageLoading(false);
   }
 };
 
+setPageLoading(true);
 loadProfile();
 resetUploadUi();
 })();
