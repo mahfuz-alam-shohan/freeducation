@@ -30,7 +30,7 @@ function formatIsoDate(isoValue) {
 export function renderDashboardPage({
   title = "Dashboard",
   activeMenu = "",
-  homePath = "/admin/dashboard",
+  homePath = "/",
   navItems,
   admin,
   content = "",

@@ -1,11 +1,15 @@
 import { loginPage } from "../ui/pages/login/index.js";
 import { setupPage } from "../ui/pages/setup/index.js";
+import { homePage } from "../ui/pages/home/index.js";
 import { html, json, redirect } from "../core/response.js";
 import { loginAdmin, setupFirstAdmin } from "../controllers/publicController.js";
+import { getAuthenticatedAdmin } from "../core/auth.js";
 
 export async function handlePublicRoute(request, env, url, hasAdmin) {
   if (request.method === "GET" && url.pathname === "/") {
-    return hasAdmin ? redirect(new URL("/admin/login", url), 302) : html(setupPage());
+    if (!hasAdmin) return html(setupPage());
+    const admin = await getAuthenticatedAdmin(request, env);
+    return html(homePage({ admin }));
   }
 
   if (request.method === "GET" && url.pathname === "/admin/login") {

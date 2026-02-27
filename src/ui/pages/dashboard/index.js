@@ -8,7 +8,6 @@ export function dashboardPage(admin) {
   return renderDashboardPage({
     title: "Dashboard",
     activeMenu: "dashboard",
-    homePath: "/admin/dashboard",
     navItems: ADMIN_NAV_ITEMS,
     admin,
     content: dashboardHtml(),
