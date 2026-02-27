@@ -19,12 +19,9 @@ export function fileManagerHtml() {
             <option value="other">Other</option>
           </select>
         </label>
-        <label>Usage
+        <label>Sub filter
           <select id="fileUsageFilter">
-            <option value="">Any usage</option>
-            <option value="profile-pic">Profile pic</option>
-            <option value="cover-pic">Cover pic</option>
-            <option value="other">Other</option>
+            <option value="">Any</option>
           </select>
         </label>
         <label>Search
