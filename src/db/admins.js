@@ -38,6 +38,19 @@ export async function updateAdminImageKey(db, { adminId, keyField, keyValue }) {
   await db.prepare(`UPDATE freeducation_admins SET ${keyField} = ?1, updated_at = ?2 WHERE id = ?3`).bind(keyValue, now, adminId).run();
 }
 
+export async function updateAdminProfileField(db, { adminId, field, value }) {
+  const now = new Date().toISOString();
+  const allowedFields = {
+    name: "name",
+    date_of_birth: "date_of_birth",
+    gender: "gender",
+  };
+  const column = allowedFields[field];
+  if (!column) throw new Error("Invalid profile field");
+
+  await db.prepare(`UPDATE freeducation_admins SET ${column} = ?1, updated_at = ?2 WHERE id = ?3`).bind(value, now, adminId).run();
+}
+
 export async function deleteAdminById(db, id) {
   await db.prepare("DELETE FROM freeducation_admins WHERE id = ?1").bind(id).run();
 }

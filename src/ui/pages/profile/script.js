@@ -35,12 +35,18 @@ const avatarImage = document.getElementById('avatarImage');
 const coverImage = document.getElementById('coverImage');
 const avatarFallback = document.getElementById('avatarFallback');
 
+const profileTitleName = document.getElementById('profileTitleName');
+const aboutName = document.getElementById('aboutName');
 const aboutEmail = document.getElementById('aboutEmail');
 const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
 
-if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageActionMenu || !imageUploadInput || !changeImageButton || !viewImageButton || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !profilePage || !profilePageLoader || !profileTabIndicator) return;
+const editTriggers = Array.from(document.querySelectorAll('[data-edit-trigger]'));
+const editForms = Array.from(document.querySelectorAll('[data-edit-form]'));
+const editCancels = Array.from(document.querySelectorAll('[data-edit-cancel]'));
+
+if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageActionMenu || !imageUploadInput || !changeImageButton || !viewImageButton || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !profilePage || !profilePageLoader || !profileTabIndicator || !aboutName || !profileTitleName) return;
 
 const controller = new AbortController();
 const { signal } = controller;
@@ -50,6 +56,16 @@ let currentImageType = 'avatar';
 const hasImage = { avatar: false, cover: false };
 let isUploadingImage = false;
 let tabSwitchTimer = null;
+let activeEditField = null;
+let isSavingInlineEdit = false;
+
+const profileState = {
+  name: '-',
+  email: '-',
+  date_of_birth: '',
+  gender: '-',
+  user_type: 'Administrator',
+};
 
 const setPageLoading = (loading) => {
   profilePage.classList.toggle('is-loading', loading);
@@ -106,6 +122,118 @@ const focusTab = (tab) => {
   if (tab && typeof tab.focus === 'function') tab.focus();
 };
 
+const formatDob = (value) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const hydrateAboutSection = () => {
+  aboutName.textContent = profileState.name || '-';
+  aboutEmail.textContent = profileState.email || '-';
+  aboutDob.textContent = formatDob(profileState.date_of_birth);
+  aboutGender.textContent = profileState.gender || '-';
+  aboutRole.textContent = profileState.user_type || 'Administrator';
+  profileTitleName.textContent = profileState.name || 'Administrator';
+  avatarFallback.textContent = (profileState.name || 'A').slice(0, 2).toUpperCase();
+};
+
+const closeInlineEdit = (field) => {
+  const trigger = panelAbout.querySelector('[data-edit-trigger="' + field + '"]');
+  const form = panelAbout.querySelector('[data-edit-form="' + field + '"]');
+  const row = panelAbout.querySelector('[data-field="' + field + '"]');
+  if (!trigger || !form || !row) return;
+
+  form.hidden = true;
+  form.classList.remove('is-visible');
+  trigger.hidden = false;
+  row.classList.remove('is-editing');
+  if (activeEditField === field) activeEditField = null;
+};
+
+const openInlineEdit = (field) => {
+  if (isSavingInlineEdit) return;
+  if (activeEditField && activeEditField !== field) {
+    closeInlineEdit(activeEditField);
+  }
+
+  const trigger = panelAbout.querySelector('[data-edit-trigger="' + field + '"]');
+  const form = panelAbout.querySelector('[data-edit-form="' + field + '"]');
+  const row = panelAbout.querySelector('[data-field="' + field + '"]');
+  if (!trigger || !form || !row) return;
+
+  const input = form.elements.value;
+  if (!input) return;
+
+  if (field === 'date_of_birth') {
+    input.value = profileState.date_of_birth || '';
+  } else if (field === 'gender') {
+    input.value = profileState.gender && profileState.gender !== '-' ? profileState.gender : 'Prefer not to say';
+  } else {
+    input.value = profileState[field] && profileState[field] !== '-' ? profileState[field] : '';
+  }
+
+  trigger.hidden = true;
+  form.hidden = false;
+  row.classList.add('is-editing');
+
+  requestAnimationFrame(() => {
+    form.classList.add('is-visible');
+    input.focus();
+    if (typeof input.select === 'function' && input.type !== 'date') input.select();
+  });
+
+  activeEditField = field;
+};
+
+const setInlineEditBusy = (busy) => {
+  isSavingInlineEdit = busy;
+  editTriggers.forEach((button) => {
+    button.disabled = busy;
+  });
+  editForms.forEach((form) => {
+    const input = form.elements.value;
+    if (input) input.disabled = busy;
+    const submit = form.querySelector('button[type="submit"]');
+    const cancel = form.querySelector('[data-edit-cancel]');
+    if (submit) submit.disabled = busy;
+    if (cancel) cancel.disabled = busy;
+  });
+};
+
+const saveInlineEdit = async (field, value) => {
+  setInlineEditBusy(true);
+  showMessage('Updating profile...');
+
+  try {
+    const response = await fetch('/api/admin/profile', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ field, value }),
+      signal,
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Unable to update profile');
+
+    const profile = result.profile || {};
+    profileState.name = profile.name || '-';
+    profileState.email = profile.email || '-';
+    profileState.date_of_birth = profile.date_of_birth || '';
+    profileState.gender = profile.gender || '-';
+    profileState.user_type = profile.user_type || 'Administrator';
+
+    hydrateAboutSection();
+    closeInlineEdit(field);
+    showMessage('Profile updated.');
+  } catch (error) {
+    if (error?.name === 'AbortError') return;
+    showMessage(error?.message || 'Unable to update profile', true);
+  } finally {
+    setInlineEditBusy(false);
+  }
+};
+
 tabAbout.addEventListener('click', () => switchTab(true), { signal });
 tabSecurity.addEventListener('click', () => switchTab(false), { signal });
 tabAbout.addEventListener('keydown', (event) => {
@@ -128,6 +256,34 @@ openPasswordForm.addEventListener('click', () => {
   passwordForm.hidden = !shouldOpen;
   openPasswordForm.textContent = shouldOpen ? 'Close password form' : 'Change password';
 }, { signal });
+
+editTriggers.forEach((button) => {
+  button.addEventListener('click', () => {
+    const field = button.getAttribute('data-edit-trigger');
+    if (!field) return;
+    openInlineEdit(field);
+  }, { signal });
+});
+
+editCancels.forEach((button) => {
+  button.addEventListener('click', () => {
+    const field = button.getAttribute('data-edit-cancel');
+    if (!field) return;
+    closeInlineEdit(field);
+  }, { signal });
+});
+
+editForms.forEach((form) => {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (isSavingInlineEdit) return;
+
+    const field = form.getAttribute('data-edit-form');
+    const input = form.elements.value;
+    if (!field || !input) return;
+    await saveInlineEdit(field, String(input.value || '').trim());
+  }, { signal });
+});
 
 const setUploadProgress = (value, label) => {
   if (!uploadProgressWrap || !uploadProgressBar || !uploadProgressText) return;
@@ -162,13 +318,6 @@ const openImageMenu = (imageType, anchor) => {
   imageActionMenu.style.top = (anchorRect.bottom - heroRect.top + 6) + 'px';
   imageActionMenu.style.left = Math.max(8, anchorRect.right - heroRect.left - 180) + 'px';
   imageActionMenu.hidden = false;
-};
-
-const formatDob = (value) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 const refreshImages = () => {
@@ -232,9 +381,9 @@ coverPanel.addEventListener('click', () => {
 closeViewModal.addEventListener('click', () => imageViewModal.close(), { signal });
 
 document.addEventListener('click', (event) => {
-  if (imageActionMenu.hidden) return;
-  if (imageActionMenu.contains(event.target) || event.target === avatarAction || event.target === coverAction || avatarAction.contains(event.target) || coverAction.contains(event.target)) return;
-  closeImageMenu();
+  if (!imageActionMenu.hidden && !imageActionMenu.contains(event.target) && event.target !== avatarAction && event.target !== coverAction && !avatarAction.contains(event.target) && !coverAction.contains(event.target)) {
+    closeImageMenu();
+  }
 }, { signal });
 
 window.addEventListener('resize', closeImageMenu, { signal });
@@ -307,10 +456,13 @@ const loadProfile = async () => {
     if (!response.ok) throw new Error(data.error || 'Unable to load profile');
     const profile = data.profile || {};
 
-    aboutEmail.textContent = profile.email || '-';
-    aboutDob.textContent = formatDob(profile.date_of_birth);
-    aboutGender.textContent = profile.gender || '-';
-    aboutRole.textContent = profile.user_type || 'Administrator';
+    profileState.name = profile.name || '-';
+    profileState.email = profile.email || '-';
+    profileState.date_of_birth = profile.date_of_birth || '';
+    profileState.gender = profile.gender || '-';
+    profileState.user_type = profile.user_type || 'Administrator';
+
+    hydrateAboutSection();
     switchTab(true);
     refreshImages();
   } catch (error) {

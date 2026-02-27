@@ -51,6 +51,16 @@ export const PROFILE_STYLE = `
 .profile-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
 .profile-row:last-child{border-bottom:0}
 .profile-row span{color:var(--text-muted)}
+.profile-inline-edit{display:flex;align-items:center;gap:6px;justify-content:flex-end;min-width:0}
+.profile-inline-edit strong{font-weight:600}
+.profile-edit-trigger{border:1px solid var(--border);background:var(--surface-soft);padding:4px;border-radius:6px;cursor:pointer;display:grid;place-items:center;color:var(--text);transition:transform .18s ease,opacity .18s ease}
+.profile-edit-trigger:hover{transform:translateY(-1px)}
+.profile-edit-form{display:flex;align-items:center;gap:6px;opacity:0;transform:translateY(-4px) scale(.98);transition:opacity .2s ease,transform .2s ease}
+.profile-edit-form[hidden]{display:none!important}
+.profile-edit-form.is-visible{opacity:1;transform:translateY(0) scale(1)}
+.profile-edit-form input,.profile-edit-form select{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:5px 6px;color:var(--text);min-width:140px}
+.profile-edit-form button{border:1px solid var(--border);background:var(--surface-soft);padding:5px 8px;border-radius:6px;color:var(--text);cursor:pointer}
+.profile-row.is-editing strong{display:none}
 .profile-open-password{border:1px solid var(--border);background:var(--surface-soft);padding:6px 10px;border-radius:6px;cursor:pointer}
 .profile-password-form{display:grid;gap:8px;max-width:360px;margin-top:10px;animation:fadeUp .24s ease}
 .profile-password-form[hidden]{display:none!important}

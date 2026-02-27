@@ -2,7 +2,7 @@ import { dashboardPage } from "../ui/pages/dashboard/index.js";
 import { usersPage } from "../ui/pages/users/index.js";
 import { profilePage } from "../ui/pages/profile/index.js";
 import { html, json } from "../core/response.js";
-import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminImage, getAdminProfile, listAdminUsers, overview, uploadAdminImage } from "../controllers/adminController.js";
+import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminImage, getAdminProfile, listAdminUsers, overview, updateAdminProfile, uploadAdminImage } from "../controllers/adminController.js";
 import { destroySession, getAuthenticatedAdmin } from "../core/auth.js";
 
 export async function handleAdminRoute(request, env, url) {
@@ -54,6 +54,10 @@ export async function handleAdminRoute(request, env, url) {
 
   if (request.method === "POST" && url.pathname === "/api/admin/change-password") {
     return json(await changeAdminPassword(request, env, admin.id));
+  }
+
+  if (request.method === "PATCH" && url.pathname === "/api/admin/profile") {
+    return json(await updateAdminProfile(request, env, admin.id));
   }
 
   if (request.method === "DELETE" && url.pathname.startsWith("/api/admin/users/")) {
