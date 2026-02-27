@@ -5,6 +5,18 @@ import { createAdmin, deleteAdminById, findAdminByEmail, findAdminById, listAdmi
 import { hashPassword, verifyPassword } from "../security/password.js";
 import { USER_TYPES } from "../core/roles.js";
 
+const FILE_TYPE_EXTENSIONS = {
+  image: ["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg", "avif"],
+  pdf: ["pdf"],
+  video: ["mp4", "webm", "mov", "m4v", "avi", "mkv"],
+};
+
+const FILE_USAGE_PREFIX = {
+  "profile-pic": "admin/",
+  "cover-pic": "admin/",
+  other: "",
+};
+
 export async function overview(env) {
   const users = await listAdmins(env.DB);
   const sessions = await env.DB.prepare("SELECT COUNT(*) total FROM freeducation_sessions").first();
@@ -119,6 +131,49 @@ export async function getAdminImage(env, adminId, imageType) {
   return new Response(object.body, { headers });
 }
 
+export async function listAdminFiles(env, options = {}) {
+  const typeFilter = normalizeType(options.type);
+  const usageFilter = normalizeUsage(options.usage);
+  const cursor = String(options.cursor || "").trim();
+  const limit = Math.max(1, Math.min(120, Number.parseInt(String(options.limit || ""), 10) || 45));
+  const search = String(options.search || "").trim().toLowerCase();
+
+  const prefix = usageFilter && FILE_USAGE_PREFIX[usageFilter] !== undefined ? FILE_USAGE_PREFIX[usageFilter] : "";
+  const listed = await env.BUCKET.list({ prefix, cursor: cursor || undefined, limit });
+
+  const files = listed.objects
+    .map((item) => normalizeObjectInfo(item))
+    .filter((file) => {
+      if (typeFilter && file.type !== typeFilter) return false;
+      if (usageFilter && file.usage !== usageFilter) return false;
+      if (search && !file.key.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+  return {
+    files,
+    cursor: listed.truncated ? listed.cursor || "" : "",
+    truncated: Boolean(listed.truncated),
+  };
+}
+
+export async function getAdminFileObject(env, key) {
+  const objectKey = String(key || "").trim();
+  if (!objectKey || objectKey.length > 350 || objectKey.includes("..")) {
+    throw new HttpError(400, "Invalid object key");
+  }
+
+  const object = await env.BUCKET.get(objectKey);
+  if (!object) throw new HttpError(404, "File not found");
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", headers.get("cache-control") || "public, max-age=86400");
+  headers.set("content-disposition", `inline; filename=\"${objectKey.split("/").pop() || "file"}\"`);
+  return new Response(object.body, { headers });
+}
+
 export async function changeAdminPassword(request, env, adminId) {
   const body = await readBody(request);
   const currentPassword = String(body?.currentPassword || "");
@@ -156,4 +211,52 @@ export async function updateAdminProfile(request, env, adminId) {
 
   const profile = await findAdminById(env.DB, adminId);
   return { ok: true, profile };
+}
+
+function normalizeType(type) {
+  const next = String(type || "").toLowerCase();
+  if (["image", "pdf", "video", "other"].includes(next)) return next;
+  return "";
+}
+
+function normalizeUsage(usage) {
+  const next = String(usage || "").toLowerCase();
+  if (["profile-pic", "cover-pic", "other"].includes(next)) return next;
+  return "";
+}
+
+function normalizeObjectInfo(item) {
+  const key = String(item?.key || "");
+  const extension = key.includes(".") ? key.split(".").pop().toLowerCase() : "";
+  const type = detectFileType(extension, String(item?.httpMetadata?.contentType || ""));
+  const usage = detectUsageFromKey(key);
+  return {
+    key,
+    type,
+    usage,
+    extension,
+    size: Number(item?.size || 0),
+    uploadedAt: item?.uploaded ? new Date(item.uploaded).toISOString() : "",
+    etag: item?.etag || "",
+    contentType: item?.httpMetadata?.contentType || "",
+    previewUrl: `/api/admin/files/object?key=${encodeURIComponent(key)}`,
+  };
+}
+
+function detectFileType(extension, contentType) {
+  const lowered = String(contentType || "").toLowerCase();
+  if (lowered.startsWith("image/")) return "image";
+  if (lowered.startsWith("video/")) return "video";
+  if (lowered === "application/pdf") return "pdf";
+  for (const [type, extensions] of Object.entries(FILE_TYPE_EXTENSIONS)) {
+    if (extensions.includes(extension)) return type;
+  }
+  return "other";
+}
+
+function detectUsageFromKey(key) {
+  const lower = String(key || "").toLowerCase();
+  if (lower.includes("avatar")) return "profile-pic";
+  if (lower.includes("cover")) return "cover-pic";
+  return "other";
 }
