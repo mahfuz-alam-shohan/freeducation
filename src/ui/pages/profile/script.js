@@ -60,6 +60,8 @@ let tabSwitchTimer = null;
 let activeEditField = null;
 let isSavingInlineEdit = false;
 const editAnimationTimers = new Map();
+let imageMenuCloseTimer = null;
+let imageModalCloseTimer = null;
 
 const profileState = {
   name: '-',
@@ -390,12 +392,52 @@ const setUploadBusyState = (busy) => {
 const openImagePreview = (src) => {
   if (!src || isUploadingImage) return;
   imageBigPreview.src = src;
-  if (imageViewModal.open) return;
-  imageViewModal.showModal();
+  if (!imageViewModal.open) imageViewModal.showModal();
+
+  if (imageModalCloseTimer) {
+    window.clearTimeout(imageModalCloseTimer);
+    imageModalCloseTimer = null;
+  }
+  imageViewModal.classList.remove('is-closing');
+  requestAnimationFrame(() => {
+    imageViewModal.classList.add('is-open');
+  });
 };
 
-const closeImageMenu = () => {
-  imageActionMenu.hidden = true;
+const closeImagePreview = () => {
+  if (!imageViewModal.open) return;
+  imageViewModal.classList.remove('is-open');
+  imageViewModal.classList.add('is-closing');
+
+  if (imageModalCloseTimer) window.clearTimeout(imageModalCloseTimer);
+  imageModalCloseTimer = window.setTimeout(() => {
+    imageViewModal.classList.remove('is-closing');
+    imageViewModal.close();
+    imageModalCloseTimer = null;
+  }, 260);
+};
+
+const closeImageMenu = (animated = true) => {
+  if (imageActionMenu.hidden) return;
+
+  if (imageMenuCloseTimer) {
+    window.clearTimeout(imageMenuCloseTimer);
+    imageMenuCloseTimer = null;
+  }
+
+  if (!animated) {
+    imageActionMenu.classList.remove('is-open', 'is-closing');
+    imageActionMenu.hidden = true;
+    return;
+  }
+
+  imageActionMenu.classList.remove('is-open');
+  imageActionMenu.classList.add('is-closing');
+  imageMenuCloseTimer = window.setTimeout(() => {
+    imageActionMenu.hidden = true;
+    imageActionMenu.classList.remove('is-closing');
+    imageMenuCloseTimer = null;
+  }, 230);
 };
 
 const openImageMenu = (imageType, anchor) => {
@@ -413,10 +455,21 @@ const openImageMenu = (imageType, anchor) => {
   imageActionMenu.style.top = (anchorRect.bottom - heroRect.top + 6) + 'px';
   imageActionMenu.style.left = Math.max(8, anchorRect.right - heroRect.left - 180) + 'px';
   imageActionMenu.hidden = false;
+  imageActionMenu.classList.remove('is-closing');
+  requestAnimationFrame(() => imageActionMenu.classList.add('is-open'));
+};
+
+const setImageLoadingState = (imageType, loading) => {
+  const panel = imageType === 'avatar' ? avatarPanel : coverPanel;
+  const image = imageType === 'avatar' ? avatarImage : coverImage;
+  panel.classList.toggle('is-loading-media', loading);
+  if (loading) image.classList.remove('is-ready');
 };
 
 const refreshImages = () => {
   const stamp = Date.now();
+  setImageLoadingState('avatar', true);
+  setImageLoadingState('cover', true);
   avatarImage.src = '/api/admin/profile/image/avatar?t=' + stamp;
   coverImage.src = '/api/admin/profile/image/cover?t=' + stamp;
 };
@@ -425,19 +478,27 @@ avatarImage.addEventListener('load', () => {
   hasImage.avatar = true;
   avatarImage.hidden = false;
   avatarFallback.hidden = true;
+  setImageLoadingState('avatar', false);
+  requestAnimationFrame(() => avatarImage.classList.add('is-ready'));
 }, { signal });
 avatarImage.addEventListener('error', () => {
   hasImage.avatar = false;
   avatarImage.hidden = true;
   avatarFallback.hidden = false;
+  setImageLoadingState('avatar', false);
+  avatarImage.classList.remove('is-ready');
 }, { signal });
 coverImage.addEventListener('load', () => {
   hasImage.cover = true;
   coverImage.hidden = false;
+  setImageLoadingState('cover', false);
+  requestAnimationFrame(() => coverImage.classList.add('is-ready'));
 }, { signal });
 coverImage.addEventListener('error', () => {
   hasImage.cover = false;
   coverImage.hidden = true;
+  setImageLoadingState('cover', false);
+  coverImage.classList.remove('is-ready');
 }, { signal });
 
 avatarAction.addEventListener('click', (event) => {
@@ -472,9 +533,13 @@ coverPanel.addEventListener('click', (event) => {
   openImagePreview(coverImage.src);
 }, { signal });
 
-closeViewModal.addEventListener('click', () => imageViewModal.close(), { signal });
+closeViewModal.addEventListener('click', closeImagePreview, { signal });
+imageViewModal.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeImagePreview();
+}, { signal });
 imageViewModal.addEventListener('click', (event) => {
-  if (event.target === imageViewModal) imageViewModal.close();
+  if (event.target === imageViewModal) closeImagePreview();
 }, { signal });
 
 document.addEventListener('click', (event) => {
@@ -483,7 +548,7 @@ document.addEventListener('click', (event) => {
   }
 }, { signal });
 
-window.addEventListener('resize', closeImageMenu, { signal });
+window.addEventListener('resize', () => closeImageMenu(false), { signal });
 window.addEventListener('resize', () => {
   updateTabIndicator(tabAbout.classList.contains('is-active') ? tabAbout : tabSecurity);
 }, { signal });

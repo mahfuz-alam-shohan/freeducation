@@ -27,7 +27,11 @@ export const PROFILE_STYLE = `
 .profile-loader-security{display:grid;gap:8px;padding-top:8px;border-top:1px solid var(--border)}
 .profile-hero{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:visible;animation:fadeUp .42s cubic-bezier(.22,.61,.36,1);transform-origin:50% 0}
 .profile-cover{position:relative;height:170px;background:var(--surface-soft);border-radius:10px 10px 0 0;overflow:hidden}
+.profile-cover::after,.profile-avatar-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,color-mix(in srgb,#fff 24%,transparent) 45%,transparent 70%);transform:translateX(-130%);opacity:0;pointer-events:none}
+.profile-cover.is-loading-media::after,.profile-avatar-wrap.is-loading-media::after{opacity:1;animation:profileMediaSweep 1.05s linear infinite}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.profile-cover-image,.profile-avatar-image{opacity:0;transform:scale(1.025);filter:blur(1.5px);transition:opacity .52s ease,transform .54s cubic-bezier(.2,.9,.3,1),filter .4s ease}
+.profile-cover-image.is-ready,.profile-avatar-image.is-ready{opacity:1;transform:scale(1);filter:blur(0)}
 .profile-head{position:relative;display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px;z-index:2}
 .profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible;transition:transform .42s cubic-bezier(.22,.82,.31,1),box-shadow .3s ease}
 .profile-avatar-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
@@ -41,8 +45,10 @@ export const PROFILE_STYLE = `
 .profile-image-action-cover:hover{background:rgba(20,20,20,.62)}
 .profile-image-action-avatar{right:-2px;bottom:-2px;border-color:var(--surface);background:var(--surface-strong);color:var(--text)}
 .profile-image-action-avatar:hover{background:var(--surface-soft)}
-.profile-image-menu{position:absolute;z-index:12;min-width:176px;display:grid;gap:6px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.profile-image-menu{position:absolute;z-index:12;min-width:176px;display:grid;gap:6px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 10px 24px rgba(0,0,0,.18);transform-origin:100% 0;opacity:0;transform:translateY(-8px) scale(.92);transition:opacity .3s ease,transform .42s cubic-bezier(.22,1.22,.33,1)}
 .profile-image-menu[hidden]{display:none!important}
+.profile-image-menu.is-open{opacity:1;transform:translateY(0) scale(1)}
+.profile-image-menu.is-closing{opacity:0;transform:translateY(-6px) scale(.94)}
 .profile-menu-btn{display:flex;align-items:center;justify-content:flex-start;border:1px solid var(--border);background:var(--surface-soft);padding:7px 9px;border-radius:6px;cursor:pointer;color:var(--text)}
 .profile-menu-btn:hover{background:var(--surface-strong)}
 .profile-title h1{margin:0;font-size:1.3rem}
@@ -57,17 +63,21 @@ export const PROFILE_STYLE = `
 .profile-panel.is-active{display:block}
 .profile-panel[hidden]{display:none!important}
 .profile-panel.is-leaving{display:block;animation:panelOut .16s ease forwards}
-.profile-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);min-width:0}
+.profile-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);min-width:0;animation:profileRise .4s cubic-bezier(.22,.61,.36,1) both}
 .profile-row:last-child{border-bottom:0}
+.profile-row:nth-child(2){animation-delay:.02s}.profile-row:nth-child(3){animation-delay:.04s}.profile-row:nth-child(4){animation-delay:.06s}.profile-row:nth-child(5){animation-delay:.08s}
 .profile-row span{color:var(--text-muted);flex:0 0 auto}
 .profile-inline-edit{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex:1;min-width:0;flex-wrap:wrap}
 .profile-inline-edit strong{font-weight:600;max-width:100%;overflow-wrap:anywhere;text-align:right;transition:opacity .3s ease,transform .32s cubic-bezier(.22,.61,.36,1)}
 .profile-edit-trigger{border:1px solid var(--border);background:var(--surface-soft);padding:4px;border-radius:8px;cursor:pointer;display:grid;place-items:center;color:var(--text);transition:transform .28s cubic-bezier(.22,.82,.31,1),opacity .24s ease,background .24s ease,border-color .24s ease,box-shadow .3s ease}
 .profile-edit-trigger:hover{transform:translateY(-1px);background:var(--surface-strong);box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 16%,transparent)}
-.profile-edit-form{display:flex;align-items:center;gap:6px;opacity:0;transform:translateY(-6px) scale(.97);transition:opacity .34s ease,transform .34s cubic-bezier(.22,.61,.36,1);flex:1 1 100%;min-width:0;max-width:100%;flex-wrap:wrap;justify-content:flex-end}
+.profile-edit-form{display:flex;align-items:center;gap:6px;opacity:0;transform:translateY(-6px) scale(.97);transition:opacity .34s ease,transform .34s cubic-bezier(.22,.61,.36,1);flex:0 1 auto;min-width:0;max-width:min(100%,420px);flex-wrap:wrap;justify-content:flex-end}
 .profile-edit-form[hidden]{display:none!important}
 .profile-edit-form.is-visible{opacity:1;transform:translateY(0) scale(1)}
 .profile-edit-form input,.profile-edit-form select{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:5px 6px;color:var(--text);min-width:0;max-width:100%;width:min(100%,220px)}
+.profile-edit-form-compact{max-width:min(100%,270px)}
+.profile-edit-form[data-edit-form="name"] input{width:min(100%,180px)}
+.profile-edit-form[data-edit-form="gender"] select{width:min(100%,170px)}
 .profile-dob-inputs{display:grid;grid-template-columns:1fr 1.2fr 1.3fr;gap:6px;width:min(100%,320px)}
 .profile-dob-inputs input,.profile-dob-inputs select{width:100%}
 .profile-edit-form button{border:1px solid var(--border);background:var(--surface-soft);padding:5px 8px;border-radius:6px;color:var(--text);cursor:pointer;transition:background .24s ease,transform .24s ease}
@@ -83,17 +93,23 @@ export const PROFILE_STYLE = `
 .profile-password-form input{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text)}
 .profile-password-form button,.profile-modal-card button{border:1px solid var(--border);background:var(--surface-soft);padding:7px 10px;border-radius:6px;color:var(--text);cursor:pointer}
 .profile-msg{min-height:1.2em;color:var(--text-muted);margin:8px 0 0}
-.profile-modal{border:none;padding:0;background:transparent}
+.profile-modal{border:none;padding:0;background:transparent;opacity:0;transition:opacity .28s ease}
 .profile-modal::backdrop{background:var(--overlay)}
-.profile-modal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:min(92vw,380px);display:grid;gap:8px}
+.profile-modal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:min(92vw,380px);display:grid;gap:8px;opacity:0;transform:translateY(12px) scale(.94);transition:opacity .3s ease,transform .5s cubic-bezier(.2,1.08,.3,1)}
+.profile-modal.is-open{opacity:1}
+.profile-modal.is-open .profile-modal-card{opacity:1;transform:translateY(0) scale(1)}
+.profile-modal.is-closing{opacity:0}
+.profile-modal.is-closing .profile-modal-card{opacity:0;transform:translateY(8px) scale(.95)}
 .profile-modal-large{min-width:min(92vw,720px)}
 .profile-upload-progress{display:grid;gap:4px}
 .profile-upload-progress[hidden]{display:none!important}
 .profile-upload-progress p{margin:0;font-size:.88rem;color:var(--text-muted)}
 .profile-upload-progress progress{width:100%;height:8px}
 .profile-big-preview{width:100%;max-height:72vh;object-fit:contain;background:var(--surface-strong);border-radius:8px}
-@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}.profile-loader-about-row{gap:8px;padding:6px 0}.profile-loader-shimmer-label{width:64px}.profile-loader-shimmer-value{width:min(100%,140px)}.profile-row{flex-direction:column;gap:6px;padding:7px 0}.profile-row.is-editing{gap:4px;padding:5px 0}.profile-inline-edit{width:100%;justify-content:flex-start;gap:5px}.profile-inline-edit strong{text-align:left;font-size:.95rem}.profile-edit-trigger{padding:3px;border-radius:6px}.profile-edit-trigger .profile-inline-icon{width:15px;height:15px}.profile-edit-form{justify-content:flex-start;gap:5px}.profile-edit-form input,.profile-edit-form select{width:100%;padding:4px 6px;font-size:.92rem}.profile-edit-form button{padding:4px 7px;font-size:.82rem}.profile-dob-inputs{grid-template-columns:1fr 1fr 1fr;width:100%;gap:5px}}
+@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}.profile-loader-about-row{gap:8px;padding:6px 0}.profile-loader-shimmer-label{width:64px}.profile-loader-shimmer-value{width:min(100%,140px)}.profile-row{flex-direction:column;gap:6px;padding:7px 0}.profile-row.is-editing{gap:4px;padding:5px 0}.profile-inline-edit{width:100%;justify-content:flex-start;gap:5px}.profile-inline-edit strong{text-align:left;font-size:.95rem}.profile-edit-trigger{padding:3px;border-radius:6px}.profile-edit-trigger .profile-inline-icon{width:15px;height:15px}.profile-edit-form{justify-content:flex-start;gap:5px;max-width:100%}.profile-edit-form input,.profile-edit-form select{width:min(76vw,220px);padding:4px 6px;font-size:.92rem}.profile-edit-form-compact{max-width:min(86vw,220px)}.profile-edit-form[data-edit-form="name"] input{width:min(70vw,190px)}.profile-edit-form[data-edit-form="gender"] select{width:min(64vw,170px)}.profile-edit-form button{padding:4px 7px;font-size:.82rem}.profile-dob-inputs{grid-template-columns:1fr 1fr 1fr;width:min(100%,290px);gap:5px}}
 @keyframes panelIn{from{opacity:.35;transform:translateY(8px) scale(.994);filter:blur(1px)}to{opacity:1;transform:none;filter:blur(0)}}
 @keyframes panelOut{from{opacity:1;transform:none;filter:blur(0)}to{opacity:0;transform:translateY(-5px) scale(.996);filter:blur(1px)}}
 @keyframes profileShimmer{100%{transform:translateX(100%)}}
+@keyframes profileRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes profileMediaSweep{100%{transform:translateX(120%)}}
 `;
