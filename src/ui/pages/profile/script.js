@@ -58,6 +58,7 @@ let isUploadingImage = false;
 let tabSwitchTimer = null;
 let activeEditField = null;
 let isSavingInlineEdit = false;
+const editAnimationTimers = new Map();
 
 const profileState = {
   name: '-',
@@ -80,12 +81,37 @@ const resetUploadUi = () => {
   if (uploadProgressText) uploadProgressText.textContent = 'Preparing upload...';
 };
 
-const showMessage = (message, isError = false) => {
-  profileMsg.textContent = message;
-  profileMsg.style.color = isError ? '#ff9ca1' : '';
-  if (typeof window.__showAppStatus === 'function' && message) {
-    window.__showAppStatus(message, isError ? 'error' : 'success');
+const clearInlineMessage = () => {
+  profileMsg.hidden = true;
+  profileMsg.textContent = '';
+  profileMsg.style.color = '';
+};
+
+const showMessage = (message, options = {}) => {
+  const { type = 'success', inline = false } = options;
+
+  if (inline && message) {
+    profileMsg.hidden = false;
+    profileMsg.textContent = message;
+    profileMsg.style.color = type === 'error' ? '#ff9ca1' : '';
+  } else {
+    clearInlineMessage();
   }
+
+  if (typeof window.__showAppStatus === 'function' && message) {
+    window.__showAppStatus(message, type === 'error' ? 'error' : 'success');
+  }
+};
+
+const updateTabIndicator = (activeTab) => {
+  if (!activeTab || !profileTabIndicator) return;
+  const tabsWrap = profileTabIndicator.parentElement;
+  if (!tabsWrap) return;
+
+  const wrapRect = tabsWrap.getBoundingClientRect();
+  const tabRect = activeTab.getBoundingClientRect();
+  profileTabIndicator.style.width = tabRect.width + 'px';
+  profileTabIndicator.style.transform = 'translateX(' + (tabRect.left - wrapRect.left) + 'px)';
 };
 
 const switchTab = (showAbout) => {
@@ -98,7 +124,7 @@ const switchTab = (showAbout) => {
   tabSecurity.classList.toggle('is-active', !showAbout);
   tabAbout.setAttribute('aria-selected', String(showAbout));
   tabSecurity.setAttribute('aria-selected', String(!showAbout));
-  profileTabIndicator.style.setProperty('--tab-index', showAbout ? '0' : '1');
+  updateTabIndicator(showAbout ? tabAbout : tabSecurity);
 
   outgoingPanel.classList.remove('is-active');
   outgoingPanel.classList.add('is-leaving');
@@ -145,10 +171,21 @@ const closeInlineEdit = (field) => {
   const row = panelAbout.querySelector('[data-field="' + field + '"]');
   if (!trigger || !form || !row) return;
 
-  form.hidden = true;
+  const existingTimer = editAnimationTimers.get(field);
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+    editAnimationTimers.delete(field);
+  }
+
   form.classList.remove('is-visible');
-  trigger.hidden = false;
-  row.classList.remove('is-editing');
+  const hideTimer = window.setTimeout(() => {
+    form.hidden = true;
+    trigger.hidden = false;
+    row.classList.remove('is-editing');
+    editAnimationTimers.delete(field);
+  }, 220);
+  editAnimationTimers.set(field, hideTimer);
+
   if (activeEditField === field) activeEditField = null;
 };
 
@@ -162,6 +199,12 @@ const openInlineEdit = (field) => {
   const form = panelAbout.querySelector('[data-edit-form="' + field + '"]');
   const row = panelAbout.querySelector('[data-field="' + field + '"]');
   if (!trigger || !form || !row) return;
+
+  const existingTimer = editAnimationTimers.get(field);
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+    editAnimationTimers.delete(field);
+  }
 
   const input = form.elements.value;
   if (!input) return;
@@ -228,7 +271,7 @@ const saveInlineEdit = async (field, value) => {
     showMessage('Profile updated.');
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to update profile', true);
+    showMessage(error?.message || 'Unable to update profile', { type: 'error', inline: true });
   } finally {
     setInlineEditBusy(false);
   }
@@ -387,6 +430,9 @@ document.addEventListener('click', (event) => {
 }, { signal });
 
 window.addEventListener('resize', closeImageMenu, { signal });
+window.addEventListener('resize', () => {
+  updateTabIndicator(tabAbout.classList.contains('is-active') ? tabAbout : tabSecurity);
+}, { signal });
 
 imageUploadInput.addEventListener('change', async (event) => {
   const file = event.target.files?.[0];
@@ -418,7 +464,7 @@ imageUploadInput.addEventListener('change', async (event) => {
     }, 280);
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to upload image', true);
+    showMessage(error?.message || 'Unable to upload image', { type: 'error', inline: true });
   } finally {
     setUploadBusyState(false);
   }
@@ -444,7 +490,7 @@ passwordForm.addEventListener('submit', async (event) => {
     openPasswordForm.textContent = 'Change password';
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to update password', true);
+    showMessage(error?.message || 'Unable to update password', { type: 'error', inline: true });
   }
 }, { signal });
 
@@ -467,13 +513,14 @@ const loadProfile = async () => {
     refreshImages();
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    showMessage(error?.message || 'Unable to load profile', true);
+    showMessage(error?.message || 'Unable to load profile', { type: 'error', inline: true });
   } finally {
     setPageLoading(false);
   }
 };
 
 setPageLoading(true);
+clearInlineMessage();
 loadProfile();
 resetUploadUi();
 })();
