@@ -1,7 +1,7 @@
 import { html, json } from "../core/response.js";
 import { getAuthenticatedAdmin } from "../core/auth.js";
 import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
-import { TEACHER_NAV_ITEMS } from "../ui/config/navigation.js";
+import { TEACHER_NAV_SECTIONS } from "../ui/config/navigation.js";
 import { profilePage } from "../ui/pages/profile/index.js";
 import { renderTeacherDashboard } from "../ui/pages/shared/dashboardRenderer.js";
 import { getAdminImage, getAdminProfile, updateAdminProfile, uploadAdminImage, changeAdminPassword } from "../controllers/adminController.js";
@@ -24,7 +24,7 @@ export async function handleTeacherRoute(request, env, url) {
   if (request.method === "GET" && url.pathname === "/teacher/dashboard") {
     return html(renderTeacherDashboard({
       homePath: "/teacher/dashboard",
-      navItems: TEACHER_NAV_ITEMS,
+      navItems: TEACHER_NAV_SECTIONS,
       admin: user,
       currentDeviceLabel: user.session_device_label || "",
       loginAt: user.session_created_at || "",
@@ -32,7 +32,7 @@ export async function handleTeacherRoute(request, env, url) {
   }
 
   if (request.method === "GET" && url.pathname === "/teacher/profile") {
-    return html(profilePage(user, { navItems: TEACHER_NAV_ITEMS, homePath: "/teacher/dashboard", apiBase: "/api/teacher" }));
+    return html(profilePage(user, { navItems: TEACHER_NAV_SECTIONS, homePath: "/teacher/dashboard", apiBase: "/api/teacher" }));
   }
 
   if (request.method === "GET" && url.pathname === "/api/teacher/profile") {

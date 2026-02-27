@@ -1,7 +1,7 @@
 import { html, json } from "../core/response.js";
 import { getAuthenticatedAdmin } from "../core/auth.js";
 import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
-import { STUDENT_NAV_ITEMS } from "../ui/config/navigation.js";
+import { STUDENT_NAV_SECTIONS } from "../ui/config/navigation.js";
 import { profilePage } from "../ui/pages/profile/index.js";
 import { renderSimpleRoleDashboard } from "../ui/pages/shared/dashboardRenderer.js";
 import { getAdminImage, getAdminProfile, updateAdminProfile, uploadAdminImage, changeAdminPassword } from "../controllers/adminController.js";
@@ -25,7 +25,7 @@ export async function handleStudentRoute(request, env, url) {
     return html(renderSimpleRoleDashboard({
       roleName: "Student",
       homePath: "/student/dashboard",
-      navItems: STUDENT_NAV_ITEMS,
+      navItems: STUDENT_NAV_SECTIONS,
       admin: user,
       currentDeviceLabel: user.session_device_label || "",
       loginAt: user.session_created_at || "",
@@ -33,7 +33,7 @@ export async function handleStudentRoute(request, env, url) {
   }
 
   if (request.method === "GET" && url.pathname === "/student/profile") {
-    return html(profilePage(user, { navItems: STUDENT_NAV_ITEMS, homePath: "/student/dashboard", apiBase: "/api/student" }));
+    return html(profilePage(user, { navItems: STUDENT_NAV_SECTIONS, homePath: "/student/dashboard", apiBase: "/api/student" }));
   }
 
   if (request.method === "GET" && url.pathname === "/api/student/profile") {

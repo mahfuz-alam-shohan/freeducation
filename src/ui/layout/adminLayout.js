@@ -1,5 +1,5 @@
 import { APP_NAME } from "../../config.js";
-import { ADMIN_NAV_ITEMS } from "../config/navigation.js";
+import { ADMIN_NAV_SECTIONS } from "../config/navigation.js";
 import { globalFooterText } from "./footer.js";
 import { renderDocument } from "./document.js";
 
@@ -51,10 +51,14 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-sidebar::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--pointer-x) var(--pointer-y),color-mix(in srgb,var(--accent) 18%,transparent),transparent 60%);opacity:.6;transition:opacity .26s ease}
 .admin-sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .admin-sidebar-close{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:background .2s ease}
-.admin-nav{display:grid;gap:4px;align-content:start}
-.admin-nav a{padding:8px 10px;border-radius:8px;color:var(--text-muted);display:flex;align-items:center;gap:8px;transition:background .22s ease,color .22s ease,transform .42s var(--motion-spring),opacity .42s ease,box-shadow .3s ease;opacity:.92;transform:translateX(-3px)}
-.admin-nav a:nth-child(1){--menu-delay:90ms}.admin-nav a:nth-child(2){--menu-delay:160ms}.admin-nav a:nth-child(3){--menu-delay:230ms}.admin-nav a:nth-child(4){--menu-delay:300ms}.admin-nav a:nth-child(5){--menu-delay:370ms}
+.admin-nav{display:grid;gap:10px;align-content:start}
+.admin-nav-section{display:grid;gap:4px}
+.admin-nav-title{margin:0;padding:0 4px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.admin-nav-links{display:grid;gap:4px}
+.admin-nav a{padding:8px 10px;border-radius:8px;color:var(--text-muted);display:flex;align-items:center;gap:8px;transition:background .22s ease,color .22s ease,transform .42s var(--motion-spring),opacity .42s ease,box-shadow .3s ease,border-color .2s ease;opacity:.92;transform:translateX(-3px);border:1px solid transparent}
 .admin-nav a.active,.admin-nav a:hover{background:var(--surface);color:var(--text);transform:translateX(0);box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 16%,transparent)}
+.admin-nav a.admin-nav-highlight{color:color-mix(in srgb,var(--accent) 70%,#fff);border-color:color-mix(in srgb,var(--accent) 40%,var(--border));background:color-mix(in srgb,var(--accent) 16%,var(--surface-soft));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}
+.admin-nav a.admin-nav-highlight.active,.admin-nav a.admin-nav-highlight:hover{background:color-mix(in srgb,var(--accent) 25%,var(--surface));color:var(--text)}
 .admin-theme-wrap{border-top:1px solid var(--border);padding-top:10px}
 .admin-theme-toggle{position:relative;isolation:isolate;width:100%;min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:4px 8px 4px 6px;cursor:pointer;font-size:.84rem;font-weight:600;letter-spacing:.02em;transition:background .2s ease,border-color .2s ease,transform .2s var(--motion-swift)}
 .admin-theme-toggle::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 18%,transparent),transparent 45%);opacity:0;transition:opacity .28s ease;z-index:-1}
@@ -82,8 +86,9 @@ body[data-theme='light'] .admin-theme-moon{opacity:0;transform:scale(.58) rotate
 .admin-profile-name{margin:0;font-weight:650;font-size:.94rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .admin-profile-email{margin:0;font-size:.82rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .admin-profile-divider{height:1px;background:var(--border)}
-.admin-profile-logout{height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.9rem}
-.admin-profile-logout:hover{background:var(--surface-soft)}
+.admin-profile-logout,.admin-profile-login{height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.9rem}
+.admin-profile-logout:hover,.admin-profile-login:hover{background:var(--surface-soft)}
+.admin-profile-help{margin:0;font-size:.82rem;color:var(--text-muted);line-height:1.4}
 body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-events:auto}
 .admin-content{padding:6px 6px 8px;display:grid;gap:6px;align-content:start;animation:section-in .24s var(--motion-swift) both;transition:opacity .2s ease;min-height:220px}
 .admin-content > *{animation:content-float-in .36s var(--motion-smooth) both;animation-delay:calc(var(--content-seq,0) * 32ms);transform-origin:50% 0;width:100%}
@@ -97,7 +102,7 @@ body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-e
 body.menu-open{overflow:hidden}
 body.menu-open .admin-nav-overlay{visibility:visible}
 body.menu-open .admin-sidebar{transform:translate3d(0,0,0)}
-body.menu-open .admin-nav a{animation:menu-item-in .56s cubic-bezier(.18,.75,.25,1) both;animation-delay:var(--menu-delay,0ms)}
+body.menu-open .admin-nav a{animation:menu-item-in .56s cubic-bezier(.18,.75,.25,1) both}
 body.app-navigating .admin-content{opacity:.78}
 body.app-navigating .admin-content::after{content:'Loading content...';display:block;border:1px dashed var(--border);background:var(--surface);color:var(--text-muted);font-size:.84rem;padding:6px 8px;border-radius:8px}
 .admin-logout:focus-visible,.admin-nav a:focus-visible,.admin-menu-toggle:focus-visible,.admin-sidebar-close:focus-visible,.admin-avatar:focus-visible,.admin-profile-logout:focus-visible,.admin-theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -366,13 +371,6 @@ const ADMIN_LAYOUT_SCRIPT = `
       if (profilePanel.contains(event.target) || avatarButton.contains(event.target)) return;
       setProfile(false);
     }, { signal });
-  } else if (avatarButton) {
-    avatarButton.addEventListener('click', () => {
-      const loginHref = avatarButton.dataset.loginHref || '';
-      if (!loginHref) return;
-      window.location.href = loginHref;
-    }, { signal });
-  }
 
   if (profileLogout && mainLogout) {
     profileLogout.addEventListener('click', () => {
@@ -386,8 +384,8 @@ const ADMIN_LAYOUT_SCRIPT = `
       setProfile(false);
       setNavigating(1800);
       await fetch('/api/logout', { method: 'POST', signal });
-      if (window.__appNavigate) window.__appNavigate('/admin/login');
-      else window.location.href = '/admin/login';
+      if (window.__appNavigate) window.__appNavigate('/');
+      else window.location.href = '/';
     }, { signal });
   }
 
@@ -436,6 +434,23 @@ const ADMIN_LAYOUT_SCRIPT = `
 })();
 `;
 
+
+function normalizeNavSections(navItems = []) {
+  if (!Array.isArray(navItems) || !navItems.length) return [];
+  const first = navItems[0] || {};
+  if (Array.isArray(first.items)) return navItems;
+  return [{ title: "Navigation", items: navItems }];
+}
+
+function renderNav(navItems = [], activeMenu = "") {
+  const sections = normalizeNavSections(navItems);
+  return `<nav class="admin-nav">${sections.map((section) => {
+    const title = String(section?.title || "").trim();
+    const items = Array.isArray(section?.items) ? section.items : [];
+    return `<section class="admin-nav-section">${title ? `<h3 class="admin-nav-title">${title}</h3>` : ""}<div class="admin-nav-links">${items.map((item) => `<a class="${activeMenu === item.key ? "active" : ""} ${item.kind === "highlight" ? "admin-nav-highlight" : ""}" href="${item.href}">${item.icon}${item.label}</a>`).join("")}</div></section>`;
+  }).join("")}</nav>`;
+}
+
 const initialsFor = (name = "") => {
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "A";
@@ -443,8 +458,8 @@ const initialsFor = (name = "") => {
   return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
 };
 
-export function renderAdminLayout({ title, activeMenu, admin, content, contentClass = "", script = "", footerText = globalFooterText(), homePath = "/", navItems = ADMIN_NAV_ITEMS, pageClass = "", pageStyles = "" }) {
-  const nav = `<nav class="admin-nav">${navItems.map((item) => `<a class="${activeMenu === item.key ? "active" : ""}" href="${item.href}">${item.icon}${item.label}</a>`).join("")}</nav>`;
+export function renderAdminLayout({ title, activeMenu, admin, content, contentClass = "", script = "", footerText = globalFooterText(), homePath = "/", navItems = ADMIN_NAV_SECTIONS, pageClass = "", pageStyles = "" }) {
+  const nav = renderNav(navItems, activeMenu);
   const isAuthenticated = Boolean(admin);
   const safeAdmin = admin || { name: "Guest", email: "Not signed in" };
   const initials = initialsFor(admin?.name);
@@ -456,7 +471,7 @@ export function renderAdminLayout({ title, activeMenu, admin, content, contentCl
     bodyClass: pageClass,
     pageStyles: `${ADMIN_BASE_STYLE}
 ${pageStyles}`,
-    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to homepage" data-brand="${APP_NAME}" data-home="${homePath}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${safeAdmin.name}">${safeAdmin.name}</span><span class="admin-user-email" title="${safeAdmin.email}">${safeAdmin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="${isAuthenticated ? "Open profile" : "Profile"}" aria-expanded="false" aria-haspopup="${isAuthenticated ? "dialog" : "false"}" aria-busy="false" data-login-href="${isAuthenticated ? "" : "/admin/login"}"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${avatarFallback}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button>${isAuthenticated ? `<button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${safeAdmin.name}">${safeAdmin.name}</p><p class="admin-profile-email" title="${safeAdmin.email}">${safeAdmin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div>` : ""}</div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" data-theme-state="idle" aria-pressed="false" aria-busy="false"><span class="admin-theme-orb" aria-hidden="true"><svg class="admin-theme-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.51 17.51l1.56 1.56M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.51 6.49l1.56-1.56"></path></svg><svg class="admin-theme-moon" viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5Z"></path></svg></span><span class="admin-theme-copy"><span class="admin-theme-label">Theme</span><span id="themeToggleText" class="admin-theme-text">Dark mode on</span></span><span id="themeToggleChip" class="admin-theme-chip">Dark</span></button></div></aside><main class="admin-content ${contentClass}">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
+    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to homepage" data-brand="${APP_NAME}" data-home="${homePath}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${safeAdmin.name}">${safeAdmin.name}</span><span class="admin-user-email" title="${safeAdmin.email}">${safeAdmin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="${isAuthenticated ? "Open profile" : "Open login menu"}" aria-expanded="false" aria-haspopup="dialog" aria-busy="false"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${avatarFallback}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button>${isAuthenticated ? `<button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button>` : ""}<div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="${isAuthenticated ? "Profile menu" : "Login menu"}">${isAuthenticated ? `<p class="admin-profile-name" title="${safeAdmin.name}">${safeAdmin.name}</p><p class="admin-profile-email" title="${safeAdmin.email}">${safeAdmin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button>` : `<p class="admin-profile-name">Welcome</p><p class="admin-profile-help">You are currently logged out. Please sign in to access dashboard pages and your profile.</p><div class="admin-profile-divider"></div><a class="admin-profile-login" href="/admin/login">Login</a>`}</div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" data-theme-state="idle" aria-pressed="false" aria-busy="false"><span class="admin-theme-orb" aria-hidden="true"><svg class="admin-theme-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.51 17.51l1.56 1.56M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.51 6.49l1.56-1.56"></path></svg><svg class="admin-theme-moon" viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5Z"></path></svg></span><span class="admin-theme-copy"><span class="admin-theme-label">Theme</span><span id="themeToggleText" class="admin-theme-text">Dark mode on</span></span><span id="themeToggleChip" class="admin-theme-chip">Dark</span></button></div></aside><main class="admin-content ${contentClass}">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
     script: `${ADMIN_LAYOUT_SCRIPT}
 ${script}`,
   });

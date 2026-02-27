@@ -1,10 +1,32 @@
 const navIcon = (path) => `<svg class="admin-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
+const HOME_ITEM = {
+  key: "home",
+  href: "/",
+  label: "Home",
+  icon: navIcon("<path d='M3 10.5 12 3l9 7.5'/><path d='M5.5 9.7V21h13V9.7'/>")
+};
+
+const LOGIN_ITEM = {
+  key: "login",
+  href: "/admin/login",
+  label: "Login",
+  kind: "highlight",
+  icon: navIcon("<path d='M10 17l5-5-5-5'/><path d='M15 12H3'/><path d='M21 21V3'/>")
+};
+
 const PROFILE_ITEM = {
   key: "profile",
   label: "Profile",
   icon: navIcon("<path d='M12 13.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4z'/><path d='M4 21c.35-3.6 3.4-6.1 8-6.1s7.65 2.5 8 6.1' />"),
 };
+
+const PUBLIC_SECTION = { title: "Public", items: [HOME_ITEM] };
+
+export const LOGGED_OUT_NAV_SECTIONS = [
+  PUBLIC_SECTION,
+  { title: "Admin", items: [LOGIN_ITEM] },
+];
 
 export const ADMIN_NAV_ITEMS = [
   {
@@ -31,6 +53,21 @@ export const ADMIN_NAV_ITEMS = [
   },
 ];
 
+export const ADMIN_NAV_SECTIONS = [
+  PUBLIC_SECTION,
+  { title: "Admin", items: ADMIN_NAV_ITEMS },
+];
+
 export const TEACHER_NAV_ITEMS = [{ ...PROFILE_ITEM, href: "/teacher/profile" }];
 
 export const STUDENT_NAV_ITEMS = [{ ...PROFILE_ITEM, href: "/student/profile" }];
+
+export const TEACHER_NAV_SECTIONS = [
+  PUBLIC_SECTION,
+  { title: "My Dashboard", items: TEACHER_NAV_ITEMS },
+];
+
+export const STUDENT_NAV_SECTIONS = [
+  PUBLIC_SECTION,
+  { title: "My Dashboard", items: STUDENT_NAV_ITEMS },
+];
