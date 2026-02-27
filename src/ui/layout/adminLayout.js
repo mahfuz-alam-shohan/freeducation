@@ -163,13 +163,13 @@ const ADMIN_LAYOUT_SCRIPT = `
       if (!rect.width || !rect.height) return;
       const x = ((event.clientX - rect.left) / rect.width) * 100;
       const y = ((event.clientY - rect.top) / rect.height) * 100;
-      body.style.setProperty('--pointer-x', `${Math.max(0, Math.min(100, x)).toFixed(2)}%`);
-      body.style.setProperty('--pointer-y', `${Math.max(0, Math.min(100, y)).toFixed(2)}%`);
+      body.style.setProperty('--pointer-x', Math.max(0, Math.min(100, x)).toFixed(2) + '%');
+      body.style.setProperty('--pointer-y', Math.max(0, Math.min(100, y)).toFixed(2) + '%');
       const tiltX = (((y - 50) / 50) * -1.5 * tiltMultiplier).toFixed(2);
       const tiltY = (((x - 50) / 50) * 2.3 * tiltMultiplier).toFixed(2);
-      body.style.setProperty('--header-tilt-x', `${tiltX}deg`);
-      body.style.setProperty('--header-tilt-y', `${tiltY}deg`);
-      body.style.setProperty('--sidebar-tilt', `${(tiltY * 0.75).toFixed(2)}deg`);
+      body.style.setProperty('--header-tilt-x', tiltX + 'deg');
+      body.style.setProperty('--header-tilt-y', tiltY + 'deg');
+      body.style.setProperty('--sidebar-tilt', (tiltY * 0.75).toFixed(2) + 'deg');
     };
 
     const resetPointer = () => {

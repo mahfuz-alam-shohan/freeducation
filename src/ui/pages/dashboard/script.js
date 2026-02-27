@@ -75,10 +75,10 @@ if (dashboardCards.length && !reducedMotion.matches) {
       spring.x += spring.vx;
       spring.y += spring.vy;
 
-      card.style.setProperty('--mx', `${spring.x * 0.35}px`);
-      card.style.setProperty('--my', `${spring.y * 0.35}px`);
-      card.style.setProperty('--ry', `${spring.x * 0.8}deg`);
-      card.style.setProperty('--rx', `${-spring.y * 0.8}deg`);
+      card.style.setProperty('--mx', (spring.x * 0.35) + 'px');
+      card.style.setProperty('--my', (spring.y * 0.35) + 'px');
+      card.style.setProperty('--ry', (spring.x * 0.8) + 'deg');
+      card.style.setProperty('--rx', (-spring.y * 0.8) + 'deg');
 
       if (!spring.active && Math.abs(spring.x) < 0.03 && Math.abs(spring.y) < 0.03 && Math.abs(spring.vx) < 0.03 && Math.abs(spring.vy) < 0.03) {
         spring.raf = 0;
@@ -104,8 +104,8 @@ if (dashboardCards.length && !reducedMotion.matches) {
       spring.tx = (px - 0.5) * 5;
       spring.ty = (py - 0.5) * 5;
       spring.active = true;
-      card.style.setProperty('--gx', `${(px * 100).toFixed(2)}%`);
-      card.style.setProperty('--gy', `${(py * 100).toFixed(2)}%`);
+      card.style.setProperty('--gx', (px * 100).toFixed(2) + '%');
+      card.style.setProperty('--gy', (py * 100).toFixed(2) + '%');
       card.style.setProperty('--glow', '1');
       start();
     }, { signal: controller.signal });
