@@ -6,7 +6,7 @@ import { LOGIN_SCRIPT } from "./script.js";
 
 export function loginPage() {
   return renderAdminLayout({
-    title: "Campus login",
+    title: "Education login",
     activeMenu: "login",
     navItems: LOGGED_OUT_NAV_SECTIONS,
     content: loginHtml(),

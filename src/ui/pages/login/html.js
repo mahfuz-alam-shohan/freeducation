@@ -2,8 +2,8 @@ export function loginHtml() {
   return `
     <section class="login-page">
       <header class="auth-header">
-        <h1>Campus login</h1>
-        <p class="auth-muted">School records, lessons, and class updates stay organized here.</p>
+        <h1>Education login</h1>
+        <p class="auth-muted">Learning resources, lessons, and progress tools are organized here.</p>
       </header>
 
       <section class="learning-strip" aria-label="Learning highlights">
@@ -24,7 +24,7 @@ export function loginHtml() {
         <p id="loginMsg" class="login-muted" role="status" aria-live="polite"></p>
       </section>
 
-      <footer class="auth-footer">Knowledge grows one class at a time.</footer>
+      <footer class="auth-footer">Learning grows one step at a time.</footer>
     </section>
   `;
 }
