@@ -15,8 +15,8 @@ export const PROFILE_STYLE = `
 .profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible}
 .profile-avatar-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .profile-avatar-fallback{font-size:1.5rem;font-weight:700}
-.profile-inline-icon{width:20px;height:20px;display:block;mix-blend-mode:difference;color:#fff}
-.profile-image-action{position:absolute;z-index:3;border:none;background:transparent;color:#fff;width:34px;height:34px;padding:0;cursor:pointer;display:grid;place-items:center;transition:transform .18s ease}
+.profile-inline-icon{width:44px;height:24px;display:block;mix-blend-mode:difference;color:#fff}
+.profile-image-action{position:absolute;z-index:3;border:none;background:transparent;color:#fff;width:70px;height:40px;padding:0;cursor:pointer;display:grid;place-items:center;transition:transform .18s ease}
 .profile-image-action:hover{transform:scale(1.05)}
 .profile-image-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .profile-image-action-cover{right:10px;bottom:10px}
