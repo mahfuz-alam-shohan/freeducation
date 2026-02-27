@@ -13,7 +13,12 @@ export async function handleAdminRoute(request, env, url) {
   }
 
   const admin = await getAuthenticatedAdmin(request, env);
-  if (!admin) return null;
+  if (!admin) {
+    if (url.pathname.startsWith("/api/admin")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    return null;
+  }
 
   if (admin.user_type !== USER_TYPES.ADMINISTRATOR) {
     if (url.pathname.startsWith("/admin")) {

@@ -8,7 +8,12 @@ import { getAdminImage, getAdminProfile, updateAdminProfile, uploadAdminImage, c
 
 export async function handleTeacherRoute(request, env, url) {
   const user = await getAuthenticatedAdmin(request, env);
-  if (!user) return null;
+  if (!user) {
+    if (url.pathname.startsWith("/api/teacher")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    return null;
+  }
 
   if (user.user_type !== USER_TYPES.TEACHER) {
     if (url.pathname.startsWith("/teacher")) return htmlRedirect(dashboardPathForRole(user.user_type));
