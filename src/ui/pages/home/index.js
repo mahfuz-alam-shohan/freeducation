@@ -11,7 +11,7 @@ const HOME_QUOTES = [
 ];
 
 const HOME_STYLE = `
-.home-cover{position:relative;min-height:clamp(360px,72vh,640px);display:grid;align-items:center;overflow:hidden;padding:clamp(18px,4vw,44px)}
+.home-cover{position:relative;min-height:clamp(280px,56vh,480px);display:grid;align-items:center;overflow:hidden;padding:clamp(12px,2.6vw,24px)}
 .home-cover::before{content:'';position:absolute;inset:0;background:linear-gradient(140deg,#532d95,#1a7fa9 34%,#1a2f7a 72%,#8f3f63);opacity:.95}
 .home-cover::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 20%,rgba(255,232,170,.46),transparent 45%),radial-gradient(circle at 80% 8%,rgba(145,255,232,.28),transparent 42%),radial-gradient(circle at 70% 82%,rgba(255,137,172,.24),transparent 47%);mix-blend-mode:screen}
 .home-cover-inner{position:relative;z-index:2;display:grid;gap:12px;max-width:760px;width:min(100%,760px);justify-items:start;text-align:left}
