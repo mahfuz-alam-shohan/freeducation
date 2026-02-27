@@ -344,14 +344,18 @@ const ADMIN_LAYOUT_SCRIPT = `
   const setMenu = (open) => {
     body.classList.toggle('menu-open', open);
     openButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    if (open) setProfile(false);
   };
 
   const setProfile = (open) => {
     body.classList.toggle('profile-open', open);
     if (avatarButton) avatarButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (profilePanel) profilePanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    if (open) setMenu(false);
   };
 
-  openButton.addEventListener('click', () => setMenu(true), { signal });
+  openButton.addEventListener('click', () => setMenu(!body.classList.contains('menu-open')), { signal });
   closeButton.addEventListener('click', () => setMenu(false), { signal });
   overlay.addEventListener('click', () => setMenu(false), { signal });
   window.addEventListener('keydown', (event) => {
@@ -430,7 +434,8 @@ const ADMIN_LAYOUT_SCRIPT = `
   window.addEventListener('pageshow', clearNavigating, { signal });
 
   clearNavigating();
-  body.classList.remove('profile-open');
+  setMenu(false);
+  setProfile(false);
 })();
 `;
 
