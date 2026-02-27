@@ -21,7 +21,7 @@ export async function handleTeacherRoute(request, env, url) {
       homePath: "/teacher/dashboard",
       navItems: TEACHER_NAV_ITEMS,
       admin: user,
-      currentDeviceLabel: user.session_device_label || "Unknown device",
+      currentDeviceLabel: user.session_device_label || "",
       loginAt: user.session_created_at || "",
     }));
   }

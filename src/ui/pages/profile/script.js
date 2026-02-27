@@ -327,7 +327,9 @@ tabSecurity.addEventListener('keydown', (event) => {
 }, { signal });
 
 const profileUrlParams = new URLSearchParams(window.location.search);
-if (profileUrlParams.get('tab') === 'security') {
+const profileHash = (window.location.hash || '').replace('#', '').toLowerCase();
+const openSecurityTab = profileUrlParams.get('tab') === 'security' || profileHash === 'security';
+if (openSecurityTab) {
   switchTab(false);
 }
 if (profileUrlParams.get('openPassword') === '1') {

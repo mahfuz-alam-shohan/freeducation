@@ -4,7 +4,6 @@ export function usersScript(adminId = 0) {
 const usersTableBody = document.getElementById('rows');
 const addUserForm = document.getElementById('addUserForm');
 const usersMsg = document.getElementById('usersMsg');
-const logoutButton = document.getElementById('logout');
 const userSearch = document.getElementById('userSearch');
 const addUserPanel = document.getElementById('addUserPanel');
 const toggleAddUser = document.getElementById('toggleAddUser');
@@ -19,7 +18,7 @@ let allUsers = [];
 let deleteTarget = null;
 let lastTrigger = null;
 
-if (!usersTableBody || !addUserForm || !usersMsg || !logoutButton || !userSearch || !addUserPanel || !toggleAddUser || !deleteDialog || !deleteCancelButton || !deleteConfirmButton || !deleteSummary || !usersCard) {
+if (!usersTableBody || !addUserForm || !usersMsg || !userSearch || !addUserPanel || !toggleAddUser || !deleteDialog || !deleteCancelButton || !deleteConfirmButton || !deleteSummary || !usersCard) {
   return;
 }
 

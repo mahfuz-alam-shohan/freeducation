@@ -304,6 +304,16 @@ const ADMIN_LAYOUT_SCRIPT = `
     }, { signal });
   }
 
+  if (mainLogout) {
+    mainLogout.addEventListener('click', async () => {
+      setProfile(false);
+      setNavigating(1800);
+      await fetch('/api/logout', { method: 'POST', signal });
+      if (window.__appNavigate) window.__appNavigate('/admin/login');
+      else window.location.href = '/admin/login';
+    }, { signal });
+  }
+
   let navigationClearTimer = 0;
   const clearNavigating = () => {
     body.classList.remove('app-navigating');
