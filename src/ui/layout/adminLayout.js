@@ -34,8 +34,12 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-user-name{display:block;font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
 .admin-user-email{display:block;font-size:.77rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
 .admin-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:transform .2s ease,background .2s ease;overflow:hidden;padding:0;position:relative}
+.admin-avatar [hidden]{display:none!important}
 .admin-avatar-image{width:100%;height:100%;object-fit:cover;display:block}
 .admin-avatar-fallback{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%}
+.admin-avatar-loader{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s ease;background:linear-gradient(90deg,var(--surface-soft),color-mix(in srgb,var(--accent) 22%,var(--surface-soft)),var(--surface-soft));background-size:220% 100%}
+.admin-avatar.is-loading .admin-avatar-loader{opacity:1;animation:avatar-skeleton 1s linear infinite}
+@keyframes avatar-skeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .admin-avatar:hover{background:var(--surface-soft)}
 .admin-avatar:active{transform:scale(.96)}
 .admin-logout{display:none;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);padding:7px 10px;cursor:pointer;white-space:nowrap;align-items:center;gap:6px;font-size:.9rem;transition:background .2s ease}
@@ -122,6 +126,7 @@ const ADMIN_LAYOUT_SCRIPT = `
   const avatarButton = document.getElementById('adminAvatar');
   const avatarImage = document.getElementById('adminAvatarImage');
   const avatarFallback = document.getElementById('adminAvatarFallback');
+  let activeAvatarVersion = '';
   const profilePanel = document.getElementById('adminProfilePanel');
   const profileLogout = document.getElementById('profileLogout');
   const mainLogout = document.getElementById('logout');
@@ -155,35 +160,45 @@ const ADMIN_LAYOUT_SCRIPT = `
     }, { signal });
   }
 
-  const setAvatarState = (hasImage) => {
-    if (avatarImage) avatarImage.hidden = !hasImage;
-    if (avatarFallback) avatarFallback.hidden = hasImage;
+  const setAvatarState = (state = 'fallback') => {
+    if (!avatarButton) return;
+    const nextState = state === 'image' || state === 'loading' ? state : 'fallback';
+    avatarButton.classList.toggle('is-loading', nextState === 'loading');
+    avatarButton.setAttribute('aria-busy', nextState === 'loading' ? 'true' : 'false');
+    if (avatarImage) avatarImage.hidden = nextState !== 'image';
+    if (avatarFallback) avatarFallback.hidden = nextState === 'image';
   };
 
   const loadAvatar = (version = '', persistVersion = false) => {
     if (!avatarImage || !avatarButton) return;
     const nextVersion = String(version || '').trim();
+    activeAvatarVersion = nextVersion;
     if (!nextVersion) {
       avatarImage.removeAttribute('src');
-      setAvatarState(false);
+      setAvatarState('fallback');
       return;
     }
 
     if (persistVersion) window.localStorage.setItem(avatarVersionStorageKey, nextVersion);
     avatarButton.dataset.avatarVersion = nextVersion;
+    setAvatarState('loading');
     avatarImage.src = '/api/admin/profile/image/avatar?v=' + encodeURIComponent(nextVersion);
   };
 
   if (avatarImage) {
-    avatarImage.addEventListener('load', () => setAvatarState(true), { signal });
-    avatarImage.addEventListener('error', () => setAvatarState(false), { signal });
+    avatarImage.addEventListener('load', () => {
+      const currentVersion = (avatarButton?.dataset.avatarVersion || '').trim();
+      if (!currentVersion || currentVersion !== activeAvatarVersion) return;
+      setAvatarState('image');
+    }, { signal });
+    avatarImage.addEventListener('error', () => setAvatarState('fallback'), { signal });
   }
 
   const initialAvatarVersion = (avatarButton?.dataset.avatarVersion || '').trim() || (window.localStorage.getItem(avatarVersionStorageKey) || '').trim();
   if (initialAvatarVersion) {
     loadAvatar(initialAvatarVersion, true);
   } else {
-    setAvatarState(false);
+    setAvatarState('fallback');
   }
 
   window.addEventListener('freeducation:avatar-updated', (event) => {
@@ -195,7 +210,7 @@ const ADMIN_LAYOUT_SCRIPT = `
     if (event.key !== avatarVersionStorageKey) return;
     const nextVersion = String(event.newValue || '').trim();
     if (!nextVersion) {
-      setAvatarState(false);
+      loadAvatar('', false);
       return;
     }
     loadAvatar(nextVersion, false);
@@ -325,7 +340,7 @@ export function renderAdminLayout({ title, activeMenu, admin, content, script = 
     bodyClass: pageClass,
     pageStyles: `${ADMIN_BASE_STYLE}
 ${pageStyles}`,
-    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to dashboard" data-brand="${APP_NAME}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${initials}</span></button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" aria-pressed="false"><span>Theme</span><span id="themeToggleText">Use light theme</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
+    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to dashboard" data-brand="${APP_NAME}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog" aria-busy="false"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${initials}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" aria-pressed="false"><span>Theme</span><span id="themeToggleText">Use light theme</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
     script: `${ADMIN_LAYOUT_SCRIPT}
 ${script}`,
   });
