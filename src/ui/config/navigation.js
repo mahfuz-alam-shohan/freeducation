@@ -23,7 +23,7 @@ export const ADMIN_NAV_ITEMS = [
     key: "file-manager",
     href: "/admin/file-manager",
     label: "File manager",
-    icon: navIcon("<path d='M3 7h18'/><path d='M3 12h18'/><path d='M3 17h18'/><rect x='4' y='4' width='16' height='16' rx='2' />"),
+    icon: navIcon("<path d='M3 7.5A1.5 1.5 0 0 1 4.5 6h5.2l1.9 2H19.5A1.5 1.5 0 0 1 21 9.5v8A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z'/><path d='M3 10h18' />"),
   },
   {
     ...PROFILE_ITEM,

@@ -3,7 +3,7 @@ import { usersPage } from "../ui/pages/users/index.js";
 import { profilePage } from "../ui/pages/profile/index.js";
 import { fileManagerPage } from "../ui/pages/file-manager/index.js";
 import { html, json } from "../core/response.js";
-import { changeAdminPassword, createAdminUser, deleteAdminUser, getAdminFileObject, getAdminImage, getAdminProfile, listAdminFiles, listAdminUsers, overview, updateAdminProfile, uploadAdminImage } from "../controllers/adminController.js";
+import { changeAdminPassword, createAdminUser, deleteAdminFile, deleteAdminUser, getAdminFileObject, getAdminImage, getAdminProfile, listAdminFiles, listAdminUsers, overview, updateAdminProfile, uploadAdminImage } from "../controllers/adminController.js";
 import { destroySession, getAuthenticatedAdmin } from "../core/auth.js";
 import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
 
@@ -76,6 +76,10 @@ export async function handleAdminRoute(request, env, url) {
 
   if (request.method === "GET" && url.pathname === "/api/admin/files/object") {
     return getAdminFileObject(env, url.searchParams.get("key"));
+  }
+
+  if (request.method === "DELETE" && url.pathname === "/api/admin/files/object") {
+    return json(await deleteAdminFile(env, url.searchParams.get("key")));
   }
 
   if (request.method === "POST" && url.pathname === "/api/admin/users") {
