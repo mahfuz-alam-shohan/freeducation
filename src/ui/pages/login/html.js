@@ -1,6 +1,6 @@
 export function loginHtml() {
   return `
-    <main class="login-page">
+    <section class="login-page">
       <header class="auth-header">
         <h1>Admin login</h1>
         <p class="auth-muted">Sign in to manage content and administrators.</p>
@@ -14,6 +14,6 @@ export function loginHtml() {
         <p id="loginMsg" class="login-muted" role="status" aria-live="polite"></p>
       </section>
       <footer class="auth-footer">Direct form access keeps sign-in immediate and distraction-free.</footer>
-    </main>
+    </section>
   `;
 }

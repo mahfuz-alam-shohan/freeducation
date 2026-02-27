@@ -1,6 +1,6 @@
 import { APP_NAME } from "../../../config.js";
 import { USER_TYPES } from "../../../core/roles.js";
-import { ADMIN_NAV_ITEMS, STUDENT_NAV_ITEMS, TEACHER_NAV_ITEMS } from "../../config/navigation.js";
+import { ADMIN_NAV_SECTIONS, LOGGED_OUT_NAV_SECTIONS, STUDENT_NAV_SECTIONS, TEACHER_NAV_SECTIONS } from "../../config/navigation.js";
 import { renderAdminLayout } from "../../layout/adminLayout.js";
 
 const HOME_QUOTES = [
@@ -52,9 +52,9 @@ const HOME_SCRIPT = `
 `;
 
 function navItemsForUser(userType = "") {
-  if (userType === USER_TYPES.TEACHER) return TEACHER_NAV_ITEMS;
-  if (userType === USER_TYPES.STUDENT) return STUDENT_NAV_ITEMS;
-  return ADMIN_NAV_ITEMS;
+  if (userType === USER_TYPES.TEACHER) return TEACHER_NAV_SECTIONS;
+  if (userType === USER_TYPES.STUDENT) return STUDENT_NAV_SECTIONS;
+  return ADMIN_NAV_SECTIONS;
 }
 
 export function homePage({ admin } = {}) {
@@ -65,7 +65,7 @@ export function homePage({ admin } = {}) {
     activeMenu: "home",
     homePath: "/",
     admin,
-    navItems: loggedIn ? navItemsForUser(admin?.user_type) : [{ key: "home", href: "/", label: "Home", icon: "<svg class=\"admin-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5\"/><path d=\"M5.5 9.7V21h13V9.7\"/></svg>" }],
+    navItems: loggedIn ? navItemsForUser(admin?.user_type) : LOGGED_OUT_NAV_SECTIONS,
     pageClass: "page-home",
     pageStyles: HOME_STYLE,
     contentClass: "admin-content-flush",
