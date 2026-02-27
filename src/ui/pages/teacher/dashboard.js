@@ -2,7 +2,7 @@ import { renderDashboardPage } from "../shared/dashboardRenderer.js";
 
 const TEACHER_DASHBOARD_STYLE = `
 .teacher-dashboard{display:grid;gap:10px;max-width:860px;margin:0 auto}
-.teacher-dashboard-card{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:10px;display:grid;gap:8px}
+.teacher-dashboard-card{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:8px;display:grid;gap:7px}
 .teacher-dashboard-card h2{margin:0;font-size:1.05rem}
 .teacher-dashboard-muted{margin:0;color:var(--text-muted);font-size:.92rem}
 .teacher-device-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border)}
@@ -10,7 +10,7 @@ const TEACHER_DASHBOARD_STYLE = `
 .teacher-device-row strong{font-size:.92rem}
 .teacher-device-row span{color:var(--text-muted);text-align:right;font-size:.9rem}
 .teacher-links{display:grid;gap:6px}
-.teacher-link{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--text);border:1px solid var(--border);background:var(--surface-soft);border-radius:8px;padding:7px 9px}
+.teacher-link{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--text);border:1px solid var(--border);background:var(--surface-soft);border-radius:8px;padding:6px 8px}
 .teacher-link span{color:var(--text-muted);font-size:.88rem}
 `;
 
@@ -53,7 +53,6 @@ export function teacherDashboardPage({ admin, navItems, homePath, currentDeviceL
           <div class="teacher-links">
             <a class="teacher-link" href="/teacher/profile?tab=security&openPassword=1">Change password <span>Open security tab</span></a>
             <a class="teacher-link" href="/teacher/profile">Profile <span>Update name, date of birth, gender</span></a>
-            <a class="teacher-link" href="/teacher/profile?tab=about">About profile <span>Review account details</span></a>
           </div>
         </article>
       </section>

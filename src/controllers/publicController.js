@@ -28,7 +28,6 @@ function describeDeviceFromUserAgent(request) {
   return [device, browser, os].filter(Boolean).join(" • ");
 }
 
-
 export async function setupFirstAdmin(request, env, hasAdmin) {
   if (hasAdmin) throw new HttpError(403, "Initial setup already completed");
 
