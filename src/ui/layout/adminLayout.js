@@ -56,8 +56,28 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-nav a:nth-child(1){--menu-delay:90ms}.admin-nav a:nth-child(2){--menu-delay:160ms}.admin-nav a:nth-child(3){--menu-delay:230ms}.admin-nav a:nth-child(4){--menu-delay:300ms}.admin-nav a:nth-child(5){--menu-delay:370ms}
 .admin-nav a.active,.admin-nav a:hover{background:var(--surface);color:var(--text);transform:translateX(0);box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 16%,transparent)}
 .admin-theme-wrap{border-top:1px solid var(--border);padding-top:10px}
-.admin-theme-toggle{width:100%;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:.86rem;font-weight:600;letter-spacing:.02em;transition:background .2s ease}
-.admin-theme-toggle:hover{background:var(--surface-soft)}
+.admin-theme-toggle{position:relative;isolation:isolate;width:100%;min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:4px 8px 4px 6px;cursor:pointer;font-size:.84rem;font-weight:600;letter-spacing:.02em;transition:background .2s ease,border-color .2s ease,transform .2s var(--motion-swift)}
+.admin-theme-toggle::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 18%,transparent),transparent 45%);opacity:0;transition:opacity .28s ease;z-index:-1}
+.admin-theme-toggle:hover{background:var(--surface-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+.admin-theme-toggle:hover::before,.admin-theme-toggle[data-theme-state='switching']::before{opacity:.9}
+.admin-theme-toggle:active{transform:scale(.985)}
+.admin-theme-orb{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 55%,var(--border));background:color-mix(in srgb,var(--surface) 78%,var(--accent) 22%);overflow:hidden;transition:transform .36s var(--motion-smooth),background .28s ease,border-color .22s ease}
+.admin-theme-orb svg{position:absolute;width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:opacity .3s ease,transform .34s var(--motion-smooth),filter .28s ease}
+.admin-theme-sun{color:var(--accent);opacity:0;transform:scale(.52) rotate(-38deg);filter:blur(2px)}
+.admin-theme-moon{color:var(--text);opacity:1;transform:scale(1) rotate(0deg)}
+body[data-theme='light'] .admin-theme-orb{background:color-mix(in srgb,var(--surface) 74%,var(--accent) 26%)}
+body[data-theme='light'] .admin-theme-sun{opacity:1;transform:scale(1) rotate(0deg);filter:blur(0)}
+body[data-theme='light'] .admin-theme-moon{opacity:0;transform:scale(.58) rotate(36deg);filter:blur(2px)}
+.admin-theme-copy{display:grid;line-height:1.1;text-align:left;gap:2px;min-width:0}
+.admin-theme-copy > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-theme-label{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);font-weight:700}
+.admin-theme-text{font-size:.86rem;color:var(--text)}
+.admin-theme-chip{justify-self:end;min-width:62px;padding:4px 8px;border-radius:999px;background:var(--surface-soft);border:1px solid var(--border);color:var(--text-muted);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;text-align:center;transition:background .22s ease,color .22s ease,border-color .22s ease}
+.admin-theme-toggle[data-theme-state='switching']{cursor:progress}
+.admin-theme-toggle[data-theme-state='switching'] .admin-theme-chip{color:var(--text);border-color:color-mix(in srgb,var(--accent) 44%,var(--border));background:color-mix(in srgb,var(--accent) 18%,var(--surface-soft));animation:theme-chip-pulse .7s ease-in-out infinite}
+.admin-theme-toggle[data-theme-state='switching'] .admin-theme-orb{animation:theme-orb-spin .9s var(--motion-swift) infinite}
+@keyframes theme-chip-pulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+@keyframes theme-orb-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .admin-profile-pop{position:absolute;right:0;top:calc(100% + 10px);width:min(280px,86vw);padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-strong);box-shadow:0 14px 38px rgba(0,0,0,.24);display:grid;gap:8px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .22s ease,transform .24s ease}
 .admin-profile-name{margin:0;font-weight:650;font-size:.94rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .admin-profile-email{margin:0;font-size:.82rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -87,7 +107,7 @@ body.app-navigating .admin-content::after{content:'Loading content...';display:b
 @keyframes page-out-back{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:.22;transform:translateX(3%) scale(.992)}}
 @keyframes page-in-back{from{opacity:0;transform:translateX(-4%) scale(.995)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes menu-item-in{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
-@media (prefers-reduced-motion:reduce){.admin-menu-toggle,.admin-avatar,.admin-nav-overlay,.admin-sidebar,.admin-nav a,.admin-profile-pop,.admin-content,.admin-content > *,.admin-shell::before,::view-transition-old(root),::view-transition-new(root){animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.admin-menu-toggle,.admin-avatar,.admin-nav-overlay,.admin-sidebar,.admin-nav a,.admin-profile-pop,.admin-content,.admin-content > *,.admin-shell::before,.admin-theme-toggle,.admin-theme-orb,.admin-theme-orb svg,.admin-theme-chip,::view-transition-old(root),::view-transition-new(root){animation:none;transition:none}}
 @media (min-width:900px){
   .admin-shell{grid-template-columns:236px minmax(0,1fr);grid-template-rows:auto 1fr auto}
   .admin-header{grid-column:1 / -1;padding:10px 8px;min-height:62px}
@@ -133,33 +153,83 @@ const ADMIN_LAYOUT_SCRIPT = `
   const mainLogout = document.getElementById('logout');
   const themeToggle = document.getElementById('themeToggle');
   const themeText = document.getElementById('themeToggleText');
+  const themeChip = document.getElementById('themeToggleChip');
   const themeStorageKey = 'freeducation-theme';
   const avatarVersionStorageKey = 'freeducation-avatar-version';
   const brandHome = document.getElementById('adminBrandHome');
   const statusToast = document.getElementById('adminStatusToast');
   const header = document.querySelector('.admin-header');
   const canAnimateMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let themeSwitching = false;
   let statusTimer;
 
   const applyTheme = (theme) => {
     const finalTheme = theme === 'light' ? 'light' : 'dark';
     body.setAttribute('data-theme', finalTheme);
-    if (themeText) themeText.textContent = finalTheme === 'light' ? 'Use dark theme' : 'Use light theme';
+    if (themeText) themeText.textContent = finalTheme === 'light' ? 'Light mode on' : 'Dark mode on';
+    if (themeChip) themeChip.textContent = finalTheme === 'light' ? 'Light' : 'Dark';
     if (themeToggle) themeToggle.setAttribute('aria-pressed', finalTheme === 'light' ? 'true' : 'false');
     return finalTheme;
   };
 
-  const savedTheme = window.localStorage.getItem(themeStorageKey);
-  applyTheme(savedTheme);
+  const setThemeState = (state = 'idle') => {
+    if (!themeToggle) return;
+    const nextState = state === 'switching' ? 'switching' : 'idle';
+    themeToggle.dataset.themeState = nextState;
+    themeToggle.setAttribute('aria-busy', nextState === 'switching' ? 'true' : 'false');
+  };
 
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const isLight = body.getAttribute('data-theme') === 'light';
-      const nextTheme = isLight ? 'dark' : 'light';
+  const waitForThemeMotion = () => new Promise((resolve) => {
+    if (!canAnimateMotion) {
+      resolve();
+      return;
+    }
+    window.setTimeout(resolve, 240);
+  });
+
+  const switchTheme = async (targetTheme) => {
+    if (themeSwitching) return;
+    const nextTheme = targetTheme === 'light' ? 'light' : 'dark';
+    const currentTheme = body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    if (currentTheme === nextTheme) return;
+
+    themeSwitching = true;
+    setThemeState('switching');
+
+    const runUpdate = () => {
       applyTheme(nextTheme);
       window.localStorage.setItem(themeStorageKey, nextTheme);
+    };
+
+    try {
+      if (document.startViewTransition && canAnimateMotion) {
+        await document.startViewTransition(() => runUpdate()).finished.catch(() => {});
+      } else {
+        runUpdate();
+      }
+      await waitForThemeMotion();
+    } finally {
+      themeSwitching = false;
+      setThemeState('idle');
+    }
+  };
+
+  const savedTheme = window.localStorage.getItem(themeStorageKey);
+  applyTheme(savedTheme);
+  setThemeState('idle');
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', async () => {
+      const isLight = body.getAttribute('data-theme') === 'light';
+      const nextTheme = isLight ? 'dark' : 'light';
+      await switchTheme(nextTheme);
     }, { signal });
   }
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== themeStorageKey) return;
+    applyTheme(String(event.newValue || '').trim());
+  }, { signal });
 
   const setAvatarState = (state = 'fallback') => {
     if (!avatarButton) return;
@@ -376,7 +446,7 @@ export function renderAdminLayout({ title, activeMenu, admin, content, script = 
     bodyClass: pageClass,
     pageStyles: `${ADMIN_BASE_STYLE}
 ${pageStyles}`,
-    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to dashboard" data-brand="${APP_NAME}" data-home="${homePath}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog" aria-busy="false"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${initials}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" aria-pressed="false"><span>Theme</span><span id="themeToggleText">Use light theme</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
+    body: `<div class="admin-shell"><header class="admin-header"><div class="admin-header-left"><button id="adminMenuOpen" class="admin-menu-toggle" aria-label="Open menu" aria-expanded="false">${ICONS.menu}</button><button id="adminBrandHome" class="admin-brand admin-brand-signature" type="button" aria-label="Go to dashboard" data-brand="${APP_NAME}" data-home="${homePath}">${APP_NAME}</button></div><div class="admin-header-right"><div class="admin-user-meta"><span class="admin-user-name" title="${admin.name}">${admin.name}</span><span class="admin-user-email" title="${admin.email}">${admin.email}</span></div><button id="adminAvatar" class="admin-avatar" data-avatar-version="${avatarVersion}" aria-label="Open profile" aria-expanded="false" aria-haspopup="dialog" aria-busy="false"><img id="adminAvatarImage" class="admin-avatar-image" alt="" hidden /><span id="adminAvatarFallback" class="admin-avatar-fallback">${initials}</span><span class="admin-avatar-loader" aria-hidden="true"></span></button><button id="logout" class="admin-logout">${ICONS.logout}<span>Logout</span></button><div id="adminProfilePanel" class="admin-profile-pop" role="dialog" aria-label="Profile menu"><p class="admin-profile-name" title="${admin.name}">${admin.name}</p><p class="admin-profile-email" title="${admin.email}">${admin.email}</p><div class="admin-profile-divider"></div><button id="profileLogout" class="admin-profile-logout">${ICONS.logout}<span>Logout</span></button></div></div></header><div id="adminMenuOverlay" class="admin-nav-overlay" aria-hidden="true"></div><aside id="adminSidebar" class="admin-sidebar"><div class="admin-sidebar-head"><div class="admin-brand">Navigation</div><button id="adminMenuClose" class="admin-sidebar-close" aria-label="Close menu">${ICONS.close}</button></div>${nav}<div class="admin-theme-wrap"><button id="themeToggle" class="admin-theme-toggle" type="button" data-theme-state="idle" aria-pressed="false" aria-busy="false"><span class="admin-theme-orb" aria-hidden="true"><svg class="admin-theme-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.51 17.51l1.56 1.56M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.51 6.49l1.56-1.56"></path></svg><svg class="admin-theme-moon" viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5Z"></path></svg></span><span class="admin-theme-copy"><span class="admin-theme-label">Theme</span><span id="themeToggleText" class="admin-theme-text">Dark mode on</span></span><span id="themeToggleChip" class="admin-theme-chip">Dark</span></button></div></aside><main class="admin-content">${content}</main><footer class="admin-footer">${footerText}</footer><div id="adminStatusToast" class="admin-status-toast" role="status" aria-live="polite"></div></div>`,
     script: `${ADMIN_LAYOUT_SCRIPT}
 ${script}`,
   });
