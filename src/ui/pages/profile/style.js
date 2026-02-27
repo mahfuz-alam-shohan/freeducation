@@ -12,8 +12,8 @@ export const PROFILE_STYLE = `
 .profile-cover{position:relative;height:210px;background:var(--surface-soft);display:flex;align-items:flex-start;justify-content:flex-end;padding:8px}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .profile-head{position:relative;display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px;z-index:2}
-.profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:hidden}
-.profile-avatar-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible}
+.profile-avatar-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .profile-avatar-fallback{font-size:1.5rem;font-weight:700}
 .profile-inline-icon{width:16px;height:16px;display:block}
 .profile-image-action{position:relative;z-index:3;border:1px solid var(--border);background:var(--surface);width:34px;height:34px;padding:0;border-radius:999px;cursor:pointer;display:grid;place-items:center;box-shadow:0 3px 9px rgba(0,0,0,.18)}
