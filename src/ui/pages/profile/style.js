@@ -18,8 +18,8 @@ export const PROFILE_STYLE = `
 .profile-loader-tabs-row{display:flex;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .profile-loader-shimmer-tab{height:30px;width:94px;border-radius:8px}
 .profile-loader-shimmer-row{height:34px;border-radius:8px}
-.profile-hero{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .32s ease}
-.profile-cover{position:relative;height:170px;background:var(--surface-soft)}
+.profile-hero{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:visible;animation:fadeUp .32s ease}
+.profile-cover{position:relative;height:170px;background:var(--surface-soft);border-radius:10px 10px 0 0;overflow:hidden}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .profile-head{position:relative;display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px;z-index:2}
 .profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible}
@@ -43,7 +43,7 @@ export const PROFILE_STYLE = `
 .profile-tab{position:relative;z-index:2;border:none;background:transparent;color:var(--text-muted);padding:7px 10px 9px;border-radius:0;cursor:pointer;font-weight:600;transition:color .18s ease}
 .profile-tab:hover{color:var(--text)}
 .profile-tab.is-active{color:var(--text)}
-.profile-tab-indicator{position:absolute;left:0;bottom:-1px;height:2px;width:50%;background:var(--accent);border-radius:999px;transform:translateX(calc(var(--tab-index,0) * 100%));transition:transform .22s cubic-bezier(.22,.61,.36,1)}
+.profile-tab-indicator{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--accent);border-radius:999px;transform:translateX(0);transition:transform .22s cubic-bezier(.22,.61,.36,1),width .22s cubic-bezier(.22,.61,.36,1)}
 .profile-panel{display:none;animation:panelIn .26s cubic-bezier(.22,.61,.36,1)}
 .profile-panel.is-active{display:block}
 .profile-panel[hidden]{display:none!important}

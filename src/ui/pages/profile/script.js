@@ -88,6 +88,17 @@ const showMessage = (message, isError = false) => {
   }
 };
 
+const updateTabIndicator = (activeTab) => {
+  if (!activeTab || !profileTabIndicator) return;
+  const tabsWrap = profileTabIndicator.parentElement;
+  if (!tabsWrap) return;
+
+  const wrapRect = tabsWrap.getBoundingClientRect();
+  const tabRect = activeTab.getBoundingClientRect();
+  profileTabIndicator.style.width = tabRect.width + 'px';
+  profileTabIndicator.style.transform = 'translateX(' + (tabRect.left - wrapRect.left) + 'px)';
+};
+
 const switchTab = (showAbout) => {
   if (profilePage.classList.contains('is-loading')) return;
 
@@ -98,7 +109,7 @@ const switchTab = (showAbout) => {
   tabSecurity.classList.toggle('is-active', !showAbout);
   tabAbout.setAttribute('aria-selected', String(showAbout));
   tabSecurity.setAttribute('aria-selected', String(!showAbout));
-  profileTabIndicator.style.setProperty('--tab-index', showAbout ? '0' : '1');
+  updateTabIndicator(showAbout ? tabAbout : tabSecurity);
 
   outgoingPanel.classList.remove('is-active');
   outgoingPanel.classList.add('is-leaving');
@@ -387,6 +398,9 @@ document.addEventListener('click', (event) => {
 }, { signal });
 
 window.addEventListener('resize', closeImageMenu, { signal });
+window.addEventListener('resize', () => {
+  updateTabIndicator(tabAbout.classList.contains('is-active') ? tabAbout : tabSecurity);
+}, { signal });
 
 imageUploadInput.addEventListener('change', async (event) => {
   const file = event.target.files?.[0];
