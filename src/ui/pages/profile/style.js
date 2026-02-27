@@ -9,15 +9,18 @@ export const PROFILE_STYLE = `
 .profile-loader-shimmer-avatar{width:108px;height:108px;border-radius:50%;margin-top:-56px;margin-left:12px}
 .profile-loader-shimmer-line{height:74px}
 .profile-hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .32s ease}
-.profile-cover{position:relative;height:210px;background:var(--surface-soft);display:flex;align-items:flex-start;justify-content:flex-end;padding:8px}
+.profile-cover{position:relative;height:210px;background:var(--surface-soft)}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .profile-head{position:relative;display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px;z-index:2}
 .profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible}
 .profile-avatar-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .profile-avatar-fallback{font-size:1.5rem;font-weight:700}
 .profile-inline-icon{width:16px;height:16px;display:block}
-.profile-image-action{position:relative;z-index:3;border:1px solid var(--border);background:var(--surface);width:34px;height:34px;padding:0;border-radius:999px;cursor:pointer;display:grid;place-items:center;box-shadow:0 3px 9px rgba(0,0,0,.18)}
-.profile-image-action-avatar{position:absolute;right:-4px;bottom:-4px}
+.profile-image-action{position:absolute;z-index:3;border:none;background:transparent;color:var(--text-muted);width:24px;height:24px;padding:0;cursor:pointer;display:grid;place-items:center}
+.profile-image-action:hover{color:var(--text)}
+.profile-image-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.profile-image-action-cover{right:10px;bottom:10px}
+.profile-image-action-avatar{right:-2px;bottom:-2px}
 .profile-title h1{margin:0;font-size:1.3rem}
 .profile-title p{margin:2px 0 0;color:var(--text-muted)}
 .profile-tabs-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;animation:fadeUp .4s ease}
