@@ -366,7 +366,11 @@ const ADMIN_LAYOUT_SCRIPT = `
   }, { signal });
 
   const desktopMedia = window.matchMedia('(min-width: 900px)');
-  desktopMedia.addEventListener('change', () => setMenu(false), { signal });
+  if (typeof desktopMedia.addEventListener === 'function') {
+    desktopMedia.addEventListener('change', () => setMenu(false), { signal });
+  } else if (typeof desktopMedia.addListener === 'function') {
+    desktopMedia.addListener(() => setMenu(false));
+  }
 
   if (avatarButton && profilePanel) {
     avatarButton.addEventListener('click', () => setProfile(!body.classList.contains('profile-open')), { signal });
@@ -375,6 +379,7 @@ const ADMIN_LAYOUT_SCRIPT = `
       if (profilePanel.contains(event.target) || avatarButton.contains(event.target)) return;
       setProfile(false);
     }, { signal });
+  }
 
   if (profileLogout && mainLogout) {
     profileLogout.addEventListener('click', () => {
