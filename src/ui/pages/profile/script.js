@@ -15,17 +15,15 @@ const profilePage = document.querySelector('.profile-page');
 const profilePageLoader = document.getElementById('profilePageLoader');
 const profileTabIndicator = document.getElementById('profileTabIndicator');
 
-const imageUploadModal = document.getElementById('imageUploadModal');
-const imageViewModal = document.getElementById('imageViewModal');
-const imageModalTitle = document.getElementById('imageModalTitle');
-const imageModalPreview = document.getElementById('imageModalPreview');
-const imageModalEmpty = document.getElementById('imageModalEmpty');
+const imageActionMenu = document.getElementById('imageActionMenu');
 const imageUploadInput = document.getElementById('imageUploadInput');
+const changeImageButton = document.getElementById('changeImageButton');
+const viewImageButton = document.getElementById('viewImageButton');
 const uploadProgressWrap = document.getElementById('uploadProgressWrap');
 const uploadProgressText = document.getElementById('uploadProgressText');
 const uploadProgressBar = document.getElementById('uploadProgressBar');
-const closeImageModal = document.getElementById('closeImageModal');
-const viewImageButton = document.getElementById('viewImageButton');
+
+const imageViewModal = document.getElementById('imageViewModal');
 const closeViewModal = document.getElementById('closeViewModal');
 const imageBigPreview = document.getElementById('imageBigPreview');
 
@@ -42,7 +40,7 @@ const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
 
-if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageUploadModal || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !imageUploadInput || !profilePage || !profilePageLoader || !profileTabIndicator) return;
+if (!tabAbout || !tabSecurity || !panelAbout || !panelSecurity || !openPasswordForm || !passwordForm || !profileMsg || !imageActionMenu || !imageUploadInput || !changeImageButton || !viewImageButton || !imageViewModal || !avatarPanel || !coverPanel || !avatarAction || !coverAction || !profilePage || !profilePageLoader || !profileTabIndicator) return;
 
 const controller = new AbortController();
 const { signal } = controller;
@@ -64,7 +62,6 @@ const resetUploadUi = () => {
   if (uploadProgressWrap) uploadProgressWrap.hidden = true;
   if (uploadProgressBar) uploadProgressBar.value = 0;
   if (uploadProgressText) uploadProgressText.textContent = 'Preparing upload...';
-  if (viewImageButton) viewImageButton.hidden = true;
 };
 
 const showMessage = (message, isError = false) => {
@@ -142,8 +139,29 @@ const setUploadProgress = (value, label) => {
 const setUploadBusyState = (busy) => {
   isUploadingImage = busy;
   imageUploadInput.disabled = busy;
-  closeImageModal.disabled = busy;
+  changeImageButton.disabled = busy;
   viewImageButton.disabled = busy;
+};
+
+const closeImageMenu = () => {
+  imageActionMenu.hidden = true;
+};
+
+const openImageMenu = (imageType, anchor) => {
+  if (isUploadingImage) return;
+  currentImageType = imageType;
+  const available = hasImage[imageType];
+
+  viewImageButton.hidden = !available;
+  changeImageButton.textContent = available
+    ? (imageType === 'avatar' ? 'Change avatar' : 'Change cover')
+    : 'Upload picture';
+
+  const anchorRect = anchor.getBoundingClientRect();
+  const heroRect = coverPanel.closest('.profile-hero').getBoundingClientRect();
+  imageActionMenu.style.top = (anchorRect.bottom - heroRect.top + 6) + 'px';
+  imageActionMenu.style.left = Math.max(8, anchorRect.right - heroRect.left - 180) + 'px';
+  imageActionMenu.hidden = false;
 };
 
 const formatDob = (value) => {
@@ -178,30 +196,26 @@ coverImage.addEventListener('error', () => {
   coverImage.hidden = true;
 }, { signal });
 
-const openImageModal = (imageType) => {
-  if (isUploadingImage) return;
-  if (imageViewModal.open) imageViewModal.close();
-  currentImageType = imageType;
-  imageModalTitle.textContent = imageType === 'avatar' ? 'Profile photo' : 'Cover photo';
-  const imageSrc = imageType === 'avatar' ? avatarImage.src : coverImage.src;
-  const available = hasImage[imageType];
-  imageModalPreview.hidden = !available;
-  imageModalEmpty.hidden = available;
-  viewImageButton.hidden = true;
-  if (available) imageModalPreview.src = imageSrc;
-  imageUploadInput.value = '';
-  setUploadBusyState(false);
-  resetUploadUi();
-  imageUploadModal.showModal();
-};
-
 avatarAction.addEventListener('click', (event) => {
   event.stopPropagation();
-  openImageModal('avatar');
+  openImageMenu('avatar', avatarAction);
 }, { signal });
 coverAction.addEventListener('click', (event) => {
   event.stopPropagation();
-  openImageModal('cover');
+  openImageMenu('cover', coverAction);
+}, { signal });
+
+viewImageButton.addEventListener('click', () => {
+  if (isUploadingImage || !hasImage[currentImageType]) return;
+  imageBigPreview.src = currentImageType === 'avatar' ? avatarImage.src : coverImage.src;
+  closeImageMenu();
+  imageViewModal.showModal();
+}, { signal });
+
+changeImageButton.addEventListener('click', () => {
+  if (isUploadingImage) return;
+  imageUploadInput.value = '';
+  imageUploadInput.click();
 }, { signal });
 
 avatarPanel.addEventListener('click', () => {
@@ -215,24 +229,15 @@ coverPanel.addEventListener('click', () => {
   imageViewModal.showModal();
 }, { signal });
 
-closeImageModal.addEventListener('click', () => {
-  if (!isUploadingImage) imageUploadModal.close();
-}, { signal });
 closeViewModal.addEventListener('click', () => imageViewModal.close(), { signal });
-viewImageButton.addEventListener('click', () => {
-  if (isUploadingImage) return;
-  const source = currentImageType === 'avatar' ? avatarImage.src : coverImage.src;
-  imageBigPreview.src = source;
-  imageUploadModal.close();
-  imageViewModal.showModal();
+
+document.addEventListener('click', (event) => {
+  if (imageActionMenu.hidden) return;
+  if (imageActionMenu.contains(event.target) || event.target === avatarAction || event.target === coverAction || avatarAction.contains(event.target) || coverAction.contains(event.target)) return;
+  closeImageMenu();
 }, { signal });
 
-imageModalPreview.addEventListener('click', () => {
-  if (isUploadingImage || imageModalPreview.hidden) return;
-  imageBigPreview.src = imageModalPreview.src;
-  imageUploadModal.close();
-  imageViewModal.showModal();
-}, { signal });
+window.addEventListener('resize', closeImageMenu, { signal });
 
 imageUploadInput.addEventListener('change', async (event) => {
   const file = event.target.files?.[0];
@@ -258,15 +263,15 @@ imageUploadInput.addEventListener('change', async (event) => {
     setUploadProgress(100, 'Upload complete. Refreshing preview...');
     showMessage('Image updated.');
     refreshImages();
-    setTimeout(() => {
-      if (imageUploadModal.open) imageUploadModal.close();
+    window.setTimeout(() => {
+      closeImageMenu();
+      resetUploadUi();
     }, 280);
   } catch (error) {
     if (error?.name === 'AbortError') return;
     showMessage(error?.message || 'Unable to upload image', true);
   } finally {
     setUploadBusyState(false);
-    resetUploadUi();
   }
 }, { signal });
 

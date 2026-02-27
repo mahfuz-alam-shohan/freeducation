@@ -7,7 +7,7 @@ export const PROFILE_STYLE = `
 .profile-loader-shimmer::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 22%,transparent),transparent);animation:profileShimmer 1s linear infinite}
 .profile-loader-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px}
 .profile-loader-block-hero{padding:0;overflow:hidden}
-.profile-loader-shimmer-cover{height:210px;border:none;border-radius:0}
+.profile-loader-shimmer-cover{height:170px;border:none;border-radius:0}
 .profile-loader-head{display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px}
 .profile-loader-shimmer-avatar{width:108px;height:108px;border-radius:50%}
 .profile-loader-lines{display:grid;gap:8px;padding-bottom:8px;flex:1}
@@ -18,8 +18,8 @@ export const PROFILE_STYLE = `
 .profile-loader-tabs-row{display:flex;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .profile-loader-shimmer-tab{height:30px;width:94px;border-radius:8px}
 .profile-loader-shimmer-row{height:34px;border-radius:8px}
-.profile-hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .32s ease}
-.profile-cover{position:relative;height:210px;background:var(--surface-soft)}
+.profile-hero{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .32s ease}
+.profile-cover{position:relative;height:170px;background:var(--surface-soft)}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .profile-head{position:relative;display:flex;align-items:flex-end;gap:12px;padding:0 12px 10px;margin-top:-42px;z-index:2}
 .profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible}
@@ -33,6 +33,9 @@ export const PROFILE_STYLE = `
 .profile-image-action-cover:hover{background:rgba(20,20,20,.62)}
 .profile-image-action-avatar{right:-2px;bottom:-2px;border-color:var(--surface);background:var(--surface-strong);color:var(--text)}
 .profile-image-action-avatar:hover{background:var(--surface-soft)}
+.profile-image-menu{position:absolute;z-index:12;min-width:176px;display:grid;gap:6px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.profile-menu-btn{display:flex;align-items:center;justify-content:flex-start;border:1px solid var(--border);background:var(--surface-soft);padding:7px 9px;border-radius:6px;cursor:pointer;color:var(--text)}
+.profile-menu-btn:hover{background:var(--surface-strong)}
 .profile-title h1{margin:0;font-size:1.3rem}
 .profile-title p{margin:2px 0 0;color:var(--text-muted)}
 .profile-tabs-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;animation:fadeUp .4s ease}
@@ -59,17 +62,13 @@ export const PROFILE_STYLE = `
 .profile-modal::backdrop{background:var(--overlay)}
 .profile-modal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:min(92vw,380px);display:grid;gap:8px}
 .profile-modal-large{min-width:min(92vw,720px)}
-.profile-modal-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:zoom-in}
-.profile-upload-input{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--border);padding:7px;border-radius:8px;cursor:pointer}
-.profile-upload-input input{display:none}
 .profile-upload-progress{display:grid;gap:4px}
 .profile-upload-progress[hidden]{display:none!important}
 .profile-upload-progress p{margin:0;font-size:.88rem;color:var(--text-muted)}
 .profile-upload-progress progress{width:100%;height:8px}
-.profile-modal-actions{display:flex;justify-content:flex-end;gap:6px}
 .profile-big-preview{width:100%;max-height:72vh;object-fit:contain;background:var(--surface-strong);border-radius:8px}
-@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-@keyframes panelIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-@keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
+@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}}
+@keyframes panelIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-3px)}}
 @keyframes profileShimmer{100%{transform:translateX(100%)}}
 `;
