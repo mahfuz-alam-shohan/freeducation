@@ -3,7 +3,7 @@ import { getAuthenticatedAdmin } from "../core/auth.js";
 import { dashboardPathForRole, USER_TYPES } from "../core/roles.js";
 import { TEACHER_NAV_ITEMS } from "../ui/config/navigation.js";
 import { profilePage } from "../ui/pages/profile/index.js";
-import { teacherDashboardPage } from "../ui/pages/teacher/dashboard.js";
+import { renderTeacherDashboard } from "../ui/pages/shared/dashboardRenderer.js";
 import { getAdminImage, getAdminProfile, updateAdminProfile, uploadAdminImage, changeAdminPassword } from "../controllers/adminController.js";
 
 export async function handleTeacherRoute(request, env, url) {
@@ -17,7 +17,7 @@ export async function handleTeacherRoute(request, env, url) {
   }
 
   if (request.method === "GET" && url.pathname === "/teacher/dashboard") {
-    return html(teacherDashboardPage({
+    return html(renderTeacherDashboard({
       homePath: "/teacher/dashboard",
       navItems: TEACHER_NAV_ITEMS,
       admin: user,
