@@ -64,8 +64,8 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-profile-logout{height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.9rem}
 .admin-profile-logout:hover{background:var(--surface-soft)}
 body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-events:auto}
-.admin-content{padding:6px 6px 8px;display:grid;gap:6px;align-content:start;animation:section-in .24s var(--motion-swift) both;transition:opacity .2s ease;min-height:220px;justify-items:center}
-.admin-content > *{animation:content-float-in .36s var(--motion-smooth) both;animation-delay:calc(var(--content-seq,0) * 32ms);transform-origin:50% 0;width:min(100%,var(--page-content-max))}
+.admin-content{padding:6px 6px 8px;display:grid;gap:6px;align-content:start;animation:section-in .24s var(--motion-swift) both;transition:opacity .2s ease;min-height:220px}
+.admin-content > *{animation:content-float-in .36s var(--motion-smooth) both;animation-delay:calc(var(--content-seq,0) * 32ms);transform-origin:50% 0;width:100%}
 .admin-content > *:nth-child(1){--content-seq:1}.admin-content > *:nth-child(2){--content-seq:2}.admin-content > *:nth-child(3){--content-seq:3}.admin-content > *:nth-child(4){--content-seq:4}.admin-content > *:nth-child(5){--content-seq:5}.admin-content > *:nth-child(n+6){--content-seq:6}
 .admin-footer{padding:8px 8px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.84rem}
 .admin-status-toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);min-width:min(320px,88vw);max-width:min(440px,92vw);padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:70;box-shadow:0 12px 30px rgba(0,0,0,.2)}
@@ -92,8 +92,7 @@ body.app-navigating .admin-content::after{content:'Loading content...';display:b
   .admin-header{grid-column:1 / -1;padding:10px 8px;min-height:62px}
   .admin-user-meta{display:block}
   .admin-logout{display:inline-flex}
-  .admin-content{padding:8px;justify-items:stretch}
-  .admin-content > *{margin:0 auto}
+  .admin-content{padding:8px}
   .admin-footer{grid-column:1 / -1;padding:8px}
   .admin-menu-toggle,.admin-sidebar-close{display:none}
   .admin-nav-overlay{display:none}
