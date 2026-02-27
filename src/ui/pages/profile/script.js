@@ -1,9 +1,10 @@
 import { imageCompressionModule } from "./imageCompression.js";
 
-export function profileScript() {
+export function profileScript(apiBase = "/api/admin") {
   return `
 (() => {
 ${imageCompressionModule()}
+const API_BASE = ${JSON.stringify("" + apiBase)};
 const tabAbout = document.getElementById('tabAbout');
 const tabSecurity = document.getElementById('tabSecurity');
 const panelAbout = document.getElementById('panelAbout');
@@ -274,7 +275,7 @@ const saveInlineEdit = async (field, value) => {
   showMessage('Updating profile...');
 
   try {
-    const response = await fetch('/api/admin/profile', {
+    const response = await fetch(API_BASE + '/profile', {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ field, value }),
@@ -470,8 +471,8 @@ const refreshImages = () => {
   const stamp = Date.now();
   setImageLoadingState('avatar', true);
   setImageLoadingState('cover', true);
-  avatarImage.src = '/api/admin/profile/image/avatar?t=' + stamp;
-  coverImage.src = '/api/admin/profile/image/cover?t=' + stamp;
+  avatarImage.src = API_BASE + '/profile/image/avatar?t=' + stamp;
+  coverImage.src = API_BASE + '/profile/image/cover?t=' + stamp;
 };
 
 avatarImage.addEventListener('load', () => {
@@ -565,7 +566,7 @@ imageUploadInput.addEventListener('change', async (event) => {
     setUploadProgress(55, 'Compression done. Uploading...');
     showMessage('Uploading image...');
 
-    const response = await fetch('/api/admin/profile/image', {
+    const response = await fetch(API_BASE + '/profile/image', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ imageType: currentImageType, imageData }),
@@ -601,7 +602,7 @@ passwordForm.addEventListener('submit', async (event) => {
   showMessage('Updating password...');
 
   try {
-    const response = await fetch('/api/admin/change-password', {
+    const response = await fetch(API_BASE + '/change-password', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
@@ -622,7 +623,7 @@ passwordForm.addEventListener('submit', async (event) => {
 const loadProfile = async () => {
   setPageLoading(true);
   try {
-    const response = await fetch('/api/admin/profile', { signal });
+    const response = await fetch(API_BASE + '/profile', { signal });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Unable to load profile');
     const profile = data.profile || {};

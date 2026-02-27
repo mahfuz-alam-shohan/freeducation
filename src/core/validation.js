@@ -4,6 +4,7 @@ export function validateAdminPayload(payload) {
   const name = String(payload.name || "").trim();
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
+  const userType = String(payload.user_type || "Administrator").trim();
 
   if (name.length < 2 || name.length > 120) {
     return "Name must be between 2 and 120 characters";
@@ -13,6 +14,9 @@ export function validateAdminPayload(payload) {
   }
   if (password.length < 8 || password.length > 200) {
     return "Password must be between 8 and 200 characters";
+  }
+  if (!["Administrator", "Teacher", "Student"].includes(userType)) {
+    return "Select a valid user type";
   }
   return null;
 }

@@ -5,6 +5,8 @@ import { HttpError, mapDatabaseError } from "./core/errors.js";
 import { json, redirect } from "./core/response.js";
 import { handlePublicRoute } from "./routes/publicRoutes.js";
 import { handleAdminRoute } from "./routes/adminRoutes.js";
+import { handleTeacherRoute } from "./routes/teacherRoutes.js";
+import { handleStudentRoute } from "./routes/studentRoutes.js";
 
 let schemaReadyAt = 0;
 let schemaInFlight = null;
@@ -89,7 +91,13 @@ export default {
       const adminResponse = await handleAdminRoute(request, env, url);
       if (adminResponse !== undefined && adminResponse !== null) return adminResponse;
 
-      if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/api/admin")) {
+      const teacherResponse = await handleTeacherRoute(request, env, url);
+      if (teacherResponse !== undefined && teacherResponse !== null) return teacherResponse;
+
+      const studentResponse = await handleStudentRoute(request, env, url);
+      if (studentResponse !== undefined && studentResponse !== null) return studentResponse;
+
+      if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/teacher") || url.pathname.startsWith("/student") || url.pathname.startsWith("/api/admin") || url.pathname.startsWith("/api/teacher") || url.pathname.startsWith("/api/student")) {
         return redirect(new URL("/admin/login", url), 302);
       }
 

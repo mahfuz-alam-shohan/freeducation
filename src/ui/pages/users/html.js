@@ -14,6 +14,13 @@ export function usersHtml() {
         <form id="addUserForm" class="users-form" autocomplete="off">
           <label>Name<input name="name" required maxlength="120" autocomplete="off" /></label>
           <label>Email<input name="email" type="email" required maxlength="190" autocomplete="off" /></label>
+          <label>User type
+            <select name="user_type" required>
+              <option value="Administrator">Administrator</option>
+              <option value="Teacher">Teacher</option>
+              <option value="Student">Student</option>
+            </select>
+          </label>
           <label>Password<input name="password" type="password" required minlength="8" maxlength="200" autocomplete="new-password" /></label>
           <button type="submit">Add user</button>
         </form>
