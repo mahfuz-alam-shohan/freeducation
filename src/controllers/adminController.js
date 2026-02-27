@@ -1,7 +1,7 @@
 import { readBody, normalizeEmail } from "../core/request.js";
-import { validateAdminPayload } from "../core/validation.js";
+import { validateAdminPayload, validateProfileFieldUpdate } from "../core/validation.js";
 import { HttpError, mapDatabaseError } from "../core/errors.js";
-import { createAdmin, deleteAdminById, findAdminByEmail, findAdminById, listAdmins, updateAdminImageKey, updateAdminPassword } from "../db/admins.js";
+import { createAdmin, deleteAdminById, findAdminByEmail, findAdminById, listAdmins, updateAdminImageKey, updateAdminPassword, updateAdminProfileField } from "../db/admins.js";
 import { hashPassword, verifyPassword } from "../security/password.js";
 
 export async function overview(env) {
@@ -135,4 +135,21 @@ export async function changeAdminPassword(request, env, adminId) {
   const { hash, salt } = await hashPassword(nextPassword);
   await updateAdminPassword(env.DB, { adminId, hash, salt });
   return { ok: true };
+}
+
+export async function updateAdminProfile(request, env, adminId) {
+  const body = await readBody(request);
+  const field = String(body?.field || "").trim();
+  const value = String(body?.value || "").trim();
+  const validationError = validateProfileFieldUpdate({ field, value });
+  if (validationError) throw new HttpError(400, validationError);
+
+  try {
+    await updateAdminProfileField(env.DB, { adminId, field, value });
+  } catch (error) {
+    throw mapDatabaseError(error, "Unable to update profile");
+  }
+
+  const profile = await findAdminById(env.DB, adminId);
+  return { ok: true, profile };
 }

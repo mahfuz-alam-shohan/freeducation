@@ -1,5 +1,6 @@
 const PROFILE_ICONS = {
   camera: `<svg viewBox="0 0 24 24" class="profile-inline-icon" aria-hidden="true" focusable="false"><path d="M7.5 6.5h2.1l1-1.5h2.8l1 1.5h2.1A2.5 2.5 0 0 1 19 9v8a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 17V9a2.5 2.5 0 0 1 2.5-2.5Zm4.5 3.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 1.7a2.1 2.1 0 1 1 0 4.2 2.1 2.1 0 0 1 0-4.2Z" fill="currentColor"/></svg>`,
+  edit: `<svg viewBox="0 0 24 24" class="profile-inline-icon" aria-hidden="true" focusable="false"><path d="M4 17.25V20h2.75l8.1-8.1-2.75-2.75L4 17.25Zm12.7-9.5 1.8-1.8a1 1 0 0 1 1.4 0l1.35 1.35a1 1 0 0 1 0 1.4l-1.8 1.8-2.75-2.75Z" fill="currentColor"/></svg>`,
 };
 
 export function profileHtml(admin) {
@@ -39,7 +40,7 @@ export function profileHtml(admin) {
             <button id="avatarAction" class="profile-image-action profile-image-action-avatar" type="button" aria-label="Change profile photo" title="Change profile photo">${PROFILE_ICONS.camera}</button>
           </div>
           <div class="profile-title">
-            <h1>${admin?.name || "Administrator"}</h1>
+            <h1 id="profileTitleName">${admin?.name || "Administrator"}</h1>
             <p>${admin?.user_type || "Administrator"}</p>
           </div>
         </div>
@@ -62,9 +63,48 @@ export function profileHtml(admin) {
         </div>
 
         <section id="panelAbout" class="profile-panel is-active" role="tabpanel" aria-labelledby="tabAbout">
+          <div class="profile-row profile-row-editable" data-field="name">
+            <span>Name</span>
+            <div class="profile-inline-edit">
+              <strong id="aboutName">-</strong>
+              <button class="profile-edit-trigger" type="button" data-edit-trigger="name" aria-label="Edit name" title="Edit name">${PROFILE_ICONS.edit}</button>
+              <form class="profile-edit-form" data-edit-form="name" hidden>
+                <input type="text" name="value" minlength="2" maxlength="120" required />
+                <button type="submit">Save</button>
+                <button type="button" data-edit-cancel="name">Cancel</button>
+              </form>
+            </div>
+          </div>
           <div class="profile-row"><span>Mail</span><strong id="aboutEmail">-</strong></div>
-          <div class="profile-row"><span>Date of birth</span><strong id="aboutDob">-</strong></div>
-          <div class="profile-row"><span>Gender</span><strong id="aboutGender">-</strong></div>
+          <div class="profile-row profile-row-editable" data-field="date_of_birth">
+            <span>Date of birth</span>
+            <div class="profile-inline-edit">
+              <strong id="aboutDob">-</strong>
+              <button class="profile-edit-trigger" type="button" data-edit-trigger="date_of_birth" aria-label="Edit date of birth" title="Edit date of birth">${PROFILE_ICONS.edit}</button>
+              <form class="profile-edit-form" data-edit-form="date_of_birth" hidden>
+                <input type="date" name="value" required />
+                <button type="submit">Save</button>
+                <button type="button" data-edit-cancel="date_of_birth">Cancel</button>
+              </form>
+            </div>
+          </div>
+          <div class="profile-row profile-row-editable" data-field="gender">
+            <span>Gender</span>
+            <div class="profile-inline-edit">
+              <strong id="aboutGender">-</strong>
+              <button class="profile-edit-trigger" type="button" data-edit-trigger="gender" aria-label="Edit gender" title="Edit gender">${PROFILE_ICONS.edit}</button>
+              <form class="profile-edit-form" data-edit-form="gender" hidden>
+                <select name="value" required>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+                <button type="submit">Save</button>
+                <button type="button" data-edit-cancel="gender">Cancel</button>
+              </form>
+            </div>
+          </div>
           <div class="profile-row"><span>Role</span><strong id="aboutRole">-</strong></div>
         </section>
 

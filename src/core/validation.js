@@ -16,3 +16,33 @@ export function validateAdminPayload(payload) {
   }
   return null;
 }
+
+export function validateProfileFieldUpdate(payload) {
+  const field = String(payload?.field || "").trim();
+  const value = String(payload?.value || "").trim();
+
+  if (!field) return "Field is required";
+
+  if (field === "name") {
+    if (value.length < 2 || value.length > 120) return "Name must be between 2 and 120 characters";
+    return null;
+  }
+
+  if (field === "date_of_birth") {
+    if (!value) return "Date of birth is required";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return "Date of birth must be in YYYY-MM-DD format";
+    const parsed = new Date(value + "T00:00:00Z");
+    if (Number.isNaN(parsed.getTime())) return "Date of birth is invalid";
+    const now = new Date();
+    if (parsed.getTime() > now.getTime()) return "Date of birth cannot be in the future";
+    return null;
+  }
+
+  if (field === "gender") {
+    const allowed = ["Male", "Female", "Other", "Prefer not to say"];
+    if (!allowed.includes(value)) return "Select a valid gender";
+    return null;
+  }
+
+  return "Field is not editable";
+}
