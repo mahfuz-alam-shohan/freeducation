@@ -1,7 +1,7 @@
 import { readBody, normalizeEmail } from "../core/request.js";
 import { validateAdminPayload, validateProfileFieldUpdate } from "../core/validation.js";
 import { HttpError, mapDatabaseError } from "../core/errors.js";
-import { createAdmin, deleteAdminById, findAdminByEmail, findAdminById, listAdmins, updateAdminImageKey, updateAdminPassword, updateAdminProfileField } from "../db/admins.js";
+import { clearImageKeyReferences, createAdmin, deleteAdminById, findAdminByEmail, findAdminById, listAdmins, updateAdminImageKey, updateAdminPassword, updateAdminProfileField } from "../db/admins.js";
 import { hashPassword, verifyPassword } from "../security/password.js";
 import { USER_TYPES } from "../core/roles.js";
 
@@ -172,6 +172,18 @@ export async function getAdminFileObject(env, key) {
   headers.set("cache-control", headers.get("cache-control") || "public, max-age=86400");
   headers.set("content-disposition", `inline; filename=\"${objectKey.split("/").pop() || "file"}\"`);
   return new Response(object.body, { headers });
+}
+
+export async function deleteAdminFile(env, key) {
+  const objectKey = String(key || "").trim();
+  if (!objectKey || objectKey.length > 350 || objectKey.includes("..")) {
+    throw new HttpError(400, "Invalid object key");
+  }
+
+  await env.BUCKET.delete(objectKey);
+  await clearImageKeyReferences(env.DB, objectKey);
+
+  return { ok: true, key: objectKey };
 }
 
 export async function changeAdminPassword(request, env, adminId) {

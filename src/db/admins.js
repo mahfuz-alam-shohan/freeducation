@@ -38,6 +38,19 @@ export async function updateAdminImageKey(db, { adminId, keyField, keyValue }) {
   await db.prepare(`UPDATE freeducation_admins SET ${keyField} = ?1, updated_at = ?2 WHERE id = ?3`).bind(keyValue, now, adminId).run();
 }
 
+export async function clearImageKeyReferences(db, keyValue) {
+  const key = String(keyValue || "").trim();
+  if (!key) return;
+  const now = new Date().toISOString();
+  await db.prepare(
+    `UPDATE freeducation_admins
+     SET avatar_key = CASE WHEN avatar_key = ?1 THEN '' ELSE avatar_key END,
+         cover_key = CASE WHEN cover_key = ?1 THEN '' ELSE cover_key END,
+         updated_at = ?2
+     WHERE avatar_key = ?1 OR cover_key = ?1`,
+  ).bind(key, now).run();
+}
+
 export async function updateAdminProfileField(db, { adminId, field, value }) {
   const now = new Date().toISOString();
   const allowedFields = {
