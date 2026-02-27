@@ -2,6 +2,7 @@ import { APP_NAME } from "../../../config.js";
 import { USER_TYPES } from "../../../core/roles.js";
 import { ADMIN_NAV_SECTIONS, LOGGED_OUT_NAV_SECTIONS, STUDENT_NAV_SECTIONS, TEACHER_NAV_SECTIONS } from "../../config/navigation.js";
 import { renderAdminLayout } from "../../layout/adminLayout.js";
+import { SITE_LOGO_CSS, renderSiteLogo } from "../../layout/siteLogo.js";
 
 const HOME_QUOTES = [
   { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
@@ -11,11 +12,14 @@ const HOME_QUOTES = [
 ];
 
 const HOME_STYLE = `
+${SITE_LOGO_CSS}
 .home-cover{position:relative;min-height:clamp(280px,56vh,480px);display:grid;align-items:center;overflow:hidden;padding:clamp(12px,2.6vw,24px)}
 .home-cover::before{content:'';position:absolute;inset:0;background:linear-gradient(140deg,#532d95,#1a7fa9 34%,#1a2f7a 72%,#8f3f63);opacity:.95}
 .home-cover::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 20%,rgba(255,232,170,.46),transparent 45%),radial-gradient(circle at 80% 8%,rgba(145,255,232,.28),transparent 42%),radial-gradient(circle at 70% 82%,rgba(255,137,172,.24),transparent 47%);mix-blend-mode:screen}
 .home-cover-inner{position:relative;z-index:2;display:grid;gap:12px;max-width:760px;width:min(100%,760px);justify-items:start;text-align:left}
-.home-cover-title{margin:0;font-size:clamp(2rem,6vw,4rem);line-height:1.04;letter-spacing:.04em;color:#fff;text-transform:uppercase}
+.home-cover-title{margin:0;display:inline-flex;max-width:min(100%,420px)}
+.home-cover-title .site-logo{width:100%}
+.home-cover-title .site-logo-svg{filter:drop-shadow(0 6px 14px rgba(5,10,20,.45))}
 .home-cover-sub{margin:0;max-width:52ch;color:rgba(247,250,255,.92);font-size:clamp(.98rem,2.1vw,1.15rem)}
 .home-cover-quote{margin:4px 0 0;padding:14px;border-radius:12px;background:rgba(10,14,26,.3);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.22);display:grid;gap:6px}
 .home-cover-quote p{margin:0;color:#fff;font-size:clamp(1rem,2.4vw,1.25rem)}
@@ -69,7 +73,7 @@ export function homePage({ admin } = {}) {
     pageClass: "page-home",
     pageStyles: HOME_STYLE,
     contentClass: "admin-content-flush",
-    content: `<section class="home-cover" aria-label="${APP_NAME} welcome banner"><div class="home-orbit" aria-hidden="true"></div><div class="home-shape home-shape-a" aria-hidden="true"></div><div class="home-shape home-shape-b" aria-hidden="true"></div><div class="home-shape home-shape-c" aria-hidden="true"></div><div class="home-cover-inner"><h1 class="home-cover-title">${APP_NAME}</h1><p class="home-cover-sub">Learn without limits and build strong knowledge with focused, readable learning spaces.</p><blockquote class="home-cover-quote"><p id="homeQuoteText" data-quotes='${quotesJson.replaceAll("'", "&#39;")}'>${HOME_QUOTES[0].text}</p><cite id="homeQuoteAuthor">— ${HOME_QUOTES[0].author}</cite></blockquote></div></section>`,
+    content: `<section class="home-cover" aria-label="${APP_NAME} welcome banner"><div class="home-orbit" aria-hidden="true"></div><div class="home-shape home-shape-a" aria-hidden="true"></div><div class="home-shape home-shape-b" aria-hidden="true"></div><div class="home-shape home-shape-c" aria-hidden="true"></div><div class="home-cover-inner"><h1 class="home-cover-title">${renderSiteLogo({ className: "site-logo site-logo--block", label: APP_NAME })}</h1><p class="home-cover-sub">Learn without limits and build strong knowledge with focused, readable learning spaces.</p><blockquote class="home-cover-quote"><p id="homeQuoteText" data-quotes='${quotesJson.replaceAll("'", "&#39;")}'>${HOME_QUOTES[0].text}</p><cite id="homeQuoteAuthor">— ${HOME_QUOTES[0].author}</cite></blockquote></div></section>`,
     script: HOME_SCRIPT,
   });
 }
