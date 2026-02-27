@@ -24,6 +24,7 @@ export const ADMIN_SCHEMA = {
     ["id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
     ["admin_id", "INTEGER NOT NULL"],
     ["token_hash", "TEXT NOT NULL UNIQUE"],
+    ["device_label", "TEXT NOT NULL DEFAULT ''"],
     ["created_at", "TEXT NOT NULL"],
     ["expires_at", "TEXT NOT NULL"],
   ],
