@@ -1,5 +1,13 @@
 export const PROFILE_STYLE = `
-.profile-page{display:grid;gap:10px}
+.profile-page{position:relative;display:grid;gap:10px}
+.profile-page.is-loading{pointer-events:none}
+.profile-page-loader{position:absolute;inset:0;z-index:5;display:grid;align-content:start;gap:10px;padding:0;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.profile-page.is-loading .profile-page-loader{opacity:1;pointer-events:auto}
+.profile-loader-shimmer{position:relative;overflow:hidden;background:color-mix(in srgb,var(--surface-soft) 74%,var(--surface));border:1px solid var(--border);border-radius:10px}
+.profile-loader-shimmer::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 22%,transparent),transparent);animation:profileShimmer 1s linear infinite}
+.profile-loader-shimmer-cover{height:210px}
+.profile-loader-shimmer-avatar{width:108px;height:108px;border-radius:50%;margin-top:-56px;margin-left:12px}
+.profile-loader-shimmer-line{height:74px}
 .profile-hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .32s ease}
 .profile-cover{position:relative;height:210px;background:var(--surface-soft);display:flex;align-items:flex-start;justify-content:flex-end;padding:8px}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -44,4 +52,5 @@ export const PROFILE_STYLE = `
 .profile-big-preview{width:100%;max-height:72vh;object-fit:contain;background:var(--surface-strong);border-radius:8px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes slideIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes profileShimmer{100%{transform:translateX(100%)}}
 `;
