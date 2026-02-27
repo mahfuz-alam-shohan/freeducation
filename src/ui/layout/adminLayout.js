@@ -16,7 +16,7 @@ html[data-nav-motion='back']::view-transition-new(root){animation-name:page-in-b
 .admin-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;position:relative}
 .admin-shell::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 50%);transition:opacity .4s ease;z-index:20}
 body.app-navigating .admin-shell::before{opacity:.42}
-.admin-header{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(8px,env(safe-area-inset-top)) 10px 8px;background:color-mix(in srgb,var(--surface-strong) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);min-height:58px}
+.admin-header{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(8px,env(safe-area-inset-top)) 8px 8px;background:color-mix(in srgb,var(--surface-strong) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);min-height:58px}
 .admin-header-left{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
 .admin-menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:background .25s ease,transform .2s ease}
 .admin-menu-toggle:hover{background:var(--surface-soft)}
@@ -56,10 +56,10 @@ body.menu-open .admin-menu-toggle{transform:rotate(180deg)}
 .admin-profile-logout{height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:.9rem}
 .admin-profile-logout:hover{background:var(--surface-soft)}
 body.profile-open .admin-profile-pop{opacity:1;transform:translateY(0);pointer-events:auto}
-.admin-content{padding:9px 10px;display:grid;gap:8px;align-content:start;animation:section-in .22s ease both;transition:opacity .2s ease;min-height:220px}
+.admin-content{padding:6px 6px 8px;display:grid;gap:6px;align-content:start;animation:section-in .22s ease both;transition:opacity .2s ease;min-height:220px}
 .admin-content > *{animation:content-float-in .28s ease both;animation-delay:calc(var(--content-seq,0) * 32ms)}
 .admin-content > *:nth-child(1){--content-seq:1}.admin-content > *:nth-child(2){--content-seq:2}.admin-content > *:nth-child(3){--content-seq:3}.admin-content > *:nth-child(4){--content-seq:4}.admin-content > *:nth-child(5){--content-seq:5}.admin-content > *:nth-child(n+6){--content-seq:6}
-.admin-footer{padding:8px 10px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.84rem}
+.admin-footer{padding:8px 8px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.84rem}
 .admin-status-toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);min-width:min(320px,88vw);max-width:min(440px,92vw);padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:70;box-shadow:0 12px 30px rgba(0,0,0,.2)}
 .admin-status-toast.is-visible{opacity:1;transform:translate(-50%,0)}
 .admin-status-toast[data-status='error']{border-color:#c76167;color:#ffd8dc}
@@ -81,11 +81,11 @@ body.app-navigating .admin-content::after{content:'Loading content...';display:b
 @media (prefers-reduced-motion:reduce){.admin-menu-toggle,.admin-avatar,.admin-nav-overlay,.admin-sidebar,.admin-nav a,.admin-profile-pop,.admin-content,.admin-content > *,.admin-shell::before,::view-transition-old(root),::view-transition-new(root){animation:none;transition:none}}
 @media (min-width:900px){
   .admin-shell{grid-template-columns:236px minmax(0,1fr);grid-template-rows:auto 1fr auto}
-  .admin-header{grid-column:1 / -1;padding:10px 12px;min-height:62px}
+  .admin-header{grid-column:1 / -1;padding:10px 8px;min-height:62px}
   .admin-user-meta{display:block}
   .admin-logout{display:inline-flex}
-  .admin-content{padding:10px 12px}
-  .admin-footer{grid-column:1 / -1;padding:8px 12px}
+  .admin-content{padding:8px}
+  .admin-footer{grid-column:1 / -1;padding:8px}
   .admin-menu-toggle,.admin-sidebar-close{display:none}
   .admin-nav-overlay{display:none}
   .admin-sidebar{position:sticky;top:62px;align-self:start;transform:none;height:calc(100vh - 62px);width:236px;animation:desktop-sidebar-in .45s ease both}
