@@ -1,5 +1,5 @@
 export const DASHBOARD_STYLE = `
-.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}
+.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start;width:min(100%,980px);margin:0 auto}
 .dash-card{position:relative;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;gap:6px;min-height:122px;padding:10px;background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 94%,var(--accent) 6%),var(--surface));border:1px solid color-mix(in srgb,var(--border) 84%,var(--accent) 16%);border-radius:12px;animation:panel-in .28s cubic-bezier(.22,.61,.36,1) both;transform:translate3d(var(--mx,0px),var(--my,0px),0) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-origin:center;transition:box-shadow .24s ease,border-color .24s ease}
 .dash-card::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(150px circle at var(--gx,50%) var(--gy,50%),color-mix(in srgb,var(--accent) 16%,transparent),transparent 72%);opacity:var(--glow,0);transition:opacity .22s ease;pointer-events:none}
 .dash-card.is-interactive{will-change:transform}

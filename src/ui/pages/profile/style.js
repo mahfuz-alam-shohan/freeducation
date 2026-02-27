@@ -1,5 +1,5 @@
 export const PROFILE_STYLE = `
-.profile-page{position:relative;display:grid;gap:10px;overflow-x:hidden}
+.profile-page{position:relative;display:grid;gap:10px;overflow-x:hidden;width:min(100%,980px);margin:0 auto}
 .profile-page.is-loading{pointer-events:none}
 .profile-page-loader{position:absolute;inset:0;z-index:5;display:grid;align-content:start;gap:10px;padding:0;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .profile-page.is-loading .profile-page-loader{opacity:1;pointer-events:auto}
@@ -77,7 +77,7 @@ export const PROFILE_STYLE = `
 .profile-row.is-editing .profile-edit-form input,.profile-row.is-editing .profile-edit-form select{padding:4px 6px;font-size:.93rem}
 .profile-row.is-editing .profile-edit-form button{padding:4px 7px;font-size:.84rem}
 .profile-open-password{border:1px solid var(--border);background:var(--surface-soft);padding:6px 10px;border-radius:6px;cursor:pointer}
-.profile-password-form{display:grid;gap:8px;max-width:360px;margin-top:10px;animation:fadeUp .24s ease}
+.profile-password-form{display:grid;gap:8px;max-width:360px;width:min(100%,var(--page-form-max,560px));margin-top:10px;animation:fadeUp .24s ease}
 .profile-password-form[hidden]{display:none!important}
 .profile-password-form label{display:grid;gap:4px;font-size:.92rem}
 .profile-password-form input{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text)}

@@ -1,5 +1,5 @@
 export const USERS_STYLE = `
-.users-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;display:grid;gap:8px;animation:section-in .34s cubic-bezier(.22,.61,.36,1) both}
+.users-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;display:grid;gap:8px;animation:section-in .34s cubic-bezier(.22,.61,.36,1) both;width:min(100%,1040px);margin:0 auto}
 .users-layout{overflow:hidden}
 .users-card.is-loading .users-table-wrap{position:relative}
 .users-card.is-loading .users-table-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 16%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
@@ -35,7 +35,7 @@ export const USERS_STYLE = `
 .users-actions-col{width:114px}
 .users-delete-btn{background:var(--surface-soft);color:var(--text)}
 .users-delete-btn[disabled]{opacity:.45;cursor:not-allowed}
-.users-form{display:grid;gap:8px;max-width:500px;position:relative}
+.users-form{display:grid;gap:8px;max-width:500px;position:relative;width:min(100%,var(--page-form-max,560px))}
 .users-form.is-submitting::after,.users-delete-dialog.is-submitting .users-delete-surface::after{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 22%,transparent),transparent);animation:user-submit-pulse 1.1s linear infinite;pointer-events:none}
 .users-form label{display:grid;gap:4px;color:var(--text-muted);font-size:.85rem}
 .users-form input{height:36px;font-size:16px;background:var(--surface-soft);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 10px;transition:border-color .2s ease,box-shadow .2s ease}
