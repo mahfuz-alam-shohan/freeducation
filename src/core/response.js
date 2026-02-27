@@ -19,5 +19,10 @@ export function html(content, status = 200, headers = {}) {
 }
 
 export function redirect(url, status = 302) {
-  return Response.redirect(url, status);
+  return new Response(null, {
+    status,
+    headers: {
+      location: String(url),
+    },
+  });
 }

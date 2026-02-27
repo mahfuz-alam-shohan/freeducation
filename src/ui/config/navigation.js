@@ -24,8 +24,7 @@ const PROFILE_ITEM = {
 const PUBLIC_SECTION = { title: "Public", items: [HOME_ITEM] };
 
 export const LOGGED_OUT_NAV_SECTIONS = [
-  PUBLIC_SECTION,
-  { title: "Admin", items: [LOGIN_ITEM] },
+  { title: "Public", items: [HOME_ITEM, LOGIN_ITEM] },
 ];
 
 export const ADMIN_NAV_ITEMS = [
