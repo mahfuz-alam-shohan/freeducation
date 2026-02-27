@@ -18,6 +18,13 @@ export const PROFILE_STYLE = `
 .profile-loader-tabs-row{display:flex;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .profile-loader-shimmer-tab{height:30px;width:94px;border-radius:8px}
 .profile-loader-shimmer-row{height:34px;border-radius:8px}
+.profile-loader-shimmer-row-short{width:min(100%,170px)}
+.profile-loader-about-rows{display:grid;gap:6px;padding-top:2px}
+.profile-loader-about-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.profile-loader-about-row:last-child{border-bottom:0}
+.profile-loader-shimmer-label{height:12px;width:74px;border-radius:6px}
+.profile-loader-shimmer-value{height:15px;width:min(100%,180px);border-radius:6px}
+.profile-loader-security{display:grid;gap:8px;padding-top:8px;border-top:1px solid var(--border)}
 .profile-hero{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:visible;animation:fadeUp .32s ease}
 .profile-cover{position:relative;height:170px;background:var(--surface-soft);border-radius:10px 10px 0 0;overflow:hidden}
 .profile-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -64,6 +71,10 @@ export const PROFILE_STYLE = `
 .profile-dob-inputs input,.profile-dob-inputs select{width:100%}
 .profile-edit-form button{border:1px solid var(--border);background:var(--surface-soft);padding:5px 8px;border-radius:6px;color:var(--text);cursor:pointer;transition:background .24s ease,transform .24s ease}
 .profile-row.is-editing strong{opacity:0;transform:translateY(-2px);pointer-events:none;display:none}
+.profile-row.is-editing{padding-top:5px;padding-bottom:5px}
+.profile-row.is-editing .profile-inline-edit{gap:5px}
+.profile-row.is-editing .profile-edit-form input,.profile-row.is-editing .profile-edit-form select{padding:4px 6px;font-size:.93rem}
+.profile-row.is-editing .profile-edit-form button{padding:4px 7px;font-size:.84rem}
 .profile-open-password{border:1px solid var(--border);background:var(--surface-soft);padding:6px 10px;border-radius:6px;cursor:pointer}
 .profile-password-form{display:grid;gap:8px;max-width:360px;margin-top:10px;animation:fadeUp .24s ease}
 .profile-password-form[hidden]{display:none!important}
@@ -80,7 +91,7 @@ export const PROFILE_STYLE = `
 .profile-upload-progress p{margin:0;font-size:.88rem;color:var(--text-muted)}
 .profile-upload-progress progress{width:100%;height:8px}
 .profile-big-preview{width:100%;max-height:72vh;object-fit:contain;background:var(--surface-strong);border-radius:8px}
-@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}.profile-row{flex-direction:column;gap:6px}.profile-inline-edit{width:100%;justify-content:flex-start}.profile-inline-edit strong{text-align:left}.profile-edit-form{justify-content:flex-start}.profile-edit-form input,.profile-edit-form select{width:100%}.profile-dob-inputs{grid-template-columns:1fr 1fr 1fr;width:100%}}
+@media (max-width:640px){.profile-cover{height:140px}.profile-loader-shimmer-cover{height:140px}.profile-avatar-wrap{width:94px;height:94px}.profile-head{margin-top:-34px}.profile-loader-about-row{gap:8px;padding:6px 0}.profile-loader-shimmer-label{width:64px}.profile-loader-shimmer-value{width:min(100%,140px)}.profile-row{flex-direction:column;gap:6px;padding:7px 0}.profile-row.is-editing{gap:4px;padding:5px 0}.profile-inline-edit{width:100%;justify-content:flex-start;gap:5px}.profile-inline-edit strong{text-align:left;font-size:.95rem}.profile-edit-trigger{padding:3px;border-radius:6px}.profile-edit-trigger .profile-inline-icon{width:15px;height:15px}.profile-edit-form{justify-content:flex-start;gap:5px}.profile-edit-form input,.profile-edit-form select{width:100%;padding:4px 6px;font-size:.92rem}.profile-edit-form button{padding:4px 7px;font-size:.82rem}.profile-dob-inputs{grid-template-columns:1fr 1fr 1fr;width:100%;gap:5px}}
 @keyframes panelIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
 @keyframes profileShimmer{100%{transform:translateX(100%)}}
