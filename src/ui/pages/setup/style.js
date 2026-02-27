@@ -1,4 +1,7 @@
+import { SITE_LOGO_CSS } from "../../layout/siteLogo.js";
+
 export const SETUP_STYLE = `
+${SITE_LOGO_CSS}
 :root{color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:#0a1221;color:#e9eef8;font:16px/1.5 Inter,system-ui,sans-serif}
@@ -6,6 +9,7 @@ body{margin:0;background:#0a1221;color:#e9eef8;font:16px/1.5 Inter,system-ui,san
 .auth-header{display:grid;gap:4px;animation:section-in .36s ease both}
 .auth-header h1{margin:0;font-size:clamp(1.4rem,4vw,1.7rem);line-height:1.25}
 .auth-muted,.setup-muted{margin:0;color:#a8b5ca}
+.auth-muted .site-logo{transform:translateY(2px)}
 .setup-card{background:#101b30;border:1px solid #24344f;border-radius:8px;padding:10px;width:100%;display:grid;align-self:start;animation:section-in .46s ease both}
 .setup-form{display:grid;gap:10px}
 .setup-form label{display:grid;gap:4px;color:#b2bfd3;font-size:.85rem}

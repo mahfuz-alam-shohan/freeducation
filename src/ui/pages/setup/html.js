@@ -1,11 +1,12 @@
 import { APP_NAME } from "../../../config.js";
+import { renderSiteLogo } from "../../layout/siteLogo.js";
 
 export function setupHtml() {
   return `
     <main class="setup-page">
       <header class="auth-header">
         <h1>Initial admin setup</h1>
-        <p class="auth-muted">Create the first administrator account for ${APP_NAME}.</p>
+        <p class="auth-muted">Create the first administrator account for ${renderSiteLogo({ className: "site-logo site-logo--inline", label: APP_NAME })}.</p>
       </header>
       <section class="setup-card">
         <form id="setupForm" class="setup-form" method="post" action="/api/setup">
