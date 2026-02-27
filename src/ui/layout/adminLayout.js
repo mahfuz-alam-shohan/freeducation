@@ -303,10 +303,32 @@ const ADMIN_LAYOUT_SCRIPT = `
     }, { signal });
   }
 
-  const setNavigating = () => body.classList.add('app-navigating');
+  let navigationClearTimer = 0;
+  const clearNavigating = () => {
+    body.classList.remove('app-navigating');
+    if (navigationClearTimer) {
+      window.clearTimeout(navigationClearTimer);
+      navigationClearTimer = 0;
+    }
+  };
+
+  const setNavigating = (autoClearMs = 0) => {
+    body.classList.add('app-navigating');
+    if (navigationClearTimer) {
+      window.clearTimeout(navigationClearTimer);
+      navigationClearTimer = 0;
+    }
+
+    if (autoClearMs > 0) {
+      navigationClearTimer = window.setTimeout(() => {
+        navigationClearTimer = 0;
+        body.classList.remove('app-navigating');
+      }, autoClearMs);
+    }
+  };
 
   document.querySelectorAll('form').forEach((form) => {
-    form.addEventListener('submit', setNavigating, { signal });
+    form.addEventListener('submit', () => setNavigating(1800), { signal });
   });
 
   document.addEventListener('click', (event) => {
@@ -316,10 +338,12 @@ const ADMIN_LAYOUT_SCRIPT = `
     if (!href || href.startsWith('#') || link.target === '_blank' || link.hasAttribute('download')) return;
     setMenu(false);
     setProfile(false);
-    body.classList.add('app-navigating');
+    setNavigating();
   }, { signal });
 
-  body.classList.remove('app-navigating');
+  window.addEventListener('pageshow', clearNavigating, { signal });
+
+  clearNavigating();
   body.classList.remove('profile-open');
 })();
 `;
