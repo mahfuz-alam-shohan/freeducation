@@ -13,15 +13,15 @@ const HOME_QUOTES = [
 
 const HOME_STYLE = `
 ${SITE_LOGO_CSS}
-.home-cover{position:relative;min-height:clamp(280px,56vh,480px);display:grid;align-items:center;overflow:hidden;padding:clamp(12px,2.6vw,24px)}
+.home-cover{position:relative;display:grid;align-items:start;overflow:hidden;padding:10px 12px}
 .home-cover::before{content:'';position:absolute;inset:0;background:linear-gradient(140deg,#532d95,#1a7fa9 34%,#1a2f7a 72%,#8f3f63);opacity:.95}
 .home-cover::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 20%,rgba(255,232,170,.46),transparent 45%),radial-gradient(circle at 80% 8%,rgba(145,255,232,.28),transparent 42%),radial-gradient(circle at 70% 82%,rgba(255,137,172,.24),transparent 47%);mix-blend-mode:screen}
-.home-cover-inner{position:relative;z-index:2;display:grid;gap:12px;max-width:760px;width:min(100%,760px);justify-items:start;text-align:left}
+.home-cover-inner{position:relative;z-index:2;display:grid;gap:8px;max-width:760px;width:min(100%,760px);justify-items:start;text-align:left}
 .home-cover-title{margin:0;display:inline-flex;max-width:min(100%,420px)}
 .home-cover-title .site-logo{width:100%}
 .home-cover-title .site-logo-svg{filter:drop-shadow(0 6px 14px rgba(5,10,20,.45))}
 .home-cover-sub{margin:0;max-width:52ch;color:rgba(247,250,255,.92);font-size:clamp(.98rem,2.1vw,1.15rem)}
-.home-cover-quote{margin:6px 0 0;display:grid;gap:6px;position:relative;isolation:isolate}
+.home-cover-quote{margin:2px 0 0;display:grid;gap:4px;position:relative;isolation:isolate}
 .home-cover-quote::before{content:'“';position:absolute;left:-.32em;top:-.34em;font-size:clamp(2rem,5vw,2.8rem);font-weight:700;line-height:1;color:rgba(255,255,255,.35);animation:quoteGlow 5s ease-in-out infinite}
 .home-cover-quote p{margin:0;max-width:34ch;color:#fff;font-size:clamp(1rem,2.4vw,1.25rem);line-height:1.48;text-wrap:balance;transform-origin:left center;animation:quoteTextIn .65s cubic-bezier(.25,.84,.34,1) both}
 .home-cover-quote cite{font-style:normal;color:rgba(234,240,255,.9);font-size:.92rem;letter-spacing:.01em;opacity:.95;transform-origin:left center;animation:quoteAuthorIn .75s cubic-bezier(.24,.78,.3,1) both}
@@ -46,7 +46,7 @@ ${SITE_LOGO_CSS}
 @keyframes quoteAuthorIn{0%{opacity:0;transform:translateX(-10px)}100%{opacity:.95;transform:translateX(0)}}
 @keyframes quoteTextOut{to{opacity:0;transform:translateY(-8px) scale(.985);filter:blur(3px)}}
 @keyframes quoteGlow{0%,100%{opacity:.28;transform:translateY(0)}50%{opacity:.5;transform:translateY(-2px)}}
-@media (max-width:760px){.home-cover{padding:10px 8px;justify-items:center}.home-cover-inner{gap:6px;justify-items:center;text-align:center}.home-cover-title{display:none}.home-cover-sub{font-size:.98rem;line-height:1.4;max-width:30ch}.home-cover-quote{margin-top:0;width:100%;justify-items:center}.home-cover-quote::before{left:50%;transform:translateX(-50%);top:-.62em}.home-cover-quote p{font-size:1rem;line-height:1.4;max-width:28ch;transform-origin:center}.home-cover-quote cite{transform-origin:center}.home-orbit{opacity:.4;right:-18vmin;top:auto;bottom:-9vmin;width:62vmin;height:62vmin}}
+@media (max-width:760px){.home-cover{padding:8px 6px;justify-items:center}.home-cover-inner{gap:5px;justify-items:center;text-align:center}.home-cover-title{display:none}.home-cover-sub{font-size:.98rem;line-height:1.35;max-width:30ch}.home-cover-quote{margin-top:0;width:100%;justify-items:center}.home-cover-quote::before{left:50%;transform:translateX(-50%);top:-.62em}.home-cover-quote p{font-size:1rem;line-height:1.35;max-width:28ch;transform-origin:center}.home-cover-quote cite{transform-origin:center}.home-orbit{opacity:.32;right:-18vmin;top:auto;bottom:-9vmin;width:62vmin;height:62vmin}}
 `;
 
 const HOME_SCRIPT = `
