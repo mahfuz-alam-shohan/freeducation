@@ -75,7 +75,7 @@ export async function getSocialFeed(db, viewerId = 0, limit = 20) {
   const likedRows = viewerId
     ? await db.prepare(
       `SELECT post_id FROM freeducation_social_reactions
-       WHERE admin_id = ?1 AND post_id IN (${placeholders})`,
+       WHERE admin_id = ?1 AND post_id IN (${postIds.map((_, index) => `?${index + 2}`).join(",")})`,
     ).bind(viewerId, ...postIds).all()
     : { results: [] };
 
