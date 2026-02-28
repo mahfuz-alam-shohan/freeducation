@@ -1,33 +1,21 @@
 import { loginPage } from "../ui/pages/login/index.js";
-import { setupPage } from "../ui/pages/setup/index.js";
 import { homePage } from "../ui/pages/home/index.js";
 import { html, json, redirect } from "../core/response.js";
-import { loginAdmin, setupFirstAdmin } from "../controllers/publicController.js";
+import { loginAdmin } from "../controllers/publicController.js";
 import { getAuthenticatedAdmin } from "../core/auth.js";
 
-export async function handlePublicRoute(request, env, url, hasAdmin) {
+export async function handlePublicRoute(request, env, url) {
   if (request.method === "GET" && url.pathname === "/") {
-    if (!hasAdmin) return html(setupPage());
     const admin = await getAuthenticatedAdmin(request, env);
     return html(homePage({ admin }));
   }
 
   if (request.method === "GET" && url.pathname === "/admin/login") {
-    return hasAdmin ? html(loginPage()) : redirect(new URL("/", url), 302);
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/setup") {
-    const result = await setupFirstAdmin(request, env, hasAdmin);
-    const contentType = String(request.headers.get("content-type") || "").toLowerCase();
-    const wantsHtml = contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data");
-    if (wantsHtml) {
-      return redirect(new URL("/admin/login", url), 303);
-    }
-    return json({ ok: result.ok }, result.status || 201, result.headers || {});
+    return html(loginPage());
   }
 
   if (request.method === "POST" && url.pathname === "/api/login") {
-    const result = await loginAdmin(request, env, hasAdmin);
+    const result = await loginAdmin(request, env);
     const contentType = String(request.headers.get("content-type") || "").toLowerCase();
     const wantsHtml = contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data");
     if (wantsHtml) {
