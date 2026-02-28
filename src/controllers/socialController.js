@@ -59,6 +59,9 @@ export async function createPost(request, env, viewer) {
 
   let imageKey = "";
   if (image) {
+    if (!env?.BUCKET || typeof env.BUCKET.put !== "function") {
+      throw new HttpError(500, "Image storage is not configured");
+    }
     imageKey = `social/posts/${viewer.id}/${Date.now()}.${image.ext}`;
     await env.BUCKET.put(imageKey, image.binary, {
       httpMetadata: { contentType: image.contentType, cacheControl: "public, max-age=604800" },
