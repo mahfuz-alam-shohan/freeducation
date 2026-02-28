@@ -19,10 +19,12 @@ Each page has its **own folder** with isolated files:
 - `src/ui/pages/<page>/index.js`
 
 Current pages:
-- `setup`
+- `home`
 - `login`
 - `dashboard`
 - `users`
+- `profile`
+- `file-manager`
 
 `index.js` composes the page from html/style/script and returns final HTML through layout renderers.
 

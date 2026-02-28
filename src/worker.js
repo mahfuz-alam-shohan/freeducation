@@ -1,6 +1,6 @@
-import { ADMIN_COUNT_CACHE_MS, SCHEMA_REVALIDATE_MS, SESSION_CLEANUP_INTERVAL_MS } from "./config.js";
+import { SCHEMA_REVALIDATE_MS, SESSION_CLEANUP_INTERVAL_MS } from "./config.js";
 import { ensureSchema } from "./db/schema.js";
-import { cleanupSessions, getAdminCount } from "./db/admins.js";
+import { cleanupSessions } from "./db/admins.js";
 import { HttpError, mapDatabaseError } from "./core/errors.js";
 import { json, redirect } from "./core/response.js";
 import { handlePublicRoute } from "./routes/publicRoutes.js";
@@ -12,8 +12,6 @@ let schemaReadyAt = 0;
 let schemaInFlight = null;
 let sessionCleanupAt = 0;
 let sessionCleanupInFlight = null;
-let adminCountCache = { value: 0, cachedAt: 0 };
-let adminCountInFlight = null;
 
 async function ensureSchemaCached(db) {
   const now = Date.now();
@@ -48,33 +46,6 @@ function scheduleSessionCleanup(db, ctx) {
   ctx.waitUntil(sessionCleanupInFlight);
 }
 
-async function getAdminCountCached(db) {
-  const now = Date.now();
-  if (now - adminCountCache.cachedAt < ADMIN_COUNT_CACHE_MS) {
-    return adminCountCache.value;
-  }
-
-  if (!adminCountInFlight) {
-    adminCountInFlight = getAdminCount(db)
-      .then((count) => {
-        adminCountCache = { value: count, cachedAt: Date.now() };
-        return count;
-      })
-      .finally(() => {
-        adminCountInFlight = null;
-      });
-  }
-
-  return adminCountInFlight;
-}
-
-
-function needsFreshAdminCount(url, method) {
-  if (method === "POST" && (url.pathname === "/api/setup" || url.pathname === "/api/login")) return true;
-  if (method === "GET" && (url.pathname === "/" || url.pathname === "/admin/login")) return true;
-  return false;
-}
-
 export default {
   async fetch(request, env, ctx) {
     try {
@@ -82,10 +53,7 @@ export default {
       scheduleSessionCleanup(env.DB, ctx);
 
       const url = new URL(request.url);
-      const adminCount = needsFreshAdminCount(url, request.method) ? await getAdminCount(env.DB) : await getAdminCountCached(env.DB);
-      const hasAdmin = adminCount > 0;
-
-      const publicResponse = await handlePublicRoute(request, env, url, hasAdmin);
+      const publicResponse = await handlePublicRoute(request, env, url);
       if (publicResponse) return publicResponse;
 
       const adminResponse = await handleAdminRoute(request, env, url);

@@ -1,8 +1,3 @@
-export async function getAdminCount(db) {
-  const row = await db.prepare("SELECT COUNT(*) AS total FROM freeducation_admins WHERE user_type = 'Administrator'").first();
-  return Number(row?.total || 0);
-}
-
 export async function findAdminByEmail(db, email) {
   return db.prepare("SELECT * FROM freeducation_admins WHERE email = ?1").bind(email.toLowerCase()).first();
 }
