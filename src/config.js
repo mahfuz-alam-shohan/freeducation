@@ -27,4 +27,25 @@ export const ADMIN_SCHEMA = {
     ["created_at", "TEXT NOT NULL"],
     ["expires_at", "TEXT NOT NULL"],
   ],
+  freeducation_social_posts: [
+    ["id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
+    ["admin_id", "INTEGER NOT NULL"],
+    ["body", "TEXT NOT NULL DEFAULT ''"],
+    ["image_key", "TEXT NOT NULL DEFAULT ''"],
+    ["created_at", "TEXT NOT NULL"],
+    ["updated_at", "TEXT NOT NULL"],
+  ],
+  freeducation_social_comments: [
+    ["id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
+    ["post_id", "INTEGER NOT NULL"],
+    ["admin_id", "INTEGER NOT NULL"],
+    ["body", "TEXT NOT NULL DEFAULT ''"],
+    ["created_at", "TEXT NOT NULL"],
+  ],
+  freeducation_social_reactions: [
+    ["id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
+    ["post_id", "INTEGER NOT NULL"],
+    ["admin_id", "INTEGER NOT NULL"],
+    ["created_at", "TEXT NOT NULL"],
+  ],
 };
