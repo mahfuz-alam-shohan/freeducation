@@ -26,6 +26,10 @@ ${SITE_LOGO_CSS}
 .home-cover-quote p{margin:0;max-width:34ch;color:#fff;font-size:clamp(1rem,2.4vw,1.25rem);line-height:1.48;text-wrap:balance;transform-origin:left center;animation:quoteTextIn .65s cubic-bezier(.25,.84,.34,1) both}
 .home-cover-quote cite{font-style:normal;color:rgba(234,240,255,.9);font-size:.92rem;letter-spacing:.01em;opacity:.95;transform-origin:left center;animation:quoteAuthorIn .75s cubic-bezier(.24,.78,.3,1) both}
 .home-cover-quote.is-animating p,.home-cover-quote.is-animating cite{animation:quoteTextOut .35s ease forwards}
+.home-cover-inner>*{opacity:0;transform:translateY(8px);animation:bannerItemIn .6s ease forwards}
+.home-cover-inner>*:nth-child(1){animation-delay:.08s}
+.home-cover-inner>*:nth-child(2){animation-delay:.2s}
+.home-cover-inner>*:nth-child(3){animation-delay:.32s}
 .home-orbit,.home-orbit::before,.home-orbit::after{position:absolute;border-radius:999px;pointer-events:none}
 .home-orbit{width:42vmin;height:42vmin;min-width:220px;min-height:220px;right:-8vmin;top:10%;border:1px solid rgba(255,255,255,.3);animation:spin 26s linear infinite}
 .home-orbit::before{content:'';width:14px;height:14px;background:#fff;top:50%;left:-7px;transform:translateY(-50%)}
@@ -37,11 +41,12 @@ ${SITE_LOGO_CSS}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes spinReverse{to{transform:rotate(-360deg)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes bannerItemIn{to{opacity:1;transform:translateY(0)}}
 @keyframes quoteTextIn{0%{opacity:0;transform:translateY(12px) scale(.98);filter:blur(4px)}100%{opacity:1;transform:translateY(0) scale(1);filter:none}}
 @keyframes quoteAuthorIn{0%{opacity:0;transform:translateX(-10px)}100%{opacity:.95;transform:translateX(0)}}
 @keyframes quoteTextOut{to{opacity:0;transform:translateY(-8px) scale(.985);filter:blur(3px)}}
 @keyframes quoteGlow{0%,100%{opacity:.28;transform:translateY(0)}50%{opacity:.5;transform:translateY(-2px)}}
-@media (max-width:760px){.home-cover{padding:12px 10px;justify-items:stretch}.home-cover-inner{gap:9px;justify-items:start;text-align:left}.home-cover-title{max-width:min(88vw,340px)}.home-cover-sub{font-size:1rem;line-height:1.45}.home-cover-quote{margin-top:2px;width:100%}.home-cover-quote p{font-size:1.02rem;line-height:1.43}.home-orbit{opacity:.45;right:-18vmin;top:auto;bottom:-8vmin;width:62vmin;height:62vmin}}
+@media (max-width:760px){.home-cover{padding:10px 8px;justify-items:center}.home-cover-inner{gap:6px;justify-items:center;text-align:center}.home-cover-title{display:none}.home-cover-sub{font-size:.98rem;line-height:1.4;max-width:30ch}.home-cover-quote{margin-top:0;width:100%;justify-items:center}.home-cover-quote::before{left:50%;transform:translateX(-50%);top:-.62em}.home-cover-quote p{font-size:1rem;line-height:1.4;max-width:28ch;transform-origin:center}.home-cover-quote cite{transform-origin:center}.home-orbit{opacity:.4;right:-18vmin;top:auto;bottom:-9vmin;width:62vmin;height:62vmin}}
 `;
 
 const HOME_SCRIPT = `
