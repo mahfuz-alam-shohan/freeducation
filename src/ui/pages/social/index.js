@@ -1,6 +1,6 @@
 import { ADMIN_NAV_SECTIONS, LOGGED_OUT_NAV_SECTIONS, STUDENT_NAV_SECTIONS, TEACHER_NAV_SECTIONS } from "../../config/navigation.js";
 import { renderDashboardPage } from "../shared/dashboardRenderer.js";
-import { socialHtml } from "./html.js";
+import { socialCreateHtml, socialFeedHtml } from "./html.js";
 import { SOCIAL_STYLE } from "./style.js";
 import { SOCIAL_SCRIPT } from "./script.js";
 
@@ -20,17 +20,25 @@ function resolveHomePath(userType) {
   return "/";
 }
 
-export function socialPage(user) {
+function renderSocialShell(user, title, content) {
   const userType = user?.user_type || "";
   return renderDashboardPage({
-    title: "Social",
+    title,
     activeMenu: "social",
     homePath: resolveHomePath(userType),
     navItems: resolveNav(userType),
     admin: user || null,
-    content: socialHtml(Boolean(user)),
+    content,
     pageClass: "page-social",
     pageStyles: SOCIAL_STYLE,
     script: SOCIAL_SCRIPT,
   });
+}
+
+export function socialPage(user) {
+  return renderSocialShell(user, "Social", socialFeedHtml(Boolean(user)));
+}
+
+export function socialCreatePage(user) {
+  return renderSocialShell(user, "Create post", socialCreateHtml(Boolean(user)));
 }

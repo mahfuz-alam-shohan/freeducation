@@ -27,7 +27,7 @@ function parseDataImage(payload) {
 
   const binary = Uint8Array.from(atob(match[2]), (char) => char.charCodeAt(0));
   if (!binary.byteLength) throw new HttpError(400, "Image is empty");
-  if (binary.byteLength > 1_500_000) throw new HttpError(413, "Image is too large");
+  if (binary.byteLength > 450_000) throw new HttpError(413, "Image is too large after compression");
 
   const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
   return { binary, contentType, ext };
@@ -50,7 +50,7 @@ export async function socialFeed(env, viewer) {
 
 export async function createPost(request, env, viewer) {
   if (!viewer) throw new HttpError(401, "Login required to create posts");
-  const body = await readBody(request);
+  const body = await readBody(request, { maxBodySize: 3_200_000 });
   const postText = sanitizePostText(body?.text);
   const image = parseDataImage(body?.imageData);
 
