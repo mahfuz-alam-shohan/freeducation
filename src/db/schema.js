@@ -5,6 +5,12 @@ const ADMIN_INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_freeducation_sessions_token_hash ON freeducation_sessions(token_hash)",
   "CREATE INDEX IF NOT EXISTS idx_freeducation_sessions_expires_at ON freeducation_sessions(expires_at)",
   "CREATE INDEX IF NOT EXISTS idx_freeducation_sessions_admin_id ON freeducation_sessions(admin_id)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_posts_created_at ON freeducation_social_posts(created_at)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_posts_admin_id ON freeducation_social_posts(admin_id)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_comments_post_id ON freeducation_social_comments(post_id)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_comments_admin_id ON freeducation_social_comments(admin_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_freeducation_social_reactions_unique ON freeducation_social_reactions(post_id, admin_id)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_reactions_post_id ON freeducation_social_reactions(post_id)",
 ];
 
 export async function ensureSchema(db) {

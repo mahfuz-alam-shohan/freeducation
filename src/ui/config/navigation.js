@@ -15,16 +15,24 @@ const LOGIN_ITEM = {
   icon: navIcon("<path d='M10 17l5-5-5-5'/><path d='M15 12H3'/><path d='M21 21V3'/>")
 };
 
+
+const SOCIAL_ITEM = {
+  key: "social",
+  href: "/social",
+  label: "Social",
+  icon: navIcon("<path d='M4 7.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 7.5v7A2.5 2.5 0 0 1 17.5 17h-6.2L7 20v-3H6.5A2.5 2.5 0 0 1 4 14.5z'/><path d='M8 9.5h8M8 12.5h5' />")
+};
+
 const PROFILE_ITEM = {
   key: "profile",
   label: "Profile",
   icon: navIcon("<path d='M12 13.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4z'/><path d='M4 21c.35-3.6 3.4-6.1 8-6.1s7.65 2.5 8 6.1' />"),
 };
 
-const PUBLIC_SECTION = { title: "Public", items: [HOME_ITEM] };
+const PUBLIC_SECTION = { title: "Public", items: [HOME_ITEM, SOCIAL_ITEM] };
 
 export const LOGGED_OUT_NAV_SECTIONS = [
-  { title: "Public", items: [HOME_ITEM, LOGIN_ITEM] },
+  { title: "Public", items: [HOME_ITEM, SOCIAL_ITEM, LOGIN_ITEM] },
 ];
 
 export const ADMIN_NAV_ITEMS = [
