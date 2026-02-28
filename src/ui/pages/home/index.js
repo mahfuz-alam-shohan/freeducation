@@ -13,101 +13,14 @@ const HOME_QUOTES = [
 
 const HOME_STYLE = `
 ${SITE_LOGO_CSS}
-.home-cover{position:relative;display:grid;align-items:start;overflow:hidden;padding:8px 10px;min-height:152px}
-.home-cover::before{content:'';position:absolute;inset:0;background:linear-gradient(140deg,#532d95,#1a7fa9 34%,#1a2f7a 72%,#8f3f63);opacity:.95}
-.home-cover::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 20%,rgba(255,232,170,.46),transparent 45%),radial-gradient(circle at 80% 8%,rgba(145,255,232,.28),transparent 42%),radial-gradient(circle at 70% 82%,rgba(255,137,172,.24),transparent 47%);mix-blend-mode:screen}
-.home-cover-inner{position:relative;z-index:2;display:grid;gap:8px;max-width:600px;width:min(100%,600px);justify-items:start;text-align:left}
+.home-cover{display:grid;align-items:start;padding:8px 10px;min-height:152px;background:#1a2f7a}
+.home-cover-inner{display:grid;gap:8px;max-width:600px;width:min(100%,600px);justify-items:start;text-align:left}
 .home-cover-title{margin:0;display:inline-flex;max-width:min(100%,420px)}
 .home-cover-title .site-logo{width:100%}
-.home-cover-title .site-logo-svg{filter:drop-shadow(0 6px 14px rgba(5,10,20,.45))}
-.home-cover-quote{margin:2px 0 0;display:grid;gap:4px;position:relative;isolation:isolate;min-height:66px;max-height:66px;overflow:hidden}
-.home-cover-quote::before{content:'“';position:absolute;left:-.32em;top:-.34em;font-size:clamp(2rem,5vw,2.8rem);font-weight:700;line-height:1;color:rgba(255,255,255,.35);animation:quoteGlow 5s ease-in-out infinite}
-.home-cover-quote p{margin:0;max-width:35ch;color:#f7f9ff;font-family:Georgia,'Times New Roman',serif;font-size:clamp(1.02rem,2vw,1.18rem);font-weight:500;line-height:1.42;letter-spacing:.015em;word-break:normal;overflow-wrap:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.home-cover-quote cite{font-style:normal;color:rgba(246,250,255,.86);font-family:'Palatino Linotype','Book Antiqua',Palatino,serif;font-size:.85rem;letter-spacing:.07em;text-transform:uppercase;opacity:.95;min-height:18px}
-.home-cover-quote.is-animating p,.home-cover-quote.is-animating cite{animation:quoteTextOut .35s ease forwards}
-.home-cover-word{display:inline-block;opacity:0;transform:translateY(-14px) scale(.98);filter:blur(2px);animation:charDrop .55s cubic-bezier(.18,.78,.34,1) forwards;animation-delay:calc(var(--word-index,0) * 72ms)}
-.home-cover-word-space{white-space:pre}
-.home-cover-inner>*{opacity:0;transform:translateY(8px);animation:bannerItemIn .6s ease forwards}
-.home-cover-inner>*:nth-child(1){animation-delay:.08s}
-.home-cover-inner>*:nth-child(2){animation-delay:.2s}
-.home-orbit,.home-orbit::before,.home-orbit::after{position:absolute;border-radius:999px;pointer-events:none}
-.home-orbit{width:42vmin;height:42vmin;min-width:220px;min-height:220px;right:-8vmin;top:10%;border:1px solid rgba(255,255,255,.3);animation:spin 26s linear infinite}
-.home-orbit::before{content:'';width:14px;height:14px;background:#fff;top:50%;left:-7px;transform:translateY(-50%)}
-.home-orbit::after{content:'';inset:15%;border:1px dashed rgba(255,255,255,.34);animation:spinReverse 18s linear infinite}
-.home-shape{position:absolute;filter:blur(.2px);opacity:.88;pointer-events:none;animation:float 6s ease-in-out infinite}
-.home-shape-a{width:120px;height:120px;left:6%;bottom:9%;background:rgba(255,200,120,.42);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)}
-.home-shape-b{width:150px;height:150px;right:18%;bottom:-38px;background:rgba(126,232,255,.33);border-radius:31% 69% 58% 42%/53% 44% 56% 47%;animation-duration:8s}
-.home-shape-c{width:80px;height:80px;right:42%;top:13%;background:rgba(231,163,255,.35);clip-path:polygon(25% 6%,100% 0,75% 100%,0 80%);animation-duration:7s}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes spinReverse{to{transform:rotate(-360deg)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
-@keyframes bannerItemIn{to{opacity:1;transform:translateY(0)}}
-@keyframes quoteTextIn{0%{opacity:0;transform:translateY(12px) scale(.98);filter:blur(4px)}100%{opacity:1;transform:translateY(0) scale(1);filter:none}}
-@keyframes quoteAuthorIn{0%{opacity:0;transform:translateX(-10px)}100%{opacity:.95;transform:translateX(0)}}
-@keyframes quoteTextOut{to{opacity:0;transform:translateY(-8px) scale(.985);filter:blur(3px)}}
-@keyframes quoteGlow{0%,100%{opacity:.28;transform:translateY(0)}50%{opacity:.5;transform:translateY(-2px)}}
-@keyframes charDrop{0%{opacity:0;transform:translateY(-14px) scale(.98);filter:blur(2px)}100%{opacity:1;transform:translateY(0) scale(1);filter:none}}
-@media (max-width:760px){.home-cover{padding:7px 6px;justify-items:center;min-height:144px}.home-cover-inner{gap:5px;justify-items:center;text-align:center;max-width:100%}.home-cover-title{display:none}.home-cover-quote{margin-top:0;width:100%;justify-items:center;min-height:68px;max-height:68px}.home-cover-quote::before{left:50%;transform:translateX(-50%);top:-.62em}.home-cover-quote p{font-size:1rem;line-height:1.35;max-width:29ch}.home-cover-quote cite{transform-origin:center}.home-orbit{opacity:.32;right:-18vmin;top:auto;bottom:-9vmin;width:62vmin;height:62vmin}}
-`;
-
-const HOME_SCRIPT = `
-(() => {
-  const quote = document.getElementById('homeQuoteText');
-  const author = document.getElementById('homeQuoteAuthor');
-  if (!quote || !author) return;
-  const quoteWrap = quote.closest('.home-cover-quote');
-  const entries = JSON.parse(quote.dataset.quotes || '[]');
-  if (!Array.isArray(entries) || entries.length === 0) return;
-  const tickMs = 72;
-  const holdMs = 2600;
-  let index = 0;
-
-  const placeQuote = (entry = {}) => {
-    const text = String(entry.text || '');
-    const authorName = entry.author ? '— ' + entry.author : '';
-    quote.replaceChildren();
-    author.textContent = '';
-
-    text.split(/(\s+)/).forEach((token, wordIndex) => {
-      const span = document.createElement('span');
-      if (/\s+/.test(token)) {
-        span.className = 'home-cover-word-space';
-      } else {
-        span.className = 'home-cover-word';
-        span.style.setProperty('--word-index', String(wordIndex));
-      }
-      span.textContent = token;
-      quote.append(span);
-    });
-
-    const authorDelay = Math.max(260, text.length * tickMs);
-    window.setTimeout(() => {
-      author.textContent = authorName;
-    }, authorDelay);
-
-    return tickMs * text.length + holdMs;
-  };
-
-  const rotate = () => {
-    if (quoteWrap) quoteWrap.classList.add('is-animating');
-    window.setTimeout(() => {
-      const next = entries[index] || {};
-      const cycleDelay = placeQuote(next);
-      quote.style.animation = 'none';
-      author.style.animation = 'none';
-      void quote.offsetWidth;
-      quote.style.animation = '';
-      author.style.animation = '';
-      if (quoteWrap) {
-        quoteWrap.classList.remove('is-animating');
-      }
-      index = (index + 1) % entries.length;
-      window.setTimeout(rotate, cycleDelay);
-    }, 260);
-  };
-
-  rotate();
-})();
+.home-cover-quote{margin:2px 0 0;display:grid;gap:4px}
+.home-cover-quote p{margin:0;max-width:35ch;color:#f7f9ff;font-family:Georgia,'Times New Roman',serif;font-size:clamp(1.02rem,2vw,1.18rem);font-weight:500;line-height:1.42;letter-spacing:.015em;word-break:break-word;overflow-wrap:anywhere}
+.home-cover-quote cite{font-style:normal;color:rgba(246,250,255,.86);font-family:'Palatino Linotype','Book Antiqua',Palatino,serif;font-size:.85rem;letter-spacing:.07em;text-transform:uppercase}
+@media (max-width:760px){.home-cover{padding:7px 6px;justify-items:center;min-height:144px}.home-cover-inner{gap:5px;justify-items:center;text-align:center;max-width:100%}.home-cover-title{display:none}.home-cover-quote{margin-top:0;width:100%;justify-items:center}.home-cover-quote p{font-size:1rem;line-height:1.35;max-width:29ch}}
 `;
 
 function navItemsForUser(userType = "") {
@@ -118,7 +31,9 @@ function navItemsForUser(userType = "") {
 
 export function homePage({ admin } = {}) {
   const loggedIn = Boolean(admin);
-  const quotesJson = JSON.stringify(HOME_QUOTES);
+  const staticQuote = HOME_QUOTES[0] || { text: "", author: "" };
+  const quoteText = String(staticQuote.text || "");
+  const quoteAuthor = staticQuote.author ? `— ${staticQuote.author}` : "";
   return renderAdminLayout({
     title: `${APP_NAME} Home`,
     activeMenu: "home",
@@ -128,7 +43,6 @@ export function homePage({ admin } = {}) {
     pageClass: "page-home",
     pageStyles: HOME_STYLE,
     contentClass: "admin-content-flush",
-    content: `<section class="home-cover" aria-label="${APP_NAME} welcome banner"><div class="home-orbit" aria-hidden="true"></div><div class="home-shape home-shape-a" aria-hidden="true"></div><div class="home-shape home-shape-b" aria-hidden="true"></div><div class="home-shape home-shape-c" aria-hidden="true"></div><div class="home-cover-inner"><h1 class="home-cover-title">${renderSiteLogo({ className: "site-logo site-logo--block", label: APP_NAME })}</h1><blockquote class="home-cover-quote"><p id="homeQuoteText" data-quotes='${quotesJson.replaceAll("'", "&#39;")}'></p><cite id="homeQuoteAuthor"></cite></blockquote></div></section>`,
-    script: HOME_SCRIPT,
+    content: `<section class="home-cover" aria-label="${APP_NAME} welcome banner"><div class="home-cover-inner"><h1 class="home-cover-title">${renderSiteLogo({ className: "site-logo site-logo--block", label: APP_NAME })}</h1><blockquote class="home-cover-quote"><p id="homeQuoteText">${quoteText}</p><cite id="homeQuoteAuthor">${quoteAuthor}</cite></blockquote></div></section>`,
   });
 }
