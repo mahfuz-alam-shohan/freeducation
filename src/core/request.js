@@ -5,14 +5,15 @@ export function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-export async function readJsonBody(request) {
+export async function readJsonBody(request, options = {}) {
+  const maxBodySize = Number(options.maxBodySize) > 0 ? Number(options.maxBodySize) : MAX_BODY_SIZE;
   const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > MAX_BODY_SIZE) {
+  if (contentLength > maxBodySize) {
     throw new HttpError(413, "Request body too large");
   }
 
   const text = await request.text();
-  if (text.length > MAX_BODY_SIZE) {
+  if (text.length > maxBodySize) {
     throw new HttpError(413, "Request body too large");
   }
 
@@ -23,11 +24,11 @@ export async function readJsonBody(request) {
   }
 }
 
-export async function readBody(request) {
+export async function readBody(request, options = {}) {
   const contentType = String(request.headers.get("content-type") || "").toLowerCase();
 
   if (contentType.includes("application/json") || !contentType) {
-    return readJsonBody(request);
+    return readJsonBody(request, options);
   }
 
   if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {

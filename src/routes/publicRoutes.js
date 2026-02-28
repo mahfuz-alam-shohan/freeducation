@@ -1,6 +1,6 @@
 import { loginPage } from "../ui/pages/login/index.js";
 import { homePage } from "../ui/pages/home/index.js";
-import { socialPage } from "../ui/pages/social/index.js";
+import { socialCreatePage, socialPage } from "../ui/pages/social/index.js";
 import { html, json, redirect } from "../core/response.js";
 import { loginAdmin } from "../controllers/publicController.js";
 import { createComment, createPost, socialAvatar, socialFeed, socialPostImage, toggleReaction } from "../controllers/socialController.js";
@@ -19,6 +19,11 @@ export async function handlePublicRoute(request, env, url) {
   if (request.method === "GET" && url.pathname === "/social") {
     const user = await getAuthenticatedAdmin(request, env);
     return html(socialPage(user));
+  }
+
+  if (request.method === "GET" && url.pathname === "/social/create") {
+    const user = await getAuthenticatedAdmin(request, env);
+    return html(socialCreatePage(user));
   }
 
   if (request.method === "GET" && url.pathname === "/admin/login") {

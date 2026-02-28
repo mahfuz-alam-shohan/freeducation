@@ -1,13 +1,24 @@
 export const SOCIAL_STYLE = `
 .social-page{display:grid;gap:8px;max-width:860px;margin:0 auto;inline-size:min(100%,860px);min-width:0;overflow-x:hidden}
 .social-card{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:8px;min-width:0}
-.social-create h2{margin:0;font-size:1rem}
+.social-create-cta h2,.social-create-page h2{margin:0;font-size:1rem}
 .social-note{margin:4px 0 0;color:var(--text-muted);font-size:.88rem}
 .social-readonly{margin:8px 0 0;border:1px solid var(--border);background:var(--surface-soft);border-radius:8px;padding:6px 8px;color:var(--text-muted);font-size:.9rem}
+.social-create-button,.social-back-link{display:inline-block;border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:8px;padding:5px 9px;text-decoration:none;font-size:.9rem}
+.social-create-button{margin-top:8px}
+.social-create-button:hover,.social-back-link:hover{border-color:var(--accent)}
+.social-create-topbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .social-form{margin-top:8px;display:grid;gap:6px}
-.social-form textarea,.social-comment-form input{width:100%;max-width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:8px;padding:6px 8px;font:inherit}
+.social-label{font-size:.86rem;color:var(--text-muted)}
+.social-form textarea,.social-comment-form input,.social-form input[type='file']{width:100%;max-width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:8px;padding:6px 8px;font:inherit}
 .social-form button,.social-comment-form button,.social-like{border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:8px;padding:5px 9px;cursor:pointer}
 .social-form button:hover,.social-comment-form button:hover,.social-like:hover{border-color:var(--accent)}
+.image-preview-wrap{position:relative;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:420px;background:var(--surface-soft)}
+.image-preview{display:block;max-width:100%;max-height:280px;object-fit:contain}
+.clear-image-button{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;font-size:1rem;line-height:1;padding:0}
+.upload-progress-wrap{display:grid;gap:3px}
+.upload-progress-head{display:flex;justify-content:space-between;color:var(--text-muted);font-size:.85rem}
+.upload-progress-wrap progress{width:100%;height:12px}
 .social-status{min-height:20px;color:var(--text-muted);font-size:.86rem}
 .social-feed{display:grid;gap:8px;min-width:0}
 .post-card{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:8px;display:grid;gap:7px;min-width:0}

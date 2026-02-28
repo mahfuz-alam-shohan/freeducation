@@ -1,14 +1,23 @@
 export const SOCIAL_SCRIPT = `
 (() => {
   const page = document.querySelector('.social-page');
-  const feed = document.getElementById('socialFeed');
-  const status = document.getElementById('socialStatus');
-  if (!page || !feed || !status) return;
+  if (!page) return;
 
+  const mode = page.dataset.mode || 'feed';
   const canInteract = page.dataset.canInteract === '1';
+  const status = document.getElementById('socialStatus');
+  const feed = document.getElementById('socialFeed');
+
   const createForm = document.getElementById('createPostForm');
   const postText = document.getElementById('postText');
   const postImage = document.getElementById('postImage');
+  const previewWrap = document.getElementById('imagePreviewWrap');
+  const previewImage = document.getElementById('imagePreview');
+  const clearImageButton = document.getElementById('clearImageButton');
+  const submitPostButton = document.getElementById('submitPostButton');
+  const uploadProgressWrap = document.getElementById('uploadProgressWrap');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const uploadProgressValue = document.getElementById('uploadProgressValue');
 
   const escapeHtml = (value) => String(value || '')
     .replaceAll('&', '&amp;')
@@ -17,26 +26,15 @@ export const SOCIAL_SCRIPT = `
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
+  const setStatus = (message) => {
+    if (status) status.textContent = message || '';
+  };
+
   const formatTime = (iso) => {
     if (!iso) return 'now';
     const parsed = new Date(iso);
     if (Number.isNaN(parsed.getTime())) return 'now';
     return parsed.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
-  const toDataUrl = (file) => new Promise((resolve, reject) => {
-    if (!file) {
-      resolve('');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Unable to read image'));
-    reader.readAsDataURL(file);
-  });
-
-  const setStatus = (message) => {
-    status.textContent = message || '';
   };
 
   const readErrorMessage = async (response, fallback) => {
@@ -49,6 +47,68 @@ export const SOCIAL_SCRIPT = `
     }
     const raw = await response.text().catch(() => '');
     return raw.trim() || fallback;
+  };
+
+  const compressImageToDataUrl = async (file, onProgress) => {
+    if (!file) return '';
+
+    const bitmap = await createImageBitmap(file);
+    const maxSide = 1280;
+    const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * ratio));
+    const height = Math.max(1, Math.round(bitmap.height * ratio));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const targetBytes = 260000;
+    let quality = 0.68;
+    let bestDataUrl = '';
+
+    for (let attempt = 0; attempt < 7; attempt += 1) {
+      const testQuality = Math.max(0.22, quality - attempt * 0.08);
+      const dataUrl = canvas.toDataURL('image/jpeg', testQuality);
+      const estimatedBytes = Math.floor((dataUrl.length * 3) / 4);
+      bestDataUrl = dataUrl;
+      if (typeof onProgress === 'function') {
+        onProgress(Math.min(92, 40 + attempt * 8));
+      }
+      if (estimatedBytes <= targetBytes || testQuality <= 0.24) break;
+    }
+
+    return bestDataUrl;
+  };
+
+  const updatePreview = async () => {
+    if (!postImage || !previewWrap || !previewImage) return;
+    const file = postImage.files?.[0];
+    if (!file) {
+      previewImage.removeAttribute('src');
+      previewWrap.hidden = true;
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    previewImage.src = objectUrl;
+    previewWrap.hidden = false;
+  };
+
+  const setProgress = (value) => {
+    if (!uploadProgressWrap || !uploadProgress || !uploadProgressValue) return;
+    uploadProgressWrap.hidden = false;
+    const safe = Math.max(0, Math.min(100, Math.round(value)));
+    uploadProgress.value = safe;
+    uploadProgressValue.textContent = safe + '%';
+  };
+
+  const resetProgress = () => {
+    if (!uploadProgressWrap || !uploadProgress || !uploadProgressValue) return;
+    uploadProgressWrap.hidden = true;
+    uploadProgress.value = 0;
+    uploadProgressValue.textContent = '0%';
   };
 
   const renderAvatar = (author) => {
@@ -95,6 +155,7 @@ export const SOCIAL_SCRIPT = `
   };
 
   const loadFeed = async () => {
+    if (!feed) return;
     setStatus('Loading feed...');
     const response = await fetch('/api/social/feed');
     if (!response.ok) {
@@ -111,11 +172,16 @@ export const SOCIAL_SCRIPT = `
   const submitPost = async (event) => {
     event.preventDefault();
     if (!canInteract) return;
-    try {
-      const file = postImage?.files?.[0];
-      const imageData = await toDataUrl(file);
 
-      setStatus('Posting...');
+    try {
+      if (submitPostButton) submitPostButton.disabled = true;
+      setStatus('Preparing post image...');
+      setProgress(10);
+
+      const file = postImage?.files?.[0];
+      const imageData = await compressImageToDataUrl(file, setProgress);
+      setProgress(95);
+
       const response = await fetch('/api/social/posts', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -127,12 +193,16 @@ export const SOCIAL_SCRIPT = `
         return;
       }
 
-      if (postText) postText.value = '';
-      if (postImage) postImage.value = '';
-      setStatus('Post created');
-      await loadFeed();
+      setProgress(100);
+      setStatus('Post created. Redirecting...');
+      window.setTimeout(() => {
+        window.location.assign('/social');
+      }, 350);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Unable to post');
+      resetProgress();
+    } finally {
+      if (submitPostButton) submitPostButton.disabled = false;
     }
   };
 
@@ -184,10 +254,24 @@ export const SOCIAL_SCRIPT = `
     }
   };
 
-  if (createForm) createForm.addEventListener('submit', submitPost);
-  feed.addEventListener('click', onFeedAction);
-  feed.addEventListener('submit', onFeedAction);
+  if (mode === 'feed') {
+    if (feed) {
+      feed.addEventListener('click', onFeedAction);
+      feed.addEventListener('submit', onFeedAction);
+      loadFeed().catch((error) => setStatus(error instanceof Error ? error.message : 'Unable to load community feed'));
+    }
+    return;
+  }
 
-  loadFeed().catch((error) => setStatus(error instanceof Error ? error.message : 'Unable to load community feed'));
+  if (mode === 'create') {
+    if (createForm) createForm.addEventListener('submit', submitPost);
+    if (postImage) postImage.addEventListener('change', updatePreview);
+    if (clearImageButton) {
+      clearImageButton.addEventListener('click', () => {
+        if (postImage) postImage.value = '';
+        updatePreview();
+      });
+    }
+  }
 })();
 `;
