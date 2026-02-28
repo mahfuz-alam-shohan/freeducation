@@ -43,7 +43,9 @@ export const SOCIAL_SCRIPT = `
     const contentType = String(response.headers.get('content-type') || '').toLowerCase();
     if (contentType.includes('application/json')) {
       const payload = await response.json().catch(() => ({}));
+      if (payload?.error && payload?.detail) return payload.error + ' (' + payload.detail + ')';
       if (payload?.error) return payload.error;
+      if (payload?.detail) return String(payload.detail);
     }
     const raw = await response.text().catch(() => '');
     return raw.trim() || fallback;
