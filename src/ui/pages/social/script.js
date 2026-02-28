@@ -39,6 +39,16 @@ export const SOCIAL_SCRIPT = `
     status.textContent = message || '';
   };
 
+  const readErrorMessage = async (response, fallback) => {
+    const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+    if (contentType.includes('application/json')) {
+      const payload = await response.json().catch(() => ({}));
+      if (payload?.error) return payload.error;
+    }
+    const raw = await response.text().catch(() => '');
+    return raw.trim() || fallback;
+  };
+
   const renderAvatar = (author) => {
     const initial = escapeHtml((author?.name || 'U').slice(0, 1).toUpperCase());
     if (author?.avatarUrl) {
@@ -85,7 +95,12 @@ export const SOCIAL_SCRIPT = `
   const loadFeed = async () => {
     setStatus('Loading feed...');
     const response = await fetch('/api/social/feed');
-    const data = await response.json();
+    if (!response.ok) {
+      const errorMessage = await readErrorMessage(response, 'Unable to load community feed');
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json().catch(() => ({}));
     const posts = Array.isArray(data.posts) ? data.posts : [];
     feed.innerHTML = posts.length ? posts.map(renderPost).join('') : '<div class="empty-feed">No posts yet.</div>';
     setStatus('');
@@ -94,26 +109,29 @@ export const SOCIAL_SCRIPT = `
   const submitPost = async (event) => {
     event.preventDefault();
     if (!canInteract) return;
-    const file = postImage?.files?.[0];
-    const imageData = await toDataUrl(file);
+    try {
+      const file = postImage?.files?.[0];
+      const imageData = await toDataUrl(file);
 
-    setStatus('Posting...');
-    const response = await fetch('/api/social/posts', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: postText?.value || '', imageData }),
-    });
+      setStatus('Posting...');
+      const response = await fetch('/api/social/posts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: postText?.value || '', imageData }),
+      });
 
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}));
-      setStatus(payload.error || 'Unable to post');
-      return;
+      if (!response.ok) {
+        setStatus(await readErrorMessage(response, 'Unable to post'));
+        return;
+      }
+
+      if (postText) postText.value = '';
+      if (postImage) postImage.value = '';
+      setStatus('Post created');
+      await loadFeed();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to post');
     }
-
-    if (postText) postText.value = '';
-    if (postImage) postImage.value = '';
-    setStatus('Post created');
-    await loadFeed();
   };
 
   const onFeedAction = async (event) => {
@@ -126,8 +144,16 @@ export const SOCIAL_SCRIPT = `
 
     if (target.matches('[data-action="toggle-like"]')) {
       if (!canInteract) return;
-      await fetch('/api/social/posts/' + encodeURIComponent(postId) + '/reactions', { method: 'POST' });
-      await loadFeed();
+      try {
+        const response = await fetch('/api/social/posts/' + encodeURIComponent(postId) + '/reactions', { method: 'POST' });
+        if (!response.ok) {
+          setStatus(await readErrorMessage(response, 'Unable to react'));
+          return;
+        }
+        await loadFeed();
+      } catch {
+        setStatus('Unable to react');
+      }
       return;
     }
 
@@ -138,13 +164,21 @@ export const SOCIAL_SCRIPT = `
       const input = form.querySelector('input[name="comment"]');
       const text = input ? input.value : '';
       if (!text.trim()) return;
-      await fetch('/api/social/posts/' + encodeURIComponent(postId) + '/comments', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (input) input.value = '';
-      await loadFeed();
+      try {
+        const response = await fetch('/api/social/posts/' + encodeURIComponent(postId) + '/comments', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+        if (!response.ok) {
+          setStatus(await readErrorMessage(response, 'Unable to comment'));
+          return;
+        }
+        if (input) input.value = '';
+        await loadFeed();
+      } catch {
+        setStatus('Unable to comment');
+      }
     }
   };
 
@@ -152,6 +186,6 @@ export const SOCIAL_SCRIPT = `
   feed.addEventListener('click', onFeedAction);
   feed.addEventListener('submit', onFeedAction);
 
-  loadFeed().catch(() => setStatus('Unable to load community feed'));
+  loadFeed().catch((error) => setStatus(error instanceof Error ? error.message : 'Unable to load community feed'));
 })();
 `;

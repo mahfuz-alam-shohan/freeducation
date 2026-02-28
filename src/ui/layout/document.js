@@ -5,10 +5,11 @@ export function renderDocument({ title, body, script = "", bodyClass = "", pageS
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover, interactive-widget=resizes-content" />
   <title>${title} - ${APP_NAME}</title>
   <style>
-  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+  body{touch-action:manipulation}
   input,select,textarea,button{font-size:16px}
   ${pageStyles}
   </style>
@@ -21,14 +22,17 @@ window.__appPageScript = ${JSON.stringify(script || "")};
     return;
   }
   window.__appShellBooted = true;
-  const blockZoomKeys = new Set(['+', '-', '=', '_']);
+  const blockZoomKeys = new Set(['+', '-', '=', '_', '0']);
 
   document.addEventListener('wheel', (event) => {
     if (event.ctrlKey || event.metaKey) event.preventDefault();
   }, { passive: false });
 
   document.addEventListener('keydown', (event) => {
-    if ((event.ctrlKey || event.metaKey) && blockZoomKeys.has(event.key)) event.preventDefault();
+    if (!(event.ctrlKey || event.metaKey)) return;
+    if (blockZoomKeys.has(event.key) || event.code === 'NumpadAdd' || event.code === 'NumpadSubtract' || event.code === 'Digit0' || event.code === 'Numpad0') {
+      event.preventDefault();
+    }
   });
 
   document.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
@@ -36,8 +40,8 @@ window.__appPageScript = ${JSON.stringify(script || "")};
   document.addEventListener('gestureend', (event) => event.preventDefault(), { passive: false });
 
   const viewportMeta = document.querySelector('meta[name="viewport"]');
-  const viewportStatic = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
-  const viewportFocus = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
+  const viewportStatic = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover, interactive-widget=resizes-content';
+  const viewportFocus = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover, interactive-widget=resizes-content';
   const lockViewport = () => {
     if (viewportMeta) viewportMeta.setAttribute('content', viewportFocus);
   };
@@ -49,6 +53,8 @@ window.__appPageScript = ${JSON.stringify(script || "")};
     if (event.target && event.target.matches('input, textarea, select')) lockViewport();
   });
   document.addEventListener('focusout', resetViewport);
+  window.addEventListener('orientationchange', resetViewport);
+  window.addEventListener('resize', resetViewport);
 
   let singleTouch = false;
   let lastTouchEnd = 0;
