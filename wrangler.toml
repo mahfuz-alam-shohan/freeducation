@@ -1,5 +1,5 @@
 name = "freeducation"
-main = "src/worker.js"
+main = "src/app/worker.js"
 compatibility_date = "2026-02-01"
 
 [[d1_databases]]

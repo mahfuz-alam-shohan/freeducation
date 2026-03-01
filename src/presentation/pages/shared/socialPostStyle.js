@@ -1,0 +1,95 @@
+export const SOCIAL_POST_SHARED_STYLE = `
+.post-like-icon{display:inline-grid;place-items:center;width:16px;height:16px;line-height:1;color:currentColor;transform-origin:50% 60%;transition:color .2s ease,filter .2s ease,transform .2s ease}
+.post-like-icon path{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:fill .2s ease,stroke .2s ease}
+.social-like.is-liked .post-like-icon path{fill:currentColor;stroke:currentColor}
+.post-like-icon.is-like-pop{animation:post-like-pop .32s var(--motion-spring)}
+.social-page .post-card,.profile-page .post-card,.social-post-modal .post-card,.profile-post-modal-content .post-card{width:min(100%,var(--social-post-max-w,var(--social-feed-max,640px)));border:1px solid color-mix(in srgb,var(--border) 78%,var(--accent) 22%);background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 96%,#fff 4%),var(--surface));border-radius:12px;padding:var(--space-2);display:grid;gap:var(--space-1);min-width:0;box-shadow:0 8px 22px rgba(0,0,0,.16);transition:transform .24s var(--motion-spring),box-shadow .24s ease,border-color .2s ease}
+.social-page .post-card:hover,.profile-page .post-card:hover,.social-post-modal .post-card:hover,.profile-post-modal-content .post-card:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 36%,var(--border));box-shadow:0 14px 30px rgba(0,0,0,.2)}
+.social-page .post-head,.profile-page .post-head,.social-post-modal .post-head,.profile-post-modal-content .post-head{display:flex;gap:var(--space-2);align-items:center;min-width:0}
+.social-page .avatar,.profile-page .avatar,.social-post-modal .avatar,.profile-post-modal-content .avatar{width:36px;height:36px;border-radius:50%;border:1px solid color-mix(in srgb,var(--border) 70%,var(--accent) 30%);background:var(--surface-soft);display:grid;place-items:center;font-size:.74rem;color:var(--text-muted);overflow:hidden}
+.social-page .avatar img,.profile-page .avatar img,.social-post-modal .avatar img,.profile-post-modal-content .avatar img{width:100%;height:100%;object-fit:cover}
+.social-page .post-meta,.profile-page .post-meta,.social-post-modal .post-meta,.profile-post-modal-content .post-meta{display:grid;line-height:1.2;min-width:0}
+.social-page .post-author,.profile-page .post-author,.social-post-modal .post-author,.profile-post-modal-content .post-author{font-size:.88rem;font-weight:650;overflow-wrap:anywhere}
+.social-page .post-author-link,.profile-page .post-author-link,.social-post-modal .post-author-link,.profile-post-modal-content .post-author-link{color:inherit;text-decoration:none}
+.social-page .post-author-link-name:hover,.profile-page .post-author-link-name:hover,.social-post-modal .post-author-link-name:hover,.profile-post-modal-content .post-author-link-name:hover{text-decoration:underline}
+.social-page .post-time,.profile-page .post-time,.social-post-modal .post-time,.profile-post-modal-content .post-time{font-size:.72rem;color:var(--text-muted)}
+.social-page .post-body,.profile-page .post-body,.social-post-modal .post-body,.profile-post-modal-content .post-body{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:.9rem;line-height:1.45}
+.social-page .post-media,.profile-page .post-media,.social-post-modal .post-media,.profile-post-modal-content .post-media{display:grid;gap:2px;overflow:hidden;background:transparent}
+.social-page .post-media-grid-1,.profile-page .post-media-grid-1,.social-post-modal .post-media-grid-1,.profile-post-modal-content .post-media-grid-1{grid-template-columns:1fr}
+.social-page .post-media-grid-2,.profile-page .post-media-grid-2,.social-post-modal .post-media-grid-2,.profile-post-modal-content .post-media-grid-2{grid-template-columns:1fr 1fr}
+.social-page .post-media-grid-3,.profile-page .post-media-grid-3,.social-post-modal .post-media-grid-3,.profile-post-modal-content .post-media-grid-3{grid-template-columns:1.55fr 1fr;grid-template-rows:1fr 1fr}
+.social-page .post-media-grid-3 .post-media-item:first-child,.profile-page .post-media-grid-3 .post-media-item:first-child,.social-post-modal .post-media-grid-3 .post-media-item:first-child,.profile-post-modal-content .post-media-grid-3 .post-media-item:first-child{grid-row:1 / span 2}
+.social-page .post-media-item,.profile-page .post-media-item,.social-post-modal .post-media-item,.profile-post-modal-content .post-media-item{position:relative;margin:0;overflow:hidden;background:var(--surface-soft);min-height:160px}
+.social-page .post-media-grid-1 .post-media-item,.profile-page .post-media-grid-1 .post-media-item,.social-post-modal .post-media-grid-1 .post-media-item,.profile-post-modal-content .post-media-grid-1 .post-media-item{min-height:220px;max-height:470px}
+.social-page .post-media-grid-2 .post-media-item,.social-page .post-media-grid-3 .post-media-item,.profile-page .post-media-grid-2 .post-media-item,.profile-page .post-media-grid-3 .post-media-item,.social-post-modal .post-media-grid-2 .post-media-item,.social-post-modal .post-media-grid-3 .post-media-item,.profile-post-modal-content .post-media-grid-2 .post-media-item,.profile-post-modal-content .post-media-grid-3 .post-media-item{min-height:170px}
+.social-page .post-media-link,.profile-page .post-media-link,.social-post-modal .post-media-link,.profile-post-modal-content .post-media-link{display:block;width:100%;height:100%;cursor:pointer}
+.social-page .post-image,.profile-page .post-image,.social-post-modal .post-image,.profile-post-modal-content .post-image{display:block;width:100%;height:100%;object-fit:cover;background:inherit}
+.social-page .post-media-grid-1 .post-media-item,.profile-page .post-media-grid-1 .post-media-item,.social-post-modal .post-media-grid-1 .post-media-item,.profile-post-modal-content .post-media-grid-1 .post-media-item{min-height:0;max-height:none}
+.social-page .post-media-grid-1 .post-media-link,.profile-page .post-media-grid-1 .post-media-link,.social-post-modal .post-media-grid-1 .post-media-link,.profile-post-modal-content .post-media-grid-1 .post-media-link{height:auto}
+.social-page .post-media-grid-1 .post-image,.profile-page .post-media-grid-1 .post-image,.social-post-modal .post-media-grid-1 .post-image,.profile-post-modal-content .post-media-grid-1 .post-image{width:100%;height:auto;object-fit:cover}
+.social-page .post-stats,.profile-page .post-stats,.social-post-modal .post-stats,.profile-post-modal-content .post-stats{display:flex;justify-content:space-between;align-items:center;padding:2px var(--space-1) 0;font-size:.78rem;color:var(--text-muted);border-top:1px solid color-mix(in srgb,var(--border) 86%,transparent)}
+.social-page .post-stat-likes,.profile-page .post-stat-likes,.social-post-modal .post-stat-likes,.profile-post-modal-content .post-stat-likes{display:inline-flex;align-items:center;gap:6px}
+.social-page .post-stat-comments,.profile-page .post-stat-comments,.social-post-modal .post-stat-comments,.profile-post-modal-content .post-stat-comments{border:none;background:none;color:var(--text-muted);padding:0;cursor:pointer}
+.social-page .post-stat-comments:hover,.profile-page .post-stat-comments:hover,.social-post-modal .post-stat-comments:hover,.profile-post-modal-content .post-stat-comments:hover{text-decoration:underline;color:var(--text)}
+.social-page .post-actions,.profile-page .post-actions,.social-post-modal .post-actions,.profile-post-modal-content .post-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-1);align-items:center;padding-top:var(--space-1)}
+.social-page .post-action-button,.social-page .social-comment-form button,.profile-page .post-action-button,.profile-page .social-comment-form button,.social-post-modal .post-action-button,.social-post-modal .social-comment-form button,.profile-post-modal-content .post-action-button,.profile-post-modal-content .social-comment-form button{border:none;background:transparent;color:var(--text-muted);border-radius:10px;padding:7px var(--space-2);cursor:pointer;font-weight:600;font-size:.82rem}
+.social-page .post-action-button:hover,.social-page .social-comment-form button:hover,.profile-page .post-action-button:hover,.profile-page .social-comment-form button:hover,.social-post-modal .post-action-button:hover,.social-post-modal .social-comment-form button:hover,.profile-post-modal-content .post-action-button:hover,.profile-post-modal-content .social-comment-form button:hover{background:var(--surface-soft);color:var(--text)}
+.social-page .social-like,.profile-page .social-like,.social-post-modal .social-like,.profile-post-modal-content .social-like{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.social-page .post-like-icon,.profile-page .post-like-icon,.social-post-modal .post-like-icon,.profile-post-modal-content .post-like-icon{display:inline-grid;place-items:center;width:16px;height:16px;line-height:1;color:currentColor;transform-origin:50% 60%;transition:color .2s ease,filter .2s ease,transform .2s ease}
+.social-page .post-like-icon path,.profile-page .post-like-icon path,.social-post-modal .post-like-icon path,.profile-post-modal-content .post-like-icon path{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:fill .2s ease,stroke .2s ease}
+.social-page .social-like.is-liked,.profile-page .social-like.is-liked,.social-post-modal .social-like.is-liked,.profile-post-modal-content .social-like.is-liked{color:#e04a60}
+.social-page .social-like.is-liked .post-like-icon path,.profile-page .social-like.is-liked .post-like-icon path,.social-post-modal .social-like.is-liked .post-like-icon path,.profile-post-modal-content .social-like.is-liked .post-like-icon path{fill:currentColor;stroke:currentColor}
+.social-page .social-like.is-liked .post-like-icon,.profile-page .social-like.is-liked .post-like-icon,.social-post-modal .social-like.is-liked .post-like-icon,.profile-post-modal-content .social-like.is-liked .post-like-icon{color:#e04a60;filter:drop-shadow(0 0 8px rgba(224,74,96,.28))}
+.social-page .post-like-icon.is-like-pop,.profile-page .post-like-icon.is-like-pop,.social-post-modal .post-like-icon.is-like-pop,.profile-post-modal-content .post-like-icon.is-like-pop{animation:post-like-pop .32s var(--motion-spring)}
+.social-page .post-thread,.profile-page .post-thread,.social-post-modal .post-thread,.profile-post-modal-content .post-thread{display:grid;gap:var(--space-2)}
+.social-page .comment-list,.profile-page .comment-list,.social-post-modal .comment-list,.profile-post-modal-content .comment-list{display:grid;gap:var(--space-1);max-height:280px;overflow:auto;padding-right:2px}
+.social-page .comment-item,.profile-page .comment-item,.social-post-modal .comment-item,.profile-post-modal-content .comment-item{border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-soft);padding:var(--space-1) var(--space-2);font-size:.82rem;overflow-wrap:anywhere}
+.social-page .comment-author,.profile-page .comment-author,.social-post-modal .comment-author,.profile-post-modal-content .comment-author{font-weight:600;font-size:.78rem}
+.social-page .comment-empty,.profile-page .comment-empty,.social-post-modal .comment-empty,.profile-post-modal-content .comment-empty{margin:0;color:var(--text-muted);font-size:.86rem}
+.social-page .social-comment-form,.profile-page .social-comment-form,.social-post-modal .social-comment-form,.profile-post-modal-content .social-comment-form{display:none;gap:var(--space-2);align-items:center;min-width:0}
+.social-page .social-comment-form-modal,.profile-page .social-comment-form-modal,.social-post-modal .social-comment-form-modal,.profile-post-modal-content .social-comment-form-modal{display:flex}
+.social-page .social-comment-form input,.profile-page .social-comment-form input,.social-post-modal .social-comment-form input,.profile-post-modal-content .social-comment-form input{flex:1 1 auto;width:auto;min-width:0;border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:999px;padding:8px 11px;font:inherit}
+.social-post-modal,.profile-post-modal{position:fixed;inset:0;z-index:9999;opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;padding:clamp(8px,2vh,18px)}
+.social-post-modal-backdrop,.profile-post-modal-backdrop{position:absolute;inset:0;background:color-mix(in srgb,var(--overlay) 90%,#000 10%)}
+.social-post-modal-sheet,.profile-post-modal-sheet{position:relative;width:min(920px,96vw);height:min(80dvh,760px);max-height:min(80dvh,760px);background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 97%,#fff 3%),var(--surface));border:1px solid color-mix(in srgb,var(--border) 78%,var(--accent) 22%);border-radius:12px;box-shadow:0 16px 32px rgba(0,0,0,.24);display:grid;grid-template-rows:auto minmax(0,1fr);transform:translateY(10px) scale(.992);transition:transform .2s ease}
+.social-post-modal-head,.profile-post-modal-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,var(--surface-soft));border-radius:12px 12px 0 0}
+.social-post-modal-head h3,.profile-post-modal-head h3{margin:0;font-size:1rem;font-weight:700;letter-spacing:.01em}
+.social-post-modal-close,.profile-post-modal-close{width:34px;height:34px;border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:999px;cursor:pointer;font-size:1.2rem;line-height:1}
+.social-post-modal-close:hover,.profile-post-modal-close:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--border));background:var(--surface)}
+.social-modal-content,.profile-post-modal-content{overflow:auto;padding:var(--space-2);display:grid;justify-items:stretch;align-content:start}
+.social-post-modal .post-card,.profile-post-modal-content .post-card{width:100%;max-width:100%}
+.social-post-modal .post-card-modal-social-thread{grid-template-rows:auto auto auto auto auto minmax(0,1fr);height:100%;align-content:start}
+.social-post-modal .post-card-modal-social-thread .post-media-item{min-height:0;max-height:220px}
+.social-post-modal .post-card-modal-social-thread .post-media-grid-1 .post-media-item{max-height:260px}
+.social-post-modal .post-card-modal-social-thread .post-thread-modal{display:grid;gap:var(--space-1);grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
+.social-post-modal .post-card-modal-social-thread .social-detail-comments{max-height:none;overflow:auto}
+body.social-modal-open .social-post-modal,body.profile-post-modal-open .profile-post-modal{opacity:1;pointer-events:auto}
+body.social-modal-open .social-post-modal-sheet,body.profile-post-modal-open .profile-post-modal-sheet{transform:translateY(0) scale(1)}
+body.social-modal-open,body.profile-post-modal-open{overflow:hidden}
+@media (min-width:900px){
+  .social-page .post-card,.profile-page .post-card{width:min(100%,var(--social-post-max-w,560px))}
+  .social-page .post-media-grid-1 .post-media-item,.profile-page .post-media-grid-1 .post-media-item,.social-post-modal .post-media-grid-1 .post-media-item,.profile-post-modal-content .post-media-grid-1 .post-media-item{max-height:420px}
+  .social-page .post-media-grid-1 .post-image,.profile-page .post-media-grid-1 .post-image,.social-post-modal .post-media-grid-1 .post-image,.profile-post-modal-content .post-media-grid-1 .post-image{max-height:420px;object-fit:cover}
+  .social-page .post-media-grid-2 .post-media-item,.profile-page .post-media-grid-2 .post-media-item,.social-post-modal .post-media-grid-2 .post-media-item,.profile-post-modal-content .post-media-grid-2 .post-media-item{min-height:142px;max-height:230px}
+  .social-page .post-media-grid-3 .post-media-item,.profile-page .post-media-grid-3 .post-media-item,.social-post-modal .post-media-grid-3 .post-media-item,.profile-post-modal-content .post-media-grid-3 .post-media-item{min-height:128px;max-height:205px}
+}
+@media (max-width:899px){
+  .social-page .post-card,.profile-page .post-card{width:min(100%,94vw);padding:var(--space-1);gap:var(--space-1)}
+  .social-page .post-body,.profile-page .post-body{font-size:.92rem}
+  .social-page .post-media-item,.profile-page .post-media-item{min-height:140px}
+  .social-page .post-media-grid-1 .post-media-item,.profile-page .post-media-grid-1 .post-media-item{min-height:min(78vw,260px);max-height:min(78vw,260px);aspect-ratio:1/1}
+  .social-page .post-media-grid-2 .post-media-item,.social-page .post-media-grid-3 .post-media-item,.profile-page .post-media-grid-2 .post-media-item,.profile-page .post-media-grid-3 .post-media-item{min-height:122px}
+  .social-page .post-actions,.profile-page .post-actions{padding-top:4px}
+}
+@keyframes post-like-pop{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.28)}
+  100%{transform:scale(1)}
+}
+@media (max-width:767px) and (pointer:coarse){
+  .social-post-modal,.profile-post-modal{padding:0;align-items:flex-end}
+  .social-post-modal-sheet,.profile-post-modal-sheet{width:100%;height:86dvh;min-height:80dvh;max-height:92dvh;border-top:1px solid var(--border);border-right:none;border-left:none;border-bottom:none;border-radius:16px 16px 0 0;transform:translateY(104%)}
+  .social-post-modal-head,.profile-post-modal-head{border-radius:16px 16px 0 0}
+  body.social-modal-open .social-post-modal-sheet,body.profile-post-modal-open .profile-post-modal-sheet{transform:translateY(0)}
+}
+`;
