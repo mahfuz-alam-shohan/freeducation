@@ -3,6 +3,7 @@ import { readBody } from "../../shared/http/request.js";
 import {
   createSocialComment,
   createSocialPost,
+  deleteSocialPostById,
   findSocialCommentById,
   findSocialPostById,
   getSocialAvatarObject,
@@ -10,12 +11,14 @@ import {
   getSocialNotifications,
   getSocialPostById,
   getSocialPostImageObject,
+  markSocialNotificationRead,
+  markSocialNotificationsSeen,
   toggleSocialCommentReaction,
   toggleSocialReaction,
 } from "../../infrastructure/db/social.js";
 import { objectToResponse } from "./helpers/http.js";
 import { parseDataImage, parseDataImages, parsePositiveId, sanitizePostText } from "./helpers/validation.js";
-import { encodePostImageKeys, maxPostImages } from "../../shared/social/postImages.js";
+import { decodePostImageKeys, encodePostImageKeys, maxPostImages } from "../../shared/social/postImages.js";
 
 const FEED_LIMIT_DEFAULT = 12;
 const FEED_LIMIT_MIN = 4;
@@ -160,6 +163,37 @@ export async function createPost(request, env, viewer) {
   return { ok: true, postId };
 }
 
+async function safeDeleteBucketObject(env, key) {
+  const safeKey = String(key || "").trim();
+  if (!safeKey || !env?.BUCKET || typeof env.BUCKET.delete !== "function") return;
+  try {
+    await env.BUCKET.delete(safeKey);
+  } catch {
+    // Ignore cleanup errors for stale objects.
+  }
+}
+
+export async function deletePost(env, viewer, postId) {
+  if (!viewer) throw new HttpError(401, "Login required to delete posts");
+  const id = parsePositiveId(postId, "post id");
+  const post = await findSocialPostById(env.DB, id);
+  if (!post) throw new HttpError(404, "Post not found");
+  if (Number(post.admin_id) !== Number(viewer.id)) {
+    throw new HttpError(403, "You can delete only your own post");
+  }
+
+  const imageKeys = decodePostImageKeys(post.image_key);
+  const result = await deleteSocialPostById(env.DB, { postId: id });
+  for (const key of imageKeys) {
+    await safeDeleteBucketObject(env, key);
+  }
+
+  return {
+    ok: Boolean(result?.ok),
+    postId: id,
+  };
+}
+
 export async function createComment(request, env, viewer, postId) {
   if (!viewer) throw new HttpError(401, "Login required to comment");
   const id = parsePositiveId(postId, "post id");
@@ -248,9 +282,42 @@ export async function socialPostImage(env, postId, options = {}) {
 export async function socialNotifications(env, viewer, options = {}) {
   if (!viewer) throw new HttpError(401, "Login required to view notifications");
   const limit = clampInt(options?.limit, 32, 1, 80);
-  const notifications = await getSocialNotifications(env.DB, Number(viewer.id), limit);
+  const response = await getSocialNotifications(env.DB, Number(viewer.id), limit);
   return {
-    notifications,
-    count: notifications.length,
+    notifications: Array.isArray(response?.notifications) ? response.notifications : [],
+    count: Number(response?.count || 0),
+    unreadCount: Number(response?.unreadCount || 0),
+    hasUnseen: Boolean(response?.hasUnseen),
+    seenAt: String(response?.seenAt || ""),
+  };
+}
+
+export async function socialNotificationsSeen(env, viewer) {
+  if (!viewer) throw new HttpError(401, "Login required to view notifications");
+  const result = await markSocialNotificationsSeen(env.DB, {
+    userId: Number(viewer.id),
+    seenAt: new Date().toISOString(),
+  });
+  return {
+    ok: Boolean(result?.ok),
+    seenAt: String(result?.seenAt || ""),
+  };
+}
+
+export async function socialNotificationRead(request, env, viewer) {
+  if (!viewer) throw new HttpError(401, "Login required to view notifications");
+  const body = await readBody(request);
+  const notificationId = String(body?.id || "").trim();
+  if (!notificationId) throw new HttpError(400, "Notification id is required");
+  if (notificationId.length > 220) throw new HttpError(400, "Notification id is too long");
+  const result = await markSocialNotificationRead(env.DB, {
+    userId: Number(viewer.id),
+    notificationId,
+    readAt: new Date().toISOString(),
+  });
+  return {
+    ok: Boolean(result?.ok),
+    readAt: String(result?.readAt || ""),
+    id: notificationId,
   };
 }

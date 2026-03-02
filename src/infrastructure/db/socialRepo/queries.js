@@ -40,6 +40,15 @@ function trimNotificationPreview(value, maxLength = 110) {
   return `${normalized.slice(0, maxLength - 1)}…`;
 }
 
+function notificationKey(type, ...parts) {
+  const normalizedType = String(type || "notification").trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_");
+  const normalizedParts = parts
+    .map((part) => String(part ?? "").trim())
+    .filter((part) => part.length > 0)
+    .map((part) => part.replaceAll("|", "_"));
+  return [normalizedType, ...normalizedParts].join("|");
+}
+
 async function getHydratedCommentsByPost(db, postIds, viewerId = 0) {
   const ids = Array.isArray(postIds)
     ? postIds.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0)
@@ -258,6 +267,8 @@ export async function getSocialFeed(db, viewerId = 0, limit = 20, options = {}) 
       likedByViewer: likedSet.has(id),
       comments: commentsByPost.get(id) || [],
       commentCount: commentCountByPost.get(id) || 0,
+      isOwner: Number(row.admin_id) === Number(viewerId || 0),
+      canManage: Number(row.admin_id) === Number(viewerId || 0),
       author: {
         id: Number(row.admin_id),
         name: row.author_name || "User",
@@ -334,6 +345,8 @@ export async function getSocialPostById(db, viewerId = 0, postId) {
     likedByViewer: Boolean(likedRow?.post_id),
     comments,
     commentCount,
+    isOwner: Number(row.admin_id) === Number(viewerId || 0),
+    canManage: Number(row.admin_id) === Number(viewerId || 0),
     author: {
       id: Number(row.admin_id),
       name: row.author_name || "User",
@@ -345,11 +358,25 @@ export async function getSocialPostById(db, viewerId = 0, postId) {
 
 export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
   const safeViewerId = Number.parseInt(String(viewerId || 0), 10);
-  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) return [];
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    return {
+      notifications: [],
+      count: 0,
+      unreadCount: 0,
+      hasUnseen: false,
+      seenAt: "",
+    };
+  }
 
   const safeLimit = clampInt(limit, 32, 1, 80);
   const queryLimit = Math.max(60, safeLimit * NOTIFICATION_FETCH_MULTIPLIER);
   const notifications = [];
+  const seenMeta = await db.prepare(
+    `SELECT seen_at
+     FROM freeducation_social_notification_meta
+     WHERE admin_id = ?1`,
+  ).bind(safeViewerId).first();
+  const seenAt = String(seenMeta?.seen_at || "");
 
   const postReactionRows = await db.prepare(
     `SELECT r.post_id, r.admin_id AS actor_id, r.created_at,
@@ -390,7 +417,7 @@ export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
       ? `${bucket.actorName} and ${bucket.count - 1} others reacted to your post`
       : `${bucket.actorName} reacted to your post`;
     notifications.push({
-      id: `post-reaction:${bucket.postId}`,
+      id: notificationKey("post_reaction", bucket.postId, bucket.createdAt),
       type: "post_reaction",
       createdAt: bucket.createdAt,
       actorCount: bucket.count,
@@ -457,7 +484,7 @@ export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
       ? `${bucket.actorName} commented ${bucket.count} times on your post`
       : `${bucket.actorName} commented on your post`;
     notifications.push({
-      id: `post-comment:${bucket.postId}:${bucket.actorId}`,
+      id: notificationKey("post_comment", bucket.postId, bucket.actorId, bucket.createdAt),
       type: "post_comment",
       createdAt: bucket.createdAt,
       actorCount: bucket.count,
@@ -523,7 +550,7 @@ export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
       ? `${bucket.actorName} and ${bucket.count - 1} others reacted to your comment`
       : `${bucket.actorName} reacted to your comment`;
     notifications.push({
-      id: `comment-reaction:${bucket.commentId}`,
+      id: notificationKey("comment_reaction", bucket.commentId, bucket.createdAt),
       type: "comment_reaction",
       createdAt: bucket.createdAt,
       actorCount: bucket.count,
@@ -594,7 +621,7 @@ export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
       ? `${bucket.actorName} replied ${bucket.count} times to your comment`
       : `${bucket.actorName} replied to your comment`;
     notifications.push({
-      id: `comment-reply:${bucket.parentCommentId}:${bucket.actorId}`,
+      id: notificationKey("comment_reply", bucket.parentCommentId, bucket.actorId, bucket.createdAt),
       type: "comment_reply",
       createdAt: bucket.createdAt,
       actorCount: bucket.count,
@@ -613,5 +640,45 @@ export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
   }
 
   notifications.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
-  return notifications.slice(0, safeLimit);
+  const limited = notifications.slice(0, safeLimit);
+  const notificationIds = limited
+    .map((entry) => String(entry?.id || "").trim())
+    .filter((value) => Boolean(value));
+
+  let readSet = new Set();
+  if (notificationIds.length) {
+    const placeholders = notificationIds.map((_, index) => `?${index + 2}`).join(",");
+    const readRows = await db.prepare(
+      `SELECT notification_id
+       FROM freeducation_social_notification_reads
+       WHERE admin_id = ?1 AND notification_id IN (${placeholders})`,
+    ).bind(safeViewerId, ...notificationIds).all();
+    readSet = new Set((readRows.results || []).map((row) => String(row.notification_id || "")));
+  }
+
+  const hydrated = limited.map((entry) => {
+    const notificationId = String(entry?.id || "").trim();
+    const createdAt = String(entry?.createdAt || "");
+    const read = readSet.has(notificationId);
+    const seen = seenAt ? createdAt.localeCompare(seenAt) <= 0 : false;
+    return {
+      ...entry,
+      read,
+      unread: !read,
+      seen,
+    };
+  });
+
+  const unreadCount = hydrated.reduce((total, entry) => total + (entry.read ? 0 : 1), 0);
+  const hasUnseen = seenAt
+    ? hydrated.some((entry) => String(entry?.createdAt || "").localeCompare(seenAt) > 0)
+    : hydrated.length > 0;
+
+  return {
+    notifications: hydrated,
+    count: hydrated.length,
+    unreadCount,
+    hasUnseen,
+    seenAt,
+  };
 }

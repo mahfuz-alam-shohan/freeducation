@@ -13,10 +13,11 @@ body.menu-open .app-menu-toggle{transform:rotate(180deg)}
 .app-brand-signature .site-logo{width:clamp(136px,19vw,184px);max-width:100%}
 .app-brand-signature .site-logo-svg{filter:drop-shadow(0 3px 9px color-mix(in srgb,var(--accent) 40%,transparent))}
 .app-header-right{display:flex;align-items:center;gap:var(--space-2);position:relative;z-index:1}
-.app-notify-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.app-notify-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;position:relative}
 .app-notify-toggle .app-icon{width:17px;height:17px}
 .app-notify-toggle:hover{background:var(--surface-soft);color:var(--text);border-color:color-mix(in srgb,var(--accent) 30%,var(--border))}
 .app-notify-toggle:active{transform:scale(.96)}
+.app-notify-toggle.has-unseen::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:999px;background:#ff4d4f;box-shadow:0 0 0 2px var(--surface),0 0 0 5px rgba(255,77,79,.18)}
 body.notifications-open .app-notify-toggle{color:var(--text);border-color:var(--accent);background:color-mix(in srgb,var(--surface-soft) 88%,var(--accent) 12%)}
 .app-user-meta{display:none;min-width:0;text-align:right;line-height:1.2}
 .app-user-name{display:block;font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}

@@ -69,6 +69,24 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     return { postCard, postId: postCard.getAttribute('data-post-id') || '' };
   };
 
+  const setPostMenuState = (menuRoot, open) => {
+    if (!(menuRoot instanceof HTMLElement)) return;
+    const expanded = Boolean(open);
+    menuRoot.dataset.open = expanded ? '1' : '0';
+    const trigger = menuRoot.querySelector('[data-action="toggle-post-menu"]');
+    if (trigger instanceof HTMLElement) trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    const menu = menuRoot.querySelector('.post-ops-menu');
+    if (menu instanceof HTMLElement) menu.hidden = !expanded;
+  };
+
+  const closeAllPostMenus = (exceptRoot = null) => {
+    const openMenus = document.querySelectorAll('.post-ops[data-open="1"]');
+    openMenus.forEach((menuRoot) => {
+      if (exceptRoot && menuRoot === exceptRoot) return;
+      setPostMenuState(menuRoot, false);
+    });
+  };
+
   const openCommentsModal = (postId, focusComment = false) => {
     if (!postId) return;
     if (!openPostModal(postId)) return;
@@ -407,6 +425,22 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     return cards;
   };
 
+  const removePostFromView = (postId) => {
+    const safeId = Number.parseInt(String(postId || ''), 10);
+    if (!Number.isInteger(safeId) || safeId <= 0) return;
+    feedPosts = feedPosts.filter((entry) => Number(entry?.id || 0) !== safeId);
+    for (const card of collectPostCardsById(safeId)) {
+      card.remove();
+    }
+    if (Number(activeModalPostId || 0) === safeId) {
+      closePostModal();
+    }
+    if (feed && !feed.querySelector('.post-card')) {
+      feed.innerHTML = '<div class="empty-feed">' + (scope === 'mine' ? "You haven't posted yet." : 'No posts yet.') + '</div>';
+    }
+    setFeedTailMessage();
+  };
+
   const setLikeButtonsDisabled = (postId, disabled) => {
     for (const card of collectPostCardsById(postId)) {
       const likeButton = card.querySelector('[data-action="toggle-like"]');
@@ -506,6 +540,50 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     const closeModalTrigger = target.closest('[data-action="close-modal"]');
     if (closeModalTrigger) {
       closePostModal();
+      return;
+    }
+
+    const clickedInsidePostMenu = Boolean(target.closest('.post-ops'));
+    if (!clickedInsidePostMenu) {
+      closeAllPostMenus();
+    }
+
+    const togglePostMenuTrigger = target.closest('[data-action="toggle-post-menu"]');
+    if (togglePostMenuTrigger) {
+      event.preventDefault();
+      const menuRoot = togglePostMenuTrigger.closest('.post-ops');
+      if (!(menuRoot instanceof HTMLElement)) return;
+      const isOpen = String(menuRoot.dataset.open || '0') === '1';
+      closeAllPostMenus(menuRoot);
+      setPostMenuState(menuRoot, !isOpen);
+      return;
+    }
+
+    const deletePostTrigger = target.closest('[data-action="delete-post"]');
+    if (deletePostTrigger) {
+      event.preventDefault();
+      closeAllPostMenus();
+      const { postId } = resolvePostContext(deletePostTrigger);
+      const safePostId = Number.parseInt(String(postId || ''), 10);
+      if (!Number.isInteger(safePostId) || safePostId <= 0) return;
+      if (!window.confirm('Delete this post? This action cannot be undone.')) return;
+      try {
+        setStatus('Deleting post...');
+        const response = await fetch('/api/social/posts/' + encodeURIComponent(safePostId), { method: 'DELETE' });
+        if (!response.ok) {
+          throw new Error(await readErrorMessage(response, 'Unable to delete post'));
+        }
+        removePostFromView(safePostId);
+        if (mode === 'post' && Number(detailPostId || 0) === safePostId) {
+          navigateToSocialPath('/social');
+          return;
+        }
+        setStatus('Post deleted');
+      } catch (error) {
+        if (error?.name !== 'AbortError') {
+          setStatus(error instanceof Error ? error.message : 'Unable to delete post');
+        }
+      }
       return;
     }
 
@@ -1081,9 +1159,13 @@ export const SOCIAL_SCRIPT_ACTIONS = `
   }
 
   document.addEventListener('pointerdown', (event) => {
-    if (!(socialHeaderSearchRoot instanceof Element)) return;
     const target = event.target;
     if (!(target instanceof Node)) return;
+    const targetElement = target instanceof Element ? target : null;
+    if (targetElement && !targetElement.closest('.post-ops')) {
+      closeAllPostMenus();
+    }
+    if (!(socialHeaderSearchRoot instanceof Element)) return;
     if (socialHeaderSearchRoot.contains(target)) return;
     closeHeaderSearchDropdown();
     if (!headerSearchPinned) setHeaderSearchOpen(false);

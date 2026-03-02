@@ -32,24 +32,50 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
     return '/social';
   };
 
+  let notificationsUnreadCount = 0;
+  let notificationsHasUnseen = false;
+  let notificationsSeenAt = '';
+
+  const deriveUnreadCount = (items) => {
+    const list = Array.isArray(items) ? items : [];
+    return list.reduce((total, entry) => total + (entry?.read ? 0 : 1), 0);
+  };
+
+  const setNotificationIndicator = (options = {}) => {
+    if (!(notificationToggle instanceof HTMLElement)) return;
+    const unreadCount = Math.max(0, Number(options?.unreadCount || 0));
+    const hasUnseen = Boolean(options?.hasUnseen);
+    notificationsUnreadCount = unreadCount;
+    notificationsHasUnseen = hasUnseen;
+    notificationToggle.classList.toggle('has-unseen', hasUnseen);
+    notificationToggle.dataset.unreadCount = String(unreadCount);
+    const label = unreadCount > 0
+      ? ('Open notifications (' + unreadCount + ' unread)')
+      : 'Open notifications';
+    notificationToggle.setAttribute('aria-label', label);
+  };
+
   const renderNotificationItem = (entry) => {
     const actorName = String(entry?.actor?.name || 'User');
     const actorAvatarUrl = String(entry?.actor?.avatarUrl || '').trim();
     const href = resolveNotificationHref(entry);
     const text = String(entry?.message || '').trim() || (actorName + ' interacted with your post');
     const preview = String(entry?.preview || '').trim();
+    const notificationId = String(entry?.id || '').trim();
+    const isRead = Boolean(entry?.read);
 
     const avatarMarkup = actorAvatarUrl
       ? '<span class="app-notification-avatar has-image"><img src="' + escapeNotificationHtml(actorAvatarUrl) + '" alt="' + escapeNotificationHtml(actorName) + ' avatar" loading="lazy"></span>'
       : '<span class="app-notification-avatar">' + escapeNotificationHtml(profileInitial(actorName)) + '</span>';
 
-    return '<a class="app-notification-item" href="' + escapeNotificationHtml(href) + '">' +
+    return '<a class="app-notification-item' + (isRead ? '' : ' is-unread') + '" data-notification-id="' + escapeNotificationHtml(notificationId) + '" href="' + escapeNotificationHtml(href) + '">' +
       avatarMarkup +
       '<span class="app-notification-body">' +
         '<span class="app-notification-text">' + escapeNotificationHtml(text) + '</span>' +
         (preview ? '<span class="app-notification-preview">' + escapeNotificationHtml(preview) + '</span>' : '') +
         '<span class="app-notification-time">' + escapeNotificationHtml(formatNotificationTime(entry?.createdAt || '')) + '</span>' +
       '</span>' +
+      (isRead ? '' : '<span class="app-notification-unread-dot" aria-hidden="true"></span>') +
     '</a>';
   };
 
@@ -69,18 +95,34 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
     notificationList.innerHTML = list.map((entry) => renderNotificationItem(entry)).join('');
   };
 
+  const applyNotificationPayload = (payload, options = {}) => {
+    const shouldRender = options?.render !== false;
+    const list = Array.isArray(payload?.notifications) ? payload.notifications : [];
+    notificationsCache = list;
+    notificationsLoadedAt = Date.now();
+    notificationsUnreadCount = Math.max(0, Number(payload?.unreadCount || deriveUnreadCount(list)));
+    notificationsHasUnseen = Boolean(payload?.hasUnseen);
+    notificationsSeenAt = String(payload?.seenAt || notificationsSeenAt || '');
+    setNotificationIndicator({ unreadCount: notificationsUnreadCount, hasUnseen: notificationsHasUnseen });
+    if (shouldRender) renderNotifications(notificationsCache);
+    return notificationsCache;
+  };
+
   const loadNotifications = async (options = {}) => {
     if (!(notificationPanel instanceof HTMLElement)) return [];
     const force = Boolean(options.force);
+    const background = Boolean(options.background);
+    const shouldRender = options?.render !== false;
     const now = Date.now();
     if (!force && notificationsLoading) return notificationsCache;
     if (!force && notificationsCache.length && notificationsLoadedAt > 0 && (now - notificationsLoadedAt) < 12000) {
-      renderNotifications(notificationsCache);
+      if (shouldRender) renderNotifications(notificationsCache);
+      setNotificationIndicator({ unreadCount: notificationsUnreadCount, hasUnseen: notificationsHasUnseen });
       return notificationsCache;
     }
 
     notificationsLoading = true;
-    setNotificationLoadingState(true);
+    if (!background) setNotificationLoadingState(true);
     try {
       const response = await fetch('/api/social/notifications?limit=40', {
         headers: { accept: 'application/json' },
@@ -89,23 +131,83 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload?.error || 'Unable to load notifications');
-      notificationsCache = Array.isArray(payload?.notifications) ? payload.notifications : [];
-      notificationsLoadedAt = Date.now();
-      renderNotifications(notificationsCache);
-      return notificationsCache;
+      return applyNotificationPayload(payload, { render: shouldRender });
     } catch (error) {
       if (error?.name === 'AbortError') return notificationsCache;
       notificationsCache = [];
       notificationsLoadedAt = 0;
+      notificationsUnreadCount = 0;
+      notificationsHasUnseen = false;
+      setNotificationIndicator({ unreadCount: 0, hasUnseen: false });
       if (notificationEmpty) notificationEmpty.hidden = true;
-      if (notificationList) {
+      if (shouldRender && notificationList) {
         notificationList.innerHTML = '<p class="app-notifications-error">' + escapeNotificationHtml(error instanceof Error ? error.message : 'Unable to load notifications') + '</p>';
       }
       return [];
     } finally {
       notificationsLoading = false;
-      setNotificationLoadingState(false);
+      if (!background) setNotificationLoadingState(false);
     }
+  };
+
+  const markNotificationsSeen = async () => {
+    setNotificationIndicator({ unreadCount: notificationsUnreadCount, hasUnseen: false });
+    try {
+      const response = await fetch('/api/social/notifications/seen', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+        keepalive: true,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || 'Unable to update notifications');
+      notificationsSeenAt = String(payload?.seenAt || notificationsSeenAt || '');
+      notificationsHasUnseen = false;
+      setNotificationIndicator({ unreadCount: notificationsUnreadCount, hasUnseen: false });
+    } catch {
+      loadNotifications({
+        force: true,
+        background: !body.classList.contains('notifications-open'),
+        render: body.classList.contains('notifications-open'),
+      }).catch(() => {});
+    }
+  };
+
+  const setNotificationReadInCache = (notificationId) => {
+    const safeNotificationId = String(notificationId || '').trim();
+    if (!safeNotificationId || !Array.isArray(notificationsCache) || !notificationsCache.length) return false;
+    let changed = false;
+    notificationsCache = notificationsCache.map((entry) => {
+      if (String(entry?.id || '') !== safeNotificationId) return entry;
+      if (entry?.read) return entry;
+      changed = true;
+      return { ...entry, read: true, unread: false };
+    });
+    if (!changed) return false;
+    notificationsUnreadCount = deriveUnreadCount(notificationsCache);
+    setNotificationIndicator({ unreadCount: notificationsUnreadCount, hasUnseen: notificationsHasUnseen });
+    return true;
+  };
+
+  const markNotificationRead = (notificationId) => {
+    const safeNotificationId = String(notificationId || '').trim();
+    if (!safeNotificationId) return;
+    const changed = setNotificationReadInCache(safeNotificationId);
+    if (changed && body.classList.contains('notifications-open')) {
+      renderNotifications(notificationsCache);
+    }
+    fetch('/api/social/notifications/read', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: safeNotificationId }),
+      keepalive: true,
+    }).catch(() => {
+      loadNotifications({
+        force: true,
+        background: !body.classList.contains('notifications-open'),
+        render: body.classList.contains('notifications-open'),
+      }).catch(() => {});
+    });
   };
 
   if (notificationToggle && notificationPanel) {
@@ -114,8 +216,11 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
       const nextOpen = !body.classList.contains('notifications-open');
       setNotificationsOpen(nextOpen);
       if (!nextOpen) return;
-      await loadNotifications();
+      void markNotificationsSeen();
+      await loadNotifications({ force: true, render: true });
     }, { signal });
+
+    loadNotifications({ force: true, background: true, render: false }).catch(() => {});
   }
 
   if (notificationClose) {
@@ -127,13 +232,29 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
   }
 
   if (notificationList) {
-    notificationList.addEventListener('click', () => {
+    notificationList.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const item = target.closest('.app-notification-item');
+      if (!item) return;
+      markNotificationRead(item.getAttribute('data-notification-id'));
       setNotificationsOpen(false);
     }, { signal });
   }
 
-  window.addEventListener('focus', () => {
-    if (!body.classList.contains('notifications-open')) return;
-    loadNotifications({ force: true }).catch(() => {});
-  }, { signal });
+  const refreshNotifications = () => {
+    loadNotifications({
+      force: true,
+      background: !body.classList.contains('notifications-open'),
+      render: body.classList.contains('notifications-open'),
+    }).catch(() => {});
+  };
+
+  window.addEventListener('focus', refreshNotifications, { signal });
+
+  const notificationPollTimer = window.setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    refreshNotifications();
+  }, 45000);
+  signal.addEventListener('abort', () => window.clearInterval(notificationPollTimer), { once: true });
 `;

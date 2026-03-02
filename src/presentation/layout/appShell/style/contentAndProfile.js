@@ -35,14 +35,17 @@ body.profile-open .app-profile-pop{opacity:1;transform:translateY(0);pointer-eve
 .app-notifications-close:hover{background:var(--surface-soft);border-color:color-mix(in srgb,var(--accent) 30%,var(--border))}
 .app-notifications-loading,.app-notifications-empty,.app-notifications-error{margin:0;color:var(--text-muted);font-size:.84rem}
 .app-notifications-list{display:grid;align-content:start;gap:6px;min-height:0;overflow:auto;padding-right:2px}
-.app-notification-item{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:start;padding:8px;border:1px solid transparent;border-radius:10px;text-decoration:none;color:var(--text);background:transparent;transition:background .2s ease,border-color .2s ease,transform .2s ease}
+.app-notification-item{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px;border:1px solid transparent;border-radius:10px;text-decoration:none;color:var(--text);background:transparent;transition:background .2s ease,border-color .2s ease,transform .2s ease}
 .app-notification-item:hover,.app-notification-item:focus-visible{background:var(--surface-soft);border-color:color-mix(in srgb,var(--accent) 24%,var(--border));transform:translateY(-1px)}
+.app-notification-item.is-unread{background:color-mix(in srgb,var(--accent) 14%,var(--surface));border-color:color-mix(in srgb,var(--accent) 36%,var(--border))}
+.app-notification-item.is-unread:hover,.app-notification-item.is-unread:focus-visible{background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
 .app-notification-avatar{width:38px;height:38px;min-width:38px;min-height:38px;border-radius:999px;overflow:hidden;border:1px solid color-mix(in srgb,var(--border) 70%,var(--accent) 30%);display:grid;place-items:center;background:var(--surface-soft);color:var(--text-muted);font-size:.8rem;font-weight:700}
 .app-notification-avatar img{display:block;width:100%;height:100%;object-fit:cover}
 .app-notification-body{display:grid;gap:2px;min-width:0}
 .app-notification-text{font-size:.86rem;line-height:1.3;overflow-wrap:anywhere}
 .app-notification-preview{font-size:.78rem;color:var(--text-muted);line-height:1.25;overflow-wrap:anywhere}
 .app-notification-time{font-size:.74rem;color:var(--text-muted)}
+.app-notification-unread-dot{display:inline-flex;align-self:center;justify-self:end;width:8px;height:8px;border-radius:999px;background:#2d8cff;box-shadow:0 0 0 4px color-mix(in srgb,#2d8cff 18%,transparent)}
 body.notifications-open .app-notifications-overlay{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .22s ease,visibility .22s step-start}
 body.notifications-open .app-notifications-panel{transform:translateX(0)}
 body.menu-open{overflow:hidden}

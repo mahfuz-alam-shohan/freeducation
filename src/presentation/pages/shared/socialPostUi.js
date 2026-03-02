@@ -81,6 +81,21 @@ export const SOCIAL_POST_UI_SCRIPT = `
     return '<div class="post-media post-media-grid post-media-grid-' + Math.min(3, renderableUrls.length) + '">' + items + '</div>';
   };
 
+  const renderPostMenu = (post) => {
+    const canManage = Boolean(post?.canManage || post?.isOwner);
+    if (!canManage) return '';
+    const dotsIcon = '<svg class="post-ops-trigger-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="18" cy="12" r="1.8"></circle></svg>';
+    const deleteIcon = '<svg class="post-ops-item-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 10v7"></path><path d="M14 10v7"></path></svg>';
+    return '<div class="post-ops" data-post-ops data-open="0">' +
+      '<button class="post-ops-trigger" type="button" data-action="toggle-post-menu" aria-haspopup="menu" aria-expanded="false" aria-label="Post options">' +
+        dotsIcon +
+      '</button>' +
+      '<div class="post-ops-menu" role="menu" hidden>' +
+        '<button class="post-ops-item is-danger" type="button" data-action="delete-post" role="menuitem">' + deleteIcon + '<span>Delete post</span></button>' +
+      '</div>' +
+    '</div>';
+  };
+
   const renderPostCard = (post, options = {}) => {
     const forModal = Boolean(options.forModal);
     const canInteract = Boolean(options.canInteract);
@@ -121,6 +136,7 @@ export const SOCIAL_POST_UI_SCRIPT = `
           authorMarkup +
           '<span class="post-time">' + escapeHtml(formatTime(post?.createdAt || '')) + '</span>' +
         '</div>' +
+        renderPostMenu(post) +
       '</div>' +
       '<div class="post-body">' + escapeHtml(post?.body || '') + '</div>' +
       mediaMarkup +
@@ -147,6 +163,7 @@ export const SOCIAL_POST_UI_SCRIPT = `
     renderComments,
     renderCommentComposer,
     renderAvatar,
+    renderPostMenu,
     mediaSourcesForPost,
     mediaMarkupForPost,
     renderPostCard,

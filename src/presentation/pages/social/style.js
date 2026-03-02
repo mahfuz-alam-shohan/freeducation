@@ -80,7 +80,22 @@ body.social-post-page .social-status{padding-inline:var(--space-2);min-height:0;
 .social-intro-card h2{margin:0;font-size:1rem}
 .social-note{margin:4px 0 0;color:var(--text-muted);font-size:.88rem}
 .social-status{min-height:20px;color:var(--text-muted);font-size:.86rem;justify-self:stretch;padding:0 var(--space-1)}
+.social-status:empty{display:none}
 ${SOCIAL_POST_SHARED_STYLE}
+
+/* Keep feed posts visually flat: no hover/tap lift effects on cards. */
+.social-page .post-card{
+  box-shadow:none;
+  transition:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.social-page .post-card:hover,
+.social-page .post-card:active,
+.social-page .post-card:focus-within{
+  transform:none;
+  box-shadow:none;
+  border-color:color-mix(in srgb,var(--border) 78%,var(--accent) 22%);
+}
 
 .social-right-sidebar{display:grid;position:fixed;z-index:var(--z-sidebar);right:0;top:var(--layout-header-offset-mobile);height:calc(100vh - var(--layout-header-offset-mobile));height:calc(100dvh - var(--layout-header-offset-mobile));width:min(var(--social-sidebar-w),92vw);max-width:100vw;background:linear-gradient(180deg,color-mix(in srgb,var(--surface-strong) 95%,#fff 5%),var(--surface-strong));border-left:var(--layout-border-size) solid var(--border);padding:var(--space-3);gap:var(--space-2);align-content:start;overflow:auto;overscroll-behavior:contain;transform:translateX(104%);transition:transform .36s var(--motion-spring)}
 body.page-social.menu-open .social-right-sidebar{transform:translateX(0)}
@@ -192,12 +207,51 @@ body.page-social.notifications-open .social-right-sidebar{visibility:hidden;poin
 .social-feed-tail{width:min(100%,var(--social-feed-max));min-height:18px;text-align:center;color:var(--text-muted);font-size:.82rem;line-height:1.35}
 .social-feed-sentinel{width:min(100%,var(--social-feed-max));height:1px;pointer-events:none}
 
-/* Keep social images fully visible and avoid upscaling tiny assets. */
-.social-page .post-media-item,.social-post-modal .post-media-item{display:grid;place-items:center;background:#0b0d13}
-.social-page .post-media-link,.social-post-modal .post-media-link{display:grid;place-items:center;width:100%;height:100%}
-.social-page .post-image,.social-post-modal .post-image{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;background:transparent}
+/* Feed and modal media should stay tight and fill 1/2/3 layouts consistently. */
+.social-page .post-media,.social-post-modal .post-media{width:100%;max-width:100%;min-width:0;line-height:0}
+.social-page .post-media-item,.social-post-modal .post-media-item{position:relative;overflow:hidden;background:#0b0d13}
+.social-page .post-media-link,.social-post-modal .post-media-link{display:block;width:100%;height:100%}
+.social-page .post-media-item:not(.post-media-item-detail) > .post-media-link,.social-post-modal .post-media-item:not(.post-media-item-detail) > .post-media-link{position:absolute;inset:0}
+.social-page .post-media-item:not(.post-media-item-detail) > .post-image,.social-page .post-media-item:not(.post-media-item-detail) > .post-media-link > .post-image,.social-post-modal .post-media-item:not(.post-media-item-detail) > .post-image,.social-post-modal .post-media-item:not(.post-media-item-detail) > .post-media-link > .post-image{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center center;background:#0b0d13}
 .social-page .post-media-grid-1 .post-media-item,.social-post-modal .post-media-grid-1 .post-media-item{min-height:220px;max-height:min(72vh,520px);aspect-ratio:auto}
-.social-page .post-media-grid-1 .post-image,.social-post-modal .post-media-grid-1 .post-image{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain}
+.social-page .post-media-grid-1 .post-media-link,.social-post-modal .post-media-grid-1 .post-media-link{height:100%}
+/* Single-image posts should show full image (no crop), centered. */
+.social-page .post-media-grid-1 .post-media-item > .post-media-link,.social-post-modal .post-media-grid-1 .post-media-item > .post-media-link{
+  position:relative;
+  inset:auto;
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+}
+.social-page .post-media-grid-1 .post-media-item > .post-image,.social-page .post-media-grid-1 .post-media-item > .post-media-link > .post-image,.social-post-modal .post-media-grid-1 .post-media-item > .post-image,.social-post-modal .post-media-grid-1 .post-media-item > .post-media-link > .post-image{
+  position:relative;
+  inset:auto;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  object-position:center center;
+}
+.social-page .post-media-grid-2,.social-post-modal .post-media-grid-2{
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:minmax(0,1fr);
+  aspect-ratio:4/3;
+}
+.social-page .post-media-grid-3,.social-post-modal .post-media-grid-3{
+  grid-template-columns:1.55fr 1fr;
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  aspect-ratio:4/3;
+}
+.social-page .post-media-grid-2 .post-media-item,.social-page .post-media-grid-3 .post-media-item,.social-post-modal .post-media-grid-2 .post-media-item,.social-post-modal .post-media-grid-3 .post-media-item{
+  min-height:0!important;
+  max-height:none!important;
+  height:100%;
+}
+.social-page .post-media-grid-3 .post-media-item:first-child,.social-post-modal .post-media-grid-3 .post-media-item:first-child{
+  grid-row:1 / span 2!important;
+}
 .post-media-detail{gap:0;height:100%;min-height:0}
 .post-media-item-detail{position:relative;display:grid;place-items:center;width:100%;height:100%;min-height:0;background:#0b0d13;overflow:hidden;line-height:0}
 .post-media-item-detail .post-image,
@@ -205,11 +259,25 @@ body.page-social.notifications-open .social-right-sidebar{visibility:hidden;poin
   display:block;
   width:100%!important;
   height:100%!important;
-  max-width:100%!important;
-  max-height:100%!important;
-  object-fit:scale-down!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
   object-position:center center!important;
+  margin:auto;
   background:#0b0d13;
+}
+body.social-post-page .post-media-item-detail > .post-image,
+body.social-post-page .post-media-item-detail > .post-image-detail{
+  position:relative!important;
+  inset:auto!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  margin:auto!important;
 }
 .post-media-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(18,20,27,.62);color:#fff;display:grid;place-items:center;cursor:pointer;font-size:1.45rem;line-height:1;padding:0}
 .post-media-nav:hover{background:rgba(18,20,27,.8)}
@@ -227,6 +295,17 @@ body.page-social.notifications-open .social-right-sidebar{visibility:hidden;poin
 button[disabled]{opacity:.58;cursor:not-allowed}
 
 @media (min-width:900px){
+  .social-page .post-media-grid-2,.social-post-modal .post-media-grid-2{aspect-ratio:16/10}
+  .social-page .post-media-grid-3,.social-post-modal .post-media-grid-3{aspect-ratio:16/10}
+  .social-page .post-media-grid-2 .post-media-item,.social-page .post-media-grid-3 .post-media-item,.social-post-modal .post-media-grid-2 .post-media-item,.social-post-modal .post-media-grid-3 .post-media-item{
+    min-height:0!important;
+    max-height:none!important;
+    height:100%;
+  }
+  .social-page .post-media-grid-3 .post-media-item:first-child,.social-post-modal .post-media-grid-3 .post-media-item:first-child{
+    grid-row:1 / span 2;
+  }
+
   .social-detail-back-fab{display:none!important}
   body.social-post-page{overflow:hidden}
   body.social-post-page .app-shell{
@@ -274,7 +353,8 @@ button[disabled]{opacity:.58;cursor:not-allowed}
     height:100%;
     width:100%;
     overflow:hidden;
-    align-content:stretch;
+    display:grid;
+    place-items:center;
   }
   body.social-post-page .social-post-focus .post-card-detail-media .post-media-item-detail{
     height:100%;
@@ -284,9 +364,9 @@ button[disabled]{opacity:.58;cursor:not-allowed}
   body.social-post-page .social-post-focus .post-card-detail-media .post-media-item-detail > .post-image{
     width:100%!important;
     height:100%!important;
-    max-width:100%!important;
-    max-height:100%!important;
-    object-fit:scale-down!important;
+    max-width:none!important;
+    max-height:none!important;
+    object-fit:contain!important;
     object-position:center center!important;
   }
   .page-social{--social-left-collapsed-w:68px;--social-left-expanded-w:312px}
@@ -389,9 +469,12 @@ button[disabled]{opacity:.58;cursor:not-allowed}
   .social-compose-menu{order:2}
   .social-mobile-pages{order:3}
   .social-feed{gap:var(--space-1)}
+  .social-page .post-media{width:100%;max-width:100%;min-width:0;overflow:hidden;gap:0}
+  .social-page .post-media-grid-1,.social-page .post-media-grid-2,.social-page .post-media-grid-3{width:100%;max-width:100%}
+  .social-page .post-media-item{width:100%;max-width:100%;min-width:0}
   .social-page .post-card{width:100%;border-radius:0;border-left:none;border-right:none}
-  .social-page .post-media-grid-1 .post-media-item{min-height:min(72vw,320px);max-height:min(72vw,320px);aspect-ratio:auto}
-  .social-page .post-media-grid-1 .post-image{width:auto;height:auto;max-width:100%;max-height:100%}
+  .social-page .post-media-grid-1 .post-media-item{min-height:min(72vw,320px);max-height:min(72vw,320px);aspect-ratio:1/1}
+  .social-page .post-media-grid-1 .post-image{width:100%;height:100%;object-fit:contain;object-position:center center}
 
   .social-detail-back{display:none}
   .social-detail-desktop-only{display:none!important}
@@ -417,7 +500,7 @@ button[disabled]{opacity:.58;cursor:not-allowed}
   .social-page-post .social-post-focus .post-card-detail-media .post-media-item-detail > .post-image{
     width:100%!important;
     height:100%!important;
-    object-fit:scale-down!important;
+    object-fit:contain!important;
     object-position:center center!important;
   }
   .social-detail-inline{display:grid;gap:var(--space-2);padding:var(--space-2);background:var(--surface);border-top:1px solid var(--border)}

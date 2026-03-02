@@ -255,7 +255,7 @@ export const SOCIAL_SCRIPT_RENDER = `
         : '';
       return '<div class="post-media post-media-detail">' +
         '<figure class="post-media-item post-media-item-detail">' +
-          '<img class="post-image post-image-detail" src="' + escapeHtml(imageSrc) + '" data-base-src="' + escapeHtml(baseImageSrc) + '" alt="Post image" loading="lazy" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:scale-down;object-position:center;" onerror="markBrokenPostImage(this.dataset.baseSrc);">' +
+          '<img class="post-image post-image-detail" src="' + escapeHtml(imageSrc) + '" data-base-src="' + escapeHtml(baseImageSrc) + '" alt="Post image" loading="lazy" decoding="async" fetchpriority="high" onerror="markBrokenPostImage(this.dataset.baseSrc);">' +
           navControls +
         '</figure>' +
       '</div>';
@@ -322,6 +322,7 @@ export const SOCIAL_SCRIPT_RENDER = `
             authorMarkup +
             '<span class="post-time">' + escapeHtml(formatTime(post?.createdAt || '')) + '</span>' +
           '</div>' +
+          (postUi?.renderPostMenu ? postUi.renderPostMenu(post) : '') +
         '</div>' +
         '<div class="post-body">' + escapeHtml(post?.body || '') + '</div>' +
         mediaMarkup +
@@ -344,6 +345,7 @@ export const SOCIAL_SCRIPT_RENDER = `
           '<span class="post-author">' + escapeHtml(post.author?.name || 'User') + '</span>' +
           '<span class="post-time">' + escapeHtml(formatTime(post.createdAt)) + '</span>' +
         '</div>' +
+        (postUi?.renderPostMenu ? postUi.renderPostMenu(post) : '') +
       '</div>' +
       '<div class="post-body">' + escapeHtml(post.body || '') + '</div>' +
       mediaMarkupForPost(post, { forModal, forDetail }) +

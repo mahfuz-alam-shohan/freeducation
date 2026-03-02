@@ -38,8 +38,8 @@ export const DOCUMENT_BOOT_NAVIGATION = `
       if (!response.ok) throw new Error('Navigation failed');
       const html = await response.text();
       const nextDoc = parser.parseFromString(html, 'text/html');
-      await replacePage(nextDoc, motion);
       if (push) window.history.pushState({ href }, '', href);
+      await replacePage(nextDoc, motion);
     } catch {
       if (typeof window.__showAppStatus === 'function') window.__showAppStatus('Navigation failed. Retrying...', 'error', 1800);
       window.location.href = href;
