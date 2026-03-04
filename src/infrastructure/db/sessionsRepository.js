@@ -1,14 +1,20 @@
-export async function createSession(db, { userId, tokenHash, expiresAt, deviceLabel = "" }) {
+export async function createSession(db, {
+  userId,
+  tokenHash,
+  expiresAt,
+  deviceLabel = "",
+  activeAttemptId = 0,
+}) {
   const now = new Date().toISOString();
   await db.prepare(
-    `INSERT INTO freeducation_sessions (admin_id, token_hash, device_label, created_at, expires_at)
-     VALUES (?1, ?2, ?3, ?4, ?5)`,
-  ).bind(userId, tokenHash, deviceLabel, now, expiresAt).run();
+    `INSERT INTO freeducation_sessions (admin_id, token_hash, device_label, active_attempt_id, created_at, expires_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+  ).bind(userId, tokenHash, deviceLabel, Number(activeAttemptId) || 0, now, expiresAt).run();
 }
 
 export async function findSessionByTokenHash(db, tokenHash) {
   return db.prepare(
-    `SELECT s.admin_id, s.expires_at, s.created_at AS session_created_at, s.device_label,
+    `SELECT s.id AS session_id, s.admin_id, s.expires_at, s.created_at AS session_created_at, s.device_label, s.active_attempt_id,
             a.name, a.email, a.id, a.user_type, a.date_of_birth, a.gender, a.avatar_key, a.cover_key
      FROM freeducation_sessions s
      JOIN freeducation_admins a ON a.id = s.admin_id
@@ -18,6 +24,23 @@ export async function findSessionByTokenHash(db, tokenHash) {
 
 export async function deleteSessionByTokenHash(db, tokenHash) {
   await db.prepare("DELETE FROM freeducation_sessions WHERE token_hash = ?1").bind(tokenHash).run();
+}
+
+export async function setActiveAttemptForUserSessions(db, { userId, attemptId }) {
+  const now = new Date().toISOString();
+  await db.prepare(
+    `UPDATE freeducation_sessions
+     SET active_attempt_id = ?1
+     WHERE admin_id = ?2 AND expires_at > ?3`,
+  ).bind(Number(attemptId) || 0, Number(userId) || 0, now).run();
+}
+
+export async function clearActiveAttemptForUserSessions(db, { userId }) {
+  await db.prepare(
+    `UPDATE freeducation_sessions
+     SET active_attempt_id = 0
+     WHERE admin_id = ?1`,
+  ).bind(Number(userId) || 0).run();
 }
 
 export async function cleanupExpiredSessions(db) {

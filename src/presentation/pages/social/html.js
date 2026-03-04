@@ -1,9 +1,25 @@
+function escapeAttr(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function socialPageContextAttrs(options = {}) {
+  const viewerId = Number.parseInt(String(options?.viewerId || 0), 10) || 0;
+  const viewerProfilePath = String(options?.viewerProfilePath || "").trim();
+  return ` data-viewer-id="${viewerId}" data-viewer-profile-path="${escapeAttr(viewerProfilePath)}"`;
+}
+
 export function socialFeedHtml(canInteract, view = "feed", options = {}) {
   const scope = view === "mine" ? "mine" : "feed";
   const focusComposer = Boolean(options.focusComposer);
+  const contextAttrs = socialPageContextAttrs(options);
 
   return `
-    <section class="social-page" data-can-interact="${canInteract ? "1" : "0"}" data-mode="feed" data-scope="${scope}" data-focus-composer="${focusComposer ? "1" : "0"}">
+    <section class="social-page" data-can-interact="${canInteract ? "1" : "0"}" data-mode="feed" data-scope="${scope}" data-focus-composer="${focusComposer ? "1" : "0"}"${contextAttrs}>
       <section class="social-main">
         <div id="socialStatus" class="social-status" role="status" aria-live="polite"></div>
         <section id="socialFeed" class="social-feed" aria-label="${scope === "mine" ? "My posts feed" : "Community feed"}"></section>
@@ -25,20 +41,21 @@ export function socialFeedHtml(canInteract, view = "feed", options = {}) {
   `;
 }
 
-export function socialCreateHtml(canInteract) {
-  return socialFeedHtml(canInteract, "feed", { focusComposer: true });
+export function socialCreateHtml(canInteract, options = {}) {
+  return socialFeedHtml(canInteract, "feed", { ...options, focusComposer: true });
 }
 
-export function socialSearchHtml(canInteract, query = "") {
+export function socialSearchHtml(canInteract, query = "", options = {}) {
   const safeQuery = String(query || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+  const contextAttrs = socialPageContextAttrs(options);
 
   return `
-    <section class="social-page social-page-search" data-can-interact="${canInteract ? "1" : "0"}" data-mode="search" data-scope="feed" data-search-query="${safeQuery}" data-focus-composer="0">
+    <section class="social-page social-page-search" data-can-interact="${canInteract ? "1" : "0"}" data-mode="search" data-scope="feed" data-search-query="${safeQuery}" data-focus-composer="0"${contextAttrs}>
       <section class="social-main">
         <div id="socialStatus" class="social-status" role="status" aria-live="polite"></div>
         <section class="social-search-page-card" aria-label="Profile search results">
@@ -50,11 +67,12 @@ export function socialSearchHtml(canInteract, query = "") {
   `;
 }
 
-export function socialPostHtml(canInteract, postId) {
+export function socialPostHtml(canInteract, postId, options = {}) {
   const safePostId = Number.isInteger(Number(postId)) ? Number(postId) : 0;
+  const contextAttrs = socialPageContextAttrs(options);
 
   return `
-    <section class="social-page social-page-post" data-can-interact="${canInteract ? "1" : "0"}" data-mode="post" data-scope="feed" data-post-id="${safePostId}" data-focus-composer="0">
+    <section class="social-page social-page-post" data-can-interact="${canInteract ? "1" : "0"}" data-mode="post" data-scope="feed" data-post-id="${safePostId}" data-focus-composer="0"${contextAttrs}>
       <section class="social-main social-main-post">
         <a id="socialDetailBackFab" class="social-detail-back-fab" href="/social" aria-label="Back to feed">&larr;</a>
         <div id="socialStatus" class="social-status" role="status" aria-live="polite"></div>

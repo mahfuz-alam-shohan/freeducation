@@ -1,3 +1,5 @@
+import { imageToolsModule } from "../../../shared/client/imageTools.js";
+
 export const SOCIAL_SCRIPT_BOOTSTRAP = `
 (() => {
   const page = document.querySelector('.social-page');
@@ -11,7 +13,7 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
   const initialSearchQuery = String(page.dataset.searchQuery || '').trim();
   const canInteract = page.dataset.canInteract === '1';
   const focusComposer = page.dataset.focusComposer === '1';
-  const MAX_POST_IMAGES = 3;
+  const MAX_POST_IMAGES = 4;
   const FEED_PAGE_LIMIT = 12;
   const FEED_PAGE_MAX_BYTES = 220000;
 
@@ -137,6 +139,7 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
     const raw = await response.text().catch(() => '');
     return raw.trim() || fallback;
   };
+${imageToolsModule()}
 
   const markBrokenPostImage = (value) => {
     const key = String(value || '').trim();
@@ -150,58 +153,21 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
     return Boolean(key) && brokenPostImages.has(key);
   };
 
-  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Unable to read image file'));
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.readAsDataURL(file);
-  });
-
   const compressImageToDataUrl = async (file, onProgress) => {
-    if (!file) return '';
-
-    const targetBytes = 520000;
-
-    try {
-      const bitmap = await createImageBitmap(file);
-      const maxSide = 1800;
-      const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-      const width = Math.max(1, Math.round(bitmap.width * ratio));
-      const height = Math.max(1, Math.round(bitmap.height * ratio));
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d', { alpha: true });
-      if (!ctx) {
-        bitmap.close();
-        return await readFileAsDataUrl(file);
-      }
-      ctx.drawImage(bitmap, 0, 0, width, height);
-      bitmap.close();
-
-      const preferredType = file.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
-      const outputType = preferredType === 'image/webp' || preferredType === 'image/jpeg' ? preferredType : 'image/jpeg';
-      let quality = 0.9;
-      let bestDataUrl = '';
-
-      for (let attempt = 0; attempt < 7; attempt += 1) {
-        const testQuality = Math.max(0.58, quality - attempt * 0.05);
-        const dataUrl = canvas.toDataURL(outputType, testQuality);
-        const estimatedBytes = Math.floor((dataUrl.length * 3) / 4);
-        bestDataUrl = dataUrl;
-        if (typeof onProgress === 'function') {
-          onProgress(Math.min(92, 34 + attempt * 9));
-        }
-        if (estimatedBytes <= targetBytes || testQuality <= 0.6) break;
-      }
-
-      return bestDataUrl;
-    } catch {
-      const fallbackDataUrl = await readFileAsDataUrl(file);
-      const estimatedBytes = Math.floor((fallbackDataUrl.length * 3) / 4);
-      if (estimatedBytes <= targetBytes) return fallbackDataUrl;
-      throw new Error('Unable to prepare image');
-    }
+    return compressFileToDataUrl(file, {
+      maxWidth: 1800,
+      maxHeight: 1800,
+      targetBytes: 520000,
+      minQuality: 0.58,
+      quality: 0.9,
+      qualityStep: 0.05,
+      maxPasses: 7,
+      outputType: String(file?.type || '').toLowerCase() === 'image/webp' ? 'image/webp' : 'image/jpeg',
+      preserveAlpha: true,
+      throwIfTooLarge: true,
+      tooLargeMessage: 'Unable to prepare image',
+      onProgress,
+    });
   };
 
   const postImageFingerprint = (file) => [

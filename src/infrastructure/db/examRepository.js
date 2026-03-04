@@ -85,6 +85,41 @@ export async function createExamSessionQuestion(db, {
   return Number(inserted?.meta?.last_row_id || 0);
 }
 
+export async function createExamSessionQuestionsBatch(db, rows = []) {
+  const list = Array.isArray(rows) ? rows : [];
+  if (!list.length) return [];
+
+  const now = toIsoNow();
+  const buildStatement = (item = {}) => db.prepare(
+    `INSERT INTO freeducation_exam_session_questions
+      (session_id, subject_id, source_item_id, question_body, question_image_key,
+       original_options_json, original_correct_option, sort_order, created_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
+  ).bind(
+    Number(item.sessionId) || 0,
+    Number(item.subjectId) || 0,
+    Number(item.sourceItemId) || 0,
+    String(item.questionBody || ""),
+    String(item.questionImageKey || ""),
+    String(item.originalOptionsJson || "[]"),
+    String(item.originalCorrectOption || ""),
+    Number(item.sortOrder) || 0,
+    String(item.createdAt || now),
+  );
+
+  if (typeof db?.batch === "function") {
+    await db.batch(list.map((item) => buildStatement(item)));
+    return [];
+  }
+
+  const ids = [];
+  for (const row of list) {
+    const inserted = await buildStatement(row).run();
+    ids.push(Number(inserted?.meta?.last_row_id || 0));
+  }
+  return ids;
+}
+
 export async function listExamSessionQuestions(db, { sessionId }) {
   const result = await db.prepare(
     `SELECT id, session_id, subject_id, source_item_id, question_body, question_image_key,
@@ -229,6 +264,38 @@ export async function createExamAttemptAnswer(db, {
   return Number(inserted?.meta?.last_row_id || 0);
 }
 
+export async function createExamAttemptAnswersBatch(db, rows = []) {
+  const list = Array.isArray(rows) ? rows : [];
+  if (!list.length) return [];
+
+  const now = toIsoNow();
+  const buildStatement = (item = {}) => db.prepare(
+    `INSERT INTO freeducation_exam_attempt_answers
+      (attempt_id, session_question_id, question_order, shuffled_options_json, correct_option,
+       selected_option, is_correct, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, '', 0, ?6, ?6)`,
+  ).bind(
+    Number(item.attemptId) || 0,
+    Number(item.sessionQuestionId) || 0,
+    Number(item.questionOrder) || 0,
+    String(item.shuffledOptionsJson || "[]"),
+    String(item.correctOption || ""),
+    String(item.createdAt || now),
+  );
+
+  if (typeof db?.batch === "function") {
+    await db.batch(list.map((item) => buildStatement(item)));
+    return [];
+  }
+
+  const ids = [];
+  for (const row of list) {
+    const inserted = await buildStatement(row).run();
+    ids.push(Number(inserted?.meta?.last_row_id || 0));
+  }
+  return ids;
+}
+
 export async function listAttemptAnswers(db, { attemptId }) {
   const result = await db.prepare(
     `SELECT id, attempt_id, session_question_id, question_order, shuffled_options_json,
@@ -238,6 +305,22 @@ export async function listAttemptAnswers(db, { attemptId }) {
      ORDER BY question_order ASC, id ASC`,
   ).bind(attemptId).all();
   return result.results || [];
+}
+
+export async function summarizeAttemptAnswers(db, { attemptId }) {
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS total_questions,
+            SUM(CASE WHEN selected_option <> '' THEN 1 ELSE 0 END) AS answered_count,
+            SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct_count
+     FROM freeducation_exam_attempt_answers
+     WHERE attempt_id = ?1`,
+  ).bind(attemptId).first();
+
+  return {
+    totalQuestions: Number(row?.total_questions || 0),
+    answeredCount: Number(row?.answered_count || 0),
+    correctCount: Number(row?.correct_count || 0),
+  };
 }
 
 export async function listAttemptAnswersWithQuestions(db, { attemptId }) {

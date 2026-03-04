@@ -50,17 +50,18 @@ import {
   updateSubjectTopic,
   upsertSubjectTemplate,
 } from "../../infrastructure/db/modulesRepository.js";
+import {
+  BASE_CONTENT_TYPE_KEYS,
+  CONTENT_MODULE_KEYS,
+  contentLabelForType,
+  contentTypeMetaList,
+  isEditableContentType,
+  isKnownContentType,
+  publicReaderModules,
+} from "../../shared/modules/contentModules.js";
 
-const BASE_CONTENT_TYPES = ["cq_bank", "mcq_bank", "short_notes", "videos"];
-const CONTENT_TYPES = [...BASE_CONTENT_TYPES, "summary"];
-const EDITABLE_CONTENT_TYPES = new Set(["short_notes", "mcq_bank", "summary"]);
-const CONTENT_LABELS = {
-  cq_bank: "CQ Bank",
-  mcq_bank: "MCQ Bank",
-  short_notes: "Short Notes",
-  videos: "Videos",
-  summary: "Summary",
-};
+const BASE_CONTENT_TYPES = BASE_CONTENT_TYPE_KEYS;
+const CONTENT_TYPES = CONTENT_MODULE_KEYS;
 const BANGLA_TEMPLATE = {
   code: "BANGLA-1ST-NCTB2010",
   name: "BANGLA-1ST-NCTB2010",
@@ -85,7 +86,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: BASE_CONTENT_TYPES,
+      contentTypes: [...BASE_CONTENT_TYPES],
     },
     {
       key: "rhymes",
@@ -96,7 +97,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: BASE_CONTENT_TYPES,
+      contentTypes: [...BASE_CONTENT_TYPES],
     },
     {
       key: "assisting_book",
@@ -118,7 +119,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: BASE_CONTENT_TYPES,
+      contentTypes: [...BASE_CONTENT_TYPES],
     },
     {
       key: "novel",
@@ -129,7 +130,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: BASE_CONTENT_TYPES,
+      contentTypes: [...BASE_CONTENT_TYPES],
     },
   ],
 };
@@ -146,7 +147,7 @@ const PHY_TEMPLATE = {
       supportsTopics: true,
       canEditName: false,
       canUploadImage: false,
-      contentTypes: CONTENT_TYPES,
+      contentTypes: [...CONTENT_TYPES],
     },
   ],
 };
@@ -202,7 +203,7 @@ function normalizeContextType(value) {
 
 function normalizeContentType(value) {
   const type = String(value || "").trim().toLowerCase();
-  if (!CONTENT_TYPES.includes(type)) {
+  if (!isKnownContentType(type)) {
     throw new HttpError(400, "Invalid content type");
   }
   return type;
@@ -250,7 +251,7 @@ function imageUrlForKey(key) {
 }
 
 function mapTemplateNode(node) {
-  const contentTypes = Array.isArray(node?.contentTypes) ? node.contentTypes.filter((type) => CONTENT_TYPES.includes(type)) : [];
+  const contentTypes = Array.isArray(node?.contentTypes) ? node.contentTypes.filter((type) => isKnownContentType(type)) : [];
   return {
     key: String(node?.key || ""),
     parentKey: node?.parentKey ? String(node.parentKey) : null,
@@ -278,18 +279,12 @@ function parseTemplateStructure(raw) {
 }
 
 function contentTypeMeta(contentTypes = []) {
-  return contentTypes
-    .filter((type) => CONTENT_TYPES.includes(type))
-    .map((type) => ({
-      key: type,
-      label: CONTENT_LABELS[type],
-      editable: EDITABLE_CONTENT_TYPES.has(type),
-    }));
+  return contentTypeMetaList(contentTypes);
 }
 
 function serializeSubjectNode(row) {
   const parsedContentTypes = safeJsonParse(row?.content_types_json, []);
-  const contentTypes = Array.isArray(parsedContentTypes) ? parsedContentTypes.filter((type) => CONTENT_TYPES.includes(type)) : [];
+  const contentTypes = Array.isArray(parsedContentTypes) ? parsedContentTypes.filter((type) => isKnownContentType(type)) : [];
 
   return {
     id: Number(row?.id || 0),
@@ -491,7 +486,7 @@ function hierarchyRowsFromTemplate(structure) {
         node.contentTypes.forEach((type) => {
           rows.push({
             id: `content:${node.key}:${node.supportsTopics ? "topic-or-chapter" : "chapter"}:${type}`,
-            name: CONTENT_LABELS[type],
+            name: contentLabelForType(type),
             depth: node.supportsTopics ? depth + 3 : depth + 2,
             editable: false,
             imageUpload: false,
@@ -503,7 +498,7 @@ function hierarchyRowsFromTemplate(structure) {
         node.contentTypes.forEach((type) => {
           rows.push({
             id: `content:${node.key}:${type}`,
-            name: CONTENT_LABELS[type],
+            name: contentLabelForType(type),
             depth: depth + 1,
             editable: false,
             imageUpload: false,
@@ -815,6 +810,7 @@ export async function getPublicChapterReader(env, subjectIdRaw, chapterIdRaw) {
   const chapter = serializeChapter(chapterRow);
   const node = await getNodeOrThrow(env.DB, subjectId, chapter.nodeId);
   const availableTypes = Array.isArray(node?.contentTypes) ? node.contentTypes : [];
+  const contentModules = publicReaderModules(availableTypes);
 
   const loadByType = async (contentType) => {
     if (!availableTypes.includes(contentType)) return [];
@@ -827,21 +823,16 @@ export async function getPublicChapterReader(env, subjectIdRaw, chapterIdRaw) {
     return rows.map(serializeContentItem);
   };
 
-  const [shortNotes, mcqBank, cqBank, videos] = await Promise.all([
-    loadByType("short_notes"),
-    loadByType("mcq_bank"),
-    loadByType("cq_bank"),
-    loadByType("videos"),
-  ]);
+  const contentItemsByType = Object.fromEntries(await Promise.all(
+    contentModules.map(async (moduleItem) => [moduleItem.key, await loadByType(moduleItem.key)]),
+  ));
 
   return {
     subject,
     node,
     chapter,
-    shortNotes,
-    mcqBank,
-    cqBank,
-    videos,
+    contentModules,
+    contentItemsByType,
   };
 }
 
@@ -1436,7 +1427,7 @@ export async function listModuleContentItems(env, subjectIdRaw, options = {}) {
     throw new HttpError(400, "This content type is not supported in selected context");
   }
 
-  if (!EDITABLE_CONTENT_TYPES.has(contentType)) {
+  if (!isEditableContentType(contentType)) {
     return {
       items: [],
       contentType,
@@ -1468,7 +1459,7 @@ export async function createModuleContentItem(request, env, subjectIdRaw, actorI
   if (!resolved.contentTypes.includes(contentType)) {
     throw new HttpError(400, "This content type is not supported in selected context");
   }
-  if (!EDITABLE_CONTENT_TYPES.has(contentType)) {
+  if (!isEditableContentType(contentType)) {
     throw new HttpError(400, "This content type is not editable yet");
   }
 
@@ -1554,7 +1545,7 @@ export async function updateModuleContentItem(request, env, subjectIdRaw, itemId
   if (!current) throw new HttpError(404, "Content item not found");
 
   const contentType = normalizeContentType(current?.content_type);
-  if (!EDITABLE_CONTENT_TYPES.has(contentType)) {
+  if (!isEditableContentType(contentType)) {
     throw new HttpError(400, "This content type is not editable yet");
   }
 

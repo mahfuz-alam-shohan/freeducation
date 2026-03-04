@@ -1,11 +1,1 @@
-import { PROFILE_SCRIPT_POSTS_FEED_LOAD } from "./postsFeedLoad.js";
-import { PROFILE_SCRIPT_POSTS_INTERACTIONS } from "./postsInteractions.js";
-import { PROFILE_SCRIPT_POSTS_RENDER_AND_MODAL } from "./postsRenderAndModal.js";
-import { SOCIAL_POST_UI_SCRIPT } from "../../../shared/socialPostUi.js";
-
-export const PROFILE_SCRIPT_POSTS_FEED_AND_MODAL = `
-${SOCIAL_POST_UI_SCRIPT}
-${PROFILE_SCRIPT_POSTS_RENDER_AND_MODAL}
-${PROFILE_SCRIPT_POSTS_FEED_LOAD}
-${PROFILE_SCRIPT_POSTS_INTERACTIONS}
-`;
+export { PROFILE_SCRIPT_POSTS_FEED_AND_MODAL } from "../../../../modules/posts/profile/feedAndModal.js";

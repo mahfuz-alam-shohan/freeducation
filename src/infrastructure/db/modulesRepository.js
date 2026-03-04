@@ -557,6 +557,16 @@ export async function listAllContentItemsBySubject(db, { subjectId }) {
   return result.results || [];
 }
 
+export async function listMcqCountsByContextForSubject(db, { subjectId }) {
+  const result = await db.prepare(
+    `SELECT context_type, context_id, COUNT(*) AS total
+     FROM freeducation_subject_content_items
+     WHERE subject_id = ?1 AND content_type = 'mcq_bank'
+     GROUP BY context_type, context_id`,
+  ).bind(subjectId).all();
+  return result.results || [];
+}
+
 export async function listContentItems(db, { subjectId, contextType, contextId, contentType }) {
   const result = await db.prepare(
     `SELECT id, subject_id, context_type, context_id, content_type, body, image_key,

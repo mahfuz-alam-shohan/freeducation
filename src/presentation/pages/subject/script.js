@@ -1,9 +1,20 @@
 
-export function subjectScript(subjectId, apiBase = "/api/workspace") {
+import { imageToolsModule } from "../../shared/client/imageTools.js";
+
+export function subjectScript(subjectId, apiBase = "/api/workspace", contentModules = []) {
+  const safeContentModules = (Array.isArray(contentModules) ? contentModules : [])
+    .map((item) => ({
+      key: String(item?.key || "").trim().toLowerCase(),
+      label: String(item?.label || "").trim(),
+      editable: Boolean(item?.editable),
+    }))
+    .filter((item, index, list) => item.key && list.findIndex((entry) => entry.key === item.key) === index);
+
   return `
 (() => {
   const subjectId = ${Number(subjectId) || 0};
   const apiRoot = ${JSON.stringify(String(apiBase || "/api/workspace"))};
+  const contentModules = ${JSON.stringify(safeContentModules)};
 
   const titleEl = document.getElementById('subjectTitle');
   const subtitleEl = document.getElementById('subjectSubtitle');
@@ -115,87 +126,17 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     if (!response.ok) throw new Error(payload?.error || 'Request failed');
     return payload;
   };
-
-  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-    if (!file) {
-      resolve('');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Unable to read file'));
-    reader.readAsDataURL(file);
-  });
-
-  const dataUrlSizeBytes = (dataUrl) => {
-    const value = String(dataUrl || '');
-    const comma = value.indexOf(',');
-    if (comma < 0) return 0;
-    const base64 = value.slice(comma + 1);
-    return Math.floor((base64.length * 3) / 4);
-  };
-
-  const loadImageFromFile = (file) => new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Unable to process image'));
-    };
-    image.src = objectUrl;
-  });
-
-  const fileToDataUrl = async (file, options = {}) => {
-    if (!file) return '';
-    const type = String(file.type || '').toLowerCase();
-    if (!type.startsWith('image/')) return readFileAsDataUrl(file);
-
-    const maxWidth = Number(options.maxWidth || 1600);
-    const maxHeight = Number(options.maxHeight || 1600);
-    const targetBytes = Number(options.targetBytes || (900 * 1024));
-    const minQuality = Number(options.minQuality || 0.5);
-    let quality = Number(options.quality || 0.84);
-
-    try {
-      const image = await loadImageFromFile(file);
-      const sourceWidth = Number(image.naturalWidth || image.width || 0);
-      const sourceHeight = Number(image.naturalHeight || image.height || 0);
-      if (!sourceWidth || !sourceHeight) return readFileAsDataUrl(file);
-
-      let scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return readFileAsDataUrl(file);
-
-      const render = () => {
-        canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-        canvas.height = Math.max(1, Math.round(sourceHeight * scale));
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-
-      render();
-      let compressed = canvas.toDataURL('image/webp', quality);
-      let guard = 0;
-      while (dataUrlSizeBytes(compressed) > targetBytes && guard < 12) {
-        if (quality > minQuality + 0.01) {
-          quality = Math.max(minQuality, quality - 0.08);
-        } else {
-          scale *= 0.9;
-          render();
-        }
-        compressed = canvas.toDataURL('image/webp', quality);
-        guard += 1;
-      }
-      return compressed;
-    } catch {
-      return readFileAsDataUrl(file);
-    }
-  };
+${imageToolsModule()}
+  const fileToDataUrl = async (file, options = {}) => (
+    compressFileToDataUrl(file, {
+      maxWidth: Number(options.maxWidth || 1600),
+      maxHeight: Number(options.maxHeight || 1600),
+      targetBytes: Number(options.targetBytes || (900 * 1024)),
+      minQuality: Number(options.minQuality || 0.5),
+      quality: Number(options.quality || 0.84),
+      outputType: 'image/webp',
+    })
+  );
 
   const clearChapterModalPreviewUrl = () => {
     if (!chapterModalPreviewUrl) return;
@@ -275,13 +216,41 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     }).join('<span>/</span>');
   };
 
-  const contentTypeLabel = (key) => {
-    if (key === 'short_notes') return 'Short Notes';
-    if (key === 'mcq_bank') return 'MCQ Bank';
-    if (key === 'cq_bank') return 'CQ Bank';
-    if (key === 'videos') return 'Videos';
-    if (key === 'summary') return 'Summary';
-    return String(key || '');
+  const contentModuleMap = new Map();
+  for (const item of (Array.isArray(contentModules) ? contentModules : [])) {
+    const key = String(item?.key || '').toLowerCase();
+    if (!key || contentModuleMap.has(key)) continue;
+    contentModuleMap.set(key, {
+      label: String(item?.label || '').trim(),
+      editable: Boolean(item?.editable),
+    });
+  }
+
+  const resolveContentTypeMeta = (key, fallback = {}) => {
+    const normalizedKey = String(key || '').trim().toLowerCase();
+    if (!normalizedKey) {
+      return {
+        key: '',
+        label: String(fallback?.label || '').trim(),
+        editable: Boolean(fallback?.editable),
+      };
+    }
+    const registry = contentModuleMap.get(normalizedKey);
+    return {
+      key: normalizedKey,
+      label: String(fallback?.label || registry?.label || normalizedKey).trim(),
+      editable: fallback?.editable === undefined ? Boolean(registry?.editable) : Boolean(fallback?.editable),
+    };
+  };
+
+  const contentTypeLabel = (key, fallbackLabel = '') => resolveContentTypeMeta(key, { label: fallbackLabel }).label;
+  const isEditableContentType = (key, fallbackEditable = false) => resolveContentTypeMeta(key, { editable: fallbackEditable }).editable;
+  const editorModeForType = (key) => {
+    const normalized = String(key || '').trim().toLowerCase();
+    if (normalized === 'short_notes') return 'short_notes';
+    if (normalized === 'mcq_bank') return 'mcq_bank';
+    if (normalized === 'summary') return 'summary';
+    return '';
   };
   const nodeImagePlaceholderIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 15.2l-4.6-4.3-4.4 4.1-2.3-2.1-5.7 5.2"/></svg>';
   const editIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.6 3.4a2.1 2.1 0 1 1 3 3L8 18l-4 1 1-4z"/></svg>';
@@ -459,7 +428,7 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
       + tabs.map((item) => {
         const key = String(item?.key || '').toLowerCase();
         const isActive = key === activeTab;
-        return '<button type="button" role="tab" class="sbj-tab ' + (isActive ? 'is-active' : '') + '" data-action="switch-content-tab" data-tab-key="' + escapeHtml(key) + '" aria-selected="' + (isActive ? 'true' : 'false') + '">' + escapeHtml(item?.label || contentTypeLabel(key)) + '</button>';
+        return '<button type="button" role="tab" class="sbj-tab ' + (isActive ? 'is-active' : '') + '" data-action="switch-content-tab" data-tab-key="' + escapeHtml(key) + '" aria-selected="' + (isActive ? 'true' : 'false') + '">' + escapeHtml(contentTypeLabel(key, item?.label)) + '</button>';
       }).join('')
       + '<span class="sbj-tab-indicator" data-tab-indicator="1" aria-hidden="true"></span>'
       + '</div>';
@@ -585,8 +554,10 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     }
 
     if (node?.supportsChapters) {
+      // Keep the chapter table heading stable across template/node naming variants.
+      const chapterHeading = 'Chapters';
       dynamicArea.innerHTML = '<section class="sbj-card">'
-        + '<header class="sbj-toolbar"><h3>Chapters in ' + escapeHtml(node?.displayName || node?.serverName || '') + '</h3>'
+        + '<header class="sbj-toolbar"><h3>' + escapeHtml(chapterHeading) + '</h3>'
         + '<button type="button" class="sbj-primary" data-action="open-chapter-modal-create" data-node-id="' + Number(node?.id || 0) + '" data-node-supports-topics="' + (node?.supportsTopics ? '1' : '0') + '">Add Chapter</button></header>'
         + '<div class="sbj-table-wrap"><table class="sbj-table sbj-chapter-table"><thead><tr><th>Rank</th><th>Chapter</th><th>Topics</th><th>Image</th><th>Created</th><th>Actions</th></tr></thead><tbody>'
         + (chapters.length ? chapters.map((chapter, index) => chapterRow(chapter, Boolean(node?.supportsTopics), index, chapters.length)).join('') : '<tr><td colspan="6" class="sbj-empty">No chapters yet.</td></tr>')
@@ -981,7 +952,7 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
   };
 
   const renderPlaceholderEditor = (context, contentType) => {
-    const label = contentType === 'videos' ? 'Videos' : 'CQ Bank';
+    const label = contentTypeLabel(contentType);
     return '<section class="sbj-card">'
       + '<header class="sbj-toolbar"><h3>' + escapeHtml(label) + ' - ' + escapeHtml(context?.label || '') + '</h3></header>'
       + '<p class="sbj-empty">This section is intentionally blank for now. ' + escapeHtml(label) + ' editor will be added next.</p>'
@@ -994,6 +965,9 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     const types = Array.isArray(currentTabContext.contentTypes) ? currentTabContext.contentTypes : [];
     const validKeys = types.map((item) => String(item?.key || '').toLowerCase()).filter(Boolean);
     if (!validKeys.includes(key)) return;
+    const typeMeta = types.find((item) => String(item?.key || '').toLowerCase() === key) || null;
+    const editable = isEditableContentType(key, Boolean(typeMeta?.editable));
+    const editorMode = editorModeForType(key);
 
     currentTabContext.activeTab = key;
     if (options.updateUrl !== false) updateTabInUrl(key);
@@ -1016,7 +990,7 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
       || 'Content';
     const context = { label: contextLabel };
 
-    if (key !== 'short_notes' && key !== 'mcq_bank' && key !== 'summary') {
+    if (!editable || !editorMode) {
       if (options.updateUrl !== false) updateNotesPageInUrl(1);
       if (options.updateUrl !== false) updateMcqPageInUrl(1);
       panel.innerHTML = renderPlaceholderEditor(context, key);
@@ -1031,17 +1005,17 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     const safeNotesPage = Math.min(Math.max(1, requestedNotesPage), totalNotesPages);
     const totalPages = Math.max(1, Math.ceil(items.length / 40));
     const safeMcqPage = Math.min(Math.max(1, requestedMcqPage), totalPages);
-    panel.innerHTML = key === 'short_notes'
+    panel.innerHTML = editorMode === 'short_notes'
       ? renderShortNotesEditor(context, items, safeNotesPage)
-      : key === 'summary'
+      : editorMode === 'summary'
         ? renderSummaryEditor(context, items)
         : renderMcqEditor(context, items, safeMcqPage);
 
-    if (key === 'short_notes') {
+    if (editorMode === 'short_notes') {
       if (options.updateUrl !== false) updateNotesPageInUrl(safeNotesPage);
       if (options.updateUrl !== false) updateMcqPageInUrl(1);
       requestAnimationFrame(updateEditorToolbarState);
-    } else if (key === 'mcq_bank') {
+    } else if (editorMode === 'mcq_bank') {
       if (options.updateUrl !== false) updateNotesPageInUrl(1);
       if (options.updateUrl !== false) updateMcqPageInUrl(safeMcqPage);
       setMcqFormOpen(false);
@@ -1068,11 +1042,14 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     if (context?.topic?.id) {
       crumbs.push({ label: context.topic.name || 'Topic', href: subjectHref('topic=' + Number(context.topic.id)) });
     }
-    const contentLabel = contentTypeLabel(state.editor);
+    const contextContentTypes = Array.isArray(context?.contentTypes) ? context.contentTypes : [];
+    const selectedContextType = contextContentTypes.find((item) => String(item?.key || '').toLowerCase() === String(state.editor || '').toLowerCase()) || null;
+    const contentLabel = contentTypeLabel(state.editor, selectedContextType?.label);
+    const editorMode = editorModeForType(state.editor);
     crumbs.push({ label: contentLabel });
     setBreadcrumb(crumbs);
 
-    if (!['short_notes', 'mcq_bank', 'summary'].includes(state.editor)) {
+    if (!editorMode || !isEditableContentType(state.editor, Boolean(selectedContextType?.editable))) {
       dynamicArea.innerHTML = renderPlaceholderEditor(context, state.editor);
       return;
     }
@@ -1080,9 +1057,9 @@ export function subjectScript(subjectId, apiBase = "/api/workspace") {
     const itemsPayload = await apiRequest('/subjects/' + subjectId + '/content-items?contextType=' + encodeURIComponent(state.contextType) + '&contextId=' + encodeURIComponent(String(state.contextId)) + '&contentType=' + encodeURIComponent(state.editor));
     const items = Array.isArray(itemsPayload?.items) ? itemsPayload.items : [];
 
-    dynamicArea.innerHTML = state.editor === 'short_notes'
+    dynamicArea.innerHTML = editorMode === 'short_notes'
       ? renderShortNotesEditor(context, items, readNotesPageFromUrl())
-      : state.editor === 'summary'
+      : editorMode === 'summary'
         ? renderSummaryEditor(context, items)
         : renderMcqEditor(context, items, readMcqPageFromUrl());
   };

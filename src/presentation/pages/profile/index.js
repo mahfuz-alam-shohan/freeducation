@@ -9,6 +9,9 @@ export function profilePage(user, options = {}) {
   const readOnly = Boolean(options.readOnly);
   const profileUserId = Number.parseInt(String(options.profileUserId || profileUser?.id || 0), 10) || 0;
   const canInteract = options.canInteract !== false;
+  const showBackToFeed = Boolean(options.showBackToFeed);
+  const backToFeedHref = String(options.backToFeedHref || "/social");
+  const backToFeedLabel = String(options.backToFeedLabel || "Back to feed");
   const extraPageClass = String(options.pageClass || "").trim();
   const extraPageStyles = String(options.pageStyles || "");
   const mergedPageClass = ["page-profile", extraPageClass].filter(Boolean).join(" ");
@@ -16,13 +19,16 @@ export function profilePage(user, options = {}) {
   const shellOptions = { ...options };
   delete shellOptions.pageClass;
   delete shellOptions.pageStyles;
+  delete shellOptions.showBackToFeed;
+  delete shellOptions.backToFeedHref;
+  delete shellOptions.backToFeedLabel;
 
   return renderAppShellLayout({
     ...shellOptions,
     title: "Profile",
     activeMenu: "profile",
     user,
-    content: profileHtml(profileUser, { readOnly, profileUserId }),
+    content: profileHtml(profileUser, { readOnly, profileUserId, showBackToFeed, backToFeedHref, backToFeedLabel }),
     pageClass: mergedPageClass,
     pageStyles: mergedPageStyles,
     script: profileScript(apiBase, { readOnly, profileUserId, canInteract }),

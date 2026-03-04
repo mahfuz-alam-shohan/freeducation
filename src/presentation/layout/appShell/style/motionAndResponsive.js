@@ -12,7 +12,7 @@ export const APP_SHELL_STYLE_MOTION = `
 @media (prefers-reduced-motion:reduce){.app-menu-toggle,.app-avatar,.app-nav-overlay,.app-sidebar,.app-nav a,.app-profile-pop,.app-content,.app-content > *,.app-shell::before,.app-theme-toggle,.app-theme-orb,.app-theme-orb svg,.app-theme-chip,::view-transition-old(root),::view-transition-new(root){animation:none;transition:none}}
 @media (min-width:900px){
   .app-shell{grid-template-columns:var(--layout-sidebar-w) minmax(0,1fr);grid-template-rows:var(--layout-header-h-desktop) minmax(0,1fr) auto}
-  .app-header{grid-column:1 / -1;grid-row:1;padding:0 var(--space-2);block-size:var(--layout-header-h-desktop)}
+  .app-header{grid-column:1 / -1;grid-row:1;padding:0 14px;block-size:var(--layout-header-h-desktop)}
   .app-user-meta{display:block}
   .app-logout{display:inline-flex}
   .app-sidebar{grid-column:1;grid-row:2;z-index:auto}

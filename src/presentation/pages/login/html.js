@@ -7,10 +7,6 @@ export function loginHtml() {
         <p class="auth-muted">Simple, focused access for all role-based accounts.</p>
       </header>
 
-      <section class="motion-band" aria-hidden="true">
-        <span></span>
-      </section>
-
       <section class="login-card">
         <h2>Account Login</h2>
         <form id="loginForm" class="login-form" method="post" action="/api/login">

@@ -25,6 +25,24 @@ if (!PROFILE_READ_ONLY && passwordForm && openPasswordForm) {
   }, { signal });
 }
 
+if (!PROFILE_READ_ONLY && profileLogoutButton) {
+  profileLogoutButton.addEventListener('click', async () => {
+    if (profileLogoutButton.disabled) return;
+    profileLogoutButton.disabled = true;
+    showMessage('Logging out...');
+
+    try {
+      await fetch('/api/logout', { method: 'POST', signal });
+      if (window.__appNavigate) window.__appNavigate('/login');
+      else window.location.href = '/login';
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      profileLogoutButton.disabled = false;
+      showMessage(error?.message || 'Unable to logout', { type: 'error', inline: true });
+    }
+  }, { signal });
+}
+
 const loadProfile = async () => {
   setPageLoading(true);
   try {

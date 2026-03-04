@@ -5,7 +5,21 @@ export const APP_SHELL_STYLE_NAV_THEME = `
 .app-nav-title{margin:0;padding:0 4px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
 .app-nav-links{display:grid;gap:var(--space-1)}
 .app-nav a{padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);color:var(--text-muted);display:flex;align-items:center;gap:var(--space-2);transition:background .22s ease,color .22s ease,transform .42s var(--motion-spring),opacity .42s ease,box-shadow .3s ease,border-color .2s ease;opacity:.92;transform:translateX(-3px);border:1px solid transparent}
+.app-nav a .app-nav-icon{display:inline-grid;place-items:center;width:24px;height:24px;flex:0 0 24px;border-radius:7px;background:color-mix(in srgb,var(--surface-soft) 86%,transparent);color:var(--nav-icon-color,var(--text-muted))}
+.app-nav a .app-nav-icon .app-icon{width:16px;height:16px;display:block;stroke:currentColor}
+.app-nav a .app-nav-label{min-width:0}
+.app-nav a[data-nav-key='home']{--nav-icon-color:#2d88ff}
+.app-nav a[data-nav-key='social']{--nav-icon-color:#1fb774}
+.app-nav a[data-nav-key='results']{--nav-icon-color:#f2a531}
+.app-nav a[data-nav-key='login']{--nav-icon-color:#2d88ff}
+.app-nav a[data-nav-key='dashboard']{--nav-icon-color:#6f7dff}
+.app-nav a[data-nav-key='users']{--nav-icon-color:#14a9cf}
+.app-nav a[data-nav-key='file-manager']{--nav-icon-color:#f2994a}
+.app-nav a[data-nav-key='templates']{--nav-icon-color:#9a63ff}
+.app-nav a[data-nav-key='subjects']{--nav-icon-color:#22b476}
+.app-nav a[data-nav-key='classes']{--nav-icon-color:#ea5a5a}
 .app-nav a.active,.app-nav a:hover{background:var(--surface);color:var(--text);transform:translateX(0);box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 16%,transparent)}
+.app-nav a.active .app-nav-icon,.app-nav a:hover .app-nav-icon{background:color-mix(in srgb,var(--nav-icon-color) 18%,var(--surface-soft))}
 .app-nav a.app-nav-highlight{color:color-mix(in srgb,var(--accent) 70%,#fff);border-color:color-mix(in srgb,var(--accent) 40%,var(--border));background:color-mix(in srgb,var(--accent) 16%,var(--surface-soft));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}
 .app-nav a.app-nav-highlight.active,.app-nav a.app-nav-highlight:hover{background:color-mix(in srgb,var(--accent) 25%,var(--surface));color:var(--text)}
 .app-theme-wrap{border-top:1px solid var(--border);padding-top:var(--space-2)}

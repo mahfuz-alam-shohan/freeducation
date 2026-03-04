@@ -5,6 +5,8 @@ import { handleAdminWorkspaceRoute } from "./workspace/adminWorkspaceRoutes.js";
 import { htmlRedirect } from "./workspace/common.js";
 import { detectPortal, isPortalApiPath } from "./workspace/portalConfig.js";
 import { handlePortalUserRoute } from "./workspace/portalUserRoutes.js";
+import { getActiveExamAttemptForUser } from "../../features/modules/examService.js";
+import { clearActiveAttemptForUserSessions } from "../../infrastructure/db/sessionsRepository.js";
 
 export async function handleWorkspaceRoute(request, env, url) {
   if (request.method === "POST" && url.pathname === "/api/logout") {
@@ -21,6 +23,18 @@ export async function handleWorkspaceRoute(request, env, url) {
   if (!user) {
     if (isPortalApiPath(portal, url.pathname)) return json({ error: "Unauthorized" }, 401);
     return null;
+  }
+
+  if (request.method === "GET" && !isPortalApiPath(portal, url.pathname)) {
+    const hintedAttemptId = Number(user.session_active_attempt_id || 0);
+    if (hintedAttemptId > 0) {
+      const active = await getActiveExamAttemptForUser(env, user.id);
+      const activeAttemptId = Number(active?.attempt?.id || 0);
+      if (activeAttemptId > 0) {
+        return htmlRedirect(`/exam/${activeAttemptId}`);
+      }
+      await clearActiveAttemptForUserSessions(env.DB, { userId: user.id });
+    }
   }
 
   if (user.user_type !== portal.role) {

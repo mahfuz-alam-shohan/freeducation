@@ -15,6 +15,7 @@ export const DOCUMENT_BOOT_NAVIGATION = `
       const styleEl = appStyle();
       if (styleEl) styleEl.textContent = nextStyle.textContent || styleEl.textContent;
 
+      window.__appPageScript = nextPageScript;
       runPageScript(nextPageScript);
       document.body.classList.remove('app-navigating');
       syncTheme();
@@ -63,6 +64,7 @@ export const DOCUMENT_BOOT_NAVIGATION = `
   });
 
   window.addEventListener('popstate', () => navigate(window.location.pathname + window.location.search + window.location.hash, { push: false, motion: 'back' }));
-  runPageScript(window.__appPageScript || '');
+  const initialPageScript = getCurrentPageScript();
+  runPageScript(initialPageScript);
 })();
 `;

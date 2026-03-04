@@ -5,6 +5,7 @@ import { verifyPassword } from "../../shared/security/password.js";
 import { createSession } from "../../infrastructure/db/sessionsRepository.js";
 import { createToken, sessionCookie, tokenHash } from "../../shared/security/session.js";
 import { dashboardPathForRole } from "../../shared/auth/roles.js";
+import { getActiveExamAttemptForUser } from "../modules/examService.js";
 
 function describeDeviceFromUserAgent(request) {
   const raw = String(request.headers.get("user-agent") || "").toLowerCase();
@@ -39,8 +40,16 @@ export async function loginUser(request, env) {
   const token = createToken();
   const tokenDigest = await tokenHash(token);
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
+  const activeExam = await getActiveExamAttemptForUser(env, user.id);
+  const activeAttemptId = Number(activeExam?.attempt?.id || 0);
   try {
-    await createSession(env.DB, { userId: user.id, tokenHash: tokenDigest, expiresAt, deviceLabel: describeDeviceFromUserAgent(request) });
+    await createSession(env.DB, {
+      userId: user.id,
+      tokenHash: tokenDigest,
+      expiresAt,
+      deviceLabel: describeDeviceFromUserAgent(request),
+      activeAttemptId,
+    });
   } catch (error) {
     throw mapDatabaseError(error, "Unable to create session");
   }

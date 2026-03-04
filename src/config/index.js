@@ -24,6 +24,7 @@ export const PLATFORM_SCHEMA = {
     ["admin_id", "INTEGER NOT NULL"],
     ["token_hash", "TEXT NOT NULL UNIQUE"],
     ["device_label", "TEXT NOT NULL DEFAULT ''"],
+    ["active_attempt_id", "INTEGER NOT NULL DEFAULT 0"],
     ["created_at", "TEXT NOT NULL"],
     ["expires_at", "TEXT NOT NULL"],
   ],

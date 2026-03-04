@@ -1,7 +1,15 @@
 export const DOCUMENT_BOOT_INTERACTION = `
 (() => {
+  const getCurrentPageScript = () => {
+    const fromTag = document.querySelector('script[data-app-page-script]')?.textContent || '';
+    if (fromTag && fromTag.trim()) return fromTag;
+    return String(window.__appPageScript || '');
+  };
+
   if (window.__appShellBooted) {
-    if (typeof window.__runPageScript === 'function') window.__runPageScript(window.__appPageScript || '');
+    if (typeof window.__runPageScript === 'function') {
+      window.__runPageScript(getCurrentPageScript());
+    }
     return;
   }
   window.__appShellBooted = true;

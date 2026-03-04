@@ -1,4 +1,4 @@
-const MAX_POST_IMAGES = 3;
+const MAX_POST_IMAGES = 4;
 const POST_IMAGE_KEY_PREFIX = "social/posts/";
 
 function sanitizeKey(value) {

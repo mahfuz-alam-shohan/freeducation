@@ -10,7 +10,7 @@ export function renderShellNav(navItems = [], activeMenu = "") {
   return `<nav class="app-nav">${sections.map((section) => {
     const title = String(section?.title || "").trim();
     const items = Array.isArray(section?.items) ? section.items : [];
-    return `<section class="app-nav-section">${title ? `<h3 class="app-nav-title">${title}</h3>` : ""}<div class="app-nav-links">${items.map((item) => `<a class="${activeMenu === item.key ? "active" : ""} ${item.kind === "highlight" ? "app-nav-highlight" : ""}" href="${item.href}">${item.icon}${item.label}</a>`).join("")}</div></section>`;
+    return `<section class="app-nav-section">${title ? `<h3 class="app-nav-title">${title}</h3>` : ""}<div class="app-nav-links">${items.map((item) => `<a class="${activeMenu === item.key ? "active" : ""} ${item.kind === "highlight" ? "app-nav-highlight" : ""}" href="${item.href}" data-nav-key="${item.key || ""}"><span class="app-nav-icon">${item.icon || ""}</span><span class="app-nav-label">${item.label || ""}</span></a>`).join("")}</div></section>`;
   }).join("")}</nav>`;
 }
 

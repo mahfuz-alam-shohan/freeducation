@@ -10,28 +10,31 @@ import {
   listAllSubjectChaptersBySubject,
   listAllSubjectTopicsBySubject,
   listAllContentItemsBySubject,
+  listMcqCountsByContextForSubject,
 } from "../../infrastructure/db/modulesRepository.js";
 import {
   countExamAttemptsForSession,
   createExamAttempt,
-  createExamAttemptAnswer,
+  createExamAttemptAnswersBatch,
   createExamSession,
-  createExamSessionQuestion,
+  createExamSessionQuestionsBatch,
   findExamAttemptById,
   findExamSessionById,
   findLatestActiveExamAttemptByUser,
   findAttemptAnswerByQuestion,
-  listAttemptAnswers,
   listAttemptAnswersWithQuestions,
   listExamAttemptsBySession,
   listExamSessionQuestions,
   listUserExamSessions,
+  summarizeAttemptAnswers,
   updateExamAttemptAnswer,
   updateExamAttemptStatus,
   updateExamSessionStatus,
 } from "../../infrastructure/db/examRepository.js";
+import { clearActiveAttemptForUserSessions, setActiveAttemptForUserSessions } from "../../infrastructure/db/sessionsRepository.js";
 
 const EXAM_SCOPE = new Set(["full", "chapter", "topic"]);
+const EXAM_SETUP_CONTEXT = new Set(["node", "chapter", "topic"]);
 const OPTION_KEYS = ["A", "B", "C", "D"];
 
 function parsePositiveId(value, label) {
@@ -50,6 +53,27 @@ function parseScope(value) {
   const scope = String(value || "").trim().toLowerCase();
   if (!EXAM_SCOPE.has(scope)) throw new HttpError(400, "Invalid exam scope");
   return scope;
+}
+
+function parseSetupContext(contextTypeRaw, contextIdRaw) {
+  const contextType = String(contextTypeRaw || "").trim().toLowerCase();
+  if (!EXAM_SETUP_CONTEXT.has(contextType)) {
+    return {
+      contextType: "",
+      contextId: 0,
+    };
+  }
+  const contextId = Number.parseInt(String(contextIdRaw || ""), 10);
+  if (!Number.isInteger(contextId) || contextId <= 0) {
+    return {
+      contextType: "",
+      contextId: 0,
+    };
+  }
+  return {
+    contextType,
+    contextId,
+  };
 }
 
 function safeJsonParse(value, fallback) {
@@ -193,6 +217,158 @@ function buildQuestionCountOptions(total) {
   return options;
 }
 
+function rootNodeMap(nodes = [], nodeById = new Map()) {
+  const rows = Array.isArray(nodes) ? nodes : [];
+  const map = nodeById instanceof Map ? nodeById : new Map(rows.map((node) => [node.id, node]));
+  const cache = new Map();
+
+  const resolveRoot = (nodeId) => {
+    const safeNodeId = Number(nodeId || 0);
+    if (!safeNodeId) return null;
+    if (cache.has(safeNodeId)) return cache.get(safeNodeId) || null;
+
+    const visited = new Set();
+    let current = map.get(safeNodeId) || null;
+    while (current && Number(current?.parentNodeId || 0) > 0 && !visited.has(Number(current.id || 0))) {
+      visited.add(Number(current.id || 0));
+      const parentId = Number(current.parentNodeId || 0);
+      current = map.get(parentId) || null;
+    }
+    cache.set(safeNodeId, current || null);
+    return current || null;
+  };
+
+  for (const node of rows) {
+    resolveRoot(node?.id);
+  }
+  return cache;
+}
+
+function preferQuestionCount(options = []) {
+  const rows = Array.isArray(options) ? options : [];
+  if (!rows.length) return 0;
+  const preferred = rows.find((count) => Number(count) === 20);
+  if (preferred) return Number(preferred);
+  const fallback = rows.find((count) => Number(count) === 10);
+  if (fallback) return Number(fallback);
+  return Number(rows[Math.max(0, rows.length - 1)] || 0);
+}
+
+function buildSetupRecommendation({
+  originContextType = "",
+  originContextId = 0,
+  chapterChoices = [],
+  topicChoices = [],
+  fullQuestionCountOptions = [],
+} = {}) {
+  const fullOptions = Array.isArray(fullQuestionCountOptions) ? fullQuestionCountOptions : [];
+  const fullAvailable = fullOptions.length > 0;
+  const chapterRows = Array.isArray(chapterChoices) ? chapterChoices : [];
+  const topicRows = Array.isArray(topicChoices) ? topicChoices : [];
+
+  const recommendation = {
+    sourceContextType: String(originContextType || "").toLowerCase(),
+    sourceContextId: Number(originContextId || 0),
+    scopeType: "",
+    rootId: 0,
+    nodeId: 0,
+    chapterId: 0,
+    topicId: 0,
+    questionCount: 0,
+    timed: false,
+    durationMinutes: 20,
+    message: "",
+  };
+
+  if (recommendation.sourceContextType === "topic" && recommendation.sourceContextId > 0) {
+    const topic = topicRows.find((item) => Number(item?.topicId || 0) === recommendation.sourceContextId) || null;
+    if (topic) {
+      recommendation.scopeType = "topic";
+      recommendation.rootId = Number(topic?.rootId || 0);
+      recommendation.nodeId = Number(topic?.nodeId || 0);
+      recommendation.chapterId = Number(topic?.chapterId || 0);
+      recommendation.topicId = Number(topic?.topicId || 0);
+      recommendation.questionCount = preferQuestionCount(topic?.questionCountOptions);
+      recommendation.message = "Auto-selected this topic for quick exam setup.";
+      return recommendation;
+    }
+  }
+
+  if (recommendation.sourceContextType === "chapter" && recommendation.sourceContextId > 0) {
+    const chapter = chapterRows.find((item) => Number(item?.chapterId || 0) === recommendation.sourceContextId) || null;
+    if (chapter) {
+      recommendation.scopeType = "chapter";
+      recommendation.rootId = Number(chapter?.rootId || 0);
+      recommendation.nodeId = Number(chapter?.nodeId || 0);
+      recommendation.chapterId = Number(chapter?.chapterId || 0);
+      recommendation.questionCount = preferQuestionCount(chapter?.questionCountOptions);
+      recommendation.message = "Auto-selected this chapter for quick exam setup.";
+      return recommendation;
+    }
+  }
+
+  if (recommendation.sourceContextType === "node" && recommendation.sourceContextId > 0) {
+    const scopedChapters = chapterRows.filter((item) => Number(item?.nodeId || 0) === recommendation.sourceContextId);
+    if (scopedChapters.length) {
+      const preferred = scopedChapters[0];
+      recommendation.scopeType = "chapter";
+      recommendation.rootId = Number(preferred?.rootId || 0);
+      recommendation.nodeId = Number(preferred?.nodeId || 0);
+      recommendation.chapterId = Number(preferred?.chapterId || 0);
+      recommendation.questionCount = preferQuestionCount(preferred?.questionCountOptions);
+      recommendation.message = "Auto-selected this section. You can change chapter if needed.";
+      return recommendation;
+    }
+    const scopedTopics = topicRows.filter((item) => Number(item?.nodeId || 0) === recommendation.sourceContextId);
+    if (scopedTopics.length) {
+      const preferred = scopedTopics[0];
+      recommendation.scopeType = "topic";
+      recommendation.rootId = Number(preferred?.rootId || 0);
+      recommendation.nodeId = Number(preferred?.nodeId || 0);
+      recommendation.chapterId = Number(preferred?.chapterId || 0);
+      recommendation.topicId = Number(preferred?.topicId || 0);
+      recommendation.questionCount = preferQuestionCount(preferred?.questionCountOptions);
+      recommendation.message = "Auto-selected this section and first available topic.";
+      return recommendation;
+    }
+  }
+
+  if (fullAvailable) {
+    recommendation.scopeType = "full";
+    recommendation.questionCount = preferQuestionCount(fullOptions);
+    recommendation.message = "Full-subject exam is selected by default.";
+    return recommendation;
+  }
+
+  if (chapterRows.length) {
+    const preferred = chapterRows[0];
+    recommendation.scopeType = "chapter";
+    recommendation.rootId = Number(preferred?.rootId || 0);
+    recommendation.nodeId = Number(preferred?.nodeId || 0);
+    recommendation.chapterId = Number(preferred?.chapterId || 0);
+    recommendation.questionCount = preferQuestionCount(preferred?.questionCountOptions);
+    recommendation.message = "Chapter exam is selected by default.";
+    return recommendation;
+  }
+
+  if (topicRows.length) {
+    const preferred = topicRows[0];
+    recommendation.scopeType = "topic";
+    recommendation.rootId = Number(preferred?.rootId || 0);
+    recommendation.nodeId = Number(preferred?.nodeId || 0);
+    recommendation.chapterId = Number(preferred?.chapterId || 0);
+    recommendation.topicId = Number(preferred?.topicId || 0);
+    recommendation.questionCount = preferQuestionCount(preferred?.questionCountOptions);
+    recommendation.message = "Topic exam is selected by default.";
+    return recommendation;
+  }
+
+  recommendation.scopeType = "full";
+  recommendation.questionCount = 0;
+  recommendation.message = "No eligible MCQ scope found.";
+  return recommendation;
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -203,27 +379,32 @@ function isExpired(isoTime) {
   return Date.parse(value) <= Date.now();
 }
 
+async function syncUserActiveAttemptHint(env, userId, attemptId = 0) {
+  const safeUserId = Number(userId) || 0;
+  if (safeUserId <= 0 || !env?.DB) return;
+  if (Number(attemptId) > 0) {
+    await setActiveAttemptForUserSessions(env.DB, { userId: safeUserId, attemptId: Number(attemptId) || 0 });
+    return;
+  }
+  await clearActiveAttemptForUserSessions(env.DB, { userId: safeUserId });
+}
+
 async function getSubjectOrThrow(db, subjectId) {
   const row = await findSubjectById(db, subjectId);
   if (!row) throw new HttpError(404, "Subject not found");
   return serializeSubject(row);
 }
 
-async function collectSubjectContext(db, subjectId) {
-  const [nodeRows, chapterRows, topicRows, contentRows] = await Promise.all([
+async function collectSubjectStructure(db, subjectId) {
+  const [nodeRows, chapterRows, topicRows] = await Promise.all([
     listAllSubjectNodes(db, { subjectId }),
     listAllSubjectChaptersBySubject(db, { subjectId }),
     listAllSubjectTopicsBySubject(db, { subjectId }),
-    listAllContentItemsBySubject(db, { subjectId }),
   ]);
 
   const nodes = nodeRows.map(serializeNode).sort((a, b) => (a.sortOrder - b.sortOrder) || (a.id - b.id));
   const chapters = chapterRows.map(serializeChapter).sort((a, b) => (a.sortOrder - b.sortOrder) || (a.id - b.id));
   const topics = topicRows.map(serializeTopic).sort((a, b) => (a.sortOrder - b.sortOrder) || (a.id - b.id));
-  const mcqs = contentRows
-    .filter((item) => String(item?.content_type || "").toLowerCase() === "mcq_bank")
-    .map(serializeMcqItem)
-    .filter(Boolean);
 
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]));
@@ -233,10 +414,61 @@ async function collectSubjectContext(db, subjectId) {
     nodes,
     chapters,
     topics,
-    mcqs,
     nodeById,
     chapterById,
     topicById,
+  };
+}
+
+async function collectSubjectContext(db, subjectId) {
+  const [structure, contentRows] = await Promise.all([
+    collectSubjectStructure(db, subjectId),
+    listAllContentItemsBySubject(db, { subjectId }),
+  ]);
+
+  const mcqs = contentRows
+    .filter((item) => String(item?.content_type || "").toLowerCase() === "mcq_bank")
+    .map(serializeMcqItem)
+    .filter(Boolean);
+
+  return {
+    ...structure,
+    mcqs,
+  };
+}
+
+async function collectSubjectMcqCounts(db, subjectId, topics = []) {
+  const rows = await listMcqCountsByContextForSubject(db, { subjectId });
+  const topicToChapter = new Map((Array.isArray(topics) ? topics : []).map((item) => [Number(item?.id || 0), Number(item?.chapterId || 0)]));
+  const topicCounts = new Map();
+  const chapterCounts = new Map();
+  let fullCount = 0;
+
+  for (const row of rows) {
+    const contextType = String(row?.context_type || "").trim().toLowerCase();
+    const contextId = Number(row?.context_id || 0);
+    const count = Number(row?.total || 0);
+    if (!Number.isInteger(contextId) || contextId <= 0 || count <= 0) {
+      if (count > 0) fullCount += count;
+      continue;
+    }
+
+    fullCount += count;
+    if (contextType === "chapter") {
+      chapterCounts.set(contextId, (chapterCounts.get(contextId) || 0) + count);
+      continue;
+    }
+    if (contextType === "topic") {
+      topicCounts.set(contextId, (topicCounts.get(contextId) || 0) + count);
+      const chapterId = topicToChapter.get(contextId) || 0;
+      if (chapterId > 0) chapterCounts.set(chapterId, (chapterCounts.get(chapterId) || 0) + count);
+    }
+  };
+
+  return {
+    fullCount,
+    chapterCounts,
+    topicCounts,
   };
 }
 
@@ -287,23 +519,12 @@ async function ensureSessionBelongsToUser(env, userId, sessionId) {
   return session;
 }
 
-async function syncAttemptProgress(env, attempt) {
-  const answers = await listAttemptAnswers(env.DB, { attemptId: attempt.id });
-  const totalQuestions = answers.length;
-  const answeredCount = answers.filter((item) => String(item?.selected_option || "").trim()).length;
-  const correctCount = answers.filter((item) => Number(item?.is_correct || 0) === 1).length;
+async function summarizeAttemptProgress(env, attempt) {
+  const summary = await summarizeAttemptAnswers(env.DB, { attemptId: attempt.id });
+  const totalQuestions = Number(summary?.totalQuestions || 0);
+  const answeredCount = Number(summary?.answeredCount || 0);
+  const correctCount = Number(summary?.correctCount || 0);
   const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-
-  await updateExamAttemptStatus(env.DB, {
-    attemptId: attempt.id,
-    status: attempt.status,
-    score,
-    correctCount,
-    answeredCount,
-    totalQuestions,
-    submittedAt: attempt.submittedAt,
-    exitedAt: attempt.exitedAt,
-  });
 
   return {
     totalQuestions,
@@ -315,7 +536,7 @@ async function syncAttemptProgress(env, attempt) {
 
 async function finalizeAttempt(env, attempt, reason) {
   if (!attempt || attempt.status !== "active") return attempt;
-  const progress = await syncAttemptProgress(env, attempt);
+  const progress = await summarizeAttemptProgress(env, attempt);
   const endedAt = nowIso();
   const status = reason === "exited" ? "exited" : reason === "expired" ? "expired" : "submitted";
 
@@ -336,6 +557,7 @@ async function finalizeAttempt(env, attempt, reason) {
     submittedAt: status === "submitted" || status === "expired" ? endedAt : "",
     exitedAt: status === "exited" ? endedAt : "",
   });
+  await syncUserActiveAttemptHint(env, attempt.userId, 0);
 
   const latest = await findExamAttemptById(env.DB, { attemptId: attempt.id });
   return serializeAttemptRow(latest);
@@ -370,7 +592,7 @@ async function buildAttemptPayload(env, userId, attemptId) {
   attempt = await autoExpireAttemptIfNeeded(env, attempt);
   const session = await ensureSessionBelongsToUser(env, userId, attempt.sessionId);
   const subject = await getSubjectOrThrow(env.DB, session.subjectId);
-  const context = await collectSubjectContext(env.DB, subject.id);
+  const context = await collectSubjectStructure(env.DB, subject.id);
   const answers = await listAttemptAnswersWithQuestions(env.DB, { attemptId: attempt.id });
 
   const questions = answers.map((row) => {
@@ -443,6 +665,7 @@ async function createAttemptFromSession(env, { session, userId }) {
   const orderedQuestionIds = shuffle(sessionQuestions.map((item) => Number(item?.id || 0)));
   const questionById = new Map(sessionQuestions.map((item) => [Number(item?.id || 0), item]));
 
+  const answerRows = [];
   for (let i = 0; i < orderedQuestionIds.length; i += 1) {
     const sessionQuestionId = orderedQuestionIds[i];
     const question = questionById.get(sessionQuestionId);
@@ -462,7 +685,7 @@ async function createAttemptFromSession(env, { session, userId }) {
     const correctIndex = shuffledPairs.findIndex((pair) => pair.key === originalCorrect);
     const correctOption = correctIndex >= 0 ? OPTION_KEYS[correctIndex] : "";
 
-    await createExamAttemptAnswer(env.DB, {
+    answerRows.push({
       attemptId,
       sessionQuestionId,
       questionOrder: i + 1,
@@ -471,7 +694,12 @@ async function createAttemptFromSession(env, { session, userId }) {
     });
   }
 
+  if (answerRows.length) {
+    await createExamAttemptAnswersBatch(env.DB, answerRows);
+  }
+
   const attemptRow = await findExamAttemptById(env.DB, { attemptId });
+  await syncUserActiveAttemptHint(env, userId, attemptId);
   return serializeAttemptRow(attemptRow);
 }
 
@@ -492,11 +720,13 @@ export async function getActiveExamAttemptForUser(env, userIdRaw) {
   };
 }
 
-export async function getExamSetupPayload(env, userIdRaw, subjectIdRaw) {
+export async function getExamSetupPayload(env, userIdRaw, subjectIdRaw, options = {}) {
   const userId = parsePositiveId(userIdRaw, "user id");
   const subjectId = parsePositiveId(subjectIdRaw, "subject id");
+  const setupContext = parseSetupContext(options?.contextType, options?.contextId);
   const active = await getActiveAttemptRow(env, userId);
   if (active) {
+    await syncUserActiveAttemptHint(env, userId, active.id);
     return {
       subject: await getSubjectOrThrow(env.DB, subjectId),
       activeAttempt: {
@@ -510,21 +740,35 @@ export async function getExamSetupPayload(env, userIdRaw, subjectIdRaw) {
   }
 
   const subject = await getSubjectOrThrow(env.DB, subjectId);
-  const context = await collectSubjectContext(env.DB, subject.id);
+  const context = await collectSubjectStructure(env.DB, subject.id);
+  const counts = await collectSubjectMcqCounts(env.DB, subject.id, context.topics);
+  const rootByNodeId = rootNodeMap(context.nodes, context.nodeById);
+  const rootOrder = [];
+  const rootSeen = new Set();
+  for (const node of context.nodes) {
+    const root = rootByNodeId.get(Number(node?.id || 0)) || null;
+    const rootId = Number(root?.id || 0);
+    if (!rootId || rootSeen.has(rootId)) continue;
+    rootSeen.add(rootId);
+    rootOrder.push({
+      id: rootId,
+      name: String(root?.displayName || root?.serverName || "Book"),
+    });
+  }
+  const hasMultipleBooks = rootOrder.length > 1;
 
-  const fullCount = context.mcqs.length;
+  const fullCount = counts.fullCount;
   const chapterPools = context.chapters.map((chapter) => {
     const node = context.nodeById.get(chapter.nodeId);
-    const count = filterPoolByScope({
-      scopeType: "chapter",
-      chapterId: chapter.id,
-      mcqs: context.mcqs,
-      topicById: context.topicById,
-    }).length;
+    const root = rootByNodeId.get(chapter.nodeId) || node || null;
+    const count = Number(counts.chapterCounts.get(chapter.id) || 0);
     return {
+      rootId: Number(root?.id || 0),
+      rootName: String(root?.displayName || root?.serverName || "Book"),
       nodeId: chapter.nodeId,
       chapterId: chapter.id,
       nodeName: node?.displayName || node?.serverName || "Section",
+      sectionName: node?.displayName || node?.serverName || "Section",
       chapterName: chapter.name,
       chapterNumber: chapter.chapterNumber,
       count,
@@ -535,23 +779,30 @@ export async function getExamSetupPayload(env, userIdRaw, subjectIdRaw) {
   const topicPools = context.topics.map((topic) => {
     const chapter = context.chapterById.get(topic.chapterId);
     const node = chapter ? context.nodeById.get(chapter.nodeId) : null;
-    const count = filterPoolByScope({
-      scopeType: "topic",
-      topicId: topic.id,
-      mcqs: context.mcqs,
-      topicById: context.topicById,
-    }).length;
+    const root = chapter ? (rootByNodeId.get(chapter.nodeId) || node || null) : null;
+    const count = Number(counts.topicCounts.get(topic.id) || 0);
     return {
       topicId: topic.id,
       chapterId: topic.chapterId,
+      rootId: Number(root?.id || 0),
+      rootName: String(root?.displayName || root?.serverName || "Book"),
       nodeId: Number(chapter?.nodeId || 0),
       nodeName: node?.displayName || node?.serverName || "Section",
+      sectionName: node?.displayName || node?.serverName || "Section",
       chapterName: chapter?.name || "Chapter",
       topicName: topic.name,
       count,
       questionCountOptions: buildQuestionCountOptions(count),
     };
   }).filter((item) => item.count > 0);
+  const fullQuestionCountOptions = buildQuestionCountOptions(fullCount);
+  const recommendation = buildSetupRecommendation({
+    originContextType: setupContext.contextType,
+    originContextId: setupContext.contextId,
+    chapterChoices: chapterPools,
+    topicChoices: topicPools,
+    fullQuestionCountOptions,
+  });
 
   return {
     subject,
@@ -559,13 +810,20 @@ export async function getExamSetupPayload(env, userIdRaw, subjectIdRaw) {
     options: {
       full: {
         count: fullCount,
-        questionCountOptions: buildQuestionCountOptions(fullCount),
+        questionCountOptions: fullQuestionCountOptions,
       },
       chapters: chapterPools,
       topics: topicPools,
       hasTopicScope: topicPools.length > 0,
       hasChapterScope: chapterPools.length > 0,
       durations: [5, 10, 15, 20, 30, 45, 60, 90, 120],
+      recommendation,
+      ui: {
+        templateCode: subject.templateCode || "",
+        hasMultipleBooks,
+        books: rootOrder,
+        nodeLabel: hasMultipleBooks ? "Book" : "Section",
+      },
     },
   };
 }
@@ -576,6 +834,7 @@ export async function startSubjectExam(request, env, userIdRaw, subjectIdRaw) {
 
   const active = await getActiveAttemptRow(env, userId);
   if (active) {
+    await syncUserActiveAttemptHint(env, userId, active.id);
     return {
       ok: true,
       resumed: true,
@@ -656,9 +915,10 @@ export async function startSubjectExam(request, env, userIdRaw, subjectIdRaw) {
     questionCount: requestedQuestionCount,
   });
 
+  const sessionQuestionRows = [];
   for (let index = 0; index < selectedQuestions.length; index += 1) {
     const question = selectedQuestions[index];
-    await createExamSessionQuestion(env.DB, {
+    sessionQuestionRows.push({
       sessionId,
       subjectId,
       sourceItemId: question.id,
@@ -668,6 +928,9 @@ export async function startSubjectExam(request, env, userIdRaw, subjectIdRaw) {
       originalCorrectOption: question.correctOption,
       sortOrder: index + 1,
     });
+  }
+  if (sessionQuestionRows.length) {
+    await createExamSessionQuestionsBatch(env.DB, sessionQuestionRows);
   }
 
   const session = await ensureSessionBelongsToUser(env, userId, sessionId);
@@ -704,6 +967,11 @@ export async function saveExamAttemptAnswer(request, env, userIdRaw, attemptIdRa
 
   const correctOption = String(answer?.correct_option || "").trim().toUpperCase();
   const isCorrect = Boolean(selectedOption) && selectedOption === correctOption;
+  const previousSelected = String(answer?.selected_option || "").trim().toUpperCase();
+  const previousAnswered = OPTION_KEYS.includes(previousSelected);
+  const previousCorrect = Number(answer?.is_correct || 0) === 1;
+  const nextAnswered = OPTION_KEYS.includes(selectedOption);
+  const nextCorrect = Boolean(isCorrect);
 
   await updateExamAttemptAnswer(env.DB, {
     attemptId,
@@ -712,14 +980,31 @@ export async function saveExamAttemptAnswer(request, env, userIdRaw, attemptIdRa
     isCorrect,
   });
 
-  const progress = await syncAttemptProgress(env, attempt);
+  const totalQuestions = Math.max(0, Number(attempt.totalQuestions || 0));
+  const answeredDelta = (nextAnswered ? 1 : 0) - (previousAnswered ? 1 : 0);
+  const correctDelta = (nextCorrect ? 1 : 0) - (previousCorrect ? 1 : 0);
+  const answeredCount = Math.max(0, Math.min(totalQuestions || Number.MAX_SAFE_INTEGER, Number(attempt.answeredCount || 0) + answeredDelta));
+  const correctCount = Math.max(0, Math.min(totalQuestions || Number.MAX_SAFE_INTEGER, Number(attempt.correctCount || 0) + correctDelta));
+  const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+  await updateExamAttemptStatus(env.DB, {
+    attemptId,
+    status: attempt.status,
+    score,
+    correctCount,
+    answeredCount,
+    totalQuestions,
+    submittedAt: attempt.submittedAt,
+    exitedAt: attempt.exitedAt,
+  });
+
   return {
     ok: true,
     stats: {
-      totalQuestions: progress.totalQuestions,
-      answeredCount: progress.answeredCount,
-      correctCount: progress.correctCount,
-      score: progress.score,
+      totalQuestions,
+      answeredCount,
+      correctCount,
+      score,
     },
   };
 }
@@ -851,7 +1136,7 @@ export async function getExamResultDetail(env, userIdRaw, sessionIdRaw, attemptI
   const sessionId = parsePositiveId(sessionIdRaw, "session id");
   const session = await ensureSessionBelongsToUser(env, userId, sessionId);
   const subject = await getSubjectOrThrow(env.DB, session.subjectId);
-  const context = await collectSubjectContext(env.DB, subject.id);
+  const context = await collectSubjectStructure(env.DB, subject.id);
 
   const attempts = (await listExamAttemptsBySession(env.DB, { sessionId, userId })).map(serializeAttemptRow);
   if (!attempts.length) throw new HttpError(404, "No attempts found for this exam");
@@ -905,6 +1190,7 @@ export async function retakeExamSession(env, userIdRaw, sessionIdRaw) {
 
   const active = await getActiveAttemptRow(env, userId);
   if (active) {
+    await syncUserActiveAttemptHint(env, userId, active.id);
     return {
       ok: true,
       resumed: true,

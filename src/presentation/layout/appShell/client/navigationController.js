@@ -23,20 +23,31 @@ export const APP_SHELL_CLIENT_NAVIGATION = `
     desktopMedia.addListener(() => setMenu(false));
   }
 
-  if (avatarButton && profilePanel) {
-    avatarButton.addEventListener('click', () => setProfile(!body.classList.contains('profile-open')), { signal });
-    document.addEventListener('click', (event) => {
-      if (!body.classList.contains('profile-open')) return;
-      if (profilePanel.contains(event.target) || avatarButton.contains(event.target)) return;
-      setProfile(false);
-    }, { signal });
-  }
+  if (avatarButton) {
+    avatarButton.addEventListener('click', () => {
+      const avatarHref = String(avatarButton.getAttribute('data-avatar-href') || '').trim();
+      if (avatarHref) {
+        setMenu(false);
+        setProfile(false);
+        setNotificationsOpen(false);
+        setNavigating(1800);
+        if (window.__appNavigate) window.__appNavigate(avatarHref);
+        else window.location.href = avatarHref;
+        return;
+      }
 
-  if (profileLogout && mainLogout) {
-    profileLogout.addEventListener('click', () => {
-      setProfile(false);
-      mainLogout.click();
+      if (profilePanel) {
+        setProfile(!body.classList.contains('profile-open'));
+      }
     }, { signal });
+
+    if (profilePanel) {
+      document.addEventListener('click', (event) => {
+        if (!body.classList.contains('profile-open')) return;
+        if (profilePanel.contains(event.target) || avatarButton.contains(event.target)) return;
+        setProfile(false);
+      }, { signal });
+    }
   }
 
   if (mainLogout) {

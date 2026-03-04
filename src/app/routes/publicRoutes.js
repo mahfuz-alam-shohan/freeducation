@@ -1,10 +1,10 @@
 import { loginPage } from "../../presentation/pages/login/index.js";
 import { homePage } from "../../presentation/pages/home/index.js";
 import { classSubjectsPage, publicChapterPage, publicSectionPage, publicSubjectPage } from "../../presentation/pages/academics/index.js";
+import { examSessionPage, examSetupPage } from "../../presentation/pages/exam/index.js";
+import { examResultDetailPage, examResultsPage } from "../../presentation/pages/results/index.js";
 import { socialCreatePage, socialMyPostsPage, socialPage, socialPostPage, socialSearchPage } from "../../presentation/pages/social/index.js";
 import { profilePage } from "../../presentation/pages/profile/index.js";
-import { SOCIAL_STYLE } from "../../presentation/pages/social/style.js";
-import { renderProfileSocialContextSidebar } from "../../presentation/pages/profile/components/socialContextSidebar.js";
 import {
   LOGGED_OUT_NAV_SECTIONS,
   PRIMARY_NAV_SECTIONS,
@@ -33,6 +33,7 @@ import { searchProfilesForSocial } from "../../features/user/userDirectoryServic
 import { HttpError } from "../../shared/http/errors.js";
 import { profilePathForRole, USER_TYPES } from "../../shared/auth/roles.js";
 import { imageResponse } from "../../features/user/profile/storage.js";
+import { clearActiveAttemptForUserSessions } from "../../infrastructure/db/sessionsRepository.js";
 import {
   getPublicChapterReader,
   getPublicModuleClassImageMeta,
@@ -41,6 +42,18 @@ import {
   getPublicSubjectNodeChapters,
   listPublicModuleClasses,
 } from "../../features/modules/modulesService.js";
+import {
+  exitExamAttempt,
+  getActiveExamAttemptForUser,
+  getExamAttemptPagePayload,
+  getExamResultDetail,
+  getExamResultsOverview,
+  getExamSetupPayload,
+  retakeExamSession,
+  saveExamAttemptAnswer,
+  startSubjectExam,
+  submitExamAttempt,
+} from "../../features/modules/examService.js";
 
 function resolvePublicNav(userType = "") {
   const role = String(userType || "").toLowerCase();
@@ -76,26 +89,149 @@ export async function handlePublicRoute(request, env, url) {
   const publicProfileImageMatch = url.pathname.match(/^\/api\/public\/profiles\/(\d+)\/profile\/image\/(avatar|cover)$/);
   const publicClassImageMatch = url.pathname.match(/^\/api\/public\/classes\/(\d+)\/image$/);
   const classSubjectsPageMatch = url.pathname.match(/^\/classes\/(\d+)$/);
+  const subjectExamSetupPageMatch = url.pathname.match(/^\/subjects\/(\d+)\/exam$/);
   const publicSubjectPageMatch = url.pathname.match(/^\/subjects\/(\d+)$/);
   const publicSubjectSectionPageMatch = url.pathname.match(/^\/subjects\/(\d+)\/sections\/(\d+)$/);
   const publicSubjectChapterPageMatch = url.pathname.match(/^\/subjects\/(\d+)\/chapters\/(\d+)$/);
+  const examAttemptPageMatch = url.pathname.match(/^\/exam\/(\d+)$/);
+  const examResultsDetailPageMatch = url.pathname.match(/^\/results\/(\d+)$/);
+  const startExamApiMatch = url.pathname.match(/^\/api\/public\/subjects\/(\d+)\/exams\/start$/);
+  const saveExamAnswerApiMatch = url.pathname.match(/^\/api\/public\/exams\/attempts\/(\d+)\/answer$/);
+  const submitExamApiMatch = url.pathname.match(/^\/api\/public\/exams\/attempts\/(\d+)\/submit$/);
+  const exitExamApiMatch = url.pathname.match(/^\/api\/public\/exams\/attempts\/(\d+)\/exit$/);
+  const retakeExamApiMatch = url.pathname.match(/^\/api\/public\/exams\/sessions\/(\d+)\/retake$/);
+
+  let userLoaded = false;
+  let userCache = null;
+  const getCurrentUser = async () => {
+    if (!userLoaded) {
+      userLoaded = true;
+      userCache = await getAuthenticatedUser(request, env);
+    }
+    return userCache;
+  };
+
+  const isPageRequest = request.method === "GET" && !url.pathname.startsWith("/api/");
+  if (isPageRequest) {
+    const user = await getCurrentUser();
+    if (user) {
+      const hintedAttemptId = Number(user.session_active_attempt_id || 0);
+      const currentAttemptId = examAttemptPageMatch ? Number.parseInt(examAttemptPageMatch[1], 10) : 0;
+      if (hintedAttemptId > 0 && (!Number.isInteger(currentAttemptId) || currentAttemptId !== hintedAttemptId)) {
+        const active = await getActiveExamAttemptForUser(env, user.id);
+        const activeAttemptId = Number(active?.attempt?.id || 0);
+        if (activeAttemptId > 0) {
+          return redirect(new URL(`/exam/${activeAttemptId}`, url), 302);
+        }
+        await clearActiveAttemptForUserSessions(env.DB, { userId: user.id });
+      }
+    }
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/public/exams/active") {
+    const user = await getCurrentUser();
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    const active = await getActiveExamAttemptForUser(env, user.id);
+    if (!active?.attempt && Number(user.session_active_attempt_id || 0) > 0) {
+      await clearActiveAttemptForUserSessions(env.DB, { userId: user.id });
+    }
+    return json(active);
+  }
+
+  if (request.method === "GET" && subjectExamSetupPageMatch) {
+    const user = await getCurrentUser();
+    if (!user) return redirect(new URL("/login", url), 302);
+    const setupPayload = await getExamSetupPayload(env, user.id, subjectExamSetupPageMatch[1], {
+      contextType: url.searchParams.get("contextType"),
+      contextId: url.searchParams.get("contextId"),
+    });
+    return html(examSetupPage({
+      user,
+      navItems: resolvePublicNav(user?.user_type),
+      homePath: resolvePublicHomePath(user?.user_type),
+      subject: setupPayload.subject,
+      setupPayload,
+    }));
+  }
+
+  if (request.method === "POST" && startExamApiMatch) {
+    const user = await getCurrentUser();
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    return json(await startSubjectExam(request, env, user.id, startExamApiMatch[1]));
+  }
+
+  if (request.method === "GET" && examAttemptPageMatch) {
+    const user = await getCurrentUser();
+    if (!user) return redirect(new URL("/login", url), 302);
+    const payload = await getExamAttemptPagePayload(env, user.id, examAttemptPageMatch[1]);
+    return html(examSessionPage(payload));
+  }
+
+  if (request.method === "PATCH" && saveExamAnswerApiMatch) {
+    const user = await getCurrentUser();
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    return json(await saveExamAttemptAnswer(request, env, user.id, saveExamAnswerApiMatch[1]));
+  }
+
+  if (request.method === "POST" && submitExamApiMatch) {
+    const user = await getCurrentUser();
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    return json(await submitExamAttempt(env, user.id, submitExamApiMatch[1]));
+  }
+
+  if (request.method === "POST" && exitExamApiMatch) {
+    const user = await getCurrentUser();
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    return json(await exitExamAttempt(env, user.id, exitExamApiMatch[1]));
+  }
+
+  if (request.method === "GET" && url.pathname === "/results") {
+    const user = await getCurrentUser();
+    if (!user) return redirect(new URL("/login", url), 302);
+    const payload = await getExamResultsOverview(env, user.id);
+    return html(examResultsPage({
+      user,
+      navItems: resolvePublicNav(user?.user_type),
+      homePath: resolvePublicHomePath(user?.user_type),
+      sessions: payload.sessions,
+    }));
+  }
+
+  if (request.method === "GET" && examResultsDetailPageMatch) {
+    const user = await getCurrentUser();
+    if (!user) return redirect(new URL("/login", url), 302);
+    const attemptQuery = String(url.searchParams.get("attempt") || "").trim();
+    const detail = await getExamResultDetail(env, user.id, examResultsDetailPageMatch[1], attemptQuery || null);
+    return html(examResultDetailPage({
+      user,
+      navItems: resolvePublicNav(user?.user_type),
+      homePath: resolvePublicHomePath(user?.user_type),
+      detail,
+    }));
+  }
+
+  if (request.method === "POST" && retakeExamApiMatch) {
+    const user = await getCurrentUser();
+    if (!user) return json({ error: "Unauthorized" }, 401);
+    return json(await retakeExamSession(env, user.id, retakeExamApiMatch[1]));
+  }
 
   if (request.method === "GET" && url.pathname === "/") {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const featured = await listPublicModuleClasses(env, { onlyHome: true });
     const all = await listPublicModuleClasses(env, { onlyHome: false });
     return html(homePage({ user, featuredClasses: featured.classes, allClasses: all.classes, showAllClasses: false }));
   }
 
   if (request.method === "GET" && url.pathname === "/classes") {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const featured = await listPublicModuleClasses(env, { onlyHome: true });
     const all = await listPublicModuleClasses(env, { onlyHome: false });
     return html(homePage({ user, featuredClasses: featured.classes, allClasses: all.classes, showAllClasses: true }));
   }
 
   if (request.method === "GET" && classSubjectsPageMatch) {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const payload = await getPublicModuleClassSubjects(env, classSubjectsPageMatch[1]);
     return html(classSubjectsPage({
       user,
@@ -107,7 +243,7 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "GET" && publicSubjectPageMatch) {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const payload = await getPublicSubjectBooks(env, publicSubjectPageMatch[1]);
     const roots = Array.isArray(payload?.roots) ? payload.roots : [];
     const templateCode = String(payload?.subject?.templateCode || "").trim().toUpperCase();
@@ -143,7 +279,7 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "GET" && publicSubjectSectionPageMatch) {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const payload = await getPublicSubjectNodeChapters(env, publicSubjectSectionPageMatch[1], publicSubjectSectionPageMatch[2]);
     return html(publicSectionPage({
       user,
@@ -156,7 +292,7 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "GET" && publicSubjectChapterPageMatch) {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const payload = await getPublicChapterReader(env, publicSubjectChapterPageMatch[1], publicSubjectChapterPageMatch[2]);
     return html(publicChapterPage({
       user,
@@ -165,10 +301,8 @@ export async function handlePublicRoute(request, env, url) {
       subject: payload.subject,
       node: payload.node,
       chapter: payload.chapter,
-      shortNotes: payload.shortNotes,
-      mcqBank: payload.mcqBank,
-      cqBank: payload.cqBank,
-      videos: payload.videos,
+      contentModules: payload.contentModules,
+      contentItemsByType: payload.contentItemsByType,
     }));
   }
 
@@ -188,12 +322,14 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "GET" && publicProfileMatch) {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     const profileUserId = parsePositiveId(publicProfileMatch[1], "profile id");
     const fromSocial = String(url.searchParams.get("from") || "").toLowerCase() === "social";
 
-    if (viewer && Number(viewer.id) === profileUserId && !fromSocial) {
-      return redirect(new URL(profilePathForRole(viewer.user_type), url), 302);
+    if (viewer && Number(viewer.id) === profileUserId) {
+      const ownProfileUrl = new URL(profilePathForRole(viewer.user_type), url);
+      if (fromSocial) ownProfileUrl.searchParams.set("from", "social");
+      return redirect(ownProfileUrl, 302);
     }
 
     const profileUser = await getUserProfile(env, profileUserId);
@@ -205,42 +341,33 @@ export async function handlePublicRoute(request, env, url) {
       readOnly: true,
       profileUserId,
       canInteract: Boolean(viewer),
-      ...(fromSocial
-        ? {
-          activeMenu: "social",
-          pageClass: "page-social profile-social-context",
-          pageStyles: SOCIAL_STYLE,
-          rightSidebar: renderProfileSocialContextSidebar({
-            canInteract: Boolean(viewer),
-            profileUserId,
-          }),
-        }
-        : {}),
+      showBackToFeed: fromSocial,
+      backToFeedHref: "/social",
     }));
   }
 
   if (request.method === "GET" && url.pathname === "/social") {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     return html(socialPage(user));
   }
 
   if (request.method === "GET" && url.pathname === "/social/my-posts") {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     return html(socialMyPostsPage(user));
   }
 
   if (request.method === "GET" && url.pathname === "/social/create") {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     return html(socialCreatePage(user));
   }
 
   if (request.method === "GET" && url.pathname === "/social/search") {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     return html(socialSearchPage(user, url.searchParams.get("q") || ""));
   }
 
   if (request.method === "GET" && socialPostPageMatch) {
-    const user = await getAuthenticatedUser(request, env);
+    const user = await getCurrentUser();
     const postId = parsePositiveId(socialPostPageMatch[1], "post id");
     return html(socialPostPage(user, postId));
   }
@@ -264,7 +391,7 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/social/feed") {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await socialFeed(env, viewer, {
       scope: url.searchParams.get("scope") || "",
       cursor: url.searchParams.get("cursor") || "",
@@ -275,19 +402,19 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/social/notifications") {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await socialNotifications(env, viewer, {
       limit: url.searchParams.get("limit") || "",
     }));
   }
 
   if (request.method === "POST" && url.pathname === "/api/social/notifications/seen") {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await socialNotificationsSeen(env, viewer));
   }
 
   if (request.method === "POST" && url.pathname === "/api/social/notifications/read") {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await socialNotificationRead(request, env, viewer));
   }
 
@@ -312,22 +439,22 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/social/posts") {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await createPost(request, env, viewer));
   }
 
   if (request.method === "GET" && socialPostMatch) {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await socialPost(env, viewer, socialPostMatch[1]));
   }
 
   if (request.method === "DELETE" && socialPostMatch) {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await deletePost(env, viewer, socialPostMatch[1]));
   }
 
   if (request.method === "POST" && socialMatch) {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     const postId = socialMatch[1];
     const action = socialMatch[2];
     if (action === "comments") return json(await createComment(request, env, viewer, postId));
@@ -335,7 +462,7 @@ export async function handlePublicRoute(request, env, url) {
   }
 
   if (request.method === "POST" && socialCommentReactionMatch) {
-    const viewer = await getAuthenticatedUser(request, env);
+    const viewer = await getCurrentUser();
     return json(await toggleCommentReaction(env, viewer, socialCommentReactionMatch[1]));
   }
 

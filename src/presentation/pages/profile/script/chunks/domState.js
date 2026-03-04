@@ -14,6 +14,7 @@ const profilePostsStatus = document.getElementById('profilePostsStatus');
 const profilePostsLoadMore = document.getElementById('profilePostsLoadMore');
 const openPasswordForm = document.getElementById('openPasswordForm');
 const passwordForm = document.getElementById('passwordForm');
+const profileLogoutButton = document.getElementById('profileLogoutButton');
 const profileMsg = document.getElementById('profileMsg');
 const profilePage = document.querySelector('.profile-page');
 const profilePageLoader = document.getElementById('profilePageLoader');

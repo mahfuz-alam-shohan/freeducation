@@ -35,10 +35,13 @@ export async function handlePortalUserRoute({ request, env, url, portal, user })
   }
 
   if (request.method === "GET" && url.pathname === `${portal.portalPrefix}/profile`) {
+    const fromSocial = String(url.searchParams.get("from") || "").toLowerCase() === "social";
     return html(profilePage(user, {
       navItems: portal.navItems,
       homePath: portal.homePath,
       apiBase: portal.defaultApiBase,
+      showBackToFeed: fromSocial,
+      backToFeedHref: "/social",
     }));
   }
 

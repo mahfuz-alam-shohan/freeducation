@@ -1,5 +1,7 @@
 export const PROFILE_STYLE_LAYOUT = `
 .profile-page{--profile-motion-scale:1.7;--social-post-max-w:560px;position:relative;display:grid;gap:var(--space-2);overflow-x:hidden}
+.profile-context-nav{display:flex;align-items:center}
+.profile-back-feed{display:inline-flex;align-items:center;height:34px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);text-decoration:none;font-size:.86rem;font-weight:700;letter-spacing:.01em}
 .profile-page.is-loading{pointer-events:none}
 .profile-page-loader{position:absolute;inset:0;z-index:5;display:grid;align-content:start;gap:var(--space-2);padding:0;opacity:0;pointer-events:none;transition:opacity calc(.2s * var(--profile-motion-scale)) ease}
 .profile-page.is-loading .profile-page-loader{opacity:1;pointer-events:auto}

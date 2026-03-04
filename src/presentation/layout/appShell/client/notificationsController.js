@@ -45,10 +45,14 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
     if (!(notificationToggle instanceof HTMLElement)) return;
     const unreadCount = Math.max(0, Number(options?.unreadCount || 0));
     const hasUnseen = Boolean(options?.hasUnseen);
+    const hasUnread = unreadCount > 0;
+    const unreadLabel = unreadCount > 99 ? '99+' : String(unreadCount);
     notificationsUnreadCount = unreadCount;
     notificationsHasUnseen = hasUnseen;
     notificationToggle.classList.toggle('has-unseen', hasUnseen);
+    notificationToggle.classList.toggle('has-unread', hasUnread);
     notificationToggle.dataset.unreadCount = String(unreadCount);
+    notificationToggle.dataset.unreadLabel = hasUnread ? unreadLabel : '';
     const label = unreadCount > 0
       ? ('Open notifications (' + unreadCount + ' unread)')
       : 'Open notifications';
@@ -68,7 +72,7 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
       ? '<span class="app-notification-avatar has-image"><img src="' + escapeNotificationHtml(actorAvatarUrl) + '" alt="' + escapeNotificationHtml(actorName) + ' avatar" loading="lazy"></span>'
       : '<span class="app-notification-avatar">' + escapeNotificationHtml(profileInitial(actorName)) + '</span>';
 
-    return '<a class="app-notification-item' + (isRead ? '' : ' is-unread') + '" data-notification-id="' + escapeNotificationHtml(notificationId) + '" href="' + escapeNotificationHtml(href) + '">' +
+    return '<a class="app-notification-item' + (isRead ? ' is-read' : ' is-unread') + '" data-notification-id="' + escapeNotificationHtml(notificationId) + '" href="' + escapeNotificationHtml(href) + '">' +
       avatarMarkup +
       '<span class="app-notification-body">' +
         '<span class="app-notification-text">' + escapeNotificationHtml(text) + '</span>' +
@@ -242,19 +246,23 @@ export const APP_SHELL_CLIENT_NOTIFICATIONS = `
     }, { signal });
   }
 
-  const refreshNotifications = () => {
+  const refreshNotifications = (options = {}) => {
     loadNotifications({
-      force: true,
+      force: Boolean(options.force),
       background: !body.classList.contains('notifications-open'),
       render: body.classList.contains('notifications-open'),
     }).catch(() => {});
   };
 
-  window.addEventListener('focus', refreshNotifications, { signal });
+  window.addEventListener('focus', () => refreshNotifications({ force: true }), { signal });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    refreshNotifications({ force: true });
+  }, { signal });
 
   const notificationPollTimer = window.setInterval(() => {
     if (document.visibilityState !== 'visible') return;
-    refreshNotifications();
+    refreshNotifications({ force: false });
   }, 45000);
   signal.addEventListener('abort', () => window.clearInterval(notificationPollTimer), { once: true });
 `;

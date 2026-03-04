@@ -1,4 +1,5 @@
 import { renderAppShellLayout } from "../../layout/appShell/index.js";
+import { publicReaderModules } from "../../../shared/modules/contentModules.js";
 
 const ACADEMICS_STYLE = `
 .acad-wrap{display:grid;gap:10px;padding:12px var(--space-2) var(--space-2)}
@@ -11,9 +12,9 @@ const ACADEMICS_STYLE = `
 .acad-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,182px));justify-content:flex-start;gap:10px}
 .acad-card-link,.acad-root-card{display:grid;gap:0;text-decoration:none;color:inherit;background:transparent;border:0;padding:0;cursor:pointer;min-width:0;max-width:100%;width:100%}
 .acad-root-card{appearance:none;-webkit-appearance:none;text-align:left;font:inherit;line-height:inherit}
-.acad-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:linear-gradient(145deg,#cfd7e8,#8e9ab6)}
+.acad-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--surface-strong) 28%,#d8e3f3),color-mix(in srgb,var(--accent) 34%,#8799b6))}
 .acad-poster img{display:block;width:100%;height:100%;max-width:100%;object-fit:cover;object-position:center}
-.acad-poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:1rem;font-weight:800;letter-spacing:.03em;color:#f4f7ff;background:linear-gradient(145deg,#6d7ba0,#3e4f76)}
+.acad-poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:1rem;font-weight:800;letter-spacing:.03em;color:#f4f8ff;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 38%,#4b658b),color-mix(in srgb,var(--accent) 62%,#233a60))}
 .acad-card-name{margin:0;padding:6px 2px 0;font-size:.88rem;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acad-card-meta{margin:0;padding:1px 2px 0;font-size:.74rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acad-empty{margin:0;padding:14px;border:1px dashed var(--border);border-radius:10px;color:var(--text-muted)}
@@ -71,7 +72,7 @@ const ACADEMICS_STYLE = `
 .acad-page-gap{padding:0 2px;color:var(--text-muted)}
 .acad-reader-block{display:grid;gap:10px;min-width:0}
 .acad-reader-block h3{margin:0;font-size:.92rem}
-.acad-exam-fab{position:fixed;right:14px;bottom:16px;z-index:40;height:42px;padding:0 14px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 72%,var(--border));background:var(--accent);color:var(--accent-contrast);text-decoration:none;display:inline-flex;align-items:center;font-weight:800;letter-spacing:.01em;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 30%,transparent)}
+.acad-exam-fab{position:fixed!important;right:max(14px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));left:auto!important;z-index:80;height:44px;padding:0 15px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 72%,var(--border));background:var(--accent);color:var(--accent-contrast);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.01em;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 30%,transparent);width:auto!important;max-width:max-content!important;min-width:unset!important;margin:0!important;transform:translateZ(0)}
 .acad-exam-fab:hover{filter:brightness(1.03)}
 @media (max-width:760px){.acad-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;gap:10px}.acad-root-grid{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;gap:10px}.acad-content-columns{grid-template-columns:1fr}}
 @media (max-width:380px){.acad-card-grid,.acad-root-grid{grid-template-columns:1fr}}
@@ -242,6 +243,22 @@ function initialsFromName(name) {
   return safeName.split(/\s+/).map((part) => part.slice(0, 1).toUpperCase()).join("").slice(0, 3) || "NA";
 }
 
+function sectionHeadingMeta(node = {}) {
+  const label = String(node?.displayName || node?.serverName || "Section").trim() || "Section";
+  const normalized = label.toLowerCase();
+  const chapterLike = normalized === "chapter" || normalized === "chapters";
+  if (chapterLike) {
+    return {
+      subtitle: "Chapters",
+      title: "Chapters",
+    };
+  }
+  return {
+    subtitle: `${label} | Chapters`,
+    title: `${label} Chapters`,
+  };
+}
+
 function cardMarkup({ href = "", name = "", imageUrl = "", meta = "", cardClass = "" } = {}) {
   const title = String(name || "").trim() || "Untitled";
   const safeHref = String(href || "").trim();
@@ -255,10 +272,19 @@ function cardMarkup({ href = "", name = "", imageUrl = "", meta = "", cardClass 
   return `<div class="acad-card-link ${escapeHtml(cardClass)}">${body}</div>`;
 }
 
-function examFab(subjectId) {
+function examFab(subjectId, options = {}) {
   const id = Number(subjectId || 0);
   if (!id) return "";
-  return `<a class="acad-exam-fab" href="/subjects/${id}/exam">Exam</a>`;
+  const contextType = String(options?.contextType || "").trim().toLowerCase();
+  const contextId = Number.parseInt(String(options?.contextId || ""), 10);
+  const params = new URLSearchParams();
+  if (contextType && Number.isInteger(contextId) && contextId > 0) {
+    params.set("contextType", contextType);
+    params.set("contextId", String(contextId));
+  }
+  const query = params.toString();
+  const href = query ? `/subjects/${id}/exam?${query}` : `/subjects/${id}/exam`;
+  return `<a class="acad-exam-fab" href="${escapeHtml(href)}">Exam</a>`;
 }
 
 function renderShell({ title, user, navItems, homePath, content }) {
@@ -335,6 +361,9 @@ export function publicSubjectPage({ user, navItems, homePath, subject, roots = [
 export function publicSectionPage({ user, navItems, homePath, subject, node, chapters = [] } = {}) {
   const safeSubject = subject || {};
   const safeNode = node || {};
+  const headingMeta = sectionHeadingMeta(safeNode);
+  const isRootNode = !Number(safeNode?.parentNodeId || 0);
+  const backLabel = isRootNode ? "Back to subject" : "Back to books";
   const rows = Array.isArray(chapters) ? chapters : [];
   const cards = rows.length
     ? `<div class="acad-card-grid">${rows.map((chapter) => cardMarkup({
@@ -345,9 +374,9 @@ export function publicSectionPage({ user, navItems, homePath, subject, node, cha
       cardClass: "acad-chapter-card",
     })).join("")}</div>`
     : `<p class="acad-empty">No chapters added yet.</p>`;
-  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")} | Chapters</p></div><a class="acad-back" href="/subjects/${Number(safeSubject?.id || 0)}">Back to books</a></header>${cards}</section>${examFab(safeSubject?.id)}`;
+  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(headingMeta.subtitle)}</p></div><a class="acad-back" href="/subjects/${Number(safeSubject?.id || 0)}">${escapeHtml(backLabel)}</a></header>${cards}</section>${examFab(safeSubject?.id, { contextType: "node", contextId: safeNode?.id })}`;
   return renderShell({
-    title: `${String(safeNode?.displayName || safeNode?.serverName || "Section")} Chapters`,
+    title: headingMeta.title,
     user,
     navItems,
     homePath,
@@ -436,19 +465,49 @@ function tabPanelMarkup(panelKey, items = [], mode = "rich", active = false) {
   return `<section class="${stateClass}" data-tab-panel="${escapeHtml(panelKey)}"${hiddenAttr}>${content}</section>`;
 }
 
-export function publicChapterPage({ user, navItems, homePath, subject, node, chapter, shortNotes = [], mcqBank = [], cqBank = [], videos = [] } = {}) {
+export function publicChapterPage({
+  user,
+  navItems,
+  homePath,
+  subject,
+  node,
+  chapter,
+  contentModules = [],
+  contentItemsByType = {},
+} = {}) {
   const safeSubject = subject || {};
   const safeNode = node || {};
   const safeChapter = chapter || {};
-  const tabs = `<div class="acad-tabs" data-acad-tabs><button type="button" class="acad-tab-btn is-active" data-tab-key="short" aria-selected="true">Short Notes</button><button type="button" class="acad-tab-btn" data-tab-key="mcq" aria-selected="false">MCQ Bank</button><button type="button" class="acad-tab-btn" data-tab-key="cq" aria-selected="false">CQ Bank</button><button type="button" class="acad-tab-btn" data-tab-key="videos" aria-selected="false">Videos</button></div>`;
-  const panels = [
-    tabPanelMarkup("short", shortNotes, "short", true),
-    tabPanelMarkup("mcq", mcqBank, "mcq", false),
-    tabPanelMarkup("cq", cqBank, "rich", false),
-    tabPanelMarkup("videos", videos, "rich", false),
-  ].join("");
+  const mapFromPayload = (contentItemsByType && typeof contentItemsByType === "object") ? contentItemsByType : {};
+  const inferredModules = publicReaderModules(Object.keys(mapFromPayload));
+  const readerModules = (Array.isArray(contentModules) && contentModules.length ? contentModules : inferredModules)
+    .map((item) => ({
+      key: String(item?.key || "").trim().toLowerCase(),
+      label: String(item?.label || "").trim() || String(item?.key || ""),
+      tabKey: String(item?.tabKey || item?.key || "").trim().toLowerCase(),
+      panelMode: String(item?.panelMode || "rich").trim().toLowerCase(),
+    }))
+    .filter((item, index, list) => item.key && item.tabKey && list.findIndex((entry) => entry.tabKey === item.tabKey) === index);
 
-  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeChapter?.name || "Chapter")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")}</p></div><a class="acad-back" href="/subjects/${Number(safeSubject?.id || 0)}/sections/${Number(safeNode?.id || 0)}">Back to chapters</a></header><section class="acad-reader-block"><h3>Contents</h3>${tabs}${panels}</section></section>${examFab(safeSubject?.id)}`;
+  const getItemsForType = (type) => {
+    const key = String(type || "").trim().toLowerCase();
+    const direct = mapFromPayload?.[key];
+    if (Array.isArray(direct)) return direct;
+    return [];
+  };
+
+  const tabs = readerModules.length
+    ? `<div class="acad-tabs" data-acad-tabs>${readerModules.map((moduleItem, index) => `<button type="button" class="acad-tab-btn${index === 0 ? " is-active" : ""}" data-tab-key="${escapeHtml(moduleItem.tabKey)}" aria-selected="${index === 0 ? "true" : "false"}">${escapeHtml(moduleItem.label)}</button>`).join("")}</div>`
+    : "";
+  const panels = readerModules.map((moduleItem, index) => tabPanelMarkup(
+    moduleItem.tabKey,
+    getItemsForType(moduleItem.key),
+    moduleItem.panelMode,
+    index === 0,
+  )).join("");
+  const readerContent = readerModules.length ? `${tabs}${panels}` : `<p class="acad-empty">No content tabs configured for this chapter.</p>`;
+
+  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeChapter?.name || "Chapter")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")}</p></div><a class="acad-back" href="/subjects/${Number(safeSubject?.id || 0)}/sections/${Number(safeNode?.id || 0)}">Back to chapters</a></header><section class="acad-reader-block"><h3>Contents</h3>${readerContent}</section></section>${examFab(safeSubject?.id, { contextType: "chapter", contextId: safeChapter?.id })}`;
   return renderShell({
     title: String(safeChapter?.name || "Chapter"),
     user,

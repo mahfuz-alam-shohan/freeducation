@@ -1,8 +1,16 @@
 export const SOCIAL_SCRIPT_RENDER = `
   const postUi = window.__socialPostUi;
+  const viewerId = Number.parseInt(String(page?.dataset?.viewerId || 0), 10) || 0;
+  const viewerProfilePath = String(page?.dataset?.viewerProfilePath || '').trim();
+  const buildProfileHref = (targetUserId) => {
+    const safeId = Number(targetUserId || 0);
+    if (!safeId) return '';
+    if (viewerId > 0 && safeId === viewerId && viewerProfilePath) return viewerProfilePath + '?from=social';
+    return '/profile/' + safeId + '?from=social';
+  };
   const profileHrefForAuthor = (author) => {
     const authorId = Number(author?.id || 0);
-    return authorId > 0 ? '/profile/' + authorId + '?from=social' : '';
+    return buildProfileHref(authorId);
   };
 
   const renderAvatar = (author) => {
@@ -27,14 +35,17 @@ export const SOCIAL_SCRIPT_RENDER = `
     const name = escapeHtml(rawName);
     const role = escapeHtml(profile?.userType || profile?.role || '');
     const email = escapeHtml(profile?.email || '');
-    const profileUrl = escapeHtml(profile?.profileUrl || ('/profile/' + id + '?from=social'));
+    const profileUrlRaw = (viewerId > 0 && id === viewerId)
+      ? buildProfileHref(id)
+      : String(profile?.profileUrl || buildProfileHref(id));
+    const profileUrl = escapeHtml(profileUrlRaw);
     const avatarUrl = String(profile?.avatarUrl || '').trim();
     const avatarInitial = escapeHtml(rawName.slice(0, 1).toUpperCase() || 'U');
     const avatarMarkup = avatarUrl
       ? '<span class="avatar"><img src="' + escapeHtml(avatarUrl) + '" alt="' + name + ' avatar" loading="lazy"></span>'
       : '<span class="avatar">' + avatarInitial + '</span>';
     const compactClass = options?.compact ? ' social-profile-search-item-compact' : '';
-    const subtitle = role && email ? (role + ' · ' + email) : (role || email || 'Profile');
+    const subtitle = role && email ? (role + ' - ' + email) : (role || email || 'Profile');
     return '<a class="social-profile-search-item' + compactClass + '" href="' + profileUrl + '" data-action="social-open-profile" data-profile-id="' + id + '">' +
       '<span class="social-profile-search-avatar">' + avatarMarkup + '</span>' +
       '<span class="social-profile-search-text">' +
@@ -227,9 +238,10 @@ export const SOCIAL_SCRIPT_RENDER = `
     if (mode !== 'post' || !Number.isInteger(detailPostId) || detailPostId <= 0) return false;
     const post = getPostById(detailPostId);
     if (!post) return false;
-    const normalized = normalizeDetailImageIndex(post, { index: activeDetailImageIndex + Number(step || 0), wrap: true });
+    const safeStep = Number(step || 0);
+    const normalized = normalizeDetailImageIndex(post, { index: activeDetailImageIndex + safeStep, wrap: true });
     if (!normalized.list.length) return false;
-    renderDetailView(post);
+    renderDetailView(post, { imageMotion: true, imageDirection: safeStep < 0 ? -1 : 1 });
     return true;
   };
 
@@ -245,6 +257,9 @@ export const SOCIAL_SCRIPT_RENDER = `
       const imageSrc = baseImageSrc
         ? baseImageSrc + (post.updatedAt ? (baseImageSrc.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(post.updatedAt) : '')
         : '';
+      const detailMotionClass = options.imageMotion
+        ? (Number(options.imageDirection || 0) < 0 ? ' is-switching is-switching-prev' : ' is-switching is-switching-next')
+        : '';
       const hasMultiple = normalized.list.length > 1;
       const navControls = hasMultiple
         ? (
@@ -253,9 +268,12 @@ export const SOCIAL_SCRIPT_RENDER = `
           '<div class="post-media-counter">' + (normalized.index + 1) + ' / ' + normalized.list.length + '</div>'
         )
         : '';
+      const detailBgStyle = imageSrc
+        ? (' style="--detail-bg-image:url(&quot;' + escapeHtml(imageSrc) + '&quot;)"')
+        : '';
       return '<div class="post-media post-media-detail">' +
-        '<figure class="post-media-item post-media-item-detail">' +
-          '<img class="post-image post-image-detail" src="' + escapeHtml(imageSrc) + '" data-base-src="' + escapeHtml(baseImageSrc) + '" alt="Post image" loading="lazy" decoding="async" fetchpriority="high" onerror="markBrokenPostImage(this.dataset.baseSrc);">' +
+        '<figure class="post-media-item post-media-item-detail"' + detailBgStyle + '>' +
+          '<img class="post-image post-image-detail' + detailMotionClass + '" src="' + escapeHtml(imageSrc) + '" data-base-src="' + escapeHtml(baseImageSrc) + '" alt="Post image" loading="lazy" decoding="async" fetchpriority="high" onerror="markBrokenPostImage(this.dataset.baseSrc);">' +
           navControls +
         '</figure>' +
       '</div>';
@@ -265,7 +283,7 @@ export const SOCIAL_SCRIPT_RENDER = `
       const imageSrc = baseImageSrc
         ? baseImageSrc + (post.updatedAt ? (baseImageSrc.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(post.updatedAt) : '')
         : '';
-      const imageTag = '<img class="post-image" src="' + escapeHtml(imageSrc) + '" data-base-src="' + escapeHtml(baseImageSrc) + '" alt="Post image" loading="lazy" decoding="async" fetchpriority="low" onerror="markBrokenPostImage(this.dataset.baseSrc);this.closest(\\'.post-media-item\\').style.display=\\'none\\';">';
+      const imageTag = '<img class="post-image" src="' + escapeHtml(imageSrc) + '" data-base-src="' + escapeHtml(baseImageSrc) + '" alt="Post image" loading="lazy" decoding="async" fetchpriority="low" onload="if(window.syncPostMediaLayout)window.syncPostMediaLayout(this.closest(\\'.post-media\\'));" onerror="markBrokenPostImage(this.dataset.baseSrc);this.closest(\\'.post-media-item\\').style.display=\\'none\\';if(window.syncPostMediaLayout)window.syncPostMediaLayout(this.closest(\\'.post-media\\'));">';
       const detailHref = '/social/post/' + Number(post.id || 0);
       const useLink = !forDetail && !forModal && Number(post.id || 0) > 0;
       const href = detailHref + (imageIndex > 0 ? ('?image=' + imageIndex) : '');
@@ -273,7 +291,9 @@ export const SOCIAL_SCRIPT_RENDER = `
       return '<figure class="post-media-item">' + mediaContent + '</figure>';
     }).join('');
 
-    return '<div class="post-media post-media-grid post-media-grid-' + Math.min(3, renderableUrls.length) + '">' + items + '</div>';
+    const initialGridCount = Math.min(3, renderableUrls.length);
+    const singleClass = initialGridCount === 1 ? ' post-media-single' : '';
+    return '<div class="post-media post-media-grid post-media-grid-' + initialGridCount + singleClass + '">' + items + '</div>';
   };
 
   const renderPostCard = (post, options = {}) => {
@@ -290,6 +310,7 @@ export const SOCIAL_SCRIPT_RENDER = `
         focusCommentAction: 'focus-comment',
         toggleLikeAction: 'toggle-like',
         commentComposerAction: 'comment',
+        maxImages: 3,
         mediaHrefForIndex: (item, imageIndex) => {
           if (forModal) return '';
           const postId = Number(item?.id || 0);
@@ -378,7 +399,11 @@ export const SOCIAL_SCRIPT_RENDER = `
   const renderDetailView = (post, options = {}) => {
     if (!post) return false;
     if (detailPostShell) {
-      const mediaMarkup = mediaMarkupForPost(post, { forDetail: true });
+      const mediaMarkup = mediaMarkupForPost(post, {
+        forDetail: true,
+        imageMotion: Boolean(options.imageMotion),
+        imageDirection: Number(options.imageDirection || 0),
+      });
       detailPostShell.innerHTML = '<article class="post-card post-card-detail-media" data-post-id="' + Number(post.id || 0) + '">' +
         (mediaMarkup || '<div class="comment-empty">No image found for this post.</div>') +
       '</article>' +
@@ -643,3 +668,4 @@ export const SOCIAL_SCRIPT_RENDER = `
     onScrollFallback();
   };
 `;
+

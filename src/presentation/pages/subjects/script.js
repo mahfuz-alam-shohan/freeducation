@@ -1,3 +1,5 @@
+import { imageToolsModule } from "../../shared/client/imageTools.js";
+
 export function subjectsScript(apiBase = "/api/workspace") {
   return `
 (() => {
@@ -80,87 +82,17 @@ export function subjectsScript(apiBase = "/api/workspace") {
     }, delay);
     autosaveTimers.set(timerKey, timer);
   };
-
-  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-    if (!file) {
-      resolve('');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Unable to read file'));
-    reader.readAsDataURL(file);
-  });
-
-  const dataUrlSizeBytes = (dataUrl) => {
-    const value = String(dataUrl || '');
-    const comma = value.indexOf(',');
-    if (comma < 0) return 0;
-    const base64 = value.slice(comma + 1);
-    return Math.floor((base64.length * 3) / 4);
-  };
-
-  const loadImageFromFile = (file) => new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Unable to process image'));
-    };
-    image.src = objectUrl;
-  });
-
-  const fileToDataUrl = async (file, options = {}) => {
-    if (!file) return '';
-    const type = String(file.type || '').toLowerCase();
-    if (!type.startsWith('image/')) return readFileAsDataUrl(file);
-
-    const maxWidth = Number(options.maxWidth || 1600);
-    const maxHeight = Number(options.maxHeight || 1600);
-    const targetBytes = Number(options.targetBytes || (900 * 1024));
-    const minQuality = Number(options.minQuality || 0.5);
-    let quality = Number(options.quality || 0.84);
-
-    try {
-      const image = await loadImageFromFile(file);
-      const sourceWidth = Number(image.naturalWidth || image.width || 0);
-      const sourceHeight = Number(image.naturalHeight || image.height || 0);
-      if (!sourceWidth || !sourceHeight) return readFileAsDataUrl(file);
-
-      let scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return readFileAsDataUrl(file);
-
-      const render = () => {
-        canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-        canvas.height = Math.max(1, Math.round(sourceHeight * scale));
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-
-      render();
-      let compressed = canvas.toDataURL('image/webp', quality);
-      let guard = 0;
-      while (dataUrlSizeBytes(compressed) > targetBytes && guard < 12) {
-        if (quality > minQuality + 0.01) {
-          quality = Math.max(minQuality, quality - 0.08);
-        } else {
-          scale *= 0.9;
-          render();
-        }
-        compressed = canvas.toDataURL('image/webp', quality);
-        guard += 1;
-      }
-      return compressed;
-    } catch {
-      return readFileAsDataUrl(file);
-    }
-  };
+${imageToolsModule()}
+  const fileToDataUrl = async (file, options = {}) => (
+    compressFileToDataUrl(file, {
+      maxWidth: Number(options.maxWidth || 1600),
+      maxHeight: Number(options.maxHeight || 1600),
+      targetBytes: Number(options.targetBytes || (900 * 1024)),
+      minQuality: Number(options.minQuality || 0.5),
+      quality: Number(options.quality || 0.84),
+      outputType: 'image/webp',
+    })
+  );
 
   const clearCreatePreviewUrl = () => {
     if (!createPreviewUrl) return;

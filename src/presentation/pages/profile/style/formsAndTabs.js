@@ -1,4 +1,4 @@
-import { SOCIAL_POST_SHARED_STYLE } from "../../shared/socialPostStyle.js";
+import { SOCIAL_POST_SHARED_STYLE } from "../../../modules/posts/style.js";
 
 export const PROFILE_STYLE_FORMS = `
 .profile-tabs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);animation:fadeUp .46s cubic-bezier(.22,.61,.36,1);overflow-x:hidden}
@@ -40,9 +40,13 @@ export const PROFILE_STYLE_FORMS = `
 .profile-password-form[hidden]{display:none!important}
 .profile-password-form label{display:grid;gap:4px;font-size:.92rem}
 .profile-password-form input{background:var(--surface-strong);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text)}
+.profile-security-actions{display:grid;gap:6px;margin-top:var(--space-2)}
+.profile-logout-action{justify-self:start;border:1px solid color-mix(in srgb,#e24f56 55%,var(--border));background:color-mix(in srgb,#e24f56 16%,var(--surface-soft));padding:7px 12px;border-radius:8px;color:var(--text);cursor:pointer;font-weight:650}
+.profile-logout-action:disabled{opacity:.62;cursor:not-allowed}
+.profile-security-note{margin:0;color:var(--text-muted);font-size:.82rem;line-height:1.35}
 .profile-password-form button,.profile-modal-card button{border:1px solid var(--border);background:var(--surface-soft);padding:7px 10px;border-radius:6px;color:var(--text);cursor:pointer}
 .profile-msg{min-height:1.2em;color:var(--text-muted);margin:var(--space-2) 0 0}
-.profile-posts-list{display:grid;gap:var(--space-2);justify-items:center}
+.profile-posts-list{width:100%}
 .profile-posts-status{margin:var(--space-2) 0 0;min-height:1.1rem;color:var(--text-muted);font-size:.86rem}
 .profile-posts-status.is-error{color:#ff9ca1}
 .profile-posts-actions{display:flex;justify-content:center;padding-top:var(--space-2)}
@@ -50,4 +54,8 @@ export const PROFILE_STYLE_FORMS = `
 .profile-posts-load-more:disabled{opacity:.65;cursor:not-allowed}
 .profile-posts-empty{margin:0;border:1px dashed var(--border);border-radius:var(--radius-md);padding:var(--space-3);color:var(--text-muted);text-align:center}
 ${SOCIAL_POST_SHARED_STYLE}
+@media (max-width:899px){
+  #panelPosts{margin-inline:calc(-1 * var(--space-3))}
+  .profile-posts-status,.profile-posts-actions{padding-inline:var(--space-2)}
+}
 `;

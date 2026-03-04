@@ -23,9 +23,24 @@ function resolveHomePath(userType) {
   return "/";
 }
 
+function resolveProfilePath(userType) {
+  const role = String(userType || "").toLowerCase();
+  if (role === "administrator") return "/admin/profile";
+  if (role === "teacher") return "/teacher/profile";
+  if (role === "student") return "/student/profile";
+  return "";
+}
+
 function buildSocialQuickLinks(user) {
   const userType = user?.user_type || "";
   return resolveNav(userType);
+}
+
+function buildSocialPageContext(user) {
+  return {
+    viewerId: Number.parseInt(String(user?.id || 0), 10) || 0,
+    viewerProfilePath: resolveProfilePath(user?.user_type || ""),
+  };
 }
 
 function renderSocialShell(user, title, content, rightSidebar = "", options = {}) {
@@ -47,10 +62,11 @@ function renderSocialShell(user, title, content, rightSidebar = "", options = {}
 }
 
 export function socialPage(user) {
+  const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
     "Social",
-    socialFeedHtml(Boolean(user), "feed"),
+    socialFeedHtml(Boolean(user), "feed", pageContext),
     renderSocialRightSidebar({
       canInteract: Boolean(user),
       scope: "feed",
@@ -60,10 +76,11 @@ export function socialPage(user) {
 }
 
 export function socialMyPostsPage(user) {
+  const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
     "My posts",
-    socialFeedHtml(Boolean(user), "mine"),
+    socialFeedHtml(Boolean(user), "mine", pageContext),
     renderSocialRightSidebar({
       canInteract: Boolean(user),
       scope: "mine",
@@ -73,10 +90,11 @@ export function socialMyPostsPage(user) {
 }
 
 export function socialCreatePage(user) {
+  const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
     "Create post",
-    socialCreateHtml(Boolean(user)),
+    socialCreateHtml(Boolean(user), pageContext),
     renderSocialRightSidebar({
       canInteract: Boolean(user),
       scope: "feed",
@@ -86,10 +104,11 @@ export function socialCreatePage(user) {
 }
 
 export function socialPostPage(user, postId) {
+  const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
     "Post",
-    socialPostHtml(Boolean(user), postId),
+    socialPostHtml(Boolean(user), postId, pageContext),
     renderSocialPostDetailSidebar({
       canInteract: Boolean(user),
     }),
@@ -98,10 +117,11 @@ export function socialPostPage(user, postId) {
 
 export function socialSearchPage(user, query = "") {
   const safeQuery = String(query || "").trim();
+  const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
     safeQuery ? ("Search: " + safeQuery) : "Search profiles",
-    socialSearchHtml(Boolean(user), safeQuery),
+    socialSearchHtml(Boolean(user), safeQuery, pageContext),
     renderSocialRightSidebar({
       canInteract: Boolean(user),
       scope: "feed",

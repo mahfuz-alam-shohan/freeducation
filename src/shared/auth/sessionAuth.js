@@ -15,6 +15,7 @@ export async function getAuthenticatedUser(request, env) {
 
   return {
     id: session.id,
+    session_id: Number(session.session_id || 0),
     name: session.name,
     email: session.email,
     user_type: session.user_type || "Administrator",
@@ -22,6 +23,7 @@ export async function getAuthenticatedUser(request, env) {
     gender: session.gender || "",
     avatar_key: session.avatar_key || "",
     cover_key: session.cover_key || "",
+    session_active_attempt_id: Number(session.active_attempt_id || 0),
     session_device_label: session.device_label || "",
     session_created_at: session.session_created_at || "",
   };

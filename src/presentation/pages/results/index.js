@@ -27,12 +27,19 @@ const RESULTS_STYLE = `
 .result-q-no{font-weight:800;color:var(--text-muted)}
 .result-q img,.result-q video,.result-q iframe{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border)}
 .result-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px}
-.result-opt{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start;min-width:0}
-.result-opt-key{width:18px;height:18px;border-radius:999px;border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--text-muted)}
-.result-opt.correct .result-opt-key{border-color:#3c8b58;color:#2e7347}
-.result-opt.selected .result-opt-key{border-color:#8b5f2f;color:#70461f}
-.result-opt.correct{color:#256040}
-.result-opt.selected{color:#7a4f22}
+.result-opt{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:start;min-width:0;padding:7px 8px;border:1px solid color-mix(in srgb,var(--border) 85%,transparent);border-radius:10px;background:color-mix(in srgb,var(--surface-soft) 65%,transparent)}
+.result-opt-key{width:18px;height:18px;border-radius:999px;border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--text-muted);line-height:1}
+.result-opt-label{min-width:0;overflow-wrap:anywhere}
+.result-opt-tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:999px;font-size:.66rem;font-weight:800;letter-spacing:.01em;border:1px solid transparent}
+.result-opt.is-correct{border-color:color-mix(in srgb,#2f9a66 55%,var(--border));background:color-mix(in srgb,#2f9a66 14%,var(--surface));color:color-mix(in srgb,#2f9a66 80%,var(--text))}
+.result-opt.is-correct .result-opt-key{border-color:#2f9a66;color:#1f7a4e;background:color-mix(in srgb,#2f9a66 18%,transparent)}
+.result-opt.is-correct .result-opt-tag{border-color:color-mix(in srgb,#2f9a66 70%,var(--border));background:color-mix(in srgb,#2f9a66 20%,var(--surface));color:#18593a}
+.result-opt.is-selected{border-color:color-mix(in srgb,var(--accent) 48%,var(--border))}
+.result-opt.is-selected .result-opt-key{border-color:color-mix(in srgb,var(--accent) 62%,var(--border));color:color-mix(in srgb,var(--accent) 76%,var(--text))}
+.result-opt.is-selected .result-opt-tag{border-color:color-mix(in srgb,var(--accent) 54%,var(--border));background:color-mix(in srgb,var(--accent) 18%,var(--surface));color:color-mix(in srgb,var(--accent) 80%,var(--text))}
+.result-opt.is-wrong-selected{border-color:color-mix(in srgb,#d84b4b 68%,var(--border));background:color-mix(in srgb,#d84b4b 12%,var(--surface));color:color-mix(in srgb,#d84b4b 80%,var(--text))}
+.result-opt.is-wrong-selected .result-opt-key{border-color:#d84b4b;color:#b12a2a;background:color-mix(in srgb,#d84b4b 18%,transparent)}
+.result-opt.is-wrong-selected .result-opt-tag{border-color:color-mix(in srgb,#d84b4b 70%,var(--border));background:color-mix(in srgb,#d84b4b 18%,var(--surface));color:#8d1f1f}
 .results-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 @media (max-width:900px){.results-row{grid-template-columns:1fr}.result-opts{grid-template-columns:1fr}}
 `;
@@ -105,18 +112,30 @@ export function examResultDetailPage({ user, navItems, homePath, detail } = {}) 
   const attempts = Array.isArray(detail?.attempts) ? detail.attempts : [];
   const progressSeries = Array.isArray(detail?.progressSeries) ? detail.progressSeries : [];
   const activeAttemptId = Number(selected?.id || 0);
+  const subjectId = Number(detail?.subject?.id || 0);
+  const subjectAction = subjectId > 0 ? `<a class="results-btn" href="/subjects/${subjectId}">Back to subject</a>` : "";
 
   const questionMarkup = (selected?.questions || []).map((question, index) => {
     const options = Array.isArray(question?.options) ? question.options : [];
     return `<article class="result-q"><header class="result-q-head"><span class="result-q-no">${index + 1}.</span><div>${String(question?.body || "")}</div></header>${question?.imageUrl ? `<img src="${escapeHtml(question.imageUrl)}" alt="Question image" loading="lazy" decoding="async" />` : ""}<section class="result-opts">${options.map((option, optionIndex) => {
       const key = optionKey(optionIndex);
-      const selectedClass = String(question?.selectedOption || "").toUpperCase() === key ? " selected" : "";
-      const correctClass = String(question?.correctOption || "").toUpperCase() === key ? " correct" : "";
-      return `<div class="result-opt${selectedClass}${correctClass}"><span class="result-opt-key">${key}</span><span>${String(option || "")}</span></div>`;
+      const isSelected = String(question?.selectedOption || "").toUpperCase() === key;
+      const isCorrect = String(question?.correctOption || "").toUpperCase() === key;
+      const wrongSelected = isSelected && !isCorrect;
+      const classes = [
+        "result-opt",
+        isSelected ? "is-selected" : "",
+        isCorrect ? "is-correct" : "",
+        wrongSelected ? "is-wrong-selected" : "",
+      ].filter(Boolean).join(" ");
+      const tag = isCorrect
+        ? (isSelected ? "Your correct answer" : "Correct answer")
+        : (wrongSelected ? "Your answer" : "");
+      return `<div class="${classes}"><span class="result-opt-key">${key}</span><span class="result-opt-label">${String(option || "")}</span>${tag ? `<span class="result-opt-tag">${escapeHtml(tag)}</span>` : ""}</div>`;
     }).join("")}</section></article>`;
   }).join("");
 
-  const content = `<section class="results-wrap"><header class="results-head"><div><h2>${escapeHtml(detail?.subject?.name || "Result")}</h2><p>${escapeHtml(detail?.scopeLabel || "Full Subject")}</p></div><a class="results-btn" href="/results">Back to list</a></header><section class="results-card"><div class="result-attempts">${attempts.map((attempt) => `<a class="result-chip${Number(attempt?.id || 0) === activeAttemptId ? " active" : ""}" href="/results/${Number(detail?.session?.id || 0)}?attempt=${Number(attempt?.id || 0)}">Attempt ${Number(attempt?.attemptIndex || 0)}</a>`).join("")}</div><div class="results-meta">Score: ${Number(selected?.score || 0)}% | Correct: ${Number(selected?.correctCount || 0)} / ${Number(selected?.totalQuestions || 0)} | Answered: ${Number(selected?.answeredCount || 0)}</div><div class="result-bars">${progressSeries.map((item) => `<div class="result-bar-row"><span>Try ${Number(item?.attemptIndex || 0)}</span><div class="result-bar"><span style="width:${Math.max(0, Math.min(100, Number(item?.score || 0)))}%"></span></div><span>${Number(item?.score || 0)}%</span></div>`).join("")}</div><div class="results-actions"><button id="retakeExamBtn" data-session-id="${Number(detail?.session?.id || 0)}" class="results-btn" type="button">Retake Exam</button></div><p id="resultsMsg" class="results-meta" role="status" aria-live="polite"></p></section><section class="results-card"><h3>Result Sheet</h3><div class="result-questions">${questionMarkup || '<p class="results-empty">No questions found.</p>'}</div></section></section>`;
+  const content = `<section class="results-wrap"><header class="results-head"><div><h2>${escapeHtml(detail?.subject?.name || "Result")}</h2><p>${escapeHtml(detail?.scopeLabel || "Full Subject")}</p></div><a class="results-btn" href="/results">Back to list</a></header><section class="results-card"><div class="result-attempts">${attempts.map((attempt) => `<a class="result-chip${Number(attempt?.id || 0) === activeAttemptId ? " active" : ""}" href="/results/${Number(detail?.session?.id || 0)}?attempt=${Number(attempt?.id || 0)}">Attempt ${Number(attempt?.attemptIndex || 0)}</a>`).join("")}</div><div class="results-meta">Score: ${Number(selected?.score || 0)}% | Correct: ${Number(selected?.correctCount || 0)} / ${Number(selected?.totalQuestions || 0)} | Answered: ${Number(selected?.answeredCount || 0)}</div><div class="result-bars">${progressSeries.map((item) => `<div class="result-bar-row"><span>Try ${Number(item?.attemptIndex || 0)}</span><div class="result-bar"><span style="width:${Math.max(0, Math.min(100, Number(item?.score || 0)))}%"></span></div><span>${Number(item?.score || 0)}%</span></div>`).join("")}</div><div class="results-actions"><button id="retakeExamBtn" data-session-id="${Number(detail?.session?.id || 0)}" class="results-btn" type="button">Retake Exam</button>${subjectAction}<a class="results-btn" href="/">Home</a></div><p id="resultsMsg" class="results-meta" role="status" aria-live="polite"></p></section><section class="results-card"><h3>Result Sheet</h3><div class="result-questions">${questionMarkup || '<p class="results-empty">No questions found.</p>'}</div></section></section>`;
 
   return renderAppShellLayout({
     title: "Result Detail",
