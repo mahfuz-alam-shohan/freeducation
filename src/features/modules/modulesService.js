@@ -10,6 +10,7 @@ import {
   deleteContentItem,
   deleteContentItemsByContext,
   deleteSubjectById,
+  deleteModuleClassById,
   deleteSubjectChapter,
   deleteSubjectChaptersBySubjectId,
   deleteSubjectContentItemsBySubjectId,
@@ -42,11 +43,13 @@ import {
   nextModuleClassSortOrder,
   nextTopicSortOrder,
   reorderSubjectChapters,
+  reorderSubjectTopics,
   updateContentItem,
   updateModuleClass,
   updateSubject,
   updateSubjectChapter,
   updateSubjectNode,
+  updateSubjectNodeContentTypes,
   updateSubjectTopic,
   upsertSubjectTemplate,
 } from "../../infrastructure/db/modulesRepository.js";
@@ -62,6 +65,7 @@ import {
 
 const BASE_CONTENT_TYPES = BASE_CONTENT_TYPE_KEYS;
 const CONTENT_TYPES = CONTENT_MODULE_KEYS;
+const BANGLA_CONTENT_TYPES = [...BASE_CONTENT_TYPES, "summary"];
 const BANGLA_TEMPLATE = {
   code: "BANGLA-1ST-NCTB2010",
   name: "BANGLA-1ST-NCTB2010",
@@ -86,7 +90,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: [...BASE_CONTENT_TYPES],
+      contentTypes: [...BANGLA_CONTENT_TYPES],
     },
     {
       key: "rhymes",
@@ -97,7 +101,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: [...BASE_CONTENT_TYPES],
+      contentTypes: [...BANGLA_CONTENT_TYPES],
     },
     {
       key: "assisting_book",
@@ -119,7 +123,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: [...BASE_CONTENT_TYPES],
+      contentTypes: [...BANGLA_CONTENT_TYPES],
     },
     {
       key: "novel",
@@ -130,7 +134,7 @@ const BANGLA_TEMPLATE = {
       supportsTopics: false,
       canEditName: true,
       canUploadImage: true,
-      contentTypes: [...BASE_CONTENT_TYPES],
+      contentTypes: [...BANGLA_CONTENT_TYPES],
     },
   ],
 };
@@ -181,16 +185,6 @@ function normalizeBoolean(value) {
   if (typeof value === "boolean") return value;
   const text = String(value || "").trim().toLowerCase();
   return text === "1" || text === "true" || text === "yes" || text === "on";
-}
-
-function normalizeOrdinalLabel(value, { label = "number", max = 24, required = false } = {}) {
-  const text = String(value || "").trim();
-  if (!text) {
-    if (required) throw new HttpError(400, `${label} is required`);
-    return "";
-  }
-  if (text.length > max) throw new HttpError(400, `${label} must be ${max} characters or fewer`);
-  return text;
 }
 
 function normalizeContextType(value) {
@@ -282,6 +276,63 @@ function contentTypeMeta(contentTypes = []) {
   return contentTypeMetaList(contentTypes);
 }
 
+function normalizeAllowedContentTypes(contentTypes = []) {
+  return (Array.isArray(contentTypes) ? contentTypes : [])
+    .map((type) => String(type || "").trim().toLowerCase())
+    .filter((type, index, list) => Boolean(type) && isKnownContentType(type) && list.indexOf(type) === index);
+}
+
+function parseStoredContentTypesPreference(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const parsed = safeJsonParse(raw, null);
+  if (!Array.isArray(parsed)) return null;
+  return parsed
+    .map((type) => String(type || "").trim().toLowerCase())
+    .filter((type, index, list) => Boolean(type) && isKnownContentType(type) && list.indexOf(type) === index);
+}
+
+function resolveContentTypesForContext(availableTypes = [], storedPreference = null) {
+  const allowed = normalizeAllowedContentTypes(availableTypes);
+  if (!Array.isArray(storedPreference)) return allowed;
+  if (!allowed.length) return [];
+  const allowedSet = new Set(allowed);
+  return storedPreference.filter((type) => allowedSet.has(type));
+}
+
+function normalizeSelectedContentTypes(value, availableTypes = [], label = "content types") {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) throw new HttpError(400, `${label} must be an array`);
+  const allowed = normalizeAllowedContentTypes(availableTypes);
+  const allowedSet = new Set(allowed);
+  const normalized = [];
+  for (const entry of value) {
+    const type = normalizeContentType(entry);
+    if (!allowedSet.has(type)) {
+      throw new HttpError(400, `${contentLabelForType(type)} is not available in this context`);
+    }
+    if (!normalized.includes(type)) normalized.push(type);
+  }
+  return normalized;
+}
+
+function sameContentTypes(left = [], right = []) {
+  const a = normalizeAllowedContentTypes(left);
+  const b = normalizeAllowedContentTypes(right);
+  if (a.length !== b.length) return false;
+  const bSet = new Set(b);
+  return a.every((type) => bSet.has(type));
+}
+
+function banglaLeafSummaryTypes(subjectTemplateCode, templateNodeKey, contentTypes = []) {
+  const normalized = normalizeAllowedContentTypes(contentTypes);
+  const code = String(subjectTemplateCode || "").trim();
+  const nodeKey = String(templateNodeKey || "").trim().toLowerCase();
+  if (code !== BANGLA_TEMPLATE_CODE || !BANGLA_LEAF_KEYS.has(nodeKey)) return normalized;
+  if (normalized.includes("summary")) return normalized;
+  return [...normalized, "summary"];
+}
+
 function serializeSubjectNode(row) {
   const parsedContentTypes = safeJsonParse(row?.content_types_json, []);
   const contentTypes = Array.isArray(parsedContentTypes) ? parsedContentTypes.filter((type) => isKnownContentType(type)) : [];
@@ -315,6 +366,7 @@ function serializeChapter(row) {
     imageUrl: imageUrlForKey(row?.image_key),
     sortOrder: Number(row?.sort_order || 0),
     createdAt: String(row?.created_at || ""),
+    storedContentTypes: parseStoredContentTypesPreference(row?.content_types_json),
   };
 }
 
@@ -328,6 +380,29 @@ function serializeTopic(row) {
     imageUrl: imageUrlForKey(row?.image_key),
     sortOrder: Number(row?.sort_order || 0),
     createdAt: String(row?.created_at || ""),
+    storedContentTypes: parseStoredContentTypesPreference(row?.content_types_json),
+  };
+}
+
+function chapterWithResolvedContentTypes(chapter, nodeContentTypes = []) {
+  const availableContentTypes = normalizeAllowedContentTypes(nodeContentTypes);
+  const contentTypes = resolveContentTypesForContext(availableContentTypes, chapter?.storedContentTypes);
+  return {
+    ...chapter,
+    availableContentTypes,
+    contentTypes,
+    contentTypeMeta: contentTypeMeta(contentTypes),
+  };
+}
+
+function topicWithResolvedContentTypes(topic, nodeContentTypes = []) {
+  const availableContentTypes = normalizeAllowedContentTypes(nodeContentTypes);
+  const contentTypes = resolveContentTypesForContext(availableContentTypes, topic?.storedContentTypes);
+  return {
+    ...topic,
+    availableContentTypes,
+    contentTypes,
+    contentTypeMeta: contentTypeMeta(contentTypes),
   };
 }
 
@@ -523,9 +598,50 @@ async function getSubjectOrThrow(db, subjectId) {
 }
 
 async function getNodeOrThrow(db, subjectId, nodeId) {
-  const node = await findSubjectNodeById(db, { subjectId, nodeId });
-  if (!node) throw new HttpError(404, "Node not found");
-  return serializeSubjectNode(node);
+  const nodeRow = await findSubjectNodeById(db, { subjectId, nodeId });
+  if (!nodeRow) throw new HttpError(404, "Node not found");
+
+  const subject = await getSubjectOrThrow(db, subjectId);
+  const node = serializeSubjectNode(nodeRow);
+  const legacyTypes = normalizeAllowedContentTypes(node.contentTypes);
+  const resolvedTypes = banglaLeafSummaryTypes(subject.templateCode, node.templateNodeKey, legacyTypes);
+
+  if (!sameContentTypes(legacyTypes, resolvedTypes)) {
+    await updateSubjectNodeContentTypes(db, {
+      subjectId,
+      nodeId: node.id,
+      contentTypesJson: JSON.stringify(resolvedTypes),
+    });
+
+    const chapterRows = await listSubjectChapters(db, { subjectId, nodeId: node.id });
+    for (const chapterRow of chapterRows) {
+      const chapterId = Number(chapterRow?.id || 0);
+      const chapterStored = parseStoredContentTypesPreference(chapterRow?.content_types_json);
+      if (!Array.isArray(chapterStored) || !sameContentTypes(chapterStored, legacyTypes)) continue;
+      await updateSubjectChapter(db, {
+        subjectId,
+        chapterId,
+        contentTypesJson: JSON.stringify(resolvedTypes),
+      });
+
+      const topicRows = await listSubjectTopics(db, { subjectId, chapterId });
+      for (const topicRow of topicRows) {
+        const topicStored = parseStoredContentTypesPreference(topicRow?.content_types_json);
+        if (!Array.isArray(topicStored) || !sameContentTypes(topicStored, legacyTypes)) continue;
+        await updateSubjectTopic(db, {
+          subjectId,
+          topicId: Number(topicRow?.id || 0),
+          contentTypesJson: JSON.stringify(resolvedTypes),
+        });
+      }
+    }
+  }
+
+  return {
+    ...node,
+    contentTypes: resolvedTypes,
+    contentTypeMeta: contentTypeMeta(resolvedTypes),
+  };
 }
 
 async function resolveContentContext(db, subjectId, contextTypeRaw, contextIdRaw) {
@@ -548,15 +664,16 @@ async function resolveContentContext(db, subjectId, contextTypeRaw, contextIdRaw
   if (contextType === "chapter") {
     const chapterRow = await findSubjectChapterById(db, { subjectId, chapterId: contextId });
     if (!chapterRow) throw new HttpError(404, "Chapter not found");
-    const chapter = serializeChapter(chapterRow);
-    const node = await getNodeOrThrow(db, subjectId, chapter.nodeId);
+    const chapterBase = serializeChapter(chapterRow);
+    const node = await getNodeOrThrow(db, subjectId, chapterBase.nodeId);
+    const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
     return {
       contextType,
       contextId,
       node,
       chapter,
       topic: null,
-      contentTypes: node.contentTypes,
+      contentTypes: chapter.contentTypes,
       label: chapter.name,
       parentNode: node,
     };
@@ -564,18 +681,20 @@ async function resolveContentContext(db, subjectId, contextTypeRaw, contextIdRaw
 
   const topicRow = await findSubjectTopicById(db, { subjectId, topicId: contextId });
   if (!topicRow) throw new HttpError(404, "Topic not found");
-  const topic = serializeTopic(topicRow);
-  const topicChapterRow = await findSubjectChapterById(db, { subjectId, chapterId: topic.chapterId });
+  const topicBase = serializeTopic(topicRow);
+  const topicChapterRow = await findSubjectChapterById(db, { subjectId, chapterId: topicBase.chapterId });
   if (!topicChapterRow) throw new HttpError(404, "Chapter not found");
-  const chapter = serializeChapter(topicChapterRow);
-  const node = await getNodeOrThrow(db, subjectId, chapter.nodeId);
+  const chapterBase = serializeChapter(topicChapterRow);
+  const node = await getNodeOrThrow(db, subjectId, chapterBase.nodeId);
+  const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
+  const topic = topicWithResolvedContentTypes(topicBase, node.contentTypes);
   return {
     contextType,
     contextId,
     node,
     chapter,
     topic,
-    contentTypes: node.contentTypes,
+    contentTypes: topic.contentTypes,
     label: topic.name,
     parentNode: chapter,
   };
@@ -715,6 +834,21 @@ export async function updateModuleClassEntry(request, env, classIdRaw) {
   };
 }
 
+export async function deleteModuleClassEntry(env, classIdRaw) {
+  const classId = parsePositiveId(classIdRaw, "class id");
+  const current = await findModuleClassById(env.DB, classId);
+  if (!current) throw new HttpError(404, "Class not found");
+
+  const linkedSubjects = await listSubjectsByClassId(env.DB, { classId });
+  if (Array.isArray(linkedSubjects) && linkedSubjects.length > 0) {
+    throw new HttpError(409, "Cannot remove class while subjects are assigned to it");
+  }
+
+  await deleteModuleClassById(env.DB, { classId });
+  await safeDeleteImage(env, current?.image_key);
+  return { ok: true };
+}
+
 export async function listPublicModuleClasses(env, options = {}) {
   const onlyHome = options?.onlyHome === true;
   const rows = await listModuleClasses(env.DB, { onlyHome });
@@ -791,9 +925,10 @@ export async function getPublicSubjectNodeChapters(env, subjectIdRaw, nodeIdRaw)
   const nodeId = parsePositiveId(nodeIdRaw, "node id");
   const subject = await getSubjectOrThrow(env.DB, subjectId);
   const node = await getNodeOrThrow(env.DB, subjectId, nodeId);
-  const chapters = node.supportsChapters
-    ? (await listSubjectChapters(env.DB, { subjectId, nodeId })).map(serializeChapter)
+  const chapterRows = node.supportsChapters
+    ? await listSubjectChapters(env.DB, { subjectId, nodeId })
     : [];
+  const chapters = chapterRows.map((row) => chapterWithResolvedContentTypes(serializeChapter(row), node.contentTypes));
   return {
     subject,
     node,
@@ -807,17 +942,65 @@ export async function getPublicChapterReader(env, subjectIdRaw, chapterIdRaw) {
   const subject = await getSubjectOrThrow(env.DB, subjectId);
   const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId });
   if (!chapterRow) throw new HttpError(404, "Chapter not found");
-  const chapter = serializeChapter(chapterRow);
-  const node = await getNodeOrThrow(env.DB, subjectId, chapter.nodeId);
-  const availableTypes = Array.isArray(node?.contentTypes) ? node.contentTypes : [];
+  const chapterBase = serializeChapter(chapterRow);
+  const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
+  const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
+  const topics = chapter.topicsEnabled
+    ? (await listSubjectTopics(env.DB, { subjectId, chapterId: chapter.id })).map((row) => topicWithResolvedContentTypes(serializeTopic(row), node.contentTypes))
+    : [];
+  const availableTypes = chapter.contentTypes;
+  const contentModules = chapter.topicsEnabled ? [] : publicReaderModules(availableTypes);
+
+  let contentItemsByType = {};
+  if (!chapter.topicsEnabled) {
+    const loadByType = async (contentType) => {
+      if (!availableTypes.includes(contentType)) return [];
+      const rows = await listContentItems(env.DB, {
+        subjectId,
+        contextType: "chapter",
+        contextId: chapter.id,
+        contentType,
+      });
+      return rows.map(serializeContentItem);
+    };
+
+    contentItemsByType = Object.fromEntries(await Promise.all(
+      contentModules.map(async (moduleItem) => [moduleItem.key, await loadByType(moduleItem.key)]),
+    ));
+  }
+
+  return {
+    subject,
+    node,
+    chapter,
+    topics,
+    contentModules,
+    contentItemsByType,
+  };
+}
+
+export async function getPublicTopicReader(env, subjectIdRaw, topicIdRaw) {
+  const subjectId = parsePositiveId(subjectIdRaw, "subject id");
+  const topicId = parsePositiveId(topicIdRaw, "topic id");
+  const subject = await getSubjectOrThrow(env.DB, subjectId);
+  const topicRow = await findSubjectTopicById(env.DB, { subjectId, topicId });
+  if (!topicRow) throw new HttpError(404, "Topic not found");
+  const topicBase = serializeTopic(topicRow);
+  const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId: topicBase.chapterId });
+  if (!chapterRow) throw new HttpError(404, "Chapter not found");
+  const chapterBase = serializeChapter(chapterRow);
+  const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
+  const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
+  const topic = topicWithResolvedContentTypes(topicBase, node.contentTypes);
+  const availableTypes = topic.contentTypes;
   const contentModules = publicReaderModules(availableTypes);
 
   const loadByType = async (contentType) => {
     if (!availableTypes.includes(contentType)) return [];
     const rows = await listContentItems(env.DB, {
       subjectId,
-      contextType: "chapter",
-      contextId: chapter.id,
+      contextType: "topic",
+      contextId: topic.id,
       contentType,
     });
     return rows.map(serializeContentItem);
@@ -831,6 +1014,7 @@ export async function getPublicChapterReader(env, subjectIdRaw, chapterIdRaw) {
     subject,
     node,
     chapter,
+    topic,
     contentModules,
     contentItemsByType,
   };
@@ -1029,9 +1213,10 @@ export async function getModuleSubjectNodeView(env, subjectIdRaw, nodeIdRaw) {
     }
   }
 
-  const chapters = node.supportsChapters
-    ? (await listSubjectChapters(env.DB, { subjectId, nodeId: node.id })).map(serializeChapter)
+  const chapterRows = node.supportsChapters
+    ? await listSubjectChapters(env.DB, { subjectId, nodeId: node.id })
     : [];
+  const chapters = chapterRows.map((row) => chapterWithResolvedContentTypes(serializeChapter(row), node.contentTypes));
 
   return {
     subject,
@@ -1112,13 +1297,15 @@ export async function createModuleChapter(request, env, subjectIdRaw) {
     name: chapterName,
     topicsEnabled,
     imageKey,
+    contentTypesJson: JSON.stringify(node.contentTypes),
     sortOrder,
   });
 
   const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId });
+  const chapter = chapterWithResolvedContentTypes(serializeChapter(chapterRow), node.contentTypes);
   return {
     ok: true,
-    chapter: serializeChapter(chapterRow),
+    chapter,
   };
 }
 
@@ -1136,6 +1323,7 @@ export async function updateModuleChapter(request, env, subjectIdRaw, chapterIdR
   const topicsEnabled = body?.topicsEnabled === undefined
     ? boolFromInt(current?.topics_enabled)
     : (node.supportsTopics ? Boolean(body?.topicsEnabled) : false);
+  const selectedContentTypes = normalizeSelectedContentTypes(body?.contentTypes, node.contentTypes, "Chapter content types");
   const requestedClear = Boolean(body?.clearImage);
   const hasImageData = Boolean(String(body?.imageData || "").trim());
   let nextImageKey;
@@ -1156,6 +1344,7 @@ export async function updateModuleChapter(request, env, subjectIdRaw, chapterIdR
     name,
     topicsEnabled,
     imageKey: nextImageKey,
+    contentTypesJson: selectedContentTypes === undefined ? undefined : JSON.stringify(selectedContentTypes),
   });
 
   if (nextImageKey !== undefined && current.image_key && current.image_key !== nextImageKey) {
@@ -1163,7 +1352,8 @@ export async function updateModuleChapter(request, env, subjectIdRaw, chapterIdR
   }
 
   const updated = await findSubjectChapterById(env.DB, { subjectId, chapterId });
-  return { ok: true, chapter: serializeChapter(updated) };
+  const chapter = chapterWithResolvedContentTypes(serializeChapter(updated), node.contentTypes);
+  return { ok: true, chapter };
 }
 
 export async function moveModuleChapter(request, env, subjectIdRaw, chapterIdRaw) {
@@ -1266,10 +1456,11 @@ export async function getModuleChapterView(env, subjectIdRaw, chapterIdRaw) {
   const subject = await getSubjectOrThrow(env.DB, subjectId);
   const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId });
   if (!chapterRow) throw new HttpError(404, "Chapter not found");
-  const chapter = serializeChapter(chapterRow);
-  const node = await getNodeOrThrow(env.DB, subjectId, chapter.nodeId);
+  const chapterBase = serializeChapter(chapterRow);
+  const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
+  const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
   const topics = chapter.topicsEnabled
-    ? (await listSubjectTopics(env.DB, { subjectId, chapterId: chapter.id })).map(serializeTopic)
+    ? (await listSubjectTopics(env.DB, { subjectId, chapterId: chapter.id })).map((row) => topicWithResolvedContentTypes(serializeTopic(row), node.contentTypes))
     : [];
 
   return {
@@ -1277,7 +1468,7 @@ export async function getModuleChapterView(env, subjectIdRaw, chapterIdRaw) {
     node,
     chapter,
     topics,
-    contentTypes: contentTypeMeta(node.contentTypes),
+    contentTypes: chapter.contentTypeMeta,
   };
 }
 
@@ -1287,12 +1478,14 @@ export async function createModuleTopic(request, env, subjectIdRaw) {
   const chapterId = parsePositiveId(body?.chapterId, "chapter id");
   const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId });
   if (!chapterRow) throw new HttpError(404, "Chapter not found");
-  const chapter = serializeChapter(chapterRow);
+  const chapterBase = serializeChapter(chapterRow);
+  const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
+  const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
   if (!chapter.topicsEnabled) throw new HttpError(400, "Topics are disabled for this chapter");
 
-  const topicNumber = normalizeOrdinalLabel(body?.topicNumber, { label: "Topic number", max: 24, required: false });
   const name = normalizeName(body?.name, "Topic name", 2, 140);
   const sortOrder = await nextTopicSortOrder(env.DB, { subjectId, chapterId });
+  const topicNumber = String(sortOrder);
   const imageKey = await uploadOptionalImage(env, {
     dataUrl: body?.imageData,
     keyPrefix: `modules/subjects/${subjectId}/topics/${chapterId}`,
@@ -1304,12 +1497,14 @@ export async function createModuleTopic(request, env, subjectIdRaw) {
     topicNumber,
     name,
     imageKey,
+    contentTypesJson: JSON.stringify(node.contentTypes),
     sortOrder,
   });
   const created = await findSubjectTopicById(env.DB, { subjectId, topicId });
+  const topic = topicWithResolvedContentTypes(serializeTopic(created), node.contentTypes);
   return {
     ok: true,
-    topic: serializeTopic(created),
+    topic,
   };
 }
 
@@ -1320,10 +1515,13 @@ export async function updateModuleTopic(request, env, subjectIdRaw, topicIdRaw) 
 
   const current = await findSubjectTopicById(env.DB, { subjectId, topicId });
   if (!current) throw new HttpError(404, "Topic not found");
+  const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId: Number(current.chapter_id || 0) });
+  if (!chapterRow) throw new HttpError(404, "Chapter not found");
+  const chapterBase = serializeChapter(chapterRow);
+  const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
   const name = String(body?.name || "").trim() ? normalizeName(body?.name, "Topic name", 2, 140) : String(current?.name || "");
-  const topicNumber = body?.topicNumber === undefined
-    ? String(current?.topic_number || "")
-    : normalizeOrdinalLabel(body?.topicNumber, { label: "Topic number", max: 24, required: false });
+  const topicNumber = String(current?.topic_number || current?.sort_order || "");
+  const selectedContentTypes = normalizeSelectedContentTypes(body?.contentTypes, node.contentTypes, "Topic content types");
   const requestedClear = Boolean(body?.clearImage);
   const hasImageData = Boolean(String(body?.imageData || "").trim());
   let nextImageKey;
@@ -1343,6 +1541,7 @@ export async function updateModuleTopic(request, env, subjectIdRaw, topicIdRaw) 
     topicNumber,
     name,
     imageKey: nextImageKey,
+    contentTypesJson: selectedContentTypes === undefined ? undefined : JSON.stringify(selectedContentTypes),
   });
 
   if (nextImageKey !== undefined && current.image_key && current.image_key !== nextImageKey) {
@@ -1350,7 +1549,49 @@ export async function updateModuleTopic(request, env, subjectIdRaw, topicIdRaw) 
   }
 
   const updated = await findSubjectTopicById(env.DB, { subjectId, topicId });
-  return { ok: true, topic: serializeTopic(updated) };
+  const topic = topicWithResolvedContentTypes(serializeTopic(updated), node.contentTypes);
+  return { ok: true, topic };
+}
+
+export async function moveModuleTopic(request, env, subjectIdRaw, topicIdRaw) {
+  const subjectId = parsePositiveId(subjectIdRaw, "subject id");
+  const topicId = parsePositiveId(topicIdRaw, "topic id");
+  const body = await readBody(request, { maxBodySize: 50_000 });
+  const direction = String(body?.direction || "").trim().toLowerCase();
+  if (direction !== "up" && direction !== "down") {
+    throw new HttpError(400, "Direction must be up or down");
+  }
+
+  const current = await findSubjectTopicById(env.DB, { subjectId, topicId });
+  if (!current) throw new HttpError(404, "Topic not found");
+
+  const chapterId = Number(current?.chapter_id || 0);
+  const rows = await listSubjectTopics(env.DB, { subjectId, chapterId });
+  const topicIds = rows.map((row) => Number(row?.id || 0)).filter((id) => id > 0);
+  const currentIndex = topicIds.indexOf(topicId);
+  if (currentIndex < 0 || topicIds.length < 2) {
+    const unchanged = await findSubjectTopicById(env.DB, { subjectId, topicId });
+    return { ok: true, moved: false, topic: serializeTopic(unchanged) };
+  }
+
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= topicIds.length) {
+    const unchanged = await findSubjectTopicById(env.DB, { subjectId, topicId });
+    return { ok: true, moved: false, topic: serializeTopic(unchanged) };
+  }
+
+  const reordered = topicIds.slice();
+  const temp = reordered[currentIndex];
+  reordered[currentIndex] = reordered[targetIndex];
+  reordered[targetIndex] = temp;
+  await reorderSubjectTopics(env.DB, {
+    subjectId,
+    chapterId,
+    topicIds: reordered,
+  });
+
+  const updated = await findSubjectTopicById(env.DB, { subjectId, topicId });
+  return { ok: true, moved: true, topic: serializeTopic(updated) };
 }
 
 export async function deleteModuleTopic(env, subjectIdRaw, topicIdRaw) {
@@ -1385,18 +1626,20 @@ export async function getModuleTopicView(env, subjectIdRaw, topicIdRaw) {
   const subject = await getSubjectOrThrow(env.DB, subjectId);
   const topicRow = await findSubjectTopicById(env.DB, { subjectId, topicId });
   if (!topicRow) throw new HttpError(404, "Topic not found");
-  const topic = serializeTopic(topicRow);
-  const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId: topic.chapterId });
+  const topicBase = serializeTopic(topicRow);
+  const chapterRow = await findSubjectChapterById(env.DB, { subjectId, chapterId: topicBase.chapterId });
   if (!chapterRow) throw new HttpError(404, "Chapter not found");
-  const chapter = serializeChapter(chapterRow);
-  const node = await getNodeOrThrow(env.DB, subjectId, chapter.nodeId);
+  const chapterBase = serializeChapter(chapterRow);
+  const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
+  const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
+  const topic = topicWithResolvedContentTypes(topicBase, node.contentTypes);
 
   return {
     subject,
     node,
     chapter,
     topic,
-    contentTypes: contentTypeMeta(node.contentTypes),
+    contentTypes: topic.contentTypeMeta,
   };
 }
 

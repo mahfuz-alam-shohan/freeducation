@@ -17,6 +17,7 @@ import {
   createModuleSubject,
   createModuleTopic,
   deleteModuleChapter,
+  deleteModuleClassEntry,
   deleteModuleSubject,
   deleteModuleContentItem,
   deleteModuleTopic,
@@ -32,6 +33,7 @@ import {
   listModuleSubjects,
   listModuleTemplates,
   moveModuleChapter,
+  moveModuleTopic,
   updateModuleChapter,
   updateModuleContentItem,
   updateModuleSubject,
@@ -53,6 +55,7 @@ export async function handleAdminWorkspaceRoute({ request, env, url, user }) {
   const apiSubjectChapterReorderMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/chapters\/(\d+)\/reorder$/);
   const apiSubjectTopicsCollectionMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/topics$/);
   const apiSubjectTopicMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/topics\/(\d+)$/);
+  const apiSubjectTopicReorderMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/topics\/(\d+)\/reorder$/);
   const apiContentContextMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/content-context$/);
   const apiContentItemsCollectionMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/content-items$/);
   const apiContentItemMatch = url.pathname.match(/^\/api\/(?:workspace|admin)\/subjects\/(\d+)\/content-items\/(\d+)$/);
@@ -163,6 +166,10 @@ export async function handleAdminWorkspaceRoute({ request, env, url, user }) {
     return json(await updateModuleClassEntry(request, env, apiClassMatch[1]));
   }
 
+  if (request.method === "DELETE" && apiClassMatch) {
+    return json(await deleteModuleClassEntry(env, apiClassMatch[1]));
+  }
+
   if (request.method === "GET" && apiClassMatch) {
     return json(await getModuleClassSubjects(env, apiClassMatch[1]));
   }
@@ -213,6 +220,10 @@ export async function handleAdminWorkspaceRoute({ request, env, url, user }) {
 
   if (request.method === "POST" && apiSubjectTopicsCollectionMatch) {
     return json(await createModuleTopic(request, env, apiSubjectTopicsCollectionMatch[1]), 201);
+  }
+
+  if (request.method === "POST" && apiSubjectTopicReorderMatch) {
+    return json(await moveModuleTopic(request, env, apiSubjectTopicReorderMatch[1], apiSubjectTopicReorderMatch[2]));
   }
 
   if (request.method === "GET" && apiSubjectTopicMatch) {

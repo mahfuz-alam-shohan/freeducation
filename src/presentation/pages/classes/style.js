@@ -45,6 +45,8 @@ export const CLASSES_STYLE = `
 .cls-image-remove{position:absolute;top:-7px;right:-7px;width:16px;height:16px;border-radius:999px;border:1px solid color-mix(in srgb,#cc4a52 60%,var(--border));background:color-mix(in srgb,#cc4a52 88%,var(--surface));color:#fff;font-size:.68rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .cls-image-remove:hover{filter:brightness(1.06)}
 .cls-image-remove[hidden]{display:none!important}
+.cls-danger{height:30px;border-radius:8px;border:1px solid color-mix(in srgb,#cc4a52 62%,var(--border));background:color-mix(in srgb,#cc4a52 10%,var(--surface));color:color-mix(in srgb,#cc4a52 80%,var(--text));font-weight:600;font-size:.78rem;line-height:1;padding:0 10px;cursor:pointer}
+.cls-danger:hover{filter:brightness(1.03)}
 .cls-empty{color:var(--text-muted)}
 .cls-msg{margin:0;min-height:18px;color:var(--text-muted);font-size:.82rem}
 .cls-toast-stack{position:fixed;top:82px;right:16px;display:grid;gap:8px;z-index:140;pointer-events:none}

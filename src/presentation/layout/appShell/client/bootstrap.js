@@ -8,6 +8,7 @@ export const APP_SHELL_CLIENT_BOOTSTRAP = `
 
   const body = document.body;
   const openButton = document.getElementById('appMenuOpen');
+  const mobileMenuButton = document.getElementById('appMobileMenu');
   const closeButton = document.getElementById('appMenuClose');
   const overlay = document.getElementById('appMenuOverlay');
   const sidebar = document.getElementById('appSidebar');
@@ -51,6 +52,20 @@ export const APP_SHELL_CLIENT_BOOTSTRAP = `
   };
 
   const apiBase = (shellRoot?.dataset?.apiBase || '').trim() || resolveApiBase();
+  const sessionEntryKey = 'freeducation-session-entered';
+
+  try {
+    if (window.sessionStorage.getItem(sessionEntryKey)) {
+      body.classList.remove('app-first-load');
+    } else {
+      body.classList.add('app-first-load');
+      window.sessionStorage.setItem(sessionEntryKey, '1');
+      window.setTimeout(() => body.classList.remove('app-first-load'), 650);
+    }
+  } catch {
+    body.classList.add('app-first-load');
+    window.setTimeout(() => body.classList.remove('app-first-load'), 650);
+  }
 
   const applyTheme = (theme) => {
     const finalTheme = theme === 'light' ? 'light' : 'dark';
@@ -137,10 +152,12 @@ export const APP_SHELL_CLIENT_BOOTSTRAP = `
   };
 
   const setMenu = (open) => {
-    body.classList.toggle('menu-open', open);
-    if (openButton) openButton.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (overlay) overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-    if (open) {
+    const nextOpen = Boolean(open);
+    body.classList.toggle('menu-open', nextOpen);
+    if (openButton) openButton.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    if (mobileMenuButton) mobileMenuButton.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    if (overlay) overlay.setAttribute('aria-hidden', nextOpen ? 'false' : 'true');
+    if (nextOpen) {
       setProfile(false);
       setNotificationsOpen(false);
     }

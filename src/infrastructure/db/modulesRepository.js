@@ -110,6 +110,13 @@ export async function updateModuleClass(db, { classId, name, imageKey, showInHom
   ).bind(...values).run();
 }
 
+export async function deleteModuleClassById(db, { classId }) {
+  await db.prepare(
+    `DELETE FROM freeducation_module_classes
+     WHERE id = ?1`,
+  ).bind(classId).run();
+}
+
 export async function findSubjectTemplateById(db, templateId) {
   return db.prepare(
     `SELECT id, code, name, structure_json, created_at
@@ -344,9 +351,19 @@ export async function updateSubjectNode(db, { subjectId, nodeId, displayName, im
   ).bind(displayName, imageKey, now, subjectId, nodeId).run();
 }
 
+export async function updateSubjectNodeContentTypes(db, { subjectId, nodeId, contentTypesJson }) {
+  const now = toIsoNow();
+  await db.prepare(
+    `UPDATE freeducation_subject_nodes
+     SET content_types_json = ?1,
+         updated_at = ?2
+     WHERE subject_id = ?3 AND id = ?4`,
+  ).bind(String(contentTypesJson || "[]"), now, subjectId, nodeId).run();
+}
+
 export async function listSubjectChapters(db, { subjectId, nodeId }) {
   const result = await db.prepare(
-    `SELECT id, subject_id, node_id, chapter_number, name, topics_enabled, image_key, sort_order, created_at
+    `SELECT id, subject_id, node_id, chapter_number, name, topics_enabled, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_chapters
      WHERE subject_id = ?1 AND node_id = ?2
      ORDER BY sort_order ASC, id ASC`,
@@ -363,47 +380,65 @@ export async function nextChapterSortOrder(db, { subjectId, nodeId }) {
   return Number(row?.next_sort || 1);
 }
 
-export async function createSubjectChapter(db, { subjectId, nodeId, chapterNumber, name, topicsEnabled, imageKey, sortOrder }) {
+export async function createSubjectChapter(db, { subjectId, nodeId, chapterNumber, name, topicsEnabled, imageKey, contentTypesJson, sortOrder }) {
   const now = toIsoNow();
   const inserted = await db.prepare(
     `INSERT INTO freeducation_subject_chapters
-      (subject_id, node_id, chapter_number, name, topics_enabled, image_key, sort_order, created_at, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`,
-  ).bind(subjectId, nodeId, chapterNumber || "", name, topicsEnabled ? 1 : 0, imageKey || "", sortOrder, now).run();
+      (subject_id, node_id, chapter_number, name, topics_enabled, image_key, content_types_json, sort_order, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`,
+  ).bind(subjectId, nodeId, chapterNumber || "", name, topicsEnabled ? 1 : 0, imageKey || "", String(contentTypesJson || ""), sortOrder, now).run();
   return Number(inserted?.meta?.last_row_id || 0);
 }
 
 export async function findSubjectChapterById(db, { subjectId, chapterId }) {
   return db.prepare(
-    `SELECT id, subject_id, node_id, chapter_number, name, topics_enabled, image_key, sort_order, created_at
+    `SELECT id, subject_id, node_id, chapter_number, name, topics_enabled, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_chapters
      WHERE subject_id = ?1 AND id = ?2`,
   ).bind(subjectId, chapterId).first();
 }
 
-export async function updateSubjectChapter(db, { subjectId, chapterId, chapterNumber, name, topicsEnabled, imageKey }) {
+export async function updateSubjectChapter(db, { subjectId, chapterId, chapterNumber, name, topicsEnabled, imageKey, contentTypesJson }) {
   const now = toIsoNow();
-  if (imageKey === undefined) {
-    await db.prepare(
-      `UPDATE freeducation_subject_chapters
-       SET name = ?1,
-           chapter_number = ?2,
-           topics_enabled = ?3,
-           updated_at = ?4
-       WHERE subject_id = ?5 AND id = ?6`,
-    ).bind(name, chapterNumber || "", topicsEnabled ? 1 : 0, now, subjectId, chapterId).run();
-    return;
+  const hasChapterNumber = typeof chapterNumber === "string";
+  const hasName = typeof name === "string";
+  const hasTopicsEnabled = typeof topicsEnabled === "boolean";
+  const hasImage = typeof imageKey === "string";
+  const hasContentTypes = typeof contentTypesJson === "string";
+  if (!hasChapterNumber && !hasName && !hasTopicsEnabled && !hasImage && !hasContentTypes) return;
+
+  const updates = [];
+  const values = [];
+  if (hasName) {
+    updates.push("name = ?" + String(values.length + 1));
+    values.push(name);
   }
+  if (hasChapterNumber) {
+    updates.push("chapter_number = ?" + String(values.length + 1));
+    values.push(chapterNumber);
+  }
+  if (hasTopicsEnabled) {
+    updates.push("topics_enabled = ?" + String(values.length + 1));
+    values.push(topicsEnabled ? 1 : 0);
+  }
+  if (hasImage) {
+    updates.push("image_key = ?" + String(values.length + 1));
+    values.push(imageKey);
+  }
+  if (hasContentTypes) {
+    updates.push("content_types_json = ?" + String(values.length + 1));
+    values.push(contentTypesJson);
+  }
+  updates.push("updated_at = ?" + String(values.length + 1));
+  values.push(now);
+  values.push(subjectId);
+  values.push(chapterId);
 
   await db.prepare(
     `UPDATE freeducation_subject_chapters
-     SET name = ?1,
-         chapter_number = ?2,
-         topics_enabled = ?3,
-         image_key = ?4,
-         updated_at = ?5
-     WHERE subject_id = ?6 AND id = ?7`,
-  ).bind(name, chapterNumber || "", topicsEnabled ? 1 : 0, imageKey, now, subjectId, chapterId).run();
+     SET ${updates.join(", ")}
+     WHERE subject_id = ?${values.length - 1} AND id = ?${values.length}`,
+  ).bind(...values).run();
 }
 
 export async function deleteSubjectChapter(db, { subjectId, chapterId }) {
@@ -431,9 +466,27 @@ export async function reorderSubjectChapters(db, { subjectId, nodeId, chapterIds
   }
 }
 
+export async function reorderSubjectTopics(db, { subjectId, chapterId, topicIds }) {
+  const ids = Array.isArray(topicIds) ? topicIds.map((id) => Number(id || 0)).filter((id) => id > 0) : [];
+  if (!ids.length) return;
+  const now = toIsoNow();
+  const query = db.prepare(
+    `UPDATE freeducation_subject_topics
+     SET sort_order = ?1,
+         topic_number = ?2,
+         updated_at = ?3
+     WHERE subject_id = ?4 AND chapter_id = ?5 AND id = ?6`,
+  );
+
+  for (let index = 0; index < ids.length; index += 1) {
+    const sortOrder = index + 1;
+    await query.bind(sortOrder, String(sortOrder), now, subjectId, chapterId, ids[index]).run();
+  }
+}
+
 export async function listSubjectTopics(db, { subjectId, chapterId }) {
   const result = await db.prepare(
-    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, sort_order, created_at
+    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_topics
      WHERE subject_id = ?1 AND chapter_id = ?2
      ORDER BY sort_order ASC, id ASC`,
@@ -443,7 +496,7 @@ export async function listSubjectTopics(db, { subjectId, chapterId }) {
 
 export async function listAllSubjectTopicsByChapter(db, { subjectId, chapterId }) {
   const result = await db.prepare(
-    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, sort_order, created_at
+    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_topics
      WHERE subject_id = ?1 AND chapter_id = ?2
      ORDER BY sort_order ASC, id ASC`,
@@ -453,7 +506,7 @@ export async function listAllSubjectTopicsByChapter(db, { subjectId, chapterId }
 
 export async function listAllSubjectChaptersBySubject(db, { subjectId }) {
   const result = await db.prepare(
-    `SELECT id, subject_id, node_id, chapter_number, name, topics_enabled, image_key, sort_order, created_at
+    `SELECT id, subject_id, node_id, chapter_number, name, topics_enabled, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_chapters
      WHERE subject_id = ?1
      ORDER BY sort_order ASC, id ASC`,
@@ -463,7 +516,7 @@ export async function listAllSubjectChaptersBySubject(db, { subjectId }) {
 
 export async function listAllSubjectTopicsBySubject(db, { subjectId }) {
   const result = await db.prepare(
-    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, sort_order, created_at
+    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_topics
      WHERE subject_id = ?1
      ORDER BY sort_order ASC, id ASC`,
@@ -480,45 +533,60 @@ export async function nextTopicSortOrder(db, { subjectId, chapterId }) {
   return Number(row?.next_sort || 1);
 }
 
-export async function createSubjectTopic(db, { subjectId, chapterId, topicNumber, name, imageKey, sortOrder }) {
+export async function createSubjectTopic(db, { subjectId, chapterId, topicNumber, name, imageKey, contentTypesJson, sortOrder }) {
   const now = toIsoNow();
   const inserted = await db.prepare(
     `INSERT INTO freeducation_subject_topics
-      (subject_id, chapter_id, topic_number, name, image_key, sort_order, created_at, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)`,
-  ).bind(subjectId, chapterId, topicNumber || "", name, imageKey || "", sortOrder, now).run();
+      (subject_id, chapter_id, topic_number, name, image_key, content_types_json, sort_order, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`,
+  ).bind(subjectId, chapterId, topicNumber || "", name, imageKey || "", String(contentTypesJson || ""), sortOrder, now).run();
   return Number(inserted?.meta?.last_row_id || 0);
 }
 
 export async function findSubjectTopicById(db, { subjectId, topicId }) {
   return db.prepare(
-    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, sort_order, created_at
+    `SELECT id, subject_id, chapter_id, topic_number, name, image_key, content_types_json, sort_order, created_at
      FROM freeducation_subject_topics
      WHERE subject_id = ?1 AND id = ?2`,
   ).bind(subjectId, topicId).first();
 }
 
-export async function updateSubjectTopic(db, { subjectId, topicId, topicNumber, name, imageKey }) {
+export async function updateSubjectTopic(db, { subjectId, topicId, topicNumber, name, imageKey, contentTypesJson }) {
   const now = toIsoNow();
-  if (imageKey === undefined) {
-    await db.prepare(
-      `UPDATE freeducation_subject_topics
-       SET topic_number = ?1,
-           name = ?2,
-           updated_at = ?3
-       WHERE subject_id = ?4 AND id = ?5`,
-    ).bind(topicNumber || "", name, now, subjectId, topicId).run();
-    return;
+  const hasTopicNumber = typeof topicNumber === "string";
+  const hasName = typeof name === "string";
+  const hasImage = typeof imageKey === "string";
+  const hasContentTypes = typeof contentTypesJson === "string";
+  if (!hasTopicNumber && !hasName && !hasImage && !hasContentTypes) return;
+
+  const updates = [];
+  const values = [];
+  if (hasTopicNumber) {
+    updates.push("topic_number = ?" + String(values.length + 1));
+    values.push(topicNumber);
   }
+  if (hasName) {
+    updates.push("name = ?" + String(values.length + 1));
+    values.push(name);
+  }
+  if (hasImage) {
+    updates.push("image_key = ?" + String(values.length + 1));
+    values.push(imageKey);
+  }
+  if (hasContentTypes) {
+    updates.push("content_types_json = ?" + String(values.length + 1));
+    values.push(contentTypesJson);
+  }
+  updates.push("updated_at = ?" + String(values.length + 1));
+  values.push(now);
+  values.push(subjectId);
+  values.push(topicId);
 
   await db.prepare(
     `UPDATE freeducation_subject_topics
-     SET topic_number = ?1,
-         name = ?2,
-         image_key = ?3,
-         updated_at = ?4
-     WHERE subject_id = ?5 AND id = ?6`,
-  ).bind(topicNumber || "", name, imageKey, now, subjectId, topicId).run();
+     SET ${updates.join(", ")}
+     WHERE subject_id = ?${values.length - 1} AND id = ?${values.length}`,
+  ).bind(...values).run();
 }
 
 export async function deleteSubjectTopic(db, { subjectId, topicId }) {

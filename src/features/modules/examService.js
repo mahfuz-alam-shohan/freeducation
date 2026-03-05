@@ -615,6 +615,7 @@ async function buildAttemptPayload(env, userId, attemptId) {
   const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
   return {
+    serverNow: nowIso(),
     subject,
     session,
     attempt,

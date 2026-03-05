@@ -1,29 +1,33 @@
 import { renderAppShellLayout } from "../../layout/appShell/index.js";
-import { publicReaderModules } from "../../../shared/modules/contentModules.js";
+import { isEditableContentType, publicReaderModules } from "../../../shared/modules/contentModules.js";
 
 const ACADEMICS_STYLE = `
 .acad-wrap{display:grid;gap:10px;padding:12px var(--space-2) var(--space-2)}
 .acad-wrap *{box-sizing:border-box}
-.acad-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.acad-head h2{margin:0;font-size:1.05rem}
-.acad-sub{margin:0;color:var(--text-muted);font-size:.84rem}
-.acad-back{height:32px;border:1px solid var(--border);border-radius:999px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;background:var(--surface-soft);color:var(--text);text-decoration:none;font-weight:700}
-.acad-back:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
+.acad-head{position:relative;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:center;gap:4px}
+.acad-head > div{text-align:center}
+.acad-head h2{margin:0;font-size:1.05rem;text-align:center}
+.acad-sub{margin:0;color:var(--text-muted);font-size:.84rem;text-align:center}
+.acad-float-back{position:sticky;top:8px;left:0;z-index:12;width:34px;height:34px;min-width:34px;max-width:34px;min-height:34px;max-height:34px;margin:0 0 6px;padding:0;border-radius:999px;border:1px solid color-mix(in srgb,var(--border) 68%,#fff 32%);background:color-mix(in srgb,var(--surface) 88%,#000 12%);color:var(--text);display:grid;place-items:center;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 8px 18px rgba(0,0,0,.28);font-size:1rem;line-height:1;box-sizing:border-box}
+.app-content > .acad-float-back{width:34px!important;max-width:34px!important;min-width:34px!important;height:34px!important;max-height:34px!important;min-height:34px!important;justify-self:start!important;align-self:start!important;margin:8px 0 6px 8px!important}
+.acad-float-back:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
+.acad-float-back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .acad-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,182px));justify-content:flex-start;gap:10px}
 .acad-card-link,.acad-root-card{display:grid;gap:0;text-decoration:none;color:inherit;background:transparent;border:0;padding:0;cursor:pointer;min-width:0;max-width:100%;width:100%}
 .acad-root-card{appearance:none;-webkit-appearance:none;text-align:left;font:inherit;line-height:inherit}
-.acad-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--surface-strong) 28%,#d8e3f3),color-mix(in srgb,var(--accent) 34%,#8799b6))}
+.acad-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid color-mix(in srgb,var(--border) 78%,#fff 22%);background:linear-gradient(145deg,color-mix(in srgb,var(--surface-strong) 28%,#d8e3f3),color-mix(in srgb,var(--accent) 34%,#8799b6))}
 .acad-poster img{display:block;width:100%;height:100%;max-width:100%;object-fit:cover;object-position:center}
 .acad-poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:1rem;font-weight:800;letter-spacing:.03em;color:#f4f8ff;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 38%,#4b658b),color-mix(in srgb,var(--accent) 62%,#233a60))}
 .acad-card-name{margin:0;padding:6px 2px 0;font-size:.88rem;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acad-card-meta{margin:0;padding:1px 2px 0;font-size:.74rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acad-empty{margin:0;padding:14px;border:1px dashed var(--border);border-radius:10px;color:var(--text-muted)}
-.acad-root-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,182px));justify-content:flex-start;gap:10px}
+.acad-root-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,182px));justify-content:flex-start;gap:10px;max-height:2000px;transition:opacity .24s ease,transform .24s ease,max-height .28s ease,margin .28s ease}
 .acad-root-card{transition:transform .22s ease,opacity .22s ease,filter .22s ease}
 .acad-root-card:hover{transform:translateY(-2px)}
-.acad-root-grid.has-selection .acad-root-card{display:none}
-.acad-root-grid.has-selection .acad-root-card.is-selected{display:grid}
+.acad-root-grid.is-collapsing{opacity:0;transform:translateY(-8px);pointer-events:none}
+.acad-root-grid.is-collapsed{opacity:0;transform:translateY(-8px);max-height:0;margin:0;overflow:hidden;pointer-events:none}
 .acad-child-area{display:grid;gap:10px}
+.acad-child-area[hidden]{display:none!important}
 .acad-child-group{display:grid;gap:10px;opacity:0;transform:translateY(-8px);transition:opacity .22s ease,transform .22s ease}
 .acad-child-group.is-visible{opacity:1;transform:translateY(0)}
 .acad-child-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
@@ -44,8 +48,8 @@ const ACADEMICS_STYLE = `
 .acad-note-body img,.acad-note-body video,.acad-note-body iframe{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border)}
 .acad-content-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
 .acad-content-col{display:grid;gap:0}
-.acad-tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:5px}
-.acad-tab-btn{height:28px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text-muted);padding:0 9px;font-weight:700;cursor:pointer;font-size:.8rem}
+.acad-tabs{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--border);padding-bottom:5px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.acad-tab-btn{height:28px;flex:0 0 auto;white-space:nowrap;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text-muted);padding:0 9px;font-weight:700;cursor:pointer;font-size:.8rem}
 .acad-tab-btn:hover{background:color-mix(in srgb,var(--surface-soft) 80%,transparent);color:var(--text)}
 .acad-tab-btn.is-active{background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--text);border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
 .acad-tab-panel{display:none;gap:7px;padding-top:6px}
@@ -72,14 +76,70 @@ const ACADEMICS_STYLE = `
 .acad-page-gap{padding:0 2px;color:var(--text-muted)}
 .acad-reader-block{display:grid;gap:10px;min-width:0}
 .acad-reader-block h3{margin:0;font-size:.92rem}
-.acad-exam-fab{position:fixed!important;right:max(14px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));left:auto!important;z-index:80;height:44px;padding:0 15px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 72%,var(--border));background:var(--accent);color:var(--accent-contrast);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.01em;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 30%,transparent);width:auto!important;max-width:max-content!important;min-width:unset!important;margin:0!important;transform:translateZ(0)}
+.acad-admin-panelbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px;border:1px dashed color-mix(in srgb,var(--accent) 36%,var(--border));border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.acad-admin-badge{font-size:.72rem;font-weight:800;letter-spacing:.03em;color:color-mix(in srgb,var(--accent) 74%,var(--text))}
+.acad-admin-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.acad-admin-btn{height:28px;border:1px solid var(--border);border-radius:7px;background:var(--surface-soft);color:var(--text);padding:0 9px;font-size:.74rem;font-weight:700;cursor:pointer}
+.acad-admin-btn:hover{border-color:color-mix(in srgb,var(--accent) 60%,var(--border))}
+.acad-admin-btn-danger{border-color:color-mix(in srgb,#cc4a52 60%,var(--border));color:color-mix(in srgb,#cc4a52 82%,var(--text));background:color-mix(in srgb,#cc4a52 8%,var(--surface))}
+.acad-admin-item-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+.acad-admin-modal{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:14px;background:color-mix(in srgb,var(--overlay) 86%,transparent)}
+.acad-admin-modal[hidden]{display:none!important}
+.acad-admin-modal-surface{width:min(760px,100%);max-height:86vh;overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:grid;gap:10px}
+.acad-admin-modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.acad-admin-modal-head h3{margin:0;font-size:1rem}
+.acad-admin-close{height:30px;min-width:30px;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft);color:var(--text);font-size:1rem;line-height:1;cursor:pointer}
+.acad-admin-form{display:grid;gap:8px}
+.acad-admin-field{display:grid;gap:4px}
+.acad-admin-field label{font-size:.78rem;color:var(--text-muted);font-weight:700}
+.acad-admin-field textarea,.acad-admin-field select{width:100%;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft);color:var(--text);padding:8px}
+.acad-admin-field textarea{min-height:88px;resize:vertical}
+.acad-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.acad-admin-grid[hidden]{display:none!important}
+.acad-admin-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.acad-admin-msg{margin:0;min-height:18px;font-size:.78rem;color:var(--text-muted)}
+.acad-exam-fab{position:fixed!important;top:calc(var(--layout-header-offset-mobile) + env(safe-area-inset-top,0px) + 8px);right:max(10px,env(safe-area-inset-right,0px));bottom:auto;left:auto!important;z-index:91;height:34px;padding:0 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 72%,var(--border));background:var(--accent);color:var(--accent-contrast);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.01em;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 30%,transparent);width:auto!important;max-width:max-content!important;min-width:unset!important;margin:0!important;transform:translateZ(0);box-sizing:border-box}
 .acad-exam-fab:hover{filter:brightness(1.03)}
-@media (max-width:760px){.acad-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;gap:10px}.acad-root-grid{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;gap:10px}.acad-content-columns{grid-template-columns:1fr}}
-@media (max-width:380px){.acad-card-grid,.acad-root-grid{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .acad-wrap{padding:10px var(--space-2) var(--space-2)}
+  .acad-head{gap:8px}
+  .acad-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch;gap:8px}
+  .acad-root-grid{grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch;gap:8px}
+  .acad-card-name{font-size:.8rem;padding-top:5px}
+  .acad-card-meta{font-size:.67rem}
+  .acad-poster{border-radius:10px}
+  .acad-content-columns{grid-template-columns:1fr}
+  .acad-admin-grid{grid-template-columns:1fr}
+}
+@media (min-width:900px){.acad-exam-fab{top:calc(var(--layout-header-offset-desktop) + env(safe-area-inset-top,0px) + 8px)!important}}
+@media (max-width:460px){.acad-card-grid,.acad-root-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px) and (orientation:portrait){
+  .acad-subject-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .acad-book-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .acad-subject-grid .acad-poster,.acad-book-grid .acad-poster{border-radius:9px}
+  .acad-subject-grid .acad-card-name,.acad-book-grid .acad-card-name{font-size:.74rem;padding-top:4px}
+  .acad-subject-grid .acad-card-meta,.acad-book-grid .acad-card-meta{font-size:.64rem}
+}
 `;
 
 const ACADEMICS_SCRIPT = `
 (() => {
+  const previousController = window.__acadPublicController;
+  if (previousController && typeof previousController.abort === 'function') {
+    previousController.abort();
+  }
+  const listenerController = new AbortController();
+  window.__acadPublicController = listenerController;
+  const { signal } = listenerController;
+  if (typeof window.__registerCleanup === 'function') {
+    window.__registerCleanup(() => {
+      if (window.__acadPublicController === listenerController) {
+        window.__acadPublicController = null;
+      }
+      listenerController.abort();
+    });
+  }
+
   const buildPageTokens = (totalPages, currentPage) => {
     const total = Math.max(1, Number(totalPages || 1));
     const current = Math.min(Math.max(1, Number(currentPage || 1)), total);
@@ -138,45 +198,317 @@ const ACADEMICS_SCRIPT = `
     }
   };
 
+  const adminModal = document.getElementById('acadAdminEditor');
+  const adminForm = document.getElementById('acadAdminForm');
+  const adminMsg = document.getElementById('acadAdminMsg');
+  const adminBodyInput = document.getElementById('acadAdminBody');
+  const adminBodyLabel = adminForm?.querySelector('label[for="acadAdminBody"]') || null;
+  const adminMcqFields = document.getElementById('acadAdminMcqFields');
+  const adminOptA = document.getElementById('acadAdminOptA');
+  const adminOptB = document.getElementById('acadAdminOptB');
+  const adminOptC = document.getElementById('acadAdminOptC');
+  const adminOptD = document.getElementById('acadAdminOptD');
+  const adminCorrect = document.getElementById('acadAdminCorrect');
+  const adminEnabled = Boolean(adminModal && adminForm);
+
+  const setAdminMsg = (text) => {
+    if (!adminMsg) return;
+    adminMsg.textContent = String(text || '');
+  };
+
+  const adminBodyMetaForType = (contentType) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    if (normalized === 'mcq_bank') {
+      return { label: 'Question', placeholder: 'Write question...' };
+    }
+    if (normalized === 'summary') {
+      return { label: 'Summary', placeholder: 'Write summary...' };
+    }
+    if (normalized === 'short_notes') {
+      return { label: 'Short note', placeholder: 'Write short note...' };
+    }
+    return { label: 'Body', placeholder: 'Write content...' };
+  };
+
+  const reloadCurrentPage = () => {
+    const href = window.location.pathname + window.location.search + window.location.hash;
+    if (typeof window.__appNavigate === 'function') {
+      window.__appNavigate(href, { push: false, motion: 'forward' });
+      return;
+    }
+    window.location.href = href;
+  };
+
+  const adminApiRequest = async (path, options = {}) => {
+    const response = await fetch('/api/workspace' + String(path || ''), {
+      ...options,
+      signal,
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload?.error || 'Request failed');
+    return payload;
+  };
+
+  const readAdminContext = (actionEl) => {
+    const panel = actionEl?.closest?.('[data-admin-content-type]');
+    if (!panel) return null;
+    const subjectId = Number.parseInt(String(panel.getAttribute('data-admin-subject-id') || '0'), 10);
+    const contextType = String(panel.getAttribute('data-admin-context-type') || '').trim().toLowerCase();
+    const contextId = Number.parseInt(String(panel.getAttribute('data-admin-context-id') || '0'), 10);
+    const contentType = String(panel.getAttribute('data-admin-content-type') || '').trim().toLowerCase();
+    const contentLabel = String(panel.getAttribute('data-admin-content-label') || contentType || 'Content').trim();
+    const panelMode = String(panel.getAttribute('data-admin-panel-mode') || 'rich').trim().toLowerCase();
+    if (!subjectId || !contextId || !contextType || !contentType) return null;
+    return { panel, subjectId, contextType, contextId, contentType, contentLabel, panelMode };
+  };
+
+  const closeAdminModal = () => {
+    if (!adminModal || !adminForm) return;
+    adminModal.hidden = true;
+    adminModal.setAttribute('aria-hidden', 'true');
+    adminForm.reset();
+    if (adminBodyLabel) adminBodyLabel.textContent = 'Body';
+    if (adminBodyInput) adminBodyInput.placeholder = 'Write content...';
+    setAdminMsg('');
+  };
+
+  const openAdminModal = (state = {}) => {
+    if (!adminModal || !adminForm) return;
+    adminForm.elements.subjectId.value = String(Number(state?.subjectId || 0));
+    adminForm.elements.contextType.value = String(state?.contextType || '');
+    adminForm.elements.contextId.value = String(Number(state?.contextId || 0));
+    adminForm.elements.contentType.value = String(state?.contentType || '');
+    adminForm.elements.panelMode.value = String(state?.panelMode || 'rich');
+    adminForm.elements.itemId.value = String(Number(state?.itemId || 0));
+    if (adminBodyInput) adminBodyInput.value = String(state?.body || '');
+    const bodyMeta = adminBodyMetaForType(state?.contentType);
+    if (adminBodyLabel) adminBodyLabel.textContent = bodyMeta.label;
+    if (adminBodyInput) adminBodyInput.placeholder = bodyMeta.placeholder;
+    if (adminOptA) adminOptA.value = String(state?.optA || '');
+    if (adminOptB) adminOptB.value = String(state?.optB || '');
+    if (adminOptC) adminOptC.value = String(state?.optC || '');
+    if (adminOptD) adminOptD.value = String(state?.optD || '');
+    if (adminCorrect) adminCorrect.value = String(state?.correctOption || 'A').toUpperCase();
+
+    const titleEl = document.getElementById('acadAdminTitle');
+    if (titleEl) {
+      const modeText = Number(state?.itemId || 0) > 0 ? 'Edit' : 'Add';
+      titleEl.textContent = modeText + ' ' + String(state?.contentLabel || 'content');
+    }
+
+    const showMcq = String(state?.contentType || '').trim().toLowerCase() === 'mcq_bank';
+    if (adminMcqFields) adminMcqFields.hidden = !showMcq;
+    if (!showMcq) {
+      if (adminOptA) adminOptA.value = '';
+      if (adminOptB) adminOptB.value = '';
+      if (adminOptC) adminOptC.value = '';
+      if (adminOptD) adminOptD.value = '';
+      if (adminCorrect) adminCorrect.value = 'A';
+    }
+    adminModal.hidden = false;
+    adminModal.setAttribute('aria-hidden', 'false');
+    setAdminMsg('');
+  };
+
+  const findItemForEdit = async (ctx, itemId) => {
+    const path = '/subjects/' + ctx.subjectId
+      + '/content-items?contextType=' + encodeURIComponent(ctx.contextType)
+      + '&contextId=' + encodeURIComponent(String(ctx.contextId))
+      + '&contentType=' + encodeURIComponent(ctx.contentType);
+    const payload = await adminApiRequest(path);
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+    const requestedId = Number(itemId || 0);
+    if (requestedId > 0) {
+      return items.find((item) => Number(item?.id || 0) === requestedId) || null;
+    }
+    return items[0] || null;
+  };
+
   const rootGrid = document.getElementById('acadRootGrid');
   const childArea = document.getElementById('acadChildArea');
   if (rootGrid && childArea) {
     const rootCards = Array.from(rootGrid.querySelectorAll('[data-root-id]'));
     const groups = Array.from(childArea.querySelectorAll('[data-root-group]'));
-    const clearSelection = () => {
-      rootGrid.classList.remove('has-selection');
-      rootCards.forEach((card) => card.classList.remove('is-selected'));
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let collapseTimer = 0;
+
+    const hideGroups = () => {
       groups.forEach((group) => {
         group.hidden = true;
         group.classList.remove('is-visible');
       });
       childArea.hidden = true;
     };
-    const selectRoot = (rootId) => {
-      rootGrid.classList.add('has-selection');
-      rootCards.forEach((card) => {
-        card.classList.toggle('is-selected', String(card.getAttribute('data-root-id') || '') === String(rootId));
-      });
+
+    const revealGroup = (rootId) => {
       let matched = false;
       groups.forEach((group) => {
         const isMatch = String(group.getAttribute('data-root-group') || '') === String(rootId);
         group.hidden = !isMatch;
-        group.classList.toggle('is-visible', isMatch);
         if (isMatch) matched = true;
       });
       childArea.hidden = !matched;
+      if (!matched) return;
+
+      const show = () => {
+        groups.forEach((group) => {
+          const isMatch = String(group.getAttribute('data-root-group') || '') === String(rootId);
+          group.classList.toggle('is-visible', isMatch);
+        });
+      };
+      if (reduceMotion) {
+        show();
+      } else {
+        window.requestAnimationFrame(show);
+      }
     };
+
+    const clearSelection = () => {
+      if (collapseTimer) {
+        window.clearTimeout(collapseTimer);
+        collapseTimer = 0;
+      }
+      rootGrid.classList.remove('has-selection', 'is-collapsing', 'is-collapsed');
+      rootCards.forEach((card) => card.classList.remove('is-selected'));
+      hideGroups();
+    };
+
+    const selectRoot = (rootId) => {
+      if (!rootId) return;
+      if (collapseTimer) {
+        window.clearTimeout(collapseTimer);
+        collapseTimer = 0;
+      }
+      rootGrid.classList.add('has-selection');
+      rootCards.forEach((card) => {
+        card.classList.toggle('is-selected', String(card.getAttribute('data-root-id') || '') === String(rootId));
+      });
+      hideGroups();
+
+      if (reduceMotion) {
+        rootGrid.classList.add('is-collapsed');
+        revealGroup(rootId);
+        return;
+      }
+
+      rootGrid.classList.remove('is-collapsed');
+      rootGrid.classList.add('is-collapsing');
+      collapseTimer = window.setTimeout(() => {
+        collapseTimer = 0;
+        rootGrid.classList.remove('is-collapsing');
+        rootGrid.classList.add('is-collapsed');
+        revealGroup(rootId);
+      }, 210);
+    };
+
     rootGrid.addEventListener('click', (event) => {
       const card = event.target.closest('[data-root-id]');
       if (!card) return;
       selectRoot(card.getAttribute('data-root-id'));
-    });
+    }, { signal });
     childArea.addEventListener('click', (event) => {
       const resetBtn = event.target.closest('[data-action="acad-reset-root"]');
       if (!resetBtn) return;
       clearSelection();
-    });
+    }, { signal });
+
+    if (typeof window.__registerCleanup === 'function') {
+      window.__registerCleanup(() => {
+        if (collapseTimer) {
+          window.clearTimeout(collapseTimer);
+          collapseTimer = 0;
+        }
+      });
+    }
+
     clearSelection();
+  }
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const backBtn = event.target.closest('[data-action="acad-history-back"]');
+    if (!backBtn) return;
+    event.preventDefault();
+    const fallbackHref = String(backBtn.getAttribute('data-fallback-href') || '/');
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    if (typeof window.__appNavigate === 'function') {
+      window.__appNavigate(fallbackHref);
+      return;
+    }
+    window.location.href = fallbackHref;
+  }, { signal });
+
+  if (adminEnabled) {
+    const adminCloseBtn = document.getElementById('acadAdminClose');
+    const adminCancelBtn = document.getElementById('acadAdminCancel');
+    adminCloseBtn?.addEventListener('click', closeAdminModal, { signal });
+    adminCancelBtn?.addEventListener('click', closeAdminModal, { signal });
+    adminModal?.addEventListener('click', (event) => {
+      if (event.target === adminModal) closeAdminModal();
+    }, { signal });
+
+    adminForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const subjectId = Number.parseInt(String(adminForm.elements.subjectId.value || '0'), 10);
+      const contextType = String(adminForm.elements.contextType.value || '').trim().toLowerCase();
+      const contextId = Number.parseInt(String(adminForm.elements.contextId.value || '0'), 10);
+      const contentType = String(adminForm.elements.contentType.value || '').trim().toLowerCase();
+      const panelMode = String(adminForm.elements.panelMode.value || 'rich').trim().toLowerCase();
+      const itemId = Number.parseInt(String(adminForm.elements.itemId.value || '0'), 10);
+      if (!subjectId || !contextType || !contextId || !contentType) return;
+
+      const bodyValue = String(adminBodyInput?.value || '').trim();
+      if (!bodyValue) {
+        setAdminMsg('Body is required.');
+        return;
+      }
+
+      const payload = {
+        contentType,
+        contextType,
+        contextId,
+        body: bodyValue,
+      };
+      if (contentType === 'mcq_bank') {
+        payload.options = [
+          String(adminOptA?.value || '').trim(),
+          String(adminOptB?.value || '').trim(),
+          String(adminOptC?.value || '').trim(),
+          String(adminOptD?.value || '').trim(),
+        ];
+        payload.correctOption = String(adminCorrect?.value || 'A').trim().toUpperCase();
+        const hasMissing = payload.options.some((option) => !option);
+        if (hasMissing) {
+          setAdminMsg('All MCQ options are required.');
+          return;
+        }
+      }
+
+      try {
+        setAdminMsg(itemId > 0 ? 'Updating content...' : 'Adding content...');
+        if (itemId > 0) {
+          await adminApiRequest('/subjects/' + subjectId + '/content-items/' + itemId, {
+            method: 'PATCH',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        } else {
+          await adminApiRequest('/subjects/' + subjectId + '/content-items', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+        closeAdminModal();
+        reloadCurrentPage();
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+        setAdminMsg(error?.message || 'Unable to save content.');
+      }
+    }, { signal });
   }
 
   const tabsWrap = document.querySelector('[data-acad-tabs]');
@@ -201,14 +533,131 @@ const ACADEMICS_SCRIPT = `
       const btn = event.target.closest('[data-tab-key]');
       if (!btn) return;
       activate(btn.getAttribute('data-tab-key'));
-    });
+    }, { signal });
     const firstKey = String(buttons[0]?.getAttribute('data-tab-key') || '');
     if (firstKey) activate(firstKey);
   }
 
   document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+
+    if (adminEnabled) {
+      const addBtn = event.target.closest('[data-action="acad-admin-add-item"]');
+      if (addBtn) {
+        event.preventDefault();
+        if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+        else event.stopPropagation();
+        const ctx = readAdminContext(addBtn);
+        if (!ctx) return;
+        const itemCount = Number.parseInt(String(ctx.panel?.getAttribute('data-admin-item-count') || '0'), 10) || 0;
+        if (ctx.contentType === 'summary' && itemCount > 0) {
+          const firstItemId = Number(ctx.panel?.getAttribute('data-admin-first-item-id') || 0);
+          openAdminModal({
+            ...ctx,
+            itemId: firstItemId,
+            body: '',
+            correctOption: 'A',
+          });
+          setAdminMsg('Loading summary...');
+          findItemForEdit(ctx, firstItemId).then((item) => {
+            if (!item) {
+              setAdminMsg('Summary not found.');
+              return;
+            }
+            openAdminModal({
+              ...ctx,
+              itemId: Number(item?.id || 0),
+              body: String(item?.body || ''),
+              correctOption: 'A',
+            });
+          }).catch((error) => {
+            if (error?.name === 'AbortError') return;
+            setAdminMsg(error?.message || 'Unable to load summary.');
+          });
+          return;
+        }
+        openAdminModal({
+          ...ctx,
+          itemId: 0,
+          body: '',
+          optA: '',
+          optB: '',
+          optC: '',
+          optD: '',
+          correctOption: 'A',
+        });
+        return;
+      }
+
+      const editBtn = event.target.closest('[data-action="acad-admin-edit-item"]');
+      if (editBtn) {
+        event.preventDefault();
+        if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+        else event.stopPropagation();
+        const ctx = readAdminContext(editBtn);
+        const itemId = Number.parseInt(String(editBtn.getAttribute('data-item-id') || '0'), 10);
+        if (!ctx || !itemId) return;
+        openAdminModal({
+          ...ctx,
+          itemId,
+          body: '',
+          optA: '',
+          optB: '',
+          optC: '',
+          optD: '',
+          correctOption: 'A',
+        });
+        setAdminMsg('Loading content...');
+        findItemForEdit(ctx, itemId).then((item) => {
+          if (!item) {
+            setAdminMsg('Content not found.');
+            return;
+          }
+          openAdminModal({
+            ...ctx,
+            itemId,
+            body: String(item?.body || ''),
+            optA: String(item?.options?.[0] || ''),
+            optB: String(item?.options?.[1] || ''),
+            optC: String(item?.options?.[2] || ''),
+            optD: String(item?.options?.[3] || ''),
+            correctOption: String(item?.correctOption || 'A'),
+          });
+        }).catch((error) => {
+          if (error?.name === 'AbortError') return;
+          setAdminMsg(error?.message || 'Unable to load content.');
+        });
+        return;
+      }
+
+      const deleteBtn = event.target.closest('[data-action="acad-admin-delete-item"]');
+      if (deleteBtn) {
+        event.preventDefault();
+        if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+        else event.stopPropagation();
+        const ctx = readAdminContext(deleteBtn);
+        const itemId = Number.parseInt(String(deleteBtn.getAttribute('data-item-id') || '0'), 10);
+        if (!ctx || !itemId) return;
+        if (!window.confirm('Delete this content item?')) return;
+        adminApiRequest('/subjects/' + ctx.subjectId + '/content-items/' + itemId, {
+          method: 'DELETE',
+        }).then(() => {
+          reloadCurrentPage();
+        }).catch((error) => {
+          if (error?.name === 'AbortError') return;
+          if (typeof window.__showAppStatus === 'function') {
+            window.__showAppStatus(error?.message || 'Unable to delete content.', 'error', 2200);
+          }
+        });
+        return;
+      }
+    }
+
     const pageBtn = event.target.closest('[data-action="acad-page"]');
     if (pageBtn) {
+      event.preventDefault();
+      if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+      else event.stopPropagation();
       const panelKey = String(pageBtn.getAttribute('data-panel-key') || '');
       const page = Number.parseInt(String(pageBtn.getAttribute('data-page') || '1'), 10) || 1;
       const panel = pageBtn.closest('[data-tab-panel]');
@@ -218,6 +667,9 @@ const ACADEMICS_SCRIPT = `
 
     const toggle = event.target.closest('[data-action="acad-toggle-answer"]');
     if (!toggle) return;
+    event.preventDefault();
+    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+    else event.stopPropagation();
     const container = toggle.closest('.acad-mcq');
     const answer = container?.querySelector('[data-mcq-answer]');
     if (!answer) return;
@@ -225,7 +677,7 @@ const ACADEMICS_SCRIPT = `
     answer.hidden = !show;
     toggle.setAttribute('aria-expanded', show ? 'true' : 'false');
     toggle.textContent = show ? 'Hide answer' : 'Show answer';
-  });
+  }, { signal, capture: true });
 })();
 `;
 
@@ -287,6 +739,46 @@ function examFab(subjectId, options = {}) {
   return `<a class="acad-exam-fab" href="${escapeHtml(href)}">Exam</a>`;
 }
 
+function hasRichInlineMarkup(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  if (/<[a-z][\s\S]*>/i.test(text)) return true;
+  return false;
+}
+
+function normalizeInlineBlockWrappers(value) {
+  const raw = String(value || "").trim();
+  if (!raw || (!/<div\b/i.test(raw) && !/<p\b/i.test(raw))) return raw;
+  const compactRaw = raw.replace(/\s+/g, "");
+  const blocks = raw.match(/<(?:div|p)\b[^>]*>[\s\S]*?<\/(?:div|p)>/gi);
+  if (!Array.isArray(blocks) || !blocks.length) return raw;
+  const compactBlocks = blocks.join("").replace(/\s+/g, "");
+  if (compactBlocks !== compactRaw) return raw;
+  return blocks
+    .map((block) => block
+      .replace(/^<(?:div|p)\b[^>]*>/i, "")
+      .replace(/<\/(?:div|p)>$/i, "")
+      .trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+function richDisplayValue(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  if (hasRichInlineMarkup(raw)) {
+    return normalizeInlineBlockWrappers(raw);
+  }
+  return escapeHtml(raw)
+    .replaceAll("\r\n", "\n")
+    .replaceAll("\r", "\n")
+    .replaceAll("\n", "<br>");
+}
+
+function floatingBackButton(fallbackHref = "/") {
+  return `<button type="button" class="acad-float-back" data-action="acad-history-back" data-fallback-href="${escapeHtml(fallbackHref)}" aria-label="Go back" title="Go back">&larr;</button>`;
+}
+
 function renderShell({ title, user, navItems, homePath, content }) {
   return renderAppShellLayout({
     title,
@@ -297,23 +789,32 @@ function renderShell({ title, user, navItems, homePath, content }) {
     pageClass: "page-home page-academics",
     pageStyles: ACADEMICS_STYLE,
     contentClass: "app-content-flush",
+    shellScope: "public",
     content,
     script: ACADEMICS_SCRIPT,
   });
+}
+
+function isAdminUser(user) {
+  return String(user?.user_type || "").trim().toLowerCase() === "administrator";
+}
+
+function adminEditorModalMarkup(enabled = false) {
+  if (!enabled) return "";
+  return `<section id="acadAdminEditor" class="acad-admin-modal" role="dialog" aria-modal="true" aria-hidden="true" hidden><div class="acad-admin-modal-surface"><header class="acad-admin-modal-head"><h3 id="acadAdminTitle">Edit content</h3><button id="acadAdminClose" class="acad-admin-close" type="button" aria-label="Close editor">x</button></header><form id="acadAdminForm" class="acad-admin-form" autocomplete="off"><input type="hidden" name="subjectId" value="0" /><input type="hidden" name="contextType" value="" /><input type="hidden" name="contextId" value="0" /><input type="hidden" name="contentType" value="" /><input type="hidden" name="panelMode" value="rich" /><input type="hidden" name="itemId" value="0" /><div class="acad-admin-field"><label for="acadAdminBody">Body</label><textarea id="acadAdminBody" name="body" placeholder="Write content..."></textarea></div><div id="acadAdminMcqFields" class="acad-admin-grid" hidden><div class="acad-admin-field"><label for="acadAdminOptA">Option A</label><textarea id="acadAdminOptA" name="optA"></textarea></div><div class="acad-admin-field"><label for="acadAdminOptB">Option B</label><textarea id="acadAdminOptB" name="optB"></textarea></div><div class="acad-admin-field"><label for="acadAdminOptC">Option C</label><textarea id="acadAdminOptC" name="optC"></textarea></div><div class="acad-admin-field"><label for="acadAdminOptD">Option D</label><textarea id="acadAdminOptD" name="optD"></textarea></div><div class="acad-admin-field"><label for="acadAdminCorrect">Correct option</label><select id="acadAdminCorrect" name="correctOption"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div></div><p id="acadAdminMsg" class="acad-admin-msg" role="status" aria-live="polite"></p><div class="acad-admin-actions"><button id="acadAdminCancel" class="acad-admin-btn" type="button">Cancel</button><button class="acad-admin-btn" type="submit">Save</button></div></form></div></section>`;
 }
 
 export function classSubjectsPage({ user, navItems, homePath, classItem, subjects = [] } = {}) {
   const className = String(classItem?.name || "").trim() || "Class";
   const rows = Array.isArray(subjects) ? subjects : [];
   const cards = rows.length
-    ? `<div class="acad-card-grid">${rows.map((subject) => cardMarkup({
+    ? `<div class="acad-card-grid acad-subject-grid">${rows.map((subject) => cardMarkup({
       href: `/subjects/${Number(subject?.id || 0)}`,
       name: subject?.name || "Subject",
       imageUrl: subject?.thumbnailUrl || "",
-      meta: subject?.templateCode || subject?.templateName || "",
     })).join("")}</div>`
     : `<p class="acad-empty">No subjects found for this class.</p>`;
-  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(className)}</h2><p class="acad-sub">Subjects in this class</p></div><a class="acad-back" href="/classes">Back to classes</a></header>${cards}</section>`;
+  const content = `${floatingBackButton("/classes")}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(className)}</h2><p class="acad-sub">Subjects in this class</p></div></header>${cards}</section>`;
   return renderShell({
     title: `${className} Subjects`,
     user,
@@ -348,7 +849,7 @@ export function publicSubjectPage({ user, navItems, homePath, subject, roots = [
     return `<section class="acad-child-group" data-root-group="${Number(root?.id || 0)}" hidden><header class="acad-child-head"><h3>${escapeHtml(root?.displayName || root?.serverName || "Book")}</h3><button type="button" class="acad-chip" data-action="acad-reset-root">Back to books</button></header>${cards}</section>`;
   }).join("");
 
-  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(className || "Subject")} | Select a book</p></div><a class="acad-back" href="${escapeHtml(backHref)}">Back to subjects</a></header><div id="acadRootGrid" class="acad-root-grid">${rootCards}</div><div id="acadChildArea" class="acad-child-area" hidden>${childGroups}</div></section>${examFab(safeSubject?.id)}`;
+  const content = `${floatingBackButton(backHref)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(className || "Subject")} | Select a book</p></div></header><div id="acadRootGrid" class="acad-root-grid acad-book-grid">${rootCards}</div><div id="acadChildArea" class="acad-child-area" hidden>${childGroups}</div></section>${examFab(safeSubject?.id)}`;
   return renderShell({
     title: String(safeSubject?.name || "Subject"),
     user,
@@ -362,8 +863,7 @@ export function publicSectionPage({ user, navItems, homePath, subject, node, cha
   const safeSubject = subject || {};
   const safeNode = node || {};
   const headingMeta = sectionHeadingMeta(safeNode);
-  const isRootNode = !Number(safeNode?.parentNodeId || 0);
-  const backLabel = isRootNode ? "Back to subject" : "Back to books";
+  const backHref = `/subjects/${Number(safeSubject?.id || 0)}`;
   const rows = Array.isArray(chapters) ? chapters : [];
   const cards = rows.length
     ? `<div class="acad-card-grid">${rows.map((chapter) => cardMarkup({
@@ -374,7 +874,7 @@ export function publicSectionPage({ user, navItems, homePath, subject, node, cha
       cardClass: "acad-chapter-card",
     })).join("")}</div>`
     : `<p class="acad-empty">No chapters added yet.</p>`;
-  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(headingMeta.subtitle)}</p></div><a class="acad-back" href="/subjects/${Number(safeSubject?.id || 0)}">${escapeHtml(backLabel)}</a></header>${cards}</section>${examFab(safeSubject?.id, { contextType: "node", contextId: safeNode?.id })}`;
+  const content = `${floatingBackButton(backHref)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(headingMeta.subtitle)}</p></div></header>${cards}</section>${examFab(safeSubject?.id, { contextType: "node", contextId: safeNode?.id })}`;
   return renderShell({
     title: headingMeta.title,
     user,
@@ -384,24 +884,33 @@ export function publicSectionPage({ user, navItems, homePath, subject, node, cha
   });
 }
 
-function richItemMarkup(item = {}) {
+function adminItemToolsMarkup(item = {}, options = {}) {
+  const isAdmin = Boolean(options?.isAdmin);
+  const editable = Boolean(options?.editable);
+  if (!isAdmin || !editable) return "";
+  const itemId = Number(item?.id || 0);
+  if (!itemId) return "";
+  return `<div class="acad-admin-item-tools"><button type="button" class="acad-admin-btn" data-action="acad-admin-edit-item" data-item-id="${itemId}">Edit</button><button type="button" class="acad-admin-btn acad-admin-btn-danger" data-action="acad-admin-delete-item" data-item-id="${itemId}">Delete</button></div>`;
+}
+
+function richItemMarkup(item = {}, options = {}) {
   const body = String(item?.body || "").trim();
   const imageUrl = String(item?.imageUrl || "").trim();
   if (!body && !imageUrl) return "";
-  return `<article class="acad-note">${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="Content" loading="lazy" decoding="async" />` : ""}${body}</article>`;
+  return `<article class="acad-note">${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="Content" loading="lazy" decoding="async" />` : ""}${richDisplayValue(body)}${adminItemToolsMarkup(item, options)}</article>`;
 }
 
-function shortNoteItemMarkup(item = {}, index = 0) {
+function shortNoteItemMarkup(item = {}, index = 0, options = {}) {
   const body = String(item?.body || "").trim();
   const imageUrl = String(item?.imageUrl || "").trim();
   if (!body && !imageUrl) return "";
-  return `<article class="acad-note-row"><span class="acad-note-index">${index + 1}.</span><div class="acad-note-body">${body}${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="Short note" loading="lazy" decoding="async" />` : ""}</div></article>`;
+  return `<article class="acad-note-row"><span class="acad-note-index">${index + 1}.</span><div class="acad-note-body">${richDisplayValue(body)}${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="Short note" loading="lazy" decoding="async" />` : ""}${adminItemToolsMarkup(item, options)}</div></article>`;
 }
 
-function mcqItemMarkup(item = {}, index = 0) {
-  const options = Array.isArray(item?.options) ? item.options : [];
+function mcqItemMarkup(item = {}, index = 0, options = {}) {
+  const itemOptions = Array.isArray(item?.options) ? item.options : [];
   const correctOption = String(item?.correctOption || "").trim().toUpperCase();
-  return `<article class="acad-mcq"><p class="acad-mcq-q"><span class="acad-mcq-q-no">${index + 1}.</span><span>${String(item?.body || "")}</span></p>${item?.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="MCQ" loading="lazy" decoding="async" />` : ""}<ul class="acad-mcq-opts">${options.map((option, optionIndex) => `<li><span class="acad-mcq-opt-key">${String.fromCharCode(65 + optionIndex)}</span><span>${String(option || "")}</span></li>`).join("")}</ul><div class="acad-mcq-foot"><button type="button" class="acad-answer-btn" data-action="acad-toggle-answer" aria-expanded="false">Show answer</button><p class="acad-mcq-answer" data-mcq-answer hidden>Answer: ${escapeHtml(correctOption || "Not set")}</p></div></article>`;
+  return `<article class="acad-mcq"><p class="acad-mcq-q"><span class="acad-mcq-q-no">${index + 1}.</span><span>${richDisplayValue(item?.body || "")}</span></p>${item?.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="MCQ" loading="lazy" decoding="async" />` : ""}<ul class="acad-mcq-opts">${itemOptions.map((option, optionIndex) => `<li><span class="acad-mcq-opt-key">${String.fromCharCode(65 + optionIndex)}</span><span>${richDisplayValue(option || "")}</span></li>`).join("")}</ul><div class="acad-mcq-foot"><button type="button" class="acad-answer-btn" data-action="acad-toggle-answer" aria-expanded="false">Show answer</button><p class="acad-mcq-answer" data-mcq-answer hidden>Answer: ${escapeHtml(correctOption || "Not set")}</p>${adminItemToolsMarkup(item, options)}</div></article>`;
 }
 
 function buildPageTokens(totalPages, currentPage) {
@@ -434,7 +943,7 @@ function pagerMarkup(panelKey, totalPages, currentPage = 1, label = "Pages") {
   }).join("")}</span><button type="button" class="acad-page-btn" data-action="acad-page" data-nav="next" data-panel-key="${escapeHtml(panelKey)}" data-page="${Math.min(totalPages, safeCurrent + 1)}"${safeCurrent >= totalPages ? " disabled" : ""}>Next</button></nav>`;
 }
 
-function pagedColumnsMarkup(panelKey, rows = [], itemRenderer, pagerLabel) {
+function pagedColumnsMarkup(panelKey, rows = [], itemRenderer, pagerLabel, renderOptions = {}) {
   const items = Array.isArray(rows) ? rows : [];
   const totalPages = Math.max(1, Math.ceil(items.length / 40));
   let blocks = "";
@@ -443,26 +952,40 @@ function pagedColumnsMarkup(panelKey, rows = [], itemRenderer, pagerLabel) {
     const pageItems = items.slice(start, start + 40);
     const leftItems = pageItems.slice(0, 20);
     const rightItems = pageItems.slice(20, 40);
-    const left = leftItems.map((item, index) => itemRenderer(item, start + index)).join("");
-    const right = rightItems.map((item, index) => itemRenderer(item, start + 20 + index)).join("");
+    const left = leftItems.map((item, index) => itemRenderer(item, start + index, renderOptions)).join("");
+    const right = rightItems.map((item, index) => itemRenderer(item, start + 20 + index, renderOptions)).join("");
     blocks += `<div class="acad-page-block${page === 1 ? " is-active" : ""}" data-page-block="${escapeHtml(panelKey)}" data-page="${page}"${page === 1 ? "" : " hidden"}><div class="acad-content-columns"><div class="acad-content-col">${left || `<p class="acad-empty">No content added yet.</p>`}</div><div class="acad-content-col">${right}</div></div></div>`;
   }
   return `${blocks}${pagerMarkup(panelKey, totalPages, 1, pagerLabel)}`;
 }
 
-function tabPanelMarkup(panelKey, items = [], mode = "rich", active = false) {
+function tabPanelMarkup(panelKey, items = [], mode = "rich", active = false, options = {}) {
   const rows = Array.isArray(items) ? items : [];
   const stateClass = active ? "acad-tab-panel is-active" : "acad-tab-panel";
   const hiddenAttr = active ? "" : " hidden";
+  const subjectId = Number(options?.subjectId || 0);
+  const contextType = String(options?.contextType || "").trim().toLowerCase();
+  const contextId = Number(options?.contextId || 0);
+  const contentType = String(options?.contentType || "").trim().toLowerCase();
+  const contentLabel = String(options?.contentLabel || contentType || "Content").trim();
+  const panelMode = String(options?.panelMode || mode || "rich").trim().toLowerCase();
+  const firstItemId = Number(rows[0]?.id || 0);
+  const panelAttrs = ` data-admin-subject-id="${subjectId}" data-admin-context-type="${escapeHtml(contextType)}" data-admin-context-id="${contextId}" data-admin-content-type="${escapeHtml(contentType)}" data-admin-content-label="${escapeHtml(contentLabel)}" data-admin-panel-mode="${escapeHtml(panelMode)}" data-admin-item-count="${rows.length}" data-admin-first-item-id="${firstItemId}"`;
+  const addButtonLabel = contentType === "summary" && rows.length > 0
+    ? "Edit Summary"
+    : ("Add " + contentLabel);
+  const adminBar = options?.isAdmin && options?.editable
+    ? `<div class="acad-admin-panelbar"><span class="acad-admin-badge">ADMIN QUICK EDIT</span><div class="acad-admin-tools"><button type="button" class="acad-admin-btn" data-action="acad-admin-add-item">${escapeHtml(addButtonLabel)}</button></div></div>`
+    : "";
   if (!rows.length) {
-    return `<section class="${stateClass}" data-tab-panel="${escapeHtml(panelKey)}"${hiddenAttr}><p class="acad-empty">No content added yet.</p></section>`;
+    return `<section class="${stateClass}" data-tab-panel="${escapeHtml(panelKey)}"${hiddenAttr}${panelAttrs}>${adminBar}<p class="acad-empty">No content added yet.</p></section>`;
   }
   const content = mode === "mcq"
-    ? pagedColumnsMarkup(panelKey, rows, (item, index) => mcqItemMarkup(item, index), "MCQ pages")
+    ? pagedColumnsMarkup(panelKey, rows, (item, index, renderOptions) => mcqItemMarkup(item, index, renderOptions), "MCQ pages", options)
     : mode === "short"
-      ? pagedColumnsMarkup(panelKey, rows, (item, index) => shortNoteItemMarkup(item, index), "Short notes pages")
-      : rows.map((item) => richItemMarkup(item)).join("");
-  return `<section class="${stateClass}" data-tab-panel="${escapeHtml(panelKey)}"${hiddenAttr}>${content}</section>`;
+      ? pagedColumnsMarkup(panelKey, rows, (item, index, renderOptions) => shortNoteItemMarkup(item, index, renderOptions), "Short notes pages", options)
+      : rows.map((item) => richItemMarkup(item, options)).join("");
+  return `<section class="${stateClass}" data-tab-panel="${escapeHtml(panelKey)}"${hiddenAttr}${panelAttrs}>${adminBar}${content}</section>`;
 }
 
 export function publicChapterPage({
@@ -472,12 +995,15 @@ export function publicChapterPage({
   subject,
   node,
   chapter,
+  topics = [],
   contentModules = [],
   contentItemsByType = {},
 } = {}) {
+  const adminMode = isAdminUser(user);
   const safeSubject = subject || {};
   const safeNode = node || {};
   const safeChapter = chapter || {};
+  const chapterTopics = Array.isArray(topics) ? topics : [];
   const mapFromPayload = (contentItemsByType && typeof contentItemsByType === "object") ? contentItemsByType : {};
   const inferredModules = publicReaderModules(Object.keys(mapFromPayload));
   const readerModules = (Array.isArray(contentModules) && contentModules.length ? contentModules : inferredModules)
@@ -486,6 +1012,7 @@ export function publicChapterPage({
       label: String(item?.label || "").trim() || String(item?.key || ""),
       tabKey: String(item?.tabKey || item?.key || "").trim().toLowerCase(),
       panelMode: String(item?.panelMode || "rich").trim().toLowerCase(),
+      editable: isEditableContentType(item?.key),
     }))
     .filter((item, index, list) => item.key && item.tabKey && list.findIndex((entry) => entry.tabKey === item.tabKey) === index);
 
@@ -504,12 +1031,104 @@ export function publicChapterPage({
     getItemsForType(moduleItem.key),
     moduleItem.panelMode,
     index === 0,
+    {
+      isAdmin: adminMode,
+      editable: Boolean(moduleItem?.editable),
+      subjectId: Number(safeSubject?.id || 0),
+      contextType: "chapter",
+      contextId: Number(safeChapter?.id || 0),
+      contentType: moduleItem.key,
+      contentLabel: moduleItem.label,
+      panelMode: moduleItem.panelMode,
+    },
   )).join("");
-  const readerContent = readerModules.length ? `${tabs}${panels}` : `<p class="acad-empty">No content tabs configured for this chapter.</p>`;
+  const readerContent = readerModules.length
+    ? `${tabs}${panels}`
+    : `<p class="acad-empty">No content tabs configured for this chapter.</p>`;
+  const topicCards = chapterTopics.length
+    ? `<div class="acad-card-grid">${chapterTopics.map((topic) => cardMarkup({
+      href: `/subjects/${Number(safeSubject?.id || 0)}/topics/${Number(topic?.id || 0)}`,
+      name: topic?.name || "Topic",
+      imageUrl: topic?.imageUrl || "",
+      meta: topic?.topicNumber ? `Topic ${topic.topicNumber}` : "Topic",
+      cardClass: "acad-chapter-card",
+    })).join("")}</div>`
+    : `<p class="acad-empty">No topics added yet.</p>`;
+  const chapterBody = safeChapter?.topicsEnabled
+    ? `<section class="acad-reader-block"><h3>Topics</h3>${topicCards}</section>`
+    : `<section class="acad-reader-block"><h3>Contents</h3>${readerContent}</section>`;
 
-  const content = `<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeChapter?.name || "Chapter")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")}</p></div><a class="acad-back" href="/subjects/${Number(safeSubject?.id || 0)}/sections/${Number(safeNode?.id || 0)}">Back to chapters</a></header><section class="acad-reader-block"><h3>Contents</h3>${readerContent}</section></section>${examFab(safeSubject?.id, { contextType: "chapter", contextId: safeChapter?.id })}`;
+  const content = `${floatingBackButton(`/subjects/${Number(safeSubject?.id || 0)}/sections/${Number(safeNode?.id || 0)}`)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeChapter?.name || "Chapter")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")}</p></div></header>${chapterBody}</section>${adminEditorModalMarkup(adminMode)}${examFab(safeSubject?.id, { contextType: "chapter", contextId: safeChapter?.id })}`;
   return renderShell({
     title: String(safeChapter?.name || "Chapter"),
+    user,
+    navItems,
+    homePath,
+    content,
+  });
+}
+
+export function publicTopicPage({
+  user,
+  navItems,
+  homePath,
+  subject,
+  node,
+  chapter,
+  topic,
+  contentModules = [],
+  contentItemsByType = {},
+} = {}) {
+  const adminMode = isAdminUser(user);
+  const safeSubject = subject || {};
+  const safeNode = node || {};
+  const safeChapter = chapter || {};
+  const safeTopic = topic || {};
+  const mapFromPayload = (contentItemsByType && typeof contentItemsByType === "object") ? contentItemsByType : {};
+  const inferredModules = publicReaderModules(Object.keys(mapFromPayload));
+  const readerModules = (Array.isArray(contentModules) && contentModules.length ? contentModules : inferredModules)
+    .map((item) => ({
+      key: String(item?.key || "").trim().toLowerCase(),
+      label: String(item?.label || "").trim() || String(item?.key || ""),
+      tabKey: String(item?.tabKey || item?.key || "").trim().toLowerCase(),
+      panelMode: String(item?.panelMode || "rich").trim().toLowerCase(),
+      editable: isEditableContentType(item?.key),
+    }))
+    .filter((item, index, list) => item.key && item.tabKey && list.findIndex((entry) => entry.tabKey === item.tabKey) === index);
+
+  const getItemsForType = (type) => {
+    const key = String(type || "").trim().toLowerCase();
+    const direct = mapFromPayload?.[key];
+    if (Array.isArray(direct)) return direct;
+    return [];
+  };
+
+  const tabs = readerModules.length
+    ? `<div class="acad-tabs" data-acad-tabs>${readerModules.map((moduleItem, index) => `<button type="button" class="acad-tab-btn${index === 0 ? " is-active" : ""}" data-tab-key="${escapeHtml(moduleItem.tabKey)}" aria-selected="${index === 0 ? "true" : "false"}">${escapeHtml(moduleItem.label)}</button>`).join("")}</div>`
+    : "";
+  const panels = readerModules.map((moduleItem, index) => tabPanelMarkup(
+    moduleItem.tabKey,
+    getItemsForType(moduleItem.key),
+    moduleItem.panelMode,
+    index === 0,
+    {
+      isAdmin: adminMode,
+      editable: Boolean(moduleItem?.editable),
+      subjectId: Number(safeSubject?.id || 0),
+      contextType: "topic",
+      contextId: Number(safeTopic?.id || 0),
+      contentType: moduleItem.key,
+      contentLabel: moduleItem.label,
+      panelMode: moduleItem.panelMode,
+    },
+  )).join("");
+  const readerContent = readerModules.length
+    ? `${tabs}${panels}`
+    : `<p class="acad-empty">No content tabs configured for this topic.</p>`;
+
+  const content = `${floatingBackButton(`/subjects/${Number(safeSubject?.id || 0)}/chapters/${Number(safeChapter?.id || 0)}`)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeTopic?.name || "Topic")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")} | ${escapeHtml(safeChapter?.name || "Chapter")}</p></div></header><section class="acad-reader-block"><h3>Contents</h3>${readerContent}</section></section>${adminEditorModalMarkup(adminMode)}${examFab(safeSubject?.id, { contextType: "topic", contextId: safeTopic?.id })}`;
+  return renderShell({
+    title: String(safeTopic?.name || "Topic"),
     user,
     navItems,
     homePath,

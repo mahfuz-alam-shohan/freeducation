@@ -4,123 +4,85 @@ import { PRIMARY_NAV_SECTIONS, LOGGED_OUT_NAV_SECTIONS, STUDENT_NAV_SECTIONS, TE
 import { renderAppShellLayout } from "../../layout/appShell/index.js";
 import { SITE_LOGO_CSS, renderSiteLogo } from "../../layout/siteLogo.js";
 
-const HOME_QUOTE_SEEDS = [
+const HOME_QUOTES = [
   { text: "Education is the most powerful weapon to change the world.", author: "Nelson Mandela" },
   { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
   { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
   { text: "The roots of education are bitter, but the fruit is sweet.", author: "Aristotle" },
   { text: "Study the past if you would define the future.", author: "Confucius" },
-  { text: "Wisdom begins in wonder.", author: "Socrates" },
+  { text: "The only true wisdom is in knowing you know nothing.", author: "Socrates" },
   { text: "The mind is not a vessel to be filled, but a fire to be ignited.", author: "Plutarch" },
   { text: "Knowledge is power.", author: "Francis Bacon" },
+  { text: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "Mahatma Gandhi" },
+  { text: "Education is not preparation for life; education is life itself.", author: "John Dewey" },
+  { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+  { text: "The future belongs to those who prepare for it today.", author: "Malcolm X" },
+  { text: "He who opens a school door, closes a prison.", author: "Victor Hugo" },
+  { text: "The whole purpose of education is to turn mirrors into windows.", author: "Sydney J. Harris" },
+  { text: "Education is what remains after one has forgotten what one has learned in school.", author: "Albert Einstein" },
+  { text: "I never teach my pupils. I only attempt to provide the conditions in which they can learn.", author: "Albert Einstein" },
+  { text: "The important thing is not to stop questioning.", author: "Albert Einstein" },
+  { text: "Anyone who has never made a mistake has never tried anything new.", author: "Albert Einstein" },
+  { text: "It is not that I'm so smart. But I stay with the questions much longer.", author: "Albert Einstein" },
+  { text: "Education is a progressive discovery of our own ignorance.", author: "Will Durant" },
+  { text: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss" },
+  { text: "Never let formal education get in the way of your learning.", author: "Mark Twain" },
+  { text: "A person who won't read has no advantage over one who can't read.", author: "Mark Twain" },
+  { text: "Reading is to the mind what exercise is to the body.", author: "Joseph Addison" },
+  { text: "A room without books is like a body without a soul.", author: "Cicero" },
+  { text: "I am still learning.", author: "Michelangelo" },
+  { text: "The mind once enlightened cannot again become dark.", author: "Thomas Paine" },
+  { text: "You cannot teach a man anything; you can only help him find it within himself.", author: "Galileo Galilei" },
+  { text: "The purpose of education is to replace an empty mind with an open one.", author: "Malcolm Forbes" },
+  { text: "Change is the end result of all true learning.", author: "Leo Buscaglia" },
+  { text: "Study hard what interests you the most in the most undisciplined, irreverent and original manner possible.", author: "Richard Feynman" },
+  { text: "Knowledge speaks, but wisdom listens.", author: "Jimi Hendrix" },
+  { text: "Educating the mind without educating the heart is no education at all.", author: "Aristotle" },
+  { text: "The function of education is to teach one to think intensively and to think critically. Intelligence plus character - that is the goal of true education.", author: "Martin Luther King Jr." },
+  { text: "Knowledge will bring you the opportunity to make a difference.", author: "Claire Fagin" },
+  { text: "Learning is not attained by chance, it must be sought for with ardor and attended to with diligence.", author: "Abigail Adams" },
+  { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+  { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+  { text: "Genius is one percent inspiration and ninety-nine percent perspiration.", author: "Thomas Edison" },
+  { text: "Knowing is not enough; we must apply. Willing is not enough; we must do.", author: "Johann Wolfgang von Goethe" },
+  { text: "Quality is not an act, it is a habit.", author: "Aristotle" },
+  { text: "If you want to lift yourself up, lift up someone else.", author: "Booker T. Washington" },
+  { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { text: "Act as if what you do makes a difference. It does.", author: "William James" },
+  { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+  { text: "Our greatest glory is not in never falling, but in rising every time we fall.", author: "Confucius" },
+  { text: "Happiness depends upon ourselves.", author: "Aristotle" },
+  { text: "The unexamined life is not worth living.", author: "Socrates" },
+  { text: "What lies behind us and what lies before us are tiny matters compared to what lies within us.", author: "Ralph Waldo Emerson" },
+  { text: "You must be the change you wish to see in the world.", author: "Mahatma Gandhi" },
+  { text: "It always seems impossible until it is done.", author: "Nelson Mandela" },
+  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+  { text: "The best way to predict the future is to create it.", author: "Peter Drucker" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { text: "Stay hungry, stay foolish.", author: "Steve Jobs" },
+  { text: "When you know better, you do better.", author: "Maya Angelou" },
+  { text: "Turn your wounds into wisdom.", author: "Oprah Winfrey" },
+  { text: "Well done is better than well said.", author: "Benjamin Franklin" },
+  { text: "Tell me and I forget. Teach me and I remember. Involve me and I learn.", author: "Benjamin Franklin" },
+  { text: "Develop a passion for learning. If you do, you will never cease to grow.", author: "Anthony J. D'Angelo" },
+  { text: "Education does not change the world. Education changes people. People change the world.", author: "Paulo Freire" },
+  { text: "Try not to become a man of success, but rather try to become a man of value.", author: "Albert Einstein" },
+  { text: "The measure of intelligence is the ability to change.", author: "Albert Einstein" },
+  { text: "Life is really simple, but we insist on making it complicated.", author: "Confucius" },
+  { text: "Knowing yourself is the beginning of all wisdom.", author: "Aristotle" },
+  { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
+  { text: "What we think, we become.", author: "Buddha" },
+  { text: "The only source of knowledge is experience.", author: "Albert Einstein" },
+  { text: "The greatest enemy of knowledge is not ignorance, it is the illusion of knowledge.", author: "Stephen Hawking" },
+  { text: "Dream, dream, dream. Dreams transform into thoughts and thoughts result in action.", author: "A. P. J. Abdul Kalam" },
+  { text: "Small aim is a crime; have great aim.", author: "A. P. J. Abdul Kalam" },
+  { text: "Arise, awake, and stop not till the goal is reached.", author: "Swami Vivekananda" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn" },
+  { text: "Formal education will make you a living; self-education will make you a fortune.", author: "Jim Rohn" },
 ];
-
-const HOME_QUOTE_COMPONENTS = {
-  topics: [
-    "Strong learning",
-    "Deep understanding",
-    "Clear thinking",
-    "Creative problem-solving",
-    "Real confidence",
-    "Academic excellence",
-    "Long-term success",
-    "Personal growth",
-    "Community leadership",
-    "Focused discipline",
-    "Practical intelligence",
-    "Independent learning",
-    "Career readiness",
-    "Scientific curiosity",
-    "Mathematical clarity",
-    "Language mastery",
-    "Digital literacy",
-    "Critical reasoning",
-    "Moral strength",
-    "Collaborative spirit",
-  ],
-  actions: [
-    "practice consistently",
-    "review small lessons daily",
-    "ask better questions",
-    "teach what you learn",
-    "take notes with intention",
-    "solve one more problem",
-    "learn from mistakes quickly",
-    "stay curious under pressure",
-    "build concepts before speed",
-    "reflect after every study session",
-    "connect ideas across subjects",
-    "protect focused study time",
-    "read beyond the syllabus",
-    "test yourself regularly",
-    "return to weak chapters early",
-  ],
-  outcomes: [
-    "progress becomes visible",
-    "difficult chapters become manageable",
-    "confidence replaces doubt",
-    "results improve steadily",
-    "memory becomes stronger",
-    "exam pressure becomes lighter",
-    "clarity grows faster",
-    "skills become reliable",
-    "decisions become smarter",
-    "learning becomes enjoyable",
-    "discipline becomes natural",
-    "goals feel achievable",
-    "mistakes turn into momentum",
-    "your foundation becomes stronger",
-    "consistency starts compounding",
-  ],
-  reflections: [
-    "one page at a time",
-    "one concept at a time",
-    "one day at a time",
-    "one honest effort at a time",
-    "one focused session at a time",
-    "one better habit at a time",
-  ],
-  authors: [
-    "Freeducation",
-    "Learning Desk",
-    "Study Coach",
-    "Academic Mentor",
-    "Classroom Insight",
-    "Daily Revision",
-    "Exam Guide",
-    "Focus Notebook",
-    "Concept Lab",
-    "Practice Planner",
-    "Scholar Journal",
-    "Learning Compass",
-  ],
-};
-
-function buildHomeQuotes(limit = 1200) {
-  const maxCount = Math.max(1000, Number(limit) || 1200);
-  const output = [...HOME_QUOTE_SEEDS];
-  const uniqueTexts = new Set(output.map((entry) => String(entry?.text || "").trim()).filter(Boolean));
-  const { topics, actions, outcomes, reflections, authors } = HOME_QUOTE_COMPONENTS;
-
-  outer:
-  for (let i = 0; i < topics.length; i += 1) {
-    for (let j = 0; j < actions.length; j += 1) {
-      for (let k = 0; k < outcomes.length; k += 1) {
-        for (let m = 0; m < reflections.length; m += 1) {
-          const text = `${topics[i]} grows when you ${actions[j]}; ${outcomes[k]}, ${reflections[m]}.`;
-          if (uniqueTexts.has(text)) continue;
-          uniqueTexts.add(text);
-          output.push({ text, author: authors[(output.length - 1) % authors.length] });
-          if (output.length >= maxCount) break outer;
-        }
-      }
-    }
-  }
-
-  return output;
-}
-
-const HOME_QUOTES = buildHomeQuotes(1200);
 
 const HOME_STYLE = `
 ${SITE_LOGO_CSS}
@@ -128,9 +90,9 @@ ${SITE_LOGO_CSS}
 body[data-theme='light'] .home-cover{background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 93%,#fff 7%),color-mix(in srgb,var(--surface-soft) 84%,var(--accent) 16%))}
 .home-cover::before{content:'';position:absolute;right:-72px;top:-64px;width:210px;height:210px;border-radius:999px;pointer-events:none;opacity:.25;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 55%,#fff 45%) 0%,transparent 68%);z-index:0}
 .home-cover::after{content:'';position:absolute;left:-56px;bottom:-74px;width:180px;height:180px;border-radius:999px;pointer-events:none;opacity:.14;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 62%,#fff 38%) 0%,transparent 70%);z-index:0}
-.home-cover-inner{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);align-items:center;gap:12px;width:100%}
-.home-cover-title{margin:0;display:inline-flex;justify-self:start;max-width:min(100%,310px)}
-.home-cover-title .site-logo{width:100%}
+.home-cover-inner{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);align-items:center;gap:12px;width:100%}
+.home-cover-title{margin:0;display:inline-flex;justify-self:start;max-width:min(100%,620px)}
+.home-cover-title .site-logo{width:auto;max-width:100%}
 .home-cover-quote{margin:0;display:grid;gap:8px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--border) 70%,var(--accent) 30%);border-radius:12px;background:color-mix(in srgb,var(--surface) 84%,transparent);min-height:94px;align-content:space-between}
 .home-cover-quote p{margin:0;color:var(--text);font-family:Georgia,'Times New Roman',serif;font-size:clamp(.96rem,1.6vw,1.08rem);font-weight:500;line-height:1.35;letter-spacing:.01em;word-break:break-word;overflow-wrap:anywhere}
 .home-cover-quote-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -145,7 +107,7 @@ body[data-theme='light'] .home-cover{background:linear-gradient(145deg,color-mix
 .home-class-rail::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--border) 78%,transparent);border-radius:999px}
 .home-class-card{display:grid;gap:0;min-width:0}
 .home-class-link{display:grid;gap:0;text-decoration:none;color:inherit}
-.home-class-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--surface-strong) 28%,#d8e3f3),color-mix(in srgb,var(--accent) 34%,#8799b6))}
+.home-class-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid color-mix(in srgb,var(--border) 78%,#fff 22%);background:linear-gradient(145deg,color-mix(in srgb,var(--surface-strong) 28%,#d8e3f3),color-mix(in srgb,var(--accent) 34%,#8799b6))}
 .home-class-poster img{display:block;width:100%;height:100%;object-fit:cover}
 .home-class-poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:1rem;font-weight:800;letter-spacing:.03em;color:#f4f8ff;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 38%,#4b658b),color-mix(in srgb,var(--accent) 62%,#233a60))}
 .home-class-name{margin:0;padding:8px 2px 0;font-size:.9rem;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -155,16 +117,27 @@ body[data-theme='light'] .home-cover{background:linear-gradient(145deg,color-mix
 @media (max-width:900px){
   .home-cover{padding:10px 12px;min-height:138px}
   .home-cover-inner{grid-template-columns:1fr;gap:9px}
-  .home-cover-title{max-width:min(100%,248px)}
+  .home-cover-title{max-width:min(100%,248px);justify-self:center}
   .home-cover-quote{min-height:86px;padding:9px 10px}
 }
 @media (max-width:760px){
   .home-cover{padding:10px;min-height:132px}
-  .home-cover-title{max-width:min(100%,210px)}
-  .home-cover-quote{min-height:82px;padding:8px 9px;border-radius:10px}
+  .home-cover-title{max-width:min(100%,210px);justify-self:center}
+  .home-cover-quote{width:100%;min-height:82px;padding:8px 9px;border-radius:10px}
   .home-cover-quote p{font-size:.95rem;line-height:1.33}
-  .home-class-rail{grid-auto-columns:44vw;gap:10px}
-  .home-all-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .home-class-rail{grid-auto-columns:38vw;gap:8px}
+  .home-class-name{font-size:.82rem}
+  .home-all-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+}
+@media (max-width:430px){
+  .home-class-rail{grid-auto-columns:42vw}
+  .home-all-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px) and (orientation:portrait){
+  .home-class-rail{grid-auto-columns:32vw;gap:7px}
+  .home-all-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .home-class-poster{border-radius:10px}
+  .home-class-name{font-size:.76rem;padding-top:5px}
 }
 `;
 
@@ -174,38 +147,7 @@ const HOME_SCRIPT = `
   const quoteAuthor = document.getElementById('homeQuoteAuthor');
   if (!(quoteText instanceof HTMLElement) || !(quoteAuthor instanceof HTMLElement)) return;
 
-  const seeds = ${JSON.stringify(HOME_QUOTE_SEEDS)};
-  const components = ${JSON.stringify(HOME_QUOTE_COMPONENTS)};
-  const limit = 1200;
-
-  const buildQuotes = () => {
-    const quotes = Array.isArray(seeds) ? [...seeds] : [];
-    const topics = Array.isArray(components?.topics) ? components.topics : [];
-    const actions = Array.isArray(components?.actions) ? components.actions : [];
-    const outcomes = Array.isArray(components?.outcomes) ? components.outcomes : [];
-    const reflections = Array.isArray(components?.reflections) ? components.reflections : [];
-    const authors = Array.isArray(components?.authors) ? components.authors : ['Freeducation'];
-    const unique = new Set(quotes.map((entry) => String(entry?.text || '').trim()).filter(Boolean));
-
-    outer:
-    for (let i = 0; i < topics.length; i += 1) {
-      for (let j = 0; j < actions.length; j += 1) {
-        for (let k = 0; k < outcomes.length; k += 1) {
-          for (let m = 0; m < reflections.length; m += 1) {
-            const text = topics[i] + ' grows when you ' + actions[j] + '; ' + outcomes[k] + ', ' + reflections[m] + '.';
-            if (unique.has(text)) continue;
-            unique.add(text);
-            quotes.push({ text, author: authors[(quotes.length - 1) % authors.length] });
-            if (quotes.length >= limit) break outer;
-          }
-        }
-      }
-    }
-
-    return quotes;
-  };
-
-  const quotes = buildQuotes();
+  const quotes = ${JSON.stringify(HOME_QUOTES)};
   if (!quotes.length) return;
 
   let index = Math.floor(Math.random() * quotes.length);
@@ -288,6 +230,7 @@ export function homePage({ user, featuredClasses = [], allClasses = [], showAllC
     pageStyles: HOME_STYLE,
     script: HOME_SCRIPT,
     contentClass: "app-content-flush",
+    shellScope: "public",
     content: bodyContent,
   });
 }

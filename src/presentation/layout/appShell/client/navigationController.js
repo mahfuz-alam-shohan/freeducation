@@ -1,10 +1,15 @@
 export const APP_SHELL_CLIENT_NAVIGATION = `
-  if (!openButton || !overlay || !sidebar) {
+  if (!overlay || !sidebar || (!openButton && !mobileMenuButton)) {
     clearNavigating();
     return;
   }
 
-  openButton.addEventListener('click', () => setMenu(!body.classList.contains('menu-open')), { signal });
+  if (openButton) {
+    openButton.addEventListener('click', () => setMenu(!body.classList.contains('menu-open')), { signal });
+  }
+  if (mobileMenuButton) {
+    mobileMenuButton.addEventListener('click', () => setMenu(!body.classList.contains('menu-open')), { signal });
+  }
   if (closeButton) closeButton.addEventListener('click', () => setMenu(false), { signal });
   overlay.addEventListener('click', () => setMenu(false), { signal });
 

@@ -22,6 +22,21 @@ export const APP_SHELL_STYLE_NAV_THEME = `
 .app-nav a.active .app-nav-icon,.app-nav a:hover .app-nav-icon{background:color-mix(in srgb,var(--nav-icon-color) 18%,var(--surface-soft))}
 .app-nav a.app-nav-highlight{color:color-mix(in srgb,var(--accent) 70%,#fff);border-color:color-mix(in srgb,var(--accent) 40%,var(--border));background:color-mix(in srgb,var(--accent) 16%,var(--surface-soft));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}
 .app-nav a.app-nav-highlight.active,.app-nav a.app-nav-highlight:hover{background:color-mix(in srgb,var(--accent) 25%,var(--surface));color:var(--text)}
+.app-mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-mobile-nav);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:7px calc(8px + env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));background:linear-gradient(180deg,color-mix(in srgb,var(--surface-strong) 88%,transparent),var(--surface-strong));border-top:1px solid var(--border);backdrop-filter:blur(14px)}
+.app-mobile-nav-link{appearance:none;-webkit-appearance:none;text-decoration:none;color:var(--text-muted);display:grid;justify-items:center;align-content:center;gap:2px;min-height:52px;padding:4px 2px;border-radius:12px;border:1px solid transparent;background:transparent;font-size:.66rem;font-weight:700;line-height:1.1;letter-spacing:.02em;cursor:pointer}
+.app-mobile-nav-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:color-mix(in srgb,var(--surface-soft) 90%,transparent);color:var(--mobile-nav-color,var(--text-muted))}
+.app-mobile-nav-icon .app-icon{width:16px;height:16px;stroke-width:1.9}
+.app-mobile-nav-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-inline:2px}
+.app-mobile-nav-link[data-nav-key='home']{--mobile-nav-color:#2d88ff}
+.app-mobile-nav-link[data-nav-key='social']{--mobile-nav-color:#1fb774}
+.app-mobile-nav-link[data-nav-key='results']{--mobile-nav-color:#f2a531}
+.app-mobile-nav-link[data-nav-key='menu']{--mobile-nav-color:#6f7dff}
+.app-mobile-nav-link.active{color:var(--text);border-color:color-mix(in srgb,var(--mobile-nav-color) 44%,var(--border));background:color-mix(in srgb,var(--mobile-nav-color) 12%,var(--surface-soft))}
+.app-mobile-nav-link.active .app-mobile-nav-icon{background:color-mix(in srgb,var(--mobile-nav-color) 20%,var(--surface-soft))}
+body.menu-open .app-mobile-nav-menu{color:var(--text);border-color:color-mix(in srgb,var(--mobile-nav-color) 44%,var(--border));background:color-mix(in srgb,var(--mobile-nav-color) 12%,var(--surface-soft))}
+body.menu-open .app-mobile-nav-menu .app-mobile-nav-icon{background:color-mix(in srgb,var(--mobile-nav-color) 20%,var(--surface-soft))}
+.app-mobile-nav-link:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.app-mobile-nav-menu{font:inherit}
 .app-theme-wrap{border-top:1px solid var(--border);padding-top:var(--space-2)}
 .app-theme-toggle{position:relative;isolation:isolate;width:100%;min-height:42px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);color:var(--text);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-2) var(--space-1) var(--space-2);cursor:pointer;font-size:.84rem;font-weight:600;letter-spacing:.02em;transition:background .2s ease,border-color .2s ease,transform .2s var(--motion-swift)}
 .app-theme-toggle::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 18%,transparent),transparent 45%);opacity:0;transition:opacity .28s ease;z-index:-1}
@@ -43,4 +58,7 @@ body[data-theme='light'] .app-theme-moon{opacity:0;transform:scale(.58) rotate(3
 .app-theme-toggle[data-theme-state='switching']{cursor:progress}
 .app-theme-toggle[data-theme-state='switching'] .app-theme-chip{color:var(--text);border-color:color-mix(in srgb,var(--accent) 44%,var(--border));background:color-mix(in srgb,var(--accent) 18%,var(--surface-soft));animation:theme-chip-pulse .7s ease-in-out infinite}
 .app-theme-toggle[data-theme-state='switching'] .app-theme-orb{animation:theme-orb-spin .9s var(--motion-swift) infinite}
+@media (min-width:900px){
+  .app-mobile-nav{display:none}
+}
 `;

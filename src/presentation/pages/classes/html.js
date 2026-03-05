@@ -60,6 +60,7 @@ export function classesHtml() {
               <th>Image</th>
               <th>Class Name</th>
               <th>Created</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="classRows"></tbody>

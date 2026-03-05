@@ -1,10 +1,11 @@
 import { loginPage } from "../../presentation/pages/login/index.js";
 import { homePage } from "../../presentation/pages/home/index.js";
-import { classSubjectsPage, publicChapterPage, publicSectionPage, publicSubjectPage } from "../../presentation/pages/academics/index.js";
+import { classSubjectsPage, publicChapterPage, publicSectionPage, publicSubjectPage, publicTopicPage } from "../../presentation/pages/academics/index.js";
 import { examSessionPage, examSetupPage } from "../../presentation/pages/exam/index.js";
 import { examResultDetailPage, examResultsPage } from "../../presentation/pages/results/index.js";
 import { socialCreatePage, socialMyPostsPage, socialPage, socialPostPage, socialSearchPage } from "../../presentation/pages/social/index.js";
 import { profilePage } from "../../presentation/pages/profile/index.js";
+import { faviconResponse } from "../../presentation/layout/favicon.js";
 import {
   LOGGED_OUT_NAV_SECTIONS,
   PRIMARY_NAV_SECTIONS,
@@ -40,6 +41,7 @@ import {
   getPublicModuleClassSubjects,
   getPublicSubjectBooks,
   getPublicSubjectNodeChapters,
+  getPublicTopicReader,
   listPublicModuleClasses,
 } from "../../features/modules/modulesService.js";
 import {
@@ -93,6 +95,7 @@ export async function handlePublicRoute(request, env, url) {
   const publicSubjectPageMatch = url.pathname.match(/^\/subjects\/(\d+)$/);
   const publicSubjectSectionPageMatch = url.pathname.match(/^\/subjects\/(\d+)\/sections\/(\d+)$/);
   const publicSubjectChapterPageMatch = url.pathname.match(/^\/subjects\/(\d+)\/chapters\/(\d+)$/);
+  const publicSubjectTopicPageMatch = url.pathname.match(/^\/subjects\/(\d+)\/topics\/(\d+)$/);
   const examAttemptPageMatch = url.pathname.match(/^\/exam\/(\d+)$/);
   const examResultsDetailPageMatch = url.pathname.match(/^\/results\/(\d+)$/);
   const startExamApiMatch = url.pathname.match(/^\/api\/public\/subjects\/(\d+)\/exams\/start$/);
@@ -100,6 +103,10 @@ export async function handlePublicRoute(request, env, url) {
   const submitExamApiMatch = url.pathname.match(/^\/api\/public\/exams\/attempts\/(\d+)\/submit$/);
   const exitExamApiMatch = url.pathname.match(/^\/api\/public\/exams\/attempts\/(\d+)\/exit$/);
   const retakeExamApiMatch = url.pathname.match(/^\/api\/public\/exams\/sessions\/(\d+)\/retake$/);
+
+  if (request.method === "GET" && (url.pathname === "/favicon.svg" || url.pathname === "/favicon.ico")) {
+    return faviconResponse();
+  }
 
   let userLoaded = false;
   let userCache = null;
@@ -301,6 +308,23 @@ export async function handlePublicRoute(request, env, url) {
       subject: payload.subject,
       node: payload.node,
       chapter: payload.chapter,
+      topics: payload.topics,
+      contentModules: payload.contentModules,
+      contentItemsByType: payload.contentItemsByType,
+    }));
+  }
+
+  if (request.method === "GET" && publicSubjectTopicPageMatch) {
+    const user = await getCurrentUser();
+    const payload = await getPublicTopicReader(env, publicSubjectTopicPageMatch[1], publicSubjectTopicPageMatch[2]);
+    return html(publicTopicPage({
+      user,
+      navItems: resolvePublicNav(user?.user_type),
+      homePath: resolvePublicHomePath(user?.user_type),
+      subject: payload.subject,
+      node: payload.node,
+      chapter: payload.chapter,
+      topic: payload.topic,
       contentModules: payload.contentModules,
       contentItemsByType: payload.contentItemsByType,
     }));

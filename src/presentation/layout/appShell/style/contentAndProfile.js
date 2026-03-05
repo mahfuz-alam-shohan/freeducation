@@ -17,12 +17,23 @@ export const APP_SHELL_STYLE_CONTENT = `
 .app-profile-logout:hover,.app-profile-login:hover{background:var(--surface-soft)}
 .app-profile-help{margin:0;font-size:.78rem;color:var(--text-muted);line-height:1.35}
 body.profile-open .app-profile-pop{opacity:1;transform:translateY(0);pointer-events:auto}
-.app-content{padding:var(--space-2);display:grid;gap:var(--space-2);align-content:start;animation:section-in .24s var(--motion-swift) both;transition:opacity .2s ease;min-height:200px;min-width:0;overflow-x:clip}
-.app-content > *{animation:content-float-in .36s var(--motion-smooth) both;animation-delay:calc(var(--content-seq,0) * 32ms);transform-origin:50% 0;width:100%!important;max-width:none!important;margin-left:0!important;margin-right:0!important;min-width:0}
+.app-content{padding:var(--space-2);padding-bottom:calc(var(--space-2) + var(--layout-mobile-nav-offset));display:grid;gap:var(--space-2);align-content:start;transition:opacity .2s ease;min-height:200px;min-width:0;overflow-x:clip}
+.app-content > *{transform-origin:50% 0;width:100%!important;max-width:none!important;margin-left:0!important;margin-right:0!important;min-width:0}
 .app-content > *:nth-child(1){--content-seq:1}.app-content > *:nth-child(2){--content-seq:2}.app-content > *:nth-child(3){--content-seq:3}.app-content > *:nth-child(4){--content-seq:4}.app-content > *:nth-child(5){--content-seq:5}.app-content > *:nth-child(n+6){--content-seq:6}
+html.app-view-transitioning .app-content,
+html.app-view-transitioning .app-content > *{
+  animation:none !important;
+  transform:none !important;
+  filter:none !important;
+}
+body.app-navigating .app-content,
+body.app-navigating .app-content > *{
+  animation:none !important;
+  transform:none !important;
+}
 .app-content.app-content-flush{padding:0;gap:0}
-.app-footer{padding:var(--space-2) var(--space-2) max(var(--space-2),env(safe-area-inset-bottom));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.8rem;min-width:0}
-.app-status-toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);min-width:min(320px,88vw);max-width:min(440px,92vw);padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:var(--z-toast);box-shadow:0 12px 30px rgba(0,0,0,.2)}
+.app-footer{padding:var(--space-2) var(--space-2) calc(var(--space-2) + var(--layout-mobile-nav-offset));border-top:1px solid var(--border);color:var(--text-muted);background:var(--surface-strong);font-size:.8rem;min-width:0}
+.app-status-toast{position:fixed;left:50%;bottom:calc(16px + var(--layout-mobile-nav-offset));transform:translate(-50%,20px);min-width:min(320px,88vw);max-width:min(440px,92vw);padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:var(--z-toast);box-shadow:0 12px 30px rgba(0,0,0,.2)}
 .app-status-toast.is-visible{opacity:1;transform:translate(-50%,0)}
 .app-status-toast[data-status='error']{border-color:#c76167;color:#ffd8dc}
 .app-status-toast[data-status='success']{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
@@ -53,13 +64,15 @@ body.notifications-open .app-notifications-overlay{opacity:1;visibility:visible;
 body.notifications-open .app-notifications-panel{transform:translateX(0)}
 body.menu-open{overflow:hidden}
 body.notifications-open{overflow:hidden}
-body.menu-open .app-nav-overlay{visibility:visible}
+body.menu-open .app-nav-overlay{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility .2s step-start}
 body.menu-open .app-sidebar{transform:translate3d(0,0,0)}
 body.menu-open .app-nav a{animation:menu-item-in .56s cubic-bezier(.18,.75,.25,1) both}
-body.app-navigating .app-content{opacity:.78}
-body.app-navigating .app-content::after{content:'Loading content...';display:block;border:1px dashed var(--border);background:var(--surface);color:var(--text-muted);font-size:.84rem;padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm)}
+body.app-navigating .app-content{opacity:1}
 .app-logout:focus-visible,.app-nav a:focus-visible,.app-menu-toggle:focus-visible,.app-avatar:focus-visible,.app-profile-logout:focus-visible,.app-theme-toggle:focus-visible,.app-notify-toggle:focus-visible,.app-notifications-close:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 @media (min-width:900px){
+  .app-content{padding-bottom:var(--space-3)}
+  .app-footer{padding-bottom:var(--space-3)}
+  .app-status-toast{bottom:16px}
   .app-notifications-panel{top:var(--layout-header-offset-desktop);height:calc(100vh - var(--layout-header-offset-desktop));height:calc(100dvh - var(--layout-header-offset-desktop))}
   .app-notifications-overlay{inset:var(--layout-header-offset-desktop) 0 0 0}
 }

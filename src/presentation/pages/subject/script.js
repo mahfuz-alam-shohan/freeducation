@@ -35,8 +35,19 @@ export function subjectScript(subjectId, apiBase = "/api/workspace", contentModu
   const topicForm = document.getElementById('topicForm');
   const topicModalCancel = document.getElementById('topicModalCancel');
   const topicModalTitle = document.getElementById('topicModalTitle');
+  const topicModalImageSlot = document.getElementById('topicModalImageSlot');
+  const topicModalImageInput = document.getElementById('topicModalImageInput');
+  const topicModalImagePreview = document.getElementById('topicModalImagePreview');
+  const topicModalImageIcon = document.getElementById('topicModalImageIcon');
+  const topicModalImageRemove = document.getElementById('topicModalImageRemove');
+  const contentPrefsModal = document.getElementById('contentPrefsModal');
+  const contentPrefsForm = document.getElementById('contentPrefsForm');
+  const contentPrefsModalTitle = document.getElementById('contentPrefsModalTitle');
+  const contentPrefsModalHint = document.getElementById('contentPrefsModalHint');
+  const contentPrefsOptions = document.getElementById('contentPrefsOptions');
+  const contentPrefsModalCancel = document.getElementById('contentPrefsModalCancel');
   const chapterTopicsToggleWrap = document.getElementById('chapterTopicsToggleWrap');
-  if (!titleEl || !subtitleEl || !breadcrumbEl || !dynamicArea || !msgEl || !backBtn || !chapterModal || !chapterForm || !chapterModalCancel || !chapterModalTitle || !chapterModalImageSlot || !chapterModalImageInput || !chapterModalImagePreview || !chapterModalImageIcon || !chapterModalImageRemove || !topicModal || !topicForm || !topicModalCancel || !topicModalTitle || !chapterTopicsToggleWrap) return;
+  if (!titleEl || !subtitleEl || !breadcrumbEl || !dynamicArea || !msgEl || !backBtn || !chapterModal || !chapterForm || !chapterModalCancel || !chapterModalTitle || !chapterModalImageSlot || !chapterModalImageInput || !chapterModalImagePreview || !chapterModalImageIcon || !chapterModalImageRemove || !topicModal || !topicForm || !topicModalCancel || !topicModalTitle || !topicModalImageSlot || !topicModalImageInput || !topicModalImagePreview || !topicModalImageIcon || !topicModalImageRemove || !contentPrefsModal || !contentPrefsForm || !contentPrefsModalTitle || !contentPrefsModalHint || !contentPrefsOptions || !contentPrefsModalCancel || !chapterTopicsToggleWrap) return;
 
   const controller = new AbortController();
   if (typeof window.__registerCleanup === 'function') {
@@ -52,6 +63,7 @@ export function subjectScript(subjectId, apiBase = "/api/workspace", contentModu
   const rootChildrenCache = new Map();
   const autosaveTimers = new Map();
   let chapterModalPreviewUrl = '';
+  let topicModalPreviewUrl = '';
 
   const escapeHtml = (value) => String(value || '')
     .replaceAll('&', '&amp;')
@@ -163,6 +175,44 @@ ${imageToolsModule()}
     chapterModalImageSlot.classList.add('has-image');
   };
 
+  const clearTopicModalPreviewUrl = () => {
+    if (!topicModalPreviewUrl) return;
+    URL.revokeObjectURL(topicModalPreviewUrl);
+    topicModalPreviewUrl = '';
+  };
+
+  const syncTopicModalImageUi = () => {
+    const file = topicModalImageInput.files?.[0] || null;
+    const existingImage = String(topicForm.dataset.existingImage || '').trim();
+    clearTopicModalPreviewUrl();
+
+    if (file) {
+      topicModalPreviewUrl = URL.createObjectURL(file);
+      topicModalImagePreview.src = topicModalPreviewUrl;
+      topicModalImagePreview.hidden = false;
+      topicModalImageIcon.hidden = true;
+      topicModalImageRemove.hidden = false;
+      topicModalImageSlot.classList.add('has-image');
+      topicForm.elements.clearImage.value = '0';
+      return;
+    }
+
+    if (existingImage) {
+      topicModalImagePreview.src = existingImage;
+      topicModalImagePreview.hidden = false;
+      topicModalImageIcon.hidden = true;
+      topicModalImageRemove.hidden = false;
+      topicModalImageSlot.classList.add('has-image');
+      return;
+    }
+
+    topicModalImagePreview.hidden = true;
+    topicModalImagePreview.removeAttribute('src');
+    topicModalImageIcon.hidden = false;
+    topicModalImageRemove.hidden = true;
+    topicModalImageSlot.classList.remove('has-image');
+  };
+
   const currentState = () => {
     const params = new URLSearchParams(window.location.search);
     const nodeId = Number.parseInt(String(params.get('node') || 0), 10) || 0;
@@ -257,6 +307,192 @@ ${imageToolsModule()}
   const deleteIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 10v7"/><path d="M14 10v7"/></svg>';
   const moveUpIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V6"/><path d="m6.5 11.5 5.5-5.5 5.5 5.5"/></svg>';
   const moveDownIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12"/><path d="m6.5 12.5 5.5 5.5 5.5-5.5"/></svg>';
+  const prefsIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M12 17v4"/><path d="M4 8h16"/><path d="M4 16h16"/><circle cx="8" cy="8" r="2"/><circle cx="16" cy="16" r="2"/></svg>';
+  const parseContentTypeKeys = (value) => String(value || '')
+    .split(',')
+    .map((item) => String(item || '').trim().toLowerCase())
+    .filter((item, index, list) => Boolean(item) && list.indexOf(item) === index && contentModuleMap.has(item));
+  const encodeContentTypeKeys = (value) => parseContentTypeKeys(Array.isArray(value) ? value.join(',') : value).join(',');
+  const greekLowerSymbols = [
+    { label: 'alpha', value: '\u03B1' }, { label: 'beta', value: '\u03B2' }, { label: 'gamma', value: '\u03B3' }, { label: 'delta', value: '\u03B4' },
+    { label: 'epsilon', value: '\u03B5' }, { label: 'zeta', value: '\u03B6' }, { label: 'eta', value: '\u03B7' }, { label: 'theta', value: '\u03B8' },
+    { label: 'iota', value: '\u03B9' }, { label: 'kappa', value: '\u03BA' }, { label: 'lambda', value: '\u03BB' }, { label: 'mu', value: '\u03BC' },
+    { label: 'nu', value: '\u03BD' }, { label: 'xi', value: '\u03BE' }, { label: 'omicron', value: '\u03BF' }, { label: 'pi', value: '\u03C0' },
+    { label: 'rho', value: '\u03C1' }, { label: 'sigma', value: '\u03C3' }, { label: 'tau', value: '\u03C4' }, { label: 'upsilon', value: '\u03C5' },
+    { label: 'phi', value: '\u03C6' }, { label: 'chi', value: '\u03C7' }, { label: 'psi', value: '\u03C8' }, { label: 'omega', value: '\u03C9' },
+    { label: 'vartheta', value: '\u03D1' }, { label: 'varphi', value: '\u03D5' }, { label: 'varpi', value: '\u03D6' }, { label: 'varrho', value: '\u03F1' },
+    { label: 'final sigma', value: '\u03C2' },
+  ];
+  const greekUpperSymbols = [
+    { label: 'Alpha', value: '\u0391' }, { label: 'Beta', value: '\u0392' }, { label: 'Gamma', value: '\u0393' }, { label: 'Delta', value: '\u0394' },
+    { label: 'Epsilon', value: '\u0395' }, { label: 'Zeta', value: '\u0396' }, { label: 'Eta', value: '\u0397' }, { label: 'Theta', value: '\u0398' },
+    { label: 'Iota', value: '\u0399' }, { label: 'Kappa', value: '\u039A' }, { label: 'Lambda', value: '\u039B' }, { label: 'Mu', value: '\u039C' },
+    { label: 'Nu', value: '\u039D' }, { label: 'Xi', value: '\u039E' }, { label: 'Omicron', value: '\u039F' }, { label: 'Pi', value: '\u03A0' },
+    { label: 'Rho', value: '\u03A1' }, { label: 'Sigma', value: '\u03A3' }, { label: 'Tau', value: '\u03A4' }, { label: 'Upsilon', value: '\u03A5' },
+    { label: 'Phi', value: '\u03A6' }, { label: 'Chi', value: '\u03A7' }, { label: 'Psi', value: '\u03A8' }, { label: 'Omega', value: '\u03A9' },
+  ];
+  const mathOperatorSymbols = [
+    { label: 'plus-minus', value: '\u00B1' }, { label: 'multiply', value: '\u00D7' }, { label: 'divide', value: '\u00F7' }, { label: 'dot product', value: '\u22C5' },
+    { label: 'not equal', value: '\u2260' }, { label: 'approximately', value: '\u2248' }, { label: 'less or equal', value: '\u2264' }, { label: 'greater or equal', value: '\u2265' },
+    { label: 'proportional', value: '\u221D' }, { label: 'infinity', value: '\u221E' }, { label: 'partial derivative', value: '\u2202' }, { label: 'nabla', value: '\u2207' },
+    { label: 'summation', value: '\u2211' }, { label: 'product', value: '\u220F' }, { label: 'integral', value: '\u222B' }, { label: 'contour integral', value: '\u222E' },
+    { label: 'square root', value: '\u221A' }, { label: 'cube root', value: '\u221B' }, { label: 'angle', value: '\u2220' }, { label: 'degree', value: '\u00B0' },
+    { label: 'prime', value: '\u2032' }, { label: 'double prime', value: '\u2033' }, { label: 'micro', value: '\u00B5' }, { label: 'ohm', value: '\u2126' },
+    { label: 'therefore', value: '\u2234' }, { label: 'because', value: '\u2235' },
+  ];
+  const setAndArrowSymbols = [
+    { label: 'element of', value: '\u2208' }, { label: 'not element', value: '\u2209' }, { label: 'subset', value: '\u2282' }, { label: 'subset or equal', value: '\u2286' },
+    { label: 'superset', value: '\u2283' }, { label: 'superset or equal', value: '\u2287' }, { label: 'union', value: '\u222A' }, { label: 'intersection', value: '\u2229' },
+    { label: 'logical and', value: '\u2227' }, { label: 'logical or', value: '\u2228' }, { label: 'implies', value: '\u21D2' }, { label: 'iff', value: '\u21D4' },
+    { label: 'right arrow', value: '\u2192' }, { label: 'left arrow', value: '\u2190' }, { label: 'double arrow', value: '\u2194' }, { label: 'up arrow', value: '\u2191' },
+    { label: 'down arrow', value: '\u2193' }, { label: 'parallel', value: '\u2225' }, { label: 'perpendicular', value: '\u22A5' },
+  ];
+  const allMathSymbols = [...greekLowerSymbols, ...greekUpperSymbols, ...mathOperatorSymbols, ...setAndArrowSymbols];
+  const editorTemplateMap = {
+    fraction: '<span class="sbj-math-template sbj-math-fraction"><span class="sbj-math-frac-top">a+b</span><span class="sbj-math-frac-bottom">c+d</span></span>',
+    radical: '<span class="sbj-math-template sbj-math-radical"><span class="sbj-math-radical-root">&#8730;</span><span class="sbj-math-radical-body">x+y</span></span>',
+    power: 'x<sup>n</sup>',
+    subscript: 'x<sub>n</sub>',
+  };
+
+  const symbolButtonMarkup = (rows = []) => rows
+    .map((entry) => '<button type="button" class="sbj-tool-btn sbj-symbol-btn" data-action="editor-insert" data-value="' + escapeHtml(entry?.value || '') + '" title="' + escapeHtml(String(entry?.label || '')) + '">' + escapeHtml(String(entry?.value || '')) + '</button>')
+    .join('');
+  const allSymbolButtons = symbolButtonMarkup(allMathSymbols);
+
+  const editorFromToolbar = (toolbarElement) => {
+    const toolbar = toolbarElement?.closest?.('.sbj-editor-toolbar[data-editor-target]');
+    const targetId = String(toolbar?.getAttribute('data-editor-target') || '');
+    return targetId ? document.getElementById(targetId) : null;
+  };
+
+  const focusEditor = (editor) => {
+    if (!(editor instanceof HTMLElement)) return false;
+    activeEditor = editor;
+    editor.focus();
+    return true;
+  };
+
+  const closestMathTemplate = (node) => {
+    const base = node instanceof HTMLElement ? node : node?.parentElement;
+    return base?.closest?.('.sbj-math-template') || null;
+  };
+
+  const insertTextIntoEditor = (editor, value) => {
+    if (!focusEditor(editor) || !value) return;
+    try {
+      document.execCommand('insertText', false, value);
+    } catch {
+      const selection = window.getSelection();
+      if (!selection?.rangeCount) return;
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const node = document.createTextNode(value);
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  };
+
+  const insertHtmlIntoEditor = (editor, html) => {
+    if (!focusEditor(editor) || !html) return;
+    try {
+      document.execCommand('insertHTML', false, html);
+      return;
+    } catch {
+      const selection = window.getSelection();
+      if (!selection?.rangeCount) return;
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const template = document.createElement('template');
+      template.innerHTML = html;
+      const fragment = template.content;
+      const lastNode = fragment.lastChild;
+      range.insertNode(fragment);
+      if (lastNode) {
+        range.setStartAfter(lastNode);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+  };
+
+  const insertTemplateIntoEditor = (editor, html) => {
+    if (!focusEditor(editor) || !html) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    let range = null;
+    if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
+      range = selection.getRangeAt(0);
+    } else {
+      range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+    }
+
+    range.deleteContents();
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const fragment = template.content;
+    const exitNode = document.createTextNode('\u200B');
+    fragment.appendChild(exitNode);
+    range.insertNode(fragment);
+    range.setStartAfter(exitNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const editorHtmlValue = (editor, { required = true, label = 'Content' } = {}) => {
+    const raw = String(editor?.innerHTML || '').trim();
+    if (!required) return raw;
+    const probe = document.createElement('div');
+    probe.innerHTML = raw;
+    const text = String(probe.textContent || '').replace(/\u200B/g, '').replace(/\u00A0/g, ' ').trim();
+    const hasMedia = Boolean(probe.querySelector('img,video,iframe,table,hr'));
+    if (!text && !hasMedia) {
+      throw new Error(String(label || 'Content') + ' is required');
+    }
+    return String(probe.innerHTML || '').trim();
+  };
+  const hasRichInlineMarkup = (raw) => {
+    const text = String(raw || '').trim();
+    if (!text) return false;
+    const probe = document.createElement('div');
+    probe.innerHTML = text;
+    return Boolean(probe.querySelector('p,div,span,br,b,strong,i,em,u,sup,sub,ul,ol,li,img,table,tr,td,th,blockquote,code,pre'));
+  };
+
+  const normalizeInlineBlockWrappers = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw || (!/<div\\b/i.test(raw) && !/<p\\b/i.test(raw))) return raw;
+    const compactRaw = raw.replace(/\\s+/g, '');
+    const blocks = raw.match(/<(?:div|p)\\b[^>]*>[\\s\\S]*?<\\/(?:div|p)>/gi);
+    if (!Array.isArray(blocks) || !blocks.length) return raw;
+    const compactBlocks = blocks.join('').replace(/\\s+/g, '');
+    if (compactBlocks !== compactRaw) return raw;
+    return blocks
+      .map((block) => block
+        .replace(/^<(?:div|p)\\b[^>]*>/i, '')
+        .replace(/<\\/(?:div|p)>$/i, '')
+        .trim())
+      .filter(Boolean)
+      .join(' ');
+  };
+
+  const richDisplayValue = (value) => {
+    const raw = String(value || '');
+    if (!raw) return '';
+    if (hasRichInlineMarkup(raw)) return normalizeInlineBlockWrappers(raw);
+    return escapeHtml(raw)
+      .replaceAll('\\r\\n', '\\n')
+      .replaceAll('\\r', '\\n')
+      .replaceAll('\\n', '<br>');
+  };
 
   const nodeImageCell = (node, canEditImage) => {
     const disabledAttr = canEditImage ? '' : 'disabled';
@@ -311,15 +547,16 @@ ${imageToolsModule()}
       + '<td class="sbj-row-open-cell">'
       + (expandable ? '<span class="sbj-expand-caret" aria-hidden="true">&#8250;</span>' : '')
       + '<span class="sbj-node-title">' + escapeHtml(node?.serverName || '') + '</span>'
-      + '<span class="sbj-node-type">' + (depth === 0 ? 'Book' : 'Section') + '</span>'
       + '</td>'
       + '<td><input class="sbj-input" data-field="displayName" data-saved-value="' + escapeHtml(node?.displayName || '') + '" value="' + escapeHtml(node?.displayName || '') + '" ' + disabledEdit + ' /></td>'
       + '<td>' + nodeImageCell(node, canEditImage) + '</td>'
       + '</tr>';
   };
 
-  const chapterRow = (chapter, supportsTopics = false, index = 0, total = 0) => (
-    '<tr data-chapter-row="' + Number(chapter?.id || 0) + '" data-open-chapter-id="' + Number(chapter?.id || 0) + '">'
+  const chapterRow = (chapter, supportsTopics = false, index = 0, total = 0) => {
+    const selectedTypes = encodeContentTypeKeys(chapter?.contentTypes || []);
+    const availableTypes = encodeContentTypeKeys(chapter?.availableContentTypes || []);
+    return '<tr data-chapter-row="' + Number(chapter?.id || 0) + '" data-open-chapter-id="' + Number(chapter?.id || 0) + '">'
       + '<td><div class="sbj-rank-cell"><span class="sbj-rank-value">' + String(Number(index || 0) + 1) + '</span><span class="sbj-rank-controls">'
       + '<button type="button" class="sbj-rank-btn" data-action="move-chapter-up" data-chapter-id="' + Number(chapter?.id || 0) + '" aria-label="Move chapter up" ' + (index <= 0 ? 'disabled' : '') + '>' + moveUpIcon + '</button>'
       + '<button type="button" class="sbj-rank-btn" data-action="move-chapter-down" data-chapter-id="' + Number(chapter?.id || 0) + '" aria-label="Move chapter down" ' + (Number(index || 0) >= Number(total || 0) - 1 ? 'disabled' : '') + '>' + moveDownIcon + '</button>'
@@ -331,22 +568,29 @@ ${imageToolsModule()}
       + '<td>' + chapterImageCell(chapter) + '</td>'
       + '<td>' + escapeHtml(toDate(chapter?.createdAt)) + '</td>'
       + '<td class="sbj-actions">'
+      + '<button type="button" class="sbj-ghost sbj-pref-btn" data-action="open-content-prefs" data-context-type="chapter" data-context-id="' + Number(chapter?.id || 0) + '" data-context-label="' + escapeHtml(chapter?.name || 'Chapter') + '" data-selected-types="' + escapeHtml(selectedTypes) + '" data-available-types="' + escapeHtml(availableTypes) + '">' + prefsIcon + '<span>Preferences</span></button>'
       + '<button type="button" class="sbj-danger" data-action="delete-chapter" data-chapter-id="' + Number(chapter?.id || 0) + '" data-chapter-name="' + escapeHtml(chapter?.name || '') + '">Delete</button>'
       + '</td>'
-      + '</tr>'
-  );
+      + '</tr>';
+  };
 
-  const topicRow = (topic) => (
-    '<tr data-topic-row="' + Number(topic?.id || 0) + '" data-open-topic-id="' + Number(topic?.id || 0) + '">'
-      + '<td><input class="sbj-input sbj-number-input" data-field="topicNumber" data-saved-value="' + escapeHtml(topic?.topicNumber || '') + '" value="' + escapeHtml(topic?.topicNumber || '') + '" placeholder="No." /></td>'
+  const topicRow = (topic, index = 0, total = 0) => {
+    const selectedTypes = encodeContentTypeKeys(topic?.contentTypes || []);
+    const availableTypes = encodeContentTypeKeys(topic?.availableContentTypes || []);
+    return '<tr data-topic-row="' + Number(topic?.id || 0) + '" data-open-topic-id="' + Number(topic?.id || 0) + '">'
+      + '<td><div class="sbj-rank-cell"><span class="sbj-rank-value">' + String(Number(index || 0) + 1) + '</span><span class="sbj-rank-controls">'
+      + '<button type="button" class="sbj-rank-btn" data-action="move-topic-up" data-topic-id="' + Number(topic?.id || 0) + '" aria-label="Move topic up" ' + (index <= 0 ? 'disabled' : '') + '>' + moveUpIcon + '</button>'
+      + '<button type="button" class="sbj-rank-btn" data-action="move-topic-down" data-topic-id="' + Number(topic?.id || 0) + '" aria-label="Move topic down" ' + (Number(index || 0) >= Number(total || 0) - 1 ? 'disabled' : '') + '>' + moveDownIcon + '</button>'
+      + '</span></div></td>'
       + '<td><input class="sbj-input sbj-topic-name" data-field="topicName" data-saved-value="' + escapeHtml(topic?.name || '') + '" value="' + escapeHtml(topic?.name || '') + '" /></td>'
       + '<td>' + topicImageCell(topic) + '</td>'
       + '<td>' + escapeHtml(toDate(topic?.createdAt)) + '</td>'
       + '<td class="sbj-actions">'
+      + '<button type="button" class="sbj-ghost sbj-pref-btn" data-action="open-content-prefs" data-context-type="topic" data-context-id="' + Number(topic?.id || 0) + '" data-context-label="' + escapeHtml(topic?.name || 'Topic') + '" data-selected-types="' + escapeHtml(selectedTypes) + '" data-available-types="' + escapeHtml(availableTypes) + '">' + prefsIcon + '<span>Preferences</span></button>'
       + '<button type="button" class="sbj-danger" data-action="delete-topic" data-topic-id="' + Number(topic?.id || 0) + '" data-topic-name="' + escapeHtml(topic?.name || '') + '">Delete</button>'
       + '</td>'
-      + '</tr>'
-  );
+      + '</tr>';
+  };
 
   const inlineChildrenPanel = (parentNode, childNodes) => {
     const rows = Array.isArray(childNodes) ? childNodes : [];
@@ -401,8 +645,25 @@ ${imageToolsModule()}
     }
   };
 
+  const contentTypeTabPriority = (key) => {
+    const normalized = String(key || '').toLowerCase();
+    if (normalized === 'summary') return 1;
+    if (normalized === 'short_notes') return 2;
+    if (normalized === 'mcq_bank') return 3;
+    return 999;
+  };
+
+  const orderedContentTypes = (contentTypes = []) => (Array.isArray(contentTypes) ? contentTypes : [])
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const priorityDiff = contentTypeTabPriority(a?.item?.key) - contentTypeTabPriority(b?.item?.key);
+      if (priorityDiff !== 0) return priorityDiff;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.item);
+
   const preferredTabKey = (contentTypes, state) => {
-    const keys = (Array.isArray(contentTypes) ? contentTypes : [])
+    const keys = orderedContentTypes(contentTypes)
       .map((item) => String(item?.key || '').toLowerCase())
       .filter(Boolean);
     if (!keys.length) return '';
@@ -422,7 +683,7 @@ ${imageToolsModule()}
   };
 
   const renderTabsRow = (contentTypes, activeTab) => {
-    const tabs = Array.isArray(contentTypes) ? contentTypes : [];
+    const tabs = orderedContentTypes(contentTypes);
     if (!tabs.length) return '<p class="sbj-empty">No content tabs configured.</p>';
     return '<div class="sbj-tabs" role="tablist" aria-label="Subject contents">'
       + tabs.map((item) => {
@@ -579,7 +840,7 @@ ${imageToolsModule()}
       chapter: null,
       contextType: 'node',
       contextId: Number(node?.id || 0),
-      contentTypes,
+      contentTypes: orderedContentTypes(contentTypes),
       activeTab: tabKey,
     };
     if (tabKey) {
@@ -605,8 +866,8 @@ ${imageToolsModule()}
       dynamicArea.innerHTML = '<section class="sbj-card">'
         + '<header class="sbj-toolbar"><h3>Topics in ' + escapeHtml(chapter?.name || '') + '</h3>'
         + '<button type="button" class="sbj-primary" data-action="open-topic-modal-create" data-chapter-id="' + Number(chapter?.id || 0) + '">Add Topic</button></header>'
-        + '<div class="sbj-table-wrap"><table class="sbj-table sbj-chapter-table"><thead><tr><th>No.</th><th>Topic</th><th>Image</th><th>Created</th><th>Actions</th></tr></thead><tbody>'
-        + (topics.length ? topics.map((topic) => topicRow(topic)).join('') : '<tr><td colspan="5" class="sbj-empty">No topics yet.</td></tr>')
+        + '<div class="sbj-table-wrap"><table class="sbj-table sbj-chapter-table"><thead><tr><th>Rank</th><th>Topic</th><th>Image</th><th>Created</th><th>Actions</th></tr></thead><tbody>'
+        + (topics.length ? topics.map((topic, index) => topicRow(topic, index, topics.length)).join('') : '<tr><td colspan="5" class="sbj-empty">No topics yet.</td></tr>')
         + '</tbody></table></div>'
         + '</section>';
       return;
@@ -626,7 +887,7 @@ ${imageToolsModule()}
       topic: null,
       contextType: 'chapter',
       contextId: Number(chapter?.id || 0),
-      contentTypes,
+      contentTypes: orderedContentTypes(contentTypes),
       activeTab: tabKey,
     };
     if (tabKey) {
@@ -663,7 +924,7 @@ ${imageToolsModule()}
       topic,
       contextType: 'topic',
       contextId: Number(topic?.id || 0),
-      contentTypes,
+      contentTypes: orderedContentTypes(contentTypes),
       activeTab: tabKey,
     };
     if (tabKey) {
@@ -675,19 +936,28 @@ ${imageToolsModule()}
     const targetId = String(options?.targetId || '').trim();
     const includeMcqImage = Boolean(options?.includeMcqImage);
     const includeNoteImage = Boolean(options?.includeNoteImage);
-    return '<div class="sbj-editor-toolbar" data-editor-target="' + escapeHtml(targetId) + '">'
-      + '<button type="button" class="sbj-tool-btn" title="Bold" data-action="editor-cmd" data-cmd="bold" data-toggle-cmd="bold"><b>B</b></button>'
-      + '<button type="button" class="sbj-tool-btn" title="Italic" data-action="editor-cmd" data-cmd="italic" data-toggle-cmd="italic"><i>I</i></button>'
-      + '<button type="button" class="sbj-tool-btn" title="Underline" data-action="editor-cmd" data-cmd="underline" data-toggle-cmd="underline"><u>U</u></button>'
+    const compact = Boolean(options?.compact);
+    const toolbarClass = compact ? 'sbj-editor-toolbar sbj-editor-toolbar-compact' : 'sbj-editor-toolbar';
+    const formattingTools = compact
+      ? ''
+      : ('<button type="button" class="sbj-tool-btn" title="Bold" data-action="editor-cmd" data-cmd="bold" data-toggle-cmd="bold"><b>B</b></button>'
+        + '<button type="button" class="sbj-tool-btn" title="Italic" data-action="editor-cmd" data-cmd="italic" data-toggle-cmd="italic"><i>I</i></button>'
+        + '<button type="button" class="sbj-tool-btn" title="Underline" data-action="editor-cmd" data-cmd="underline" data-toggle-cmd="underline"><u>U</u></button>'
+        + '<button type="button" class="sbj-tool-btn" title="Bullet list" data-action="editor-cmd" data-cmd="insertUnorderedList">List</button>'
+        + '<span class="sbj-tool-divider" aria-hidden="true"></span>');
+
+    return '<div class="' + toolbarClass + '" data-editor-target="' + escapeHtml(targetId) + '">'
+      + formattingTools
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-stack" title="Superscript toggle (power)" data-action="editor-cmd" data-cmd="superscript" data-toggle-cmd="superscript"><span class="sbj-tool-main">x<sup>n</sup></span><span class="sbj-tool-hint">Power</span></button>'
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-stack" title="Subscript toggle (index)" data-action="editor-cmd" data-cmd="subscript" data-toggle-cmd="subscript"><span class="sbj-tool-main">x<sub>n</sub></span><span class="sbj-tool-hint">Index</span></button>'
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-stack" title="Insert power template" data-action="editor-insert-template" data-template="power"><span class="sbj-tool-main">x<sup>n</sup></span><span class="sbj-tool-hint">Insert</span></button>'
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-stack" title="Insert subscript template" data-action="editor-insert-template" data-template="subscript"><span class="sbj-tool-main">x<sub>n</sub></span><span class="sbj-tool-hint">Insert</span></button>'
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-stack" title="Insert fraction with divide line" data-action="editor-insert-template" data-template="fraction"><span class="sbj-tool-main">a/b</span><span class="sbj-tool-hint">Fraction</span></button>'
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-stack" title="Insert root template" data-action="editor-insert-template" data-template="radical"><span class="sbj-tool-main">&#8730;x</span><span class="sbj-tool-hint">Root</span></button>'
       + '<span class="sbj-tool-divider" aria-hidden="true"></span>'
-      + '<button type="button" class="sbj-tool-btn" title="Bullet list" data-action="editor-cmd" data-cmd="insertUnorderedList">List</button>'
-      + '<button type="button" class="sbj-tool-btn" title="Superscript" data-action="editor-cmd" data-cmd="superscript" data-toggle-cmd="superscript">x<sup>2</sup></button>'
-      + '<button type="button" class="sbj-tool-btn" title="Subscript" data-action="editor-cmd" data-cmd="subscript" data-toggle-cmd="subscript">x<sub>2</sub></button>'
-      + '<button type="button" class="sbj-tool-btn" title="Insert sqrt" data-action="editor-insert" data-value="√">√</button>'
-      + '<button type="button" class="sbj-tool-btn" title="Insert pi" data-action="editor-insert" data-value="π">π</button>'
-      + '<button type="button" class="sbj-tool-btn" title="Insert delta" data-action="editor-insert" data-value="Δ">Δ</button>'
-      + '<span class="sbj-tool-divider" aria-hidden="true"></span>'
+      + '<button type="button" class="sbj-tool-btn sbj-tool-btn-symbol-toggle" data-action="toggle-editor-symbols" aria-expanded="false">Add Characters</button>'
       + '<button type="button" class="sbj-tool-btn" title="Clear format" data-action="editor-cmd" data-cmd="removeFormat">Clear</button>'
+      + '<div class="sbj-symbol-drawer" data-editor-symbol-drawer hidden><div class="sbj-symbol-grid" aria-label="Math symbols">' + allSymbolButtons + '</div></div>'
       + (includeNoteImage
         ? ('<span class="sbj-image-slot-wrap sbj-mcq-image-picker">'
           + '<button type="button" class="sbj-image-slot sbj-tool-btn sbj-tool-image-btn" data-action="pick-note-image" aria-label="Add image" title="Add image"><span class="sbj-image-icon">' + nodeImagePlaceholderIcon + '</span></button>'
@@ -744,7 +1014,7 @@ ${imageToolsModule()}
       const displayIndex = Number(entry?.displayIndex || 0);
       return '<article class="sbj-note-row" data-note-id="' + Number(item.id) + '">'
         + '<span class="sbj-note-index">' + String(displayIndex) + '.</span>'
-        + '<div class="sbj-note-main"><div class="sbj-note-body">' + String(item.body || '') + '</div>'
+        + '<div class="sbj-note-main"><div class="sbj-note-body">' + richDisplayValue(item.body || '') + '</div>'
         + (item?.imageUrl ? ('<img class="sbj-note-image" src="' + escapeHtml(item.imageUrl) + '" alt="Note image" />') : '')
         + '</div>'
         + '<div class="sbj-note-actions">'
@@ -787,16 +1057,21 @@ ${imageToolsModule()}
   const renderSummaryEditor = (context, items) => {
     const summary = Array.isArray(items) && items.length ? items[0] : null;
     editorItemsMap = summary ? new Map([[Number(summary.id), summary]]) : new Map();
+    const hasSummary = Boolean(summary && (String(summary?.body || '').trim() || String(summary?.imageUrl || '').trim()));
     return '<section class="sbj-card">'
-      + '<header class="sbj-toolbar"><h3>Summary - ' + escapeHtml(context?.label || '') + '</h3></header>'
-      + '<form id="summaryForm" class="sbj-form sbj-summary-single" autocomplete="off">'
+      + '<header class="sbj-toolbar"><h3>Summary - ' + escapeHtml(context?.label || '') + '</h3>'
+      + (hasSummary ? '<span class="sbj-empty">Edit and save inline</span>' : '')
+      + '</header>'
+      + '<form id="summaryForm" class="sbj-form sbj-summary-single sbj-form-flat" autocomplete="off">'
       + '<input type="hidden" name="itemId" value="' + String(Number(summary?.id || 0)) + '" />'
       + editorToolbar({ targetId: 'summaryBodyEditor' })
-      + '<div id="summaryBodyEditor" class="sbj-editor" contenteditable="true" data-editor-surface="true">' + String(summary?.body || '') + '</div>'
+      + '<div id="summaryBodyEditor" class="sbj-editor" contenteditable="true" data-editor-surface="true">' + richDisplayValue(summary?.body || '') + '</div>'
       + '<label>Image (optional)<input name="image" type="file" accept="image/png,image/jpeg,image/webp" /></label>'
       + '<label class="sbj-inline-check"><input name="clearImage" type="checkbox" /> Remove existing image when updating</label>'
       + (summary?.imageUrl ? ('<img class="sbj-thumb" src="' + escapeHtml(summary.imageUrl) + '" alt="Summary image" />') : '')
-      + '<div class="sbj-form-actions"><button type="submit" class="sbj-primary">Save summary</button></div>'
+      + '<div class="sbj-form-actions">'
+      + '<button type="submit" class="sbj-primary">' + (hasSummary ? 'Update summary' : 'Save summary') + '</button>'
+      + '</div>'
       + '</form>'
       + '</section>';
   };
@@ -818,7 +1093,7 @@ ${imageToolsModule()}
       return (
       '<article class="sbj-mcq-item">'
         + '<div class="sbj-mcq-headline">'
-        + '<div class="sbj-mcq-question"><span class="sbj-mcq-q-no">' + String(displayIndex) + '.</span><div>' + item.body + '</div></div>'
+        + '<div class="sbj-mcq-question"><span class="sbj-mcq-q-no">' + String(displayIndex) + '.</span><div>' + richDisplayValue(item.body || '') + '</div></div>'
         + '<div class="sbj-note-actions">'
         + '<button type="button" class="sbj-icon-btn sbj-icon-btn-edit" data-action="edit-mcq" data-item-id="' + Number(item.id) + '" aria-label="Edit MCQ" title="Edit MCQ">' + editIcon + '</button>'
         + '<button type="button" class="sbj-icon-btn sbj-icon-btn-delete" data-action="delete-item" data-item-id="' + Number(item.id) + '" aria-label="Delete MCQ" title="Delete MCQ">' + deleteIcon + '</button>'
@@ -826,10 +1101,10 @@ ${imageToolsModule()}
         + '</div>'
         + (item?.imageUrl ? ('<img class="sbj-mcq-item-image" src="' + escapeHtml(item.imageUrl) + '" alt="MCQ image" />') : '')
         + '<ol class="sbj-mcq-options">'
-        + '<li><span class="sbj-mcq-opt-key">A</span><span>' + escapeHtml(item?.options?.[0] || '') + '</span></li>'
-        + '<li><span class="sbj-mcq-opt-key">B</span><span>' + escapeHtml(item?.options?.[1] || '') + '</span></li>'
-        + '<li><span class="sbj-mcq-opt-key">C</span><span>' + escapeHtml(item?.options?.[2] || '') + '</span></li>'
-        + '<li><span class="sbj-mcq-opt-key">D</span><span>' + escapeHtml(item?.options?.[3] || '') + '</span></li>'
+        + '<li><span class="sbj-mcq-opt-key">A</span><span>' + richDisplayValue(item?.options?.[0] || '') + '</span></li>'
+        + '<li><span class="sbj-mcq-opt-key">B</span><span>' + richDisplayValue(item?.options?.[1] || '') + '</span></li>'
+        + '<li><span class="sbj-mcq-opt-key">C</span><span>' + richDisplayValue(item?.options?.[2] || '') + '</span></li>'
+        + '<li><span class="sbj-mcq-opt-key">D</span><span>' + richDisplayValue(item?.options?.[3] || '') + '</span></li>'
         + '</ol>'
         + '<div class="sbj-mcq-foot">'
         + '<button type="button" class="sbj-answer-btn" data-action="toggle-mcq-answer-admin" aria-expanded="false">Show answer</button>'
@@ -852,10 +1127,18 @@ ${imageToolsModule()}
       + '</div>'
       + '<div id="mcqQuestionEditor" class="sbj-editor sbj-editor-lite" contenteditable="true" data-editor-surface="true"></div>'
       + '<div class="sbj-mcq-options-grid">'
-      + '<label><span>A</span><textarea name="optA" rows="2" class="sbj-input sbj-input-textarea" placeholder="Option A"></textarea></label>'
-      + '<label><span>B</span><textarea name="optB" rows="2" class="sbj-input sbj-input-textarea" placeholder="Option B"></textarea></label>'
-      + '<label><span>C</span><textarea name="optC" rows="2" class="sbj-input sbj-input-textarea" placeholder="Option C"></textarea></label>'
-      + '<label><span>D</span><textarea name="optD" rows="2" class="sbj-input sbj-input-textarea" placeholder="Option D"></textarea></label>'
+      + '<div class="sbj-mcq-option-card"><div class="sbj-mcq-option-head"><span class="sbj-mcq-opt-pill">A</span><strong>Option A</strong></div>'
+      + editorToolbar({ targetId: 'mcqOptAEditor', compact: true })
+      + '<div id="mcqOptAEditor" class="sbj-editor sbj-editor-option" contenteditable="true" data-editor-surface="true"></div></div>'
+      + '<div class="sbj-mcq-option-card"><div class="sbj-mcq-option-head"><span class="sbj-mcq-opt-pill">B</span><strong>Option B</strong></div>'
+      + editorToolbar({ targetId: 'mcqOptBEditor', compact: true })
+      + '<div id="mcqOptBEditor" class="sbj-editor sbj-editor-option" contenteditable="true" data-editor-surface="true"></div></div>'
+      + '<div class="sbj-mcq-option-card"><div class="sbj-mcq-option-head"><span class="sbj-mcq-opt-pill">C</span><strong>Option C</strong></div>'
+      + editorToolbar({ targetId: 'mcqOptCEditor', compact: true })
+      + '<div id="mcqOptCEditor" class="sbj-editor sbj-editor-option" contenteditable="true" data-editor-surface="true"></div></div>'
+      + '<div class="sbj-mcq-option-card"><div class="sbj-mcq-option-head"><span class="sbj-mcq-opt-pill">D</span><strong>Option D</strong></div>'
+      + editorToolbar({ targetId: 'mcqOptDEditor', compact: true })
+      + '<div id="mcqOptDEditor" class="sbj-editor sbj-editor-option" contenteditable="true" data-editor-surface="true"></div></div>'
       + '</div>'
       + '<div class="sbj-mcq-form-foot">'
       + '<label class="sbj-mcq-correct">Correct<select name="correctOption"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></label>'
@@ -1093,8 +1376,11 @@ ${imageToolsModule()}
     topicForm.elements.mode.value = mode;
     topicForm.elements.chapterId.value = String(Number(values?.chapterId || 0));
     topicForm.elements.topicId.value = String(Number(values?.topicId || 0));
-    topicForm.elements.topicNumber.value = String(values?.topicNumber || '');
     topicForm.elements.name.value = String(values?.name || '');
+    topicForm.elements.clearImage.value = '0';
+    topicForm.dataset.existingImage = String(values?.imageUrl || '').trim();
+    topicModalImageInput.value = '';
+    syncTopicModalImageUi();
     topicModalTitle.textContent = mode === 'edit' ? 'Edit topic' : 'Add topic';
     topicModal.classList.add('is-open');
     topicModal.setAttribute('aria-hidden', 'false');
@@ -1104,6 +1390,74 @@ ${imageToolsModule()}
     topicModal.classList.remove('is-open');
     topicModal.setAttribute('aria-hidden', 'true');
     topicForm.reset();
+    topicForm.dataset.existingImage = '';
+    topicModalImageInput.value = '';
+    topicForm.elements.clearImage.value = '0';
+    syncTopicModalImageUi();
+  };
+
+  const openContentPrefsModal = (values = {}) => {
+    const contextType = String(values?.contextType || '').trim().toLowerCase();
+    const contextId = Number(values?.contextId || 0);
+    if (!contextId || (contextType !== 'chapter' && contextType !== 'topic')) return;
+
+    const availableTypes = parseContentTypeKeys(values?.availableTypes || '');
+    const selectedSet = new Set(parseContentTypeKeys(values?.selectedTypes || '').filter((key) => availableTypes.includes(key)));
+    const contextLabel = String(values?.contextLabel || '').trim() || (contextType === 'chapter' ? 'chapter' : 'topic');
+
+    contentPrefsForm.reset();
+    contentPrefsForm.elements.contextType.value = contextType;
+    contentPrefsForm.elements.contextId.value = String(contextId);
+    contentPrefsModalTitle.textContent = 'Content preferences';
+    contentPrefsModalHint.textContent = 'Choose which tabs will be visible for "' + contextLabel + '".';
+
+    if (!availableTypes.length) {
+      contentPrefsOptions.innerHTML = '<p class="sbj-empty">No content modules available for this item.</p>';
+    } else {
+      contentPrefsOptions.innerHTML = availableTypes.map((key) => (
+        '<label class="sbj-pref-option">'
+          + '<input type="checkbox" name="contentTypes" value="' + escapeHtml(key) + '"' + (selectedSet.has(key) ? ' checked' : '') + ' />'
+          + '<span>' + escapeHtml(contentTypeLabel(key, key)) + '</span>'
+          + '</label>'
+      )).join('');
+    }
+
+    contentPrefsModal.classList.add('is-open');
+    contentPrefsModal.setAttribute('aria-hidden', 'false');
+  };
+
+  const closeContentPrefsModal = () => {
+    contentPrefsModal.classList.remove('is-open');
+    contentPrefsModal.setAttribute('aria-hidden', 'true');
+    contentPrefsForm.reset();
+    contentPrefsOptions.innerHTML = '';
+    contentPrefsModalHint.textContent = '';
+  };
+
+  const submitContentPrefsModal = async (event) => {
+    event.preventDefault();
+    const contextType = String(contentPrefsForm.elements.contextType.value || '').trim().toLowerCase();
+    const contextId = Number(contentPrefsForm.elements.contextId.value || 0);
+    if (!contextId || (contextType !== 'chapter' && contextType !== 'topic')) {
+      throw new Error('Unable to resolve preference context');
+    }
+    const selectedTypes = Array.from(contentPrefsForm.querySelectorAll('input[name="contentTypes"]:checked'))
+      .map((input) => String(input?.value || '').trim().toLowerCase())
+      .filter((value, index, list) => Boolean(value) && list.indexOf(value) === index);
+    const path = contextType === 'chapter'
+      ? ('/subjects/' + subjectId + '/chapters/' + contextId)
+      : ('/subjects/' + subjectId + '/topics/' + contextId);
+
+    setMsg('Saving preferences...');
+    await apiRequest(path, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ contentTypes: selectedTypes }),
+    });
+    setMsg('Preferences saved.');
+    showToast('Preferences saved', 'success');
+    closeContentPrefsModal();
+    await loadView();
   };
 
   const loadView = async () => {
@@ -1278,33 +1632,24 @@ ${imageToolsModule()}
 
   const saveTopicRow = async (row, topicId, options = {}) => {
     if (!row || !topicId) return;
-    const numberInput = row.querySelector('[data-field="topicNumber"]');
     const nameInput = row.querySelector('[data-field="topicName"]');
-    const topicNumber = String(numberInput?.value || '').trim();
-    const savedNumber = String(numberInput?.getAttribute('data-saved-value') || '').trim();
     const nextName = String(nameInput?.value || '').trim();
     const savedName = String(nameInput?.getAttribute('data-saved-value') || '').trim();
     if (!nextName || nextName.length < 2) throw new Error('Topic name must be at least 2 characters');
-    if (!options.force && nextName === savedName && topicNumber === savedNumber) return;
+    if (!options.force && nextName === savedName) return;
 
     if (nameInput) nameInput.classList.add('is-syncing');
-    if (numberInput) numberInput.classList.add('is-syncing');
     try {
       setMsg('Syncing topic...');
       const response = await apiRequest('/subjects/' + subjectId + '/topics/' + topicId, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ topicNumber, name: nextName }),
+        body: JSON.stringify({ name: nextName }),
       });
       const persisted = String(response?.topic?.name || nextName);
-      const persistedNumber = String(response?.topic?.topicNumber || topicNumber);
       if (nameInput) {
         nameInput.value = persisted;
         nameInput.setAttribute('data-saved-value', persisted);
-      }
-      if (numberInput) {
-        numberInput.value = persistedNumber;
-        numberInput.setAttribute('data-saved-value', persistedNumber);
       }
       const deleteBtn = row.querySelector('[data-action="delete-topic"]');
       if (deleteBtn) deleteBtn.setAttribute('data-topic-name', persisted);
@@ -1312,18 +1657,15 @@ ${imageToolsModule()}
       showToast('Topic synced', 'success');
     } finally {
       if (nameInput) nameInput.classList.remove('is-syncing');
-      if (numberInput) numberInput.classList.remove('is-syncing');
     }
   };
 
   const updateTopicImage = async (row, topicId, options = {}) => {
     if (!row || !topicId) return;
-    const numberInput = row.querySelector('[data-field="topicNumber"]');
     const nameInput = row.querySelector('[data-field="topicName"]');
-    const topicNumber = String(numberInput?.value || '').trim();
     const name = String(nameInput?.value || '').trim() || String(nameInput?.getAttribute('data-saved-value') || '').trim();
     if (!name) throw new Error('Topic name is required');
-    const payload = { topicNumber, name };
+    const payload = { name };
     if (options.file) payload.imageData = await fileToDataUrl(options.file);
     if (options.clear) payload.clearImage = true;
     setMsg(options.clear ? 'Removing topic image...' : 'Uploading topic image...');
@@ -1378,12 +1720,11 @@ ${imageToolsModule()}
     const mode = String(formData.get('mode') || 'create');
     const chapterId = Number(formData.get('chapterId') || 0);
     const topicId = Number(formData.get('topicId') || 0);
-    const topicNumber = String(formData.get('topicNumber') || '').trim();
     const name = String(formData.get('name') || '').trim();
     const file = formData.get('image');
-    const clearImage = Boolean(formData.get('clearImage'));
+    const clearImage = String(formData.get('clearImage') || '0') === '1';
 
-    const payload = { chapterId, topicNumber, name };
+    const payload = { chapterId, name };
     if (file && typeof file === 'object' && file.size > 0) {
       payload.imageData = await fileToDataUrl(file);
     }
@@ -1425,7 +1766,7 @@ ${imageToolsModule()}
       contentType: 'short_notes',
       contextType,
       contextId,
-      body: String(editor?.innerHTML || '').trim(),
+      body: editorHtmlValue(editor, { required: true, label: 'Short note' }),
     };
     if (file) payload.imageData = await fileToDataUrl(file);
     if (clearImage) payload.clearImage = true;
@@ -1464,7 +1805,7 @@ ${imageToolsModule()}
       contentType: 'summary',
       contextType,
       contextId,
-      body: String(editor?.innerHTML || '').trim(),
+      body: editorHtmlValue(editor, { required: true, label: 'Summary' }),
     };
     if (file) payload.imageData = await fileToDataUrl(file);
     if (clearImage) payload.clearImage = true;
@@ -1498,6 +1839,10 @@ ${imageToolsModule()}
     }
     const itemId = Number(form.elements.itemId.value || 0);
     const editor = document.getElementById('mcqQuestionEditor');
+    const optAEditor = document.getElementById('mcqOptAEditor');
+    const optBEditor = document.getElementById('mcqOptBEditor');
+    const optCEditor = document.getElementById('mcqOptCEditor');
+    const optDEditor = document.getElementById('mcqOptDEditor');
     const file = form.elements.image.files?.[0] || null;
     const clearImage = String(form.elements.clearImageFlag?.value || '0') === '1';
 
@@ -1505,12 +1850,12 @@ ${imageToolsModule()}
       contentType: 'mcq_bank',
       contextType,
       contextId,
-      body: String(editor?.innerHTML || '').trim(),
+      body: editorHtmlValue(editor, { required: true, label: 'MCQ question' }),
       options: [
-        String(form.elements.optA.value || '').trim(),
-        String(form.elements.optB.value || '').trim(),
-        String(form.elements.optC.value || '').trim(),
-        String(form.elements.optD.value || '').trim(),
+        editorHtmlValue(optAEditor, { required: true, label: 'Option A' }),
+        editorHtmlValue(optBEditor, { required: true, label: 'Option B' }),
+        editorHtmlValue(optCEditor, { required: true, label: 'Option C' }),
+        editorHtmlValue(optDEditor, { required: true, label: 'Option D' }),
       ],
       correctOption: String(form.elements.correctOption.value || '').trim(),
     };
@@ -1545,7 +1890,7 @@ ${imageToolsModule()}
     const editor = document.getElementById('notesBodyEditor');
     if (!item || !form || !editor) return;
     form.elements.itemId.value = String(Number(item.id));
-    editor.innerHTML = String(item.body || '');
+    editor.innerHTML = richDisplayValue(item.body || '');
     if (form.elements.clearImageFlag) form.elements.clearImageFlag.value = '0';
     form.dataset.noteExistingImage = String(item?.imageUrl || '');
     setNoteImagePreview(form, String(item?.imageUrl || ''), { temp: false });
@@ -1555,14 +1900,18 @@ ${imageToolsModule()}
     const item = editorItemsMap.get(Number(itemId));
     const form = document.getElementById('mcqForm');
     const editor = document.getElementById('mcqQuestionEditor');
+    const optAEditor = document.getElementById('mcqOptAEditor');
+    const optBEditor = document.getElementById('mcqOptBEditor');
+    const optCEditor = document.getElementById('mcqOptCEditor');
+    const optDEditor = document.getElementById('mcqOptDEditor');
     if (!item || !form || !editor) return;
 
     form.elements.itemId.value = String(Number(item.id));
-    editor.innerHTML = String(item.body || '');
-    form.elements.optA.value = String(item?.options?.[0] || '');
-    form.elements.optB.value = String(item?.options?.[1] || '');
-    form.elements.optC.value = String(item?.options?.[2] || '');
-    form.elements.optD.value = String(item?.options?.[3] || '');
+    editor.innerHTML = richDisplayValue(item.body || '');
+    if (optAEditor) optAEditor.innerHTML = richDisplayValue(item?.options?.[0] || '');
+    if (optBEditor) optBEditor.innerHTML = richDisplayValue(item?.options?.[1] || '');
+    if (optCEditor) optCEditor.innerHTML = richDisplayValue(item?.options?.[2] || '');
+    if (optDEditor) optDEditor.innerHTML = richDisplayValue(item?.options?.[3] || '');
     form.elements.correctOption.value = String(item?.correctOption || 'A');
     if (form.elements.clearImageFlag) form.elements.clearImageFlag.value = '0';
     form.dataset.mcqExistingImage = String(item?.imageUrl || '');
@@ -1591,6 +1940,14 @@ ${imageToolsModule()}
       setMcqImagePreview(mcqForm, '', { temp: false });
       const editor = document.getElementById('mcqQuestionEditor');
       if (editor) editor.innerHTML = '';
+      const optAEditor = document.getElementById('mcqOptAEditor');
+      const optBEditor = document.getElementById('mcqOptBEditor');
+      const optCEditor = document.getElementById('mcqOptCEditor');
+      const optDEditor = document.getElementById('mcqOptDEditor');
+      if (optAEditor) optAEditor.innerHTML = '';
+      if (optBEditor) optBEditor.innerHTML = '';
+      if (optCEditor) optCEditor.innerHTML = '';
+      if (optDEditor) optDEditor.innerHTML = '';
       setMcqFormOpen(false);
     }
   };
@@ -1603,12 +1960,32 @@ ${imageToolsModule()}
     chapterModalImageInput.value = '';
     syncChapterModalImageUi();
   }, { signal: controller.signal });
+  topicModalImageSlot.addEventListener('click', () => topicModalImageInput.click(), { signal: controller.signal });
+  topicModalImageInput.addEventListener('change', () => {
+    topicForm.elements.clearImage.value = '0';
+    syncTopicModalImageUi();
+  }, { signal: controller.signal });
+  topicModalImageRemove.addEventListener('click', () => {
+    const hadSelectedFile = Boolean(topicModalImageInput.files?.length);
+    if (hadSelectedFile) {
+      topicModalImageInput.value = '';
+      syncTopicModalImageUi();
+      return;
+    }
+    topicForm.dataset.existingImage = '';
+    topicForm.elements.clearImage.value = '1';
+    syncTopicModalImageUi();
+  }, { signal: controller.signal });
   topicModalCancel.addEventListener('click', closeTopicModal, { signal: controller.signal });
+  contentPrefsModalCancel.addEventListener('click', closeContentPrefsModal, { signal: controller.signal });
   chapterModal.addEventListener('click', (event) => {
     if (event.target === chapterModal) closeChapterModal();
   }, { signal: controller.signal });
   topicModal.addEventListener('click', (event) => {
     if (event.target === topicModal) closeTopicModal();
+  }, { signal: controller.signal });
+  contentPrefsModal.addEventListener('click', (event) => {
+    if (event.target === contentPrefsModal) closeContentPrefsModal();
   }, { signal: controller.signal });
   chapterForm.addEventListener('submit', (event) => {
     submitChapterModal(event).catch((error) => {
@@ -1620,6 +1997,12 @@ ${imageToolsModule()}
     submitTopicModal(event).catch((error) => {
       if (error?.name === 'AbortError') return;
       setMsg(error?.message || 'Unable to save topic');
+    });
+  }, { signal: controller.signal });
+  contentPrefsForm.addEventListener('submit', (event) => {
+    submitContentPrefsModal(event).catch((error) => {
+      if (error?.name === 'AbortError') return;
+      setMsg(error?.message || 'Unable to save preferences');
     });
   }, { signal: controller.signal });
 
@@ -1650,6 +2033,47 @@ ${imageToolsModule()}
 
   document.addEventListener('selectionchange', () => {
     if (activeEditor) updateEditorToolbarState();
+  }, { signal: controller.signal });
+
+  dynamicArea.addEventListener('mousedown', (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl) return;
+    const action = String(actionEl.getAttribute('data-action') || '');
+    if (action !== 'editor-cmd' && action !== 'editor-insert' && action !== 'editor-insert-template' && action !== 'toggle-editor-symbols') return;
+    const targetEditor = editorFromToolbar(actionEl) || activeEditor;
+    if (!(targetEditor instanceof HTMLElement)) return;
+    event.preventDefault();
+    focusEditor(targetEditor);
+  }, { signal: controller.signal });
+
+  document.addEventListener('keydown', (event) => {
+    if (!(activeEditor instanceof HTMLElement)) return;
+    const selection = window.getSelection();
+    if (!selection?.rangeCount) return;
+    if (!activeEditor.contains(selection.anchorNode)) return;
+
+    if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      const contextNode = selection.anchorNode instanceof Element ? selection.anchorNode : selection.anchorNode?.parentElement;
+      if (contextNode?.closest?.('li')) return;
+      event.preventDefault();
+      insertHtmlIntoEditor(activeEditor, '<br>');
+      return;
+    }
+
+    if (event.key !== 'ArrowRight' || !selection.isCollapsed) return;
+    const template = closestMathTemplate(selection.anchorNode);
+    if (!template) return;
+    const cursorRange = selection.getRangeAt(0).cloneRange();
+    const tailRange = cursorRange.cloneRange();
+    tailRange.setEndAfter(template);
+    const remaining = String(tailRange.toString() || '').replace(/\u200B/g, '');
+    if (remaining.length > 0) return;
+    event.preventDefault();
+    const nextRange = document.createRange();
+    nextRange.setStartAfter(template);
+    nextRange.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(nextRange);
   }, { signal: controller.signal });
 
   dynamicArea.addEventListener('click', (event) => {
@@ -1762,6 +2186,22 @@ ${imageToolsModule()}
         return;
       }
 
+      if (action === 'open-content-prefs') {
+        const contextType = String(actionEl.getAttribute('data-context-type') || '').trim().toLowerCase();
+        const contextId = Number(actionEl.getAttribute('data-context-id') || 0);
+        const contextLabel = String(actionEl.getAttribute('data-context-label') || '').trim();
+        const selectedTypes = String(actionEl.getAttribute('data-selected-types') || '');
+        const availableTypes = String(actionEl.getAttribute('data-available-types') || '');
+        openContentPrefsModal({
+          contextType,
+          contextId,
+          contextLabel,
+          selectedTypes,
+          availableTypes,
+        });
+        return;
+      }
+
       if (action === 'move-chapter-up' || action === 'move-chapter-down') {
         const chapterId = Number(actionEl.getAttribute('data-chapter-id') || 0);
         if (!chapterId || actionEl.disabled) return;
@@ -1774,6 +2214,22 @@ ${imageToolsModule()}
         });
         setMsg('Chapter rank updated.');
         showToast('Chapter order updated', 'success');
+        await loadView();
+        return;
+      }
+
+      if (action === 'move-topic-up' || action === 'move-topic-down') {
+        const topicId = Number(actionEl.getAttribute('data-topic-id') || 0);
+        if (!topicId || actionEl.disabled) return;
+        const direction = action === 'move-topic-up' ? 'up' : 'down';
+        setMsg('Updating topic rank...');
+        await apiRequest('/subjects/' + subjectId + '/topics/' + topicId + '/reorder', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ direction }),
+        });
+        setMsg('Topic rank updated.');
+        showToast('Topic order updated', 'success');
         await loadView();
         return;
       }
@@ -1897,14 +2353,24 @@ ${imageToolsModule()}
         return;
       }
 
+      if (action === 'toggle-editor-symbols') {
+        const toolbar = actionEl.closest('.sbj-editor-toolbar[data-editor-target]');
+        if (!toolbar) return;
+        const drawer = toolbar.querySelector('[data-editor-symbol-drawer]');
+        if (!drawer) return;
+        const nextOpen = !drawer.classList.contains('is-open');
+        drawer.classList.toggle('is-open', nextOpen);
+        drawer.hidden = !nextOpen;
+        actionEl.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+        actionEl.textContent = nextOpen ? 'Hide Characters' : 'Add Characters';
+        return;
+      }
+
       if (action === 'editor-cmd') {
         const cmd = String(actionEl.getAttribute('data-cmd') || '');
-        const toolbar = actionEl.closest('.sbj-editor-toolbar[data-editor-target]');
-        const targetId = String(toolbar?.getAttribute('data-editor-target') || '');
-        const targetEditor = targetId ? document.getElementById(targetId) : null;
-        if (targetEditor) activeEditor = targetEditor;
+        const targetEditor = editorFromToolbar(actionEl);
+        if (targetEditor) focusEditor(targetEditor);
         if (!cmd || !activeEditor) return;
-        activeEditor.focus();
         document.execCommand(cmd, false, null);
         updateEditorToolbarState();
         return;
@@ -1912,23 +2378,19 @@ ${imageToolsModule()}
 
       if (action === 'editor-insert') {
         const value = String(actionEl.getAttribute('data-value') || '');
-        const toolbar = actionEl.closest('.sbj-editor-toolbar[data-editor-target]');
-        const targetId = String(toolbar?.getAttribute('data-editor-target') || '');
-        const targetEditor = targetId ? document.getElementById(targetId) : null;
-        if (targetEditor) activeEditor = targetEditor;
-        if (!value || !activeEditor) return;
-        activeEditor.focus();
-        try {
-          document.execCommand('insertText', false, value);
-        } catch {
-          const selection = window.getSelection();
-          if (selection?.rangeCount) {
-            const range = selection.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(document.createTextNode(value));
-            range.collapse(false);
-          }
-        }
+        const targetEditor = editorFromToolbar(actionEl) || activeEditor;
+        if (!value || !targetEditor) return;
+        insertTextIntoEditor(targetEditor, value);
+        updateEditorToolbarState();
+        return;
+      }
+
+      if (action === 'editor-insert-template') {
+        const templateKey = String(actionEl.getAttribute('data-template') || '').trim();
+        const html = String(editorTemplateMap?.[templateKey] || '');
+        const targetEditor = editorFromToolbar(actionEl) || activeEditor;
+        if (!html || !targetEditor) return;
+        insertTemplateIntoEditor(targetEditor, html);
         updateEditorToolbarState();
         return;
       }
@@ -1997,19 +2459,15 @@ ${imageToolsModule()}
       return;
     }
 
-    if (field === 'topicName' || field === 'topicNumber') {
+    if (field === 'topicName') {
       const row = input.closest('[data-topic-row]');
       const topicId = Number(row?.getAttribute('data-topic-row') || 0);
       if (!row || !topicId || input.disabled) return;
       const nameInput = row.querySelector('[data-field="topicName"]');
       const nextName = String(nameInput?.value || '').trim();
       const savedName = String(nameInput?.getAttribute('data-saved-value') || '').trim();
-      const numberInput = row.querySelector('[data-field="topicNumber"]');
-      const nextNumber = String(numberInput?.value || '').trim();
-      const savedNumber = String(numberInput?.getAttribute('data-saved-value') || '').trim();
-      if ((!nextName || nextName.length < 2) || (nextName === savedName && nextNumber === savedNumber)) return;
+      if (!nextName || nextName.length < 2 || nextName === savedName) return;
       if (nameInput) nameInput.classList.add('is-syncing');
-      if (numberInput) numberInput.classList.add('is-syncing');
       setMsg('Syncing changes...');
       queueAutosave('topic-name:' + topicId, () => saveTopicRow(row, topicId), 700);
       return;
@@ -2124,10 +2582,12 @@ ${imageToolsModule()}
       const noteTempUrl = String(notesForm?.dataset?.noteTempUrl || '');
       if (noteTempUrl) URL.revokeObjectURL(noteTempUrl);
       clearChapterModalPreviewUrl();
+      clearTopicModalPreviewUrl();
     });
   }
 
   syncChapterModalImageUi();
+  syncTopicModalImageUi();
   loadView();
 })();
 `;

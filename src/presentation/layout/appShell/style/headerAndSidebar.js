@@ -10,8 +10,8 @@ export const APP_SHELL_STYLE_HEADER = `
 body.menu-open .app-menu-toggle{transform:rotate(180deg)}
 .app-brand{display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:0;max-width:62vw;height:52px;max-height:52px}
 .app-brand.app-brand-signature{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--accent);user-select:none;border:0;background:none;cursor:pointer}
-.app-brand-signature .site-logo{width:clamp(108px,14vw,150px);max-width:100%}
-.app-brand-signature .site-logo-svg{filter:drop-shadow(0 3px 9px color-mix(in srgb,var(--accent) 40%,transparent))}
+.app-brand-signature .site-logo{width:auto;max-width:100%}
+.app-brand-signature .site-logo-wordmark{font-size:clamp(1.4rem,2vw,1.82rem);filter:drop-shadow(0 3px 9px color-mix(in srgb,var(--accent) 40%,transparent))}
 .app-header-right{display:flex;align-items:center;gap:var(--space-2);position:relative;z-index:1}
 .app-notify-toggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;border:2px solid #d58a17;background:#ffb23f;color:#1a2432;cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;position:relative;box-shadow:0 6px 14px rgba(255,178,63,.28)}
 .app-notify-toggle .app-icon{width:20px;height:20px;stroke-width:2}
@@ -23,11 +23,15 @@ body.notifications-open .app-notify-toggle{color:#132033;border-color:#b8750f;ba
 .app-user-meta{display:none;min-width:0;text-align:right;line-height:1.2}
 .app-user-name{display:block;font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
 .app-user-email{display:block;font-size:.73rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
-.app-nav-overlay{position:fixed;inset:0;background:transparent;opacity:0;visibility:hidden;transition:visibility .2s step-end;z-index:var(--z-overlay)}
-.app-sidebar{position:fixed;z-index:var(--z-sidebar);left:0;top:var(--layout-header-offset-mobile);height:calc(100vh - var(--layout-header-offset-mobile));height:calc(100dvh - var(--layout-header-offset-mobile));width:min(264px,86vw);max-width:100vw;background:var(--surface-strong);border-right:var(--layout-border-size) solid var(--border);padding:var(--space-3);display:grid;grid-template-rows:1fr auto;gap:var(--space-2);transform:translate3d(-102%,0,0);transition:transform .42s var(--motion-spring),border-color .24s ease;will-change:transform;overflow:auto;overscroll-behavior:contain;contain:paint}
+.app-nav-overlay{position:fixed;inset:0;background:var(--overlay);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s step-end;z-index:var(--z-overlay)}
+.app-sidebar{position:fixed;z-index:var(--z-sidebar);left:0;right:0;bottom:0;top:auto;height:min(78vh,620px);height:min(78dvh,620px);width:100%;max-width:100vw;background:var(--surface-strong);border-top:var(--layout-border-size) solid var(--border);padding:var(--space-3) calc(var(--space-3) + env(safe-area-inset-right,0px)) calc(var(--space-3) + env(safe-area-inset-bottom,0px)) calc(var(--space-3) + env(safe-area-inset-left,0px));display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--space-2);transform:translate3d(0,108%,0);transition:transform .42s var(--motion-spring),border-color .24s ease;will-change:transform;overflow:auto;overscroll-behavior:contain;contain:paint;border-radius:16px 16px 0 0;box-shadow:0 -22px 42px rgba(0,0,0,.34)}
 .app-sidebar::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--pointer-x) var(--pointer-y),color-mix(in srgb,var(--accent) 18%,transparent),transparent 60%);opacity:.6;transition:opacity .26s ease}
 @media (max-width:899px){
+  .app-header-left{flex:0 0 auto}
+  .app-header-right{margin-left:auto}
+  .app-brand.app-brand-signature{position:absolute;left:50%;transform:translateX(-50%);z-index:0;max-width:calc(100vw - 190px)}
   .app-brand{height:52px;max-height:52px}
-  .app-brand-signature .site-logo{width:clamp(124px,40vw,176px)}
+  .app-brand-signature .site-logo{width:auto;max-width:calc(100vw - 190px)}
+  .app-brand-signature .site-logo-wordmark{font-size:clamp(1.62rem,7.4vw,2.08rem)}
 }
 `;

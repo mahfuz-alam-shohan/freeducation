@@ -32,7 +32,7 @@ const CONTENT_MODULE_DEFS = [
     label: "Summary",
     editable: true,
     includeInBase: false,
-    publicReader: { enabled: false, tabKey: "summary", panelMode: "rich" },
+    publicReader: { enabled: true, tabKey: "summary", panelMode: "rich" },
   },
 ];
 
@@ -62,6 +62,16 @@ export const CONTENT_LABELS = Object.freeze(
 );
 
 const MODULE_BY_KEY = new Map(CONTENT_MODULES.map((item) => [item.key, item]));
+const CONTENT_TYPE_PRIORITY = Object.freeze({
+  summary: 1,
+  short_notes: 2,
+  mcq_bank: 3,
+});
+
+function contentTypePriority(key = "") {
+  const normalized = String(key || "").trim().toLowerCase();
+  return Number(CONTENT_TYPE_PRIORITY[normalized] || 999);
+}
 
 export function contentModuleByKey(key) {
   return MODULE_BY_KEY.get(String(key || "").trim().toLowerCase()) || null;
@@ -82,9 +92,20 @@ export function contentLabelForType(key) {
 
 export function contentTypeMetaList(contentTypes = []) {
   const types = Array.isArray(contentTypes) ? contentTypes : [];
-  return types
+  const normalized = types
     .map((type) => String(type || "").trim().toLowerCase())
-    .filter((type, index, list) => Boolean(type) && list.indexOf(type) === index && isKnownContentType(type))
+    .filter((type, index, list) => Boolean(type) && list.indexOf(type) === index && isKnownContentType(type));
+
+  const ordered = normalized
+    .map((key, index) => ({ key, index }))
+    .sort((a, b) => {
+      const priorityDiff = contentTypePriority(a.key) - contentTypePriority(b.key);
+      if (priorityDiff !== 0) return priorityDiff;
+      return a.index - b.index;
+    })
+    .map((item) => item.key);
+
+  return ordered
     .map((key) => {
       const item = contentModuleByKey(key);
       return {
@@ -96,6 +117,10 @@ export function contentTypeMetaList(contentTypes = []) {
 }
 
 export function publicReaderModules(contentTypes = []) {
+  const allowedList = (Array.isArray(contentTypes) ? contentTypes : [])
+    .map((type) => String(type || "").trim().toLowerCase())
+    .filter((type, index, list) => isKnownContentType(type) && list.indexOf(type) === index);
+
   const allowed = new Set(
     (Array.isArray(contentTypes) ? contentTypes : [])
       .map((type) => String(type || "").trim().toLowerCase())
@@ -104,6 +129,11 @@ export function publicReaderModules(contentTypes = []) {
 
   return CONTENT_MODULES
     .filter((item) => item.publicReader.enabled && allowed.has(item.key))
+    .sort((a, b) => {
+      const priorityDiff = contentTypePriority(a.key) - contentTypePriority(b.key);
+      if (priorityDiff !== 0) return priorityDiff;
+      return allowedList.indexOf(a.key) - allowedList.indexOf(b.key);
+    })
     .map((item) => ({
       key: item.key,
       label: item.label,
@@ -111,4 +141,3 @@ export function publicReaderModules(contentTypes = []) {
       panelMode: item.publicReader.panelMode,
     }));
 }
-

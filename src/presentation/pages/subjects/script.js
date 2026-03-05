@@ -28,7 +28,7 @@ export function subjectsScript(apiBase = "/api/workspace") {
   let classes = [];
   let subjects = [];
   let createPreviewUrl = '';
-  const autosaveTimers = new Map();
+  const subjectSaveSequence = new Map();
   const toastHostId = 'subjectsToastHost';
   const subjectImagePlaceholderIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 15.2l-4.6-4.3-4.4 4.1-2.3-2.1-5.7 5.2"/></svg>';
 
@@ -65,23 +65,6 @@ export function subjectsScript(apiBase = "/api/workspace") {
     }, 1900);
   };
 
-  const queueAutosave = (key, run, delay = 700) => {
-    const timerKey = String(key || '');
-    if (!timerKey || typeof run !== 'function') return;
-    const existing = autosaveTimers.get(timerKey);
-    if (existing) window.clearTimeout(existing);
-    const timer = window.setTimeout(async () => {
-      autosaveTimers.delete(timerKey);
-      try {
-        await run();
-      } catch (error) {
-        if (error?.name === 'AbortError') return;
-        showToast(error?.message || 'Unable to sync', 'error');
-        setMsg(error?.message || 'Unable to sync');
-      }
-    }, delay);
-    autosaveTimers.set(timerKey, timer);
-  };
 ${imageToolsModule()}
   const fileToDataUrl = async (file, options = {}) => (
     compressFileToDataUrl(file, {
@@ -231,12 +214,30 @@ ${imageToolsModule()}
 
   const reloadAll = async () => {
     setMsg('Loading subjects...');
+    const errors = [];
+    const collectError = (error) => {
+      if (error?.name === 'AbortError') throw error;
+      errors.push(error);
+    };
     try {
-      await Promise.all([loadTemplates(), loadClasses(), loadSubjects()]);
-      setMsg('');
+      await Promise.all([
+        loadTemplates().catch(collectError),
+        loadClasses().catch(collectError),
+        loadSubjects().catch(collectError),
+      ]);
     } catch (error) {
       if (error?.name === 'AbortError') return;
-      setMsg(error?.message || 'Unable to load module data');
+      errors.push(error);
+    }
+
+    if (!errors.length) {
+      setMsg('');
+      return;
+    }
+
+    const primaryError = errors[0];
+    setMsg(primaryError?.message || 'Unable to load module data');
+    if (!Array.isArray(subjects) || !subjects.length) {
       rowsEl.innerHTML = '<tr><td colspan="6" class="sub-empty">Unable to load subjects.</td></tr>';
     }
   };
@@ -244,6 +245,8 @@ ${imageToolsModule()}
   const updateSubjectMeta = async (row, options = {}) => {
     const subjectId = Number(row?.getAttribute('data-subject-id') || 0);
     if (!subjectId) return;
+    const saveSeq = Number(subjectSaveSequence.get(subjectId) || 0) + 1;
+    subjectSaveSequence.set(subjectId, saveSeq);
 
     const nameInput = row.querySelector('[data-field="subjectName"]');
     const savedName = String(nameInput?.getAttribute('data-saved-value') || '').trim();
@@ -283,6 +286,7 @@ ${imageToolsModule()}
       if (classInput) classInput.classList.remove('is-syncing');
       throw new Error(body?.error || 'Unable to update subject');
     }
+    if (Number(subjectSaveSequence.get(subjectId) || 0) !== saveSeq) return;
 
     const persistedName = String(body?.subject?.name || name);
     const persistedClassId = Number(body?.subject?.classId || chosenClassId || savedClassId || 0);
@@ -372,7 +376,23 @@ ${imageToolsModule()}
     window.location.href = href;
   }, { signal: controller.signal });
 
-  rowsEl.addEventListener('input', (event) => {
+  rowsEl.addEventListener('keydown', (event) => {
+    const input = event.target.closest('input[data-field="subjectName"]');
+    if (!input) return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      input.blur();
+      return;
+    }
+    if (event.key === 'Escape') {
+      const savedName = String(input.getAttribute('data-saved-value') || '').trim();
+      input.value = savedName;
+      input.classList.remove('is-syncing');
+      input.blur();
+    }
+  }, { signal: controller.signal });
+
+  rowsEl.addEventListener('focusout', (event) => {
     const input = event.target.closest('input[data-field="subjectName"]');
     if (!input) return;
     const row = input.closest('tr[data-subject-id]');
@@ -386,7 +406,11 @@ ${imageToolsModule()}
 
     input.classList.add('is-syncing');
     setMsg('Syncing...');
-    queueAutosave('subject-name:' + subjectId, () => updateSubjectMeta(row), 700);
+    updateSubjectMeta(row).catch((error) => {
+      if (error?.name === 'AbortError') return;
+      input.classList.remove('is-syncing');
+      setMsg(error?.message || 'Unable to update subject name');
+    });
   }, { signal: controller.signal });
 
   rowsEl.addEventListener('change', (event) => {
@@ -456,10 +480,6 @@ ${imageToolsModule()}
 
   if (typeof window.__registerCleanup === 'function') {
     window.__registerCleanup(() => {
-      for (const timer of autosaveTimers.values()) {
-        window.clearTimeout(timer);
-      }
-      autosaveTimers.clear();
       clearCreatePreviewUrl();
     });
   }

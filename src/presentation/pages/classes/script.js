@@ -134,7 +134,7 @@ ${imageToolsModule()}
 
   const renderRows = (classes) => {
     if (!Array.isArray(classes) || !classes.length) {
-      rowsEl.innerHTML = '<tr><td colspan="4" class="cls-empty">No classes yet. Add your first class.</td></tr>';
+      rowsEl.innerHTML = '<tr><td colspan="5" class="cls-empty">No classes yet. Add your first class.</td></tr>';
       return;
     }
 
@@ -155,6 +155,7 @@ ${imageToolsModule()}
         + '</div></td>'
         + '<td><input class="cls-input" data-field="className" data-saved-value="' + escapeHtml(item?.name || '') + '" value="' + escapeHtml(item?.name || '') + '" /></td>'
         + '<td>' + escapeHtml(toDate(item?.createdAt)) + '</td>'
+        + '<td><button type="button" class="cls-danger" data-action="delete-class" data-class-id="' + id + '" data-class-name="' + escapeHtml(item?.name || '') + '">Remove</button></td>'
         + '</tr>';
     }).join('');
   };
@@ -173,7 +174,7 @@ ${imageToolsModule()}
       setMsg('');
     } catch (error) {
       if (error?.name === 'AbortError') return;
-      rowsEl.innerHTML = '<tr><td colspan="4" class="cls-empty">Unable to load classes.</td></tr>';
+      rowsEl.innerHTML = '<tr><td colspan="5" class="cls-empty">Unable to load classes.</td></tr>';
       setMsg(error?.message || 'Unable to load classes');
     }
   };
@@ -251,6 +252,27 @@ ${imageToolsModule()}
         updateClassMeta(row, { clear: true }).catch((error) => {
           if (error?.name === 'AbortError') return;
           setMsg(error?.message || 'Unable to remove image');
+        });
+        return;
+      }
+      if (action === 'delete-class') {
+        const classId = Number(actionEl.getAttribute('data-class-id') || row.getAttribute('data-class-id') || 0);
+        const className = String(actionEl.getAttribute('data-class-name') || 'class').trim();
+        if (!classId) return;
+        if (!window.confirm('Remove "' + className + '" class?')) return;
+        setMsg('Removing class...');
+        fetch(apiRoot + '/classes/' + classId, {
+          method: 'DELETE',
+          signal: controller.signal,
+        }).then(async (response) => {
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(body?.error || 'Unable to remove class');
+          await loadClasses();
+          setMsg('Class removed.');
+          showToast('Class removed', 'success');
+        }).catch((error) => {
+          if (error?.name === 'AbortError') return;
+          setMsg(error?.message || 'Unable to remove class');
         });
       }
       return;

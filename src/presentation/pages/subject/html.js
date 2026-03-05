@@ -62,20 +62,47 @@ export function subjectHtml(subjectId) {
             <input type="hidden" name="mode" value="create" />
             <input type="hidden" name="chapterId" value="0" />
             <input type="hidden" name="topicId" value="0" />
-            <label>Topic number (optional)
-              <input name="topicNumber" type="text" maxlength="24" placeholder="e.g. 1, 1.1, Topic A" />
-            </label>
+            <input type="hidden" name="clearImage" value="0" />
             <label>Topic name
               <input name="name" type="text" maxlength="140" required placeholder="Enter topic name" />
             </label>
-            <label>Template image (optional)
-              <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
-            </label>
-            <label class="sbj-inline-check">
-              <input name="clearImage" type="checkbox" /> Remove existing image
-            </label>
+            <div class="sbj-modal-media-row">
+              <div class="sbj-modal-image-field">
+                <span class="sbj-modal-label">Template image (optional)</span>
+                <div class="sbj-modal-image-slot-wrap">
+                  <button id="topicModalImageSlot" type="button" class="sbj-image-slot sbj-modal-image-slot" aria-label="Select topic image">
+                    <span id="topicModalImageIcon" class="sbj-image-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/>
+                        <circle cx="9" cy="10" r="1.6"/>
+                        <path d="M20.5 15.2l-4.6-4.3-4.4 4.1-2.3-2.1-5.7 5.2"/>
+                      </svg>
+                    </span>
+                    <img id="topicModalImagePreview" class="sbj-thumb sbj-thumb-node sbj-modal-image-preview" alt="Topic image preview" hidden />
+                  </button>
+                  <input id="topicModalImageInput" class="sbj-node-image-input" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+                  <button id="topicModalImageRemove" type="button" class="sbj-image-remove" aria-label="Remove selected topic image" hidden>x</button>
+                </div>
+              </div>
+            </div>
             <div class="sbj-form-actions">
               <button id="topicModalCancel" class="sbj-secondary" type="button">Cancel</button>
+              <button class="sbj-primary" type="submit">Save</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="contentPrefsModal" class="sbj-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="contentPrefsModalTitle">
+        <div class="sbj-modal-surface">
+          <h3 id="contentPrefsModalTitle">Content preferences</h3>
+          <form id="contentPrefsForm" class="sbj-form" autocomplete="off">
+            <input type="hidden" name="contextType" value="" />
+            <input type="hidden" name="contextId" value="0" />
+            <p id="contentPrefsModalHint" class="sbj-modal-hint"></p>
+            <div id="contentPrefsOptions" class="sbj-pref-options"></div>
+            <div class="sbj-form-actions">
+              <button id="contentPrefsModalCancel" class="sbj-secondary" type="button">Cancel</button>
               <button class="sbj-primary" type="submit">Save</button>
             </div>
           </form>

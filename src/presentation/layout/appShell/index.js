@@ -10,14 +10,10 @@ import { renderShellOverlay, renderStatusToast } from "./components/overlays.js"
 import { renderAppSidebar } from "./components/sidebar.js";
 
 const APP_SHELL_STATIC_PRO_STYLE = `
-/* Global static/professional mode: black-white palette behavior, no glow, no motion noise. */
+/* Professional mode: keep visuals clean and reduce hover noise while preserving phase motion. */
 .app-shell *,.app-shell *::before,.app-shell *::after{
-  animation:none !important;
-  transition:none !important;
   box-shadow:none !important;
   text-shadow:none !important;
-  filter:none !important;
-  backdrop-filter:none !important;
 }
 .app-shell::before,
 .app-shell .app-header::after,
@@ -30,7 +26,7 @@ const APP_SHELL_STATIC_PRO_STYLE = `
   display:none !important;
 }
 .app-shell :is(.social-header-search-icon,.social-header-search-clear,.home-cover-quote cite){color:var(--text-muted) !important}
-.app-shell .app-brand-signature .site-logo-svg{filter:none !important}
+.app-shell .app-brand-signature .site-logo-wordmark{filter:none !important}
 @media (hover:hover){
   .app-shell *:hover{transform:none !important}
   .app-shell .post-media-nav:hover{transform:translateY(-50%) !important}
@@ -41,28 +37,51 @@ const APP_SHELL_STATIC_PRO_STYLE = `
     text-decoration:none !important;
   }
 }
-@keyframes app-mobile-header-enter{
+@keyframes app-first-header-in{
   from{opacity:0;transform:translate3d(0,-10px,0)}
   to{opacity:1;transform:translate3d(0,0,0)}
 }
-@keyframes app-mobile-content-enter{
-  from{opacity:0;transform:translate3d(0,12px,0)}
+@keyframes app-first-sidebar-in{
+  from{opacity:0;transform:translate3d(-14px,0,0)}
   to{opacity:1;transform:translate3d(0,0,0)}
 }
-@keyframes app-mobile-footer-enter{
-  from{opacity:0;transform:translate3d(0,8px,0)}
-  to{opacity:1;transform:translate3d(0,0,0)}
+@keyframes app-first-mobile-content-in{
+  from{opacity:0;transform:translate3d(0,12px,0) scale(.995)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
 }
-@media (max-width:899px) and (prefers-reduced-motion:no-preference){
-  .app-shell .app-header{
-    animation:app-mobile-header-enter .28s ease-out both !important;
+body.app-first-load .app-shell .app-header{
+  animation:app-first-header-in .28s var(--motion-smooth) both !important;
+}
+body.app-first-load .app-shell .app-sidebar{
+  animation:app-first-sidebar-in .34s var(--motion-smooth) .04s both !important;
+}
+@media (max-width:899px){
+  body.app-first-load .app-shell .app-content > *{
+    animation:app-first-mobile-content-in .42s var(--motion-spring) .08s both !important;
   }
-  .app-shell .app-content{
-    animation:app-mobile-content-enter .36s cubic-bezier(.2,.7,.2,1) .06s both !important;
+  body.app-first-load .app-shell .app-footer{
+    animation:app-first-mobile-content-in .42s var(--motion-spring) .14s both !important;
   }
-  .app-shell .app-footer{
-    animation:app-mobile-footer-enter .3s ease-out .1s both !important;
+}
+@media (prefers-reduced-motion:reduce){
+  body.app-first-load .app-shell .app-content > *,
+  body.app-first-load .app-shell .app-footer{
+    animation:none !important;
+    transform:none !important;
+    opacity:1 !important;
   }
+}
+html.app-view-transitioning .app-shell .app-header,
+html.app-view-transitioning .app-shell .app-content,
+html.app-view-transitioning .app-shell .app-footer,
+html.app-view-transitioning .app-shell .app-content > *{
+  animation:none !important;
+}
+body.app-navigating .app-shell .app-header,
+body.app-navigating .app-shell .app-content,
+body.app-navigating .app-shell .app-footer,
+body.app-navigating .app-shell .app-content > *{
+  animation:none !important;
 }
 `;
 
@@ -85,6 +104,7 @@ export function renderAppShellLayout({
   pageStyles = "",
   apiBase = "",
   headerCenter = "",
+  shellScope = "app",
 }) {
   const currentUser = user || null;
   const isAuthenticated = Boolean(currentUser);
@@ -92,8 +112,9 @@ export function renderAppShellLayout({
   const avatarVersion = String(currentUser?.avatar_key || "").trim();
   const avatarFallback = isAuthenticated ? initials : guestFallbackAvatar();
   const rightSidebarMarkup = String(rightSidebar || "");
+  const resolvedShellScope = String(shellScope || "").trim().toLowerCase() === "public" ? "public" : "app";
 
-  const body = `<div class="app-shell" data-api-base="${apiBase}">${renderAppHeader({ user: currentUser, homePath, avatarVersion, avatarFallback, isAuthenticated, headerCenter })}${renderShellOverlay({ isAuthenticated })}${renderAppSidebar({ navItems, activeMenu })}${rightSidebarMarkup}<main class="app-content ${contentClass}">${content}</main><footer class="app-footer">${footerText}</footer>${renderStatusToast()}</div>`;
+  const body = `<div class="app-shell" data-api-base="${apiBase}" data-shell-scope="${resolvedShellScope}">${renderAppHeader({ user: currentUser, homePath, avatarVersion, avatarFallback, isAuthenticated, headerCenter })}${renderShellOverlay({ isAuthenticated })}${renderAppSidebar({ navItems, activeMenu })}${rightSidebarMarkup}<main class="app-content ${contentClass}">${content}</main><footer class="app-footer">${footerText}</footer>${renderStatusToast()}</div>`;
 
   return renderDocument({
     title,

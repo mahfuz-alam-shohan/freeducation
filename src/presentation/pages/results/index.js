@@ -80,6 +80,20 @@ function optionKey(index) {
   return String.fromCharCode(65 + index);
 }
 
+function hasRichInlineMarkup(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  if (/<[a-z][\s\S]*>/i.test(text)) return true;
+  return false;
+}
+
+function richDisplayValue(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  if (hasRichInlineMarkup(raw)) return raw;
+  return escapeHtml(raw).replaceAll("\n", "<br>");
+}
+
 function toDateLabel(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -103,6 +117,7 @@ export function examResultsPage({ user, navItems, homePath, sessions = [] } = {}
     pageClass: "page-results",
     contentClass: "app-content-flush",
     pageStyles: RESULTS_STYLE,
+    shellScope: "public",
     content,
   });
 }
@@ -117,7 +132,7 @@ export function examResultDetailPage({ user, navItems, homePath, detail } = {}) 
 
   const questionMarkup = (selected?.questions || []).map((question, index) => {
     const options = Array.isArray(question?.options) ? question.options : [];
-    return `<article class="result-q"><header class="result-q-head"><span class="result-q-no">${index + 1}.</span><div>${String(question?.body || "")}</div></header>${question?.imageUrl ? `<img src="${escapeHtml(question.imageUrl)}" alt="Question image" loading="lazy" decoding="async" />` : ""}<section class="result-opts">${options.map((option, optionIndex) => {
+    return `<article class="result-q"><header class="result-q-head"><span class="result-q-no">${index + 1}.</span><div>${richDisplayValue(question?.body || "")}</div></header>${question?.imageUrl ? `<img src="${escapeHtml(question.imageUrl)}" alt="Question image" loading="lazy" decoding="async" />` : ""}<section class="result-opts">${options.map((option, optionIndex) => {
       const key = optionKey(optionIndex);
       const isSelected = String(question?.selectedOption || "").toUpperCase() === key;
       const isCorrect = String(question?.correctOption || "").toUpperCase() === key;
@@ -131,7 +146,7 @@ export function examResultDetailPage({ user, navItems, homePath, detail } = {}) 
       const tag = isCorrect
         ? (isSelected ? "Your correct answer" : "Correct answer")
         : (wrongSelected ? "Your answer" : "");
-      return `<div class="${classes}"><span class="result-opt-key">${key}</span><span class="result-opt-label">${String(option || "")}</span>${tag ? `<span class="result-opt-tag">${escapeHtml(tag)}</span>` : ""}</div>`;
+      return `<div class="${classes}"><span class="result-opt-key">${key}</span><span class="result-opt-label">${richDisplayValue(option || "")}</span>${tag ? `<span class="result-opt-tag">${escapeHtml(tag)}</span>` : ""}</div>`;
     }).join("")}</section></article>`;
   }).join("");
 
@@ -146,6 +161,7 @@ export function examResultDetailPage({ user, navItems, homePath, detail } = {}) 
     pageClass: "page-results-detail",
     contentClass: "app-content-flush",
     pageStyles: RESULTS_STYLE,
+    shellScope: "public",
     content,
     script: RESULTS_SCRIPT,
   });
