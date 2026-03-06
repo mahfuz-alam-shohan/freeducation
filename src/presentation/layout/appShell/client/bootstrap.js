@@ -30,6 +30,13 @@ export const APP_SHELL_CLIENT_BOOTSTRAP = `
   const themeChip = document.getElementById('themeToggleChip');
   const brandHome = document.getElementById('appBrandHome');
   const statusToast = document.getElementById('appStatusToast');
+  const commandPalette = document.getElementById('appCommandPalette');
+  const commandClose = document.getElementById('appCommandClose');
+  const commandInput = document.getElementById('appCommandInput');
+  const commandList = document.getElementById('appCommandList');
+  const desktopStatus = document.getElementById('appDesktopStatus');
+  const desktopStatusMessage = document.getElementById('appDesktopStatusMessage');
+  const desktopStatusTime = document.getElementById('appDesktopStatusTime');
   const shellRoot = document.querySelector('.app-shell');
 
   const themeStorageKey = 'freeducation-theme';
@@ -39,6 +46,7 @@ export const APP_SHELL_CLIENT_BOOTSTRAP = `
   let themeSwitching = false;
   let activeAvatarVersion = '';
   let statusTimer;
+  let desktopStatusTimer;
   let navigationClearTimer = 0;
   let notificationsLoading = false;
   let notificationsLoadedAt = 0;

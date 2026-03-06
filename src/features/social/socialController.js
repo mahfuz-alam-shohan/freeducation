@@ -1,24 +1,33 @@
 import { HttpError } from "../../shared/http/errors.js";
 import { readBody } from "../../shared/http/request.js";
 import {
+  cancelSocialMateRequest,
   createSocialComment,
+  createSocialMateRequest,
   createSocialPost,
   deleteSocialPostById,
   findSocialCommentById,
   findSocialPostById,
   getSocialAvatarObject,
   getSocialFeed,
+  getSocialMateStatus,
+  listSocialMateRequests,
+  listSocialMates,
   getSocialNotifications,
   getSocialPostById,
   getSocialPostImageObject,
   markSocialNotificationRead,
   markSocialNotificationsSeen,
+  removeSocialMate,
+  respondToSocialMateRequest,
+  setSocialMateFollowState,
   toggleSocialCommentReaction,
   toggleSocialReaction,
 } from "../../infrastructure/db/social.js";
 import { objectToResponse } from "./helpers/http.js";
 import { parseDataImage, parseDataImages, parsePositiveId, sanitizePostText } from "./helpers/validation.js";
 import { decodePostImageKeys, encodePostImageKeys, maxPostImages } from "../../shared/social/postImages.js";
+import { findUserById } from "../../infrastructure/db/usersRepository.js";
 
 const FEED_LIMIT_DEFAULT = 12;
 const FEED_LIMIT_MIN = 4;
@@ -319,5 +328,227 @@ export async function socialNotificationRead(request, env, viewer) {
     ok: Boolean(result?.ok),
     readAt: String(result?.readAt || ""),
     id: notificationId,
+  };
+}
+
+async function ensureMateTargetUser(env, targetUserId) {
+  const target = await findUserById(env.DB, targetUserId);
+  if (!target) throw new HttpError(404, "User not found");
+  return {
+    id: Number(target.id || 0),
+    name: String(target.name || "User"),
+    email: String(target.email || ""),
+    role: String(target.user_type || ""),
+    avatarUrl: target.avatar_key ? `/api/social/avatar/${target.id}` : "",
+    profileUrl: `/profile/${target.id}?from=social`,
+  };
+}
+
+export async function socialMates(env, viewer, options = {}) {
+  if (!viewer) throw new HttpError(401, "Login required to view mates");
+  const limit = clampInt(options?.limit, 120, 1, 300);
+  const mates = await listSocialMates(env.DB, {
+    userId: Number(viewer.id),
+    limit,
+  });
+  return {
+    mates: Array.isArray(mates) ? mates : [],
+    count: Array.isArray(mates) ? mates.length : 0,
+  };
+}
+
+export async function socialMateRequests(env, viewer, options = {}) {
+  if (!viewer) throw new HttpError(401, "Login required to view mate requests");
+  const limit = clampInt(options?.limit, 120, 1, 250);
+  const requests = await listSocialMateRequests(env.DB, {
+    userId: Number(viewer.id),
+    limit,
+  });
+  const incoming = Array.isArray(requests?.incoming) ? requests.incoming : [];
+  const outgoing = Array.isArray(requests?.outgoing) ? requests.outgoing : [];
+  return {
+    incoming,
+    outgoing,
+    incomingCount: incoming.length,
+    outgoingCount: outgoing.length,
+    totalCount: incoming.length + outgoing.length,
+  };
+}
+
+export async function socialMateStatus(env, viewer, targetUserId) {
+  if (!viewer) throw new HttpError(401, "Login required to view mate status");
+  const safeTargetId = parsePositiveId(targetUserId, "user id");
+  const safeViewerId = Number.parseInt(String(viewer?.id || 0), 10);
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    throw new HttpError(401, "Login required to view mate status");
+  }
+  if (safeTargetId === safeViewerId) {
+    return {
+      targetUserId: safeTargetId,
+      status: "self",
+      requestId: 0,
+      canRequest: false,
+    };
+  }
+
+  await ensureMateTargetUser(env, safeTargetId);
+  const statusResult = await getSocialMateStatus(env.DB, {
+    viewerId: safeViewerId,
+    targetUserId: safeTargetId,
+  });
+  const status = String(statusResult?.status || "none");
+  const requestId = Number.parseInt(String(statusResult?.requestId || 0), 10) || 0;
+  const relationId = Number.parseInt(String(statusResult?.relationId || requestId || 0), 10) || 0;
+  const followingByViewer = Boolean(statusResult?.followingByViewer);
+  return {
+    targetUserId: safeTargetId,
+    status,
+    requestId,
+    relationId,
+    followingByViewer,
+    canRequest: status === "none",
+  };
+}
+
+export async function createMateRequest(request, env, viewer) {
+  if (!viewer) throw new HttpError(401, "Login required to send mate request");
+  const safeViewerId = Number.parseInt(String(viewer?.id || 0), 10);
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    throw new HttpError(401, "Login required to send mate request");
+  }
+
+  const body = await readBody(request);
+  const safeTargetId = parsePositiveId(body?.targetUserId, "target user id");
+  if (safeTargetId === safeViewerId) throw new HttpError(400, "You cannot send mate request to yourself");
+  const target = await ensureMateTargetUser(env, safeTargetId);
+
+  const result = await createSocialMateRequest(env.DB, {
+    requesterId: safeViewerId,
+    receiverId: safeTargetId,
+  });
+  const status = String(result?.status || "none");
+  const requestId = Number.parseInt(String(result?.requestId || 0), 10) || 0;
+  const relationId = Number.parseInt(String(result?.relationId || requestId || 0), 10) || 0;
+  const followingByViewer = Boolean(result?.followingByViewer);
+  return {
+    ok: Boolean(result?.ok),
+    target,
+    status,
+    requestId,
+    relationId,
+    followingByViewer,
+    canRequest: status === "none",
+  };
+}
+
+export async function respondMateRequest(request, env, viewer, requestId) {
+  if (!viewer) throw new HttpError(401, "Login required to respond to mate request");
+  const safeViewerId = Number.parseInt(String(viewer?.id || 0), 10);
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    throw new HttpError(401, "Login required to respond to mate request");
+  }
+  const safeRequestId = parsePositiveId(requestId, "request id");
+  const body = await readBody(request);
+  const action = String(body?.action || "").trim().toLowerCase();
+  if (!["accept", "decline"].includes(action)) throw new HttpError(400, "Invalid mate request action");
+
+  const result = await respondToSocialMateRequest(env.DB, {
+    requestId: safeRequestId,
+    receiverId: safeViewerId,
+    action,
+  });
+  if (!result?.ok) {
+    if (result?.missing) throw new HttpError(404, "Mate request not found");
+    if (result?.forbidden) throw new HttpError(403, "You are not allowed to respond to this mate request");
+    throw new HttpError(400, "Unable to respond to mate request");
+  }
+
+  return {
+    ok: true,
+    action,
+    status: String(result?.status || "none"),
+    requestId: safeRequestId,
+    relationId: Number.parseInt(String(result?.relationId || safeRequestId || 0), 10) || safeRequestId,
+    requesterId: Number.parseInt(String(result?.requesterId || 0), 10) || 0,
+    receiverId: Number.parseInt(String(result?.receiverId || 0), 10) || 0,
+    followingByViewer: Boolean(result?.followingByViewer),
+    respondedAt: String(result?.respondedAt || ""),
+  };
+}
+
+export async function cancelMateRequest(env, viewer, requestId) {
+  if (!viewer) throw new HttpError(401, "Login required to cancel mate request");
+  const safeViewerId = Number.parseInt(String(viewer?.id || 0), 10);
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    throw new HttpError(401, "Login required to cancel mate request");
+  }
+  const safeRequestId = parsePositiveId(requestId, "request id");
+  const result = await cancelSocialMateRequest(env.DB, {
+    requestId: safeRequestId,
+    requesterId: safeViewerId,
+  });
+  if (!result?.ok) {
+    if (result?.missing) throw new HttpError(404, "Mate request not found");
+    if (result?.forbidden) throw new HttpError(403, "You are not allowed to cancel this mate request");
+    throw new HttpError(400, "Unable to cancel mate request");
+  }
+  return {
+    ok: true,
+    status: String(result?.status || "none"),
+    requestId: safeRequestId,
+    relationId: Number.parseInt(String(result?.relationId || safeRequestId || 0), 10) || safeRequestId,
+    respondedAt: String(result?.respondedAt || ""),
+  };
+}
+
+export async function removeMate(env, viewer, relationId) {
+  if (!viewer) throw new HttpError(401, "Login required to remove mate");
+  const safeViewerId = Number.parseInt(String(viewer?.id || 0), 10);
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    throw new HttpError(401, "Login required to remove mate");
+  }
+  const safeRelationId = parsePositiveId(relationId, "relation id");
+  const result = await removeSocialMate(env.DB, {
+    relationId: safeRelationId,
+    userId: safeViewerId,
+  });
+  if (!result?.ok) {
+    if (result?.missing) throw new HttpError(404, "Mate relation not found");
+    if (result?.forbidden) throw new HttpError(403, "You are not allowed to remove this mate");
+    throw new HttpError(400, "Unable to remove mate");
+  }
+  return {
+    ok: true,
+    status: String(result?.status || "none"),
+    relationId: safeRelationId,
+    respondedAt: String(result?.respondedAt || ""),
+  };
+}
+
+export async function setMateFollowState(request, env, viewer, relationId) {
+  if (!viewer) throw new HttpError(401, "Login required to update mate follow");
+  const safeViewerId = Number.parseInt(String(viewer?.id || 0), 10);
+  if (!Number.isInteger(safeViewerId) || safeViewerId <= 0) {
+    throw new HttpError(401, "Login required to update mate follow");
+  }
+  const safeRelationId = parsePositiveId(relationId, "relation id");
+  const body = await readBody(request);
+  const follow = Boolean(body?.follow);
+  const result = await setSocialMateFollowState(env.DB, {
+    relationId: safeRelationId,
+    userId: safeViewerId,
+    follow,
+  });
+  if (!result?.ok) {
+    if (result?.missing) throw new HttpError(404, "Mate relation not found");
+    if (result?.forbidden) throw new HttpError(403, "You are not allowed to update this mate");
+    throw new HttpError(400, "Unable to update mate follow");
+  }
+  return {
+    ok: true,
+    status: String(result?.status || "none"),
+    relationId: safeRelationId,
+    followingByViewer: Boolean(result?.followingByViewer),
+    updatedAt: String(result?.updatedAt || ""),
   };
 }

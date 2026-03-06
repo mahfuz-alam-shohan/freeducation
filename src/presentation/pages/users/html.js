@@ -33,7 +33,7 @@ export function usersHtml() {
 
       <div class="users-table-wrap">
         <table class="users-table">
-          <thead><tr><th>Name</th><th>Email</th><th>User type</th><th>Created</th><th class="users-actions-col">Actions</th></tr></thead>
+          <thead><tr><th class="users-avatar-col">Avatar</th><th>Name</th><th>Email</th><th>User type</th><th>Created</th><th class="users-actions-col">Actions</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>

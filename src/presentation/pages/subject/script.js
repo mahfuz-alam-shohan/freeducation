@@ -64,6 +64,18 @@ export function subjectScript(subjectId, apiBase = "/api/workspace", contentModu
   const autosaveTimers = new Map();
   let chapterModalPreviewUrl = '';
   let topicModalPreviewUrl = '';
+  const BULK_IMPORT_LIMIT = 200;
+  const BULK_PREVIEW_LIMIT = 6;
+  const createEmptyBulkImportState = (contentType) => ({
+    contentType: String(contentType || '').trim().toLowerCase(),
+    fileName: '',
+    items: [],
+    error: '',
+  });
+  const bulkImportState = {
+    short_notes: createEmptyBulkImportState('short_notes'),
+    mcq_bank: createEmptyBulkImportState('mcq_bank'),
+  };
 
   const escapeHtml = (value) => String(value || '')
     .replaceAll('&', '&amp;')
@@ -492,6 +504,324 @@ ${imageToolsModule()}
       .replaceAll('\\r\\n', '\\n')
       .replaceAll('\\r', '\\n')
       .replaceAll('\\n', '<br>');
+  };
+
+  const bulkExamplePayload = (contentType) => {
+    if (contentType === 'mcq_bank') {
+      return JSON.stringify({
+        contentType: 'mcq_bank',
+        items: [
+          {
+            body: 'What is the SI unit of force?',
+            options: ['Newton', 'Joule', 'Watt', 'Pascal'],
+            correctOption: 'A',
+          },
+          {
+            body: '2 + 2 = ?',
+            options: ['3', '4', '5', '6'],
+            correctOption: 'B',
+          },
+        ],
+      }, null, 2);
+    }
+    return JSON.stringify({
+      contentType: 'short_notes',
+      items: [
+        { body: 'Force = mass x acceleration.' },
+        { body: 'Kinetic energy: K = (1/2)mv^2' },
+      ],
+    }, null, 2);
+  };
+
+  const bulkImportPanel = (contentType) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    const isMcq = normalized === 'mcq_bank';
+    const title = isMcq ? 'Bulk Upload MCQ (JSON)' : 'Bulk Upload Short Notes (JSON)';
+    const sample = bulkExamplePayload(normalized);
+    return '<section class="sbj-bulk-import" data-bulk-root="' + normalized + '">'
+      + '<header class="sbj-bulk-head"><h4>' + title + '</h4><span class="sbj-bulk-chip">Admin only</span></header>'
+      + '<p class="sbj-bulk-hint">Use this JSON format, select a file, then verify preview before upload.</p>'
+      + '<pre class="sbj-bulk-template">' + escapeHtml(sample) + '</pre>'
+      + '<div class="sbj-bulk-controls">'
+      + '<label class="sbj-bulk-file">JSON file<input type="file" accept="application/json,.json" data-field="bulkJsonFile" data-bulk-kind="' + normalized + '" /></label>'
+      + '<div class="sbj-form-actions sbj-bulk-actions">'
+      + '<button type="button" class="sbj-secondary" data-action="clear-bulk-json" data-bulk-kind="' + normalized + '" disabled>Clear</button>'
+      + '<button type="button" class="sbj-primary" data-action="upload-bulk-json" data-bulk-kind="' + normalized + '" disabled>Upload</button>'
+      + '</div></div>'
+      + '<section class="sbj-bulk-preview" data-bulk-preview="' + normalized + '"><p class="sbj-bulk-empty">No file selected yet.</p></section>'
+      + '</section>';
+  };
+
+  const getBulkImportState = (contentType) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    if (normalized !== 'short_notes' && normalized !== 'mcq_bank') return null;
+    if (!bulkImportState[normalized]) {
+      bulkImportState[normalized] = createEmptyBulkImportState(normalized);
+    }
+    return bulkImportState[normalized];
+  };
+
+  const resetBulkImportState = (contentType, options = {}) => {
+    const state = getBulkImportState(contentType);
+    if (!state) return;
+    state.fileName = '';
+    state.items = [];
+    state.error = '';
+
+    const normalized = String(contentType || '').trim().toLowerCase();
+    const root = dynamicArea.querySelector('[data-bulk-root="' + normalized + '"]');
+    if (root && options.keepInput !== true) {
+      const input = root.querySelector('[data-field="bulkJsonFile"][data-bulk-kind="' + normalized + '"]');
+      if (input) input.value = '';
+    }
+    syncBulkImportUi(normalized);
+  };
+
+  const resetAllBulkImportStates = () => {
+    resetBulkImportState('short_notes', { keepInput: true });
+    resetBulkImportState('mcq_bank', { keepInput: true });
+  };
+
+  const readBulkItemsFromPayload = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object' && Array.isArray(raw.items)) return raw.items;
+    return null;
+  };
+
+  const normalizeBulkShortNoteItem = (entry, index) => {
+    const itemNo = Number(index || 0) + 1;
+    if (typeof entry === 'string') {
+      const textBody = String(entry || '').trim();
+      if (!textBody) throw new Error('Item #' + itemNo + ' body is required');
+      return { body: textBody };
+    }
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new Error('Item #' + itemNo + ' must be an object with a body field');
+    }
+    const body = String(entry.body ?? entry.note ?? entry.text ?? '').trim();
+    if (!body) throw new Error('Item #' + itemNo + ' body is required');
+    const imageData = String(entry.imageData || '').trim();
+    if (imageData && !/^data:image\\//i.test(imageData)) {
+      throw new Error('Item #' + itemNo + ' has invalid imageData');
+    }
+    return imageData ? { body, imageData } : { body };
+  };
+
+  const normalizeBulkMcqItem = (entry, index) => {
+    const itemNo = Number(index || 0) + 1;
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new Error('Item #' + itemNo + ' must be an object');
+    }
+    const body = String(entry.body ?? entry.question ?? entry.prompt ?? '').trim();
+    if (!body) throw new Error('Item #' + itemNo + ' question body is required');
+
+    let options = Array.isArray(entry.options) ? entry.options : null;
+    if (!options) {
+      options = [entry.optionA ?? entry.A, entry.optionB ?? entry.B, entry.optionC ?? entry.C, entry.optionD ?? entry.D];
+    }
+    if (!Array.isArray(options) || options.length !== 4) {
+      throw new Error('Item #' + itemNo + ' must include exactly 4 options');
+    }
+    const cleanedOptions = options.map((option, optionIndex) => {
+      const text = String(option ?? '').trim();
+      if (!text) throw new Error('Item #' + itemNo + ' option ' + String.fromCharCode(65 + optionIndex) + ' is required');
+      return text;
+    });
+
+    let correctOption = String(entry.correctOption ?? entry.answer ?? '').trim().toUpperCase();
+    if (correctOption === '1') correctOption = 'A';
+    if (correctOption === '2') correctOption = 'B';
+    if (correctOption === '3') correctOption = 'C';
+    if (correctOption === '4') correctOption = 'D';
+    if (!['A', 'B', 'C', 'D'].includes(correctOption)) {
+      throw new Error('Item #' + itemNo + ' correctOption must be A, B, C or D');
+    }
+
+    const imageData = String(entry.imageData || '').trim();
+    if (imageData && !/^data:image\\//i.test(imageData)) {
+      throw new Error('Item #' + itemNo + ' has invalid imageData');
+    }
+    return imageData
+      ? { body, options: cleanedOptions, correctOption, imageData }
+      : { body, options: cleanedOptions, correctOption };
+  };
+
+  const parseBulkImportItems = (contentType, raw) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    if (normalized !== 'short_notes' && normalized !== 'mcq_bank') {
+      throw new Error('Unsupported bulk content type');
+    }
+    if (!raw || (typeof raw !== 'object' && !Array.isArray(raw))) {
+      throw new Error('JSON must be an object or an array');
+    }
+    if (!Array.isArray(raw)) {
+      const fileContentType = String(raw.contentType || '').trim().toLowerCase();
+      if (fileContentType && fileContentType !== normalized) {
+        throw new Error('This file is for "' + fileContentType + '", but current tab expects "' + normalized + '"');
+      }
+    }
+    const items = readBulkItemsFromPayload(raw);
+    if (!Array.isArray(items)) {
+      throw new Error('JSON must contain an "items" array (or be an array itself)');
+    }
+    if (!items.length) {
+      throw new Error('At least 1 item is required');
+    }
+    if (items.length > BULK_IMPORT_LIMIT) {
+      throw new Error('Maximum ' + BULK_IMPORT_LIMIT + ' items allowed per upload');
+    }
+    return items.map((entry, index) => (
+      normalized === 'mcq_bank'
+        ? normalizeBulkMcqItem(entry, index)
+        : normalizeBulkShortNoteItem(entry, index)
+    ));
+  };
+
+  const renderBulkPreviewMarkup = (contentType, state) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    const safeState = state || createEmptyBulkImportState(normalized);
+    const total = Array.isArray(safeState.items) ? safeState.items.length : 0;
+    if (safeState.error) {
+      return '<p class="sbj-bulk-error">' + escapeHtml(safeState.error) + '</p>';
+    }
+    if (!total) {
+      return '<p class="sbj-bulk-empty">No file selected yet.</p>';
+    }
+    const previewItems = safeState.items.slice(0, BULK_PREVIEW_LIMIT);
+    const rows = previewItems.map((item, index) => {
+      const itemNo = index + 1;
+      if (normalized === 'mcq_bank') {
+        const optionRows = (Array.isArray(item?.options) ? item.options : []).map((option, optionIndex) => {
+          const key = String.fromCharCode(65 + optionIndex);
+          const isCorrect = key === String(item?.correctOption || '').toUpperCase();
+          return '<li class="' + (isCorrect ? 'is-correct' : '') + '"><span class="sbj-bulk-opt-key">' + key + '</span><span>' + richDisplayValue(option || '') + '</span></li>';
+        }).join('');
+        return '<article class="sbj-bulk-item"><p class="sbj-bulk-item-title">' + String(itemNo) + '. ' + richDisplayValue(item?.body || '') + '</p><ol class="sbj-bulk-mcq-opts">' + optionRows + '</ol></article>';
+      }
+      return '<article class="sbj-bulk-item"><p class="sbj-bulk-item-title">' + String(itemNo) + '. ' + richDisplayValue(item?.body || '') + '</p></article>';
+    }).join('');
+    const remaining = total - previewItems.length;
+    return '<div class="sbj-bulk-summary"><strong>' + escapeHtml(safeState.fileName || 'Selected file') + '</strong><span>' + String(total) + ' item(s) ready</span></div>'
+      + '<div class="sbj-bulk-list">' + rows + '</div>'
+      + (remaining > 0 ? '<p class="sbj-bulk-more">+' + String(remaining) + ' more item(s)</p>' : '');
+  };
+
+  const syncBulkImportUi = (contentType) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    const state = getBulkImportState(normalized);
+    if (!state) return;
+    const root = dynamicArea.querySelector('[data-bulk-root="' + normalized + '"]');
+    if (!root) return;
+
+    const uploadBtn = root.querySelector('[data-action="upload-bulk-json"][data-bulk-kind="' + normalized + '"]');
+    const clearBtn = root.querySelector('[data-action="clear-bulk-json"][data-bulk-kind="' + normalized + '"]');
+    const preview = root.querySelector('[data-bulk-preview="' + normalized + '"]');
+    if (preview) preview.innerHTML = renderBulkPreviewMarkup(normalized, state);
+
+    const readyCount = Array.isArray(state.items) ? state.items.length : 0;
+    const hasError = Boolean(state.error);
+    const hasAnyState = Boolean(state.fileName || hasError || readyCount > 0);
+    if (clearBtn) clearBtn.disabled = !hasAnyState;
+    if (uploadBtn) {
+      const ready = readyCount > 0 && !hasError;
+      uploadBtn.disabled = !ready;
+      uploadBtn.textContent = ready
+        ? ('Upload ' + String(readyCount) + (normalized === 'mcq_bank' ? ' MCQ' : ' notes'))
+        : 'Upload';
+    }
+  };
+
+  const handleBulkJsonFileInput = async (input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    const normalized = String(input.getAttribute('data-bulk-kind') || '').trim().toLowerCase();
+    const state = getBulkImportState(normalized);
+    if (!state) return;
+    const file = input.files?.[0] || null;
+    if (!file) {
+      resetBulkImportState(normalized, { keepInput: true });
+      return;
+    }
+    if (file.size > 2_400_000) {
+      state.fileName = String(file.name || '');
+      state.items = [];
+      state.error = 'File is too large. Keep JSON under 2.4 MB.';
+      syncBulkImportUi(normalized);
+      return;
+    }
+    const text = await file.text();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      state.fileName = String(file.name || '');
+      state.items = [];
+      state.error = 'Invalid JSON. Please fix syntax and upload again.';
+      syncBulkImportUi(normalized);
+      return;
+    }
+    const parsedItems = parseBulkImportItems(normalized, parsed);
+    state.fileName = String(file.name || '');
+    state.items = parsedItems;
+    state.error = '';
+    syncBulkImportUi(normalized);
+  };
+
+  const resolveActiveContentContext = () => {
+    const state = currentState();
+    const contextType = String(currentTabContext?.contextType || (state.mode === 'topic' ? 'topic' : state.mode === 'chapter' ? 'chapter' : state.mode === 'node' ? 'node' : state.contextType || ''));
+    const contextId = Number(currentTabContext?.contextId || (state.mode === 'topic' ? state.topicId : state.mode === 'chapter' ? state.chapterId : state.mode === 'node' ? state.nodeId : state.contextId || 0));
+    if (!contextType || contextId <= 0) {
+      throw new Error('Unable to resolve content context. Please reopen this tab.');
+    }
+    return { contextType, contextId };
+  };
+
+  const uploadBulkImportItems = async (contentType) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    const state = getBulkImportState(normalized);
+    if (!state || !Array.isArray(state.items) || !state.items.length) {
+      throw new Error('Choose a JSON file with valid items first.');
+    }
+    if (String(currentTabContext?.activeTab || '') !== normalized) {
+      throw new Error('Open the correct content tab before uploading.');
+    }
+    const context = resolveActiveContentContext();
+    const total = state.items.length;
+    const label = normalized === 'mcq_bank' ? 'MCQ' : 'note';
+
+    if (!window.confirm('Upload ' + String(total) + ' ' + label + ' item(s) now?')) return;
+
+    for (let index = 0; index < total; index += 1) {
+      const item = state.items[index];
+      const payload = {
+        contentType: normalized,
+        contextType: context.contextType,
+        contextId: context.contextId,
+        body: String(item?.body || ''),
+      };
+      if (normalized === 'mcq_bank') {
+        payload.options = Array.isArray(item?.options) ? item.options : [];
+        payload.correctOption = String(item?.correctOption || '').trim().toUpperCase();
+      }
+      if (String(item?.imageData || '').trim()) {
+        payload.imageData = String(item.imageData).trim();
+      }
+      setMsg('Uploading ' + label + ' ' + String(index + 1) + ' / ' + String(total) + '...');
+      try {
+        await apiRequest('/subjects/' + subjectId + '/content-items', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch (error) {
+        throw new Error('Bulk upload stopped at item #' + String(index + 1) + ': ' + (error?.message || 'request failed'));
+      }
+    }
+
+    showToast('Uploaded ' + String(total) + ' item(s)', 'success');
+    setMsg('Bulk upload complete.');
+    resetBulkImportState(normalized);
+    await loadView();
   };
 
   const nodeImageCell = (node, canEditImage) => {
@@ -1025,17 +1355,21 @@ ${imageToolsModule()}
     };
     return '<section class="sbj-card">'
       + '<header class="sbj-toolbar sbj-toolbar-light"><h3>Short Notes - ' + escapeHtml(context?.label || '') + '</h3>'
-      + '<div class="sbj-mcq-head-tools"><span class="sbj-mcq-count">Page ' + String(currentPage) + ' / ' + String(totalPages) + ' - ' + String(allItems.length) + ' total</span></div></header>'
+      + '<div class="sbj-mcq-head-tools"><span class="sbj-mcq-count">Page ' + String(currentPage) + ' / ' + String(totalPages) + ' - ' + String(allItems.length) + ' total</span>'
+      + '<button type="button" class="sbj-secondary" data-action="toggle-bulk-form" data-bulk-kind="short_notes" aria-expanded="false">Bulk upload</button></div></header>'
       + '<form id="notesForm" class="sbj-form sbj-form-flat" autocomplete="off">'
       + '<input type="hidden" name="itemId" value="0" />'
       + '<input type="hidden" name="clearImageFlag" value="0" />'
       + editorToolbar({ targetId: 'notesBodyEditor', includeNoteImage: true })
       + '<div id="notesBodyEditor" class="sbj-editor sbj-editor-lite" contenteditable="true" data-editor-surface="true"></div>'
-      + '<div class="sbj-form-actions">'
+      + '<div class="sbj-form-actions sbj-editor-actions">'
       + '<button type="button" class="sbj-secondary" data-action="cancel-item-edit">Cancel edit</button>'
       + '<button type="submit" class="sbj-primary">Save note</button>'
       + '</div>'
       + '</form>'
+      + '<div class="sbj-collapsible sbj-collapsible-bulk" data-bulk-form-wrap="short_notes" aria-hidden="true">'
+      + bulkImportPanel('short_notes')
+      + '</div>'
       + '<div class="sbj-content-columns">'
       + '<div class="sbj-content-column sbj-notes-list">' + (leftItems.length ? leftItems.map(renderNoteItem).join('') : '<p class="sbj-empty">No short notes yet.</p>') + '</div>'
       + '<div class="sbj-content-column sbj-notes-list">' + (rightItems.length ? rightItems.map(renderNoteItem).join('') : '') + '</div>'
@@ -1069,7 +1403,7 @@ ${imageToolsModule()}
       + '<label>Image (optional)<input name="image" type="file" accept="image/png,image/jpeg,image/webp" /></label>'
       + '<label class="sbj-inline-check"><input name="clearImage" type="checkbox" /> Remove existing image when updating</label>'
       + (summary?.imageUrl ? ('<img class="sbj-thumb" src="' + escapeHtml(summary.imageUrl) + '" alt="Summary image" />') : '')
-      + '<div class="sbj-form-actions">'
+      + '<div class="sbj-form-actions sbj-editor-actions">'
       + '<button type="submit" class="sbj-primary">' + (hasSummary ? 'Update summary' : 'Save summary') + '</button>'
       + '</div>'
       + '</form>'
@@ -1117,7 +1451,8 @@ ${imageToolsModule()}
     return '<section class="sbj-card">'
       + '<header class="sbj-toolbar sbj-toolbar-light"><h3>MCQ Bank - ' + escapeHtml(context?.label || '') + '</h3>'
       + '<div class="sbj-mcq-head-tools"><span class="sbj-mcq-count">Page ' + String(currentPage) + ' / ' + String(totalPages) + ' - ' + String(allItems.length) + ' total</span>'
-      + '<button type="button" class="sbj-secondary" data-action="toggle-mcq-form" aria-expanded="false">Add MCQ</button></div></header>'
+      + '<button type="button" class="sbj-secondary" data-action="toggle-mcq-form" aria-expanded="false">Add MCQ</button>'
+      + '<button type="button" class="sbj-secondary" data-action="toggle-bulk-form" data-bulk-kind="mcq_bank" aria-expanded="false">Bulk upload</button></div></header>'
       + '<div class="sbj-collapsible" data-mcq-form-wrap="1" aria-hidden="true">'
       + '<form id="mcqForm" class="sbj-form sbj-form-flat sbj-mcq-form" autocomplete="off">'
       + '<input type="hidden" name="itemId" value="0" />'
@@ -1142,10 +1477,13 @@ ${imageToolsModule()}
       + '</div>'
       + '<div class="sbj-mcq-form-foot">'
       + '<label class="sbj-mcq-correct">Correct<select name="correctOption"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></label>'
-      + '<div class="sbj-form-actions">'
+      + '<div class="sbj-form-actions sbj-editor-actions">'
       + '<button type="button" class="sbj-secondary" data-action="cancel-item-edit">Cancel</button>'
       + '<button type="submit" class="sbj-primary">Save MCQ</button>'
       + '</div></div></form></div>'
+      + '<div class="sbj-collapsible sbj-collapsible-bulk" data-bulk-form-wrap="mcq_bank" aria-hidden="true">'
+      + bulkImportPanel('mcq_bank')
+      + '</div>'
       + '<div class="sbj-mcq-divider" aria-hidden="true"></div>'
       + '<div class="sbj-mcq-columns">'
       + '<div class="sbj-mcq-column">' + (leftItems.length ? leftItems.map(renderMcqItem).join('') : '<p class="sbj-empty">No MCQ items yet.</p>') + '</div>'
@@ -1277,6 +1615,7 @@ ${imageToolsModule()}
       if (options.updateUrl !== false) updateNotesPageInUrl(1);
       if (options.updateUrl !== false) updateMcqPageInUrl(1);
       panel.innerHTML = renderPlaceholderEditor(context, key);
+      resetAllBulkImportStates();
       return;
     }
 
@@ -1297,15 +1636,36 @@ ${imageToolsModule()}
     if (editorMode === 'short_notes') {
       if (options.updateUrl !== false) updateNotesPageInUrl(safeNotesPage);
       if (options.updateUrl !== false) updateMcqPageInUrl(1);
-      requestAnimationFrame(updateEditorToolbarState);
+      requestAnimationFrame(() => {
+        updateEditorToolbarState();
+        syncBulkImportUi('short_notes');
+      });
     } else if (editorMode === 'mcq_bank') {
       if (options.updateUrl !== false) updateNotesPageInUrl(1);
       if (options.updateUrl !== false) updateMcqPageInUrl(safeMcqPage);
       setMcqFormOpen(false);
-      requestAnimationFrame(updateEditorToolbarState);
+      requestAnimationFrame(() => {
+        updateEditorToolbarState();
+        syncBulkImportUi('mcq_bank');
+      });
     } else {
       if (options.updateUrl !== false) updateNotesPageInUrl(1);
       if (options.updateUrl !== false) updateMcqPageInUrl(1);
+      resetAllBulkImportStates();
+    }
+  };
+
+  const setBulkImportFormOpen = (contentType, open) => {
+    const normalized = String(contentType || '').trim().toLowerCase();
+    const wrap = dynamicArea.querySelector('[data-bulk-form-wrap="' + normalized + '"]');
+    const toggle = dynamicArea.querySelector('[data-action="toggle-bulk-form"][data-bulk-kind="' + normalized + '"]');
+    if (!wrap) return;
+    const isOpen = Boolean(open);
+    wrap.classList.toggle('is-open', isOpen);
+    wrap.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? 'Close bulk upload' : 'Bulk upload';
     }
   };
 
@@ -1464,6 +1824,7 @@ ${imageToolsModule()}
     setMsg('Loading...');
     editorItemsMap = new Map();
     currentTabContext = null;
+    resetAllBulkImportStates();
     try {
       const state = currentState();
       currentMode = state.mode;
@@ -1751,12 +2112,7 @@ ${imageToolsModule()}
   };
 
   const submitNotesForm = async (form) => {
-    const state = currentState();
-    const contextType = String(currentTabContext?.contextType || (state.mode === 'topic' ? 'topic' : state.mode === 'chapter' ? 'chapter' : state.mode === 'node' ? 'node' : state.contextType || ''));
-    const contextId = Number(currentTabContext?.contextId || (state.mode === 'topic' ? state.topicId : state.mode === 'chapter' ? state.chapterId : state.mode === 'node' ? state.nodeId : state.contextId || 0));
-    if (!contextType || contextId <= 0) {
-      throw new Error('Unable to resolve content context. Please reopen this tab.');
-    }
+    const { contextType, contextId } = resolveActiveContentContext();
     const itemId = Number(form.elements.itemId.value || 0);
     const editor = document.getElementById('notesBodyEditor');
     const file = form.elements.noteImageFile?.files?.[0] || null;
@@ -1793,10 +2149,7 @@ ${imageToolsModule()}
   };
 
   const submitSummaryForm = async (form) => {
-    const state = currentState();
-    const contextType = String(currentTabContext?.contextType || (state.mode === 'topic' ? 'topic' : state.mode === 'chapter' ? 'chapter' : state.mode === 'node' ? 'node' : state.contextType || ''));
-    const contextId = Number(currentTabContext?.contextId || (state.mode === 'topic' ? state.topicId : state.mode === 'chapter' ? state.chapterId : state.mode === 'node' ? state.nodeId : state.contextId || 0));
-    if (!contextType || contextId <= 0) throw new Error('Unable to resolve content context. Please reopen this tab.');
+    const { contextType, contextId } = resolveActiveContentContext();
     const itemId = Number(form.elements.itemId.value || 0);
     const editor = document.getElementById('summaryBodyEditor');
     const file = form.elements.image.files?.[0] || null;
@@ -1831,12 +2184,7 @@ ${imageToolsModule()}
   };
 
   const submitMcqForm = async (form) => {
-    const state = currentState();
-    const contextType = String(currentTabContext?.contextType || (state.mode === 'topic' ? 'topic' : state.mode === 'chapter' ? 'chapter' : state.mode === 'node' ? 'node' : state.contextType || ''));
-    const contextId = Number(currentTabContext?.contextId || (state.mode === 'topic' ? state.topicId : state.mode === 'chapter' ? state.chapterId : state.mode === 'node' ? state.nodeId : state.contextId || 0));
-    if (!contextType || contextId <= 0) {
-      throw new Error('Unable to resolve content context. Please reopen this tab.');
-    }
+    const { contextType, contextId } = resolveActiveContentContext();
     const itemId = Number(form.elements.itemId.value || 0);
     const editor = document.getElementById('mcqQuestionEditor');
     const optAEditor = document.getElementById('mcqOptAEditor');
@@ -1950,6 +2298,8 @@ ${imageToolsModule()}
       if (optDEditor) optDEditor.innerHTML = '';
       setMcqFormOpen(false);
     }
+    setBulkImportFormOpen('short_notes', false);
+    setBulkImportFormOpen('mcq_bank', false);
   };
 
   backBtn.addEventListener('click', () => navigate('/admin/subjects'), { signal: controller.signal });
@@ -2279,6 +2629,27 @@ ${imageToolsModule()}
         return;
       }
 
+      if (action === 'upload-bulk-json') {
+        const contentType = String(actionEl.getAttribute('data-bulk-kind') || '').trim().toLowerCase();
+        await uploadBulkImportItems(contentType);
+        return;
+      }
+
+      if (action === 'clear-bulk-json') {
+        const contentType = String(actionEl.getAttribute('data-bulk-kind') || '').trim().toLowerCase();
+        resetBulkImportState(contentType);
+        return;
+      }
+
+      if (action === 'toggle-bulk-form') {
+        const contentType = String(actionEl.getAttribute('data-bulk-kind') || '').trim().toLowerCase();
+        const wrap = dynamicArea.querySelector('[data-bulk-form-wrap="' + contentType + '"]');
+        const isOpen = Boolean(wrap?.classList.contains('is-open'));
+        setBulkImportFormOpen(contentType, !isOpen);
+        if (!isOpen) syncBulkImportUi(contentType);
+        return;
+      }
+
       if (action === 'toggle-mcq-form') {
         const wrap = document.querySelector('[data-mcq-form-wrap]');
         const isOpen = Boolean(wrap?.classList.contains('is-open'));
@@ -2432,44 +2803,8 @@ ${imageToolsModule()}
     if (!(input instanceof HTMLInputElement)) return;
     const field = String(input.getAttribute('data-field') || '');
 
-    if (field === 'displayName') {
-      const row = input.closest('[data-node-row]');
-      const nodeId = Number(row?.getAttribute('data-node-row') || 0);
-      if (!row || !nodeId || input.disabled) return;
-      const nextName = String(input.value || '').trim();
-      const savedName = String(input.getAttribute('data-saved-value') || '').trim();
-      if (!nextName || nextName.length < 2 || nextName === savedName) return;
-      input.classList.add('is-syncing');
-      setMsg('Syncing changes...');
-      queueAutosave('node-name:' + nodeId, () => saveNodeRow(row, nodeId), 700);
-      return;
-    }
-
-    if (field === 'chapterName') {
-      const row = input.closest('[data-chapter-row]');
-      const chapterId = Number(row?.getAttribute('data-chapter-row') || 0);
-      if (!row || !chapterId || input.disabled) return;
-      const nameInput = row.querySelector('[data-field="chapterName"]');
-      const nextName = String(nameInput?.value || '').trim();
-      const savedName = String(nameInput?.getAttribute('data-saved-value') || '').trim();
-      if (!nextName || nextName.length < 2 || nextName === savedName) return;
-      if (nameInput) nameInput.classList.add('is-syncing');
-      setMsg('Syncing changes...');
-      queueAutosave('chapter-name:' + chapterId, () => saveChapterRow(row, chapterId), 700);
-      return;
-    }
-
-    if (field === 'topicName') {
-      const row = input.closest('[data-topic-row]');
-      const topicId = Number(row?.getAttribute('data-topic-row') || 0);
-      if (!row || !topicId || input.disabled) return;
-      const nameInput = row.querySelector('[data-field="topicName"]');
-      const nextName = String(nameInput?.value || '').trim();
-      const savedName = String(nameInput?.getAttribute('data-saved-value') || '').trim();
-      if (!nextName || nextName.length < 2 || nextName === savedName) return;
-      if (nameInput) nameInput.classList.add('is-syncing');
-      setMsg('Syncing changes...');
-      queueAutosave('topic-name:' + topicId, () => saveTopicRow(row, topicId), 700);
+    if (field === 'displayName' || field === 'chapterName' || field === 'topicName') {
+      if (input.classList.contains('is-syncing')) input.classList.remove('is-syncing');
       return;
     }
 
@@ -2479,6 +2814,55 @@ ${imageToolsModule()}
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
     const field = input.getAttribute('data-field');
+
+    if (field === 'displayName') {
+      const row = input.closest('[data-node-row]');
+      const nodeId = Number(row?.getAttribute('data-node-row') || 0);
+      if (!row || !nodeId || input.disabled) return;
+      saveNodeRow(row, nodeId, { force: true }).catch((error) => {
+        if (error?.name === 'AbortError') return;
+        setMsg(error?.message || 'Unable to update section');
+      });
+      return;
+    }
+
+    if (field === 'chapterName') {
+      const row = input.closest('[data-chapter-row]');
+      const chapterId = Number(row?.getAttribute('data-chapter-row') || 0);
+      if (!row || !chapterId || input.disabled) return;
+      saveChapterRow(row, chapterId, { force: true }).catch((error) => {
+        if (error?.name === 'AbortError') return;
+        setMsg(error?.message || 'Unable to update chapter');
+      });
+      return;
+    }
+
+    if (field === 'topicName') {
+      const row = input.closest('[data-topic-row]');
+      const topicId = Number(row?.getAttribute('data-topic-row') || 0);
+      if (!row || !topicId || input.disabled) return;
+      saveTopicRow(row, topicId, { force: true }).catch((error) => {
+        if (error?.name === 'AbortError') return;
+        setMsg(error?.message || 'Unable to update topic');
+      });
+      return;
+    }
+
+    if (field === 'bulkJsonFile') {
+      handleBulkJsonFileInput(input).catch((error) => {
+        if (error?.name === 'AbortError') return;
+        const contentType = String(input.getAttribute('data-bulk-kind') || '').trim().toLowerCase();
+        const state = getBulkImportState(contentType);
+        if (state) {
+          state.fileName = String(input.files?.[0]?.name || '');
+          state.items = [];
+          state.error = error?.message || 'Unable to parse JSON file';
+          syncBulkImportUi(contentType);
+        }
+        setMsg(error?.message || 'Unable to parse JSON file');
+      });
+      return;
+    }
 
     if (field === 'chapterTopicsEnabled') {
       const row = input.closest('[data-chapter-row]');

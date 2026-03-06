@@ -28,9 +28,22 @@ export function profilePage(user, options = {}) {
     title: "Profile",
     activeMenu: "profile",
     user,
-    content: profileHtml(profileUser, { readOnly, profileUserId, showBackToFeed, backToFeedHref, backToFeedLabel }),
+    content: profileHtml(profileUser, {
+      readOnly,
+      profileUserId,
+      viewerUserId: Number.parseInt(String(user?.id || 0), 10) || 0,
+      canInteract,
+      showBackToFeed,
+      backToFeedHref,
+      backToFeedLabel,
+    }),
     pageClass: mergedPageClass,
     pageStyles: mergedPageStyles,
-    script: profileScript(apiBase, { readOnly, profileUserId, canInteract }),
+    script: profileScript(apiBase, {
+      readOnly,
+      profileUserId,
+      viewerUserId: Number.parseInt(String(user?.id || 0), 10) || 0,
+      canInteract,
+    }),
   });
 }

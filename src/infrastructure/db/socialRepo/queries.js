@@ -639,6 +639,80 @@ export async function getSocialNotifications(db, viewerId = 0, limit = 32) {
     });
   }
 
+  const mateRequestRows = await db.prepare(
+    `SELECT m.id, m.requester_id, m.updated_at, m.created_at,
+            a.name AS requester_name, a.avatar_key AS requester_avatar_key
+     FROM freeducation_social_mates m
+     JOIN freeducation_admins a ON a.id = m.requester_id
+     WHERE m.receiver_id = ?1
+       AND m.status = 'pending'
+     ORDER BY datetime(m.updated_at) DESC, m.id DESC
+     LIMIT ?2`,
+  ).bind(safeViewerId, queryLimit).all();
+
+  for (const row of mateRequestRows.results || []) {
+    const requestId = Number.parseInt(String(row.id || 0), 10);
+    const requesterId = Number.parseInt(String(row.requester_id || 0), 10);
+    if (!Number.isInteger(requestId) || requestId <= 0 || !Number.isInteger(requesterId) || requesterId <= 0) continue;
+    const createdAt = String(row.updated_at || row.created_at || "");
+    const requesterName = String(row.requester_name || "User");
+    notifications.push({
+      id: notificationKey("mate_request", requestId, createdAt),
+      type: "mate_request",
+      createdAt,
+      actorCount: 1,
+      actor: {
+        id: requesterId,
+        name: requesterName,
+        avatarUrl: row.requester_avatar_key ? `/api/social/avatar/${requesterId}` : "",
+      },
+      message: `${requesterName} sent you a mate request`,
+      preview: "Open Mate Requests to accept or decline.",
+      postId: 0,
+      commentId: 0,
+      requestId,
+      url: "/social/mates/requests",
+    });
+  }
+
+  const mateAcceptedRows = await db.prepare(
+    `SELECT m.id, m.receiver_id, m.responded_at,
+            a.name AS receiver_name, a.avatar_key AS receiver_avatar_key
+     FROM freeducation_social_mates m
+     JOIN freeducation_admins a ON a.id = m.receiver_id
+     WHERE m.requester_id = ?1
+       AND m.status = 'accepted'
+       AND m.responded_at <> ''
+     ORDER BY datetime(m.responded_at) DESC, m.id DESC
+     LIMIT ?2`,
+  ).bind(safeViewerId, queryLimit).all();
+
+  for (const row of mateAcceptedRows.results || []) {
+    const requestId = Number.parseInt(String(row.id || 0), 10);
+    const mateId = Number.parseInt(String(row.receiver_id || 0), 10);
+    if (!Number.isInteger(requestId) || requestId <= 0 || !Number.isInteger(mateId) || mateId <= 0) continue;
+    const createdAt = String(row.responded_at || "");
+    if (!createdAt) continue;
+    const mateName = String(row.receiver_name || "User");
+    notifications.push({
+      id: notificationKey("mate_accepted", requestId, createdAt),
+      type: "mate_accepted",
+      createdAt,
+      actorCount: 1,
+      actor: {
+        id: mateId,
+        name: mateName,
+        avatarUrl: row.receiver_avatar_key ? `/api/social/avatar/${mateId}` : "",
+      },
+      message: `${mateName} accepted your mate request`,
+      preview: "You are now mates.",
+      postId: 0,
+      commentId: 0,
+      requestId,
+      url: `/profile/${mateId}?from=social`,
+    });
+  }
+
   notifications.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   const limited = notifications.slice(0, safeLimit);
   const notificationIds = limited

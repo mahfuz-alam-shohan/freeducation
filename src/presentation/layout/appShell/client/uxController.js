@@ -31,6 +31,19 @@ export const APP_SHELL_CLIENT_UX = `
     statusToast.textContent = message || '';
     statusToast.dataset.status = kind;
     statusToast.classList.add('is-visible');
+    if (desktopStatusMessage instanceof HTMLElement) {
+      desktopStatusMessage.textContent = String(message || 'Ready');
+      if (desktopStatusTimer) {
+        window.clearTimeout(desktopStatusTimer);
+        desktopStatusTimer = undefined;
+      }
+      if (holdMs > 0) {
+        desktopStatusTimer = window.setTimeout(() => {
+          desktopStatusTimer = undefined;
+          if (desktopStatusMessage instanceof HTMLElement) desktopStatusMessage.textContent = 'Ready';
+        }, holdMs);
+      }
+    }
     window.clearTimeout(statusTimer);
     statusTimer = window.setTimeout(() => statusToast.classList.remove('is-visible'), holdMs);
   };

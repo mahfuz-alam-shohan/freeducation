@@ -1,11 +1,13 @@
 import { renderAppShellLayout } from "../../layout/appShell/index.js";
 
 const RESULTS_STYLE = `
+.page-results .app-content,
+.page-results-detail .app-content{background:var(--page-bg)}
 .results-wrap{display:grid;gap:12px;padding:12px var(--space-2) var(--space-2)}
 .results-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .results-head h2{margin:0;font-size:1.06rem}
 .results-head p{margin:0;color:var(--text-muted);font-size:.84rem}
-.results-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px;display:grid;gap:8px}
+.results-card{border:1px solid var(--border);border-radius:12px;background:color-mix(in srgb,var(--surface) 92%,var(--page-bg) 8%);padding:10px;display:grid;gap:8px}
 .results-list{display:grid;gap:8px}
 .results-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(120px,.8fr) minmax(100px,.55fr) minmax(100px,.55fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid color-mix(in srgb,var(--border) 80%,transparent);border-radius:10px}
 .results-row strong{font-size:.9rem}

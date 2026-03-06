@@ -1,5 +1,6 @@
 export const APP_SHELL_STYLE_NAV_THEME = `
 .app-icon{width:17px;height:17px;display:inline-block;flex:0 0 auto}
+.app-nav-desktop,.app-nav-mobile{display:block;min-width:0}
 .app-nav{display:grid;gap:var(--space-2);align-content:start}
 .app-nav-section{display:grid;gap:var(--space-1)}
 .app-nav-title{margin:0;padding:0 4px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
@@ -22,7 +23,7 @@ export const APP_SHELL_STYLE_NAV_THEME = `
 .app-nav a.active .app-nav-icon,.app-nav a:hover .app-nav-icon{background:color-mix(in srgb,var(--nav-icon-color) 18%,var(--surface-soft))}
 .app-nav a.app-nav-highlight{color:color-mix(in srgb,var(--accent) 70%,#fff);border-color:color-mix(in srgb,var(--accent) 40%,var(--border));background:color-mix(in srgb,var(--accent) 16%,var(--surface-soft));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}
 .app-nav a.app-nav-highlight.active,.app-nav a.app-nav-highlight:hover{background:color-mix(in srgb,var(--accent) 25%,var(--surface));color:var(--text)}
-.app-mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-mobile-nav);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:7px calc(8px + env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));background:linear-gradient(180deg,color-mix(in srgb,var(--surface-strong) 88%,transparent),var(--surface-strong));border-top:1px solid var(--border);backdrop-filter:blur(14px)}
+.app-mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-mobile-nav);display:grid;grid-template-columns:repeat(var(--app-mobile-nav-cols,4),minmax(0,1fr));gap:6px;padding:7px calc(8px + env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));background:linear-gradient(180deg,color-mix(in srgb,var(--surface-strong) 88%,transparent),var(--surface-strong));border-top:1px solid var(--border);backdrop-filter:blur(14px)}
 .app-mobile-nav-link{appearance:none;-webkit-appearance:none;text-decoration:none;color:var(--text-muted);display:grid;justify-items:center;align-content:center;gap:2px;min-height:52px;padding:4px 2px;border-radius:12px;border:1px solid transparent;background:transparent;font-size:.66rem;font-weight:700;line-height:1.1;letter-spacing:.02em;cursor:pointer}
 .app-mobile-nav-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:color-mix(in srgb,var(--surface-soft) 90%,transparent);color:var(--mobile-nav-color,var(--text-muted))}
 .app-mobile-nav-icon .app-icon{width:16px;height:16px;stroke-width:1.9}
@@ -60,5 +61,9 @@ body[data-theme='light'] .app-theme-moon{opacity:0;transform:scale(.58) rotate(3
 .app-theme-toggle[data-theme-state='switching'] .app-theme-orb{animation:theme-orb-spin .9s var(--motion-swift) infinite}
 @media (min-width:900px){
   .app-mobile-nav{display:none}
+  .app-nav-mobile{display:none}
+}
+@media (max-width:899px){
+  .app-nav-desktop{display:none}
 }
 `;

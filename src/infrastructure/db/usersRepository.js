@@ -15,7 +15,7 @@ export async function createUser(db, { name, email, hash, salt, userType = "Admi
 }
 
 export async function listUsers(db) {
-  const result = await db.prepare("SELECT id, name, email, user_type, created_at FROM freeducation_admins ORDER BY id DESC").all();
+  const result = await db.prepare("SELECT id, name, email, user_type, avatar_key, created_at FROM freeducation_admins ORDER BY id DESC").all();
   return result.results;
 }
 

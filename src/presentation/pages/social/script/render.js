@@ -69,6 +69,71 @@ export const SOCIAL_SCRIPT_RENDER = `
     return '<div class="social-profile-search-list">' + items.join('') + '</div>';
   };
 
+  const renderMateAvatar = (name, avatarUrl, fallbackClass = 'social-mate-avatar') => {
+    const safeName = escapeHtml(name || 'User');
+    const initial = escapeHtml(String(name || 'U').slice(0, 1).toUpperCase() || 'U');
+    const safeAvatar = String(avatarUrl || '').trim();
+    if (safeAvatar) {
+      return '<span class="' + fallbackClass + ' has-image"><img src="' + escapeHtml(safeAvatar) + '" alt="' + safeName + ' avatar" loading="lazy"></span>';
+    }
+    return '<span class="' + fallbackClass + '">' + initial + '</span>';
+  };
+  const MATE_REMOVE_ICON = '<svg class="social-mate-remove-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M7 6l1 14h8l1-14"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>';
+
+  const renderMateItem = (entry, options = {}) => {
+    const safeProfile = String(entry?.profileUrl || '').trim();
+    const safeName = String(entry?.name || 'User').trim() || 'User';
+    const safeRole = String(entry?.role || '').trim();
+    const safeEmail = String(entry?.email || '').trim();
+    const subtitle = [safeRole, safeEmail].filter(Boolean).join(' - ') || 'Member';
+    const updatedAt = String(entry?.updatedAt || entry?.createdAt || entry?.connectedAt || '').trim();
+    const hint = updatedAt ? formatTime(updatedAt) : '';
+    const modeType = String(options?.mode || 'mates');
+    const requestId = Number.parseInt(String(entry?.requestId || 0), 10) || 0;
+    const relationId = Number.parseInt(String(entry?.relationId || 0), 10) || 0;
+
+    let actionsMarkup = '';
+    if (modeType === 'incoming' && requestId > 0) {
+      actionsMarkup = '<div class="social-mate-actions">' +
+        '<button class="social-mate-action-btn is-primary" type="button" data-action="mate-respond" data-request-id="' + requestId + '" data-response="accept">Accept</button>' +
+        '<button class="social-mate-action-btn" type="button" data-action="mate-respond" data-request-id="' + requestId + '" data-response="decline">Decline</button>' +
+      '</div>';
+    } else if (modeType === 'outgoing') {
+      actionsMarkup = '<div class="social-mate-actions">' +
+        '<span class="social-mate-pending-label">Pending</span>' +
+        (requestId > 0 ? '<button class="social-mate-action-btn" type="button" data-action="mate-cancel-request" data-request-id="' + requestId + '">Cancel</button>' : '') +
+      '</div>';
+    } else if (modeType === 'mates' && relationId > 0) {
+      actionsMarkup = '<div class="social-mate-actions">' +
+        '<button class="social-mate-action-icon-btn is-danger" type="button" data-action="mate-remove" data-relation-id="' + relationId + '" aria-label="Remove mate" title="Remove mate">' + MATE_REMOVE_ICON + '</button>' +
+      '</div>';
+    } else if (modeType !== 'mates' && safeProfile) {
+      actionsMarkup = '<div class="social-mate-actions"><a class="social-mate-open-profile" href="' + escapeHtml(safeProfile) + '">View Profile</a></div>';
+    }
+
+    return '<article class="social-mate-item">' +
+      renderMateAvatar(safeName, entry?.avatarUrl) +
+      '<div class="social-mate-copy">' +
+        (safeProfile
+          ? '<a class="social-mate-name" href="' + escapeHtml(safeProfile) + '">' + escapeHtml(safeName) + '</a>'
+          : '<span class="social-mate-name">' + escapeHtml(safeName) + '</span>') +
+        '<p class="social-mate-subtitle">' + escapeHtml(subtitle) + '</p>' +
+      '</div>' +
+      '<div class="social-mate-side">' +
+        (hint ? '<span class="social-mate-time">' + escapeHtml(hint) + '</span>' : '') +
+        actionsMarkup +
+      '</div>' +
+    '</article>';
+  };
+
+  const renderMateList = (items, options = {}) => {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) {
+      return '<p class="social-mate-empty">' + escapeHtml(options?.emptyMessage || 'No entries yet.') + '</p>';
+    }
+    return list.map((entry) => renderMateItem(entry, options)).join('');
+  };
+
   const renderThreadedComments = (comments, options = {}) => {
     const list = Array.isArray(comments) ? comments : [];
     if (!list.length) return '<p class="comment-empty">No comments yet.</p>';
@@ -183,8 +248,7 @@ export const SOCIAL_SCRIPT_RENDER = `
   };
 
   const renderModalThreadPanel = (post) => {
-    return '<section class="post-thread post-thread-modal">' +
-      '<h3 class="social-detail-comments-title">Comments</h3>' +
+    return '<section class="post-thread post-thread-modal" data-post-id="' + Number(post?.id || 0) + '">' +
       '<div class="social-detail-comments" aria-live="polite">' + renderModalComments(post?.comments) + '</div>' +
       (canInteract
         ? '<form class="social-detail-comment-form social-modal-comment-form" data-action="modal-comment"><input type="text" maxlength="600" name="comment" placeholder="Write a comment"><button type="submit">Comment</button></form>'
@@ -376,12 +440,22 @@ export const SOCIAL_SCRIPT_RENDER = `
   };
 
   const renderModalPost = (postId, focusComment = false) => {
-    if (!modalContent) return false;
     const post = getPostById(postId);
     if (!post) return false;
-    modalContent.innerHTML = renderPostCard(post, { forModal: true });
+    const commentCount = Math.max(0, Number(post?.commentCount || (Array.isArray(post?.comments) ? post.comments.length : 0)));
+    const authorName = String(post?.author?.name || 'Post').trim() || 'Post';
+    const contextMeta = authorName + ' - ' + commentCount + ' comment' + (commentCount === 1 ? '' : 's');
+    if (socialCommentsPanelTitle) socialCommentsPanelTitle.textContent = 'Comments';
+    if (socialCommentsPanelMeta) socialCommentsPanelMeta.textContent = contextMeta;
+    if (socialMobileCommentsTitle) socialMobileCommentsTitle.textContent = 'Comments';
+    if (socialMobileCommentsMeta) socialMobileCommentsMeta.textContent = contextMeta;
+    const modalRoot = body.classList.contains('social-mobile-comments-open')
+      ? socialMobileCommentsContent
+      : socialCommentsContent;
+    if (!modalRoot) return false;
+    modalRoot.innerHTML = renderModalThreadPanel(post);
     if (focusComment && canInteract) {
-      const input = modalContent.querySelector('form[data-action="modal-comment"] input[name="comment"]') || modalContent.querySelector('input[name="comment"]');
+      const input = modalRoot.querySelector('form[data-action="modal-comment"] input[name="comment"]') || modalRoot.querySelector('input[name="comment"]');
       if (input instanceof HTMLInputElement) {
         window.requestAnimationFrame(() => input.focus());
       }
@@ -390,7 +464,8 @@ export const SOCIAL_SCRIPT_RENDER = `
   };
 
   const syncActiveModalPost = () => {
-    if (!body.classList.contains('social-modal-open') || !activeModalPostId) return;
+    const hasOpenCommentsSurface = body.classList.contains('social-comments-open') || body.classList.contains('social-mobile-comments-open');
+    if (!hasOpenCommentsSurface || !activeModalPostId) return;
     const activePost = getPostById(activeModalPostId);
     if (activePost) renderModalPost(activeModalPostId);
     else closePostModal();

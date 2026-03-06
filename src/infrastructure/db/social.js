@@ -9,3 +9,13 @@ export {
 } from "./socialRepo/mutations.js";
 export { findSocialCommentById, findSocialPostById, getSocialFeed, getSocialNotifications, getSocialPostById } from "./socialRepo/queries.js";
 export { getSocialAvatarObject, getSocialPostImageObject } from "./socialRepo/media.js";
+export {
+  cancelSocialMateRequest,
+  createSocialMateRequest,
+  getSocialMateStatus,
+  listSocialMateRequests,
+  listSocialMates,
+  removeSocialMate,
+  respondToSocialMateRequest,
+  setSocialMateFollowState,
+} from "./socialRepo/mates.js";

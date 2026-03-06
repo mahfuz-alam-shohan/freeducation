@@ -2,60 +2,228 @@ import { renderAppShellLayout } from "../../layout/appShell/index.js";
 import { isEditableContentType, publicReaderModules } from "../../../shared/modules/contentModules.js";
 
 const ACADEMICS_STYLE = `
-.acad-wrap{display:grid;gap:10px;padding:12px var(--space-2) var(--space-2)}
+.page-academics .app-content{
+  position:relative;
+  padding:10px var(--space-2) calc(var(--layout-mobile-nav-offset) + var(--space-2) + 4px);
+  scroll-padding-bottom:calc(var(--layout-mobile-nav-offset) + 14px);
+  background:var(--page-bg);
+}
+.acad-wrap{
+  display:grid;
+  gap:12px;
+  padding:0;
+  max-width:1140px;
+  margin:0 auto 8px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+}
+.acad-wrap::before{display:none}
 .acad-wrap *{box-sizing:border-box}
-.acad-head{position:relative;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:center;gap:4px}
+.acad-head{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  justify-items:center;
+  align-items:center;
+  gap:4px;
+  padding-bottom:2px;
+}
 .acad-head > div{text-align:center}
-.acad-head h2{margin:0;font-size:1.05rem;text-align:center}
+.acad-head h2{margin:0;font-size:1.14rem;line-height:1.22;text-align:center}
 .acad-sub{margin:0;color:var(--text-muted);font-size:.84rem;text-align:center}
-.acad-float-back{position:sticky;top:8px;left:0;z-index:12;width:34px;height:34px;min-width:34px;max-width:34px;min-height:34px;max-height:34px;margin:0 0 6px;padding:0;border-radius:999px;border:1px solid color-mix(in srgb,var(--border) 68%,#fff 32%);background:color-mix(in srgb,var(--surface) 88%,#000 12%);color:var(--text);display:grid;place-items:center;text-decoration:none;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 8px 18px rgba(0,0,0,.28);font-size:1rem;line-height:1;box-sizing:border-box}
-.app-content > .acad-float-back{width:34px!important;max-width:34px!important;min-width:34px!important;height:34px!important;max-height:34px!important;min-height:34px!important;justify-self:start!important;align-self:start!important;margin:8px 0 6px 8px!important}
-.acad-float-back:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
+.acad-float-back{
+  position:sticky;
+  top:8px;
+  left:0;
+  z-index:12;
+  width:34px;
+  height:34px;
+  min-width:34px;
+  max-width:34px;
+  min-height:34px;
+  max-height:34px;
+  margin:0 0 6px;
+  padding:0;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:color-mix(in srgb,var(--surface) 92%,var(--page-bg) 8%);
+  color:var(--text);
+  display:grid;
+  place-items:center;
+  text-decoration:none;
+  cursor:pointer;
+  font-size:1rem;
+  line-height:1;
+  box-sizing:border-box;
+}
+.app-content > .acad-float-back{
+  position:absolute!important;
+  top:8px;
+  left:8px;
+  width:34px!important;
+  max-width:34px!important;
+  min-width:34px!important;
+  height:34px!important;
+  max-height:34px!important;
+  min-height:34px!important;
+  justify-self:start!important;
+  align-self:start!important;
+  margin:0!important;
+  z-index:20;
+}
+.acad-float-back:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border));background:color-mix(in srgb,var(--surface-soft) 82%,var(--surface) 18%)}
 .acad-float-back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.acad-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,182px));justify-content:flex-start;gap:10px}
-.acad-card-link,.acad-root-card{display:grid;gap:0;text-decoration:none;color:inherit;background:transparent;border:0;padding:0;cursor:pointer;min-width:0;max-width:100%;width:100%}
+@keyframes acad-card-in{
+  from{opacity:0;transform:translate3d(0,10px,0) scale(.985)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.acad-card-grid,
+.acad-root-grid{
+  --acad-card-width:172px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(var(--acad-card-width),var(--acad-card-width)));
+  justify-content:center;
+  align-content:start;
+  gap:11px;
+}
+.acad-card-grid > *,
+.acad-root-grid > *{
+  animation:acad-card-in .36s cubic-bezier(.22,.61,.36,1) both;
+}
+.acad-card-grid > :nth-child(2),
+.acad-root-grid > :nth-child(2){animation-delay:.03s}
+.acad-card-grid > :nth-child(3),
+.acad-root-grid > :nth-child(3){animation-delay:.06s}
+.acad-card-grid > :nth-child(4),
+.acad-root-grid > :nth-child(4){animation-delay:.09s}
+.acad-card-grid > :nth-child(5),
+.acad-root-grid > :nth-child(5){animation-delay:.12s}
+.acad-card-link,
+.acad-root-card{
+  display:grid;
+  gap:0;
+  text-decoration:none;
+  color:inherit;
+  border:0;
+  border-radius:0;
+  padding:0;
+  background:transparent;
+  cursor:pointer;
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  transition:none;
+}
 .acad-root-card{appearance:none;-webkit-appearance:none;text-align:left;font:inherit;line-height:inherit}
-.acad-poster{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid color-mix(in srgb,var(--border) 78%,#fff 22%);background:linear-gradient(145deg,color-mix(in srgb,var(--surface-strong) 28%,#d8e3f3),color-mix(in srgb,var(--accent) 34%,#8799b6))}
+.acad-card-link:hover,
+.acad-root-card:hover{
+  transform:none;
+  border-color:transparent;
+  background:transparent;
+}
+.acad-poster{
+  position:relative;
+  aspect-ratio:2/3;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:
+    linear-gradient(165deg,color-mix(in srgb,var(--surface-strong) 84%,var(--surface-soft) 16%),color-mix(in srgb,var(--accent) 18%,var(--surface-soft) 82%));
+}
+.acad-poster::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,transparent 58%,color-mix(in srgb,var(--text) 14%,transparent) 100%);
+}
 .acad-poster img{display:block;width:100%;height:100%;max-width:100%;object-fit:cover;object-position:center}
-.acad-poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:1rem;font-weight:800;letter-spacing:.03em;color:#f4f8ff;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 38%,#4b658b),color-mix(in srgb,var(--accent) 62%,#233a60))}
-.acad-card-name{margin:0;padding:6px 2px 0;font-size:.88rem;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.acad-card-meta{margin:0;padding:1px 2px 0;font-size:.74rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.acad-empty{margin:0;padding:14px;border:1px dashed var(--border);border-radius:10px;color:var(--text-muted)}
-.acad-root-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,182px));justify-content:flex-start;gap:10px;max-height:2000px;transition:opacity .24s ease,transform .24s ease,max-height .28s ease,margin .28s ease}
-.acad-root-card{transition:transform .22s ease,opacity .22s ease,filter .22s ease}
-.acad-root-card:hover{transform:translateY(-2px)}
-.acad-root-grid.is-collapsing{opacity:0;transform:translateY(-8px);pointer-events:none}
-.acad-root-grid.is-collapsed{opacity:0;transform:translateY(-8px);max-height:0;margin:0;overflow:hidden;pointer-events:none}
-.acad-child-area{display:grid;gap:10px}
+.acad-poster-fallback{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:.03em;
+  color:var(--accent-contrast);
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 70%,var(--surface) 30%),color-mix(in srgb,var(--accent) 48%,var(--surface-strong) 52%));
+}
+.acad-card-name{
+  margin:0;
+  padding:7px 2px 0;
+  font-size:.86rem;
+  line-height:1.25;
+  color:var(--text);
+  white-space:normal;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  min-height:2.5em;
+}
+.acad-card-meta{margin:0;padding:1px 2px 0;font-size:.73rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acad-empty{margin:0;padding:13px;border:1px dashed color-mix(in srgb,var(--border) 82%,transparent);border-radius:10px;color:var(--text-muted);background:color-mix(in srgb,var(--surface-soft) 56%,transparent)}
+.acad-root-grid{
+  max-height:2000px;
+  transition:opacity .3s cubic-bezier(.22,.61,.36,1),transform .3s cubic-bezier(.22,.61,.36,1),max-height .34s cubic-bezier(.22,.61,.36,1),margin .34s cubic-bezier(.22,.61,.36,1);
+}
+.acad-root-grid.is-collapsing{opacity:0;transform:translateY(-10px);pointer-events:none}
+.acad-root-grid.is-collapsed{opacity:0;transform:translateY(-10px);max-height:0;margin:0;overflow:hidden;pointer-events:none}
+.acad-child-area{display:grid;gap:12px}
 .acad-child-area[hidden]{display:none!important}
-.acad-child-group{display:grid;gap:10px;opacity:0;transform:translateY(-8px);transition:opacity .22s ease,transform .22s ease}
+.acad-child-group{
+  display:grid;
+  gap:10px;
+  opacity:0;
+  transform:translateY(-10px);
+  transition:opacity .28s cubic-bezier(.22,.61,.36,1),transform .28s cubic-bezier(.22,.61,.36,1);
+  border:0;
+  border-radius:0;
+  padding:0;
+  background:transparent;
+}
 .acad-child-group.is-visible{opacity:1;transform:translateY(0)}
 .acad-child-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.acad-child-head h3{margin:0;font-size:.94rem}
-.acad-chip{height:28px;border:1px solid var(--border);border-radius:999px;padding:0 10px;background:var(--surface-soft);color:var(--text);font-weight:600;cursor:pointer}
+.acad-child-head h3{margin:0;font-size:.95rem}
+.acad-chip{height:29px;border:1px solid var(--border);border-radius:999px;padding:0 11px;background:var(--surface-soft);color:var(--text);font-weight:700;cursor:pointer}
 .acad-chip:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
 .acad-chapter-card .acad-poster{aspect-ratio:4/3}
 .acad-notes{display:grid;gap:8px}
-.acad-note{display:grid;gap:5px;padding:7px;border:1px solid color-mix(in srgb,var(--border) 84%,transparent);border-radius:8px;background:transparent;min-width:0;overflow:hidden}
+.acad-note{display:grid;gap:5px;padding:8px;border:1px solid color-mix(in srgb,var(--border) 84%,transparent);border-radius:10px;background:color-mix(in srgb,var(--surface-soft) 52%,transparent);min-width:0;overflow:hidden}
 .acad-note *{max-width:100%;overflow-wrap:anywhere}
 .acad-note img,.acad-note video,.acad-note iframe{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border)}
 .acad-notes-list{display:grid;gap:0}
-.acad-note-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 90%,transparent)}
+.acad-note-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 88%,transparent)}
 .acad-note-row:last-child{border-bottom:0}
 .acad-note-index{min-width:20px;font-size:.81rem;line-height:1.45;color:var(--text-muted);font-weight:700;padding-top:1px}
 .acad-note-body{min-width:0}
 .acad-note-body *{max-width:100%;overflow-wrap:anywhere}
 .acad-note-body img,.acad-note-body video,.acad-note-body iframe{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border)}
-.acad-content-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+.acad-content-columns{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.acad-content-columns::before{
+  content:'';
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:50%;
+  width:2px;
+  transform:translateX(-50%);
+  background:color-mix(in srgb,var(--border) 78%,var(--accent) 22%);
+  pointer-events:none;
+}
 .acad-content-col{display:grid;gap:0}
-.acad-tabs{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--border);padding-bottom:5px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-.acad-tab-btn{height:28px;flex:0 0 auto;white-space:nowrap;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text-muted);padding:0 9px;font-weight:700;cursor:pointer;font-size:.8rem}
-.acad-tab-btn:hover{background:color-mix(in srgb,var(--surface-soft) 80%,transparent);color:var(--text)}
-.acad-tab-btn.is-active{background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--text);border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
-.acad-tab-panel{display:none;gap:7px;padding-top:6px}
+.acad-tabs{display:flex;gap:5px;flex-wrap:nowrap;justify-content:center;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid color-mix(in srgb,var(--border) 82%,transparent);padding-bottom:6px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.acad-tab-btn{height:30px;flex:0 0 auto;white-space:nowrap;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--text-muted);padding:0 11px;font-weight:700;cursor:pointer;font-size:.8rem}
+.acad-tab-btn:hover{background:color-mix(in srgb,var(--surface-soft) 82%,transparent);color:var(--text)}
+.acad-tab-btn.is-active{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--text);border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
+.acad-tab-panel{display:none;gap:7px;padding-top:7px;padding-bottom:8px}
 .acad-tab-panel.is-active{display:grid}
 .acad-tab-panel[hidden]{display:none!important}
-.acad-mcq{display:grid;gap:5px;padding:7px 0;border:0;border-bottom:1px solid color-mix(in srgb,var(--border) 88%,transparent);border-radius:0}
+.acad-mcq{display:grid;gap:5px;padding:8px 0;border:0;border-bottom:1px solid color-mix(in srgb,var(--border) 86%,transparent);border-radius:0}
 .acad-content-col .acad-mcq:last-child{border-bottom:0}
 .acad-mcq *{max-width:100%;overflow-wrap:anywhere}
 .acad-mcq-q{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start;margin:0}
@@ -65,17 +233,17 @@ const ACADEMICS_STYLE = `
 .acad-mcq-opt-key{width:18px;height:18px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 58%,var(--border));display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:color-mix(in srgb,var(--accent) 72%,var(--text));line-height:1;flex:0 0 18px}
 .acad-mcq img,.acad-mcq video,.acad-mcq iframe{max-width:100%;height:auto}
 .acad-mcq-foot{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-top:1px}
-.acad-answer-btn{height:26px;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft);color:var(--text);padding:0 9px;font-size:.76rem;font-weight:700;cursor:pointer}
+.acad-answer-btn{height:27px;border:1px solid var(--border);border-radius:999px;background:var(--surface-soft);color:var(--text);padding:0 10px;font-size:.75rem;font-weight:700;cursor:pointer}
 .acad-answer-btn:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
 .acad-mcq-answer{margin:0;font-size:.78rem;color:color-mix(in srgb,#2f9a66 74%,var(--text));font-weight:700}
 .acad-pager{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px}
-.acad-page-btn{height:29px;min-width:29px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text-muted);padding:0 8px;font-weight:600;cursor:pointer}
+.acad-page-btn{height:30px;min-width:30px;border:1px solid var(--border);border-radius:999px;background:transparent;color:var(--text-muted);padding:0 9px;font-weight:700;cursor:pointer}
 .acad-page-btn:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border));color:var(--text)}
 .acad-page-btn.is-active{background:color-mix(in srgb,var(--accent) 20%,var(--surface));border-color:color-mix(in srgb,var(--accent) 65%,var(--border));color:var(--text)}
 .acad-page-btn:disabled{opacity:.52;cursor:not-allowed}
 .acad-page-gap{padding:0 2px;color:var(--text-muted)}
-.acad-reader-block{display:grid;gap:10px;min-width:0}
-.acad-reader-block h3{margin:0;font-size:.92rem}
+.acad-reader-block{display:grid;gap:10px;min-width:0;padding:0;border:0;border-radius:0;background:transparent}
+.acad-reader-block h3{margin:0;font-size:.93rem;text-align:center}
 .acad-admin-panelbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px;border:1px dashed color-mix(in srgb,var(--accent) 36%,var(--border));border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
 .acad-admin-badge{font-size:.72rem;font-weight:800;letter-spacing:.03em;color:color-mix(in srgb,var(--accent) 74%,var(--text))}
 .acad-admin-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -98,27 +266,102 @@ const ACADEMICS_STYLE = `
 .acad-admin-grid[hidden]{display:none!important}
 .acad-admin-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .acad-admin-msg{margin:0;min-height:18px;font-size:.78rem;color:var(--text-muted)}
-.acad-exam-fab{position:fixed!important;top:calc(var(--layout-header-offset-mobile) + env(safe-area-inset-top,0px) + 8px);right:max(10px,env(safe-area-inset-right,0px));bottom:auto;left:auto!important;z-index:91;height:34px;padding:0 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 72%,var(--border));background:var(--accent);color:var(--accent-contrast);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.01em;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 30%,transparent);width:auto!important;max-width:max-content!important;min-width:unset!important;margin:0!important;transform:translateZ(0);box-sizing:border-box}
+.acad-side-section{display:grid;gap:8px}
+.acad-side-title{margin:0;font-size:.84rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted)}
+.acad-side-list{display:grid;gap:5px}
+.acad-side-link{
+  display:block;
+  padding:5px 2px 5px 10px;
+  border:0;
+  border-left:2px solid transparent;
+  border-radius:0;
+  background:none;
+  color:var(--text);
+  text-decoration:none;
+  min-height:28px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.acad-side-link:hover{
+  border-left-color:color-mix(in srgb,var(--accent) 46%,var(--border));
+  background:none;
+}
+.acad-side-link.is-active{
+  border-left-color:color-mix(in srgb,var(--accent) 66%,var(--border));
+  background:none;
+}
+.acad-side-link-name{font-size:.84rem;font-weight:700;line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acad-side-link-meta{display:none}
+.acad-exam-fab{
+  position:fixed!important;
+  top:calc(var(--layout-header-offset-mobile) + env(safe-area-inset-top,0px) + 8px);
+  right:max(10px,env(safe-area-inset-right,0px));
+  bottom:auto;
+  left:auto!important;
+  z-index:91;
+  height:34px;
+  padding:0 13px;
+  border-radius:999px;
+  border:1px solid color-mix(in srgb,var(--accent) 70%,var(--border));
+  background:color-mix(in srgb,var(--accent) 90%,var(--accent-contrast) 10%);
+  color:var(--accent-contrast);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  letter-spacing:.01em;
+  width:auto!important;
+  max-width:max-content!important;
+  min-width:unset!important;
+  margin:0!important;
+  transform:translateZ(0);
+  box-sizing:border-box;
+}
 .acad-exam-fab:hover{filter:brightness(1.03)}
 @media (max-width:760px){
-  .acad-wrap{padding:10px var(--space-2) var(--space-2)}
-  .acad-head{gap:8px}
-  .acad-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch;gap:8px}
-  .acad-root-grid{grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch;gap:8px}
-  .acad-card-name{font-size:.8rem;padding-top:5px}
-  .acad-card-meta{font-size:.67rem}
-  .acad-poster{border-radius:10px}
+  .page-academics .app-content{padding:8px var(--space-2) calc(var(--layout-mobile-nav-offset) + var(--space-2) + 2px)}
+  .acad-wrap{padding:0;border-radius:0}
+  .acad-head{gap:7px}
+  .acad-card-grid,.acad-root-grid{--acad-card-width:120px;gap:8px}
+  .acad-card-link,.acad-root-card{padding:0;border-radius:0}
+  .acad-card-name{font-size:.79rem;padding-top:5px;min-height:2.35em}
+  .acad-card-meta{font-size:.66rem}
+  .acad-poster{border-radius:9px}
   .acad-content-columns{grid-template-columns:1fr}
+  .acad-content-columns::before{display:none}
   .acad-admin-grid{grid-template-columns:1fr}
 }
+@media (min-width:900px){
+  .page-academics .app-content{
+    padding:0 var(--space-2) calc(var(--layout-desktop-status-h) + var(--space-3) + 12px);
+    scroll-padding-bottom:calc(var(--layout-desktop-status-h) + 24px);
+  }
+  .app-content > .acad-float-back{
+    top:6px;
+    left:6px;
+  }
+}
 @media (min-width:900px){.acad-exam-fab{top:calc(var(--layout-header-offset-desktop) + env(safe-area-inset-top,0px) + 8px)!important}}
-@media (max-width:460px){.acad-card-grid,.acad-root-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.acad-card-grid,.acad-root-grid{--acad-card-width:108px}}
 @media (max-width:760px) and (orientation:portrait){
-  .acad-subject-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  .acad-book-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  .acad-subject-grid .acad-poster,.acad-book-grid .acad-poster{border-radius:9px}
-  .acad-subject-grid .acad-card-name,.acad-book-grid .acad-card-name{font-size:.74rem;padding-top:4px}
-  .acad-subject-grid .acad-card-meta,.acad-book-grid .acad-card-meta{font-size:.64rem}
+  .acad-subject-grid,.acad-book-grid{--acad-card-width:112px;gap:6px}
+  .acad-subject-grid .acad-poster,.acad-book-grid .acad-poster{border-radius:8px}
+  .acad-subject-grid .acad-card-name,.acad-book-grid .acad-card-name{font-size:.73rem;padding-top:4px}
+  .acad-subject-grid .acad-card-meta,.acad-book-grid .acad-card-meta{font-size:.63rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .acad-card-grid > *,
+  .acad-root-grid > *,
+  .acad-root-grid,
+  .acad-card-link,
+  .acad-root-card,
+  .acad-child-group{
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+  }
 }
 `;
 
@@ -516,8 +759,46 @@ const ACADEMICS_SCRIPT = `
     const buttons = Array.from(tabsWrap.querySelectorAll('[data-tab-key]'));
     const readerBlock = tabsWrap.closest('.acad-reader-block');
     const panels = Array.from((readerBlock || document).querySelectorAll('[data-tab-panel]'));
-    const activate = (key) => {
-      const selected = String(key || '');
+    const tabQueryKey = 'tab';
+    const tabKeys = buttons
+      .map((btn) => String(btn.getAttribute('data-tab-key') || '').trim())
+      .filter(Boolean);
+    let activeTabKey = '';
+    const isValidTabKey = (key) => tabKeys.includes(String(key || '').trim());
+    const readTabFromUrl = () => {
+      try {
+        const url = new URL(window.location.href);
+        return String(url.searchParams.get(tabQueryKey) || '').trim();
+      } catch {
+        return '';
+      }
+    };
+    const writeTabToUrl = (key, mode = 'replace') => {
+      const selected = String(key || '').trim();
+      if (!isValidTabKey(selected)) return;
+      if (!window.history || typeof window.history.pushState !== 'function') return;
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set(tabQueryKey, selected);
+        const nextHref = url.pathname + url.search + url.hash;
+        const currentHref = window.location.pathname + window.location.search + window.location.hash;
+        if (nextHref === currentHref) return;
+        if (mode === 'push') {
+          window.history.pushState({ acadTab: selected }, '', nextHref);
+        } else {
+          window.history.replaceState({ acadTab: selected }, '', nextHref);
+        }
+      } catch {
+        // Ignore URL update failures; tab switching remains functional.
+      }
+    };
+    const activate = (key, options = {}) => {
+      const selected = isValidTabKey(key) ? String(key).trim() : '';
+      if (!selected) return;
+      const pushUrl = Boolean(options?.pushUrl);
+      const syncUrl = options?.syncUrl !== false;
+      if (activeTabKey === selected && !syncUrl) return;
+      activeTabKey = selected;
       buttons.forEach((btn) => {
         const active = String(btn.getAttribute('data-tab-key') || '') === selected;
         btn.classList.toggle('is-active', active);
@@ -528,14 +809,27 @@ const ACADEMICS_SCRIPT = `
         panel.hidden = !isMatch;
         panel.classList.toggle('is-active', isMatch);
       });
+      if (syncUrl) {
+        writeTabToUrl(selected, pushUrl ? 'push' : 'replace');
+      }
     };
     tabsWrap.addEventListener('click', (event) => {
       const btn = event.target.closest('[data-tab-key]');
       if (!btn) return;
-      activate(btn.getAttribute('data-tab-key'));
+      activate(btn.getAttribute('data-tab-key'), { syncUrl: true, pushUrl: true });
     }, { signal });
     const firstKey = String(buttons[0]?.getAttribute('data-tab-key') || '');
-    if (firstKey) activate(firstKey);
+    const urlTab = readTabFromUrl();
+    const initialKey = isValidTabKey(urlTab) ? urlTab : firstKey;
+    if (initialKey) activate(initialKey, { syncUrl: true, pushUrl: false });
+    window.addEventListener('popstate', () => {
+      const nextKey = readTabFromUrl();
+      if (isValidTabKey(nextKey)) {
+        activate(nextKey, { syncUrl: false });
+        return;
+      }
+      if (firstKey) activate(firstKey, { syncUrl: false });
+    }, { signal });
   }
 
   document.addEventListener('click', (event) => {
@@ -779,7 +1073,7 @@ function floatingBackButton(fallbackHref = "/") {
   return `<button type="button" class="acad-float-back" data-action="acad-history-back" data-fallback-href="${escapeHtml(fallbackHref)}" aria-label="Go back" title="Go back">&larr;</button>`;
 }
 
-function renderShell({ title, user, navItems, homePath, content }) {
+function renderShell({ title, user, navItems, homePath, content, rightSidebar = "" }) {
   return renderAppShellLayout({
     title,
     activeMenu: "home",
@@ -791,6 +1085,7 @@ function renderShell({ title, user, navItems, homePath, content }) {
     contentClass: "app-content-flush",
     shellScope: "public",
     content,
+    rightSidebar,
     script: ACADEMICS_SCRIPT,
   });
 }
@@ -804,6 +1099,28 @@ function adminEditorModalMarkup(enabled = false) {
   return `<section id="acadAdminEditor" class="acad-admin-modal" role="dialog" aria-modal="true" aria-hidden="true" hidden><div class="acad-admin-modal-surface"><header class="acad-admin-modal-head"><h3 id="acadAdminTitle">Edit content</h3><button id="acadAdminClose" class="acad-admin-close" type="button" aria-label="Close editor">x</button></header><form id="acadAdminForm" class="acad-admin-form" autocomplete="off"><input type="hidden" name="subjectId" value="0" /><input type="hidden" name="contextType" value="" /><input type="hidden" name="contextId" value="0" /><input type="hidden" name="contentType" value="" /><input type="hidden" name="panelMode" value="rich" /><input type="hidden" name="itemId" value="0" /><div class="acad-admin-field"><label for="acadAdminBody">Body</label><textarea id="acadAdminBody" name="body" placeholder="Write content..."></textarea></div><div id="acadAdminMcqFields" class="acad-admin-grid" hidden><div class="acad-admin-field"><label for="acadAdminOptA">Option A</label><textarea id="acadAdminOptA" name="optA"></textarea></div><div class="acad-admin-field"><label for="acadAdminOptB">Option B</label><textarea id="acadAdminOptB" name="optB"></textarea></div><div class="acad-admin-field"><label for="acadAdminOptC">Option C</label><textarea id="acadAdminOptC" name="optC"></textarea></div><div class="acad-admin-field"><label for="acadAdminOptD">Option D</label><textarea id="acadAdminOptD" name="optD"></textarea></div><div class="acad-admin-field"><label for="acadAdminCorrect">Correct option</label><select id="acadAdminCorrect" name="correctOption"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div></div><p id="acadAdminMsg" class="acad-admin-msg" role="status" aria-live="polite"></p><div class="acad-admin-actions"><button id="acadAdminCancel" class="acad-admin-btn" type="button">Cancel</button><button class="acad-admin-btn" type="submit">Save</button></div></form></div></section>`;
 }
 
+function sidebarSectionMarkup(title, items = []) {
+  const rows = (Array.isArray(items) ? items : [])
+    .map((item) => ({
+      href: String(item?.href || "").trim(),
+      name: String(item?.name || "").trim(),
+      meta: String(item?.meta || "").trim(),
+      active: Boolean(item?.active),
+    }))
+    .filter((item) => item.href && item.name);
+  if (!rows.length) return "";
+  return `<article class="app-right-card acad-side-section"><h3 class="acad-side-title">${escapeHtml(title)}</h3><nav class="acad-side-list">${rows.map((item) => `<a class="acad-side-link${item.active ? " is-active" : ""}" href="${escapeHtml(item.href)}"${item.active ? ` aria-current="page"` : ""}><span class="acad-side-link-name">${escapeHtml(item.name)}</span></a>`).join("")}</nav></article>`;
+}
+
+function subjectFlowRightSidebar({ subjectName = "", sections = [] } = {}) {
+  const blocks = (Array.isArray(sections) ? sections : [])
+    .map((section) => sidebarSectionMarkup(section?.title || "Items", section?.items || []))
+    .filter(Boolean);
+  const heading = String(subjectName || "").trim() || "Subject";
+  const emptyState = `<article class="app-right-card"><p>No linked items yet.</p></article>`;
+  return `<aside id="appRightSidebar" class="app-right-sidebar" aria-label="Subject navigation"><section class="app-right-rail"><article class="app-right-card"><p class="app-right-eyebrow">Quick Navigation</p><h2>${escapeHtml(heading)}</h2><p>Jump directly to other parts from this subject flow.</p></article>${blocks.length ? blocks.join("") : emptyState}</section></aside>`;
+}
+
 export function classSubjectsPage({ user, navItems, homePath, classItem, subjects = [] } = {}) {
   const className = String(classItem?.name || "").trim() || "Class";
   const rows = Array.isArray(subjects) ? subjects : [];
@@ -814,6 +1131,18 @@ export function classSubjectsPage({ user, navItems, homePath, classItem, subject
       imageUrl: subject?.thumbnailUrl || "",
     })).join("")}</div>`
     : `<p class="acad-empty">No subjects found for this class.</p>`;
+  const rightSidebar = subjectFlowRightSidebar({
+    subjectName: className,
+    sections: [
+      {
+        title: "Subjects",
+        items: rows.map((subject) => ({
+          href: `/subjects/${Number(subject?.id || 0)}`,
+          name: subject?.name || "Subject",
+        })),
+      },
+    ],
+  });
   const content = `${floatingBackButton("/classes")}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(className)}</h2><p class="acad-sub">Subjects in this class</p></div></header>${cards}</section>`;
   return renderShell({
     title: `${className} Subjects`,
@@ -821,6 +1150,7 @@ export function classSubjectsPage({ user, navItems, homePath, classItem, subject
     navItems,
     homePath,
     content,
+    rightSidebar,
   });
 }
 
@@ -849,6 +1179,22 @@ export function publicSubjectPage({ user, navItems, homePath, subject, roots = [
     return `<section class="acad-child-group" data-root-group="${Number(root?.id || 0)}" hidden><header class="acad-child-head"><h3>${escapeHtml(root?.displayName || root?.serverName || "Book")}</h3><button type="button" class="acad-chip" data-action="acad-reset-root">Back to books</button></header>${cards}</section>`;
   }).join("");
 
+  const sectionItems = (Array.isArray(childrenByRoot) ? childrenByRoot : [])
+    .flatMap((group) => (Array.isArray(group?.items) ? group.items : []))
+    .map((child) => ({
+      href: `/subjects/${Number(safeSubject?.id || 0)}/sections/${Number(child?.id || 0)}`,
+      name: child?.displayName || child?.serverName || "Section",
+    }));
+  const rightSidebar = subjectFlowRightSidebar({
+    subjectName: safeSubject?.name || "Subject",
+    sections: [
+      {
+        title: "Sections",
+        items: sectionItems,
+      },
+    ],
+  });
+
   const content = `${floatingBackButton(backHref)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(className || "Subject")} | Select a book</p></div></header><div id="acadRootGrid" class="acad-root-grid acad-book-grid">${rootCards}</div><div id="acadChildArea" class="acad-child-area" hidden>${childGroups}</div></section>${examFab(safeSubject?.id)}`;
   return renderShell({
     title: String(safeSubject?.name || "Subject"),
@@ -856,6 +1202,7 @@ export function publicSubjectPage({ user, navItems, homePath, subject, roots = [
     navItems,
     homePath,
     content,
+    rightSidebar,
   });
 }
 
@@ -874,6 +1221,19 @@ export function publicSectionPage({ user, navItems, homePath, subject, node, cha
       cardClass: "acad-chapter-card",
     })).join("")}</div>`
     : `<p class="acad-empty">No chapters added yet.</p>`;
+  const rightSidebar = subjectFlowRightSidebar({
+    subjectName: safeSubject?.name || "Subject",
+    sections: [
+      {
+        title: "Chapters",
+        items: rows.map((chapter) => ({
+          href: `/subjects/${Number(safeSubject?.id || 0)}/chapters/${Number(chapter?.id || 0)}`,
+          name: chapter?.name || "Chapter",
+          meta: chapter?.chapterNumber ? `Chapter ${chapter.chapterNumber}` : "",
+        })),
+      },
+    ],
+  });
   const content = `${floatingBackButton(backHref)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p class="acad-sub">${escapeHtml(headingMeta.subtitle)}</p></div></header>${cards}</section>${examFab(safeSubject?.id, { contextType: "node", contextId: safeNode?.id })}`;
   return renderShell({
     title: headingMeta.title,
@@ -881,6 +1241,7 @@ export function publicSectionPage({ user, navItems, homePath, subject, node, cha
     navItems,
     homePath,
     content,
+    rightSidebar,
   });
 }
 
@@ -995,6 +1356,7 @@ export function publicChapterPage({
   subject,
   node,
   chapter,
+  chapters = [],
   topics = [],
   contentModules = [],
   contentItemsByType = {},
@@ -1004,6 +1366,7 @@ export function publicChapterPage({
   const safeNode = node || {};
   const safeChapter = chapter || {};
   const chapterTopics = Array.isArray(topics) ? topics : [];
+  const chapterSiblings = Array.isArray(chapters) ? chapters : [];
   const mapFromPayload = (contentItemsByType && typeof contentItemsByType === "object") ? contentItemsByType : {};
   const inferredModules = publicReaderModules(Object.keys(mapFromPayload));
   const readerModules = (Array.isArray(contentModules) && contentModules.length ? contentModules : inferredModules)
@@ -1056,7 +1419,29 @@ export function publicChapterPage({
     : `<p class="acad-empty">No topics added yet.</p>`;
   const chapterBody = safeChapter?.topicsEnabled
     ? `<section class="acad-reader-block"><h3>Topics</h3>${topicCards}</section>`
-    : `<section class="acad-reader-block"><h3>Contents</h3>${readerContent}</section>`;
+    : `<section class="acad-reader-block">${readerContent}</section>`;
+  const rightSidebar = subjectFlowRightSidebar({
+    subjectName: safeSubject?.name || "Subject",
+    sections: [
+      {
+        title: "Chapters",
+        items: chapterSiblings.map((entry) => ({
+          href: `/subjects/${Number(safeSubject?.id || 0)}/chapters/${Number(entry?.id || 0)}`,
+          name: entry?.name || "Chapter",
+          meta: entry?.chapterNumber ? `Chapter ${entry.chapterNumber}` : "",
+          active: Number(entry?.id || 0) === Number(safeChapter?.id || 0),
+        })),
+      },
+      {
+        title: "Topics",
+        items: chapterTopics.map((entry) => ({
+          href: `/subjects/${Number(safeSubject?.id || 0)}/topics/${Number(entry?.id || 0)}`,
+          name: entry?.name || "Topic",
+          meta: entry?.topicNumber ? `Topic ${entry.topicNumber}` : "",
+        })),
+      },
+    ],
+  });
 
   const content = `${floatingBackButton(`/subjects/${Number(safeSubject?.id || 0)}/sections/${Number(safeNode?.id || 0)}`)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeChapter?.name || "Chapter")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")}</p></div></header>${chapterBody}</section>${adminEditorModalMarkup(adminMode)}${examFab(safeSubject?.id, { contextType: "chapter", contextId: safeChapter?.id })}`;
   return renderShell({
@@ -1065,6 +1450,7 @@ export function publicChapterPage({
     navItems,
     homePath,
     content,
+    rightSidebar,
   });
 }
 
@@ -1076,6 +1462,8 @@ export function publicTopicPage({
   node,
   chapter,
   topic,
+  chapters = [],
+  topics = [],
   contentModules = [],
   contentItemsByType = {},
 } = {}) {
@@ -1084,6 +1472,8 @@ export function publicTopicPage({
   const safeNode = node || {};
   const safeChapter = chapter || {};
   const safeTopic = topic || {};
+  const chapterSiblings = Array.isArray(chapters) ? chapters : [];
+  const topicSiblings = Array.isArray(topics) ? topics : [];
   const mapFromPayload = (contentItemsByType && typeof contentItemsByType === "object") ? contentItemsByType : {};
   const inferredModules = publicReaderModules(Object.keys(mapFromPayload));
   const readerModules = (Array.isArray(contentModules) && contentModules.length ? contentModules : inferredModules)
@@ -1125,13 +1515,37 @@ export function publicTopicPage({
   const readerContent = readerModules.length
     ? `${tabs}${panels}`
     : `<p class="acad-empty">No content tabs configured for this topic.</p>`;
+  const rightSidebar = subjectFlowRightSidebar({
+    subjectName: safeSubject?.name || "Subject",
+    sections: [
+      {
+        title: "Chapters",
+        items: chapterSiblings.map((entry) => ({
+          href: `/subjects/${Number(safeSubject?.id || 0)}/chapters/${Number(entry?.id || 0)}`,
+          name: entry?.name || "Chapter",
+          meta: entry?.chapterNumber ? `Chapter ${entry.chapterNumber}` : "",
+          active: Number(entry?.id || 0) === Number(safeChapter?.id || 0),
+        })),
+      },
+      {
+        title: "Topics",
+        items: topicSiblings.map((entry) => ({
+          href: `/subjects/${Number(safeSubject?.id || 0)}/topics/${Number(entry?.id || 0)}`,
+          name: entry?.name || "Topic",
+          meta: entry?.topicNumber ? `Topic ${entry.topicNumber}` : "",
+          active: Number(entry?.id || 0) === Number(safeTopic?.id || 0),
+        })),
+      },
+    ],
+  });
 
-  const content = `${floatingBackButton(`/subjects/${Number(safeSubject?.id || 0)}/chapters/${Number(safeChapter?.id || 0)}`)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeTopic?.name || "Topic")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")} | ${escapeHtml(safeChapter?.name || "Chapter")}</p></div></header><section class="acad-reader-block"><h3>Contents</h3>${readerContent}</section></section>${adminEditorModalMarkup(adminMode)}${examFab(safeSubject?.id, { contextType: "topic", contextId: safeTopic?.id })}`;
+  const content = `${floatingBackButton(`/subjects/${Number(safeSubject?.id || 0)}/chapters/${Number(safeChapter?.id || 0)}`)}<section class="acad-wrap"><header class="acad-head"><div><h2>${escapeHtml(safeTopic?.name || "Topic")}</h2><p class="acad-sub">${escapeHtml(safeSubject?.name || "Subject")} | ${escapeHtml(safeNode?.displayName || safeNode?.serverName || "Section")} | ${escapeHtml(safeChapter?.name || "Chapter")}</p></div></header><section class="acad-reader-block">${readerContent}</section></section>${adminEditorModalMarkup(adminMode)}${examFab(safeSubject?.id, { contextType: "topic", contextId: safeTopic?.id })}`;
   return renderShell({
     title: String(safeTopic?.name || "Topic"),
     user,
     navItems,
     homePath,
     content,
+    rightSidebar,
   });
 }

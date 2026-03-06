@@ -2,42 +2,201 @@ import { renderDocument } from "../../layout/document.js";
 import { renderAppShellLayout } from "../../layout/appShell/index.js";
 
 const EXAM_SETUP_STYLE = `
-.page-exam-setup .app-content{padding:0}
-.exam-setup{display:grid;gap:14px;padding:16px 12px 18px;max-width:980px;margin:0 auto}
+.page-exam-setup .app-content{
+  padding:0;
+  background:
+    radial-gradient(860px 460px at 10% -12%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 60%),
+    radial-gradient(760px 440px at 92% -16%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 62%),
+    repeating-linear-gradient(0deg,color-mix(in srgb,var(--surface-soft) 24%,transparent) 0 1px,transparent 1px 28px),
+    linear-gradient(180deg,var(--page-bg),color-mix(in srgb,var(--page-bg) 84%,var(--surface) 16%));
+}
+.exam-setup{
+  display:grid;
+  gap:12px;
+  padding:14px 12px calc(20px + env(safe-area-inset-bottom,0px));
+  max-width:1040px;
+  margin:0 auto;
+}
 .exam-setup,.exam-setup *{min-width:0}
-.exam-setup-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.exam-setup-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:2px 2px 0;
+}
 .exam-setup-head > div{min-width:0}
-.exam-setup-head h2{margin:0;font-size:1.18rem;line-height:1.25}
-.exam-setup-head p{margin:0;color:var(--text-muted);font-size:.9rem;line-height:1.4}
-.exam-back{height:34px;border:1px solid var(--border);border-radius:999px;padding:0 13px;display:inline-flex;align-items:center;text-decoration:none;color:var(--text);font-weight:700;background:var(--surface-soft)}
-.exam-card{border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 88%,var(--accent) 12%),var(--surface));padding:14px;display:grid;gap:12px}
-.exam-grid{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
-.exam-field{display:grid;gap:6px}
+.exam-setup-head h2{margin:0;font-size:1.24rem;line-height:1.22}
+.exam-setup-head p{margin:0;color:var(--text-muted);font-size:.91rem;line-height:1.4}
+.exam-back{
+  height:36px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:0 13px;
+  display:inline-flex;
+  align-items:center;
+  text-decoration:none;
+  color:var(--text);
+  font-weight:700;
+  background:color-mix(in srgb,var(--surface) 92%,var(--page-bg) 8%);
+}
+.exam-back:hover{
+  border-color:color-mix(in srgb,var(--accent) 52%,var(--border));
+  background:color-mix(in srgb,var(--surface-soft) 78%,var(--surface) 22%);
+}
+.exam-card{
+  position:relative;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:
+    repeating-linear-gradient(90deg,color-mix(in srgb,var(--surface-soft) 16%,transparent) 0 1px,transparent 1px 20px),
+    linear-gradient(180deg,color-mix(in srgb,var(--surface) 92%,var(--page-bg) 8%),color-mix(in srgb,var(--surface-soft) 84%,var(--page-bg) 16%));
+  padding:14px;
+  display:grid;
+  gap:12px;
+  overflow:hidden;
+}
+.exam-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.13;
+  background:
+    radial-gradient(circle at 15% 22%,color-mix(in srgb,var(--accent) 34%,transparent) 0 2px,transparent 2px),
+    radial-gradient(circle at 78% 17%,color-mix(in srgb,var(--accent) 34%,transparent) 0 2px,transparent 2px),
+    radial-gradient(circle at 88% 70%,color-mix(in srgb,var(--accent) 34%,transparent) 0 2px,transparent 2px);
+}
+.exam-grid{
+  position:relative;
+  z-index:1;
+  display:grid;
+  gap:10px;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+}
+.exam-field{
+  display:grid;
+  gap:6px;
+  grid-column:span 6;
+}
+.exam-field-full{grid-column:1 / -1}
 .exam-field label{font-weight:700;font-size:.86rem;color:var(--text-muted)}
-.exam-field select,.exam-field input{display:block;width:100%;max-width:100%;height:42px;border:1px solid var(--border);border-radius:12px;padding:0 11px;background:var(--surface-soft);color:var(--text);font-size:.95rem}
-.exam-field select:focus,.exam-field input:focus{outline:none;border-color:color-mix(in srgb,var(--accent) 62%,var(--border))}
-.exam-toggle{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--border) 72%,var(--accent) 28%);border-radius:12px;background:color-mix(in srgb,var(--surface-soft) 90%,var(--accent) 10%)}
-.exam-toggle input{width:17px;height:17px;margin:0;accent-color:var(--accent)}
-.exam-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:2px}
-.exam-btn{height:40px;border:1px solid var(--border);border-radius:12px;padding:0 14px;font-weight:700;cursor:pointer;background:var(--surface-soft);color:var(--text);font-size:.93rem}
+.exam-field select,.exam-field input:not([type="checkbox"]){
+  display:block;
+  width:100%;
+  max-width:100%;
+  height:44px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:0 12px;
+  background:color-mix(in srgb,var(--surface-soft) 92%,var(--surface) 8%);
+  color:var(--text);
+  font-size:.95rem;
+}
+.exam-field select:focus,.exam-field input:not([type="checkbox"]):focus{
+  outline:none;
+  border-color:color-mix(in srgb,var(--accent) 64%,var(--border));
+  background:color-mix(in srgb,var(--surface-soft) 76%,var(--surface) 24%);
+}
+.exam-toggle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid color-mix(in srgb,var(--border) 70%,var(--accent) 30%);
+  border-radius:12px;
+  background:color-mix(in srgb,var(--surface-soft) 84%,var(--accent) 16%);
+}
+.exam-toggle input{
+  width:18px;
+  height:18px;
+  margin:0;
+  accent-color:var(--accent);
+  flex:0 0 18px;
+}
+.exam-toggle label{
+  margin:0;
+  color:var(--text);
+  font-size:.89rem;
+}
+.exam-actions{
+  position:relative;
+  z-index:1;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  padding-top:2px;
+}
+.exam-btn{
+  height:42px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:0 14px;
+  font-weight:700;
+  cursor:pointer;
+  background:color-mix(in srgb,var(--surface-soft) 90%,var(--surface) 10%);
+  color:var(--text);
+  font-size:.93rem;
+}
 .exam-btn.primary{background:var(--accent);color:var(--accent-contrast);border-color:color-mix(in srgb,var(--accent) 70%,var(--border))}
 .exam-btn:disabled{opacity:.55;cursor:not-allowed}
-.exam-msg{margin:0;font-size:.83rem;color:var(--text-muted);min-height:1.2em;overflow-wrap:anywhere}
-.exam-hint{margin:0;padding:9px 11px;border:1px solid color-mix(in srgb,var(--accent) 38%,var(--border));border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:.82rem;color:color-mix(in srgb,var(--accent) 62%,var(--text));font-weight:600;overflow-wrap:anywhere}
+.exam-msg{
+  position:relative;
+  z-index:1;
+  margin:0;
+  font-size:.83rem;
+  color:var(--text-muted);
+  min-height:1.2em;
+  overflow-wrap:anywhere;
+}
+.exam-hint{
+  margin:0;
+  padding:10px 12px;
+  border:1px solid color-mix(in srgb,var(--accent) 38%,var(--border));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 12%,var(--surface));
+  font-size:.83rem;
+  color:color-mix(in srgb,var(--accent) 62%,var(--text));
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
 .exam-resume{display:grid;gap:8px}
 .exam-resume a{justify-self:start;text-decoration:none}
 @media (max-width:760px){
-  .exam-setup{width:100%;max-width:100%;padding:10px 8px calc(18px + env(safe-area-inset-bottom));gap:10px;overflow-x:clip}
-  .exam-setup-head{align-items:flex-start;gap:8px}
+  .exam-setup{
+    width:100%;
+    max-width:100%;
+    padding:10px 8px calc(18px + env(safe-area-inset-bottom,0px));
+    gap:10px;
+    overflow-x:clip;
+  }
+  .exam-setup-head{
+    grid-template-columns:1fr;
+    align-items:flex-start;
+    gap:8px;
+  }
   .exam-setup-head h2{font-size:1.1rem}
   .exam-setup-head p{font-size:.84rem}
-  .exam-back{height:36px;padding:0 14px}
+  .exam-back{height:34px;padding:0 13px}
   .exam-card{padding:10px;border-radius:14px;gap:10px;max-width:100%;overflow-x:clip}
   .exam-grid{grid-template-columns:1fr;gap:8px}
-  .exam-field select,.exam-field input{height:44px;font-size:1rem}
+  .exam-field,.exam-field-full{grid-column:1 / -1}
+  .exam-field select,.exam-field input{height:46px;font-size:1rem}
   .exam-toggle{padding:10px 12px}
-  .exam-actions{position:sticky;bottom:max(8px,env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--surface) 88%,transparent));padding-top:8px}
-  .exam-actions .exam-btn{width:100%;height:46px;font-size:1rem}
+  .exam-actions{
+    position:sticky;
+    bottom:max(8px,env(safe-area-inset-bottom,0px));
+    background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--surface) 88%,transparent));
+    padding-top:8px;
+  }
+  .exam-actions .exam-btn{
+    width:100%;
+    height:46px;
+    font-size:1rem;
+  }
+}
+@media (min-width:761px) and (max-width:1020px){
+  .exam-field{grid-column:span 12}
 }
 `;
 
@@ -391,43 +550,43 @@ const EXAM_SETUP_SCRIPT = `
 
 const EXAM_SESSION_STYLE = `
 .exam-runtime{
-  --exam-accent:#1f6fd8;
-  --exam-accent-ink:#ffffff;
-  --exam-bg:#0f1a2c;
-  --exam-bg-soft:#162744;
-  --exam-surface:#122238;
-  --exam-surface-soft:#1a314f;
-  --exam-surface-glass:rgba(18,34,56,.86);
-  --exam-border:#314f74;
-  --exam-text:#eaf2ff;
-  --exam-text-muted:#9fb5d4;
-  --exam-timer-bg:#173863;
-  --exam-timer-border:#33639d;
+  --exam-accent:var(--accent);
+  --exam-accent-ink:var(--accent-contrast);
+  --exam-bg:var(--page-bg);
+  --exam-bg-soft:color-mix(in srgb,var(--page-bg) 82%,var(--surface) 18%);
+  --exam-surface:var(--surface);
+  --exam-surface-soft:color-mix(in srgb,var(--surface-soft) 88%,var(--surface) 12%);
+  --exam-surface-glass:color-mix(in srgb,var(--surface) 86%,transparent);
+  --exam-border:var(--border);
+  --exam-text:var(--text);
+  --exam-text-muted:var(--text-muted);
+  --exam-timer-bg:color-mix(in srgb,var(--surface-soft) 82%,var(--accent) 18%);
+  --exam-timer-border:color-mix(in srgb,var(--accent) 42%,var(--border));
   margin:0;
   min-height:100vh;
   background:
     radial-gradient(1200px 620px at 8% -8%, color-mix(in srgb,var(--exam-accent) 34%,transparent), transparent 58%),
-    radial-gradient(960px 540px at 100% 0, color-mix(in srgb,#58a4ff 20%,transparent), transparent 66%),
+    radial-gradient(960px 540px at 100% 0, color-mix(in srgb,var(--exam-accent) 20%,transparent), transparent 66%),
     linear-gradient(160deg,var(--exam-bg),var(--exam-bg-soft) 62%,var(--exam-bg));
   color:var(--exam-text);
-  font:500 16px/1.55 "Segoe UI",system-ui,sans-serif;
+  font:500 16px/1.55 var(--font-body);
   overflow-x:clip;
 }
 .exam-runtime,.exam-runtime *,.exam-runtime *::before,.exam-runtime *::after{box-sizing:border-box;min-width:0}
 .exam-runtime[data-theme='light']{
-  --exam-bg:#edf3fb;
-  --exam-bg-soft:#dfeafe;
-  --exam-surface:#ffffff;
-  --exam-surface-soft:#f3f8ff;
-  --exam-surface-glass:rgba(255,255,255,.88);
-  --exam-border:#c3d6ef;
-  --exam-text:#132943;
-  --exam-text-muted:#5f7698;
-  --exam-timer-bg:#eaf3ff;
-  --exam-timer-border:#8fb7eb;
+  --exam-bg:var(--page-bg);
+  --exam-bg-soft:color-mix(in srgb,var(--page-bg) 84%,var(--surface) 16%);
+  --exam-surface:var(--surface);
+  --exam-surface-soft:color-mix(in srgb,var(--surface-soft) 90%,var(--surface) 10%);
+  --exam-surface-glass:color-mix(in srgb,var(--surface) 88%,transparent);
+  --exam-border:var(--border);
+  --exam-text:var(--text);
+  --exam-text-muted:var(--text-muted);
+  --exam-timer-bg:color-mix(in srgb,var(--surface-soft) 80%,var(--accent) 20%);
+  --exam-timer-border:color-mix(in srgb,var(--accent) 40%,var(--border));
   background:
-    radial-gradient(1000px 560px at -4% -8%, color-mix(in srgb,var(--exam-accent) 16%,#ffffff), transparent 62%),
-    radial-gradient(860px 560px at 100% -2%, color-mix(in srgb,#7ec4ff 14%,#ffffff), transparent 70%),
+    radial-gradient(1000px 560px at -4% -8%, color-mix(in srgb,var(--exam-accent) 16%,transparent), transparent 62%),
+    radial-gradient(860px 560px at 100% -2%, color-mix(in srgb,var(--exam-accent) 14%,transparent), transparent 70%),
     linear-gradient(165deg,var(--exam-bg),var(--exam-bg-soft) 58%,var(--exam-bg));
 }
 .exam-runtime::before,
@@ -719,7 +878,46 @@ export function examSetupPage({ user, navItems, homePath, subject, setupPayload 
 
   const activeCard = activeAttempt
     ? `<section class="exam-card exam-resume"><h3>Active exam found</h3><p class="exam-msg">You already have an active exam attempt. Resume it now.</p><a class="exam-btn primary" href="${escapeHtml(String(activeAttempt.redirectUrl || '/'))}">Resume Exam</a></section>`
-    : `<form id="examSetupForm" class="exam-card" action="/api/public/subjects/${subjectId}/exams/start" method="post"><div class="exam-grid"><div class="exam-field"><label for="examScope">Exam scope</label><select id="examScope" name="scopeType"></select></div><div id="examNodeWrap" class="exam-field" hidden><label id="examNodeLabel" for="examNode">Select book</label><select id="examNode"></select></div><div id="examChapterWrap" class="exam-field" hidden><label for="examChapter">Select chapter</label><select id="examChapter" name="chapterId"></select></div><div id="examTopicChapterWrap" class="exam-field" hidden><label for="examTopicChapter">Select chapter</label><select id="examTopicChapter"></select></div><div id="examTopicWrap" class="exam-field" hidden><label for="examTopic">Select topic</label><select id="examTopic" name="topicId"></select></div><div class="exam-field exam-toggle"><input id="examTimed" type="checkbox" name="timed" value="1" /><label for="examTimed">Limited time exam</label></div><div id="examDurationWrap" class="exam-field" hidden><label for="examDuration">Duration</label><select id="examDuration" name="durationMinutes">${(setupPayload?.options?.durations || [5, 10, 15, 20, 30]).map((value) => `<option value="${Number(value)}">${Number(value)} minutes</option>`).join("")}</select></div><div class="exam-field"><label for="examQuestionCount">Questions</label><select id="examQuestionCount" name="questionCount"></select></div></div><p id="examSetupMsg" class="exam-msg" role="status" aria-live="polite"></p><div class="exam-actions"><button id="examStartBtn" class="exam-btn primary" type="submit">Start Exam</button></div></form>`;
+    : `<form id="examSetupForm" class="exam-card" action="/api/public/subjects/${subjectId}/exams/start" method="post">
+      <div class="exam-grid">
+        <div class="exam-field">
+          <label for="examScope">Exam scope</label>
+          <select id="examScope" name="scopeType"></select>
+        </div>
+        <div id="examNodeWrap" class="exam-field" hidden>
+          <label id="examNodeLabel" for="examNode">Select book</label>
+          <select id="examNode"></select>
+        </div>
+        <div id="examChapterWrap" class="exam-field" hidden>
+          <label for="examChapter">Select chapter</label>
+          <select id="examChapter" name="chapterId"></select>
+        </div>
+        <div id="examTopicChapterWrap" class="exam-field" hidden>
+          <label for="examTopicChapter">Select chapter</label>
+          <select id="examTopicChapter"></select>
+        </div>
+        <div id="examTopicWrap" class="exam-field" hidden>
+          <label for="examTopic">Select topic</label>
+          <select id="examTopic" name="topicId"></select>
+        </div>
+        <div class="exam-field exam-field-full exam-toggle">
+          <input id="examTimed" type="checkbox" name="timed" value="1" />
+          <label for="examTimed">Limited time exam</label>
+        </div>
+        <div id="examDurationWrap" class="exam-field" hidden>
+          <label for="examDuration">Duration</label>
+          <select id="examDuration" name="durationMinutes">${(setupPayload?.options?.durations || [5, 10, 15, 20, 30]).map((value) => `<option value="${Number(value)}">${Number(value)} minutes</option>`).join("")}</select>
+        </div>
+        <div class="exam-field">
+          <label for="examQuestionCount">Questions</label>
+          <select id="examQuestionCount" name="questionCount"></select>
+        </div>
+      </div>
+      <p id="examSetupMsg" class="exam-msg" role="status" aria-live="polite"></p>
+      <div class="exam-actions">
+        <button id="examStartBtn" class="exam-btn primary" type="submit">Start Exam</button>
+      </div>
+    </form>`;
 
   const content = `<section class="exam-setup"><header class="exam-setup-head"><div><h2>${escapeHtml(safeSubject?.name || "Subject")}</h2><p>Configure your exam scope, question count, and time mode.</p></div><a class="exam-back" href="/subjects/${subjectId}">Back to subject</a></header>${recommendationHint && !activeAttempt ? `<p class="exam-hint">${escapeHtml(recommendationHint)}</p>` : ""}${activeCard}<script type="application/json" id="examSetupData">${stringifyData(setupPayload || {})}</script></section>`;
 

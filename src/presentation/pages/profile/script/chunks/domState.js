@@ -49,6 +49,17 @@ const aboutEmail = document.getElementById('aboutEmail');
 const aboutDob = document.getElementById('aboutDob');
 const aboutGender = document.getElementById('aboutGender');
 const aboutRole = document.getElementById('aboutRole');
+const profileMateActionWrap = document.getElementById('profileMateActionWrap');
+const profileMateAddButton = document.getElementById('profileMateAddButton');
+const profileMateIncomingActions = document.getElementById('profileMateIncomingActions');
+const profileMateAcceptButton = document.getElementById('profileMateAcceptButton');
+const profileMateDeclineButton = document.getElementById('profileMateDeclineButton');
+const profileMateOutgoingActions = document.getElementById('profileMateOutgoingActions');
+const profileMateCancelButton = document.getElementById('profileMateCancelButton');
+const profileMateConnectedActions = document.getElementById('profileMateConnectedActions');
+const profileMateFollowToggleButton = document.getElementById('profileMateFollowToggleButton');
+const profileMateRemoveButton = document.getElementById('profileMateRemoveButton');
+const profileMateStateLabel = document.getElementById('profileMateStateLabel');
 
 const editTriggers = Array.from(document.querySelectorAll('[data-edit-trigger]'));
 const editForms = Array.from(document.querySelectorAll('[data-edit-form]'));
@@ -58,6 +69,7 @@ if (!tabAbout || !tabPosts || !panelAbout || !panelPosts || !profilePostsList ||
 
 const PROFILE_READ_ONLY = Boolean(PROFILE_CONFIG?.readOnly || profilePage?.dataset?.readOnly === '1');
 const PROFILE_USER_ID = Number.parseInt(String(PROFILE_CONFIG?.profileUserId || profilePage?.dataset?.profileUserId || 0), 10) || 0;
+const PROFILE_VIEWER_ID = Number.parseInt(String(PROFILE_CONFIG?.viewerUserId || 0), 10) || 0;
 const PROFILE_CAN_INTERACT = PROFILE_CONFIG?.canInteract !== false;
 
 if (PROFILE_READ_ONLY) {
@@ -84,6 +96,8 @@ let imageMenuCloseTimer = null;
 let imageModalCloseTimer = null;
 let ensureMyPostsLoaded = null;
 let activeTabKey = 'posts';
+let profileMateStatus = { status: 'none', requestId: 0, relationId: 0, followingByViewer: false };
+let profileMateBusy = false;
 
 const profileState = {
   name: '-',

@@ -45,6 +45,24 @@ const escapeHtml = (value) => String(value || '')
   .replaceAll("'", '&#39;');
 
 const normalize = (value) => String(value || '').toLowerCase();
+const formatDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
+};
+const getInitials = (name) => {
+  const parts = String(name || '').trim().split(' ').filter(Boolean).slice(0, 2);
+  if (!parts.length) return 'U';
+  return parts.map((part) => part[0] || '').join('').toUpperCase();
+};
+const avatarMarkup = (user) => {
+  const id = Number(user?.id || 0);
+  const name = String(user?.name || 'User');
+  if (id > 0 && user?.avatar_key) {
+    const avatarUrl = '/api/social/avatar/' + encodeURIComponent(String(id));
+    return '<img class="users-avatar" src="' + escapeHtml(avatarUrl) + '" alt="' + escapeHtml(name) + ' avatar" loading="lazy" decoding="async" />';
+  }
+  return '<span class="users-avatar-fallback" aria-hidden="true">' + escapeHtml(getInitials(name)) + '</span>';
+};
 
 const filteredUsers = () => {
   const query = normalize(userSearch.value).trim();
@@ -64,16 +82,16 @@ const renderRows = () => {
         const type = user.user_type || 'Administrator';
         const isCurrent = Number(user.id) === CURRENT_USER_ID;
         const actionButtonLabel = isCurrent ? 'Current account' : 'Delete';
-        return '<tr><td>' + escapeHtml(user.name) + '</td><td>' + escapeHtml(user.email) + '</td><td>' + escapeHtml(type) + '</td><td>' + new Date(user.created_at).toLocaleString() + '</td><td><button type="button" class="users-delete-btn" data-delete-user-id="' + user.id + '" data-delete-user-name="' + escapeHtml(user.name) + '" data-delete-user-email="' + escapeHtml(user.email) + '" aria-label="Delete user ' + escapeHtml(user.name) + '"' + (isCurrent ? ' disabled aria-disabled="true" title="You cannot delete the account you are currently using"' : '') + '>' + actionButtonLabel + '</button></td></tr>';
+        return '<tr><td class="users-avatar-cell">' + avatarMarkup(user) + '</td><td>' + escapeHtml(user.name) + '</td><td>' + escapeHtml(user.email) + '</td><td>' + escapeHtml(type) + '</td><td>' + formatDate(user.created_at) + '</td><td><button type="button" class="users-delete-btn" data-delete-user-id="' + user.id + '" data-delete-user-name="' + escapeHtml(user.name) + '" data-delete-user-email="' + escapeHtml(user.email) + '" aria-label="Delete user ' + escapeHtml(user.name) + '"' + (isCurrent ? ' disabled aria-disabled="true" title="You cannot delete the account you are currently using"' : '') + '>' + actionButtonLabel + '</button></td></tr>';
       })
       .join('')
-    : '<tr><td colspan="5">No users found.</td></tr>';
+    : '<tr><td colspan="6">No users found.</td></tr>';
 };
 
 const setLoading = (loading) => {
   usersCard.classList.toggle('is-loading', loading);
   if (loading) {
-    usersTableBody.innerHTML = '<tr><td colspan="5">Loading users...</td></tr>';
+    usersTableBody.innerHTML = '<tr><td colspan="6">Loading users...</td></tr>';
   }
 };
 

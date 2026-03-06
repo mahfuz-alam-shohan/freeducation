@@ -6,7 +6,8 @@ import { APP_SHELL_BASE_STYLE } from "./baseStyle.js";
 import { APP_SHELL_SCRIPT } from "./clientScript.js";
 import { initialsForName } from "./navigation.js";
 import { renderAppHeader } from "./components/header.js";
-import { renderShellOverlay, renderStatusToast } from "./components/overlays.js";
+import { renderDesktopStatusBar, renderShellOverlay, renderStatusToast } from "./components/overlays.js";
+import { renderDefaultRightSidebar } from "./components/rightSidebar.js";
 import { renderAppSidebar } from "./components/sidebar.js";
 
 const APP_SHELL_STATIC_PRO_STYLE = `
@@ -112,9 +113,13 @@ export function renderAppShellLayout({
   const avatarVersion = String(currentUser?.avatar_key || "").trim();
   const avatarFallback = isAuthenticated ? initials : guestFallbackAvatar();
   const rightSidebarMarkup = String(rightSidebar || "");
+  const hasRightSidebar = rightSidebarMarkup.trim().length > 0;
+  const resolvedRightSidebar = hasRightSidebar
+    ? rightSidebarMarkup
+    : renderDefaultRightSidebar({ user: currentUser, activeMenu });
   const resolvedShellScope = String(shellScope || "").trim().toLowerCase() === "public" ? "public" : "app";
 
-  const body = `<div class="app-shell" data-api-base="${apiBase}" data-shell-scope="${resolvedShellScope}">${renderAppHeader({ user: currentUser, homePath, avatarVersion, avatarFallback, isAuthenticated, headerCenter })}${renderShellOverlay({ isAuthenticated })}${renderAppSidebar({ navItems, activeMenu })}${rightSidebarMarkup}<main class="app-content ${contentClass}">${content}</main><footer class="app-footer">${footerText}</footer>${renderStatusToast()}</div>`;
+  const body = `<div class="app-shell" data-api-base="${apiBase}" data-shell-scope="${resolvedShellScope}">${renderAppHeader({ user: currentUser, homePath, avatarVersion, avatarFallback, isAuthenticated, headerCenter })}${renderShellOverlay({ isAuthenticated })}${renderAppSidebar({ navItems, activeMenu, user: currentUser })}${resolvedRightSidebar}<main class="app-content ${contentClass}">${content}</main><footer class="app-footer">${footerText}</footer>${renderDesktopStatusBar({ footerText })}${renderStatusToast()}</div>`;
 
   return renderDocument({
     title,

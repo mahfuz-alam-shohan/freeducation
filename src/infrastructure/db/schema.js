@@ -17,6 +17,11 @@ const PLATFORM_INDEXES = [
   "CREATE UNIQUE INDEX IF NOT EXISTS idx_freeducation_social_comment_reactions_unique ON freeducation_social_comment_reactions(comment_id, admin_id)",
   "CREATE INDEX IF NOT EXISTS idx_freeducation_social_comment_reactions_comment_id ON freeducation_social_comment_reactions(comment_id)",
   "CREATE INDEX IF NOT EXISTS idx_freeducation_social_comment_reactions_admin_id ON freeducation_social_comment_reactions(admin_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_freeducation_social_mates_pair_unique ON freeducation_social_mates(user_low_id, user_high_id)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_mates_receiver_status ON freeducation_social_mates(receiver_id, status, updated_at DESC, id DESC)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_mates_requester_status ON freeducation_social_mates(requester_id, status, updated_at DESC, id DESC)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_mates_low_status ON freeducation_social_mates(user_low_id, status, updated_at DESC, id DESC)",
+  "CREATE INDEX IF NOT EXISTS idx_freeducation_social_mates_high_status ON freeducation_social_mates(user_high_id, status, updated_at DESC, id DESC)",
   "CREATE UNIQUE INDEX IF NOT EXISTS idx_freeducation_social_notification_reads_unique ON freeducation_social_notification_reads(admin_id, notification_id)",
   "CREATE INDEX IF NOT EXISTS idx_freeducation_social_notification_reads_admin_read_at ON freeducation_social_notification_reads(admin_id, read_at DESC)",
   "CREATE INDEX IF NOT EXISTS idx_freeducation_social_notification_meta_seen_at ON freeducation_social_notification_meta(seen_at)",
@@ -85,6 +90,9 @@ async function applyColumnBackfill(db, table, column) {
   if (column === "user_type") {
     await db.prepare(`UPDATE ${table} SET user_type = 'Administrator' WHERE user_type IS NULL OR user_type = ''`).run();
   }
+  if (column === "follow_low" || column === "follow_high") {
+    await db.prepare(`UPDATE ${table} SET ${column} = 1 WHERE ${column} IS NULL OR ${column} = ''`).run();
+  }
 }
 
 async function rebuildTable(db, table, requiredColumns, keepColumns) {
@@ -121,6 +129,9 @@ function defaultExpressionForColumn(column, definition, now) {
   }
   if (column === "user_type") {
     return `'Administrator'`;
+  }
+  if (column === "follow_low" || column === "follow_high") {
+    return "1";
   }
 
   const type = definition.split(/\s+/)[0]?.toUpperCase() || "TEXT";

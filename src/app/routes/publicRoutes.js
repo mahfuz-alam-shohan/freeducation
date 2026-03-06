@@ -3,7 +3,15 @@ import { homePage } from "../../presentation/pages/home/index.js";
 import { classSubjectsPage, publicChapterPage, publicSectionPage, publicSubjectPage, publicTopicPage } from "../../presentation/pages/academics/index.js";
 import { examSessionPage, examSetupPage } from "../../presentation/pages/exam/index.js";
 import { examResultDetailPage, examResultsPage } from "../../presentation/pages/results/index.js";
-import { socialCreatePage, socialMyPostsPage, socialPage, socialPostPage, socialSearchPage } from "../../presentation/pages/social/index.js";
+import {
+  socialCreatePage,
+  socialMateRequestsPage,
+  socialMatesPage,
+  socialMyPostsPage,
+  socialPage,
+  socialPostPage,
+  socialSearchPage,
+} from "../../presentation/pages/social/index.js";
 import { profilePage } from "../../presentation/pages/profile/index.js";
 import { faviconResponse } from "../../presentation/layout/favicon.js";
 import {
@@ -15,11 +23,19 @@ import {
 import { html, json, redirect } from "../../shared/http/response.js";
 import { loginUser } from "../../features/auth/authController.js";
 import {
+  cancelMateRequest,
   createComment,
+  createMateRequest,
   deletePost,
   createPost,
+  removeMate,
+  respondMateRequest,
+  setMateFollowState,
   socialAvatar,
   socialFeed,
+  socialMateRequests,
+  socialMateStatus,
+  socialMates,
   socialNotificationRead,
   socialNotifications,
   socialNotificationsSeen,
@@ -85,6 +101,11 @@ export async function handlePublicRoute(request, env, url) {
   const socialPostMatch = url.pathname.match(/^\/api\/social\/posts\/(\d+)$/);
   const socialImageMatch = url.pathname.match(/^\/api\/social\/posts\/(\d+)\/image$/);
   const socialAvatarMatch = url.pathname.match(/^\/api\/social\/avatar\/(\d+)$/);
+  const socialMateStatusMatch = url.pathname.match(/^\/api\/social\/mates\/status\/(\d+)$/);
+  const socialMateRequestCancelMatch = url.pathname.match(/^\/api\/social\/mates\/requests\/(\d+)\/cancel$/);
+  const socialMateRequestRespondMatch = url.pathname.match(/^\/api\/social\/mates\/requests\/(\d+)\/respond$/);
+  const socialMateRemoveMatch = url.pathname.match(/^\/api\/social\/mates\/(\d+)\/remove$/);
+  const socialMateFollowMatch = url.pathname.match(/^\/api\/social\/mates\/(\d+)\/follow$/);
   const socialPostPageMatch = url.pathname.match(/^\/social\/post\/(\d+)$/);
   const publicProfileMatch = url.pathname.match(/^\/profile\/(\d+)$/);
   const publicProfileDataMatch = url.pathname.match(/^\/api\/public\/profiles\/(\d+)\/profile$/);
@@ -308,6 +329,7 @@ export async function handlePublicRoute(request, env, url) {
       subject: payload.subject,
       node: payload.node,
       chapter: payload.chapter,
+      chapters: payload.chapters,
       topics: payload.topics,
       contentModules: payload.contentModules,
       contentItemsByType: payload.contentItemsByType,
@@ -325,6 +347,8 @@ export async function handlePublicRoute(request, env, url) {
       node: payload.node,
       chapter: payload.chapter,
       topic: payload.topic,
+      chapters: payload.chapters,
+      topics: payload.topics,
       contentModules: payload.contentModules,
       contentItemsByType: payload.contentItemsByType,
     }));
@@ -390,6 +414,18 @@ export async function handlePublicRoute(request, env, url) {
     return html(socialSearchPage(user, url.searchParams.get("q") || ""));
   }
 
+  if (request.method === "GET" && url.pathname === "/social/mates") {
+    const user = await getCurrentUser();
+    if (!user) return redirect(new URL("/login", url), 302);
+    return html(socialMatesPage(user));
+  }
+
+  if (request.method === "GET" && url.pathname === "/social/mates/requests") {
+    const user = await getCurrentUser();
+    if (!user) return redirect(new URL("/login", url), 302);
+    return html(socialMateRequestsPage(user));
+  }
+
   if (request.method === "GET" && socialPostPageMatch) {
     const user = await getCurrentUser();
     const postId = parsePositiveId(socialPostPageMatch[1], "post id");
@@ -449,6 +485,50 @@ export async function handlePublicRoute(request, env, url) {
       query,
       results: await searchProfilesForSocial(env, { query, limit }),
     });
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/social/mates") {
+    const viewer = await getCurrentUser();
+    return json(await socialMates(env, viewer, {
+      limit: url.searchParams.get("limit") || "",
+    }));
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/social/mates/requests") {
+    const viewer = await getCurrentUser();
+    return json(await socialMateRequests(env, viewer, {
+      limit: url.searchParams.get("limit") || "",
+    }));
+  }
+
+  if (request.method === "GET" && socialMateStatusMatch) {
+    const viewer = await getCurrentUser();
+    return json(await socialMateStatus(env, viewer, socialMateStatusMatch[1]));
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/social/mates/request") {
+    const viewer = await getCurrentUser();
+    return json(await createMateRequest(request, env, viewer));
+  }
+
+  if (request.method === "POST" && socialMateRequestRespondMatch) {
+    const viewer = await getCurrentUser();
+    return json(await respondMateRequest(request, env, viewer, socialMateRequestRespondMatch[1]));
+  }
+
+  if (request.method === "POST" && socialMateRequestCancelMatch) {
+    const viewer = await getCurrentUser();
+    return json(await cancelMateRequest(env, viewer, socialMateRequestCancelMatch[1]));
+  }
+
+  if (request.method === "POST" && socialMateRemoveMatch) {
+    const viewer = await getCurrentUser();
+    return json(await removeMate(env, viewer, socialMateRemoveMatch[1]));
+  }
+
+  if (request.method === "POST" && socialMateFollowMatch) {
+    const viewer = await getCurrentUser();
+    return json(await setMateFollowState(request, env, viewer, socialMateFollowMatch[1]));
   }
 
   if (request.method === "GET" && publicProfileDataMatch) {

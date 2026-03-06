@@ -7,8 +7,9 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
 
   const body = document.body;
   const modeRaw = String(page.dataset.mode || '').toLowerCase();
-  const mode = modeRaw === 'post' ? 'post' : (modeRaw === 'search' ? 'search' : 'feed');
-  const scope = page.dataset.scope === 'mine' ? 'mine' : 'feed';
+  const mode = ["post", "search", "mates", "mate-requests"].includes(modeRaw) ? modeRaw : "feed";
+  const scopeRaw = String(page.dataset.scope || '').toLowerCase();
+  const scope = ['mine', 'mates', 'mate-requests'].includes(scopeRaw) ? scopeRaw : 'feed';
   const detailPostId = Number.parseInt(String(page.dataset.postId || ''), 10);
   const initialSearchQuery = String(page.dataset.searchQuery || '').trim();
   const canInteract = page.dataset.canInteract === '1';
@@ -32,8 +33,15 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
   const socialHeaderSearchClear = document.getElementById('socialHeaderSearchClear');
   const socialHeaderSearchDropdown = document.getElementById('socialHeaderSearchDropdown');
   const composeMenu = document.querySelector('.social-compose-menu');
-  const postModal = document.getElementById('socialPostModal');
-  const modalContent = document.getElementById('socialModalContent');
+  const socialSidebarDefault = document.getElementById('socialSidebarDefault');
+  const socialCommentsPanel = document.getElementById('socialCommentsPanel');
+  const socialCommentsContent = document.getElementById('socialCommentsContent');
+  const socialCommentsPanelTitle = document.getElementById('socialCommentsPanelTitle');
+  const socialCommentsPanelMeta = document.getElementById('socialCommentsPanelMeta');
+  const socialMobileCommentsTray = document.getElementById('socialMobileCommentsTray');
+  const socialMobileCommentsContent = document.getElementById('socialMobileCommentsContent');
+  const socialMobileCommentsTitle = document.getElementById('socialMobileCommentsTitle');
+  const socialMobileCommentsMeta = document.getElementById('socialMobileCommentsMeta');
   const detailBackFab = document.getElementById('socialDetailBackFab');
   const detailPostShell = document.getElementById('socialPostFocus');
   const detailPostMeta = document.getElementById('socialDetailPostMeta');
@@ -45,11 +53,11 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
   const detailCommentInput = document.getElementById('socialDetailCommentInput');
   const socialSearchHeading = document.getElementById('socialSearchHeading');
   const socialSearchResults = document.getElementById('socialSearchResults');
-  let movedModalToBody = false;
-  if (postModal && postModal.parentElement !== body) {
-    body.appendChild(postModal);
-    movedModalToBody = true;
-  }
+  const socialMatesList = document.getElementById('socialMatesList');
+  const socialMatesSummary = document.getElementById('socialMatesSummary');
+  const socialMateRequestsSummary = document.getElementById('socialMateRequestsSummary');
+  const socialMateIncomingList = document.getElementById('socialMateIncomingList');
+  const socialMateOutgoingList = document.getElementById('socialMateOutgoingList');
   let movedDetailBackFabToBody = false;
   if (mode === 'post' && detailBackFab && detailBackFab.parentElement !== body) {
     body.appendChild(detailBackFab);
@@ -100,12 +108,12 @@ export const SOCIAL_SCRIPT_BOOTSTRAP = `
       }
       if (window.markBrokenPostImage) delete window.markBrokenPostImage;
       body.classList.remove('social-shell-enter', 'social-shell-ready');
-      body.classList.remove('social-modal-open');
+      body.classList.remove('social-comments-open');
+      body.classList.remove('social-mobile-comments-open');
       body.classList.remove('social-post-page');
       body.classList.remove('social-search-open');
       if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer);
       if (feedObserver) feedObserver.disconnect();
-      if (movedModalToBody && postModal?.isConnected) postModal.remove();
       if (movedDetailBackFabToBody && detailBackFab?.isConnected) detailBackFab.remove();
     });
   }
@@ -324,22 +332,35 @@ ${imageToolsModule()}
   };
 
   const openPostModal = (postId) => {
-    if (!postModal || !modalContent) return false;
     const post = getPostById(postId);
     if (!post) return false;
     activeModalPostId = Number(post.id);
-    postModal.setAttribute('aria-hidden', 'false');
-    body.classList.add('social-modal-open');
+    if (isMobileSocial() && socialMobileCommentsTray && socialMobileCommentsContent) {
+      socialMobileCommentsTray.setAttribute('aria-hidden', 'false');
+      body.classList.add('social-mobile-comments-open');
+      return true;
+    }
+    if (!socialCommentsPanel || !socialCommentsContent) return false;
+    socialCommentsPanel.setAttribute('aria-hidden', 'false');
+    if (socialSidebarDefault) socialSidebarDefault.setAttribute('aria-hidden', 'true');
+    body.classList.add('social-comments-open');
     return true;
   };
 
   const closePostModal = () => {
-    if (!postModal || !modalContent) return;
     activeModalPostId = 0;
     activeModalReplyCommentId = 0;
-    postModal.setAttribute('aria-hidden', 'true');
-    modalContent.innerHTML = '';
-    body.classList.remove('social-modal-open');
+    if (socialCommentsPanel) socialCommentsPanel.setAttribute('aria-hidden', 'true');
+    if (socialSidebarDefault) socialSidebarDefault.setAttribute('aria-hidden', 'false');
+    if (socialCommentsContent) socialCommentsContent.innerHTML = '';
+    if (socialCommentsPanelTitle) socialCommentsPanelTitle.textContent = 'Comments';
+    if (socialCommentsPanelMeta) socialCommentsPanelMeta.textContent = '';
+    body.classList.remove('social-comments-open');
+    if (socialMobileCommentsTray) socialMobileCommentsTray.setAttribute('aria-hidden', 'true');
+    if (socialMobileCommentsContent) socialMobileCommentsContent.innerHTML = '';
+    if (socialMobileCommentsTitle) socialMobileCommentsTitle.textContent = 'Comments';
+    if (socialMobileCommentsMeta) socialMobileCommentsMeta.textContent = '';
+    body.classList.remove('social-mobile-comments-open');
   };
 
   body.classList.add('social-shell-enter');
@@ -374,7 +395,6 @@ ${imageToolsModule()}
   if (socialMenuClose) {
     socialMenuClose.addEventListener('click', () => closeSocialMenu(), { signal });
   }
-
   if (focusComposer && canInteract && postText) {
     setComposerExpanded(true);
     window.requestAnimationFrame(() => postText.focus());

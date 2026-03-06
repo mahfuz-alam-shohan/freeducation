@@ -22,7 +22,7 @@ const renderUsers = async () => {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     allUsers = [];
-    usersTableBody.innerHTML = '<tr><td colspan="5">Unable to load users.</td></tr>';
+    usersTableBody.innerHTML = '<tr><td colspan="6">Unable to load users.</td></tr>';
     showMessage(error?.message || 'Unable to load users.', true);
   } finally {
     setLoading(false);

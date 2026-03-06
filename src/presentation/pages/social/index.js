@@ -1,6 +1,6 @@
 import { PRIMARY_NAV_SECTIONS, LOGGED_OUT_NAV_SECTIONS, STUDENT_NAV_SECTIONS, TEACHER_NAV_SECTIONS } from "../../config/navigation.js";
 import { renderDashboardPage } from "../shared/dashboardRenderer.js";
-import { socialCreateHtml, socialFeedHtml, socialPostHtml, socialSearchHtml } from "./html.js";
+import { socialCreateHtml, socialFeedHtml, socialMateRequestsHtml, socialMatesHtml, socialPostHtml, socialSearchHtml } from "./html.js";
 import { renderSocialHeaderSearch } from "./components/headerSearch.js";
 import { renderSocialPostDetailSidebar } from "./components/postDetailSidebar.js";
 import { renderSocialRightSidebar } from "./components/rightSidebar.js";
@@ -46,6 +46,11 @@ function buildSocialPageContext(user) {
 function renderSocialShell(user, title, content, rightSidebar = "", options = {}) {
   const userType = user?.user_type || "";
   const searchQuery = String(options.searchQuery || "");
+  const rightSidebarMarkup = String(rightSidebar || "");
+  const hasRightSidebar = rightSidebarMarkup.trim().length > 0;
+  const extraPageClass = String(options.pageClass || "").trim();
+  const basePageClass = hasRightSidebar ? "page-social" : "page-social page-social-no-right-sidebar";
+  const resolvedPageClass = [basePageClass, extraPageClass].filter(Boolean).join(" ");
   return renderDashboardPage({
     title,
     activeMenu: "social",
@@ -53,8 +58,8 @@ function renderSocialShell(user, title, content, rightSidebar = "", options = {}
     navItems: resolveNav(userType),
     user: user || null,
     content,
-    rightSidebar,
-    pageClass: "page-social",
+    rightSidebar: hasRightSidebar ? rightSidebarMarkup : "",
+    pageClass: resolvedPageClass,
     pageStyles: SOCIAL_STYLE,
     script: SOCIAL_SCRIPT,
     headerCenter: renderSocialHeaderSearch(searchQuery),
@@ -76,6 +81,7 @@ export function socialPage(user) {
 }
 
 export function socialMyPostsPage(user) {
+  if (!user) return socialPage(null);
   const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
@@ -90,6 +96,7 @@ export function socialMyPostsPage(user) {
 }
 
 export function socialCreatePage(user) {
+  if (!user) return socialPage(null);
   const pageContext = buildSocialPageContext(user);
   return renderSocialShell(
     user,
@@ -112,6 +119,7 @@ export function socialPostPage(user, postId) {
     renderSocialPostDetailSidebar({
       canInteract: Boolean(user),
     }),
+    { pageClass: "social-post-page" },
   );
 }
 
@@ -128,5 +136,35 @@ export function socialSearchPage(user, query = "") {
       navSections: buildSocialQuickLinks(user),
     }),
     { searchQuery: safeQuery },
+  );
+}
+
+export function socialMatesPage(user) {
+  if (!user) return socialPage(null);
+  const pageContext = buildSocialPageContext(user);
+  return renderSocialShell(
+    user,
+    "My mates",
+    socialMatesHtml(Boolean(user), pageContext),
+    renderSocialRightSidebar({
+      canInteract: Boolean(user),
+      scope: "mates",
+      navSections: buildSocialQuickLinks(user),
+    }),
+  );
+}
+
+export function socialMateRequestsPage(user) {
+  if (!user) return socialPage(null);
+  const pageContext = buildSocialPageContext(user);
+  return renderSocialShell(
+    user,
+    "Mate requests",
+    socialMateRequestsHtml(Boolean(user), pageContext),
+    renderSocialRightSidebar({
+      canInteract: Boolean(user),
+      scope: "mate-requests",
+      navSections: buildSocialQuickLinks(user),
+    }),
   );
 }

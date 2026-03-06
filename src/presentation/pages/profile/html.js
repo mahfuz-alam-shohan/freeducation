@@ -15,6 +15,8 @@ function escapeHtml(value) {
 export function profileHtml(user, options = {}) {
   const readOnly = Boolean(options.readOnly);
   const profileUserId = Number.parseInt(String(options.profileUserId || user?.id || 0), 10) || 0;
+  const viewerUserId = Number.parseInt(String(options.viewerUserId || 0), 10) || 0;
+  const canInteract = options.canInteract !== false;
   const showBackToFeed = Boolean(options.showBackToFeed);
   const backToFeedHref = String(options.backToFeedHref || "/social");
   const backToFeedLabel = String(options.backToFeedLabel || "Back to feed");
@@ -26,7 +28,7 @@ export function profileHtml(user, options = {}) {
     <section class="profile-page" data-read-only="${readOnly ? "1" : "0"}" data-profile-user-id="${profileUserId}">
       ${renderProfileLoader()}
       ${backToFeedMarkup}
-      ${renderProfileHero(user, { readOnly })}
+      ${renderProfileHero(user, { readOnly, canInteract, profileUserId, viewerUserId })}
       ${renderProfileTabsCard()}
     </section>
     ${renderProfileImageModal()}

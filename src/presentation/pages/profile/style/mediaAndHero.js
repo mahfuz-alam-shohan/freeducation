@@ -8,6 +8,16 @@ export const PROFILE_STYLE_MEDIA = `
 .profile-cover-image,.profile-avatar-image{opacity:0;transform:scale(1.025);filter:blur(1.5px);transition:opacity calc(.52s * var(--profile-motion-scale)) ease,transform calc(.54s * var(--profile-motion-scale)) cubic-bezier(.2,.9,.3,1),filter calc(.4s * var(--profile-motion-scale)) ease}
 .profile-cover-image.is-ready,.profile-avatar-image.is-ready{opacity:1;transform:scale(1);filter:blur(0)}
 .profile-head{position:relative;display:flex;align-items:flex-end;gap:var(--space-3);padding:0 var(--space-3) var(--space-2);margin-top:-42px;z-index:2}
+.profile-mate-action{margin-left:auto;display:grid;justify-items:end;align-content:center;gap:6px}
+.profile-mate-actions-inline{display:flex;align-items:center;gap:6px}
+.profile-mate-btn{height:34px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--border) 70%,var(--accent) 30%);background:var(--surface);color:var(--text);font-weight:700;font-size:.82rem;cursor:pointer}
+.profile-mate-btn:hover{border-color:var(--accent);background:var(--surface-soft)}
+.profile-mate-btn:disabled{opacity:.65;cursor:not-allowed}
+.profile-mate-btn-primary{border-color:color-mix(in srgb,var(--accent) 58%,var(--border));background:color-mix(in srgb,var(--accent) 86%,var(--surface) 14%);color:var(--accent-contrast)}
+.profile-mate-btn-danger{border-color:color-mix(in srgb,#e24f56 62%,var(--border));color:color-mix(in srgb,#e24f56 76%,var(--text));background:color-mix(in srgb,#e24f56 12%,var(--surface))}
+.profile-mate-btn-danger:hover{border-color:color-mix(in srgb,#e24f56 74%,var(--border));background:color-mix(in srgb,#e24f56 18%,var(--surface-soft))}
+.profile-mate-state{font-size:.78rem;color:var(--text-muted);font-weight:650}
+.profile-mate-action[hidden],.profile-mate-actions-inline[hidden],.profile-mate-state[hidden],.profile-mate-btn[hidden]{display:none!important}
 .profile-avatar-wrap{position:relative;width:108px;height:108px;border-radius:50%;background:var(--surface-strong);border:3px solid var(--surface);display:grid;place-items:center;overflow:visible;transition:transform calc(.42s * var(--profile-motion-scale)) cubic-bezier(.22,.82,.31,1),box-shadow calc(.3s * var(--profile-motion-scale)) ease}
 .profile-avatar-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .profile-avatar-fallback{font-size:1.5rem;font-weight:700}
@@ -37,5 +47,7 @@ export const PROFILE_STYLE_MEDIA = `
 .profile-title p{margin:2px 0 0;color:var(--text-muted)}
 @media (max-width:767px){
   .profile-viewing-badge{top:8px;left:8px;font-size:.74rem;padding:4px 8px}
+  .profile-mate-action{width:100%;margin-left:0;justify-items:start;padding-left:2px}
+  .profile-head{flex-wrap:wrap}
 }
 `;

@@ -945,6 +945,8 @@ export async function getPublicChapterReader(env, subjectIdRaw, chapterIdRaw) {
   const chapterBase = serializeChapter(chapterRow);
   const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
   const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
+  const chapterRows = await listSubjectChapters(env.DB, { subjectId, nodeId: node.id });
+  const chapters = chapterRows.map((row) => chapterWithResolvedContentTypes(serializeChapter(row), node.contentTypes));
   const topics = chapter.topicsEnabled
     ? (await listSubjectTopics(env.DB, { subjectId, chapterId: chapter.id })).map((row) => topicWithResolvedContentTypes(serializeTopic(row), node.contentTypes))
     : [];
@@ -973,6 +975,7 @@ export async function getPublicChapterReader(env, subjectIdRaw, chapterIdRaw) {
     subject,
     node,
     chapter,
+    chapters,
     topics,
     contentModules,
     contentItemsByType,
@@ -991,7 +994,11 @@ export async function getPublicTopicReader(env, subjectIdRaw, topicIdRaw) {
   const chapterBase = serializeChapter(chapterRow);
   const node = await getNodeOrThrow(env.DB, subjectId, chapterBase.nodeId);
   const chapter = chapterWithResolvedContentTypes(chapterBase, node.contentTypes);
+  const chapterRows = await listSubjectChapters(env.DB, { subjectId, nodeId: node.id });
+  const chapters = chapterRows.map((row) => chapterWithResolvedContentTypes(serializeChapter(row), node.contentTypes));
   const topic = topicWithResolvedContentTypes(topicBase, node.contentTypes);
+  const topicRows = await listSubjectTopics(env.DB, { subjectId, chapterId: chapter.id });
+  const topics = topicRows.map((row) => topicWithResolvedContentTypes(serializeTopic(row), node.contentTypes));
   const availableTypes = topic.contentTypes;
   const contentModules = publicReaderModules(availableTypes);
 
@@ -1014,7 +1021,9 @@ export async function getPublicTopicReader(env, subjectIdRaw, topicIdRaw) {
     subject,
     node,
     chapter,
+    chapters,
     topic,
+    topics,
     contentModules,
     contentItemsByType,
   };

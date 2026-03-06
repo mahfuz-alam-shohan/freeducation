@@ -9,6 +9,7 @@ export function profileScript(apiBase = "", options = {}) {
   const configLiteral = JSON.stringify({
     readOnly: Boolean(options.readOnly),
     profileUserId: Number.parseInt(String(options.profileUserId || 0), 10) || 0,
+    viewerUserId: Number.parseInt(String(options.viewerUserId || 0), 10) || 0,
     canInteract: options.canInteract !== false,
   });
 

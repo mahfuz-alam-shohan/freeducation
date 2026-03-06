@@ -5,6 +5,13 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     event.preventDefault();
     if (!canInteract) return;
 
+    const rawText = String(postText?.value || '');
+    const selectedFiles = getSelectedPostImages();
+    if (!rawText.trim() && !selectedFiles.length) {
+      setStatus('Write something or add at least one image.');
+      return;
+    }
+
     let postedSuccessfully = false;
     try {
       if (submitPostButton) submitPostButton.disabled = true;
@@ -15,7 +22,6 @@ export const SOCIAL_SCRIPT_ACTIONS = `
         if (message) setStatus(message);
       };
 
-      const selectedFiles = getSelectedPostImages();
       const imagesData = [];
 
       if (selectedFiles.length) {
@@ -64,9 +70,10 @@ export const SOCIAL_SCRIPT_ACTIONS = `
   };
 
   const resolvePostContext = (target) => {
-    const postCard = target?.closest('.post-card');
-    if (!postCard) return { postCard: null, postId: '' };
-    return { postCard, postId: postCard.getAttribute('data-post-id') || '' };
+    const postContainer = target?.closest('[data-post-id]');
+    if (!postContainer) return { postCard: null, postId: '' };
+    const postCard = postContainer.closest('.post-card');
+    return { postCard: postCard instanceof HTMLElement ? postCard : null, postId: postContainer.getAttribute('data-post-id') || '' };
   };
 
   const setPostMenuState = (menuRoot, open) => {
@@ -95,6 +102,13 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     refreshPostState(postId, { focusComment }).catch(() => {});
   };
 
+  const getModalCommentsRoot = () => {
+    if (body.classList.contains('social-mobile-comments-open') && socialMobileCommentsContent instanceof Element) {
+      return socialMobileCommentsContent;
+    }
+    return socialCommentsContent instanceof Element ? socialCommentsContent : null;
+  };
+
   const upsertPostState = (postId, nextPost) => {
     const safeId = Number.parseInt(String(postId || ''), 10);
     if (!Number.isInteger(safeId) || safeId <= 0 || !nextPost || typeof nextPost !== 'object') return null;
@@ -120,7 +134,8 @@ export const SOCIAL_SCRIPT_ACTIONS = `
       const nextPost = payload?.post && typeof payload.post === 'object' ? payload.post : null;
       if (!nextPost) throw new Error('Post not found');
       const syncedPost = upsertPostState(safeId, nextPost);
-      if (body.classList.contains('social-modal-open') && Number(activeModalPostId || 0) === safeId) {
+      const hasOpenCommentsSurface = body.classList.contains('social-comments-open') || body.classList.contains('social-mobile-comments-open');
+      if (hasOpenCommentsSurface && Number(activeModalPostId || 0) === safeId) {
         renderModalPost(safeId, Boolean(options.focusComment));
       }
       return syncedPost;
@@ -398,7 +413,8 @@ export const SOCIAL_SCRIPT_ACTIONS = `
 
     if (Boolean(options.focus) && activeModalReplyCommentId > 0) {
       const selector = 'form[data-action="modal-comment-reply"][data-comment-id="' + activeModalReplyCommentId + '"] input[name="comment"]';
-      const input = modalContent instanceof Element ? modalContent.querySelector(selector) : null;
+      const modalRoot = getModalCommentsRoot();
+      const input = modalRoot instanceof Element ? modalRoot.querySelector(selector) : null;
       if (input instanceof HTMLInputElement) {
         window.requestAnimationFrame(() => input.focus());
       }
@@ -421,7 +437,8 @@ export const SOCIAL_SCRIPT_ACTIONS = `
       });
     };
     collect(feed);
-    collect(modalContent);
+    collect(socialCommentsContent);
+    collect(socialMobileCommentsContent);
     return cards;
   };
 
@@ -533,11 +550,204 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     }
   };
 
+  const loadMatesBoard = async () => {
+    if (mode !== 'mates' || !(socialMatesList instanceof HTMLElement)) return;
+    setStatus('Loading mates...');
+    socialMatesList.innerHTML = '<p class="social-mate-empty">Loading mates...</p>';
+    if (socialMatesSummary instanceof HTMLElement) socialMatesSummary.textContent = '';
+    try {
+      const response = await fetch('/api/social/mates?limit=220', {
+        headers: { accept: 'application/json' },
+        cache: 'no-store',
+        signal,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || await readErrorMessage(response, 'Unable to load mates'));
+      const mates = Array.isArray(payload?.mates) ? payload.mates : [];
+      socialMatesList.innerHTML = renderMateList(mates, {
+        mode: 'mates',
+        emptyMessage: 'You have no mates yet. Visit profiles and tap Add Mate.',
+      });
+      if (socialMatesSummary instanceof HTMLElement) {
+        socialMatesSummary.textContent = mates.length
+          ? ('Total mates: ' + mates.length)
+          : 'Start by sending mate requests from profile pages.';
+      }
+      setStatus('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load mates';
+      socialMatesList.innerHTML = '<p class="social-mate-empty">' + escapeHtml(message) + '</p>';
+      if (socialMatesSummary instanceof HTMLElement) socialMatesSummary.textContent = '';
+      setStatus(message);
+    }
+  };
+
+  const loadMateRequestsBoard = async () => {
+    if (mode !== 'mate-requests') return;
+    const incomingRoot = socialMateIncomingList instanceof HTMLElement ? socialMateIncomingList : null;
+    const outgoingRoot = socialMateOutgoingList instanceof HTMLElement ? socialMateOutgoingList : null;
+    if (!incomingRoot && !outgoingRoot) return;
+    setStatus('Loading mate requests...');
+    if (incomingRoot) incomingRoot.innerHTML = '<p class="social-mate-empty">Loading requests...</p>';
+    if (outgoingRoot) outgoingRoot.innerHTML = '<p class="social-mate-empty">Loading requests...</p>';
+    if (socialMateRequestsSummary instanceof HTMLElement) socialMateRequestsSummary.textContent = '';
+
+    try {
+      const response = await fetch('/api/social/mates/requests?limit=220', {
+        headers: { accept: 'application/json' },
+        cache: 'no-store',
+        signal,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || await readErrorMessage(response, 'Unable to load mate requests'));
+      const incoming = Array.isArray(payload?.incoming) ? payload.incoming : [];
+      const outgoing = Array.isArray(payload?.outgoing) ? payload.outgoing : [];
+      if (incomingRoot) {
+        incomingRoot.innerHTML = renderMateList(incoming, {
+          mode: 'incoming',
+          emptyMessage: 'No pending requests.',
+        });
+      }
+      if (outgoingRoot) {
+        outgoingRoot.innerHTML = renderMateList(outgoing, {
+          mode: 'outgoing',
+          emptyMessage: 'No sent requests.',
+        });
+      }
+      if (socialMateRequestsSummary instanceof HTMLElement) {
+        socialMateRequestsSummary.textContent = 'Received: ' + incoming.length + ' - Sent: ' + outgoing.length;
+      }
+      setStatus('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load mate requests';
+      if (incomingRoot) incomingRoot.innerHTML = '<p class="social-mate-empty">' + escapeHtml(message) + '</p>';
+      if (outgoingRoot) outgoingRoot.innerHTML = '<p class="social-mate-empty">' + escapeHtml(message) + '</p>';
+      if (socialMateRequestsSummary instanceof HTMLElement) socialMateRequestsSummary.textContent = '';
+      setStatus(message);
+    }
+  };
+
+  const respondMateRequestAction = async (requestId, responseAction) => {
+    const safeRequestId = Number.parseInt(String(requestId || ''), 10);
+    const safeAction = String(responseAction || '').trim().toLowerCase();
+    if (!Number.isInteger(safeRequestId) || safeRequestId <= 0 || !['accept', 'decline'].includes(safeAction)) return;
+    try {
+      setStatus(safeAction === 'accept' ? 'Accepting mate request...' : 'Declining mate request...');
+      const response = await fetch('/api/social/mates/requests/' + encodeURIComponent(safeRequestId) + '/respond', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: safeAction }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || await readErrorMessage(response, 'Unable to update mate request'));
+      setStatus(safeAction === 'accept' ? 'Mate request accepted.' : 'Mate request declined.');
+      await loadMateRequestsBoard();
+      if (safeAction === 'accept') {
+        fetch('/api/social/mates?limit=1', { headers: { accept: 'application/json' }, cache: 'no-store' }).catch(() => {});
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to update mate request');
+    }
+  };
+
+  const cancelMateRequestAction = async (requestId) => {
+    const safeRequestId = Number.parseInt(String(requestId || ''), 10);
+    if (!Number.isInteger(safeRequestId) || safeRequestId <= 0) return;
+    try {
+      setStatus('Cancelling mate request...');
+      const response = await fetch('/api/social/mates/requests/' + encodeURIComponent(safeRequestId) + '/cancel', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || await readErrorMessage(response, 'Unable to cancel mate request'));
+      setStatus('Mate request cancelled.');
+      await loadMateRequestsBoard();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to cancel mate request');
+    }
+  };
+
+  const removeMateAction = async (relationId) => {
+    const safeRelationId = Number.parseInt(String(relationId || ''), 10);
+    if (!Number.isInteger(safeRelationId) || safeRelationId <= 0) return;
+    if (!window.confirm('Remove this mate?')) return;
+    try {
+      setStatus('Removing mate...');
+      const response = await fetch('/api/social/mates/' + encodeURIComponent(safeRelationId) + '/remove', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || await readErrorMessage(response, 'Unable to remove mate'));
+      setStatus('Mate removed.');
+      await loadMatesBoard();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to remove mate');
+    }
+  };
+
+  const toggleMateFollowAction = async (relationId, followValue) => {
+    const safeRelationId = Number.parseInt(String(relationId || ''), 10);
+    if (!Number.isInteger(safeRelationId) || safeRelationId <= 0) return;
+    const follow = String(followValue || '').trim() === '1';
+    try {
+      setStatus(follow ? 'Following mate updates...' : 'Unfollowing mate updates...');
+      const response = await fetch('/api/social/mates/' + encodeURIComponent(safeRelationId) + '/follow', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ follow }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || await readErrorMessage(response, 'Unable to update mate follow'));
+      setStatus(follow ? 'Now following mate updates.' : 'Mate updates unfollowed.');
+      await loadMatesBoard();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to update mate follow');
+    }
+  };
+
   const onSocialClick = async (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
 
-    const closeModalTrigger = target.closest('[data-action="close-modal"]');
+    const mateRespondTrigger = target.closest('[data-action="mate-respond"]');
+    if (mateRespondTrigger) {
+      event.preventDefault();
+      await respondMateRequestAction(
+        mateRespondTrigger.getAttribute('data-request-id'),
+        mateRespondTrigger.getAttribute('data-response'),
+      );
+      return;
+    }
+
+    const mateCancelTrigger = target.closest('[data-action="mate-cancel-request"]');
+    if (mateCancelTrigger) {
+      event.preventDefault();
+      await cancelMateRequestAction(mateCancelTrigger.getAttribute('data-request-id'));
+      return;
+    }
+
+    const mateRemoveTrigger = target.closest('[data-action="mate-remove"]');
+    if (mateRemoveTrigger) {
+      event.preventDefault();
+      await removeMateAction(mateRemoveTrigger.getAttribute('data-relation-id'));
+      return;
+    }
+
+    const mateFollowTrigger = target.closest('[data-action="mate-toggle-follow"]');
+    if (mateFollowTrigger) {
+      event.preventDefault();
+      await toggleMateFollowAction(
+        mateFollowTrigger.getAttribute('data-relation-id'),
+        mateFollowTrigger.getAttribute('data-follow'),
+      );
+      return;
+    }
+
+    const closeModalTrigger = target.closest('[data-action="close-modal"],[data-action="close-social-comments"]');
     if (closeModalTrigger) {
       closePostModal();
       return;
@@ -588,7 +798,7 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     }
 
     const { postCard, postId } = resolvePostContext(target);
-    if (!postCard || !postId) return;
+    if (!postId) return;
 
     const openCommentsTrigger = target.closest('[data-action="open-comments"]');
     if (openCommentsTrigger) {
@@ -605,7 +815,8 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     const modalFocusCommentTrigger = target.closest('[data-action="modal-focus-comment"]');
     if (modalFocusCommentTrigger) {
       event.preventDefault();
-      const input = modalContent?.querySelector('form[data-action="modal-comment"] input[name="comment"]');
+      const modalRoot = getModalCommentsRoot();
+      const input = modalRoot?.querySelector('form[data-action="modal-comment"] input[name="comment"]');
       if (input instanceof HTMLInputElement) input.focus();
       return;
     }
@@ -633,7 +844,7 @@ export const SOCIAL_SCRIPT_ACTIONS = `
       const previousLiked = Boolean(post?.likedByViewer ?? toggleLikeTrigger.classList.contains('is-liked'));
       const currentReactionCount = Math.max(
         0,
-        Number(post?.reactionCount ?? parseLikeCount(postCard.querySelector('.post-stat-likes')?.textContent))
+        Number(post?.reactionCount ?? parseLikeCount(postCard?.querySelector('.post-stat-likes')?.textContent))
       );
       const optimisticLiked = !previousLiked;
       const optimisticReactionCount = Math.max(0, currentReactionCount + (optimisticLiked ? 1 : -1));
@@ -856,13 +1067,13 @@ export const SOCIAL_SCRIPT_ACTIONS = `
       liked: optimisticLiked,
       reactionCount: comment.reactionCount,
       actionNames: ['modal-toggle-comment-reaction'],
-      roots: [modalContent],
+      roots: [getModalCommentsRoot()],
     });
     if (optimisticLiked && !previousLiked) {
       animateCommentReactionIcon({
         commentId: safeCommentId,
         actionNames: ['modal-toggle-comment-reaction'],
-        roots: [modalContent],
+        roots: [getModalCommentsRoot()],
       });
     }
 
@@ -879,13 +1090,13 @@ export const SOCIAL_SCRIPT_ACTIONS = `
         liked: nextLiked,
         reactionCount: comment.reactionCount,
         actionNames: ['modal-toggle-comment-reaction'],
-        roots: [modalContent],
+        roots: [getModalCommentsRoot()],
       });
       if (nextLiked && !previousLiked) {
         animateCommentReactionIcon({
           commentId: safeCommentId,
           actionNames: ['modal-toggle-comment-reaction'],
-          roots: [modalContent],
+          roots: [getModalCommentsRoot()],
         });
       }
       setStatus('');
@@ -897,7 +1108,7 @@ export const SOCIAL_SCRIPT_ACTIONS = `
         liked: previousLiked,
         reactionCount: previousCount,
         actionNames: ['modal-toggle-comment-reaction'],
-        roots: [modalContent],
+        roots: [getModalCommentsRoot()],
       });
       if (error?.name !== 'AbortError') {
         setStatus(error instanceof Error ? error.message : 'Unable to react');
@@ -915,8 +1126,8 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     const action = String(form.getAttribute('data-action') || '');
     if (!['modal-comment', 'modal-comment-reply'].includes(action)) return;
 
-    const postCard = form.closest('.post-card');
-    const postId = postCard?.getAttribute('data-post-id') || '';
+    const postContext = form.closest('[data-post-id]');
+    const postId = postContext?.getAttribute('data-post-id') || String(activeModalPostId || '');
     const safePostId = Number.parseInt(String(postId || ''), 10);
     if (!Number.isInteger(safePostId) || safePostId <= 0) return;
     const input = form.querySelector('input[name="comment"]');
@@ -987,13 +1198,22 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     loadFeed({ reset: true }).catch((error) => setStatus(error instanceof Error ? error.message : 'Unable to load community feed'));
   }
 
-  if (postModal) {
-    postModal.addEventListener('click', onSocialClick, { signal });
-    postModal.addEventListener('submit', onSocialSubmit, { signal });
+  if (socialCommentsPanel) {
+    socialCommentsPanel.addEventListener('click', onSocialClick, { signal });
+    socialCommentsPanel.addEventListener('submit', onSocialSubmit, { signal });
+  }
+  if (socialMobileCommentsTray) {
+    socialMobileCommentsTray.addEventListener('click', onSocialClick, { signal });
+    socialMobileCommentsTray.addEventListener('submit', onSocialSubmit, { signal });
+  }
+
+  if ((mode === 'mate-requests' || mode === 'mates') && page) {
+    page.addEventListener('click', onSocialClick, { signal });
   }
 
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && body.classList.contains('social-modal-open')) {
+    const isCommentsOpen = body.classList.contains('social-comments-open') || body.classList.contains('social-mobile-comments-open');
+    if (event.key === 'Escape' && isCommentsOpen) {
       closePostModal();
       return;
     }
@@ -1240,6 +1460,14 @@ export const SOCIAL_SCRIPT_ACTIONS = `
     setHeaderSearchOpen(true);
     const sourceQuery = normalizeSearchQuery((socialHeaderSearchInput instanceof HTMLInputElement ? socialHeaderSearchInput.value : '') || initialSearchQuery);
     loadSearchPageResults(sourceQuery).catch(() => {});
+  }
+
+  if (mode === 'mates') {
+    loadMatesBoard().catch(() => {});
+  }
+
+  if (mode === 'mate-requests') {
+    loadMateRequestsBoard().catch(() => {});
   }
 })();
 `;
