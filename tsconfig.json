@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "types": ["astro/client", "node"]
+  },
+  "include": [".astro/types.d.ts", "src/**/*", "schools/**/*.json", "tools/**/*"],
+  "exclude": ["dist", "node_modules"]
+}

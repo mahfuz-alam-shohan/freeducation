@@ -1,0 +1,19 @@
+---
+interface Props { title: string; subtitle?: string }
+const { title, subtitle } = Astro.props
+---
+<header class="fe-heading">
+  <h1>{title}</h1>
+  {subtitle && <p>{subtitle}</p>}
+</header>
+<style>
+  .fe-heading { margin-bottom: var(--fe-space-8); }
+  .fe-heading h1 {
+    font-family: var(--fe-font-heading);
+    font-size: var(--fe-size-2xl);
+    line-height: var(--fe-leading-tight);
+    margin: 0;
+    color: var(--fe-color-text);
+  }
+  .fe-heading p { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); }
+</style>

@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro'
+import Container from '../ui/Container.astro'
+import { loadSchool } from '../config/index.js'
+import { createClient, fixtureSource } from '../data/index.js'
+import { createTranslator } from '../i18n/index.js'
+
+const config = loadSchool()
+const client = createClient(fixtureSource())
+const locale = config.locales.default
+const t = createTranslator(locale)
+const [navigation, profile] = await Promise.all([client.get('site.navigation'), client.get('site.profile')])
+---
+<Base config={config} navigation={navigation} profile={profile} locale={locale} t={t} title={t('page.notFound')} currentPath="">
+  <Container>
+    <h1>{t('page.notFound')}</h1>
+    <p>{t('page.notFoundBody')}</p>
+    <a href="/">{t('common.home')}</a>
+  </Container>
+</Base>

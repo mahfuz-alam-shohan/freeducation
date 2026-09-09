@@ -1,0 +1,131 @@
+---
+import Container from '../ui/Container.astro'
+import type { Locale, MenuItem, Navigation, SchoolProfile } from '../contracts/index.js'
+import { resolveText, type Translator } from '../i18n/index.js'
+import { isActive, normalisePath } from '../routing/resolver.js'
+
+interface Props {
+  navigation: Navigation
+  profile: SchoolProfile
+  locale: Locale
+  locales: Locale[]
+  t: Translator
+  currentPath: string
+  features: { languageSwitch: boolean; themeToggle: boolean; search: boolean }
+}
+const { navigation, profile, locale, locales, t, currentPath, features } = Astro.props
+const here = normalisePath(currentPath)
+const href = (menuItem: MenuItem) => menuItem.externalUrl ?? `/${normalisePath(menuItem.path)}`
+const active = (menuItem: MenuItem) =>
+  isActive({ path: normalisePath(menuItem.path) } as never, here)
+const visible = (items: MenuItem[]) => items.filter(menuItem => menuItem.visible)
+const highlighted = visible(navigation.primary).filter(menuItem => menuItem.highlighted)
+---
+<header class="fe-header">
+  <div class="fe-utility">
+    <Container class="fe-utility-inner">
+      <span class="fe-eiin">
+        {resolveText(profile.name, locale)}{profile.eiin && <> · EIIN {profile.eiin}</>}
+      </span>
+      <div class="fe-utility-actions">
+        {profile.phones[0] && <a href={`tel:${profile.phones[0]}`}>{profile.phones[0]}</a>}
+        {features.languageSwitch && locales.length > 1 && (
+          <span class="fe-langs">
+            {locales.map(code => (
+              <a href={`?lang=${code}`} aria-current={code === locale ? 'true' : undefined}>
+                {code === 'bn' ? 'বাংলা' : 'English'}
+              </a>
+            ))}
+          </span>
+        )}
+        {features.themeToggle && (
+          <button type="button" data-fe-theme-toggle aria-label="Theme">◐</button>
+        )}
+        {visible(navigation.utility).map(menuItem => (
+          <a href={href(menuItem)}>{resolveText(menuItem.label, locale)}</a>
+        ))}
+      </div>
+    </Container>
+  </div>
+
+  <Container class="fe-masthead">
+    <a class="fe-brand" href="/">
+      {profile.logo?.url && <img src={profile.logo.url} alt="" width="48" height="48" />}
+      <span>
+        <strong>{resolveText(profile.name, locale)}</strong>
+        {profile.tagline && <small>{resolveText(profile.tagline, locale)}</small>}
+      </span>
+    </a>
+    <div class="fe-cta">
+      {highlighted.map(menuItem => (
+        <a class="fe-cta-link" href={href(menuItem)}>{resolveText(menuItem.label, locale)}</a>
+      ))}
+    </div>
+  </Container>
+
+  <nav class="fe-nav" aria-label={t('common.menu')}>
+    <Container>
+      <button class="fe-nav-toggle" type="button" data-fe-nav-toggle aria-expanded="false" aria-controls="fe-menu">
+        ☰ {t('common.menu')}
+      </button>
+      <ul id="fe-menu" class="fe-menu">
+        {visible(navigation.primary).map(menuItem => (
+          <li class:list={['fe-menu-item', { 'has-children': menuItem.children.length > 0 }]}>
+            <a href={href(menuItem)} aria-current={active(menuItem) ? 'page' : undefined}>
+              {resolveText(menuItem.label, locale)}
+            </a>
+            {menuItem.children.length > 0 && (
+              <ul class="fe-submenu">
+                {visible(menuItem.children).map(child => (
+                  <li>
+                    <a href={href(child)} aria-current={active(child) ? 'page' : undefined}>
+                      {resolveText(child.label, locale)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Container>
+  </nav>
+</header>
+
+<style>
+  .fe-header { background: var(--fe-color-bg); border-bottom: 1px solid var(--fe-color-border); }
+  .fe-utility { background: var(--fe-color-surface); border-bottom: 1px solid var(--fe-color-border); font-size: var(--fe-size-xs); }
+  :global(.fe-utility-inner) { display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-4); justify-content: space-between; padding-block: var(--fe-space-2); color: var(--fe-color-textMuted); }
+  .fe-utility-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fe-space-3); }
+  .fe-utility a { color: inherit; text-decoration: none; }
+  .fe-utility a:hover { text-decoration: underline; }
+  .fe-langs { display: inline-flex; gap: var(--fe-space-2); }
+  .fe-langs a[aria-current='true'] { color: var(--fe-color-primary); font-weight: 600; }
+  .fe-utility button { background: none; border: 0; cursor: pointer; color: inherit; font-size: var(--fe-size-base); line-height: 1; }
+
+  :global(.fe-masthead) { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: center; justify-content: space-between; padding-block: var(--fe-space-4); }
+  .fe-brand { display: flex; align-items: center; gap: var(--fe-space-3); text-decoration: none; color: var(--fe-color-text); }
+  .fe-brand strong { display: block; font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); line-height: var(--fe-leading-tight); }
+  .fe-brand small { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-cta { display: flex; gap: var(--fe-space-2); }
+  .fe-cta-link { background: var(--fe-color-primary); color: var(--fe-color-primaryText); padding: var(--fe-space-2) var(--fe-space-4); border-radius: var(--fe-radius-sm); text-decoration: none; font-size: var(--fe-size-sm); font-weight: 600; }
+
+  .fe-nav { background: var(--fe-color-primary); }
+  .fe-nav-toggle { display: none; background: none; border: 0; color: var(--fe-color-primaryText); padding: var(--fe-space-3) 0; font-size: var(--fe-size-base); cursor: pointer; }
+  .fe-menu { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+  .fe-menu > li > a { display: block; padding: var(--fe-space-3) var(--fe-space-4); color: var(--fe-color-primaryText); text-decoration: none; font-size: var(--fe-size-sm); }
+  .fe-menu > li > a:hover, .fe-menu > li > a[aria-current='page'] { background: rgb(0 0 0 / 0.16); }
+  .fe-menu-item { position: relative; }
+  .fe-submenu { list-style: none; margin: 0; padding: var(--fe-space-2) 0; position: absolute; top: 100%; left: 0; min-width: 15rem; background: var(--fe-color-bg); border: 1px solid var(--fe-color-border); border-radius: 0 0 var(--fe-radius-md) var(--fe-radius-md); box-shadow: var(--fe-shadow-md); display: none; z-index: 20; }
+  .fe-menu-item:hover > .fe-submenu, .fe-menu-item:focus-within > .fe-submenu { display: block; }
+  .fe-submenu a { display: block; padding: var(--fe-space-2) var(--fe-space-4); color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm); }
+  .fe-submenu a:hover { background: var(--fe-color-surface); }
+
+  @media (max-width: 47.9375rem) {
+    .fe-nav-toggle { display: block; }
+    .fe-menu { display: none; flex-direction: column; padding-bottom: var(--fe-space-2); }
+    .fe-menu.is-open { display: flex; }
+    .fe-submenu { position: static; display: block; border: 0; box-shadow: none; background: transparent; padding-left: var(--fe-space-4); }
+    .fe-submenu a { color: var(--fe-color-primaryText); opacity: 0.85; }
+  }
+</style>

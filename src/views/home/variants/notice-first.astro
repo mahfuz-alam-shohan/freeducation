@@ -1,0 +1,78 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import type { HomeViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+const [lead, ...rest] = vm.notices
+---
+<Container>
+  <div class="fe-board">
+    <section class="fe-primary" aria-labelledby="home-notices">
+      <h2 id="home-notices">{t('home.notices')}</h2>
+      {!lead ? <EmptyState message={t('notice.empty')} /> : (
+        <article class="fe-lead">
+          <time datetime={lead.publishedAt}>{formatDate(lead.publishedAt, locale)}</time>
+          <h3><a href={`/${vm.noticesPath}/${lead.slug}`}>{resolveText(lead.title, locale)}</a></h3>
+          {lead.summary && <p>{resolveText(lead.summary, locale)}</p>}
+        </article>
+      )}
+      <ul class="fe-rest">
+        {rest.map(notice => (
+          <li>
+            <a href={`/${vm.noticesPath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
+            <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <aside class="fe-aside">
+      <h2>{resolveText(vm.profile.name, locale)}</h2>
+      {vm.profile.tagline && <p>{resolveText(vm.profile.tagline, locale)}</p>}
+      <dl>
+        {vm.stats.map(stat => (
+          <div><dt>{resolveText(stat.label, locale)}</dt><dd>{stat.value}</dd></div>
+        ))}
+      </dl>
+      <h3>{t('home.events')}</h3>
+      {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
+        <ul>
+          {vm.events.map(event => (
+            <li><a href={`/events/${event.slug}`}>{resolveText(event.title, locale)}</a></li>
+          ))}
+        </ul>
+      )}
+    </aside>
+  </div>
+</Container>
+
+<style>
+  .fe-board { display: grid; gap: var(--fe-space-8); grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); padding-block: var(--fe-space-12); }
+  @media (max-width: 55rem) { .fe-board { grid-template-columns: 1fr; } }
+  h2 { font-family: var(--fe-font-heading); font-size: var(--fe-size-xl); margin: 0 0 var(--fe-space-4); color: var(--fe-color-text); }
+  .fe-lead { border: 1px solid var(--fe-color-border); border-left: 4px solid var(--fe-color-primary); border-radius: var(--fe-radius-md); padding: var(--fe-space-4); background: var(--fe-color-bg); }
+  .fe-lead h3 { margin: var(--fe-space-2) 0; font-size: var(--fe-size-lg); }
+  .fe-lead p { margin: 0; color: var(--fe-color-textMuted); }
+  .fe-lead a { color: var(--fe-color-text); text-decoration: none; }
+  .fe-lead a:hover { color: var(--fe-color-primary); }
+  time { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-rest { list-style: none; margin: var(--fe-space-4) 0 0; padding: 0; }
+  .fe-rest li { display: flex; justify-content: space-between; gap: var(--fe-space-2); padding: var(--fe-space-3) 0; border-bottom: 1px solid var(--fe-color-border); }
+  .fe-rest a { color: var(--fe-color-text); text-decoration: none; }
+  .fe-rest a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-aside { background: var(--fe-color-surface); border-radius: var(--fe-radius-md); padding: var(--fe-space-6); }
+  .fe-aside h3 { font-family: var(--fe-font-heading); margin: var(--fe-space-6) 0 var(--fe-space-3); font-size: var(--fe-size-base); }
+  .fe-aside p { color: var(--fe-color-textMuted); margin: 0 0 var(--fe-space-4); }
+  .fe-aside dl { margin: 0; display: grid; gap: var(--fe-space-2); }
+  .fe-aside dl div { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--fe-color-border); padding-bottom: var(--fe-space-2); }
+  .fe-aside dt { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-aside dd { margin: 0; font-weight: 600; }
+  .fe-aside ul { list-style: none; margin: 0; padding: 0; }
+  .fe-aside li { padding: var(--fe-space-2) 0; }
+  .fe-aside a { color: var(--fe-color-text); text-decoration: none; }
+  .fe-aside a:hover { color: var(--fe-color-primary); }
+</style>

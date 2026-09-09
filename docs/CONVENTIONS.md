@@ -1,291 +1,189 @@
-# Freeducation — Conventions
+# Conventions
 
-The rulebook. Every rule states **what** and **how it is enforced**.
+Every rule names what enforces it. A rule with no mechanism is a suggestion, and
+suggestions decay — if you add a rule, add its check.
 
-A rule with no enforcement mechanism is a suggestion, and suggestions decay. If you add
-a rule here, add its check. If a rule cannot be checked, either find a way or do not
-make it a rule.
-
-Run `pnpm verify` before pushing. CI runs the identical command.
+Run `npm run verify` before pushing. CI runs the identical command. It is:
+`structure check → lint → typecheck → tests`.
 
 ---
 
-## 1. Naming
+## Naming
 
 | Thing | Convention | Example |
 |---|---|---|
-| Package | `kebab-case`, scoped | `@fe/contracts` |
-| Folder | `kebab-case` | `packages/pages/notice-detail/` |
-| React component file | `index.tsx` inside a named folder | `variants/table-dense/index.tsx` |
-| Component | `PascalCase` | `NoticeTable` |
-| Hook | `useCamelCase` | `useLocale` |
-| Type / schema | `PascalCase` | `Notice`, `NoticeViewModel` |
-| Constant | `SCREAMING_SNAKE_CASE` | `DEFAULT_PAGE_SIZE` |
-| Data key | `dot.case`, `entity.action` | `notice.list` |
-| Token | `dot.case`, `category.role` | `color.primary`, `space.4` |
-| i18n key | `dot.case`, `page.element` | `notice.emptyState` |
-| Variant id | `kebab-case`, describes the design | `table-dense`, `hero-split` |
-| School slug | `kebab-case` | `rajuk-uttara-model-college` |
+| Folder | kebab-case | `src/views/notice-list/` |
+| Variant file | kebab-case, describes the **design** | `table-dense.astro` |
+| Component | PascalCase | `SiteHeader` |
+| Type / schema | PascalCase | `Notice`, `NoticeListViewModel` |
+| Data key | `entity.action` | `notice.list` |
+| Token | `category.role` | `color.primary`, `space.4` |
+| i18n key | `page.element` | `notice.empty` |
+| School slug | kebab-case, matches filename | `riverside` |
+| CSS class | `fe-` prefixed | `fe-cards` |
 
-**Enforced by:** `tools/verify` checks folder and file names against these patterns;
-ESLint `@typescript-eslint/naming-convention` covers identifiers.
+Variant names describe appearance, never a school. `table-dense` is right;
+`rajuk-style` is wrong — the second school that wants it has nowhere to go.
 
-Variant ids describe **appearance**, never a school. `table-dense` is right;
-`rajuk-style` is wrong — the second school to want it will have nowhere to go.
+*Enforced by:* `tools/verify` (slug matches filename), review for the rest.
 
 ---
 
-## 2. Files and folders
+## Structure
 
-**R2.1** Every page package contains exactly: `viewModel.ts`, `viewModel.types.ts`,
-`index.ts`, `variants/`, `__tests__/contract.test.tsx`.
-*Enforced by `tools/verify`.*
+**S1** Every view folder has `viewModel.ts`, `index.ts` and `variants/` with at least one
+variant. → `tools/verify`
 
-**R2.2** Every variant folder contains exactly `index.tsx` and `meta.ts`.
-*Enforced by `tools/verify`.*
+**S2** Every variant on disk is registered in `index.ts`, and every registered variant
+exists on disk. → `tools/verify`
 
-**R2.3** Every variant on disk is registered in its page's `index.ts`, and every
-registered variant exists on disk.
-*Enforced by `tools/verify`.*
+**S3** `defaultVariant` names a registered variant. → `tools/verify`
 
-**R2.4** No file exceeds 300 lines. A longer file is a module that has not been split.
-*Enforced by ESLint `max-lines`.*
+**S4** Every view folder appears in `src/views/registry.ts`. → `tools/verify`
 
-**R2.5** One exported component per file.
-*Enforced by lint.*
+**S5** `schools/` contains only `.json`. → `tools/verify`
 
-**R2.6** `schools/` contains only `.json`. No logic, ever.
-*Enforced by `tools/verify`.*
+**S6** No file over 300 lines (400 for `.astro`, whose scoped styles are legitimately
+long). → ESLint `max-lines`
 
 ---
 
-## 3. Imports and boundaries
+## Boundaries
 
-**R3.1** Dependency direction follows the layer graph in ARCHITECTURE §3. Illegal
-imports fail lint.
-*Enforced by `eslint-plugin-boundaries`.*
+**B1** `src/ui` may not import `data`, `config` or `views`. → `import/no-restricted-paths`
 
-**R3.2** `packages/ui` and `packages/sections` may not import `packages/data`, nor call
-`fetch`, nor read `process.env`.
-*Enforced by import bans + `fe/no-fetch-in-view`.*
+**B2** `src/sections` may not import `data` or `views`. → same
 
-**R3.3** Cross-package imports use the package entry point only. No deep paths.
-`import { Button } from '@fe/ui'` — not `'@fe/ui/src/button/index.tsx'`.
-*Enforced by the `exports` field in `package.json` + `import/no-internal-modules`.*
+**B3** `src/views/*/variants` may not import `data` or `config`. A variant renders its
+view-model and nothing else. → same
 
-**R3.4** No circular dependencies.
-*Enforced by `import/no-cycle`.*
+**B4** `contracts` and `tokens` are leaves — they import nothing from the app. → same
 
-**R3.5** Nothing imports from `apps/`.
-*Enforced by `eslint-plugin-boundaries`.*
+**B5** Nothing imports `src/pages`. → same
+
+**B6** No import cycles. → `import/no-cycle`
 
 ---
 
-## 4. Types
+## Types
 
-**R4.1** `any` is banned. Use `unknown` and narrow.
-*Enforced by `@typescript-eslint/no-explicit-any`.*
+**T1** No `any`. → `@typescript-eslint/no-explicit-any`
 
-**R4.2** Type assertions (`as`) are banned outside `packages/data` adapters, where they
-must be immediately followed by a Zod parse.
-*Enforced by lint rule with a path allow-list.*
+**T2** Entity types are inferred from Zod schemas, never written twice. → review
 
-**R4.3** Entity types are inferred from Zod schemas, never hand-written in parallel.
-*Enforced by `fe/no-duplicate-entity-type`.*
+**T3** `strict` plus `noUncheckedIndexedAccess`. → `tsconfig.json`, checked by
+`astro check`
 
-**R4.4** Strict mode everywhere: `strict`, `noUncheckedIndexedAccess`,
-`exactOptionalPropertyTypes`.
-*Enforced by the shared `tsconfig.base.json`; overriding it in a package fails verify.*
-
-**R4.5** External data is parsed before use. An unparsed API response may not leave
-`packages/data`.
-*Enforced by review + the adapter test harness.*
+**T4** Nothing unvalidated leaves `src/data`. → Zod parse in `createClient`
 
 ---
 
-## 5. Rendering and variants
+## Views and variants
 
-**R5.1** A variant's props are exactly `{ vm: <Page>ViewModel }`. No extra props.
-*Enforced by the contract harness type test.*
+**V1** A variant's props are exactly `{ vm, locale, t }`. No variant-specific prop, no
+variant-specific config. → the contract harness
 
-**R5.2** Variants do not fetch, do not read config, do not read env, and do not import
-other variants.
-*Enforced by import bans.*
+**V2** Variants do not fetch, do not read config, do not read env. → B3
 
-**R5.3** Every variant renders correctly for every fixture state: empty, minimal,
-typical, overflow, single-locale.
-*Enforced by the contract harness.*
+**V3** Every variant renders correctly when the data is typical, empty, or single-locale.
+→ the contract harness renders all three for every variant
 
-**R5.4** Every variant passes automated accessibility checks: landmarks, heading order,
-labelled controls, contrast.
-*Enforced by the contract harness.*
+**V4** An empty state says something. Never a blank page. → asserted by the harness
 
-**R5.5** Loading and error states are provided by the page shell, not reinvented per
-variant.
-*Enforced by review; the shell owns the boundaries.*
+**V5** Variants are registered as lazy loaders so each is its own chunk. → `tools/verify`
+matches the `() => import(...)` form
 
 ---
 
-## 6. Styling
+## Styling
 
-**R6.1** No raw colour values in any component — no hex, `rgb()`, `hsl()`, or named
-colours. Use `var(--color-*)`.
-*Enforced by `fe/no-raw-color`.*
+**C1** No raw colour or spacing in a component — use `var(--fe-*)`. → review today;
+a custom lint rule is still owed here
 
-**R6.2** Spacing, radius, shadow and font size come from tokens.
-*Enforced by `fe/no-raw-dimension` (a small allow-list exists for `0`, `1px` borders,
-and `100%`).*
+**C2** Token names live in `src/tokens`. A school override naming an unknown token is
+rejected. → Zod `superRefine`, tested
 
-**R6.3** Token names are declared in `packages/tokens`. Unknown tokens in a school
-override are rejected.
-*Enforced by Zod validation of the config against the generated token union.*
+**C3** Mobile first: media queries add complexity upward. → review
 
-**R6.4** Every colour pair meets WCAG AA in both light and dark themes.
-*Enforced by a contrast test over the token set.*
-
-**R6.5** Mobile-first. Media queries add complexity upward, never downward.
-*Enforced by `fe/no-max-width-query`.*
+**C4** Wide content (tables, routines) scrolls inside its own container; the page body
+never scrolls sideways. → review
 
 ---
 
-## 7. Language
+## Language
 
-**R7.1** No user-facing string literal in a component. Use `t('key')`.
-*Enforced by `fe/no-bare-string`.*
+**L1** No user-facing string literal in a component — use `t('key')`. → review today;
+a custom lint rule is still owed here
 
-**R7.2** i18n keys must exist in every supported locale catalogue.
-*Enforced by `tools/verify` — a missing translation fails the build.*
+**L2** Every i18n key exists in every locale catalogue. → `tools/verify`
 
-**R7.3** Localised content fields are read through `resolveText`, never by property
-access.
-*Enforced by `fe/use-resolve-text`.*
+**L3** Localised content is read through `resolveText`, never `.bn` / `.en`.
+→ `no-restricted-syntax` (the i18n module itself is the one exemption)
 
-**R7.4** No layout may assume text length. Bangla runs longer than English and wraps
-differently.
-*Enforced by the overflow fixture in the contract harness.*
+**L4** No layout assumes text length — Bangla runs longer than English. → the
+single-locale and typical harness states
 
-**R7.5** Dates, numbers and currency go through the locale formatter. No manual
-formatting.
-*Enforced by `fe/no-manual-date-format`.*
+**L5** Dates and numbers go through the locale formatters in `src/i18n`. → review
 
 ---
 
-## 8. Data
+## Data
 
-**R8.1** All content access goes through `data.get(key, params)`. No direct `fetch` to
-the content API outside `packages/data`.
-*Enforced by import ban + `fe/no-fetch-in-view`.*
+**D1** All content access goes through `client.get(key, params)`. → B1–B3
 
-**R8.2** New data needs a new key in the `DataKey` union and a contract schema. Keys are
-never constructed dynamically from strings.
-*Enforced by the type system.*
+**D2** New content means a new key in `DataKey` plus a schema. Keys are never built from
+strings at runtime. → the type system
 
-**R8.3** API credentials are read only in `packages/data`, only from env, and never
-reach the client bundle.
-*Enforced by an env-access lint rule + a bundle scan in CI.*
+**D3** `CONTENT_API_KEY` is read only in `src/data`, only from env, and never reaches the
+browser. → review, and it is referenced in exactly one file
 
-**R8.4** Every list key supports pagination. Unbounded lists are banned.
-*Enforced by the `DataSource` interface signature.*
+**D4** Every list key is paginated. → the `DataKey` params schemas
 
-**R8.5** A failed fetch degrades to an empty state with a logged error. It never crashes
-a page or shows a stack trace to a parent.
-*Enforced by error-boundary tests.*
+**D5** A malformed payload throws in development and degrades to an empty state in
+production. → tested in `src/data/source.test.ts`
 
 ---
 
-## 9. Configuration
+## Configuration
 
-**R9.1** School config is validated at boot. Invalid config refuses to start — no
-partial rendering, no silent defaults.
-*Enforced by Zod parse in the config loader.*
+**G1** Invalid school config throws at boot — no silent defaults. → Zod in `loadSchool`
 
-**R9.2** Every `pageKey` in a menu must exist in the page registry.
-*Enforced by `tools/verify`.*
+**G2** Every variant named in a school config exists for that view. → `tools/verify`
 
-**R9.3** Every variant named in config must be registered for that page.
-*Enforced by `tools/verify`.*
-
-**R9.4** Feature flags gate both the route and the menu entry. A disabled feature leaves
-no reachable URL.
-*Enforced by a routing test.*
-
-**R9.5** No school-specific branching in core. `if (school.slug === ...)` is banned.
-*Enforced by `fe/no-tenant-branching`.*
+**G3** No school-specific branching in code. `if (school.slug === …)` is banned. → review
 
 ---
 
-## 10. Testing
+## Git
 
-**R10.1** Every page has a contract test. Adding a page without one fails verify.
-*Enforced by `tools/verify`.*
+**W1** Conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`.
 
-**R10.2** Fixtures live in `packages/testing` and are shared. No inline mock data in
-tests.
-*Enforced by lint.*
-
-**R10.3** Every contract schema has a parse test against a real captured payload.
-*Enforced by `tools/verify`.*
-
-**R10.4** Tests assert behaviour and output, never implementation details.
-*Enforced by review.*
+**W2** `npm run verify` passes before merge.
 
 ---
 
-## 11. Performance
+## Checklists
 
-**R11.1** Route JavaScript budget: 100 KB gzipped. Exceeding it fails CI.
-**R11.2** Images go through the image pipeline — correct sizes, modern formats, lazy
-below the fold.
-**R11.3** No blocking third-party script on any public page.
-**R11.4** Fonts self-hosted with `font-display: swap` and a Bangla subset.
+### Adding a design variant
 
-*Enforced by CI size budgets and a Lighthouse run on representative routes.*
+1. `src/views/<view>/variants/<name>.astro`, props `{ vm, locale, t }`
+2. Register the lazy loader in `index.ts`
+3. `npm run verify` — the harness renders it in all three states
 
----
+No data work. No config schema change. No other variant touched.
 
-## 12. Git
+### Adding a view
 
-**R12.1** Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`.
-*Enforced by commitlint.*
+1. `src/views/<view>/` with `viewModel.ts`, `index.ts`, `variants/`
+2. Schemas in `contracts`, keys in `data/keys.ts` if new content is needed
+3. At least one variant; two if the design is likely to vary
+4. Add it to `registry.ts` and to `ViewType` in `contracts/navigation.ts`
+5. Add its params to `routeParams` in the harness
+6. `npm run verify`
 
-**R12.2** Any change to `packages/contracts` requires a changeset.
-*Enforced by CI.*
+### Adding a school
 
-**R12.3** A breaking contract change requires a major bump and a migration note.
-*Enforced by changeset review.*
-
-**R12.4** `pnpm verify` passes before merge. No exceptions, no `--no-verify`.
-*Enforced by branch protection.*
-
----
-
-## 13. Adding things — the checklists
-
-### A new page
-
-1. `packages/pages/<page>/` with the six required files
-2. Entity schemas in `contracts`, data keys in `data`
-3. `viewModel.ts` — the only fetching code
-4. At least two variants, so the variant model stays honest
-5. Fixtures for all five states
-6. Register the page; add its `pageKey` to the menu vocabulary
-7. `pnpm verify`
-
-### A new variant
-
-1. `variants/<variant-id>/` with `index.tsx` and `meta.ts`
-2. Props are `{ vm }` and nothing else
-3. Register it in the page's `index.ts`
-4. Confirm it renders all five fixture states
-5. `pnpm verify`
-
-Note what is absent: no data work, no config schema change, no touching other variants.
-That is the architecture working.
-
-### A new school
-
-1. `schools/<slug>.json`
-2. Identity, locales, theme preset and overrides, variant choices, features, menu
-3. `pnpm verify`
+1. `schools/<slug>.json` — slug must match the filename
+2. `npm run verify`
 
 Note what is absent: **any code at all.**

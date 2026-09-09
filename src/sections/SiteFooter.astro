@@ -1,0 +1,45 @@
+---
+import Container from '../ui/Container.astro'
+import type { Locale, Navigation, SchoolProfile } from '../contracts/index.js'
+import { resolveText, type Translator } from '../i18n/index.js'
+import { normalisePath } from '../routing/resolver.js'
+
+interface Props { navigation: Navigation; profile: SchoolProfile; locale: Locale; t: Translator }
+const { navigation, profile, locale, t } = Astro.props
+const year = new Date().getFullYear()
+---
+<footer class="fe-footer">
+  <Container class="fe-footer-grid">
+    <div>
+      <strong>{resolveText(profile.name, locale)}</strong>
+      {profile.address && <p>{resolveText(profile.address, locale)}</p>}
+      <ul class="fe-social">
+        {Object.entries(profile.social).map(([name, url]) => (
+          <li><a href={url} rel="noopener noreferrer">{name}</a></li>
+        ))}
+      </ul>
+    </div>
+    <nav aria-label={t('common.menu')}>
+      <ul>
+        {navigation.footer.filter(item => item.visible).map(item => (
+          <li><a href={`/${normalisePath(item.path)}`}>{resolveText(item.label, locale)}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <div>
+      {profile.phones.length > 0 && <p>{t('contact.phone')}: {profile.phones.join(', ')}</p>}
+      {profile.emails.length > 0 && <p>{t('contact.email')}: {profile.emails.join(', ')}</p>}
+    </div>
+  </Container>
+  <Container class="fe-copyright"><small>© {year} {resolveText(profile.name, locale)}</small></Container>
+</footer>
+<style>
+  .fe-footer { background: var(--fe-color-surface); border-top: 1px solid var(--fe-color-border); margin-top: var(--fe-space-16); padding-block: var(--fe-space-12) var(--fe-space-4); color: var(--fe-color-text); }
+  :global(.fe-footer-grid) { display: grid; gap: var(--fe-space-8); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+  .fe-footer p { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-footer ul { list-style: none; margin: 0; padding: 0; }
+  .fe-footer a { color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm); }
+  .fe-footer a:hover { text-decoration: underline; }
+  .fe-social { display: flex; gap: var(--fe-space-3); margin-top: var(--fe-space-3); text-transform: capitalize; }
+  :global(.fe-copyright) { margin-top: var(--fe-space-8); padding-top: var(--fe-space-4); border-top: 1px solid var(--fe-color-border); color: var(--fe-color-textMuted); }
+</style>

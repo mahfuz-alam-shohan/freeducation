@@ -1,0 +1,8 @@
+{
+  "slug": "riverside",
+  "locales": { "supported": ["en", "bn"], "default": "en" },
+  "theme": { "preset": "maroon", "overrides": { "color.accent": "#1d4ed8", "radius.md": "2px" } },
+  "variants": { "home": "notice-first", "notice-list": "card-stack", "person-list": "table-compact" },
+  "features": { "search": true, "noticeTicker": false, "themeToggle": true, "languageSwitch": true },
+  "data": { "source": "fixture" }
+}

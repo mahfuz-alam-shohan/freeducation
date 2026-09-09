@@ -1,0 +1,35 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { PersonListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: PersonListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.people.length === 0 ? <EmptyState message={t('person.empty')} /> : (
+    <ul class="fe-grid">
+      {vm.people.map(person => (
+        <li class="fe-person">
+          {person.photo?.url
+            ? <img src={person.photo.url} alt="" width="120" height="120" loading="lazy" decoding="async" />
+            : <span class="fe-avatar" aria-hidden="true">{resolveText(person.name, locale).slice(0, 1)}</span>}
+          <strong>{resolveText(person.name, locale)}</strong>
+          {person.designation && <span class="fe-role">{resolveText(person.designation, locale)}</span>}
+          {person.department && <span class="fe-dept">{resolveText(person.department, locale)}</span>}
+        </li>
+      ))}
+    </ul>
+  )}
+</Container>
+<style>
+  .fe-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+  .fe-person { text-align: center; padding: var(--fe-space-4); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-md); background: var(--fe-color-bg); }
+  .fe-person img, .fe-avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; margin: 0 auto var(--fe-space-3); display: grid; place-items: center; background: var(--fe-color-surface); color: var(--fe-color-textMuted); font-size: var(--fe-size-xl); }
+  .fe-person strong { display: block; }
+  .fe-role, .fe-dept { display: block; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+</style>

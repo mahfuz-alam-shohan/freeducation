@@ -1,0 +1,52 @@
+import type { DataSource } from '../source.js'
+import type { DataKey } from '../keys.js'
+import { fixtures } from '../../testing/fixtures/index.js'
+
+/**
+ * Serves local sample content. Used for development, previews and every test,
+ * so the whole site can be built and verified with no backend at all.
+ */
+export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {}): DataSource {
+  return {
+    name: 'fixture',
+    async fetch(key, params) {
+      if (key in overrides) return overrides[key]
+
+      switch (key) {
+        case 'site.profile': return fixtures.profile
+        case 'site.navigation': return fixtures.navigation
+        case 'site.stats': return fixtures.stats
+
+        case 'notice.list': {
+          const category = params.category as string | undefined
+          const all = category ? fixtures.notices.filter(n => n.category === category) : fixtures.notices
+          return page(all, params)
+        }
+        case 'notice.bySlug':
+          return fixtures.notices.find(n => n.slug === params.slug) ?? null
+
+        case 'page.bySlug':
+          return fixtures.pages.find(p => p.slug === params.slug) ?? null
+
+        case 'person.list': {
+          const group = params.group as string | undefined
+          const all = group ? fixtures.people.filter(p => p.group === group) : fixtures.people
+          return page(all, params)
+        }
+
+        case 'event.list': return page(fixtures.events, params)
+        case 'event.bySlug': return fixtures.events.find(e => e.slug === params.slug) ?? null
+
+        case 'gallery.albums': return page(fixtures.albums, params)
+        case 'gallery.album': return fixtures.albums.find(a => a.slug === params.slug) ?? null
+      }
+    },
+  }
+}
+
+function page<T>(all: T[], params: Record<string, unknown>) {
+  const pageNumber = Number(params.page ?? 1)
+  const pageSize = Number(params.pageSize ?? 20)
+  const start = (pageNumber - 1) * pageSize
+  return { items: all.slice(start, start + pageSize), page: pageNumber, pageSize, total: all.length }
+}

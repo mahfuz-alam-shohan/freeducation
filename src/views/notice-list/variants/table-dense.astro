@@ -1,0 +1,53 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import type { NoticeListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
+    <div class="fe-scroll">
+      <table class="fe-table">
+        <thead>
+          <tr><th scope="col">{t('common.published')}</th><th scope="col">{t('notice.title')}</th><th scope="col"></th></tr>
+        </thead>
+        <tbody>
+          {vm.notices.map(notice => (
+            <tr>
+              <td><time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time></td>
+              <td>
+                {notice.pinned && <span class="fe-pin">{t('notice.pinned')}</span>}
+                <a href={`/${vm.basePath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
+              </td>
+              <td>
+                {notice.attachments.map(file => (
+                  <a class="fe-file" href={file.url}>{t('common.download')}</a>
+                ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
+</Container>
+<style>
+  .fe-scroll { overflow-x: auto; }
+  .fe-table { width: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  .fe-table th, .fe-table td { text-align: start; padding: var(--fe-space-3); border-bottom: 1px solid var(--fe-color-border); vertical-align: top; }
+  .fe-table th { background: var(--fe-color-surface); color: var(--fe-color-textMuted); font-weight: 600; white-space: nowrap; }
+  .fe-table td time { color: var(--fe-color-textMuted); white-space: nowrap; }
+  .fe-table a { color: var(--fe-color-text); text-decoration: none; }
+  .fe-table a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-pin { display: inline-block; margin-inline-end: var(--fe-space-2); padding: 0 var(--fe-space-2); border-radius: var(--fe-radius-sm); background: var(--fe-color-accent); color: var(--fe-color-primaryText); font-size: var(--fe-size-xs); }
+  .fe-file { color: var(--fe-color-primary) !important; white-space: nowrap; }
+</style>

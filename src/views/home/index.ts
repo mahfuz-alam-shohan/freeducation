@@ -1,0 +1,10 @@
+export { loadViewModel } from './viewModel.js'
+export type { HomeViewModel } from './viewModel.js'
+
+/** Lazily loaded so a page ships only the design it actually uses. */
+export const variants = {
+  'hero-split': () => import('./variants/hero-split.astro'),
+  'notice-first': () => import('./variants/notice-first.astro'),
+}
+
+export const defaultVariant = 'hero-split'

@@ -1,0 +1,38 @@
+---
+import Container from '../../../ui/Container.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { ContactViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: ContactViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+const { profile } = vm
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  <div class="fe-contact">
+    <dl>
+      {profile.address && <><dt>{t('contact.address')}</dt><dd>{resolveText(profile.address, locale)}</dd></>}
+      {profile.phones.length > 0 && (
+        <><dt>{t('contact.phone')}</dt>
+          <dd>{profile.phones.map(phone => <a href={`tel:${phone}`}>{phone}</a>)}</dd></>
+      )}
+      {profile.emails.length > 0 && (
+        <><dt>{t('contact.email')}</dt>
+          <dd>{profile.emails.map(email => <a href={`mailto:${email}`}>{email}</a>)}</dd></>
+      )}
+    </dl>
+    {profile.mapEmbedUrl && (
+      <iframe class="fe-map" src={profile.mapEmbedUrl} loading="lazy" title={t('contact.address')}></iframe>
+    )}
+  </div>
+</Container>
+<style>
+  .fe-contact { display: grid; gap: var(--fe-space-8); grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
+  dl { margin: 0; display: grid; gap: var(--fe-space-3); }
+  dt { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  dd { margin: 0 0 var(--fe-space-3); }
+  dd a { color: var(--fe-color-primary); display: block; }
+  .fe-map { width: 100%; min-height: 20rem; border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-md); }
+</style>

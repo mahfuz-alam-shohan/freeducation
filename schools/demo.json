@@ -1,0 +1,27 @@
+{
+  "slug": "demo",
+  "locales": {
+    "supported": [
+      "bn",
+      "en"
+    ],
+    "default": "bn"
+  },
+  "theme": {
+    "preset": "emerald",
+    "overrides": {}
+  },
+  "variants": {
+    "home": "hero-split",
+    "notice-list": "table-dense"
+  },
+  "features": {
+    "search": true,
+    "noticeTicker": true,
+    "themeToggle": true,
+    "languageSwitch": true
+  },
+  "data": {
+    "source": "fixture"
+  }
+}

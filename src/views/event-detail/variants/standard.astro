@@ -1,0 +1,30 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { EventDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: EventDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+const { event } = vm
+---
+<Container>
+  {!event ? <EmptyState message={t('page.notFoundBody')} /> : (
+    <article class="fe-article">
+      <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
+      <h1>{resolveText(event.title, locale)}</h1>
+      {event.location && <p class="fe-loc">{resolveText(event.location, locale)}</p>}
+      {event.description && <Prose html={resolveText(event.description, locale)} />}
+      <a class="fe-back" href={`/${vm.backPath}`}>&larr; {t('common.viewAll')}</a>
+    </article>
+  )}
+</Container>
+<style>
+  .fe-article { max-width: 46rem; margin-inline: auto; }
+  .fe-article time { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-article h1 { font-family: var(--fe-font-heading); font-size: var(--fe-size-2xl); margin: var(--fe-space-2) 0; line-height: var(--fe-leading-tight); }
+  .fe-loc { color: var(--fe-color-textMuted); margin: 0 0 var(--fe-space-6); }
+  .fe-back { display: inline-block; margin-top: var(--fe-space-8); color: var(--fe-color-primary); text-decoration: none; }
+</style>

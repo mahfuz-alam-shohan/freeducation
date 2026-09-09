@@ -1,0 +1,47 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import type { NoticeListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
+    <ul class="fe-cards">
+      {vm.notices.map(notice => (
+        <li class:list={['fe-card', { pinned: notice.pinned }]}>
+          <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+          <h2><a href={`/${vm.basePath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a></h2>
+          {notice.summary && <p>{resolveText(notice.summary, locale)}</p>}
+          {notice.attachments.length > 0 && (
+            <ul class="fe-files">
+              {notice.attachments.map(file => (
+                <li><a href={file.url}>{resolveText(file.label, locale)}</a></li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ul>
+  )}
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
+</Container>
+<style>
+  .fe-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); }
+  .fe-card { border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-md); padding: var(--fe-space-4); background: var(--fe-color-bg); box-shadow: var(--fe-shadow-sm); }
+  .fe-card.pinned { border-inline-start: 4px solid var(--fe-color-accent); }
+  .fe-card time { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-card h2 { font-size: var(--fe-size-lg); margin: var(--fe-space-2) 0; font-family: var(--fe-font-heading); }
+  .fe-card a { color: var(--fe-color-text); text-decoration: none; }
+  .fe-card a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-card p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-files { list-style: none; margin: var(--fe-space-3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--fe-space-3); }
+  .fe-files a { color: var(--fe-color-primary); font-size: var(--fe-size-sm); }
+</style>

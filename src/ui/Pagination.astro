@@ -1,0 +1,22 @@
+---
+interface Props { page: number; pageSize: number; total: number; basePath: string; labels: { previous: string; next: string; page: string } }
+const { page, pageSize, total, basePath, labels } = Astro.props
+const lastPage = Math.max(1, Math.ceil(total / Math.max(1, pageSize)))
+const href = (n: number) => (n <= 1 ? `/${basePath}` : `/${basePath}?page=${n}`)
+---
+{lastPage > 1 && (
+  <nav class="fe-pagination" aria-label={labels.page}>
+    {page > 1 && <a rel="prev" href={href(page - 1)}>&larr; {labels.previous}</a>}
+    <span>{labels.page} {page} / {lastPage}</span>
+    {page < lastPage && <a rel="next" href={href(page + 1)}>{labels.next} &rarr;</a>}
+  </nav>
+)}
+<style>
+  .fe-pagination {
+    display: flex; align-items: center; justify-content: center; gap: var(--fe-space-4);
+    margin-top: var(--fe-space-8); font-size: var(--fe-size-sm);
+  }
+  .fe-pagination a { color: var(--fe-color-primary); text-decoration: none; }
+  .fe-pagination a:hover { text-decoration: underline; }
+  .fe-pagination span { color: var(--fe-color-textMuted); }
+</style>

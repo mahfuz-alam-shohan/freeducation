@@ -1,0 +1,79 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { RichPageViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RichPageViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.blocks.length === 0 ? <EmptyState message={t('page.empty')} /> : (
+    <div class="fe-blocks">
+      {vm.blocks.map(block => (
+        <section class="fe-block">
+          {block.type === 'richtext' && <Prose html={resolveText(block.html, locale)} />}
+
+          {block.type === 'image' && (
+            <figure>
+              <img src={block.image.url} alt={resolveText(block.image.alt, locale)} loading="lazy" decoding="async" />
+              {block.caption && <figcaption>{resolveText(block.caption, locale)}</figcaption>}
+            </figure>
+          )}
+
+          {block.type === 'table' && (
+            <div class="fe-scroll">
+              <table>
+                {block.header && block.rows[0] && (
+                  <thead><tr>{block.rows[0].map(cell => <th scope="col">{resolveText(cell, locale)}</th>)}</tr></thead>
+                )}
+                <tbody>
+                  {block.rows.slice(block.header ? 1 : 0).map(row => (
+                    <tr>{row.map(cell => <td>{resolveText(cell, locale)}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {block.type === 'files' && (
+            <ul class="fe-files">
+              {block.files.map(file => (
+                <li><a href={file.url}>{resolveText(file.label, locale)}</a></li>
+              ))}
+            </ul>
+          )}
+
+          {block.type === 'people' && (
+            <ul class="fe-people">
+              {(vm.peopleByGroup[block.group] ?? []).map(person => (
+                <li>
+                  <strong>{resolveText(person.name, locale)}</strong>
+                  {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  )}
+</Container>
+<style>
+  .fe-blocks { max-width: 50rem; display: grid; gap: var(--fe-space-8); }
+  .fe-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-3); border: 1px solid var(--fe-color-border); }
+  th { background: var(--fe-color-surface); }
+  figure { margin: 0; }
+  figcaption { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); margin-top: var(--fe-space-2); }
+  img { max-width: 100%; height: auto; border-radius: var(--fe-radius-md); }
+  .fe-files, .fe-people { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-2); }
+  .fe-files a { color: var(--fe-color-primary); }
+  .fe-people li { display: flex; justify-content: space-between; gap: var(--fe-space-4); padding: var(--fe-space-2) 0; border-bottom: 1px solid var(--fe-color-border); }
+  .fe-people span { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+</style>

@@ -1,0 +1,38 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { PersonListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: PersonListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.people.length === 0 ? <EmptyState message={t('person.empty')} /> : (
+    <div class="fe-scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">#</th><th scope="col">{resolveText(vm.title, locale)}</th><th scope="col">{t('person.designation')}</th></tr>
+        </thead>
+        <tbody>
+          {vm.people.map((person, index) => (
+            <tr>
+              <td>{index + 1}</td>
+              <td>{resolveText(person.name, locale)}</td>
+              <td>{person.designation ? resolveText(person.designation, locale) : ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Container>
+<style>
+  .fe-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-3); border-bottom: 1px solid var(--fe-color-border); }
+  th { background: var(--fe-color-surface); color: var(--fe-color-textMuted); }
+</style>

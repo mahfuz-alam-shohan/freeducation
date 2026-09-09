@@ -1,0 +1,72 @@
+---
+import SiteHeader from '../sections/SiteHeader.astro'
+import SiteFooter from '../sections/SiteFooter.astro'
+import { tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
+import type { Locale, Navigation, SchoolProfile } from '../contracts/index.js'
+import { resolveText, type Translator } from '../i18n/index.js'
+import type { SchoolConfig } from '../config/index.js'
+import '../styles/global.css'
+
+interface Props {
+  config: SchoolConfig
+  navigation: Navigation
+  profile: SchoolProfile
+  locale: Locale
+  t: Translator
+  title: string
+  currentPath: string
+}
+const { config, navigation, profile, locale, t, title, currentPath } = Astro.props
+
+const preset = themePresets[config.theme.preset] ?? {}
+const themeCss = tokensToCss({ ...preset, ...(config.theme.overrides as Partial<Record<TokenName, string>>) })
+const siteName = resolveText(profile.name, locale)
+---
+<!doctype html>
+<html lang={locale} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} · ${siteName}` : siteName}</title>
+    <style is:inline set:html={themeCss}></style>
+    <script is:inline>
+      // Applied before paint so the chosen theme never flashes.
+      try {
+        const stored = localStorage.getItem('fe-theme')
+        if (stored) document.documentElement.dataset.theme = stored
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="fe-skip" href="#main">{t('common.skipToContent')}</a>
+    <SiteHeader
+      navigation={navigation} profile={profile} locale={locale}
+      locales={config.locales.supported} t={t} currentPath={currentPath}
+      features={{ languageSwitch: config.features.languageSwitch, themeToggle: config.features.themeToggle, search: config.features.search }}
+    />
+    <main id="main" class="fe-main"><slot /></main>
+    <SiteFooter navigation={navigation} profile={profile} locale={locale} t={t} />
+
+    <script>
+      const toggle = document.querySelector('[data-fe-theme-toggle]')
+      toggle?.addEventListener('click', () => {
+        const root = document.documentElement
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
+        root.dataset.theme = next
+        try { localStorage.setItem('fe-theme', next) } catch {}
+      })
+
+      const navToggle = document.querySelector('[data-fe-nav-toggle]')
+      const menu = document.getElementById('fe-menu')
+      navToggle?.addEventListener('click', () => {
+        const open = menu?.classList.toggle('is-open') ?? false
+        navToggle.setAttribute('aria-expanded', String(open))
+      })
+    </script>
+  </body>
+</html>
+<style>
+  .fe-main { padding-block: var(--fe-space-8); }
+  .fe-skip { position: absolute; inset-inline-start: -9999px; }
+  .fe-skip:focus { inset-inline-start: var(--fe-space-4); top: var(--fe-space-4); z-index: 100; background: var(--fe-color-bg); padding: var(--fe-space-3); border-radius: var(--fe-radius-sm); }
+</style>

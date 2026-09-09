@@ -1,0 +1,32 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { GalleryAlbumViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: GalleryAlbumViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+const { album } = vm
+---
+<Container>
+  {!album ? <EmptyState message={t('page.notFoundBody')} /> : (
+    <>
+      <PageHeading title={resolveText(album.title, locale)} />
+      {album.photos.length === 0 ? <EmptyState message={t('gallery.empty')} /> : (
+        <ul class="fe-photos">
+          {album.photos.map(photo => (
+            <li><img src={photo.url} alt={resolveText(photo.alt, locale)} loading="lazy" decoding="async" /></li>
+          ))}
+        </ul>
+      )}
+      <a class="fe-back" href={`/${vm.backPath}`}>&larr; {t('common.viewAll')}</a>
+    </>
+  )}
+</Container>
+<style>
+  .fe-photos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-3); grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
+  .fe-photos img { width: 100%; height: auto; border-radius: var(--fe-radius-md); display: block; }
+  .fe-back { display: inline-block; margin-top: var(--fe-space-8); color: var(--fe-color-primary); text-decoration: none; }
+</style>

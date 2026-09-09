@@ -111,15 +111,30 @@ Phase 1 must be genuinely useful with no login at all.
 Mobile first · fast on 3G · bilingual from day one · accessible · printable routines and
 results · calm and institutional rather than flashy.
 
+## Running it
+
+```bash
+npm install
+npm run dev                        # the demo school
+PUBLIC_SCHOOL=riverside npm run dev # a different school: different designs, colours, language
+npm run verify                     # structure + lint + types + tests
+```
+
+Two example schools are included. They share every line of code and differ only in
+their JSON: `demo` is Bangla-first with the split hero and a dense notice table;
+`riverside` is English-first, maroon, with the notice-led homepage and card notices.
+
 ## Status
 
 | Stage | State |
 |---|---|
 | Repository reset | Done |
 | Menu research | Done |
-| Architecture & conventions | Done — this repo's two docs |
-| Stack decision | Recommended (Next.js App Router + TypeScript), awaiting sign-off |
-| Foundation build | Not started |
+| Architecture & conventions | Done |
+| Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 10 views, 13 variants |
+| Enforcement | Done — boundaries, structure verifier, contract harness, 81 tests |
+| Real content API | Not started — waiting on the API |
 
-Next: scaffold the workspace, the enforcement layer, and the `contracts` package —
-ARCHITECTURE §10.
+Known limitations and the ordered next steps are at the end of
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

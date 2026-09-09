@@ -1,0 +1,45 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { NoticeDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t } = Astro.props
+const { notice } = vm
+---
+<Container>
+  {!notice ? <EmptyState message={t('page.notFoundBody')} /> : (
+    <article class="fe-article">
+      <header>
+        <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+        <h1>{resolveText(notice.title, locale)}</h1>
+        {notice.summary && <p class="fe-summary">{resolveText(notice.summary, locale)}</p>}
+      </header>
+      {notice.body && <Prose html={resolveText(notice.body, locale)} />}
+      {notice.attachments.length > 0 && (
+        <section aria-labelledby="attachments">
+          <h2 id="attachments">{t('notice.attachments')}</h2>
+          <ul>
+            {notice.attachments.map(file => (
+              <li><a href={file.url}>{resolveText(file.label, locale)}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <a class="fe-back" href={`/${vm.backPath}`}>&larr; {t('common.viewAll')}</a>
+    </article>
+  )}
+</Container>
+<style>
+  .fe-article { max-width: 46rem; margin-inline: auto; }
+  .fe-article time { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-article h1 { font-family: var(--fe-font-heading); font-size: var(--fe-size-2xl); line-height: var(--fe-leading-tight); margin: var(--fe-space-2) 0; }
+  .fe-summary { color: var(--fe-color-textMuted); margin: 0 0 var(--fe-space-6); }
+  .fe-article h2 { font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); margin-top: var(--fe-space-8); }
+  .fe-article ul { padding-inline-start: var(--fe-space-6); }
+  .fe-article a { color: var(--fe-color-primary); }
+  .fe-back { display: inline-block; margin-top: var(--fe-space-8); text-decoration: none; }
+</style>

@@ -1,0 +1,24 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fe-color-bg);
+  color: var(--fe-color-text);
+  font-family: var(--fe-font-body);
+  font-size: var(--fe-size-base);
+  line-height: var(--fe-leading-normal);
+  -webkit-text-size-adjust: 100%;
+}
+
+img { max-width: 100%; }
+
+:focus-visible { outline: 2px solid var(--fe-color-focus); outline-offset: 2px; }
+
+@media print {
+  header, footer, .fe-skip { display: none !important; }
+  body { background: #fff; color: #000; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

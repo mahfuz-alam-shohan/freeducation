@@ -1,0 +1,12 @@
+---
+interface Props { html: string }
+const { html } = Astro.props
+---
+<div class="fe-prose" set:html={html} />
+<style>
+  .fe-prose { color: var(--fe-color-text); line-height: var(--fe-leading-normal); }
+  .fe-prose :global(p) { margin: 0 0 var(--fe-space-4); }
+  .fe-prose :global(a) { color: var(--fe-color-primary); }
+  .fe-prose :global(img) { max-width: 100%; height: auto; border-radius: var(--fe-radius-md); }
+  .fe-prose :global(h2), .fe-prose :global(h3) { font-family: var(--fe-font-heading); }
+</style>
