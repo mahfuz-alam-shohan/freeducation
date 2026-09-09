@@ -1,6 +1,6 @@
 ---
 import Container from '../ui/Container.astro'
-import type { Locale, MenuItem, Navigation, SchoolProfile } from '../contracts/index.js'
+import type { Locale, MenuItem, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
 import { isActive, normalisePath } from '../routing/resolver.js'
 
@@ -12,8 +12,15 @@ interface Props {
   t: Translator
   currentPath: string
   features: { languageSwitch: boolean; themeToggle: boolean; search: boolean }
+  /** Where the site's search page lives, taken from the menu. Absent means no search page. */
+  searchPath?: string | undefined
+  /** Recent notices for the ticker. Empty when the school has it switched off. */
+  ticker?: Notice[] | undefined
 }
-const { navigation, profile, locale, locales, t, currentPath, features } = Astro.props
+const {
+  navigation, profile, locale, locales, t, currentPath, features,
+  searchPath, ticker = [],
+}: Props = Astro.props
 const here = normalisePath(currentPath)
 const href = (menuItem: MenuItem) => menuItem.externalUrl ?? `/${normalisePath(menuItem.path)}`
 const active = (menuItem: MenuItem) =>
@@ -25,7 +32,7 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
   <div class="fe-utility">
     <Container class="fe-utility-inner">
       <span class="fe-eiin">
-        {resolveText(profile.name, locale)}{profile.eiin && <> · EIIN {profile.eiin}</>}
+        {resolveText(profile.name, locale)}{profile.eiin && <> · {t('common.eiin')} {profile.eiin}</>}
       </span>
       <div class="fe-utility-actions">
         {profile.phones[0] && <a href={`tel:${profile.phones[0]}`}>{profile.phones[0]}</a>}
@@ -38,8 +45,14 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
             ))}
           </span>
         )}
+        {features.search && searchPath && (
+          <form class="fe-search" method="get" action={`/${searchPath}`} role="search">
+            <label class="fe-visually-hidden" for="fe-site-search">{t('search.placeholder')}</label>
+            <input id="fe-site-search" name="q" type="search" placeholder={t('search.placeholder')} />
+          </form>
+        )}
         {features.themeToggle && (
-          <button type="button" data-fe-theme-toggle aria-label="Theme">◐</button>
+          <button type="button" data-fe-theme-toggle aria-label={t('common.theme')}>◐</button>
         )}
         {visible(navigation.utility).map(menuItem => (
           <a href={href(menuItem)}>{resolveText(menuItem.label, locale)}</a>
@@ -47,6 +60,21 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
       </div>
     </Container>
   </div>
+
+  {ticker.length > 0 && (
+    <div class="fe-ticker">
+      <Container class="fe-ticker-inner">
+        <span class="fe-ticker-label">{t('ticker.label')}</span>
+        <div class="fe-ticker-viewport">
+          <ul class="fe-ticker-track" aria-label={t('ticker.label')}>
+            {ticker.map(notice => (
+              <li><a href={`/notice/${notice.slug}`}>{resolveText(notice.title, locale)}</a></li>
+            ))}
+          </ul>
+        </div>
+      </Container>
+    </div>
+  )}
 
   <Container class="fe-masthead">
     <a class="fe-brand" href="/">
@@ -103,6 +131,22 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
   .fe-langs a[aria-current='true'] { color: var(--fe-color-primary); font-weight: 600; }
   .fe-utility button { background: none; border: 0; cursor: pointer; color: inherit; font-size: var(--fe-size-base); line-height: 1; }
 
+  .fe-search input { padding: var(--fe-space-1) var(--fe-space-2); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); background: var(--fe-color-bg); color: var(--fe-color-text); font: inherit; font-size: var(--fe-size-xs); inline-size: 10rem; }
+  .fe-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .fe-ticker { background: var(--fe-color-bg); border-bottom: 1px solid var(--fe-color-border); overflow: hidden; }
+  :global(.fe-ticker-inner) { display: flex; align-items: center; gap: var(--fe-space-3); padding-block: var(--fe-space-2); }
+  .fe-ticker-label { flex: none; background: var(--fe-color-accent); color: var(--fe-color-primaryText); padding: var(--fe-space-1) var(--fe-space-3); border-radius: var(--fe-radius-sm); font-size: var(--fe-size-xs); font-weight: 600; white-space: nowrap; }
+  .fe-ticker-viewport { flex: 1; overflow: hidden; }
+  .fe-ticker-track { display: flex; gap: var(--fe-space-8); list-style: none; margin: 0; padding: 0; white-space: nowrap; animation: fe-ticker-scroll 30s linear infinite; }
+  .fe-ticker-viewport:hover .fe-ticker-track, .fe-ticker-viewport:focus-within .fe-ticker-track { animation-play-state: paused; }
+  .fe-ticker-track a { color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm); }
+  .fe-ticker-track a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  @keyframes fe-ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .fe-ticker-track { animation: none; overflow-x: auto; }
+  }
+
   :global(.fe-masthead) { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: center; justify-content: space-between; padding-block: var(--fe-space-4); }
   .fe-brand { display: flex; align-items: center; gap: var(--fe-space-3); text-decoration: none; color: var(--fe-color-text); }
   .fe-brand strong { display: block; font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); line-height: var(--fe-leading-tight); }
@@ -114,7 +158,7 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
   .fe-nav-toggle { display: none; background: none; border: 0; color: var(--fe-color-primaryText); padding: var(--fe-space-3) 0; font-size: var(--fe-size-base); cursor: pointer; }
   .fe-menu { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
   .fe-menu > li > a { display: block; padding: var(--fe-space-3) var(--fe-space-4); color: var(--fe-color-primaryText); text-decoration: none; font-size: var(--fe-size-sm); }
-  .fe-menu > li > a:hover, .fe-menu > li > a[aria-current='page'] { background: rgb(0 0 0 / 0.16); }
+  .fe-menu > li > a:hover, .fe-menu > li > a[aria-current='page'] { background: var(--fe-color-onPrimaryHover); }
   .fe-menu-item { position: relative; }
   .fe-submenu { list-style: none; margin: 0; padding: var(--fe-space-2) 0; position: absolute; top: 100%; left: 0; min-width: 15rem; background: var(--fe-color-bg); border: 1px solid var(--fe-color-border); border-radius: 0 0 var(--fe-radius-md) var(--fe-radius-md); box-shadow: var(--fe-shadow-md); display: none; z-index: 20; }
   .fe-menu-item:hover > .fe-submenu, .fe-menu-item:focus-within > .fe-submenu { display: block; }

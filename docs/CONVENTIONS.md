@@ -93,12 +93,16 @@ variant-specific config. → the contract harness
 **V5** Variants are registered as lazy loaders so each is its own chunk. → `tools/verify`
 matches the `() => import(...)` form
 
+**V6** A route reaches a controller through `src/views/controllers.ts`, never through a
+view's `index.ts`. Importing `index.ts` from a route would pull every variant's CSS into
+the page. → review; the build is checked by comparing rendered output between schools
+
 ---
 
 ## Styling
 
-**C1** No raw colour or spacing in a component — use `var(--fe-*)`. → review today;
-a custom lint rule is still owed here
+**C1** No raw colour in a component — use `var(--fe-color-*)`. → `fe/no-raw-color`
+(`src/tokens` is the one exemption, since that is where colours are declared)
 
 **C2** Token names live in `src/tokens`. A school override naming an unknown token is
 rejected. → Zod `superRefine`, tested
@@ -108,12 +112,16 @@ rejected. → Zod `superRefine`, tested
 **C4** Wide content (tables, routines) scrolls inside its own container; the page body
 never scrolls sideways. → review
 
+**C5** Spacing, radius and type sizes come from tokens. → review; `fe/no-raw-color`
+covers colour, and a dimension rule is deliberately not enforced because borders and
+100% widths make it noisy
+
 ---
 
 ## Language
 
-**L1** No user-facing string literal in a component — use `t('key')`. → review today;
-a custom lint rule is still owed here
+**L1** No user-facing string literal in a component, including in `aria-label`, `title`,
+`alt` and `placeholder` — use `t('key')`. → `fe/no-bare-string`
 
 **L2** Every i18n key exists in every locale catalogue. → `tools/verify`
 
@@ -123,7 +131,8 @@ a custom lint rule is still owed here
 **L4** No layout assumes text length — Bangla runs longer than English. → the
 single-locale and typical harness states
 
-**L5** Dates and numbers go through the locale formatters in `src/i18n`. → review
+**L5** Dates and numbers go through the locale formatters in `src/i18n`.
+→ `no-restricted-syntax` bans `toLocaleDateString` and friends
 
 ---
 
@@ -134,8 +143,9 @@ single-locale and typical harness states
 **D2** New content means a new key in `DataKey` plus a schema. Keys are never built from
 strings at runtime. → the type system
 
-**D3** `CONTENT_API_KEY` is read only in `src/data`, only from env, and never reaches the
-browser. → review, and it is referenced in exactly one file
+**D3** `CONTENT_API_KEY` is read only in `src/data` and the route that configures it.
+Presentation code cannot touch `import.meta.env` or `process.env` at all.
+→ `no-restricted-syntax` and `no-restricted-properties` on `ui`, `sections` and `views`
 
 **D4** Every list key is paginated. → the `DataKey` params schemas
 
@@ -150,7 +160,8 @@ production. → tested in `src/data/source.test.ts`
 
 **G2** Every variant named in a school config exists for that view. → `tools/verify`
 
-**G3** No school-specific branching in code. `if (school.slug === …)` is banned. → review
+**G3** No school-specific branching in code. `if (school.slug === …)` is banned.
+→ `no-restricted-syntax`
 
 ---
 
@@ -175,10 +186,12 @@ No data work. No config schema change. No other variant touched.
 ### Adding a view
 
 1. `src/views/<view>/` with `viewModel.ts`, `index.ts`, `variants/`
-2. Schemas in `contracts`, keys in `data/keys.ts` if new content is needed
+2. Schemas in `contracts`, keys in `data/keys.ts` if new content is needed, plus an
+   endpoint in `data/adapters/http.ts`, fixture data, and an entry in `emptyFallback`
 3. At least one variant; two if the design is likely to vary
-4. Add it to `registry.ts` and to `ViewType` in `contracts/navigation.ts`
-5. Add its params to `routeParams` in the harness
+4. Register it in `registry.ts`, in `controllers.ts`, and in `ViewType`
+5. Add its params to `routeParams` in the harness, and a query to `routeQuery` if the
+   view reads the URL
 6. `npm run verify`
 
 ### Adding a school

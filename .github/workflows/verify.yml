@@ -1,0 +1,37 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # structure check, lint, typecheck, tests — the same command used locally
+      - run: npm run verify
+
+  build:
+    runs-on: ubuntu-latest
+    needs: verify
+    strategy:
+      matrix:
+        school: [demo, riverside]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Every school must build: a school is only real if its configuration compiles.
+      - run: npm run build
+        env:
+          PUBLIC_SCHOOL: ${{ matrix.school }}

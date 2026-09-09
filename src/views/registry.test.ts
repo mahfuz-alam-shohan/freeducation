@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { views, pickVariant, isRenderable, type RenderableView } from './registry.js'
-import type { ViewContext } from './types.js'
+import type { VariantLoader, ViewContext } from './types.js'
 import { createClient, fixtureSource } from '../data/index.js'
 import { createTranslator } from '../i18n/index.js'
 import { SchoolConfig } from '../config/schema.js'
@@ -43,6 +43,16 @@ const routeParams: Record<RenderableView, Record<string, string>> = {
   'gallery-albums': {},
   'gallery-album': { slug: 'annual-sports-2026' },
   'contact': {},
+  'routine': {},
+  'result-lookup': {},
+  'search': {},
+}
+
+/** Query strings that drive the views whose content depends on user input. */
+const routeQuery: Partial<Record<RenderableView, string>> = {
+  'search': '?q=admission',
+  'result-lookup': '?exam=half-yearly-2026&roll=101',
+  'routine': '?class=nine',
 }
 
 /** Every state a variant must survive. */
@@ -55,6 +65,11 @@ const states = {
       'event.list': { items: [], page: 1, pageSize: 20, total: 0 },
       'gallery.albums': { items: [], page: 1, pageSize: 20, total: 0 },
       'site.stats': [],
+      'site.search': { items: [], page: 1, pageSize: 20, total: 0 },
+      'routine.classes': [],
+      'routine.byClass': null,
+      'result.exams': [],
+      'result.lookup': null,
       'notice.bySlug': null,
       'event.bySlug': null,
       'gallery.album': null,
@@ -79,7 +94,7 @@ const contextFor = (view: RenderableView, source: ReturnType<typeof fixtureSourc
     locale: 'bn',
     route,
     config,
-    url: new URL(`https://example.test/${path}`),
+    url: new URL(`https://example.test/${path}${routeQuery[view] ?? ''}`),
   }
 }
 
@@ -104,9 +119,8 @@ describe('view registry', () => {
     expect(chosen.id).toBe(views.home.defaultVariant)
   })
 
-  it('honours a variant chosen by the menu item over the school default', () => {
-    const chosen = pickVariant('home', { home: 'hero-split' }, 'notice-first')
-    expect(chosen.id).toBe('notice-first')
+  it("honours the school's choice over the view default", () => {
+    expect(pickVariant('home', { home: 'notice-first' }).id).toBe('notice-first')
   })
 })
 
@@ -121,7 +135,8 @@ describe('contract harness: every variant renders in every state', () => {
     const container = await AstroContainer.create()
     const context = contextFor(view, states[state]())
     const viewModel = await views[view].loadViewModel(context)
-    const { load } = pickVariant(view, {}, variant)
+    const load = (views[view].variants as Record<string, VariantLoader>)[variant]
+    if (!load) throw new Error(`${view} has no variant '${variant}'`)
     const Component = (await load()).default
 
     const html = await container.renderToString(Component as never, {

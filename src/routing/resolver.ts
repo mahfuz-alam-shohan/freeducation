@@ -5,7 +5,6 @@ export interface Route {
   path: string
   view: ViewType
   params: Record<string, string>
-  variant?: string
   item: MenuItem
   trail: MenuItem[]
 }
@@ -14,12 +13,12 @@ export const normalisePath = (path: string): string => path.replace(/^\/+|\/+$/g
 
 function walk(items: MenuItem[], trail: MenuItem[], out: Route[]): void {
   for (const item of items) {
-    if (item.visible && item.view !== 'external-link') {
+    // Hidden items are still routable: `visible` controls the menu, not reachability.
+    if (item.view !== 'external-link') {
       out.push({
         path: normalisePath(item.path),
         view: item.view,
         params: item.params,
-        variant: item.variant,
         item,
         trail: [...trail, item],
       })

@@ -11,6 +11,9 @@ import * as eventDetail from './event-detail/index.js'
 import * as galleryAlbums from './gallery-albums/index.js'
 import * as galleryAlbum from './gallery-album/index.js'
 import * as contact from './contact/index.js'
+import * as routine from './routine/index.js'
+import * as resultLookup from './result-lookup/index.js'
+import * as search from './search/index.js'
 
 /**
  * Every renderable view type maps to exactly one module.
@@ -27,20 +30,22 @@ export const views = {
   'gallery-albums': galleryAlbums,
   'gallery-album': galleryAlbum,
   'contact': contact,
+  'routine': routine,
+  'result-lookup': resultLookup,
+  'search': search,
 } satisfies Record<Exclude<ViewType, 'external-link'>, ViewModule>
 
 export type RenderableView = keyof typeof views
 
 export const isRenderable = (view: ViewType): view is RenderableView => view in views
 
-/** Resolves the design for a view: menu item choice, then school default, then view default. */
+/** Resolves the design for a view: the school's choice, then the view's default. */
 export function pickVariant(
   view: RenderableView,
   configured: Record<string, string>,
-  itemVariant?: string,
 ): { id: string; load: VariantLoader } {
   const module: ViewModule = views[view]
-  const candidates = [itemVariant, configured[view], module.defaultVariant]
+  const candidates = [configured[view], module.defaultVariant]
   for (const id of candidates) {
     const load = id ? module.variants[id] : undefined
     if (id && load) return { id, load }

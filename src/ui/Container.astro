@@ -1,6 +1,6 @@
 ---
 interface Props { as?: string; class?: string }
-const { as: Tag = 'div', class: className = '' } = Astro.props
+const { as: Tag = 'div', class: className = '' }: Props = Astro.props
 ---
 <Tag class:list={['fe-container', className]}><slot /></Tag>
 <style>

@@ -13,6 +13,8 @@ export const baseTokens = {
   'color.accent': '#b8860b',
   'color.danger': '#b3261e',
   'color.focus': '#1a73e8',
+  'color.onPrimarySurface': 'rgb(255 255 255 / 0.12)',
+  'color.onPrimaryHover': 'rgb(0 0 0 / 0.16)',
 
   'font.body': "'Noto Sans Bengali', 'Noto Sans', system-ui, -apple-system, sans-serif",
   'font.heading': "'Noto Serif Bengali', 'Noto Serif', Georgia, serif",
@@ -53,6 +55,8 @@ export const darkTokens: Partial<Record<TokenName, string>> = {
   'color.textMuted': '#9aabbc',
   'color.primary': '#3fbc8e',
   'color.primaryText': '#06231a',
+  'color.onPrimarySurface': 'rgb(255 255 255 / 0.1)',
+  'color.onPrimaryHover': 'rgb(0 0 0 / 0.3)',
   'shadow.sm': '0 1px 2px rgba(0, 0, 0, 0.4)',
   'shadow.md': '0 4px 12px rgba(0, 0, 0, 0.5)',
 }

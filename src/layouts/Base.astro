@@ -2,7 +2,7 @@
 import SiteHeader from '../sections/SiteHeader.astro'
 import SiteFooter from '../sections/SiteFooter.astro'
 import { tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
-import type { Locale, Navigation, SchoolProfile } from '../contracts/index.js'
+import type { Locale, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
 import type { SchoolConfig } from '../config/index.js'
 import '../styles/global.css'
@@ -15,8 +15,12 @@ interface Props {
   t: Translator
   title: string
   currentPath: string
+  searchPath?: string | undefined
+  ticker?: Notice[] | undefined
 }
-const { config, navigation, profile, locale, t, title, currentPath } = Astro.props
+const {
+  config, navigation, profile, locale, t, title, currentPath, searchPath, ticker,
+}: Props = Astro.props
 
 const preset = themePresets[config.theme.preset] ?? {}
 const themeCss = tokensToCss({ ...preset, ...(config.theme.overrides as Partial<Record<TokenName, string>>) })
@@ -43,6 +47,7 @@ const siteName = resolveText(profile.name, locale)
       navigation={navigation} profile={profile} locale={locale}
       locales={config.locales.supported} t={t} currentPath={currentPath}
       features={{ languageSwitch: config.features.languageSwitch, themeToggle: config.features.themeToggle, search: config.features.search }}
+      searchPath={searchPath} ticker={ticker}
     />
     <main id="main" class="fe-main"><slot /></main>
     <SiteFooter navigation={navigation} profile={profile} locale={locale} t={t} />

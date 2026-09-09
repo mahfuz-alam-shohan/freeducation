@@ -1,5 +1,6 @@
 import type {
-  GalleryAlbum, Navigation, Notice, Person, RichPage, SchoolEvent, SchoolProfile, Stat,
+  ClassRef, ExamRef, GalleryAlbum, Navigation, Notice, Person, ResultRecord, RichPage, Routine,
+  SchoolEvent, SchoolProfile, SearchHit, Stat,
 } from '../../contracts/index.js'
 
 const t = (bn: string, en: string) => ({ bn, en })
@@ -35,6 +36,8 @@ const item = (
 
 const navigation: Navigation = {
   utility: [
+    // Reachable but not shown as a menu entry: the header renders its own search box.
+    item('search', 'খুঁজুন', 'Search', 'search', 'search', { visible: false }),
     item('login', 'লগইন', 'Login', 'login', 'external-link', { externalUrl: '#' }),
   ],
   primary: [
@@ -58,7 +61,7 @@ const navigation: Navigation = {
     }),
     item('academics', 'একাডেমিক', 'Academics', 'academics', 'rich-page', {
       children: [
-        item('acad-routine', 'ক্লাস রুটিন', 'Class Routine', 'academics/routine', 'rich-page'),
+        item('acad-routine', 'ক্লাস রুটিন', 'Class Routine', 'academics/routine', 'routine'),
         item('acad-calendar', 'শিক্ষাপঞ্জি', 'Academic Calendar', 'academics/calendar', 'rich-page'),
         item('acad-syllabus', 'সিলেবাস', 'Syllabus & Books', 'academics/syllabus', 'rich-page'),
       ],
@@ -77,6 +80,7 @@ const navigation: Navigation = {
         item('notice-events', 'অনুষ্ঠান', 'Events', 'events', 'event-list'),
       ],
     }),
+    item('results', 'ফলাফল', 'Results', 'results', 'result-lookup'),
     item('gallery', 'গ্যালারি', 'Gallery', 'gallery', 'gallery-albums'),
     item('career', 'ক্যারিয়ার', 'Career', 'career', 'notice-list', { params: { category: 'career' } }),
     item('contact', 'যোগাযোগ', 'Contact', 'contact', 'contact'),
@@ -153,4 +157,92 @@ const albums: GalleryAlbum[] = [
   { id: 'a1', slug: 'annual-sports-2026', title: t('বার্ষিক ক্রীড়া ২০২৬', 'Annual Sports 2026'), photos: [], takenAt: '2026-12-18T00:00:00.000Z' },
 ]
 
-export const fixtures = { profile, stats, navigation, notices, people, pages, events, albums }
+const classes: ClassRef[] = [
+  { id: 'nine', label: t('নবম শ্রেণি', 'Class Nine') },
+  { id: 'ten', label: t('দশম শ্রেণি', 'Class Ten') },
+]
+
+const subject = (bn: string, en: string, teacher: [string, string]) =>
+  ({ subject: t(bn, en), teacher: t(teacher[0], teacher[1]) })
+
+const routines: Record<string, Routine> = {
+  nine: {
+    classRef: classes[0]!,
+    days: [t('রবিবার', 'Sunday'), t('সোমবার', 'Monday'), t('মঙ্গলবার', 'Tuesday')],
+    periods: [
+      { label: t('১ম', '1st'), startsAt: '09:00', endsAt: '09:45' },
+      { label: t('২য়', '2nd'), startsAt: '09:45', endsAt: '10:30' },
+      { label: t('৩য়', '3rd'), startsAt: '10:30', endsAt: '11:15' },
+    ],
+    grid: [
+      [subject('বাংলা', 'Bangla', ['সেলিনা আক্তার', 'Selina Akhter']), subject('গণিত', 'Mathematics', ['মোঃ আনিসুর রহমান', 'Md Anisur Rahman']), null],
+      [subject('ইংরেজি', 'English', ['সেলিনা আক্তার', 'Selina Akhter']), null, subject('পদার্থবিজ্ঞান', 'Physics', ['সেলিনা আক্তার', 'Selina Akhter'])],
+      [null, subject('রসায়ন', 'Chemistry', ['মোঃ আনিসুর রহমান', 'Md Anisur Rahman']), subject('বাংলা', 'Bangla', ['সেলিনা আক্তার', 'Selina Akhter'])],
+    ],
+    updatedAt: '2026-06-01T00:00:00.000Z',
+  },
+  ten: {
+    classRef: classes[1]!,
+    days: [t('রবিবার', 'Sunday'), t('সোমবার', 'Monday')],
+    periods: [
+      { label: t('১ম', '1st'), startsAt: '09:00', endsAt: '09:45' },
+      { label: t('২য়', '2nd'), startsAt: '09:45', endsAt: '10:30' },
+    ],
+    grid: [
+      [subject('গণিত', 'Mathematics', ['মোঃ আনিসুর রহমান', 'Md Anisur Rahman']), subject('জীববিজ্ঞান', 'Biology', ['সেলিনা আক্তার', 'Selina Akhter'])],
+      [subject('ইংরেজি', 'English', ['সেলিনা আক্তার', 'Selina Akhter']), null],
+    ],
+    updatedAt: '2026-06-01T00:00:00.000Z',
+  },
+}
+
+const exams: ExamRef[] = [
+  { id: 'half-yearly-2026', label: t('অর্ধবার্ষিক ২০২৬', 'Half-yearly 2026') },
+  { id: 'annual-2026', label: t('বার্ষিক ২০২৬', 'Annual 2026') },
+]
+
+const results: ResultRecord[] = [
+  {
+    roll: '101', exam: t('অর্ধবার্ষিক ২০২৬', 'Half-yearly 2026'),
+    studentName: t('তানভীর হাসান', 'Tanvir Hasan'), className: t('নবম শ্রেণি', 'Class Nine'),
+    gpa: '5.00', publishedAt: '2026-07-10T00:00:00.000Z',
+    subjects: [
+      { name: t('বাংলা', 'Bangla'), grade: 'A+', points: 5 },
+      { name: t('ইংরেজি', 'English'), grade: 'A+', points: 5 },
+      { name: t('গণিত', 'Mathematics'), grade: 'A+', points: 5 },
+    ],
+  },
+  {
+    roll: '102', exam: t('অর্ধবার্ষিক ২০২৬', 'Half-yearly 2026'),
+    studentName: t('মেহজাবিন চৌধুরী', 'Mehzabin Chowdhury'), className: t('নবম শ্রেণি', 'Class Nine'),
+    gpa: '4.50', publishedAt: '2026-07-10T00:00:00.000Z',
+    subjects: [
+      { name: t('বাংলা', 'Bangla'), grade: 'A', points: 4 },
+      { name: t('ইংরেজি', 'English'), grade: 'A+', points: 5 },
+    ],
+  },
+]
+
+/** Naive substring search across the sample content, mirroring what a backend would do. */
+function search(query: string): SearchHit[] {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return []
+  const matches = (text: Record<string, string> | undefined) =>
+    Object.values(text ?? {}).some(value => value.toLowerCase().includes(needle))
+
+  return [
+    ...notices.filter(n => matches(n.title) || matches(n.summary))
+      .map((n): SearchHit => ({ title: n.title, path: `notice/${n.slug}`, kind: 'notice', snippet: n.summary, date: n.publishedAt })),
+    ...pages.filter(p => matches(p.title))
+      .map((p): SearchHit => ({ title: p.title, path: p.slug, kind: 'page' })),
+    ...people.filter(p => matches(p.name) || matches(p.designation))
+      .map((p): SearchHit => ({ title: p.name, path: 'administration/teachers', kind: 'person', snippet: p.designation })),
+    ...events.filter(e => matches(e.title))
+      .map((e): SearchHit => ({ title: e.title, path: `events/${e.slug}`, kind: 'event', date: e.startsAt })),
+  ]
+}
+
+export const fixtures = {
+  profile, stats, navigation, notices, people, pages, events, albums,
+  classes, routines, exams, results, search,
+}

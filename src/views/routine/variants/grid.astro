@@ -1,0 +1,82 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { RoutineViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RoutineViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { routine } = vm
+---
+<Container>
+  <PageHeading
+    title={resolveText(vm.title, locale)}
+    subtitle={routine?.updatedAt ? `${t('common.updated')} ${formatDate(routine.updatedAt, locale)}` : undefined}
+  />
+
+  {vm.classes.length > 1 && (
+    <nav class="fe-classes" aria-label={t('routine.selectClass')}>
+      {vm.classes.map(entry => (
+        <a
+          href={`/${vm.basePath}?class=${entry.id}`}
+          aria-current={entry.id === vm.selected?.id ? 'page' : undefined}
+        >{resolveText(entry.label, locale)}</a>
+      ))}
+    </nav>
+  )}
+
+  {!routine ? <EmptyState message={t('routine.empty')} /> : (
+    <div class="fe-scroll">
+      <table class="fe-routine">
+        <thead>
+          <tr>
+            <th scope="col">{t('routine.day')}</th>
+            {routine.periods.map(period => (
+              <th scope="col">
+                {resolveText(period.label, locale)}
+                {period.startsAt && <small>{period.startsAt}{period.endsAt ? `–${period.endsAt}` : ''}</small>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {routine.days.map((day, dayIndex) => (
+            <tr>
+              <th scope="row">{resolveText(day, locale)}</th>
+              {routine.periods.map((_, periodIndex) => {
+                const cell = routine.grid[dayIndex]?.[periodIndex] ?? null
+                return (
+                  <td class:list={[{ free: !cell }]}>
+                    {cell ? (
+                      <>
+                        <strong>{resolveText(cell.subject, locale)}</strong>
+                        {cell.teacher && <small>{resolveText(cell.teacher, locale)}</small>}
+                        {cell.room && <small>{cell.room}</small>}
+                      </>
+                    ) : <span class="fe-free">{t('routine.free')}</span>}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Container>
+<style>
+  .fe-classes { display: flex; flex-wrap: wrap; gap: var(--fe-space-2); margin-bottom: var(--fe-space-6); }
+  .fe-classes a { padding: var(--fe-space-2) var(--fe-space-4); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); text-decoration: none; color: var(--fe-color-text); font-size: var(--fe-size-sm); }
+  .fe-classes a[aria-current='page'] { background: var(--fe-color-primary); color: var(--fe-color-primaryText); border-color: var(--fe-color-primary); }
+  .fe-scroll { overflow-x: auto; }
+  .fe-routine { width: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); min-width: 34rem; }
+  .fe-routine th, .fe-routine td { border: 1px solid var(--fe-color-border); padding: var(--fe-space-3); text-align: start; vertical-align: top; }
+  .fe-routine thead th { background: var(--fe-color-surface); }
+  .fe-routine tbody th { background: var(--fe-color-surface); white-space: nowrap; }
+  .fe-routine small { display: block; color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); font-weight: 400; }
+  .fe-routine td.free { background: var(--fe-color-surface); }
+  .fe-free { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  @media print { .fe-classes { display: none; } .fe-routine { font-size: var(--fe-size-xs); } }
+</style>

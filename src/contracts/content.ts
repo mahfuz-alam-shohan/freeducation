@@ -89,3 +89,61 @@ export const Stat = z.object({
   value: z.string(),
 })
 export type Stat = z.infer<typeof Stat>
+
+/** A class or section a routine can be shown for. */
+export const ClassRef = z.object({ id: z.string(), label: LocalizedText })
+export type ClassRef = z.infer<typeof ClassRef>
+
+export const RoutinePeriod = z.object({
+  label: LocalizedText,
+  startsAt: z.string().optional(),
+  endsAt: z.string().optional(),
+})
+export type RoutinePeriod = z.infer<typeof RoutinePeriod>
+
+export const RoutineCell = z.object({
+  subject: LocalizedText,
+  teacher: LocalizedText.optional(),
+  room: z.string().optional(),
+}).nullable()
+export type RoutineCell = z.infer<typeof RoutineCell>
+
+export const Routine = z.object({
+  classRef: ClassRef,
+  days: z.array(LocalizedText),
+  periods: z.array(RoutinePeriod),
+  /** grid[dayIndex][periodIndex]; null is a free period. */
+  grid: z.array(z.array(RoutineCell)),
+  updatedAt: IsoDate.optional(),
+})
+export type Routine = z.infer<typeof Routine>
+
+export const ExamRef = z.object({ id: z.string(), label: LocalizedText })
+export type ExamRef = z.infer<typeof ExamRef>
+
+export const ResultSubject = z.object({
+  name: LocalizedText,
+  grade: z.string(),
+  points: z.number().optional(),
+})
+export type ResultSubject = z.infer<typeof ResultSubject>
+
+export const ResultRecord = z.object({
+  roll: z.string(),
+  studentName: LocalizedText,
+  className: LocalizedText,
+  exam: LocalizedText,
+  gpa: z.string().optional(),
+  subjects: z.array(ResultSubject).default([]),
+  publishedAt: IsoDate.optional(),
+})
+export type ResultRecord = z.infer<typeof ResultRecord>
+
+export const SearchHit = z.object({
+  title: LocalizedText,
+  path: z.string(),
+  kind: z.enum(['notice', 'page', 'person', 'event']),
+  snippet: LocalizedText.optional(),
+  date: IsoDate.optional(),
+})
+export type SearchHit = z.infer<typeof SearchHit>

@@ -3,7 +3,8 @@ import Base from '../layouts/Base.astro'
 import { loadSchool } from '../config/index.js'
 import { createClient, fixtureSource, httpSource } from '../data/index.js'
 import { buildRoutes, matchRoute } from '../routing/resolver.js'
-import { isRenderable, pickVariant, views } from '../views/registry.js'
+import { controllers, isRenderable } from '../views/controllers.js'
+import { activeVariants } from 'virtual:fe/active-variants'
 import { createTranslator, resolveText } from '../i18n/index.js'
 import type { Locale } from '../contracts/index.js'
 
@@ -32,18 +33,30 @@ const [navigation, profile] = await Promise.all([
 ])
 
 const currentPath = Astro.params.slug ?? ''
-const route = matchRoute(buildRoutes(navigation), currentPath)
+const routes = buildRoutes(navigation)
+const route = matchRoute(routes, currentPath)
 
 if (!route || !isRenderable(route.view)) {
   return new Response(null, { status: 404 })
 }
 
-const module = views[route.view]
-const viewModel = await module.loadViewModel({ client, locale, route, config, url: Astro.url })
-const { load } = pickVariant(route.view, config.variants, route.variant)
+const viewModel = await controllers[route.view]({ client, locale, route, config, url: Astro.url })
+
+const load = activeVariants[route.view]
+if (!load) return new Response(null, { status: 404 })
 const Variant = (await load()).default
+
 const title = route.path === '' ? '' : resolveText(route.item.label, locale)
+
+// The search box and ticker are driven by the menu and the school's feature flags.
+const searchPath = routes.find(candidate => candidate.view === 'search')?.path
+const ticker = config.features.noticeTicker
+  ? (await client.get('notice.list', { pageSize: 6 })).items
+  : []
 ---
-<Base config={config} navigation={navigation} profile={profile} locale={locale} t={t} title={title} currentPath={currentPath}>
+<Base
+  config={config} navigation={navigation} profile={profile} locale={locale} t={t}
+  title={title} currentPath={currentPath} searchPath={searchPath} ticker={ticker}
+>
   <Variant vm={viewModel} locale={locale} t={t} />
 </Base>

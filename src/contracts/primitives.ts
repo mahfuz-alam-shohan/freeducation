@@ -25,7 +25,7 @@ export const Attachment = z.object({
 })
 export type Attachment = z.infer<typeof Attachment>
 
-export const Paginated = <T extends z.ZodTypeAny>(item: T) =>
+export const Paginated = <T extends z.ZodType>(item: T) =>
   z.object({
     items: z.array(item),
     page: z.number().int().positive(),

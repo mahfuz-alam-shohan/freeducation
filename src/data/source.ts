@@ -49,9 +49,16 @@ export function createClient(source: DataSource, opts: { strict?: boolean } = {}
 
 /** A shape-correct empty value so a page renders its empty state instead of crashing. */
 function emptyFallback(key: DataKey): unknown {
-  if (key.endsWith('.bySlug') || key === 'gallery.album') return null
-  if (key === 'site.navigation') return { primary: [], utility: [], footer: [] }
-  if (key === 'site.stats') return []
-  if (key === 'site.profile') return { name: {}, phones: [], emails: [], social: {} }
-  return { items: [], page: 1, pageSize: 0, total: 0 }
+  switch (key) {
+    case 'site.navigation': return { primary: [], utility: [], footer: [] }
+    case 'site.profile': return { name: {}, phones: [], emails: [], social: {} }
+    case 'site.stats':
+    case 'routine.classes':
+    case 'result.exams': return []
+    case 'gallery.album':
+    case 'routine.byClass':
+    case 'result.lookup': return null
+    default:
+      return key.endsWith('.bySlug') ? null : { items: [], page: 1, pageSize: 0, total: 0 }
+  }
 }

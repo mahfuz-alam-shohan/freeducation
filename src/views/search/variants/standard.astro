@@ -1,0 +1,47 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { SearchViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: SearchViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <form class="fe-searchbox" method="get" action={`/${vm.basePath}`} role="search">
+    <label class="fe-visually-hidden" for="q">{t('search.placeholder')}</label>
+    <input id="q" name="q" type="search" value={vm.query} placeholder={t('search.placeholder')} />
+    <button type="submit">{t('common.search')}</button>
+  </form>
+
+  {!vm.query && <EmptyState message={t('search.prompt')} />}
+  {vm.query && vm.hits.length === 0 && <EmptyState message={t('search.empty')} />}
+
+  {vm.hits.length > 0 && (
+    <ul class="fe-hits">
+      {vm.hits.map(hit => (
+        <li>
+          <a href={`/${hit.path}`}>{resolveText(hit.title, locale)}</a>
+          {hit.snippet && <p>{resolveText(hit.snippet, locale)}</p>}
+          {hit.date && <time datetime={hit.date}>{formatDate(hit.date, locale)}</time>}
+        </li>
+      ))}
+    </ul>
+  )}
+</Container>
+<style>
+  .fe-searchbox { display: flex; gap: var(--fe-space-2); margin-bottom: var(--fe-space-8); max-width: 34rem; }
+  .fe-searchbox input { flex: 1; padding: var(--fe-space-3); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); background: var(--fe-color-bg); color: var(--fe-color-text); font: inherit; }
+  .fe-searchbox button { padding: var(--fe-space-3) var(--fe-space-6); border: 0; border-radius: var(--fe-radius-sm); background: var(--fe-color-primary); color: var(--fe-color-primaryText); font: inherit; font-weight: 600; cursor: pointer; }
+  .fe-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .fe-hits { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); }
+  .fe-hits li { padding-bottom: var(--fe-space-4); border-bottom: 1px solid var(--fe-color-border); }
+  .fe-hits a { color: var(--fe-color-text); text-decoration: none; font-weight: 600; }
+  .fe-hits a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-hits p { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-hits time { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+</style>

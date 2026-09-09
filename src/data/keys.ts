@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
-  GalleryAlbum, Navigation, Notice, Paginated, Person, RichPage, SchoolEvent, SchoolProfile, Stat,
+  ClassRef, ExamRef, GalleryAlbum, Navigation, Notice, Paginated, Person, ResultRecord, RichPage,
+  Routine, SchoolEvent, SchoolProfile, SearchHit, Stat,
 } from '../contracts/index.js'
 
 /**
@@ -24,6 +25,14 @@ export const dataKeys = {
 
   'gallery.albums':  { params: z.object({ page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(24) }), result: Paginated(GalleryAlbum) },
   'gallery.album':   { params: z.object({ slug: z.string() }),                        result: GalleryAlbum.nullable() },
+
+  'routine.classes': { params: z.object({}).default({}),                              result: z.array(ClassRef) },
+  'routine.byClass': { params: z.object({ class: z.string().optional() }),            result: Routine.nullable() },
+
+  'result.exams':    { params: z.object({}).default({}),                              result: z.array(ExamRef) },
+  'result.lookup':   { params: z.object({ exam: z.string(), roll: z.string() }),      result: ResultRecord.nullable() },
+
+  'site.search':     { params: z.object({ q: z.string(), page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(20) }), result: Paginated(SearchHit) },
 } as const
 
 export type DataKey = keyof typeof dataKeys

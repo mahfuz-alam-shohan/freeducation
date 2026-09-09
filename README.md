@@ -69,7 +69,7 @@ School name and EIIN · phone and email · **Bangla / English switch** · search
 | **Academics** | Programs & Departments · Class Routine · Exam Routine · Academic Calendar · Syllabus & Books · Library · Rules |
 | **Admission** | Admission Notice · Eligibility & Process · Apply Online · Fees · Admission Result / Merit List · Prospectus · FAQ |
 | **Notice** | Academic Notice · Office Notice · News · Events · Circulars & Downloads |
-| **Results** | Exam Results · Result Lookup · Board Results |
+| **Results** | Result lookup by examination and roll number |
 | **Students** | Students Corner · Clubs & Co-curricular · Scholarships & Stipends · Transport · Hostel · Health · Guardianship · Alumni |
 | **Career** | Job Circulars · Application Process |
 | **Gallery** | Photo Gallery · Video Gallery |
@@ -132,9 +132,10 @@ their JSON: `demo` is Bangla-first with the split hero and a dense notice table;
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 10 views, 13 variants |
-| Enforcement | Done — boundaries, structure verifier, contract harness, 81 tests |
-| Real content API | Not started — waiting on the API |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 13 views, 16 variants |
+| Features | Done — site search, notice ticker, class routine, result lookup, dark mode |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 107 tests |
+| Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 
-Known limitations and the ordered next steps are at the end of
+The ordered next steps are at the end of
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

@@ -97,6 +97,7 @@ src/
 ├─ ui/            primitives: Container, PageHeading, EmptyState, Prose, Pagination
 ├─ sections/      SiteHeader, SiteFooter — render the menu tree
 ├─ views/         page controllers + design variants  ← most work happens here
+│                 controllers.ts (routing entry), registry.ts (full set, for tests)
 ├─ layouts/       Base.astro
 ├─ pages/         [...slug].astro and 404.astro. That is all.
 └─ testing/       fixtures used by dev, previews and every test
@@ -124,8 +125,27 @@ so each is a separate build chunk and a page only executes the design it uses.
 Adding a design is one new file plus one registry line. It touches no data code, no
 other variant, and no other view.
 
-Which variant renders is resolved in this order: the menu item's own `variant`, then the
-school's `variants` map, then the view's default.
+Which variant renders is resolved from the school's `variants` map, falling back to the
+view's default.
+
+### Only the chosen design is shipped
+
+Astro collects the styles of every component reachable from a route — including through
+dynamic imports — so simply making variants lazy was not enough to stop unused CSS being
+sent.
+
+Two things keep a page down to the design it renders:
+
+- `src/views/controllers.ts` imports each `viewModel.ts` **directly**, never through a
+  view's `index.ts`, so no variant is reachable from the route that way.
+- `virtual:fe/active-variants` is generated at build time by
+  `tools/active-variants-plugin.mjs`. It reads the school's config and emits exactly one
+  import per view: the design that school uses.
+
+`src/views/registry.ts` still holds the full set, and is what the tests and the verifier
+work against.
+
+Verified: a school using `card-stack` receives no `table-dense` CSS.
 
 ---
 
@@ -147,6 +167,11 @@ is the same command CI runs.
 | `schools/` holds only JSON | `tools/verify` |
 | Config rejects unknown tokens, presets, bad locales | Zod, tested |
 | API payloads match contracts | Zod at the data boundary |
+| No raw colours in a component | `fe/no-raw-color` |
+| No hard-coded user-facing text | `fe/no-bare-string` |
+| No per-school branching in code | `no-restricted-syntax` |
+| No manual date formatting | `no-restricted-syntax` |
+| No environment access in presentation code | `no-restricted-syntax` |
 | **Every variant renders in every state** | the contract harness |
 
 ### The contract harness
@@ -180,33 +205,33 @@ layer is ready for it, but nothing else assumes it.
 
 ---
 
-## Known limitations
+## Constraints worth knowing
 
-**Unused variant CSS is still shipped.** Variants are correctly split into separate
-JavaScript chunks, but Astro collects the styles of every component reachable from the
-route into that route's stylesheet. A school using `card-stack` currently also receives
-`table-dense` CSS. Measured pages are ~26 KB uncompressed today, so it is not yet a
-problem, but the cost grows with each new variant. The fix is to generate the variant
-registry per school at build time, since each school already builds separately.
+**One build per school.** `PUBLIC_SCHOOL` is inlined at build time, so each school is
+its own deployment on its own domain. This is what allows the build to ship only that
+school's designs. Serving many schools from one deployment would mean resolving the
+school from the `Host` header and giving up per-school CSS trimming; the config layer
+could do it, but nothing else assumes it.
 
-**No search, and no notice ticker.** Both are config flags today with no implementation
-behind them.
-
-**Fixture data only.** `httpSource` is written and typed but has not been run against a
-real backend, because the API does not exist yet.
-
----
+**A design is chosen per view, not per menu item.** An earlier draft let an individual
+menu item pick its own variant. That cannot coexist with shipping only the school's
+chosen designs, because the menu is not known at build time, so it was removed.
 
 ## What is built, and what is next
 
 Built: contracts, keyed data layer with two adapters, school config, tokens and theming
-with dark mode, bilingual i18n, dynamic menu-driven routing, header and footer,
-10 views with 13 variants, the verifier, and 81 tests.
+with dark mode, bilingual i18n, dynamic menu-driven routing, header with search box and
+notice ticker, footer, 13 views with 16 variants, site search, class routine, result
+lookup, the verifier, five project lint rules, and 107 tests.
+
+`httpSource` is exercised by integration tests against a real local HTTP server, covering
+path and query construction, authentication headers, 404 handling, server errors and
+timeouts. It has still never spoken to *your* backend — that is the one thing waiting on
+you.
 
 Next, in order:
 
-1. Point `httpSource` at the real content API and validate against real payloads
-2. Per-school variant registry to fix the CSS issue above
-3. More variants for the pages schools care most about — home, notice, teachers
-4. Search, and the notice ticker
-5. A variant gallery page for browsing every design in every state
+1. Point `httpSource` at the real content API and check the payload shapes match
+2. More variants for the pages schools care most about — home, notice, teachers
+3. A variant gallery page for browsing every design in every state
+4. Real images: an image pipeline with sizes and modern formats

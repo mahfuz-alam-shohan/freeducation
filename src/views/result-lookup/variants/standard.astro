@@ -1,0 +1,89 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { ResultLookupViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: ResultLookupViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { result } = vm
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  {vm.exams.length === 0 ? <EmptyState message={t('result.unavailable')} /> : (
+    <>
+      <form class="fe-lookup" method="get" action={`/${vm.basePath}`}>
+        <p class="fe-field">
+          <label for="exam">{t('result.exam')}</label>
+          <select id="exam" name="exam">
+            {vm.exams.map(exam => (
+              <option value={exam.id} selected={exam.id === vm.query.exam}>
+                {resolveText(exam.label, locale)}
+              </option>
+            ))}
+          </select>
+        </p>
+        <p class="fe-field">
+          <label for="roll">{t('result.roll')}</label>
+          <input id="roll" name="roll" type="text" inputmode="numeric" value={vm.query.roll} required />
+        </p>
+        <p class="fe-field">
+          <button type="submit">{t('result.submit')}</button>
+        </p>
+      </form>
+
+      {!vm.searched && <EmptyState message={t('result.prompt')} />}
+      {vm.searched && !result && <EmptyState message={t('result.notFound')} />}
+
+      {result && (
+        <article class="fe-result">
+          <dl class="fe-meta">
+            <div><dt>{t('result.student')}</dt><dd>{resolveText(result.studentName, locale)}</dd></div>
+            <div><dt>{t('result.roll')}</dt><dd>{result.roll}</dd></div>
+            <div><dt>{t('result.class')}</dt><dd>{resolveText(result.className, locale)}</dd></div>
+            <div><dt>{t('result.exam')}</dt><dd>{resolveText(result.exam, locale)}</dd></div>
+            {result.gpa && <div><dt>{t('result.gpa')}</dt><dd><strong>{result.gpa}</strong></dd></div>}
+            {result.publishedAt && (
+              <div><dt>{t('common.published')}</dt><dd>{formatDate(result.publishedAt, locale)}</dd></div>
+            )}
+          </dl>
+
+          {result.subjects.length > 0 && (
+            <div class="fe-scroll">
+              <table>
+                <thead>
+                  <tr><th scope="col">{t('result.subject')}</th><th scope="col">{t('result.grade')}</th></tr>
+                </thead>
+                <tbody>
+                  {result.subjects.map(subject => (
+                    <tr>
+                      <td>{resolveText(subject.name, locale)}</td>
+                      <td>{subject.grade}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </article>
+      )}
+    </>
+  )}
+</Container>
+<style>
+  .fe-lookup { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: end; margin-bottom: var(--fe-space-8); }
+  .fe-field { margin: 0; display: grid; gap: var(--fe-space-2); }
+  label { font-size: var(--fe-size-sm); color: var(--fe-color-textMuted); }
+  select, input { padding: var(--fe-space-2) var(--fe-space-3); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); background: var(--fe-color-bg); color: var(--fe-color-text); font: inherit; font-size: var(--fe-size-sm); }
+  button { padding: var(--fe-space-2) var(--fe-space-6); border: 0; border-radius: var(--fe-radius-sm); background: var(--fe-color-primary); color: var(--fe-color-primaryText); font: inherit; font-size: var(--fe-size-sm); font-weight: 600; cursor: pointer; }
+  .fe-meta { display: grid; gap: var(--fe-space-3); grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); margin: 0 0 var(--fe-space-6); }
+  .fe-meta dt { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-meta dd { margin: 0; }
+  .fe-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-3); border-bottom: 1px solid var(--fe-color-border); }
+  th { background: var(--fe-color-surface); color: var(--fe-color-textMuted); }
+</style>

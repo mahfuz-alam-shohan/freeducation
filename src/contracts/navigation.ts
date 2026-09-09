@@ -16,6 +16,9 @@ export const ViewType = z.enum([
   'gallery-albums',
   'gallery-album',
   'contact',
+  'routine',
+  'result-lookup',
+  'search',
   'external-link',
 ])
 export type ViewType = z.infer<typeof ViewType>
@@ -28,8 +31,7 @@ const MenuItemBase = z.object({
   view: ViewType,
   /** View-specific arguments, e.g. { category: 'academic' } or { group: 'governing-body' } */
   params: z.record(z.string(), z.string()).default({}),
-  /** Design variant id. Falls back to the school default when absent. */
-  variant: z.string().optional(),
+  /** Whether the item appears in the menu. Hidden items are still reachable by URL. */
   visible: z.boolean().default(true),
   /** Promoted out of the dropdown into a call-to-action button. */
   highlighted: z.boolean().default(false),

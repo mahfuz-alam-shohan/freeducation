@@ -39,6 +39,23 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
 
         case 'gallery.albums': return page(fixtures.albums, params)
         case 'gallery.album': return fixtures.albums.find(a => a.slug === params.slug) ?? null
+
+        case 'routine.classes': return fixtures.classes
+        case 'routine.byClass': {
+          const requested = (params.class as string | undefined) ?? fixtures.classes[0]?.id
+          return requested ? fixtures.routines[requested] ?? null : null
+        }
+
+        case 'result.exams': return fixtures.exams
+        case 'result.lookup': {
+          const exam = fixtures.exams.find(e => e.id === params.exam)
+          if (!exam) return null
+          return fixtures.results.find(
+            r => r.roll === String(params.roll) && r.exam.en === exam.label.en,
+          ) ?? null
+        }
+
+        case 'site.search': return page(fixtures.search(String(params.q ?? '')), params)
       }
     },
   }

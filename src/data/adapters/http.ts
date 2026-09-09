@@ -23,6 +23,11 @@ const endpoints: Record<DataKey, string> = {
   'event.bySlug': 'events/:slug',
   'gallery.albums': 'gallery/albums',
   'gallery.album': 'gallery/albums/:slug',
+  'routine.classes': 'routine/classes',
+  'routine.byClass': 'routine',
+  'result.exams': 'results/exams',
+  'result.lookup': 'results/lookup',
+  'site.search': 'search',
 }
 
 export function httpSource(options: HttpSourceOptions): DataSource {
