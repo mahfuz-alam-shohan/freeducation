@@ -2,6 +2,7 @@
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
 import type { GalleryAlbumsViewModel } from '../viewModel.js'
 import type { Locale } from '../../../contracts/index.js'
 import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
@@ -16,9 +17,7 @@ const { vm, locale, t } = Astro.props
       {vm.albums.map(album => (
         <li>
           <a href={`/${vm.basePath}/${album.slug}`}>
-            {album.cover?.url
-              ? <img src={album.cover.url} alt="" loading="lazy" decoding="async" />
-              : <span class="fe-placeholder" aria-hidden="true"></span>}
+            <Photo image={album.cover} locale={locale} width={320} height={240} sizes="(max-width: 40rem) 100vw, 14rem" />
             <strong>{resolveText(album.title, locale)}</strong>
             {album.takenAt && <small>{formatDate(album.takenAt, locale)}</small>}
           </a>
@@ -30,7 +29,7 @@ const { vm, locale, t } = Astro.props
 <style>
   .fe-albums { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }
   .fe-albums a { display: block; text-decoration: none; color: var(--fe-color-text); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-md); overflow: hidden; }
-  .fe-albums img, .fe-placeholder { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--fe-color-surface); }
+  .fe-albums :global(.fe-photo) { border-radius: 0; }
   .fe-albums strong, .fe-albums small { display: block; padding-inline: var(--fe-space-3); }
   .fe-albums strong { padding-top: var(--fe-space-3); }
   .fe-albums small { padding-bottom: var(--fe-space-3); color: var(--fe-color-textMuted); }

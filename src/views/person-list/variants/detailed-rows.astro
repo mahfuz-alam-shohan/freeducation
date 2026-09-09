@@ -1,0 +1,46 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { PersonListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: PersonListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.people.length === 0 ? <EmptyState message={t('person.empty')} /> : (
+    <ul class="fe-rows">
+      {vm.people.map(person => (
+        <li>
+          <Photo
+            class="fe-portrait" image={person.photo} locale={locale}
+            width={72} height={72} fallback={resolveText(person.name, locale).slice(0, 1)}
+          />
+          <div class="fe-who">
+            <strong>{resolveText(person.name, locale)}</strong>
+            {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+            {person.department && <span class="fe-dept">{resolveText(person.department, locale)}</span>}
+          </div>
+          <div class="fe-reach">
+            {person.email && <a href={`mailto:${person.email}`}>{person.email}</a>}
+            {person.phone && <a href={`tel:${person.phone}`}>{person.phone}</a>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Container>
+<style>
+  .fe-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-3); }
+  .fe-rows li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fe-space-4); padding: var(--fe-space-3); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-md); background: var(--fe-color-bg); }
+  .fe-rows :global(.fe-portrait) { inline-size: 72px; block-size: 72px; border-radius: var(--fe-radius-sm); flex: none; }
+  .fe-who { flex: 1 1 12rem; display: grid; gap: var(--fe-space-1); }
+  .fe-who span { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-who .fe-dept { font-size: var(--fe-size-xs); }
+  .fe-reach { display: grid; gap: var(--fe-space-1); text-align: end; }
+  .fe-reach a { color: var(--fe-color-primary); text-decoration: none; font-size: var(--fe-size-sm); }
+</style>

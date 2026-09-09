@@ -205,6 +205,34 @@ layer is ready for it, but nothing else assumes it.
 
 ---
 
+## Images
+
+Content images arrive from the API as URLs, so they cannot be transformed at build time.
+`src/ui/Photo.astro` is the single component every image goes through, and it does the
+things that matter on a slow connection:
+
+- **width and height are always set**, so the page does not jump as images arrive
+- **lazy loading and async decoding** by default; pass `eager` for an image above the fold
+- **`srcset` from `image.variants`** when the API supplies alternate sizes, so a phone
+  downloads a phone-sized file
+- **a graceful fallback** — an initial or an icon — when there is no image at all
+- **`alt` through `resolveText`**, so it is translated, and empty for decorative images
+
+The Cloudflare adapter is configured with `imageService: { build: 'compile', runtime:
+'passthrough' }`: local assets are optimised at build time, and remote images are served
+as they come. That avoids requiring the paid Cloudflare Images binding. If the content
+API cannot produce sized variants, putting an image CDN in front of it is the next step.
+
+## Deployment
+
+Each school is a separate Cloudflare Worker named `freeducation-<slug>`, built with its
+own `PUBLIC_SCHOOL` and therefore carrying only its own designs.
+
+`.github/workflows/deploy.yml` builds and deploys on every push to `main`. It needs
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets, and skips with
+a notice when they are absent rather than failing the build. `CONTENT_API_KEY` is pushed
+to the Worker as a Worker secret.
+
 ## Constraints worth knowing
 
 **One build per school.** `PUBLIC_SCHOOL` is inlined at build time, so each school is
@@ -221,8 +249,8 @@ chosen designs, because the menu is not known at build time, so it was removed.
 
 Built: contracts, keyed data layer with two adapters, school config, tokens and theming
 with dark mode, bilingual i18n, dynamic menu-driven routing, header with search box and
-notice ticker, footer, 13 views with 16 variants, site search, class routine, result
-lookup, the verifier, five project lint rules, and 107 tests.
+notice ticker, footer, 13 views with 19 variants, site search, class routine, result
+lookup, an image pipeline, the verifier, five project lint rules, and 116 tests.
 
 `httpSource` is exercised by integration tests against a real local HTTP server, covering
 path and query construction, authentication headers, 404 handling, server errors and
@@ -232,6 +260,5 @@ you.
 Next, in order:
 
 1. Point `httpSource` at the real content API and check the payload shapes match
-2. More variants for the pages schools care most about — home, notice, teachers
-3. A variant gallery page for browsing every design in every state
-4. Real images: an image pipeline with sizes and modern formats
+2. A variant gallery page for browsing every design in every state
+3. Custom domains per school, once the first one is live

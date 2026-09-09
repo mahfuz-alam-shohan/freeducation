@@ -14,7 +14,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "verify:structure": "node tools/verify/index.mjs",
-    "verify": "npm run verify:structure && npm run lint && npm run typecheck && npm run test"
+    "verify": "npm run verify:structure && npm run lint && npm run typecheck && npm run test",
+    "deploy": "astro build && wrangler deploy -c dist/server/wrangler.json"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.1",
@@ -32,6 +33,7 @@
     "eslint-plugin-import": "^2.32.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.130.0"
   }
 }

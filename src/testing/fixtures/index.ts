@@ -123,7 +123,12 @@ const notices: Notice[] = [
 const people: Person[] = [
   { id: 'p1', group: 'governing-body', order: 1, name: t('জনাব রফিকুল ইসলাম', 'Mr Rafiqul Islam'), designation: t('সভাপতি', 'Chairman') },
   { id: 'p2', group: 'governing-body', order: 2, name: t('ড. নাজমা বেগম', 'Dr Nazma Begum'), designation: t('সদস্য', 'Member') },
-  { id: 'p3', group: 'teachers', order: 1, name: t('মোঃ আনিসুর রহমান', 'Md Anisur Rahman'), designation: t('অধ্যক্ষ', 'Principal'), department: t('প্রশাসন', 'Administration') },
+  {
+    id: 'p3', group: 'teachers', order: 1,
+    name: t('মোঃ আনিসুর রহমান', 'Md Anisur Rahman'),
+    designation: t('অধ্যক্ষ', 'Principal'), department: t('প্রশাসন', 'Administration'),
+    photo: { url: '/sample/portrait.svg', width: 300, height: 300, variants: [] },
+  },
   { id: 'p4', group: 'teachers', order: 2, name: t('সেলিনা আক্তার', 'Selina Akhter'), designation: t('সহকারী অধ্যাপক', 'Assistant Professor'), department: t('পদার্থবিজ্ঞান', 'Physics') },
   { id: 'p5', group: 'staff', order: 1, name: t('আব্দুল করিম', 'Abdul Karim'), designation: t('হিসাবরক্ষক', 'Accountant') },
 ]
@@ -142,7 +147,17 @@ const pages: RichPage[] = [
   },
   { slug: 'about/history', title: t('ইতিহাস', 'History'), blocks: [{ type: 'richtext', html: t('<p>প্রতিষ্ঠানের ইতিহাস।</p>', '<p>The history of the institution.</p>') }] },
   { slug: 'about/mission', title: t('লক্ষ্য ও উদ্দেশ্য', 'Mission & Vision'), blocks: [] },
-  { slug: 'about/facilities', title: t('সুযোগ-সুবিধা', 'Facilities'), blocks: [{ type: 'richtext', html: t('<p>লাইব্রেরি, ল্যাব, পরিবহন ও ছাত্রাবাস।</p>', '<p>Library, laboratories, transport and hostel.</p>') }] },
+  {
+    slug: 'about/facilities', title: t('সুযোগ-সুবিধা', 'Facilities'),
+    blocks: [
+      { type: 'richtext', html: t('<p>লাইব্রেরি, ল্যাব, পরিবহন ও ছাত্রাবাস।</p>', '<p>Library, laboratories, transport and hostel.</p>') },
+      {
+        type: 'image',
+        image: { url: '/sample/campus.svg', width: 800, height: 600, variants: [], alt: t('কলেজ প্রাঙ্গণ', 'The college campus') },
+        caption: t('আমাদের ক্যাম্পাস', 'Our campus'),
+      },
+    ],
+  },
   { slug: 'academics', title: t('একাডেমিক', 'Academics'), blocks: [] },
   { slug: 'admission', title: t('ভর্তি তথ্য', 'Admission Information'), blocks: [{ type: 'richtext', html: t('<p>ভর্তি সংক্রান্ত সাধারণ তথ্য।</p>', '<p>General admission information.</p>') }] },
   { slug: 'administration/principal', title: t('অধ্যক্ষের বাণী', "Principal's Message"), blocks: [{ type: 'richtext', html: t('<p>শুভেচ্ছা।</p>', '<p>Greetings.</p>') }] },
@@ -153,8 +168,19 @@ const events: SchoolEvent[] = [
   { id: 'e2', slug: 'science-fair-2026', title: t('বিজ্ঞান মেলা', 'Science Fair'), startsAt: '2026-11-05T03:00:00.000Z' },
 ]
 
+const campus = { url: '/sample/campus.svg', width: 800, height: 600, variants: [] }
+
 const albums: GalleryAlbum[] = [
-  { id: 'a1', slug: 'annual-sports-2026', title: t('বার্ষিক ক্রীড়া ২০২৬', 'Annual Sports 2026'), photos: [], takenAt: '2026-12-18T00:00:00.000Z' },
+  {
+    id: 'a1', slug: 'annual-sports-2026',
+    title: t('বার্ষিক ক্রীড়া ২০২৬', 'Annual Sports 2026'),
+    cover: campus,
+    photos: [
+      { ...campus, alt: t('কলেজ প্রাঙ্গণ', 'The college campus') },
+      { ...campus, alt: t('মূল ভবন', 'The main building') },
+    ],
+    takenAt: '2026-12-18T00:00:00.000Z',
+  },
 ]
 
 const classes: ClassRef[] = [

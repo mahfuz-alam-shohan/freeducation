@@ -2,6 +2,7 @@
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
 import type { GalleryAlbumViewModel } from '../viewModel.js'
 import type { Locale } from '../../../contracts/index.js'
 import { resolveText, type Translator } from '../../../i18n/index.js'
@@ -17,7 +18,7 @@ const { album } = vm
       {album.photos.length === 0 ? <EmptyState message={t('gallery.empty')} /> : (
         <ul class="fe-photos">
           {album.photos.map(photo => (
-            <li><img src={photo.url} alt={resolveText(photo.alt, locale)} loading="lazy" decoding="async" /></li>
+            <li><Photo image={photo} locale={locale} width={320} height={240} sizes="(max-width: 40rem) 100vw, 12rem" /></li>
           ))}
         </ul>
       )}
@@ -27,6 +28,6 @@ const { album } = vm
 </Container>
 <style>
   .fe-photos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-3); grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
-  .fe-photos img { width: 100%; height: auto; border-radius: var(--fe-radius-md); display: block; }
+  .fe-photos :global(.fe-photo) { border-radius: var(--fe-radius-md); }
   .fe-back { display: inline-block; margin-top: var(--fe-space-8); color: var(--fe-color-primary); text-decoration: none; }
 </style>

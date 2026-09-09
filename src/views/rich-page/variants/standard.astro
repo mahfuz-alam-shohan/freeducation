@@ -2,6 +2,7 @@
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
 import Prose from '../../../ui/Prose.astro'
 import type { RichPageViewModel } from '../viewModel.js'
 import type { Locale } from '../../../contracts/index.js'
@@ -20,7 +21,7 @@ const { vm, locale, t } = Astro.props
 
           {block.type === 'image' && (
             <figure>
-              <img src={block.image.url} alt={resolveText(block.image.alt, locale)} loading="lazy" decoding="async" />
+              <Photo image={block.image} locale={locale} width={800} height={600} sizes="(max-width: 52rem) 100vw, 50rem" />
               {block.caption && <figcaption>{resolveText(block.caption, locale)}</figcaption>}
             </figure>
           )}
@@ -71,7 +72,7 @@ const { vm, locale, t } = Astro.props
   th { background: var(--fe-color-surface); }
   figure { margin: 0; }
   figcaption { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); margin-top: var(--fe-space-2); }
-  img { max-width: 100%; height: auto; border-radius: var(--fe-radius-md); }
+  figure :global(.fe-photo) { border-radius: var(--fe-radius-md); }
   .fe-files, .fe-people { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-2); }
   .fe-files a { color: var(--fe-color-primary); }
   .fe-people li { display: flex; justify-content: space-between; gap: var(--fe-space-4); padding: var(--fe-space-2) 0; border-bottom: 1px solid var(--fe-color-border); }

@@ -1,0 +1,8 @@
+{
+  "slug": "hillview",
+  "locales": { "supported": ["en", "bn"], "default": "en" },
+  "theme": { "preset": "indigo", "overrides": { "font.heading": "Georgia, 'Noto Serif Bengali', serif" } },
+  "variants": { "home": "minimal-stack", "notice-list": "timeline", "person-list": "detailed-rows" },
+  "features": { "search": true, "noticeTicker": true, "themeToggle": true, "languageSwitch": true },
+  "data": { "source": "fixture" }
+}

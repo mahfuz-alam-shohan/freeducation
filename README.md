@@ -116,13 +116,35 @@ results · calm and institutional rather than flashy.
 ```bash
 npm install
 npm run dev                        # the demo school
-PUBLIC_SCHOOL=riverside npm run dev # a different school: different designs, colours, language
+PUBLIC_SCHOOL=hillview npm run dev # a different school: different designs, colours, language
 npm run verify                     # structure + lint + types + tests
 ```
 
-Two example schools are included. They share every line of code and differ only in
-their JSON: `demo` is Bangla-first with the split hero and a dense notice table;
-`riverside` is English-first, maroon, with the notice-led homepage and card notices.
+Three example schools are included. They share every line of code and differ only in
+their JSON:
+
+| School | Language | Look |
+|---|---|---|
+| `demo` | Bangla-first, green | Split hero, dense notice table, photo grid |
+| `riverside` | English-first, maroon | Notice-led homepage, notice cards, compact table |
+| `hillview` | English-first, indigo | Minimal stacked homepage, notice timeline, detailed rows |
+
+## Deploying
+
+Each school is its own Cloudflare Worker, deployed by GitHub Actions on every push to
+`main`. To switch it on, add two repository secrets under
+**Settings → Secrets and variables → Actions**:
+
+| Secret | Where it comes from |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare dashboard → My Profile → API Tokens → Create Token → *Edit Cloudflare Workers* |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard → Workers & Pages → Account ID in the sidebar |
+
+Add `CONTENT_API_KEY` too once the content API exists; it is pushed to the Worker as a
+secret, never committed.
+
+Until those secrets exist the deploy job skips with a notice rather than failing. Add a
+school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 
 ## Status
 
@@ -132,9 +154,10 @@ their JSON: `demo` is Bangla-first with the split hero and a dense notice table;
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 13 views, 16 variants |
-| Features | Done — site search, notice ticker, class routine, result lookup, dark mode |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 107 tests |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 13 views, 19 variants |
+| Features | Done — site search, notice ticker, class routine, result lookup, dark mode, image pipeline |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 116 tests |
+| Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 
 The ordered next steps are at the end of

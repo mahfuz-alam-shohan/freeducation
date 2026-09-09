@@ -5,6 +5,7 @@ export type { HomeViewModel } from './viewModel.js'
 export const variants = {
   'hero-split': () => import('./variants/hero-split.astro'),
   'notice-first': () => import('./variants/notice-first.astro'),
+  'minimal-stack': () => import('./variants/minimal-stack.astro'),
 }
 
 export const defaultVariant = 'hero-split'

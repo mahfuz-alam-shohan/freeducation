@@ -5,6 +5,7 @@ export type { PersonListViewModel } from './viewModel.js'
 export const variants = {
   'grid-photo': () => import('./variants/grid-photo.astro'),
   'table-compact': () => import('./variants/table-compact.astro'),
+  'detailed-rows': () => import('./variants/detailed-rows.astro'),
 }
 
 export const defaultVariant = 'grid-photo'

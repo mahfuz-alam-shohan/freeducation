@@ -23,7 +23,7 @@ jobs:
     needs: verify
     strategy:
       matrix:
-        school: [demo, riverside]
+        school: [demo, riverside, hillview]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

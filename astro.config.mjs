@@ -7,7 +7,9 @@ import { activeVariants } from './tools/active-variants-plugin.mjs'
 // production build locally (ADAPTER=node astro build && astro preview).
 const adapter = process.env.ADAPTER === 'node'
   ? node({ mode: 'standalone' })
-  : cloudflare()
+  // Local assets are optimised at build time; images from the content API are served
+  // as-is. Neither needs the paid Cloudflare Images binding.
+  : cloudflare({ imageService: { build: 'compile', runtime: 'passthrough' } })
 
 const school = process.env.PUBLIC_SCHOOL ?? 'demo'
 

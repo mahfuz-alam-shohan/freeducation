@@ -1,0 +1,60 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deployment per school. Each school is its own Worker on its own domain,
+# which is what lets a build ship only that school's designs.
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      # Deploy schools one at a time so a failure does not leave a half-updated set.
+      max-parallel: 1
+      matrix:
+        school: [demo]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Cloudflare credentials are configured
+        id: creds
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping deploy. Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID under Settings → Secrets and variables → Actions."
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.creds.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+        if: steps.creds.outputs.ready == 'true'
+
+      - run: npm run build
+        if: steps.creds.outputs.ready == 'true'
+        env:
+          PUBLIC_SCHOOL: ${{ matrix.school }}
+
+      - name: Deploy ${{ matrix.school }}
+        if: steps.creds.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            deploy -c dist/server/wrangler.json
+            --name freeducation-${{ matrix.school }}
+          secrets: |
+            CONTENT_API_KEY
+        env:
+          CONTENT_API_KEY: ${{ secrets.CONTENT_API_KEY }}

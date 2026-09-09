@@ -1,0 +1,68 @@
+---
+import type { Image, Locale } from '../contracts/index.js'
+import { resolveText } from '../i18n/index.js'
+
+interface Props {
+  image: Image | undefined
+  locale: Locale
+  /** Rendered width and height. Always set: reserving space stops the page jumping as images arrive. */
+  width: number
+  height: number
+  /** Sizes hint for the srcset, e.g. '(max-width: 40rem) 100vw, 20rem'. */
+  sizes?: string | undefined
+  /** Above-the-fold images load eagerly; everything else waits. */
+  eager?: boolean | undefined
+  /** Shown when there is no image: usually an initial or an icon. */
+  fallback?: string | undefined
+  class?: string | undefined
+}
+
+const {
+  image, locale, width, height, sizes, eager = false, fallback, class: className,
+}: Props = Astro.props
+
+// Decorative images take an empty alt so screen readers skip them rather than
+// announcing a filename.
+const alt = resolveText(image?.alt, locale)
+
+const srcset = image && image.variants.length > 0
+  ? image.variants.map(variant => `${variant.url} ${variant.width}w`).join(', ')
+  : undefined
+---
+{image?.url ? (
+  <img
+    class:list={['fe-photo', className]}
+    src={image.url}
+    srcset={srcset}
+    sizes={srcset ? (sizes ?? `${width}px`) : undefined}
+    alt={alt}
+    width={image.width ?? width}
+    height={image.height ?? height}
+    loading={eager ? 'eager' : 'lazy'}
+    decoding={eager ? 'sync' : 'async'}
+    fetchpriority={eager ? 'high' : 'auto'}
+    style={`aspect-ratio: ${width} / ${height};`}
+  />
+) : (
+  <span
+    class:list={['fe-photo fe-photo-empty', className]}
+    style={`aspect-ratio: ${width} / ${height};`}
+    aria-hidden="true"
+  >{fallback}</span>
+)}
+<style>
+  .fe-photo {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    object-fit: cover;
+    background: var(--fe-color-surface);
+  }
+  .fe-photo-empty {
+    display: grid;
+    place-items: center;
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-xl);
+    inline-size: 100%;
+  }
+</style>

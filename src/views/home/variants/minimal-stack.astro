@@ -1,0 +1,73 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import type { HomeViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<Container>
+  <header class="fe-intro">
+    <h1>{resolveText(vm.profile.name, locale)}</h1>
+    {vm.profile.tagline && <p>{resolveText(vm.profile.tagline, locale)}</p>}
+    {vm.stats.length > 0 && (
+      <p class="fe-statline">
+        {vm.stats.map(stat => (
+          <span><strong>{stat.value}</strong> {resolveText(stat.label, locale)}</span>
+        ))}
+      </p>
+    )}
+  </header>
+
+  <section aria-labelledby="home-notices">
+    <h2 id="home-notices">{t('home.notices')}</h2>
+    {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
+      <ol class="fe-stack">
+        {vm.notices.map(notice => (
+          <li>
+            <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+            <a href={`/${vm.noticesPath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
+            {notice.summary && <p>{resolveText(notice.summary, locale)}</p>}
+          </li>
+        ))}
+      </ol>
+    )}
+    <a class="fe-more" href={`/${vm.noticesPath}`}>{t('common.viewAll')} &rarr;</a>
+  </section>
+
+  <section aria-labelledby="home-events">
+    <h2 id="home-events">{t('home.events')}</h2>
+    {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
+      <ul class="fe-inline">
+        {vm.events.map(event => (
+          <li>
+            <a href={`/events/${event.slug}`}>{resolveText(event.title, locale)}</a>
+            <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</Container>
+
+<style>
+  .fe-intro { padding-block: var(--fe-space-8) var(--fe-space-12); border-bottom: 2px solid var(--fe-color-primary); margin-bottom: var(--fe-space-8); }
+  .fe-intro h1 { font-family: var(--fe-font-heading); font-size: var(--fe-size-2xl); line-height: var(--fe-leading-tight); margin: 0; color: var(--fe-color-text); }
+  .fe-intro > p { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); }
+  .fe-statline { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); margin-top: var(--fe-space-4) !important; font-size: var(--fe-size-sm); }
+  .fe-statline strong { color: var(--fe-color-primary); }
+  h2 { font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); margin: var(--fe-space-8) 0 var(--fe-space-4); color: var(--fe-color-text); }
+  .fe-stack { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); }
+  .fe-stack li { display: grid; gap: var(--fe-space-1); padding-inline-start: var(--fe-space-4); border-inline-start: 2px solid var(--fe-color-border); }
+  .fe-stack time { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-stack a { color: var(--fe-color-text); text-decoration: none; font-weight: 600; }
+  .fe-stack a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-stack p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-inline { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--fe-space-4); }
+  .fe-inline li { display: grid; padding: var(--fe-space-3) var(--fe-space-4); background: var(--fe-color-surface); border-radius: var(--fe-radius-sm); }
+  .fe-inline a { color: var(--fe-color-text); text-decoration: none; }
+  .fe-inline time { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-more { display: inline-block; margin-top: var(--fe-space-4); color: var(--fe-color-primary); text-decoration: none; font-size: var(--fe-size-sm); }
+</style>

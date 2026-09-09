@@ -1,0 +1,66 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import type { NoticeListViewModel } from '../viewModel.js'
+import type { Locale, Notice } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+
+// Group by month so a long archive stays scannable.
+const groups: { key: string; label: string; notices: Notice[] }[] = []
+for (const notice of vm.notices) {
+  const date = new Date(notice.publishedAt)
+  const key = Number.isNaN(date.getTime()) ? 'unknown' : `${date.getUTCFullYear()}-${date.getUTCMonth()}`
+  const existing = groups.find(group => group.key === key)
+  if (existing) existing.notices.push(notice)
+  else groups.push({ key, label: formatDate(notice.publishedAt, locale), notices: [notice] })
+}
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+  {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
+    <div class="fe-timeline">
+      {groups.map(group => (
+        <section class="fe-group">
+          <h2>{group.label}</h2>
+          <ul>
+            {group.notices.map(notice => (
+              <li class:list={[{ pinned: notice.pinned }]}>
+                <a href={`/${vm.basePath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
+                {notice.summary && <p>{resolveText(notice.summary, locale)}</p>}
+                {notice.attachments.length > 0 && (
+                  <span class="fe-files">
+                    {notice.attachments.map(file => (
+                      <a href={file.url}>{resolveText(file.label, locale)}</a>
+                    ))}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  )}
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
+</Container>
+<style>
+  .fe-timeline { position: relative; padding-inline-start: var(--fe-space-6); }
+  .fe-timeline::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: 2px; background: var(--fe-color-border); }
+  .fe-group { margin-bottom: var(--fe-space-8); }
+  .fe-group h2 { font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); color: var(--fe-color-textMuted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 var(--fe-space-3); }
+  .fe-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); }
+  .fe-group li { position: relative; }
+  .fe-group li::before { content: ''; position: absolute; inset-inline-start: calc(-1 * var(--fe-space-6) - 3px); inset-block-start: 0.5em; inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--fe-color-border); }
+  .fe-group li.pinned::before { background: var(--fe-color-accent); }
+  .fe-group a { color: var(--fe-color-text); text-decoration: none; font-weight: 600; }
+  .fe-group a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-group p { margin: var(--fe-space-1) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-files { display: flex; flex-wrap: wrap; gap: var(--fe-space-3); margin-top: var(--fe-space-2); }
+  .fe-files a { color: var(--fe-color-primary); font-weight: 400; font-size: var(--fe-size-sm); }
+</style>
