@@ -3,6 +3,7 @@ import type { SchoolConfig } from '../config/index.js'
 import type { Locale } from '../contracts/index.js'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import type { Route } from '../routing/resolver.js'
+import type { SubmissionState } from '../contracts/index.js'
 
 /** Everything a page controller is allowed to know. */
 export interface ViewContext {
@@ -11,6 +12,8 @@ export interface ViewContext {
   route: Route
   config: SchoolConfig
   url: URL
+  /** The result of a form posted to this page, if any. */
+  submission: SubmissionState
 }
 
 /**

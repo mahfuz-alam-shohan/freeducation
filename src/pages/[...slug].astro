@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro'
 import { loadSite } from '../runtime/site.js'
+import { handleSubmission, idleSubmission } from '../runtime/forms.js'
 import { matchRoute } from '../routing/resolver.js'
 import { controllers, isRenderable } from '../views/controllers.js'
 import { metaOf } from '../views/types.js'
@@ -20,7 +21,15 @@ if (!route || !isRenderable(route.view)) {
   return new Response(null, { status: 404 })
 }
 
-const viewModel = await controllers[route.view]({ client, locale, route, config, url: Astro.url })
+// Forms post back to their own page, so a rejected form can be re-rendered with its
+// values and errors in place. This works with JavaScript switched off.
+const submission = Astro.request.method === 'POST'
+  ? await handleSubmission(client, Astro.request)
+  : idleSubmission
+
+const viewModel = await controllers[route.view]({
+  client, locale, route, config, url: Astro.url, submission,
+})
 
 const load = activeVariants[route.view]
 if (!load) return new Response(null, { status: 404 })

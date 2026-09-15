@@ -7,6 +7,7 @@ import { createTranslator } from '../i18n/index.js'
 import { SchoolConfig } from '../config/schema.js'
 import type { MenuItem, ViewType } from '../contracts/index.js'
 import type { Route } from '../routing/resolver.js'
+import { idleSubmission } from '../runtime/forms.js'
 
 /**
  * The contract harness.
@@ -46,6 +47,7 @@ const routeParams: Record<RenderableView, Record<string, string>> = {
   'routine': {},
   'result-lookup': {},
   'search': {},
+  'admission-form': {},
 }
 
 /** Query strings that drive the views whose content depends on user input. */
@@ -95,6 +97,7 @@ const contextFor = (view: RenderableView, source: ReturnType<typeof fixtureSourc
     route,
     config,
     url: new URL(`https://example.test/${path}${routeQuery[view] ?? ''}`),
+    submission: idleSubmission,
   }
 }
 

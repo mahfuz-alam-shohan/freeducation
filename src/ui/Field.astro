@@ -1,0 +1,69 @@
+---
+import type { Translator } from '../i18n/index.js'
+
+interface Props {
+  name: string
+  label: string
+  t: Translator
+  type?: 'text' | 'email' | 'tel' | 'date' | 'textarea'
+  value?: string | undefined
+  /** Translation key for the error beneath this field, if it failed validation. */
+  error?: string | undefined
+  required?: boolean | undefined
+  autocomplete?: string | undefined
+  rows?: number | undefined
+  inputmode?: 'text' | 'tel' | 'email' | 'numeric' | undefined
+}
+const {
+  name, label, t, type = 'text', value = '', error,
+  required = false, autocomplete, rows = 5, inputmode,
+}: Props = Astro.props
+
+const id = `fe-field-${name}`
+const errorId = `${id}-error`
+---
+<p class="fe-field">
+  <label for={id}>
+    {label}
+    {!required && <span class="fe-optional">({t('form.optional')})</span>}
+  </label>
+
+  {type === 'textarea' ? (
+    <textarea
+      id={id} name={name} rows={rows} required={required}
+      aria-invalid={error ? 'true' : undefined}
+      aria-describedby={error ? errorId : undefined}
+    >{value}</textarea>
+  ) : (
+    <input
+      id={id} name={name} type={type} value={value} required={required}
+      autocomplete={autocomplete} inputmode={inputmode}
+      aria-invalid={error ? 'true' : undefined}
+      aria-describedby={error ? errorId : undefined}
+    />
+  )}
+
+  {error && <span class="fe-error" id={errorId}>{t(error as never)}</span>}
+</p>
+
+<style>
+  .fe-field { margin: 0; display: grid; gap: var(--fe-space-2); }
+  label { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  .fe-optional { margin-inline-start: var(--fe-space-1); color: var(--fe-color-textMuted); font-weight: var(--fe-weight-regular); font-size: var(--fe-size-2xs); }
+
+  input, textarea {
+    inline-size: 100%;
+    padding: var(--fe-space-3);
+    border: 1px solid var(--fe-color-border);
+    border-radius: var(--fe-radius-sm);
+    background: var(--fe-color-bg);
+    color: var(--fe-color-text);
+    font: inherit;
+    font-size: var(--fe-size-sm);
+  }
+  textarea { resize: vertical; line-height: var(--fe-leading-normal); }
+  input:focus-visible, textarea:focus-visible { border-color: var(--fe-color-primary); }
+  [aria-invalid='true'] { border-color: var(--fe-color-danger); }
+
+  .fe-error { color: var(--fe-color-danger); font-size: var(--fe-size-2xs); }
+</style>

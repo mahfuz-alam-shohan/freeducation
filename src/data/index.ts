@@ -2,3 +2,4 @@ export { createClient, DataError, type Client, type DataSource } from './source.
 export { httpSource } from './adapters/http.js'
 export { fixtureSource } from './adapters/fixture.js'
 export { dataKeys, type DataKey, type ParamsOf, type ResultOf } from './keys.js'
+export { formKeys, isFormKey, type FormKey, type InputOf, type ReceiptOf } from './forms.js'

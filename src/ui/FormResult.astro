@@ -1,0 +1,36 @@
+---
+import type { Translator } from '../i18n/index.js'
+import type { SubmissionState } from '../contracts/index.js'
+
+interface Props { submission: SubmissionState; t: Translator; successMessage?: string | undefined }
+const { submission, t, successMessage }: Props = Astro.props
+const { status, reference } = submission
+---
+{status === 'ok' && (
+  <div class="fe-result ok" role="status">
+    <strong>{t('form.sent')}</strong>
+    {successMessage && <p>{successMessage}</p>}
+    {reference && <p class="fe-ref">{t('form.reference')}: <b>{reference}</b></p>}
+  </div>
+)}
+
+{status === 'invalid' && (
+  <div class="fe-result bad" role="alert"><strong>{t('form.error.summary')}</strong></div>
+)}
+
+{status === 'failed' && (
+  <div class="fe-result bad" role="alert"><strong>{t('form.error.failed')}</strong></div>
+)}
+
+<style>
+  .fe-result {
+    margin-block-end: var(--fe-space-6);
+    padding: var(--fe-space-4);
+    border-inline-start: 3px solid var(--fe-color-primary);
+    background: var(--fe-color-surface);
+    font-size: var(--fe-size-sm);
+  }
+  .fe-result.bad { border-inline-start-color: var(--fe-color-danger); }
+  .fe-result p { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); }
+  .fe-ref b { color: var(--fe-color-text); font-variant-numeric: tabular-nums; letter-spacing: var(--fe-tracking-wide); }
+</style>

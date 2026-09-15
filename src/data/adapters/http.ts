@@ -1,5 +1,6 @@
 import type { DataSource } from '../source.js'
 import type { DataKey } from '../keys.js'
+import type { FormKey } from '../forms.js'
 
 export interface HttpSourceOptions {
   baseUrl: string
@@ -30,11 +31,42 @@ const endpoints: Record<DataKey, string> = {
   'site.search': 'search',
 }
 
+/** Where a submitted form is sent. */
+const formEndpoints: Record<FormKey, string> = {
+  'contact.message': 'forms/contact',
+  'admission.application': 'forms/admission',
+}
+
 export function httpSource(options: HttpSourceOptions): DataSource {
   const { baseUrl, apiKey, tenant, timeoutMs = 8000, fetchImpl = fetch } = options
 
+  const headers = () => ({
+    accept: 'application/json',
+    ...(apiKey ? { 'x-api-key': apiKey } : {}),
+    ...(tenant ? { 'x-tenant': tenant } : {}),
+  })
+
   return {
     name: 'http',
+
+    async submit(key, payload) {
+      const url = `${baseUrl.replace(/\/$/, '')}/${formEndpoints[key]}`
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+      try {
+        const response = await fetchImpl(url, {
+          method: 'POST',
+          headers: { ...headers(), 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        })
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
+        return await response.json()
+      } finally {
+        clearTimeout(timer)
+      }
+    },
     async fetch(key, params) {
       let path = endpoints[key]
       const query = new URLSearchParams()
@@ -51,14 +83,7 @@ export function httpSource(options: HttpSourceOptions): DataSource {
       const timer = setTimeout(() => controller.abort(), timeoutMs)
 
       try {
-        const response = await fetchImpl(url, {
-          headers: {
-            accept: 'application/json',
-            ...(apiKey ? { 'x-api-key': apiKey } : {}),
-            ...(tenant ? { 'x-tenant': tenant } : {}),
-          },
-          signal: controller.signal,
-        })
+        const response = await fetchImpl(url, { headers: headers(), signal: controller.signal })
         if (response.status === 404) return null
         if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
         return await response.json()

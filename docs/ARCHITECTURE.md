@@ -205,6 +205,24 @@ layer is ready for it, but nothing else assumes it.
 
 ---
 
+## Forms
+
+Reading content and sending something are both addressed by key. `src/data/forms.ts`
+holds the closed set of things a visitor may submit, each with a Zod schema; the client
+gains `submit(key, payload)` alongside `get(key, params)`, and both adapters implement
+it — the HTTP source POSTs, the fixture source acknowledges with a reference so forms
+work end to end with no backend.
+
+Forms post back to their own page rather than to an endpoint, so a rejected form is
+re-rendered with the visitor's answers still in place and each error beside the field
+that caused it. **This works with JavaScript switched off.** Astro's origin check
+rejects cross-site posts, and a honeypot field hidden from both people and screen
+readers absorbs naive bots — anything that fills it is told the message was accepted
+and nothing is sent onward.
+
+Browser validation is treated as a convenience: every field is checked again on the
+server before it reaches the backend.
+
 ## Images
 
 Content images arrive from the API as URLs, so they cannot be transformed at build time.
@@ -249,8 +267,9 @@ chosen designs, because the menu is not known at build time, so it was removed.
 
 Built: contracts, keyed data layer with two adapters, school config, tokens and theming
 with dark mode, bilingual i18n, dynamic menu-driven routing, header with search box and
-notice ticker, footer, 13 views with 19 variants, site search, class routine, result
-lookup, an image pipeline, the verifier, five project lint rules, and 116 tests.
+notice ticker, footer, 14 views with 20 variants, site search, class routine, result
+lookup, a contact form and an online admission application, an image pipeline, the
+verifier, five project lint rules, and 148 tests.
 
 `httpSource` is exercised by integration tests against a real local HTTP server, covering
 path and query construction, authentication headers, 404 handling, server errors and

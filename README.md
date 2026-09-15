@@ -67,13 +67,13 @@ School name and EIIN · phone and email · **Bangla / English switch** · search
 | **About** | At a Glance · History · Mission & Vision · Facilities · Achievements · Campus |
 | **Administration** | Principal · Vice Principal · Governing Body / Managing Committee · Teacher List · Officers & Staff |
 | **Academics** | Programs & Departments · Class Routine · Exam Routine · Academic Calendar · Syllabus & Books · Library · Rules |
-| **Admission** | Admission Notice · Eligibility & Process · Apply Online · Fees · Admission Result / Merit List · Prospectus · FAQ |
+| **Admission** | Admission Information · **Apply Online** · Admission Notice · Fees |
 | **Notice** | Academic Notice · Office Notice · News · Events · Circulars & Downloads |
 | **Results** | Result lookup by examination and roll number |
 | **Students** | Students Corner · Clubs & Co-curricular · Scholarships & Stipends · Transport · Hostel · Health · Guardianship · Alumni |
 | **Career** | Job Circulars · Application Process |
 | **Gallery** | Photo Gallery · Video Gallery |
-| **Contact** | Address & Map · Contact Form · Department Contacts |
+| **Contact** | Address & map · contact form · department contacts |
 
 Highlighted separately, because they are what most visitors actually came for:
 **Admission / Apply Now** and **Results**.
@@ -125,7 +125,7 @@ their JSON:
 
 | School | Language | Look |
 |---|---|---|
-| `demo` | Bangla-first, green | Split hero, dense notice table, photo grid |
+| `demo` | Bangla-first, green | Newsroom homepage, dense notice table, photo grid |
 | `riverside` | English-first, maroon | Notice-led homepage, notice cards, compact table |
 | `hillview` | English-first, indigo | Minimal stacked homepage, notice timeline, detailed rows |
 
@@ -154,9 +154,9 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 13 views, 19 variants |
-| Features | Done — site search, notice ticker, class routine, result lookup, dark mode, image pipeline |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 116 tests |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 14 views, 20 variants |
+| Features | Done — search, notice ticker, routine, result lookup, contact form, online admission, dark mode, images |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 148 tests |
 | Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 

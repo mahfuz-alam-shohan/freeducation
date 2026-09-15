@@ -35,7 +35,7 @@ const restrictedZones = [
   },
   {
     // The runtime composes config and data for entry points only.
-    target: ['./src/ui', './src/sections', './src/views', './src/contracts', './src/tokens', './src/data', './src/config', './src/i18n', './src/routing'],
+    target: ['./src/ui', './src/sections', './src/contracts', './src/tokens', './src/data', './src/config', './src/i18n', './src/routing'],
     from: ['./src/runtime'],
     message: 'Only routes and layouts may use src/runtime.',
   },

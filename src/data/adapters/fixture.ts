@@ -1,5 +1,6 @@
 import type { DataSource } from '../source.js'
 import type { DataKey } from '../keys.js'
+import type { FormKey } from '../forms.js'
 import type { Notice } from '../../contracts/index.js'
 import { fixtures } from '../../testing/fixtures/index.js'
 
@@ -7,9 +8,20 @@ import { fixtures } from '../../testing/fixtures/index.js'
  * Serves local sample content. Used for development, previews and every test,
  * so the whole site can be built and verified with no backend at all.
  */
+/** Sample submissions are accepted and acknowledged, so forms work end to end offline. */
+const reference = (key: FormKey) => {
+  const prefix = key === 'admission.application' ? 'ADM' : 'MSG'
+  const stamp = Date.now().toString(36).toUpperCase().slice(-6)
+  return `${prefix}-${stamp}`
+}
+
 export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {}): DataSource {
   return {
     name: 'fixture',
+
+    async submit(key) {
+      return { ok: true, reference: reference(key) }
+    },
     async fetch(key, params) {
       if (key in overrides) return overrides[key]
 

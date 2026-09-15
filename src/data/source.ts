@@ -1,9 +1,12 @@
 import { dataKeys, type DataKey, type ParamsOf, type ResultOf } from './keys.js'
+import { formKeys, type FormKey, type InputOf, type ReceiptOf } from './forms.js'
 
 /** A backend. Implementations return raw unknown payloads; validation happens here, once. */
 export interface DataSource {
   readonly name: string
   fetch(key: DataKey, params: Record<string, unknown>): Promise<unknown>
+  /** Sends something a visitor submitted. Absent on sources that are read-only. */
+  submit?(key: FormKey, payload: Record<string, unknown>): Promise<unknown>
 }
 
 export class DataError extends Error {
@@ -15,6 +18,7 @@ export class DataError extends Error {
 
 export interface Client {
   get<K extends DataKey>(key: K, params?: ParamsOf<K>): Promise<ResultOf<K>>
+  submit<K extends FormKey>(key: K, payload: InputOf<K>): Promise<ReceiptOf<K>>
 }
 
 /**
@@ -43,6 +47,26 @@ export function createClient(source: DataSource, opts: { strict?: boolean } = {}
       if (strict) throw new DataError(key, result.error)
       console.error(`[data] '${key}' returned data that does not match its contract`, result.error.issues)
       return emptyFallback(key) as never
+    },
+
+    async submit(key, payload) {
+      const spec = formKeys[key]
+      // The payload is validated before it leaves us; the caller has already reported
+      // any field errors to the visitor by this point.
+      const parsed = spec.input.parse(payload)
+
+      if (!source.submit) throw new DataError(key as never, new Error(`source '${source.name}' cannot accept submissions`))
+
+      let raw: unknown
+      try {
+        raw = await source.submit(key, parsed as Record<string, unknown>)
+      } catch (cause) {
+        throw new DataError(key as never, cause)
+      }
+
+      const result = spec.result.safeParse(raw)
+      if (result.success) return result.data as never
+      throw new DataError(key as never, result.error)
     },
   }
 }

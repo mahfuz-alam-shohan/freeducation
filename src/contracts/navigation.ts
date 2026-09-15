@@ -18,6 +18,7 @@ export const ViewType = z.enum([
   'contact',
   'routine',
   'result-lookup',
+  'admission-form',
   'search',
   'external-link',
 ])

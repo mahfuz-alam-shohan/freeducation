@@ -40,12 +40,15 @@ const pages = [
   ['gallery-album', '/gallery/annual-sports-2026'],
   ['search', '/search?q=admission'],
   ['contact', '/contact'],
+  ['apply', '/admission/apply'],
   ['not-found', '/no-such-page'],
 ]
 
 const viewports = [
   { name: 'desktop', width: 1280, height: 900 },
   { name: 'phone', width: 390, height: 844 },
+  // Dark is a supported theme, so it gets reviewed like any other.
+  { name: 'dark', width: 1280, height: 900, theme: 'dark' },
 ]
 
 mkdirSync(outDir, { recursive: true })
@@ -59,6 +62,7 @@ for (const viewport of viewports) {
     deviceScaleFactor: 2,
     // The ticker scrolls forever; a still frame should not depend on when it was taken.
     reducedMotion: 'reduce',
+    ...(viewport.theme === 'dark' ? { colorScheme: 'dark' } : {}),
   })
   const page = await context.newPage()
 

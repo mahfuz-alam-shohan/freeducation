@@ -17,6 +17,7 @@ import { loadViewModel as contact } from './contact/viewModel.js'
 import { loadViewModel as routine } from './routine/viewModel.js'
 import { loadViewModel as resultLookup } from './result-lookup/viewModel.js'
 import { loadViewModel as search } from './search/viewModel.js'
+import { loadViewModel as admissionForm } from './admission-form/viewModel.js'
 
 export type Controller = (context: ViewContext) => Promise<unknown>
 
@@ -34,6 +35,7 @@ export const controllers = {
   'routine': routine,
   'result-lookup': resultLookup,
   'search': search,
+  'admission-form': admissionForm,
 } satisfies Record<Exclude<ViewType, 'external-link'>, Controller>
 
 export type RenderableView = keyof typeof controllers

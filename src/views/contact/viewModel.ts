@@ -1,9 +1,15 @@
-import type { LocalizedText, SchoolProfile } from '../../contracts/index.js'
+import type { LocalizedText, SchoolProfile, SubmissionState } from '../../contracts/index.js'
 import type { ViewContext } from '../types.js'
 
-export interface ContactViewModel { title: LocalizedText; profile: SchoolProfile }
+export interface ContactViewModel {
+  title: LocalizedText
+  profile: SchoolProfile
+  submission: SubmissionState
+}
 
-export async function loadViewModel({ client, route }: ViewContext): Promise<ContactViewModel> {
+export async function loadViewModel({ client, route, submission }: ViewContext): Promise<ContactViewModel> {
   const profile = await client.get('site.profile')
-  return { title: route.item.label, profile }
+  // Only show the outcome of a message sent from this page, not from another form.
+  const own = submission.formKey === 'contact.message' ? submission : { ...submission, status: 'idle' as const }
+  return { title: route.item.label, profile, submission: own }
 }

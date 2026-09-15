@@ -52,6 +52,7 @@ export const navigation: Navigation = {
       highlighted: true,
       children: [
         item('adm-info', 'ভর্তি তথ্য', 'Admission Information', 'admission', 'rich-page'),
+        item('adm-apply', 'অনলাইনে আবেদন', 'Apply Online', 'admission/apply', 'admission-form'),
         item('adm-notice', 'ভর্তি বিজ্ঞপ্তি', 'Admission Notice', 'notice/admission', 'notice-list', { params: { category: 'admission' } }),
         item('adm-fees', 'ফি কাঠামো', 'Fees', 'admission/fees', 'rich-page'),
       ],
