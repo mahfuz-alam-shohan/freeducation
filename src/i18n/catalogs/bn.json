@@ -62,5 +62,8 @@
   "common.closeMenu": "মেনু বন্ধ করুন",
   "common.more": "আরও",
   "common.language": "ভাষা",
-  "common.quickLinks": "দ্রুত লিঙ্ক"
+  "common.quickLinks": "দ্রুত লিঙ্ক",
+  "home.principal": "অধ্যক্ষের বাণী",
+  "home.gallery": "ক্যাম্পাস থেকে",
+  "home.glance": "এক নজরে"
 }

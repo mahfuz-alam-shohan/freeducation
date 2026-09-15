@@ -62,5 +62,8 @@
   "common.closeMenu": "Close menu",
   "common.more": "More",
   "common.language": "Language",
-  "common.quickLinks": "Quick links"
+  "common.quickLinks": "Quick links",
+  "home.principal": "From the Principal",
+  "home.gallery": "From the campus",
+  "home.glance": "At a glance"
 }

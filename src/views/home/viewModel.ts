@@ -1,4 +1,6 @@
-import type { Notice, SchoolEvent, SchoolProfile, Stat } from '../../contracts/index.js'
+import type {
+  GalleryAlbum, Notice, Person, RichPage, SchoolEvent, SchoolProfile, Stat,
+} from '../../contracts/index.js'
 import type { PageMeta, ViewContext } from '../types.js'
 import { resolveText } from '../../i18n/index.js'
 
@@ -7,22 +9,34 @@ export interface HomeViewModel {
   stats: Stat[]
   notices: Notice[]
   events: SchoolEvent[]
+  albums: GalleryAlbum[]
+  /** The principal's message, shown as the school's own voice on the front page. */
+  message: RichPage | null
+  principal: Person | null
   noticesPath: string
   meta: PageMeta
 }
 
 export async function loadViewModel({ client, locale }: ViewContext): Promise<HomeViewModel> {
-  const [profile, stats, notices, events] = await Promise.all([
+  const [profile, stats, notices, events, albums, message, staff] = await Promise.all([
     client.get('site.profile'),
     client.get('site.stats'),
-    client.get('notice.list', { pageSize: 5 }),
-    client.get('event.list', { pageSize: 3 }),
+    client.get('notice.list', { pageSize: 7 }),
+    client.get('event.list', { pageSize: 4 }),
+    client.get('gallery.albums', { pageSize: 4 }),
+    client.get('page.bySlug', { slug: 'administration/principal' }),
+    client.get('person.list', { group: 'teachers', pageSize: 1 }),
   ])
+
   const description = resolveText(profile.tagline ?? profile.address, locale)
 
   return {
     profile, stats,
-    notices: notices.items, events: events.items,
+    notices: notices.items,
+    events: events.items,
+    albums: albums.items,
+    message,
+    principal: staff.items[0] ?? null,
     noticesPath: 'notice',
     meta: description ? { description } : {},
   }

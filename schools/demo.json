@@ -12,7 +12,7 @@
     "overrides": {}
   },
   "variants": {
-    "home": "hero-split",
+    "home": "newsroom",
     "notice-list": "table-dense"
   },
   "features": {

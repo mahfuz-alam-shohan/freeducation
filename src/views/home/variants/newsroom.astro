@@ -1,0 +1,172 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { HomeViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, toPlainText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+
+const [lead, ...rest] = vm.notices
+
+const messageText = vm.message?.blocks.find(block => block.type === 'richtext')
+const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale), 260) : ''
+---
+<Container>
+  <!-- Notices lead the page: they are what almost every visitor came for. -->
+  <div class="fe-top">
+    <section aria-labelledby="h-notices">
+      <h2 id="h-notices" class="fe-rule">{t('home.notices')}</h2>
+
+      {!lead ? <EmptyState message={t('notice.empty')} /> : (
+        <article class="fe-lead">
+          <time datetime={lead.publishedAt}>{formatDate(lead.publishedAt, locale)}</time>
+          <h3><a href={`/${vm.noticesPath}/${lead.slug}`}>{resolveText(lead.title, locale)}</a></h3>
+          {lead.summary && <p>{resolveText(lead.summary, locale)}</p>}
+        </article>
+      )}
+
+      <ul class="fe-list">
+        {rest.map(notice => (
+          <li>
+            <a href={`/${vm.noticesPath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
+            <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+          </li>
+        ))}
+      </ul>
+      <a class="fe-more" href={`/${vm.noticesPath}`}>{t('common.viewAll')} &rarr;</a>
+    </section>
+
+    <aside class="fe-side">
+      <section aria-labelledby="h-events">
+        <h2 id="h-events" class="fe-rule">{t('home.events')}</h2>
+        {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
+          <ul class="fe-events">
+            {vm.events.map(event => (
+              <li>
+                <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
+                <a href={`/events/${event.slug}`}>{resolveText(event.title, locale)}</a>
+                {event.location && <small>{resolveText(event.location, locale)}</small>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {vm.stats.length > 0 && (
+        <section aria-labelledby="h-glance">
+          <h2 id="h-glance" class="fe-rule">{t('home.glance')}</h2>
+          <dl class="fe-glance">
+            {vm.stats.map(stat => (
+              <div><dt>{resolveText(stat.label, locale)}</dt><dd>{stat.value}</dd></div>
+            ))}
+          </dl>
+        </section>
+      )}
+    </aside>
+  </div>
+
+  {vm.message && excerpt && (
+    <section class="fe-message" aria-labelledby="h-message">
+      <h2 id="h-message" class="fe-rule">{t('home.principal')}</h2>
+      <div class="fe-message-body">
+        <Photo
+          class="fe-principal" image={vm.principal?.photo} locale={locale}
+          width={112} height={140}
+          fallback={resolveText(vm.principal?.name, locale).slice(0, 1)}
+        />
+        <div>
+          <p class="fe-quote">{excerpt}</p>
+          {vm.principal && (
+            <p class="fe-signature">
+              <strong>{resolveText(vm.principal.name, locale)}</strong>
+              {vm.principal.designation && <span>{resolveText(vm.principal.designation, locale)}</span>}
+            </p>
+          )}
+          <a class="fe-more" href={`/${vm.message.slug}`}>{t('common.readMore')} &rarr;</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {vm.albums.length > 0 && (
+    <section class="fe-gallery" aria-labelledby="h-gallery">
+      <h2 id="h-gallery" class="fe-rule">{t('home.gallery')}</h2>
+      <ul>
+        {vm.albums.map(album => (
+          <li>
+            <a href={`/gallery/${album.slug}`}>
+              <Photo image={album.cover} locale={locale} width={280} height={190} sizes="(max-width: 48rem) 45vw, 16rem" />
+              <strong>{resolveText(album.title, locale)}</strong>
+              {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Container>
+
+<style>
+  .fe-rule {
+    margin: 0 0 var(--fe-space-4);
+    padding-block-end: var(--fe-space-2);
+    border-block-end: 2px solid var(--fe-color-primary);
+    font-size: var(--fe-size-lg);
+  }
+
+  .fe-top { display: grid; gap: var(--fe-space-8); }
+  @media (min-width: 60rem) { .fe-top { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: var(--fe-space-12); } }
+
+  .fe-lead { padding-block-end: var(--fe-space-4); border-block-end: 1px solid var(--fe-color-border); }
+  .fe-lead time { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+  .fe-lead h3 { margin: var(--fe-space-1) 0 var(--fe-space-2); font-size: var(--fe-size-xl); }
+  .fe-lead a { text-decoration: none; }
+  .fe-lead a:hover { color: var(--fe-color-primary); }
+  .fe-lead p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+
+  .fe-list { list-style: none; margin: 0; padding: 0; }
+  .fe-list li { display: flex; flex-wrap: wrap; gap: var(--fe-space-2); align-items: baseline; justify-content: space-between; padding-block: var(--fe-space-3); border-block-end: 1px solid var(--fe-rule-hair); }
+  .fe-list a { text-decoration: none; }
+  .fe-list a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-list time { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); white-space: nowrap; }
+
+  .fe-more { display: inline-block; margin-block-start: var(--fe-space-4); color: var(--fe-color-primary); text-decoration: none; font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  .fe-more:hover { text-decoration: underline; }
+
+  .fe-side { display: grid; gap: var(--fe-space-8); align-content: start; }
+  .fe-events { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-3); }
+  .fe-events li { display: grid; gap: 2px; padding-inline-start: var(--fe-space-3); border-inline-start: 2px solid var(--fe-color-accent); }
+  .fe-events time { color: var(--fe-color-accent); font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold); }
+  .fe-events a { text-decoration: none; font-size: var(--fe-size-sm); }
+  .fe-events a:hover { color: var(--fe-color-primary); }
+  .fe-events small { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+
+  .fe-glance { margin: 0; display: grid; }
+  .fe-glance div { display: flex; justify-content: space-between; gap: var(--fe-space-3); padding-block: var(--fe-space-2); border-block-end: 1px solid var(--fe-rule-hair); }
+  .fe-glance dt { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  .fe-glance dd { margin: 0; font-weight: var(--fe-weight-semibold); }
+
+  .fe-message { margin-block-start: var(--fe-space-12); }
+  .fe-message-body { display: flex; gap: var(--fe-space-6); align-items: start; }
+  .fe-message-body :global(.fe-principal) { inline-size: 112px; flex: none; border-radius: var(--fe-radius-sm); }
+  .fe-quote { margin: 0 0 var(--fe-space-3); font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); line-height: var(--fe-leading-snug); }
+  .fe-signature { margin: 0; display: flex; flex-wrap: wrap; gap: var(--fe-space-2); align-items: baseline; }
+  .fe-signature span { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+
+  .fe-gallery { margin-block-start: var(--fe-space-12); }
+  .fe-gallery ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+  .fe-gallery a { display: grid; gap: var(--fe-space-2); text-decoration: none; }
+  .fe-gallery strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  .fe-gallery time { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+
+  @media (max-width: 47.99rem) {
+    /* Title and date collide when squeezed onto one line; stack them instead. */
+    .fe-list li { display: grid; gap: 2px; }
+    .fe-message-body { gap: var(--fe-space-4); }
+    .fe-message-body :global(.fe-principal) { inline-size: 84px; }
+    .fe-quote { font-size: var(--fe-size-base); }
+  }
+</style>
