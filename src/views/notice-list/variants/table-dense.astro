@@ -1,6 +1,7 @@
 ---
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
+import FilterBar from '../../../ui/FilterBar.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
 import Pagination from '../../../ui/Pagination.astro'
 import type { NoticeListViewModel } from '../viewModel.js'
@@ -12,9 +13,16 @@ const { vm, locale, t } = Astro.props
 ---
 <Container>
   <PageHeading title={resolveText(vm.title, locale)} />
+  <FilterBar
+    label={t('notice.title')}
+    items={vm.filters.map(filter => ({
+      label: resolveText(filter.label, locale), href: filter.href, active: filter.active,
+    }))}
+  />
   {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
     <div class="fe-scroll">
       <table class="fe-table">
+        <colgroup><col class="date" /><col /><col class="files" /></colgroup>
         <thead>
           <tr><th scope="col">{t('common.published')}</th><th scope="col">{t('notice.title')}</th><th scope="col"></th></tr>
         </thead>
@@ -46,21 +54,69 @@ const { vm, locale, t } = Astro.props
 </Container>
 <style>
   .fe-scroll { overflow-x: auto; }
-  .fe-table { width: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
-  .fe-table th, .fe-table td { text-align: start; padding: var(--fe-space-3); border-bottom: 1px solid var(--fe-color-border); vertical-align: top; }
-  .fe-table th { background: var(--fe-color-surface); color: var(--fe-color-textMuted); font-weight: 600; white-space: nowrap; }
-  .fe-table td time { color: var(--fe-color-textMuted); white-space: nowrap; }
+
+  .fe-table { inline-size: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  .fe-table th, .fe-table td { text-align: start; vertical-align: top; }
+
+  .fe-table thead th {
+    padding: 0 var(--fe-space-3) var(--fe-space-2);
+    border-block-end: 1px solid var(--fe-color-border);
+    color: var(--fe-color-textMuted);
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--fe-tracking-caps);
+    white-space: nowrap;
+  }
+
   .fe-table a { color: var(--fe-color-text); text-decoration: none; }
   .fe-table a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+
   .fe-pin {
-    display: inline-block;
-    margin-inline-end: var(--fe-space-2);
     color: var(--fe-color-accent);
-    font-size: var(--fe-size-xs);
-    font-weight: 700;
+    font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--fe-tracking-caps);
   }
+
   .fe-files { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-1); }
-  .fe-files a { color: var(--fe-color-primary); white-space: nowrap; }
+  .fe-files a { color: var(--fe-color-primary); }
+
+  /*
+   * Phone: a fixed three-column table cannot fit 390px — the title collapses to one
+   * word per line. Each row becomes a stacked entry instead: date, then headline,
+   * then any attachments.
+   */
+  @media (max-width: 47.99rem) {
+    .fe-table colgroup, .fe-table thead { display: none; }
+    .fe-table, .fe-table tbody, .fe-table tr, .fe-table td { display: block; }
+    .fe-table tr {
+      padding-block: var(--fe-space-4);
+      border-block-end: 1px solid var(--fe-rule-hair);
+    }
+    .fe-table td { padding: 0; }
+    .fe-table td:first-child {
+      margin-block-end: var(--fe-space-1);
+      color: var(--fe-color-textMuted);
+      font-size: var(--fe-size-2xs);
+    }
+    .fe-table td:nth-child(2) { font-size: var(--fe-size-base); line-height: var(--fe-leading-snug); }
+    .fe-table .fe-pin { display: inline; margin-inline-end: var(--fe-space-2); }
+    .fe-table td:last-child:not(:empty) { margin-block-start: var(--fe-space-2); }
+  }
+
+  /* From tablet up the columns are fixed so attachments stay beside their row. */
+  @media (min-width: 48rem) {
+    .fe-table { table-layout: fixed; }
+    .fe-table col.date { inline-size: 9.5rem; }
+    .fe-table col.files { inline-size: 12rem; }
+    .fe-table td { padding: var(--fe-space-3); border-block-end: 1px solid var(--fe-rule-hair); }
+    .fe-table th:first-child, .fe-table td:first-child { padding-inline-start: 0; }
+    .fe-table th:last-child, .fe-table td:last-child { padding-inline-end: 0; }
+    .fe-table td:first-child time { color: var(--fe-color-textMuted); white-space: nowrap; }
+    .fe-table tbody tr:hover { background: var(--fe-color-surface); }
+    .fe-pin { margin-inline-end: var(--fe-space-2); }
+  }
 </style>

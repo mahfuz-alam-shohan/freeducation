@@ -62,16 +62,39 @@ for (const viewport of viewports) {
   })
   const page = await context.newPage()
 
+  // Pages whose viewport-sized frame is worth seeing with the fixed chrome in place.
+  const framed = new Set(['home', 'notice-list', 'routine'])
+
   for (const [name, path] of pages) {
     const response = await page.goto(`${baseUrl}${path}`, { waitUntil: 'networkidle' })
     const status = response?.status() ?? 0
     if (status >= 500) failures.push(`${path} returned ${status}`)
 
-    await page.screenshot({
-      path: join(outDir, `${name}-${viewport.name}.png`),
-      fullPage: true,
+    if (viewport.name === 'phone' && framed.has(name)) {
+      // Viewport-sized, so the sticky header and tab bar appear where a user sees them.
+      await page.screenshot({ path: join(outDir, `${name}-phone-frame.png`) })
+    }
+
+    // Fixed chrome would otherwise be painted partway down a full-page capture.
+    const hideFixed = await page.addStyleTag({
+      content: '.fe-tabbar, .fe-phonebar { position: static !important; }',
     })
+    await page.screenshot({ path: join(outDir, `${name}-${viewport.name}.png`), fullPage: true })
+    await hideFixed.evaluate(node => node.remove())
+
     process.stdout.write(`${status} ${viewport.name.padEnd(7)} ${path}\n`)
+  }
+
+  // The drawer is the main phone interaction, so capture it open as well as closed.
+  if (viewport.name === 'phone') {
+    await page.goto(`${baseUrl}/notice`, { waitUntil: 'networkidle' })
+    const opener = page.locator('[data-fe-nav-open]').first()
+    if (await opener.count()) {
+      await opener.click()
+      await page.waitForTimeout(350)
+      await page.screenshot({ path: join(outDir, 'drawer-phone.png') })
+      process.stdout.write(`--- phone   drawer open\n`)
+    }
   }
 
   await context.close()

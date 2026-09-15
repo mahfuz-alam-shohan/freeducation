@@ -57,5 +57,10 @@
   "search.prompt": "Type something to search.",
   "search.results": "Results",
   "ticker.label": "Latest notices",
-  "common.breadcrumb": "Breadcrumb"
+  "common.breadcrumb": "Breadcrumb",
+  "common.openMenu": "Open menu",
+  "common.closeMenu": "Close menu",
+  "common.more": "More",
+  "common.language": "Language",
+  "common.quickLinks": "Quick links"
 }

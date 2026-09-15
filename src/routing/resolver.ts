@@ -77,6 +77,11 @@ function detailViewFor(view: ViewType): ViewType | undefined {
   }
 }
 
+/** Finds the school's page for a given kind of view, wherever it sits in the menu. */
+export function findByView(routes: Route[], view: ViewType): Route | undefined {
+  return routes.find(route => route.view === view)
+}
+
 export const isActive = (route: Route, currentPath: string): boolean => {
   const current = normalisePath(currentPath)
   return current === route.path || (route.path !== '' && current.startsWith(`${route.path}/`))

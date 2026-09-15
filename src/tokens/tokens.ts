@@ -13,36 +13,69 @@ export const baseTokens = {
   'color.accent': '#b8860b',
   'color.danger': '#b3261e',
   'color.focus': '#1a73e8',
+  'color.scrim': 'rgb(8 14 20 / 0.5)',
   'color.onPrimarySurface': 'rgb(255 255 255 / 0.28)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.16)',
 
-  'font.body': "'Noto Sans Bengali', 'Noto Sans', system-ui, -apple-system, sans-serif",
-  'font.heading': "'Noto Serif Bengali', 'Noto Serif', Georgia, serif",
+  /*
+   * Two scripts, one voice. The browser picks the Latin face for Latin characters and
+   * the Bengali face for Bengali ones, and unicode-range means it only downloads the
+   * subsets a page actually uses.
+   *
+   * Body: Inter + Anek Bangla — both are highly legible at small sizes, which is what
+   * lets the layout stay dense without becoming hard to read.
+   * Headings: Source Serif 4 + Tiro Bangla — Tiro Bangla is a book face designed for
+   * sustained Bengali reading, and gives the site an institutional rather than app-like voice.
+   */
+  'font.body': "'Inter Variable', 'Anek Bangla Variable', system-ui, -apple-system, sans-serif",
+  'font.heading': "'Source Serif 4 Variable', 'Tiro Bangla', Georgia, serif",
+  'font.numeric': "'Inter Variable', system-ui, sans-serif",
+
+  /*
+   * A small, tightly-spaced scale. Body text sits at 15px rather than 16px: at these
+   * sizes Inter and Anek Bangla stay crisp, and more of the page is usable at a glance.
+   */
+  'size.2xs': '0.6875rem',
   'size.xs': '0.75rem',
-  'size.sm': '0.875rem',
-  'size.base': '1rem',
-  'size.lg': '1.25rem',
-  'size.xl': '1.5rem',
-  'size.2xl': '2rem',
-  'size.3xl': '2.5rem',
-  'leading.tight': '1.25',
-  'leading.normal': '1.6',
+  'size.sm': '0.8125rem',
+  'size.base': '0.9375rem',
+  'size.lg': '1.0625rem',
+  'size.xl': '1.3125rem',
+  'size.2xl': '1.625rem',
+  'size.3xl': '2.125rem',
 
-  'space.1': '0.25rem',
-  'space.2': '0.5rem',
-  'space.3': '0.75rem',
-  'space.4': '1rem',
-  'space.6': '1.5rem',
-  'space.8': '2rem',
-  'space.12': '3rem',
-  'space.16': '4rem',
+  'leading.tight': '1.18',
+  'leading.snug': '1.4',
+  'leading.normal': '1.55',
 
-  'radius.sm': '4px',
-  'radius.md': '8px',
-  'radius.lg': '16px',
-  'shadow.sm': '0 1px 2px rgba(16, 24, 40, 0.06)',
-  'shadow.md': '0 4px 12px rgba(16, 24, 40, 0.1)',
-  'container.max': '1200px',
+  /* Headings tighten; small capitalised labels open up. */
+  'tracking.tight': '-0.012em',
+  'tracking.normal': '0',
+  'tracking.wide': '0.02em',
+  'tracking.caps': '0.085em',
+
+  'weight.regular': '400',
+  'weight.medium': '500',
+  'weight.semibold': '600',
+  'weight.bold': '700',
+
+  'space.1': '0.1875rem',
+  'space.2': '0.375rem',
+  'space.3': '0.5625rem',
+  'space.4': '0.75rem',
+  'space.6': '1.125rem',
+  'space.8': '1.5rem',
+  'space.12': '2.25rem',
+  'space.16': '3rem',
+
+  /* Restrained corners: a sharper edge reads as considered rather than playful. */
+  'radius.sm': '3px',
+  'radius.md': '5px',
+  'radius.lg': '10px',
+  'shadow.sm': '0 1px 2px rgba(16, 24, 40, 0.05)',
+  'shadow.md': '0 6px 18px rgba(16, 24, 40, 0.09)',
+  'container.max': '1160px',
+  'rule.hair': 'rgb(16 24 40 / 0.09)',
 } as const
 
 export type TokenName = keyof typeof baseTokens
@@ -55,8 +88,10 @@ export const darkTokens: Partial<Record<TokenName, string>> = {
   'color.textMuted': '#9aabbc',
   'color.primary': '#3fbc8e',
   'color.primaryText': '#06231a',
-  'color.onPrimarySurface': 'rgb(255 255 255 / 0.1)',
+  'color.scrim': 'rgb(0 0 0 / 0.66)',
+  'color.onPrimarySurface': 'rgb(255 255 255 / 0.22)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.3)',
+  'rule.hair': 'rgb(255 255 255 / 0.11)',
   'shadow.sm': '0 1px 2px rgba(0, 0, 0, 0.4)',
   'shadow.md': '0 4px 12px rgba(0, 0, 0, 0.5)',
 }

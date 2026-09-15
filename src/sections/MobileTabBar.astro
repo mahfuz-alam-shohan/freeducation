@@ -1,0 +1,73 @@
+---
+import Icon, { type IconName } from '../ui/Icon.astro'
+import type { Translator } from '../i18n/index.js'
+
+export interface Tab {
+  /** Absent when the school's menu has no page for it; the tab is then left out. */
+  href?: string | undefined
+  label: string
+  icon: IconName
+  active: boolean
+}
+
+interface Props { tabs: Tab[]; t: Translator }
+const { tabs, t }: Props = Astro.props
+const usable = tabs.filter(tab => tab.href)
+---
+{usable.length > 1 && (
+  <nav class="fe-tabbar" aria-label={t('common.quickLinks')}>
+    {usable.map(tab => (
+      <a href={tab.href} aria-current={tab.active ? 'page' : undefined}>
+        <Icon name={tab.icon} size={21} />
+        <span>{tab.label}</span>
+      </a>
+    ))}
+    <button type="button" data-fe-nav-open aria-controls="fe-drawer" aria-expanded="false">
+      <Icon name="menu" size={21} />
+      <span>{t('common.menu')}</span>
+    </button>
+  </nav>
+)}
+
+<style>
+  /* A fixed bar is what a phone user expects: the things they came for stay
+     under the thumb no matter how far down the page they are. */
+  .fe-tabbar {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 50;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    background: color-mix(in srgb, var(--fe-color-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    border-block-start: 1px solid var(--fe-color-border);
+    padding-block-end: env(safe-area-inset-bottom);
+  }
+
+  .fe-tabbar a,
+  .fe-tabbar button {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    padding-block: var(--fe-space-2);
+    min-block-size: 52px;
+    border: 0;
+    background: none;
+    color: var(--fe-color-textMuted);
+    font: inherit;
+    font-size: var(--fe-size-2xs);
+    letter-spacing: var(--fe-tracking-wide);
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fe-tabbar a[aria-current='page'] { color: var(--fe-color-primary); }
+  .fe-tabbar a:active, .fe-tabbar button:active { background: var(--fe-color-surface); }
+  .fe-tabbar span { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media (min-width: 60rem) { .fe-tabbar { display: none; } }
+</style>

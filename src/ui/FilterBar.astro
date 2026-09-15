@@ -1,0 +1,41 @@
+---
+interface Item { label: string; href: string; active: boolean }
+interface Props { items: Item[]; label: string }
+const { items, label }: Props = Astro.props
+---
+{items.length > 1 && (
+  <nav class="fe-filters" aria-label={label}>
+    {items.map(item => (
+      <a href={item.href} aria-current={item.active ? 'page' : undefined}>{item.label}</a>
+    ))}
+  </nav>
+)}
+<style>
+  /* Text set on a rule, not buttons in boxes: the active one is marked by weight and
+     an underline rather than by a filled shape. */
+  .fe-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--fe-space-4);
+    margin-block-end: var(--fe-space-6);
+    border-block-end: 1px solid var(--fe-color-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .fe-filters::-webkit-scrollbar { display: none; }
+  .fe-filters a {
+    padding-block: var(--fe-space-2);
+    border-block-end: 2px solid transparent;
+    margin-block-end: -1px;
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-sm);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .fe-filters a:hover { color: var(--fe-color-text); }
+  .fe-filters a[aria-current='page'] {
+    color: var(--fe-color-primary);
+    font-weight: var(--fe-weight-semibold);
+    border-block-end-color: var(--fe-color-primary);
+  }
+</style>

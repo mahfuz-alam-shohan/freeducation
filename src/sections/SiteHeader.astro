@@ -1,8 +1,9 @@
 ---
 import Container from '../ui/Container.astro'
+import Icon from '../ui/Icon.astro'
 import type { Locale, MenuItem, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
-import { isActive, normalisePath } from '../routing/resolver.js'
+import { normalisePath } from '../routing/resolver.js'
 
 interface Props {
   navigation: Navigation
@@ -12,30 +13,52 @@ interface Props {
   t: Translator
   currentPath: string
   features: { languageSwitch: boolean; themeToggle: boolean; search: boolean }
-  /** Where the site's search page lives, taken from the menu. Absent means no search page. */
   searchPath?: string | undefined
-  /** Recent notices for the ticker. Empty when the school has it switched off. */
   ticker?: Notice[] | undefined
 }
 const {
-  navigation, profile, locale, locales, t, currentPath, features,
-  searchPath, ticker = [],
+  navigation, profile, locale, locales, t, currentPath, features, searchPath, ticker = [],
 }: Props = Astro.props
+
 const here = normalisePath(currentPath)
-const href = (menuItem: MenuItem) => menuItem.externalUrl ?? `/${normalisePath(menuItem.path)}`
-const active = (menuItem: MenuItem) =>
-  isActive({ path: normalisePath(menuItem.path) } as never, here)
-const visible = (items: MenuItem[]) => items.filter(menuItem => menuItem.visible)
-const highlighted = visible(navigation.primary).filter(menuItem => menuItem.highlighted)
+const href = (item: MenuItem) => item.externalUrl ?? `/${normalisePath(item.path)}`
+const visible = (items: MenuItem[]) => items.filter(item => item.visible)
+
+const isActive = (item: MenuItem) => {
+  const path = normalisePath(item.path)
+  const own = path === here || (path !== '' && here.startsWith(`${path}/`))
+  return own || item.children.some(child => normalisePath(child.path) === here)
+}
+
+const primary = visible(navigation.primary)
+const highlighted = primary.filter(item => item.highlighted)
 ---
 <header class="fe-header">
+  <!-- Phone: one compact sticky bar. Everything else is in the drawer or the tab bar. -->
+  <div class="fe-phonebar">
+    <button type="button" data-fe-nav-open aria-controls="fe-drawer" aria-expanded="false" aria-label={t('common.openMenu')}>
+      <Icon name="menu" size={22} />
+    </button>
+    <a class="fe-phone-brand" href="/">{resolveText(profile.shortName ?? profile.name, locale)}</a>
+    {features.search && searchPath
+      ? <a href={`/${searchPath}`} aria-label={t('common.search')}><Icon name="search" size={20} /></a>
+      : <span class="fe-phone-spacer"></span>}
+  </div>
+
   <div class="fe-utility">
     <Container class="fe-utility-inner">
-      <span class="fe-eiin">
+      <span class="fe-ident">
         {resolveText(profile.name, locale)}{profile.eiin && <> · {t('common.eiin')} {profile.eiin}</>}
       </span>
       <div class="fe-utility-actions">
         {profile.phones[0] && <a href={`tel:${profile.phones[0]}`}>{profile.phones[0]}</a>}
+        {features.search && searchPath && (
+          <form class="fe-search" method="get" action={`/${searchPath}`} role="search">
+            <Icon name="search" size={15} />
+            <label class="fe-sr" for="fe-site-search">{t('search.placeholder')}</label>
+            <input id="fe-site-search" name="q" type="search" placeholder={t('search.placeholder')} />
+          </form>
+        )}
         {features.languageSwitch && locales.length > 1 && (
           <span class="fe-langs">
             {locales.map(code => (
@@ -45,18 +68,10 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
             ))}
           </span>
         )}
-        {features.search && searchPath && (
-          <form class="fe-search" method="get" action={`/${searchPath}`} role="search">
-            <label class="fe-visually-hidden" for="fe-site-search">{t('search.placeholder')}</label>
-            <input id="fe-site-search" name="q" type="search" placeholder={t('search.placeholder')} />
-          </form>
-        )}
         {features.themeToggle && (
-          <button type="button" data-fe-theme-toggle aria-label={t('common.theme')}>◐</button>
+          <button type="button" data-fe-theme-toggle aria-label={t('common.theme')}><Icon name="theme" size={16} /></button>
         )}
-        {visible(navigation.utility).map(menuItem => (
-          <a href={href(menuItem)}>{resolveText(menuItem.label, locale)}</a>
-        ))}
+        {visible(navigation.utility).map(item => <a href={href(item)}>{resolveText(item.label, locale)}</a>)}
       </div>
     </Container>
   </div>
@@ -78,40 +93,42 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
 
   <Container class="fe-masthead">
     <a class="fe-brand" href="/">
-      {profile.logo?.url && <img src={profile.logo.url} alt="" width="48" height="48" />}
+      {profile.logo?.url && <img src={profile.logo.url} alt="" width="44" height="44" />}
       <span>
         <strong>{resolveText(profile.name, locale)}</strong>
         {profile.tagline && <small>{resolveText(profile.tagline, locale)}</small>}
       </span>
     </a>
     <div class="fe-cta">
-      {highlighted.map(menuItem => (
-        <a class="fe-cta-link" href={href(menuItem)}>{resolveText(menuItem.label, locale)}</a>
+      {highlighted.map(item => (
+        <a class="fe-cta-link" href={href(item)}>
+          {resolveText(item.label, locale)}<Icon name="arrow-right" size={15} />
+        </a>
       ))}
     </div>
   </Container>
 
   <nav class="fe-nav" aria-label={t('common.menu')}>
     <Container>
-      <button class="fe-nav-toggle" type="button" data-fe-nav-toggle aria-expanded="false" aria-controls="fe-menu">
-        ☰ {t('common.menu')}
-      </button>
-      <ul id="fe-menu" class="fe-menu">
-        {visible(navigation.primary).map(menuItem => (
-          <li class:list={['fe-menu-item', { 'has-children': menuItem.children.length > 0 }]}>
-            <a href={href(menuItem)} aria-current={active(menuItem) ? 'page' : undefined}>
-              {resolveText(menuItem.label, locale)}
+      <ul class="fe-menu">
+        {primary.map(item => (
+          <li class:list={['fe-menu-item', { 'has-children': visible(item.children).length > 0 }]}>
+            <a href={href(item)} aria-current={isActive(item) ? 'page' : undefined}>
+              {resolveText(item.label, locale)}
+              {visible(item.children).length > 0 && <Icon name="chevron-down" size={13} class="fe-caret" />}
             </a>
-            {menuItem.children.length > 0 && (
-              <ul class="fe-submenu">
-                {visible(menuItem.children).map(child => (
-                  <li>
-                    <a href={href(child)} aria-current={active(child) ? 'page' : undefined}>
-                      {resolveText(child.label, locale)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+            {visible(item.children).length > 0 && (
+              <div class="fe-submenu">
+                <ul>
+                  {visible(item.children).map(child => (
+                    <li>
+                      <a href={href(child)} aria-current={normalisePath(child.path) === here ? 'page' : undefined}>
+                        {resolveText(child.label, locale)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </li>
         ))}
@@ -121,65 +138,95 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
 </header>
 
 <style>
-  .fe-header { background: var(--fe-color-bg); border-bottom: 1px solid var(--fe-color-border); }
-  .fe-utility { background: var(--fe-color-surface); border-bottom: 1px solid var(--fe-color-border); font-size: var(--fe-size-xs); }
-  :global(.fe-utility-inner) { display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-4); justify-content: space-between; padding-block: var(--fe-space-2); color: var(--fe-color-textMuted); }
+  .fe-header { background: var(--fe-color-bg); }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  /* ---------- phone bar ---------- */
+  .fe-phonebar {
+    display: none;
+    position: sticky; inset-block-start: 0; z-index: 40;
+    align-items: center; justify-content: space-between; gap: var(--fe-space-2);
+    padding-inline: var(--fe-space-2);
+    background: color-mix(in srgb, var(--fe-color-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    border-block-end: 1px solid var(--fe-color-border);
+    padding-block-start: env(safe-area-inset-top);
+  }
+  .fe-phonebar button, .fe-phonebar > a:last-child {
+    display: grid; place-items: center; inline-size: 44px; block-size: 46px;
+    border: 0; background: none; color: var(--fe-color-text); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .fe-phone-brand {
+    flex: 1; min-inline-size: 0; text-align: center; text-decoration: none;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-base);
+    letter-spacing: var(--fe-tracking-tight); color: var(--fe-color-text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fe-phone-spacer { inline-size: 44px; }
+
+  /* ---------- utility strip ---------- */
+  .fe-utility { background: var(--fe-color-surface); border-block-end: 1px solid var(--fe-color-border); font-size: var(--fe-size-2xs); }
+  :global(.fe-utility-inner) { display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-4); justify-content: space-between; align-items: center; padding-block: var(--fe-space-2); color: var(--fe-color-textMuted); }
+  .fe-ident { letter-spacing: var(--fe-tracking-wide); }
   .fe-utility-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fe-space-3); }
   .fe-utility a { color: inherit; text-decoration: none; }
-  .fe-utility a:hover { text-decoration: underline; }
+  .fe-utility a:hover { color: var(--fe-color-primary); }
+  .fe-utility button { display: grid; place-items: center; border: 0; background: none; color: inherit; cursor: pointer; padding: 0; }
   .fe-langs { display: inline-flex; gap: var(--fe-space-2); }
-  .fe-langs a[aria-current='true'] { color: var(--fe-color-primary); font-weight: 600; }
-  .fe-utility button { background: none; border: 0; cursor: pointer; color: inherit; font-size: var(--fe-size-base); line-height: 1; }
+  .fe-langs a[aria-current='true'] { color: var(--fe-color-primary); font-weight: var(--fe-weight-semibold); }
+  .fe-search { display: flex; align-items: center; gap: var(--fe-space-2); padding-inline: var(--fe-space-2); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); background: var(--fe-color-bg); }
+  .fe-search input { inline-size: 9rem; padding-block: 3px; border: 0; background: none; color: var(--fe-color-text); font: inherit; font-size: var(--fe-size-2xs); }
+  .fe-search input:focus { outline: none; }
 
-  .fe-search input { padding: var(--fe-space-1) var(--fe-space-2); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); background: var(--fe-color-bg); color: var(--fe-color-text); font: inherit; font-size: var(--fe-size-xs); inline-size: 10rem; }
-  .fe-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-
-  .fe-ticker { background: var(--fe-color-bg); border-bottom: 1px solid var(--fe-color-border); overflow: hidden; }
+  /* ---------- ticker ---------- */
+  .fe-ticker { border-block-end: 1px solid var(--fe-color-border); overflow: hidden; }
   :global(.fe-ticker-inner) { display: flex; align-items: center; gap: var(--fe-space-3); padding-block: var(--fe-space-2); }
-  .fe-ticker-label {
-    flex: none;
-    padding-inline-end: var(--fe-space-3);
-    border-inline-end: 1px solid var(--fe-color-border);
-    color: var(--fe-color-accent);
-    font-size: var(--fe-size-xs);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-  }
+  .fe-ticker-label { flex: none; padding-inline-end: var(--fe-space-3); border-inline-end: 1px solid var(--fe-color-border); color: var(--fe-color-accent); font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-bold); text-transform: uppercase; letter-spacing: var(--fe-tracking-caps); white-space: nowrap; }
   .fe-ticker-viewport { flex: 1; overflow: hidden; }
-  .fe-ticker-track { display: flex; gap: var(--fe-space-8); list-style: none; margin: 0; padding: 0; white-space: nowrap; animation: fe-ticker-scroll 30s linear infinite; }
+  .fe-ticker-track { display: flex; gap: var(--fe-space-8); list-style: none; margin: 0; padding: 0; white-space: nowrap; animation: fe-ticker-scroll 38s linear infinite; }
   .fe-ticker-viewport:hover .fe-ticker-track, .fe-ticker-viewport:focus-within .fe-ticker-track { animation-play-state: paused; }
   .fe-ticker-track a { color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm); }
-  .fe-ticker-track a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-ticker-track a:hover { color: var(--fe-color-primary); }
   @keyframes fe-ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce) {
-    .fe-ticker-track { animation: none; overflow-x: auto; }
-  }
+  @media (prefers-reduced-motion: reduce) { .fe-ticker-track { animation: none; overflow-x: auto; } }
 
+  /* ---------- masthead ---------- */
   :global(.fe-masthead) { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: center; justify-content: space-between; padding-block: var(--fe-space-4); }
   .fe-brand { display: flex; align-items: center; gap: var(--fe-space-3); text-decoration: none; color: var(--fe-color-text); }
-  .fe-brand strong { display: block; font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); line-height: var(--fe-leading-tight); }
-  .fe-brand small { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+  .fe-brand strong { display: block; font-family: var(--fe-font-heading); font-size: var(--fe-size-xl); font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-tight); letter-spacing: var(--fe-tracking-tight); }
+  .fe-brand small { display: block; margin-block-start: 2px; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: var(--fe-tracking-caps); }
   .fe-cta { display: flex; gap: var(--fe-space-2); }
-  .fe-cta-link { background: var(--fe-color-primary); color: var(--fe-color-primaryText); padding: var(--fe-space-2) var(--fe-space-4); border-radius: var(--fe-radius-sm); text-decoration: none; font-size: var(--fe-size-sm); font-weight: 600; }
+  .fe-cta-link { display: inline-flex; align-items: center; gap: var(--fe-space-2); background: var(--fe-color-primary); color: var(--fe-color-primaryText); padding: var(--fe-space-2) var(--fe-space-4); border-radius: var(--fe-radius-sm); text-decoration: none; font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); }
+  .fe-cta-link:hover { background: color-mix(in srgb, var(--fe-color-primary) 88%, black); }
 
-  .fe-nav { background: var(--fe-color-primary); }
-  .fe-nav-toggle { display: none; background: none; border: 0; color: var(--fe-color-primaryText); padding: var(--fe-space-3) 0; font-size: var(--fe-size-base); cursor: pointer; }
+  /* ---------- primary nav ---------- */
+  .fe-nav { border-block: 1px solid var(--fe-color-border); background: var(--fe-color-bg); }
   .fe-menu { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
-  .fe-menu > li > a { display: block; padding: var(--fe-space-3) var(--fe-space-4); color: var(--fe-color-primaryText); text-decoration: none; font-size: var(--fe-size-sm); }
-  .fe-menu > li > a:hover, .fe-menu > li > a[aria-current='page'] { background: var(--fe-color-onPrimaryHover); }
-  .fe-menu-item { position: relative; }
-  .fe-submenu { list-style: none; margin: 0; padding: var(--fe-space-2) 0; position: absolute; top: 100%; left: 0; min-width: 15rem; background: var(--fe-color-bg); border: 1px solid var(--fe-color-border); border-radius: 0 0 var(--fe-radius-md) var(--fe-radius-md); box-shadow: var(--fe-shadow-md); display: none; z-index: 20; }
-  .fe-menu-item:hover > .fe-submenu, .fe-menu-item:focus-within > .fe-submenu { display: block; }
-  .fe-submenu a { display: block; padding: var(--fe-space-2) var(--fe-space-4); color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm); }
-  .fe-submenu a:hover { background: var(--fe-color-surface); }
+  .fe-menu > li > a {
+    display: flex; align-items: center; gap: var(--fe-space-1);
+    padding: var(--fe-space-3) var(--fe-space-4);
+    color: var(--fe-color-text); text-decoration: none;
+    font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium);
+    border-block-end: 2px solid transparent; margin-block-end: -1px;
+  }
+  .fe-menu > li:first-child > a { padding-inline-start: 0; }
+  .fe-menu > li > a:hover { color: var(--fe-color-primary); }
+  .fe-menu > li > a[aria-current='page'] { color: var(--fe-color-primary); border-block-end-color: var(--fe-color-primary); }
+  .fe-caret { color: var(--fe-color-textMuted); }
 
-  @media (max-width: 47.9375rem) {
-    .fe-nav-toggle { display: block; }
-    .fe-menu { display: none; flex-direction: column; padding-bottom: var(--fe-space-2); }
-    .fe-menu.is-open { display: flex; }
-    .fe-submenu { position: static; display: block; border: 0; box-shadow: none; background: transparent; padding-left: var(--fe-space-4); }
-    .fe-submenu a { color: var(--fe-color-primaryText); opacity: 0.85; }
+  .fe-menu-item { position: relative; }
+  .fe-submenu { position: absolute; inset-block-start: 100%; inset-inline-start: 0; min-inline-size: 15rem; background: var(--fe-color-bg); border: 1px solid var(--fe-color-border); box-shadow: var(--fe-shadow-md); display: none; z-index: 30; }
+  .fe-menu-item:hover > .fe-submenu, .fe-menu-item:focus-within > .fe-submenu { display: block; }
+  .fe-submenu ul { list-style: none; margin: 0; padding: var(--fe-space-2) 0; }
+  .fe-submenu a { display: block; padding: var(--fe-space-2) var(--fe-space-4); color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm); }
+  .fe-submenu a:hover { background: var(--fe-color-surface); color: var(--fe-color-primary); }
+  .fe-submenu a[aria-current='page'] { color: var(--fe-color-primary); font-weight: var(--fe-weight-medium); }
+
+  /* Below this width the drawer and tab bar take over entirely. */
+  @media (max-width: 59.99rem) {
+    .fe-phonebar { display: flex; }
+    .fe-utility, .fe-nav { display: none; }
+    :global(.fe-masthead) { display: none; }
   }
 </style>

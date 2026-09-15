@@ -2,11 +2,19 @@
 import SiteHeader from '../sections/SiteHeader.astro'
 import SiteFooter from '../sections/SiteFooter.astro'
 import Breadcrumbs from '../sections/Breadcrumbs.astro'
+import NavDrawer from '../sections/NavDrawer.astro'
+import MobileTabBar, { type Tab } from '../sections/MobileTabBar.astro'
 import { tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
 import type { Crumb } from '../sections/Breadcrumbs.astro'
 import type { Locale, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
 import type { SchoolConfig } from '../config/index.js'
+// Self-hosted so there is no third-party request on a school's homepage. Each file
+// declares unicode-range per subset, so a Bangla page never downloads Cyrillic or Greek.
+import '@fontsource-variable/inter/wght.css'
+import '@fontsource-variable/anek-bangla/wght.css'
+import '@fontsource-variable/source-serif-4/wght.css'
+import '@fontsource/tiro-bangla/bengali.css'
 import '../styles/global.css'
 
 interface Props {
@@ -38,6 +46,37 @@ const summary = description ?? resolveText(profile.tagline, locale)
 
 // Canonical and preview URLs come from the live request, so each school's own
 // domain is correct without any per-school build configuration.
+// The tab bar mirrors what the school actually published: a tab is left out when the
+// menu has no page for it, rather than linking somewhere that does not exist.
+const pathFor = (view: string) => {
+  const search = (items: typeof navigation.primary): string | undefined => {
+    for (const item of items) {
+      if (item.view === view && item.visible !== false) return item.path.replace(/^\/+/, '')
+      const nested = search(item.children)
+      if (nested !== undefined) return nested
+    }
+    return undefined
+  }
+  return search([...navigation.primary, ...navigation.footer, ...navigation.utility])
+}
+
+const noticePath = pathFor('notice-list')
+const resultsPath = pathFor('result-lookup')
+const current = currentPath.replace(/^\/+|\/+$/g, '')
+
+const tabs: Tab[] = [
+  { href: '/', label: t('common.home'), icon: 'home', active: current === '' },
+  ...(noticePath !== undefined
+    ? [{ href: `/${noticePath}`, label: t('notice.title'), icon: 'notice' as const, active: current === noticePath || current.startsWith(`${noticePath}/`) }]
+    : []),
+  ...(resultsPath !== undefined
+    ? [{ href: `/${resultsPath}`, label: t('result.submit'), icon: 'results' as const, active: current === resultsPath }]
+    : []),
+  ...(searchPath !== undefined
+    ? [{ href: `/${searchPath}`, label: t('common.search'), icon: 'search' as const, active: current === searchPath }]
+    : []),
+]
+
 const canonical = new URL(Astro.url.pathname, Astro.url.origin).href
 const previewImage = image ? new URL(image, Astro.url.origin).href : undefined
 ---
@@ -81,26 +120,85 @@ const previewImage = image ? new URL(image, Astro.url.origin).href : undefined
     <main id="main" class="fe-main"><slot /></main>
     <SiteFooter navigation={navigation} profile={profile} locale={locale} t={t} />
 
+    <NavDrawer
+      items={navigation.primary} profile={profile} locale={locale}
+      locales={config.locales.supported} t={t} currentPath={currentPath}
+      searchPath={searchPath}
+      showLanguage={config.features.languageSwitch} showTheme={config.features.themeToggle}
+    />
+    <MobileTabBar tabs={tabs} t={t} />
+
     <script>
-      const toggle = document.querySelector('[data-fe-theme-toggle]')
-      toggle?.addEventListener('click', () => {
-        const root = document.documentElement
-        const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
-        root.dataset.theme = next
-        try { localStorage.setItem('fe-theme', next) } catch {}
+      for (const toggle of document.querySelectorAll('[data-fe-theme-toggle]')) {
+        toggle.addEventListener('click', () => {
+          const root = document.documentElement
+          const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
+          root.dataset.theme = next
+          try { localStorage.setItem('fe-theme', next) } catch {}
+        })
+      }
+
+      const drawer = document.getElementById('fe-drawer')
+      const openers = document.querySelectorAll('[data-fe-nav-open]')
+      let lastFocused: HTMLElement | null = null
+
+      const focusable = () =>
+        drawer
+          ? [...drawer.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, summary')]
+              .filter(element => element.offsetParent !== null)
+          : []
+
+      function openDrawer() {
+        if (!drawer) return
+        lastFocused = document.activeElement as HTMLElement
+        drawer.hidden = false
+        // Locking the page underneath is what stops the body scrolling behind the panel.
+        document.body.style.overflow = 'hidden'
+        for (const opener of openers) opener.setAttribute('aria-expanded', 'true')
+        focusable()[1]?.focus()
+      }
+
+      function closeDrawer() {
+        if (!drawer || drawer.hidden) return
+        drawer.hidden = true
+        document.body.style.overflow = ''
+        for (const opener of openers) opener.setAttribute('aria-expanded', 'false')
+        lastFocused?.focus()
+      }
+
+      for (const opener of openers) opener.addEventListener('click', openDrawer)
+      for (const closer of document.querySelectorAll('[data-fe-nav-close]')) {
+        closer.addEventListener('click', closeDrawer)
+      }
+
+      document.addEventListener('keydown', event => {
+        if (!drawer || drawer.hidden) return
+        if (event.key === 'Escape') { closeDrawer(); return }
+        if (event.key !== 'Tab') return
+
+        // Keep focus inside the panel while it is open.
+        const items = focusable()
+        if (items.length === 0) return
+        const first = items[0]
+        const last = items[items.length - 1]
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
       })
 
-      const navToggle = document.querySelector('[data-fe-nav-toggle]')
-      const menu = document.getElementById('fe-menu')
-      navToggle?.addEventListener('click', () => {
-        const open = menu?.classList.toggle('is-open') ?? false
-        navToggle.setAttribute('aria-expanded', String(open))
+      // A drawer left open across a resize would strand the desktop layout.
+      matchMedia('(min-width: 60rem)').addEventListener('change', event => {
+        if (event.matches) closeDrawer()
       })
     </script>
   </body>
 </html>
 <style>
-  .fe-main { padding-block: var(--fe-space-8); }
+  .fe-main { padding-block: var(--fe-space-8); min-block-size: 58vh; }
+
+  /* Room for the fixed tab bar so it never covers the last line of a page. */
+  @media (max-width: 59.99rem) {
+    .fe-main { padding-block-end: calc(var(--fe-space-16) + 56px + env(safe-area-inset-bottom)); }
+  }
   .fe-skip { position: absolute; inset-inline-start: -9999px; }
   .fe-skip:focus { inset-inline-start: var(--fe-space-4); top: var(--fe-space-4); z-index: 100; background: var(--fe-color-bg); padding: var(--fe-space-3); border-radius: var(--fe-radius-sm); }
 </style>

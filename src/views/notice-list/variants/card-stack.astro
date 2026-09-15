@@ -1,6 +1,7 @@
 ---
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
+import FilterBar from '../../../ui/FilterBar.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
 import Pagination from '../../../ui/Pagination.astro'
 import type { NoticeListViewModel } from '../viewModel.js'
@@ -12,6 +13,12 @@ const { vm, locale, t } = Astro.props
 ---
 <Container>
   <PageHeading title={resolveText(vm.title, locale)} />
+  <FilterBar
+    label={t('notice.title')}
+    items={vm.filters.map(filter => ({
+      label: resolveText(filter.label, locale), href: filter.href, active: filter.active,
+    }))}
+  />
   {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
     <ul class="fe-cards">
       {vm.notices.map(notice => (

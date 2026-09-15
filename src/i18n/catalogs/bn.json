@@ -57,5 +57,10 @@
   "search.prompt": "খুঁজতে কিছু লিখুন।",
   "search.results": "ফলাফল",
   "ticker.label": "সাম্প্রতিক নোটিশ",
-  "common.breadcrumb": "ব্রেডক্রাম্ব"
+  "common.breadcrumb": "ব্রেডক্রাম্ব",
+  "common.openMenu": "মেনু খুলুন",
+  "common.closeMenu": "মেনু বন্ধ করুন",
+  "common.more": "আরও",
+  "common.language": "ভাষা",
+  "common.quickLinks": "দ্রুত লিঙ্ক"
 }

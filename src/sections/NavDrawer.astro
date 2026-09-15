@@ -1,0 +1,163 @@
+---
+import Icon from '../ui/Icon.astro'
+import type { Locale, MenuItem, SchoolProfile } from '../contracts/index.js'
+import { resolveText, type Translator } from '../i18n/index.js'
+import { normalisePath } from '../routing/resolver.js'
+
+interface Props {
+  items: MenuItem[]
+  profile: SchoolProfile
+  locale: Locale
+  locales: Locale[]
+  t: Translator
+  currentPath: string
+  searchPath?: string | undefined
+  showLanguage: boolean
+  showTheme: boolean
+}
+const {
+  items, profile, locale, locales, t, currentPath, searchPath, showLanguage, showTheme,
+}: Props = Astro.props
+
+const href = (item: MenuItem) => item.externalUrl ?? `/${normalisePath(item.path)}`
+const isHere = (item: MenuItem) => normalisePath(item.path) === normalisePath(currentPath)
+const visible = items.filter(item => item.visible)
+---
+<div class="fe-drawer" id="fe-drawer" hidden>
+  <button type="button" class="fe-scrim" data-fe-nav-close aria-label={t('common.closeMenu')}></button>
+
+  <div class="fe-panel" role="dialog" aria-modal="true" aria-label={t('common.menu')}>
+    <div class="fe-panel-head">
+      <span class="fe-panel-title">{resolveText(profile.shortName ?? profile.name, locale)}</span>
+      <button type="button" class="fe-close" data-fe-nav-close aria-label={t('common.closeMenu')}>
+        <Icon name="close" size={22} />
+      </button>
+    </div>
+
+    {searchPath && (
+      <form class="fe-drawer-search" method="get" action={`/${searchPath}`} role="search">
+        <Icon name="search" size={18} />
+        <label class="fe-sr" for="fe-drawer-q">{t('search.placeholder')}</label>
+        <input id="fe-drawer-q" name="q" type="search" placeholder={t('search.placeholder')} />
+      </form>
+    )}
+
+    <nav class="fe-drawer-nav" aria-label={t('common.menu')}>
+      <ul>
+        {visible.map(item => (
+          <li>
+            {item.children.filter(child => child.visible).length > 0 ? (
+              <details open={item.children.some(isHere) || isHere(item)}>
+                <summary>
+                  <span>{resolveText(item.label, locale)}</span>
+                  <Icon name="chevron-down" size={18} class="fe-caret" />
+                </summary>
+                <ul class="fe-sub">
+                  <li>
+                    <a href={href(item)} aria-current={isHere(item) ? 'page' : undefined}>
+                      {resolveText(item.label, locale)}
+                    </a>
+                  </li>
+                  {item.children.filter(child => child.visible).map(child => (
+                    <li>
+                      <a href={href(child)} aria-current={isHere(child) ? 'page' : undefined}>
+                        {resolveText(child.label, locale)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : (
+              <a class="fe-top" href={href(item)} aria-current={isHere(item) ? 'page' : undefined}>
+                {resolveText(item.label, locale)}
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="fe-drawer-foot">
+      {showLanguage && locales.length > 1 && (
+        <div class="fe-switch" role="group" aria-label={t('common.language')}>
+          {locales.map(code => (
+            <a href={`?lang=${code}`} aria-current={code === locale ? 'true' : undefined}>
+              {code === 'bn' ? 'বাংলা' : 'English'}
+            </a>
+          ))}
+        </div>
+      )}
+      {showTheme && (
+        <button type="button" class="fe-theme" data-fe-theme-toggle>
+          <Icon name="theme" size={18} />
+          <span>{t('common.theme')}</span>
+        </button>
+      )}
+      <address>
+        {profile.phones[0] && (
+          <a href={`tel:${profile.phones[0]}`}><Icon name="phone" size={16} />{profile.phones[0]}</a>
+        )}
+        {profile.emails[0] && (
+          <a href={`mailto:${profile.emails[0]}`}><Icon name="mail" size={16} />{profile.emails[0]}</a>
+        )}
+      </address>
+    </div>
+  </div>
+</div>
+
+<style>
+  .fe-drawer { position: fixed; inset: 0; z-index: 60; }
+  .fe-drawer[hidden] { display: none; }
+
+  .fe-scrim { position: absolute; inset: 0; inline-size: 100%; border: 0; padding: 0; background: var(--fe-color-scrim); animation: fe-fade 160ms ease-out; }
+
+  .fe-panel {
+    position: absolute; inset-block: 0; inset-inline-start: 0;
+    inline-size: min(86vw, 21rem);
+    display: flex; flex-direction: column;
+    background: var(--fe-color-bg);
+    border-inline-end: 1px solid var(--fe-color-border);
+    animation: fe-slide 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    overscroll-behavior: contain;
+    padding-block-end: env(safe-area-inset-bottom);
+  }
+
+  .fe-panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--fe-space-3); padding: var(--fe-space-4); border-block-end: 1px solid var(--fe-color-border); }
+  .fe-panel-title { font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); letter-spacing: var(--fe-tracking-tight); }
+  .fe-close { display: grid; place-items: center; inline-size: 40px; block-size: 40px; margin-inline-end: calc(-1 * var(--fe-space-2)); border: 0; background: none; color: var(--fe-color-text); cursor: pointer; }
+
+  .fe-drawer-search { display: flex; align-items: center; gap: var(--fe-space-2); margin: var(--fe-space-4); padding-inline: var(--fe-space-3); border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); color: var(--fe-color-textMuted); }
+  .fe-drawer-search input { flex: 1; min-inline-size: 0; padding-block: var(--fe-space-3); border: 0; background: none; color: var(--fe-color-text); font: inherit; font-size: var(--fe-size-sm); }
+  .fe-drawer-search input:focus { outline: none; }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  .fe-drawer-nav { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .fe-drawer-nav ul { list-style: none; margin: 0; padding: 0; }
+  .fe-drawer-nav li { border-block-end: 1px solid var(--fe-rule-hair); }
+  .fe-drawer-nav summary,
+  .fe-drawer-nav .fe-top {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--fe-space-3);
+    padding: var(--fe-space-4); cursor: pointer; list-style: none;
+    font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium); text-decoration: none;
+  }
+  .fe-drawer-nav summary::-webkit-details-marker { display: none; }
+  .fe-drawer-nav details[open] .fe-caret { transform: rotate(180deg); }
+  .fe-caret { color: var(--fe-color-textMuted); transition: transform 160ms ease; }
+  .fe-sub { background: var(--fe-color-surface); }
+  .fe-sub li { border-block-end: 0; }
+  .fe-sub a { display: block; padding: var(--fe-space-3) var(--fe-space-4) var(--fe-space-3) var(--fe-space-8); font-size: var(--fe-size-sm); color: var(--fe-color-textMuted); text-decoration: none; }
+  .fe-drawer-nav a[aria-current='page'] { color: var(--fe-color-primary); font-weight: var(--fe-weight-semibold); }
+
+  .fe-drawer-foot { border-block-start: 1px solid var(--fe-color-border); padding: var(--fe-space-4); display: grid; gap: var(--fe-space-3); }
+  .fe-switch { display: flex; border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); overflow: hidden; }
+  .fe-switch a { flex: 1; padding: var(--fe-space-2); text-align: center; font-size: var(--fe-size-sm); text-decoration: none; color: var(--fe-color-textMuted); }
+  .fe-switch a[aria-current='true'] { background: var(--fe-color-primary); color: var(--fe-color-primaryText); }
+  .fe-theme { display: flex; align-items: center; gap: var(--fe-space-2); padding: var(--fe-space-2) 0; border: 0; background: none; color: var(--fe-color-textMuted); font: inherit; font-size: var(--fe-size-sm); cursor: pointer; }
+  address { font-style: normal; display: grid; gap: var(--fe-space-2); }
+  address a { display: flex; align-items: center; gap: var(--fe-space-2); color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); text-decoration: none; }
+
+  @keyframes fe-slide { from { transform: translateX(-100%); } }
+  @keyframes fe-fade { from { opacity: 0; } }
+
+  @media (min-width: 60rem) { .fe-drawer { display: none; } }
+</style>
