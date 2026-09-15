@@ -65,7 +65,8 @@ const usable = tabs.filter(tab => tab.href)
     -webkit-tap-highlight-color: transparent;
   }
 
-  .fe-tabbar a[aria-current='page'] { color: var(--fe-color-primary); }
+  .fe-tabbar a[aria-current='page'],
+  .fe-tabbar button[aria-expanded='true'] { color: var(--fe-color-primary); }
   .fe-tabbar a:active, .fe-tabbar button:active { background: var(--fe-color-surface); }
   .fe-tabbar span { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

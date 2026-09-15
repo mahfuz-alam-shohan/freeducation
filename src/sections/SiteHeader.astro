@@ -36,13 +36,13 @@ const highlighted = primary.filter(item => item.highlighted)
 <header class="fe-header">
   <!-- Phone: one compact sticky bar. Everything else is in the drawer or the tab bar. -->
   <div class="fe-phonebar">
-    <button type="button" data-fe-nav-open aria-controls="fe-drawer" aria-expanded="false" aria-label={t('common.openMenu')}>
-      <Icon name="menu" size={22} />
-    </button>
-    <a class="fe-phone-brand" href="/">{resolveText(profile.shortName ?? profile.name, locale)}</a>
-    {features.search && searchPath
-      ? <a href={`/${searchPath}`} aria-label={t('common.search')}><Icon name="search" size={20} /></a>
-      : <span class="fe-phone-spacer"></span>}
+    <a class="fe-phone-brand" href="/">
+      {profile.logo?.url && <img src={profile.logo.url} alt="" width="26" height="26" />}
+      <span>{resolveText(profile.shortName ?? profile.name, locale)}</span>
+    </a>
+    {features.search && searchPath && (
+      <a href={`/${searchPath}`} aria-label={t('common.search')}><Icon name="search" size={20} /></a>
+    )}
   </div>
 
   <div class="fe-utility">
@@ -93,7 +93,7 @@ const highlighted = primary.filter(item => item.highlighted)
 
   <Container class="fe-masthead">
     <a class="fe-brand" href="/">
-      {profile.logo?.url && <img src={profile.logo.url} alt="" width="44" height="44" />}
+      {profile.logo?.url && <img class="fe-mark" src={profile.logo.url} alt="" width="52" height="52" />}
       <span>
         <strong>{resolveText(profile.name, locale)}</strong>
         {profile.tagline && <small>{resolveText(profile.tagline, locale)}</small>}
@@ -152,17 +152,21 @@ const highlighted = primary.filter(item => item.highlighted)
     border-block-end: 1px solid var(--fe-color-border);
     padding-block-start: env(safe-area-inset-top);
   }
-  .fe-phonebar button, .fe-phonebar > a:last-child {
+  .fe-phonebar > a:last-child:not(.fe-phone-brand) {
     display: grid; place-items: center; inline-size: 44px; block-size: 46px;
-    border: 0; background: none; color: var(--fe-color-text); cursor: pointer;
+    color: var(--fe-color-text);
     -webkit-tap-highlight-color: transparent;
   }
   .fe-phone-brand {
-    flex: 1; min-inline-size: 0; text-align: center; text-decoration: none;
+    flex: 1; min-inline-size: 0; text-decoration: none;
+    display: flex; align-items: center; gap: var(--fe-space-2);
+    padding-inline-start: var(--fe-space-2);
+    block-size: 46px;
     font-family: var(--fe-font-heading); font-size: var(--fe-size-base);
     letter-spacing: var(--fe-tracking-tight); color: var(--fe-color-text);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .fe-phone-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fe-phone-brand img { flex: none; inline-size: 26px; block-size: 26px; }
   .fe-phone-spacer { inline-size: 44px; }
 
   /* ---------- utility strip ---------- */
@@ -193,7 +197,8 @@ const highlighted = primary.filter(item => item.highlighted)
 
   /* ---------- masthead ---------- */
   :global(.fe-masthead) { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: center; justify-content: space-between; padding-block: var(--fe-space-4); }
-  .fe-brand { display: flex; align-items: center; gap: var(--fe-space-3); text-decoration: none; color: var(--fe-color-text); }
+  .fe-brand { display: flex; align-items: center; gap: var(--fe-space-4); text-decoration: none; color: var(--fe-color-text); }
+  .fe-mark { flex: none; inline-size: 52px; block-size: 52px; }
   .fe-brand strong { display: block; font-family: var(--fe-font-heading); font-size: var(--fe-size-xl); font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-tight); letter-spacing: var(--fe-tracking-tight); }
   .fe-brand small { display: block; margin-block-start: 2px; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: var(--fe-tracking-caps); }
   .fe-cta { display: flex; gap: var(--fe-space-2); }

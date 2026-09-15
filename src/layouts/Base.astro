@@ -2,9 +2,9 @@
 import SiteHeader from '../sections/SiteHeader.astro'
 import SiteFooter from '../sections/SiteFooter.astro'
 import Breadcrumbs from '../sections/Breadcrumbs.astro'
-import NavDrawer from '../sections/NavDrawer.astro'
+import NavTray from '../sections/NavTray.astro'
 import MobileTabBar, { type Tab } from '../sections/MobileTabBar.astro'
-import { tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
+import { baseTokens, tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
 import type { Crumb } from '../sections/Breadcrumbs.astro'
 import type { Locale, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
@@ -39,6 +39,10 @@ const {
 }: Props = Astro.props
 
 const preset = themePresets[config.theme.preset] ?? {}
+// The phone browser chrome takes the school's own colour.
+const themeColor = (config.theme.overrides as Record<string, string>)['color.primary']
+  ?? preset['color.primary']
+  ?? baseTokens['color.primary']
 const themeCss = tokensToCss({ ...preset, ...(config.theme.overrides as Partial<Record<TokenName, string>>) })
 const siteName = resolveText(profile.name, locale)
 const pageTitle = title ? `${title} · ${siteName}` : siteName
@@ -87,6 +91,13 @@ const previewImage = image ? new URL(image, Astro.url.origin).href : undefined
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <link rel="canonical" href={canonical} />
+    {profile.logo?.url && (
+      <>
+        <link rel="icon" href={profile.logo.url} />
+        <link rel="apple-touch-icon" href={profile.logo.url} />
+      </>
+    )}
+    <meta name="theme-color" content={themeColor} />
     {summary && <meta name="description" content={summary} />}
 
     <meta property="og:type" content="website" />
@@ -120,7 +131,7 @@ const previewImage = image ? new URL(image, Astro.url.origin).href : undefined
     <main id="main" class="fe-main"><slot /></main>
     <SiteFooter navigation={navigation} profile={profile} locale={locale} t={t} />
 
-    <NavDrawer
+    <NavTray
       items={navigation.primary} profile={profile} locale={locale}
       locales={config.locales.supported} t={t} currentPath={currentPath}
       searchPath={searchPath}

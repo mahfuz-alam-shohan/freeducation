@@ -7,6 +7,7 @@ export const profile: SchoolProfile = {
   tagline: t('জ্ঞানই আলো', 'Knowledge is light'),
   eiin: '108573',
   established: '1965',
+  logo: { url: '/sample/crest.svg', width: 64, height: 64, variants: [] },
   address: t('১২ কলেজ রোড, ধানমন্ডি, ঢাকা ১২০৫', '12 College Road, Dhanmondi, Dhaka 1205'),
   phones: ['+880 2 9876543', '+880 1711 223344'],
   emails: ['info@adarsha.edu.bd'],
