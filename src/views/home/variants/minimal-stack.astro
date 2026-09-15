@@ -43,7 +43,7 @@ const { vm, locale, t }: Props = Astro.props
       <ul class="fe-inline">
         {vm.events.map(event => (
           <li>
-            <a href={`/events/${event.slug}`}>{resolveText(event.title, locale)}</a>
+            <a href={`/${vm.eventsPath}/${event.slug}`}>{resolveText(event.title, locale)}</a>
             <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
           </li>
         ))}

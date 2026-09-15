@@ -5,6 +5,7 @@ import { resolveText } from '../../i18n/index.js'
 export interface GalleryAlbumViewModel {
   album: GalleryAlbum | null
   backPath: string
+  notFound: boolean
   meta: PageMeta
 }
 
@@ -13,6 +14,7 @@ export async function loadViewModel({ client, route, locale }: ViewContext): Pro
   const album = slug ? await client.get('gallery.album', { slug }) : null
   return {
     album,
+    notFound: album === null,
     backPath: route.path.split('/').slice(0, -1).join('/'),
     meta: {
       ...(album ? { title: resolveText(album.title, locale) } : {}),

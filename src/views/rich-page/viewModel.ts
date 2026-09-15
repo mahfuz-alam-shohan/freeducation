@@ -8,6 +8,7 @@ export interface RichPageViewModel {
   page: RichPage | null
   blocks: ContentBlock[]
   peopleByGroup: Record<string, Person[]>
+  notFound: boolean
   meta: PageMeta
 }
 
@@ -26,6 +27,7 @@ export async function loadViewModel({ client, route, locale }: ViewContext): Pro
   return {
     title: page?.title ?? route.item.label,
     page, blocks, peopleByGroup,
+    notFound: page === null,
     meta: {
       ...(page ? { title: resolveText(page.title, locale) } : {}),
       ...(firstText ? { description: toPlainText(resolveText(firstText.html, locale)) } : {}),

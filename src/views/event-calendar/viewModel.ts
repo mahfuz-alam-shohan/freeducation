@@ -1,6 +1,7 @@
 import type { LocalizedText } from '../../contracts/index.js'
 import { dateKeyInZone, formatMonth, weekdayNames } from '../../i18n/index.js'
 import type { ViewContext } from '../types.js'
+import { findByView } from '../../routing/resolver.js'
 import { buildMonthView, monthParam, parseMonth, shiftMonth, type MonthView } from './calendar.js'
 
 export interface EventCalendarViewModel extends MonthView {
@@ -11,11 +12,13 @@ export interface EventCalendarViewModel extends MonthView {
   nextHref: string
   todayHref: string
   basePath: string
+  /** Where event detail pages live. Not this page: '/events/calendar/x' resolves to nothing. */
+  eventPath: string
   timeZone: string
 }
 
 export async function loadViewModel(
-  { client, route, url, config, locale }: ViewContext,
+  { client, route, routes, url, config, locale }: ViewContext,
 ): Promise<EventCalendarViewModel> {
   const timeZone = config.timezone
   const weekStartsOn = config.weekStartsOn
@@ -43,6 +46,7 @@ export async function loadViewModel(
     nextHref: href(monthParam(next.year, next.month)),
     todayHref: href(monthParam(fallback.year, fallback.month)),
     basePath: route.path,
+    eventPath: findByView(routes, 'event-list')?.path ?? route.path,
     timeZone,
   }
 }

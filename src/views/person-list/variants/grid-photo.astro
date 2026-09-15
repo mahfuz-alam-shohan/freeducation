@@ -2,6 +2,7 @@
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
 import Photo from '../../../ui/Photo.astro'
 import type { PersonListViewModel } from '../viewModel.js'
 import type { Locale } from '../../../contracts/index.js'
@@ -28,6 +29,8 @@ const { vm, locale, t } = Astro.props
       ))}
     </ul>
   )}
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
 </Container>
 <style>
   .fe-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-4); grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }

@@ -5,6 +5,7 @@ import { resolveText, toPlainText } from '../../i18n/index.js'
 export interface NoticeDetailViewModel {
   notice: Notice | null
   backPath: string
+  notFound: boolean
   meta: PageMeta
 }
 
@@ -17,6 +18,7 @@ export async function loadViewModel({ client, route, locale }: ViewContext): Pro
 
   return {
     notice,
+    notFound: notice === null,
     backPath: route.path.split('/').slice(0, -1).join('/'),
     meta: {
       ...(notice ? { title: resolveText(notice.title, locale) } : {}),

@@ -4,7 +4,7 @@ import { loadSite } from '../runtime/site.js'
 import { handleSubmission, idleSubmission } from '../runtime/forms.js'
 import { matchRoute } from '../routing/resolver.js'
 import { controllers, isRenderable } from '../views/controllers.js'
-import { metaOf } from '../views/types.js'
+import { isNotFound, metaOf } from '../views/types.js'
 import { activeVariants } from 'virtual:fe/active-variants'
 import { resolveText } from '../i18n/index.js'
 import { normalisePath } from '../routing/resolver.js'
@@ -28,8 +28,12 @@ const submission = Astro.request.method === 'POST'
   : idleSubmission
 
 const viewModel = await controllers[route.view]({
-  client, locale, route, config, url: Astro.url, submission,
+  client, locale, route, routes, config, url: Astro.url, submission,
 })
+
+// The page still renders — a visitor gets a real page with the site around it — but the
+// status tells crawlers the content is genuinely absent.
+if (isNotFound(viewModel)) Astro.response.status = 404
 
 const load = activeVariants[route.view]
 if (!load) return new Response(null, { status: 404 })

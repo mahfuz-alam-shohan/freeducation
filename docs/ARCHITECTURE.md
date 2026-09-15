@@ -223,6 +223,28 @@ and nothing is sent onward.
 Browser validation is treated as a convenience: every field is checked again on the
 server before it reaches the backend.
 
+## Cross-page links
+
+A view never hardcodes another page's path. Controllers receive the whole route table
+and resolve links through `findByView`, so a school that renames 'notice' to 'circulars'
+keeps a working home page. Where several pages share a view — a notice list filtered to
+admission notices is still a notice list — the plain, top-level one wins over a filtered
+or nested one.
+
+## Missing content
+
+A detail view model sets `notFound` when its content does not exist, and the route
+answers 404 while still rendering a real page with the site around it. Returning 200 with
+an apology tells a crawler the page exists.
+
+## Ornament
+
+`decor` is school configuration: `none`, `alpona`, `kantha` or `terracotta`. Each is an
+original vector drawn in a Bangladeshi idiom — rice-flour floor painting, nakshi kantha
+running stitch, terracotta temple panels — a few hundred bytes, taking the school's own
+colour, printed as a band under the header and above the footer at low contrast. Nothing
+is traced or copied from elsewhere, so no school inherits a licensing problem.
+
 ## Time
 
 A school keeps its own clock. `timezone` and `weekStartsOn` are school configuration,
@@ -285,7 +307,8 @@ Built: contracts, keyed data layer with two adapters, school config, tokens and 
 with dark mode, bilingual i18n, dynamic menu-driven routing, header with search box and
 notice ticker, footer, 16 views with 22 variants, site search, class routine, result
 lookup, a contact form and an online admission application, an events calendar, a video
-gallery, an image pipeline, the verifier, five project lint rules, and 174 tests.
+gallery, an image pipeline, traditional ornament, the verifier, five project lint rules,
+and 180 tests.
 
 `httpSource` is exercised by integration tests against a real local HTTP server, covering
 path and query construction, authentication headers, 404 handling, server errors and

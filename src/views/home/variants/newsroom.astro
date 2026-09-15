@@ -47,7 +47,7 @@ const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale),
             {vm.events.map(event => (
               <li>
                 <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
-                <a href={`/events/${event.slug}`}>{resolveText(event.title, locale)}</a>
+                <a href={`/${vm.eventsPath}/${event.slug}`}>{resolveText(event.title, locale)}</a>
                 {event.location && <small>{resolveText(event.location, locale)}</small>}
               </li>
             ))}
@@ -85,7 +85,7 @@ const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale),
               {vm.principal.designation && <span>{resolveText(vm.principal.designation, locale)}</span>}
             </p>
           )}
-          <a class="fe-more" href={`/${vm.message.slug}`}>{t('common.readMore')} &rarr;</a>
+          <a class="fe-more" href={`/${vm.messagePath}`}>{t('common.readMore')} &rarr;</a>
         </div>
       </div>
     </section>
@@ -97,7 +97,7 @@ const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale),
       <ul>
         {vm.albums.map(album => (
           <li>
-            <a href={`/gallery/${album.slug}`}>
+            <a href={`/${vm.galleryPath}/${album.slug}`}>
               <Photo image={album.cover} locale={locale} width={280} height={190} sizes="(max-width: 48rem) 45vw, 16rem" />
               <strong>{resolveText(album.title, locale)}</strong>
               {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}

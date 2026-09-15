@@ -5,6 +5,7 @@ import { resolveText, toPlainText } from '../../i18n/index.js'
 export interface EventDetailViewModel {
   event: SchoolEvent | null
   backPath: string
+  notFound: boolean
   meta: PageMeta
 }
 
@@ -15,6 +16,7 @@ export async function loadViewModel({ client, route, locale }: ViewContext): Pro
 
   return {
     event,
+    notFound: event === null,
     backPath: route.path.split('/').slice(0, -1).join('/'),
     meta: {
       ...(event ? { title: resolveText(event.title, locale) } : {}),

@@ -1,0 +1,74 @@
+---
+/**
+ * Original ornament drawn in three Bangladeshi idioms. Nothing here is traced or
+ * copied: these are vectors, a few hundred bytes each, that take the school's own
+ * colour and stay sharp at any size.
+ *
+ *  alpona      — the curved petal and vine of rice-flour floor painting
+ *  kantha      — the running stitch and small blossom of nakshi kantha quilting
+ *  terracotta  — the pointed panels of a temple's baked clay frieze
+ */
+export type Motif = 'none' | 'alpona' | 'kantha' | 'terracotta'
+
+interface Props {
+  motif: Motif
+  /** A band sits under the header; 'flip' mirrors it to sit above the footer. */
+  flip?: boolean | undefined
+}
+const { motif, flip = false }: Props = Astro.props
+
+const id = `fe-motif-${motif}${flip ? '-flip' : ''}`
+---
+{motif !== 'none' && (
+  <div class:list={['fe-decor', { flip }]} aria-hidden="true">
+    <svg width="100%" height="26" preserveAspectRatio="xMidYMid slice" focusable="false">
+      <defs>
+        {motif === 'alpona' && (
+          <pattern id={id} width="72" height="26" patternUnits="userSpaceOnUse">
+            <path
+              d="M0 20c9 0 9-11 18-11s9 11 18 11 9-11 18-11 9 11 18 11"
+              fill="none" stroke="currentColor" stroke-width="1.1"
+            />
+            <path d="M36 6.5c2.6 0 4.4 2 4.4 4.2 0 2.3-1.9 4.3-4.4 4.3s-4.4-2-4.4-4.3c0-2.2 1.8-4.2 4.4-4.2z" fill="currentColor" opacity="0.5" />
+            <circle cx="0" cy="20" r="1.5" fill="currentColor" />
+            <circle cx="72" cy="20" r="1.5" fill="currentColor" />
+          </pattern>
+        )}
+
+        {motif === 'kantha' && (
+          <pattern id={id} width="48" height="26" patternUnits="userSpaceOnUse">
+            <path d="M0 13h6M10 13h6M20 13h6M30 13h6M40 13h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M24 5l3.2 5.4L24 15.8l-3.2-5.4z" fill="currentColor" opacity="0.55" />
+            <path d="M0 20.5h48" stroke="currentColor" stroke-width="0.6" opacity="0.35" />
+          </pattern>
+        )}
+
+        {motif === 'terracotta' && (
+          <pattern id={id} width="40" height="26" patternUnits="userSpaceOnUse">
+            <path d="M4 24V13a6 6 0 0 1 12 0v11" fill="none" stroke="currentColor" stroke-width="1.1" />
+            <path d="M24 24V13a6 6 0 0 1 12 0v11" fill="none" stroke="currentColor" stroke-width="1.1" />
+            <circle cx="10" cy="14.5" r="1.6" fill="currentColor" opacity="0.6" />
+            <circle cx="30" cy="14.5" r="1.6" fill="currentColor" opacity="0.6" />
+            <path d="M0 24.5h40" stroke="currentColor" stroke-width="0.8" opacity="0.4" />
+          </pattern>
+        )}
+      </defs>
+      <rect width="100%" height="26" fill={`url(#${id})`} />
+    </svg>
+  </div>
+)}
+
+<style>
+  .fe-decor {
+    /* Ornament, not decoration competing with the content: the school's colour, well
+       below the contrast of anything a visitor is meant to read. */
+    color: var(--fe-color-primary);
+    opacity: 0.28;
+    line-height: 0;
+    overflow: hidden;
+  }
+  .fe-decor.flip { transform: scaleY(-1); }
+  .fe-decor svg { display: block; }
+
+  @media print { .fe-decor { display: none; } }
+</style>

@@ -20,6 +20,9 @@ export const SchoolConfig = z.object({
     message: 'default locale must be one of the supported locales',
   }),
 
+  /** Traditional ornament shown as a band under the header and above the footer. */
+  decor: z.enum(['none', 'alpona', 'kantha', 'terracotta']).default('none'),
+
   /** IANA zone used to decide which calendar day an event falls on. */
   timezone: z.string().min(1).default('Asia/Dhaka'),
 

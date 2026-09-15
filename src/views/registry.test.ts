@@ -98,6 +98,7 @@ const contextFor = (view: RenderableView, source: ReturnType<typeof fixtureSourc
     client: createClient(source, { strict: false }),
     locale: 'bn',
     route,
+    routes: [route],
     config,
     url: new URL(`https://example.test/${path}${routeQuery[view] ?? ''}`),
     submission: idleSubmission,

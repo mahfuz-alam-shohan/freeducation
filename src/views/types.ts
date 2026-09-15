@@ -10,6 +10,8 @@ export interface ViewContext {
   client: Client
   locale: Locale
   route: Route
+  /** Every page this school publishes, so cross-links survive a renamed menu. */
+  routes: Route[]
   config: SchoolConfig
   url: URL
   /** The result of a form posted to this page, if any. */
@@ -25,6 +27,17 @@ export interface PageMeta {
   title?: string
   description?: string
   image?: string
+}
+
+/**
+ * Whether a view model represents content that does not exist, so the route can answer
+ * 404 rather than 200 with an apology — search engines and link checkers rely on it.
+ */
+export function isNotFound(viewModel: unknown): boolean {
+  return typeof viewModel === 'object'
+    && viewModel !== null
+    && 'notFound' in viewModel
+    && (viewModel as { notFound: unknown }).notFound === true
 }
 
 /** Reads the optional meta off a view model without assuming its shape. */

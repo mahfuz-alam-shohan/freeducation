@@ -77,9 +77,23 @@ function detailViewFor(view: ViewType): ViewType | undefined {
   }
 }
 
-/** Finds the school's page for a given kind of view, wherever it sits in the menu. */
+/**
+ * Finds the school's main page for a kind of view, wherever it sits in the menu.
+ *
+ * Several pages can share a view — a notice list filtered to admission notices is
+ * still a notice list — so the plain, top-level one wins over a filtered or nested
+ * one. Taking simply the first match would link the home page at a category page.
+ */
 export function findByView(routes: Route[], view: ViewType): Route | undefined {
-  return routes.find(route => route.view === view)
+  const candidates = routes.filter(route => route.view === view)
+  if (candidates.length <= 1) return candidates[0]
+
+  return [...candidates].sort((a, b) =>
+    // Unfiltered first, then the shallowest menu position, then the shortest path.
+    Object.keys(a.params).length - Object.keys(b.params).length
+    || a.trail.length - b.trail.length
+    || a.path.length - b.path.length,
+  )[0]
 }
 
 export const isActive = (route: Route, currentPath: string): boolean => {

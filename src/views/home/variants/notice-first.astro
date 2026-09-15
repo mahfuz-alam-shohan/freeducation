@@ -42,7 +42,7 @@ const [lead, ...rest] = vm.notices
       {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
         <ul>
           {vm.events.map(event => (
-            <li><a href={`/events/${event.slug}`}>{resolveText(event.title, locale)}</a></li>
+            <li><a href={`/${vm.eventsPath}/${event.slug}`}>{resolveText(event.title, locale)}</a></li>
           ))}
         </ul>
       )}

@@ -125,9 +125,9 @@ their JSON:
 
 | School | Language | Look |
 |---|---|---|
-| `demo` | Bangla-first, green | Newsroom homepage, dense notice table, photo grid |
-| `riverside` | English-first, maroon | Notice-led homepage, notice cards, compact table |
-| `hillview` | English-first, indigo | Minimal stacked homepage, notice timeline, detailed rows |
+| `demo` | Bangla-first, green | Newsroom homepage, dense notice table, photo grid, alpona ornament |
+| `riverside` | English-first, maroon | Notice-led homepage, notice cards, compact table, terracotta ornament |
+| `hillview` | English-first, indigo | Minimal stacked homepage, notice timeline, detailed rows, kantha ornament |
 
 ## Deploying
 
@@ -156,7 +156,7 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
 | Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 22 variants |
 | Features | Done — search, ticker, routine, results, forms, events calendar, video gallery, dark mode, images |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 174 tests |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 180 tests |
 | Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 

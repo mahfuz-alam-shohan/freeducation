@@ -44,7 +44,7 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
         case 'person.list': {
           const group = params.group as string | undefined
           const all = group ? fixtures.people.filter(p => p.group === group) : fixtures.people
-          return page(all, params)
+          return page([...all].sort((a, b) => a.order - b.order), params)
         }
 
         case 'event.list': {

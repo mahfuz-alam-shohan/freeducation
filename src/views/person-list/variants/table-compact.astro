@@ -2,6 +2,7 @@
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
 import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
 import type { PersonListViewModel } from '../viewModel.js'
 import type { Locale } from '../../../contracts/index.js'
 import { resolveText, type Translator } from '../../../i18n/index.js'
@@ -29,6 +30,8 @@ const { vm, locale, t } = Astro.props
       </table>
     </div>
   )}
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
 </Container>
 <style>
   .fe-scroll { overflow-x: auto; }

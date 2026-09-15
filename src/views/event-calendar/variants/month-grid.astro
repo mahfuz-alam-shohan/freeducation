@@ -42,7 +42,7 @@ const calendar = vm
                   <ul>
                     {day.events.map(item => (
                       <li>
-                        <a href={`/${vm.basePath}/${item.slug}`}>
+                        <a href={`/${vm.eventPath}/${item.slug}`}>
                           <time datetime={item.startsAt}>{formatTime(item.startsAt, locale, vm.timeZone)}</time>
                           <span>{resolveText(item.title, locale)}</span>
                         </a>

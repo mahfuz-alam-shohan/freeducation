@@ -2,6 +2,7 @@ import type {
   GalleryAlbum, Notice, Person, RichPage, SchoolEvent, SchoolProfile, Stat,
 } from '../../contracts/index.js'
 import type { PageMeta, ViewContext } from '../types.js'
+import { findByView } from '../../routing/resolver.js'
 import { resolveText } from '../../i18n/index.js'
 
 export interface HomeViewModel {
@@ -13,11 +14,15 @@ export interface HomeViewModel {
   /** The principal's message, shown as the school's own voice on the front page. */
   message: RichPage | null
   principal: Person | null
+  /** Resolved from the school's own menu, so renaming a page does not break the links. */
   noticesPath: string
+  eventsPath: string
+  galleryPath: string
+  messagePath: string
   meta: PageMeta
 }
 
-export async function loadViewModel({ client, locale }: ViewContext): Promise<HomeViewModel> {
+export async function loadViewModel({ client, routes, locale }: ViewContext): Promise<HomeViewModel> {
   const [profile, stats, notices, events, albums, message, staff] = await Promise.all([
     client.get('site.profile'),
     client.get('site.stats'),
@@ -37,7 +42,10 @@ export async function loadViewModel({ client, locale }: ViewContext): Promise<Ho
     albums: albums.items,
     message,
     principal: staff.items[0] ?? null,
-    noticesPath: 'notice',
+    noticesPath: findByView(routes, 'notice-list')?.path ?? 'notice',
+    eventsPath: findByView(routes, 'event-list')?.path ?? 'events',
+    galleryPath: findByView(routes, 'gallery-albums')?.path ?? 'gallery',
+    messagePath: message?.slug ?? '',
     meta: description ? { description } : {},
   }
 }
