@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import {
   ClassRef, ExamRef, GalleryAlbum, Navigation, Notice, Paginated, Person, ResultRecord, RichPage,
-  Routine, SchoolEvent, SchoolProfile, SearchHit, Stat,
+  Routine, SchoolEvent, SchoolProfile, SearchHit, Stat, Video,
 } from '../contracts/index.js'
 
 /**
@@ -20,11 +20,12 @@ export const dataKeys = {
 
   'person.list':     { params: z.object({ group: z.string().optional(), page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(50) }), result: Paginated(Person) },
 
-  'event.list':      { params: z.object({ upcoming: z.boolean().optional(), page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(20) }), result: Paginated(SchoolEvent) },
+  'event.list':      { params: z.object({ from: z.string().optional(), to: z.string().optional(), page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(20) }), result: Paginated(SchoolEvent) },
   'event.bySlug':    { params: z.object({ slug: z.string() }),                        result: SchoolEvent.nullable() },
 
   'gallery.albums':  { params: z.object({ page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(24) }), result: Paginated(GalleryAlbum) },
   'gallery.album':   { params: z.object({ slug: z.string() }),                        result: GalleryAlbum.nullable() },
+  'video.list':      { params: z.object({ page: z.number().int().positive().default(1), pageSize: z.number().int().positive().default(24) }), result: Paginated(Video) },
 
   'routine.classes': { params: z.object({}).default({}),                              result: z.array(ClassRef) },
   'routine.byClass': { params: z.object({ class: z.string().optional() }),            result: Routine.nullable() },

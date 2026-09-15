@@ -1,4 +1,4 @@
-import type { GalleryAlbum, RichPage, SchoolProfile, Stat } from '../../contracts/index.js'
+import type { GalleryAlbum, RichPage, SchoolProfile, Stat, Video } from '../../contracts/index.js'
 import { campus, t } from './text.js'
 
 export const profile: SchoolProfile = {
@@ -145,6 +145,33 @@ export const pages: RichPage[] = [
 ]
 
 const photo = (bn: string, en: string) => ({ ...campus, alt: t(bn, en) })
+
+const poster = { url: '/sample/video-poster.svg', width: 640, height: 360, variants: [] }
+
+export const videos: Video[] = [
+  {
+    id: 'v1', slug: 'annual-sports-highlights',
+    title: t('বার্ষিক ক্রীড়া প্রতিযোগিতার ঝলক', 'Annual Sports Day highlights'),
+    description: t('২০২৬ সালের বার্ষিক ক্রীড়া প্রতিযোগিতার সংক্ষিপ্ত ভিডিও।', 'A short film of the 2026 annual sports day.'),
+    embedUrl: 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ',
+    watchUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+    poster, publishedAt: '2026-12-20T00:00:00.000Z', durationSeconds: 312,
+  },
+  {
+    id: 'v2', slug: 'science-fair-tour',
+    title: t('বিজ্ঞান মেলা পরিদর্শন', 'A walk through the science fair'),
+    embedUrl: 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ',
+    watchUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+    poster, publishedAt: '2026-11-06T00:00:00.000Z', durationSeconds: 486,
+  },
+  {
+    id: 'v3', slug: 'principal-welcome',
+    title: t('অধ্যক্ষের স্বাগত বক্তব্য', 'Welcome from the Principal'),
+    embedUrl: 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ',
+    watchUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+    poster, publishedAt: '2026-01-10T00:00:00.000Z', durationSeconds: 154,
+  },
+]
 
 export const albums: GalleryAlbum[] = [
   {

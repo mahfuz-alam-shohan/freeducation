@@ -15,6 +15,8 @@ import * as routine from './routine/index.js'
 import * as resultLookup from './result-lookup/index.js'
 import * as search from './search/index.js'
 import * as admissionForm from './admission-form/index.js'
+import * as videoList from './video-list/index.js'
+import * as eventCalendar from './event-calendar/index.js'
 
 /**
  * Every renderable view type maps to exactly one module.
@@ -35,6 +37,8 @@ export const views = {
   'result-lookup': resultLookup,
   'search': search,
   'admission-form': admissionForm,
+  'video-list': videoList,
+  'event-calendar': eventCalendar,
 } satisfies Record<Exclude<ViewType, 'external-link'>, ViewModule>
 
 export type RenderableView = keyof typeof views

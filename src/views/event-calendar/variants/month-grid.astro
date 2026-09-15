@@ -1,0 +1,110 @@
+---
+import Container from '../../../ui/Container.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { EventCalendarViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatNumber, formatTime, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: EventCalendarViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const calendar = vm
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <div class="fe-calbar">
+    <h2>{calendar.label}</h2>
+    <nav aria-label={calendar.label}>
+      <a href={calendar.previousHref} rel="prev" aria-label={t('common.previous')}>
+        <Icon name="chevron-down" size={18} class="fe-prev" />
+      </a>
+      <a class="fe-today" href={calendar.todayHref}>{t('calendar.today')}</a>
+      <a href={calendar.nextHref} rel="next" aria-label={t('common.next')}>
+        <Icon name="chevron-down" size={18} class="fe-next" />
+      </a>
+    </nav>
+  </div>
+
+  <div class="fe-scroll">
+    <table class="fe-cal">
+      <caption class="fe-sr">{calendar.label}</caption>
+      <thead>
+        <tr>{calendar.weekdays.map(day => <th scope="col">{day}</th>)}</tr>
+      </thead>
+      <tbody>
+        {calendar.weeks.map(week => (
+          <tr>
+            {week.map(day => (
+              <td class:list={[{ out: !day.inMonth, today: day.isToday, busy: day.events.length > 0 }]}>
+                <span class="fe-daynum">{formatNumber(day.dayOfMonth, locale)}</span>
+                {day.events.length > 0 && (
+                  <ul>
+                    {day.events.map(item => (
+                      <li>
+                        <a href={`/${vm.basePath}/${item.slug}`}>
+                          <time datetime={item.startsAt}>{formatTime(item.startsAt, locale, vm.timeZone)}</time>
+                          <span>{resolveText(item.title, locale)}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Container>
+
+<style>
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  .fe-calbar { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: center; justify-content: space-between; margin-block-end: var(--fe-space-4); }
+  .fe-calbar h2 { margin: 0; font-size: var(--fe-size-lg); }
+  .fe-calbar nav { display: flex; align-items: center; gap: var(--fe-space-1); }
+  .fe-calbar nav a { display: grid; place-items: center; min-inline-size: 36px; block-size: 36px; border: 1px solid var(--fe-color-border); border-radius: var(--fe-radius-sm); color: var(--fe-color-text); text-decoration: none; }
+  .fe-calbar nav a:hover { border-color: var(--fe-color-primary); color: var(--fe-color-primary); }
+  .fe-today { padding-inline: var(--fe-space-3); font-size: var(--fe-size-sm); }
+  .fe-calbar :global(.fe-prev) { transform: rotate(90deg); }
+  .fe-calbar :global(.fe-next) { transform: rotate(-90deg); }
+
+  .fe-scroll { overflow-x: auto; }
+  .fe-cal { inline-size: 100%; border-collapse: collapse; table-layout: fixed; min-inline-size: 44rem; }
+  .fe-cal th {
+    padding-block: var(--fe-space-2); border-block-end: 1px solid var(--fe-color-border);
+    color: var(--fe-color-textMuted); font-family: var(--fe-font-body);
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: var(--fe-tracking-caps); text-align: start;
+  }
+  .fe-cal td {
+    vertical-align: top;
+    block-size: 6.5rem;
+    padding: var(--fe-space-2);
+    border: 1px solid var(--fe-rule-hair);
+  }
+  .fe-cal td.out { background: var(--fe-color-surface); }
+  .fe-cal td.out .fe-daynum { color: var(--fe-color-textMuted); opacity: 0.6; }
+  .fe-cal td.today { box-shadow: inset 0 2px 0 0 var(--fe-color-primary); }
+  .fe-cal td.today .fe-daynum { color: var(--fe-color-primary); font-weight: var(--fe-weight-bold); }
+
+  .fe-daynum { display: block; font-size: var(--fe-size-sm); font-variant-numeric: tabular-nums; }
+
+  .fe-cal ul { list-style: none; margin: var(--fe-space-2) 0 0; padding: 0; display: grid; gap: var(--fe-space-1); }
+  .fe-cal li a {
+    display: grid; gap: 1px;
+    padding: var(--fe-space-1) var(--fe-space-2);
+    border-inline-start: 2px solid var(--fe-color-accent);
+    background: var(--fe-color-surface);
+    text-decoration: none;
+  }
+  .fe-cal li a:hover { border-inline-start-color: var(--fe-color-primary); }
+  .fe-cal li time { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+  .fe-cal li span { font-size: var(--fe-size-2xs); line-height: var(--fe-leading-snug); }
+
+  @media (max-width: 47.99rem) {
+    .fe-cal td { block-size: 5rem; }
+  }
+</style>

@@ -68,11 +68,11 @@ School name and EIIN · phone and email · **Bangla / English switch** · search
 | **Administration** | Principal · Vice Principal · Governing Body / Managing Committee · Teacher List · Officers & Staff |
 | **Academics** | Programs & Departments · Class Routine · Exam Routine · Academic Calendar · Syllabus & Books · Library · Rules |
 | **Admission** | Admission Information · **Apply Online** · Admission Notice · Fees |
-| **Notice** | Academic Notice · Office Notice · News · Events · Circulars & Downloads |
+| **Notice** | All notices · academic · office · events · events calendar |
 | **Results** | Result lookup by examination and roll number |
 | **Students** | Students Corner · Clubs & Co-curricular · Scholarships & Stipends · Transport · Hostel · Health · Guardianship · Alumni |
 | **Career** | Job Circulars · Application Process |
-| **Gallery** | Photo Gallery · Video Gallery |
+| **Gallery** | Photo gallery · video gallery |
 | **Contact** | Address & map · contact form · department contacts |
 
 Highlighted separately, because they are what most visitors actually came for:
@@ -154,9 +154,9 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 14 views, 20 variants |
-| Features | Done — search, notice ticker, routine, result lookup, contact form, online admission, dark mode, images |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 148 tests |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 22 variants |
+| Features | Done — search, ticker, routine, results, forms, events calendar, video gallery, dark mode, images |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 174 tests |
 | Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 

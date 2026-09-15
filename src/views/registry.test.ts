@@ -48,6 +48,8 @@ const routeParams: Record<RenderableView, Record<string, string>> = {
   'result-lookup': {},
   'search': {},
   'admission-form': {},
+  'video-list': {},
+  'event-calendar': {},
 }
 
 /** Query strings that drive the views whose content depends on user input. */
@@ -66,6 +68,7 @@ const states = {
       'person.list': { items: [], page: 1, pageSize: 20, total: 0 },
       'event.list': { items: [], page: 1, pageSize: 20, total: 0 },
       'gallery.albums': { items: [], page: 1, pageSize: 20, total: 0 },
+      'video.list': { items: [], page: 1, pageSize: 20, total: 0 },
       'site.stats': [],
       'site.search': { items: [], page: 1, pageSize: 20, total: 0 },
       'routine.classes': [],

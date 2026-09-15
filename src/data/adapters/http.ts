@@ -24,6 +24,7 @@ const endpoints: Record<DataKey, string> = {
   'event.bySlug': 'events/:slug',
   'gallery.albums': 'gallery/albums',
   'gallery.album': 'gallery/albums/:slug',
+  'video.list': 'gallery/videos',
   'routine.classes': 'routine/classes',
   'routine.byClass': 'routine',
   'result.exams': 'results/exams',

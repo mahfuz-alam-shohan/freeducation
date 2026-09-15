@@ -64,11 +64,17 @@ export const navigation: Navigation = {
         item('notice-academic', 'একাডেমিক নোটিশ', 'Academic Notice', 'notice/academic', 'notice-list', { params: { category: 'academic' } }),
         item('notice-office', 'অফিস নোটিশ', 'Office Notice', 'notice/office', 'notice-list', { params: { category: 'office' } }),
         item('notice-events', 'অনুষ্ঠান', 'Events', 'events', 'event-list'),
+        item('notice-calendar', 'অনুষ্ঠান পঞ্জিকা', 'Events Calendar', 'events/calendar', 'event-calendar'),
       ],
     }),
 
     item('results', 'ফলাফল', 'Results', 'results', 'result-lookup'),
-    item('gallery', 'গ্যালারি', 'Gallery', 'gallery', 'gallery-albums'),
+    item('gallery', 'গ্যালারি', 'Gallery', 'gallery', 'gallery-albums', {
+      children: [
+        item('gallery-photo', 'ফটো গ্যালারি', 'Photo Gallery', 'gallery', 'gallery-albums'),
+        item('gallery-video', 'ভিডিও গ্যালারি', 'Video Gallery', 'gallery/videos', 'video-list'),
+      ],
+    }),
     item('career', 'ক্যারিয়ার', 'Career', 'career', 'notice-list', { params: { category: 'career' } }),
     item('contact', 'যোগাযোগ', 'Contact', 'contact', 'contact'),
   ],

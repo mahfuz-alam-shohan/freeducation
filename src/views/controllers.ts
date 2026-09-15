@@ -18,6 +18,8 @@ import { loadViewModel as routine } from './routine/viewModel.js'
 import { loadViewModel as resultLookup } from './result-lookup/viewModel.js'
 import { loadViewModel as search } from './search/viewModel.js'
 import { loadViewModel as admissionForm } from './admission-form/viewModel.js'
+import { loadViewModel as videoList } from './video-list/viewModel.js'
+import { loadViewModel as eventCalendar } from './event-calendar/viewModel.js'
 
 export type Controller = (context: ViewContext) => Promise<unknown>
 
@@ -36,6 +38,8 @@ export const controllers = {
   'result-lookup': resultLookup,
   'search': search,
   'admission-form': admissionForm,
+  'video-list': videoList,
+  'event-calendar': eventCalendar,
 } satisfies Record<Exclude<ViewType, 'external-link'>, Controller>
 
 export type RenderableView = keyof typeof controllers

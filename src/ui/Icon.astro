@@ -5,7 +5,7 @@
  */
 export type IconName =
   | 'home' | 'notice' | 'results' | 'search' | 'menu' | 'close'
-  | 'chevron-down' | 'arrow-right' | 'phone' | 'mail' | 'pin' | 'download' | 'theme'
+  | 'chevron-down' | 'arrow-right' | 'phone' | 'mail' | 'pin' | 'download' | 'theme' | 'play'
 
 interface Props {
   name: IconName
@@ -28,6 +28,7 @@ const paths: Record<IconName, string> = {
   'pin': 'M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5',
   'download': 'M12 3v11M7.5 10 12 14.5 16.5 10M5 19h14',
   'theme': 'M12 3a9 9 0 1 0 0 18zM12 3a9 9 0 0 1 0 18',
+  'play': 'M8 5.5v13l11-6.5z',
 }
 ---
 <svg

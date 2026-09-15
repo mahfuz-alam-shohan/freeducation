@@ -2,7 +2,7 @@ import type { SearchHit } from '../../contracts/index.js'
 import { navigation } from './navigation.js'
 import { people } from './people.js'
 import { events, notices } from './notices.js'
-import { albums, pages, profile, stats } from './content.js'
+import { albums, pages, profile, stats, videos } from './content.js'
 import { classes, exams, results, routines } from './academics.js'
 
 /** Substring search across the sample content, standing in for what a backend would do. */
@@ -35,7 +35,7 @@ function search(query: string): SearchHit[] {
 
 export const fixtures = {
   profile, stats, navigation,
-  notices, events, people, pages, albums,
+  notices, events, people, pages, albums, videos,
   classes, routines, exams, results,
   search,
 }

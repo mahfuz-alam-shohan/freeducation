@@ -84,6 +84,25 @@ export const GalleryAlbum = z.object({
 })
 export type GalleryAlbum = z.infer<typeof GalleryAlbum>
 
+/**
+ * A video the school has published. The backend supplies an embed URL and a poster
+ * rather than a watch link, so the frontend never has to know about providers.
+ */
+export const Video = z.object({
+  id: z.string(),
+  slug: z.string(),
+  title: LocalizedText,
+  description: LocalizedText.optional(),
+  /** Loaded only when a visitor asks for it, so no third party is contacted on page load. */
+  embedUrl: z.string(),
+  /** Where the video can be watched if embedding is blocked or scripting is off. */
+  watchUrl: z.string().optional(),
+  poster: Image.optional(),
+  publishedAt: IsoDate.optional(),
+  durationSeconds: z.number().int().positive().optional(),
+})
+export type Video = z.infer<typeof Video>
+
 export const Stat = z.object({
   label: LocalizedText,
   value: z.string(),

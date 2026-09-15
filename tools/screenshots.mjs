@@ -37,6 +37,8 @@ const pages = [
   ['results-found', '/results?exam=half-yearly-2026&roll=101'],
   ['events', '/events'],
   ['gallery', '/gallery'],
+  ['videos', '/gallery/videos'],
+  ['calendar', '/events/calendar'],
   ['gallery-album', '/gallery/annual-sports-2026'],
   ['search', '/search?q=admission'],
   ['contact', '/contact'],

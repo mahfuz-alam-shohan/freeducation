@@ -1,0 +1,104 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { VideoListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatDuration, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: VideoListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  {vm.videos.length === 0 ? <EmptyState message={t('video.empty')} /> : (
+    <ul class="fe-videos">
+      {vm.videos.map(video => (
+        <li>
+          <!--
+            A poster with a play button, not an embed. The provider is only contacted
+            when someone actually presses play; with scripting off this is simply a
+            link to the video.
+          -->
+          <a
+            class="fe-poster"
+            href={video.watchUrl ?? video.embedUrl}
+            data-fe-video={video.embedUrl}
+            data-fe-video-title={resolveText(video.title, locale)}
+            rel="noopener"
+          >
+            <Photo image={video.poster} locale={locale} width={480} height={270} sizes="(max-width: 48rem) 100vw, 20rem" />
+            <span class="fe-play"><Icon name="play" size={22} /></span>
+            <span class="fe-sr">{t('video.play')}</span>
+            {video.durationSeconds && (
+              <span class="fe-duration">{formatDuration(video.durationSeconds, locale)}</span>
+            )}
+          </a>
+
+          <h2>{resolveText(video.title, locale)}</h2>
+          {video.description && <p>{resolveText(video.description, locale)}</p>}
+          {video.publishedAt && (
+            <time datetime={video.publishedAt}>{formatDate(video.publishedAt, locale)}</time>
+          )}
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
+</Container>
+
+<script>
+  for (const trigger of document.querySelectorAll<HTMLAnchorElement>('[data-fe-video]')) {
+    trigger.addEventListener('click', event => {
+      const embed = trigger.dataset.feVideo
+      if (!embed) return
+      event.preventDefault()
+
+      const frame = document.createElement('iframe')
+      frame.src = `${embed}${embed.includes('?') ? '&' : '?'}autoplay=1`
+      frame.title = trigger.dataset.feVideoTitle ?? ''
+      frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen'
+      frame.allowFullscreen = true
+      frame.loading = 'lazy'
+      frame.className = 'fe-frame'
+
+      trigger.replaceWith(frame)
+    })
+  }
+</script>
+
+<style>
+  .fe-videos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-8) var(--fe-space-6); grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+
+  .fe-poster { position: relative; display: block; border-radius: var(--fe-radius-sm); overflow: hidden; }
+  .fe-poster :global(.fe-photo) { aspect-ratio: 16 / 9; }
+  .fe-play {
+    position: absolute; inset-block-start: 50%; inset-inline-start: 50%;
+    transform: translate(-50%, -50%);
+    display: grid; place-items: center;
+    inline-size: 52px; block-size: 52px;
+    border-radius: 50%;
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    transition: transform 140ms ease;
+  }
+  .fe-poster:hover .fe-play { transform: translate(-50%, -50%) scale(1.06); }
+  .fe-duration {
+    position: absolute; inset-block-end: var(--fe-space-2); inset-inline-end: var(--fe-space-2);
+    padding: 1px var(--fe-space-2);
+    background: var(--fe-color-scrim); color: var(--fe-color-bg);
+    font-size: var(--fe-size-2xs); font-variant-numeric: tabular-nums;
+  }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  :global(.fe-frame) { inline-size: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--fe-radius-sm); }
+
+  h2 { margin: var(--fe-space-3) 0 0; font-size: var(--fe-size-base); font-weight: var(--fe-weight-semibold); }
+  p { margin: var(--fe-space-1) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+  time { display: block; margin-block-start: var(--fe-space-1); color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+</style>

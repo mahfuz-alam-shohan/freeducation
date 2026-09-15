@@ -223,6 +223,22 @@ and nothing is sent onward.
 Browser validation is treated as a convenience: every field is checked again on the
 server before it reaches the backend.
 
+## Time
+
+A school keeps its own clock. `timezone` and `weekStartsOn` are school configuration,
+defaulting to `Asia/Dhaka` and a Saturday-start week. Every date shown to a visitor, and
+every decision about which calendar day an event falls on, is made in that zone — a
+09:00 event in Dhaka appears on the Dhaka date even when the server runs in UTC. The
+calendar grid is pure, timezone-aware and covered by its own tests.
+
+## Videos
+
+Videos are posters with a play button, not embeds. The provider is only contacted when
+a visitor actually presses play, so no third party sees anyone who merely opens the
+page, and nothing blocks the first render. With scripting off, the poster is simply a
+link to the video. The backend supplies an embed URL and a poster, so the frontend never
+has to know which provider is in use.
+
 ## Images
 
 Content images arrive from the API as URLs, so they cannot be transformed at build time.
@@ -267,9 +283,9 @@ chosen designs, because the menu is not known at build time, so it was removed.
 
 Built: contracts, keyed data layer with two adapters, school config, tokens and theming
 with dark mode, bilingual i18n, dynamic menu-driven routing, header with search box and
-notice ticker, footer, 14 views with 20 variants, site search, class routine, result
-lookup, a contact form and an online admission application, an image pipeline, the
-verifier, five project lint rules, and 148 tests.
+notice ticker, footer, 16 views with 22 variants, site search, class routine, result
+lookup, a contact form and an online admission application, an events calendar, a video
+gallery, an image pipeline, the verifier, five project lint rules, and 174 tests.
 
 `httpSource` is exercised by integration tests against a real local HTTP server, covering
 path and query construction, authentication headers, 404 handling, server errors and

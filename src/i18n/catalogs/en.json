@@ -91,5 +91,8 @@
   "admission.previous": "Previous school",
   "admission.address": "Address",
   "admission.note": "Anything else",
-  "admission.submitted": "Your application has been received. Keep the reference below."
+  "admission.submitted": "Your application has been received. Keep the reference below.",
+  "calendar.today": "Today",
+  "video.empty": "No videos have been published yet.",
+  "video.play": "Play"
 }

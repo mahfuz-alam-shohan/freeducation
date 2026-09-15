@@ -20,6 +20,12 @@ export const SchoolConfig = z.object({
     message: 'default locale must be one of the supported locales',
   }),
 
+  /** IANA zone used to decide which calendar day an event falls on. */
+  timezone: z.string().min(1).default('Asia/Dhaka'),
+
+  /** 0 is Sunday. Bangladeshi wall calendars normally begin the week on Saturday. */
+  weekStartsOn: z.number().int().min(0).max(6).default(6),
+
   theme: z.object({
     preset: z.string().refine(p => p in themePresets, { message: 'unknown theme preset' }).default('emerald'),
     overrides: TokenOverrides,

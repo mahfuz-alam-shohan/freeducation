@@ -98,6 +98,21 @@ export const events: SchoolEvent[] = [
     startsAt: '2026-12-20T12:00:00.000Z', location: t('কলেজ মিলনায়তন', 'College auditorium'),
   },
   {
+    id: 'e6', slug: 'guardians-meeting-september',
+    title: t('অভিভাবক সমাবেশ', 'Guardians’ meeting'),
+    startsAt: '2026-09-05T05:00:00.000Z', location: t('কলেজ মিলনায়তন', 'College auditorium'),
+  },
+  {
+    id: 'e7', slug: 'class-nine-orientation',
+    title: t('নবম শ্রেণির ওরিয়েন্টেশন', 'Class Nine orientation'),
+    startsAt: '2026-09-16T04:00:00.000Z', location: t('২০১ নম্বর কক্ষ', 'Room 201'),
+  },
+  {
+    id: 'e8', slug: 'inter-house-football',
+    title: t('আন্তঃহাউস ফুটবল', 'Inter-house football'),
+    startsAt: '2026-09-24T09:30:00.000Z', location: t('কলেজ মাঠ', 'College ground'),
+  },
+  {
     id: 'e4', slug: 'debate-competition',
     title: t('আন্তঃশ্রেণি বিতর্ক প্রতিযোগিতা', 'Inter-class Debate Competition'),
     startsAt: '2026-10-12T04:00:00.000Z',

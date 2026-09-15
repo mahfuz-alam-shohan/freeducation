@@ -91,5 +91,8 @@
   "admission.previous": "পূর্ববর্তী প্রতিষ্ঠান",
   "admission.address": "ঠিকানা",
   "admission.note": "অন্যান্য তথ্য",
-  "admission.submitted": "আপনার আবেদন গৃহীত হয়েছে। নিচের রেফারেন্সটি সংরক্ষণ করুন।"
+  "admission.submitted": "আপনার আবেদন গৃহীত হয়েছে। নিচের রেফারেন্সটি সংরক্ষণ করুন।",
+  "calendar.today": "আজ",
+  "video.empty": "এখনো কোনো ভিডিও প্রকাশ করা হয়নি।",
+  "video.play": "চালান"
 }

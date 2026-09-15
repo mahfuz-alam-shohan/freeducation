@@ -47,8 +47,16 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
           return page(all, params)
         }
 
-        case 'event.list':
-          return page([...fixtures.events].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), params)
+        case 'event.list': {
+          // from/to are calendar days; compare on the date portion of the timestamp.
+          const from = params.from as string | undefined
+          const to = params.to as string | undefined
+          const within = fixtures.events.filter(item => {
+            const day = item.startsAt.slice(0, 10)
+            return (!from || day >= from) && (!to || day <= to)
+          })
+          return page([...within].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), params)
+        }
         case 'event.bySlug': return fixtures.events.find(e => e.slug === params.slug) ?? null
 
         case 'gallery.albums':
@@ -69,6 +77,12 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
             r => r.roll === String(params.roll) && r.exam.en === exam.label.en,
           ) ?? null
         }
+
+        case 'video.list':
+          return page(
+            [...fixtures.videos].sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '')),
+            params,
+          )
 
         case 'site.search': return page(fixtures.search(String(params.q ?? '')), params)
       }
