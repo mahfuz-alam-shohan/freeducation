@@ -34,6 +34,12 @@ const restrictedZones = [
     message: 'A variant renders its view-model and nothing else: no fetching, no config.',
   },
   {
+    // The runtime composes config and data for entry points only.
+    target: ['./src/ui', './src/sections', './src/views', './src/contracts', './src/tokens', './src/data', './src/config', './src/i18n', './src/routing'],
+    from: ['./src/runtime'],
+    message: 'Only routes and layouts may use src/runtime.',
+  },
+  {
     target: './src',
     from: ['./src/pages'],
     except: ['./pages'],

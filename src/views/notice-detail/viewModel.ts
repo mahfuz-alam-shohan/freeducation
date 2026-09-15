@@ -1,10 +1,26 @@
 import type { Notice } from '../../contracts/index.js'
-import type { ViewContext } from '../types.js'
+import type { PageMeta, ViewContext } from '../types.js'
+import { resolveText, toPlainText } from '../../i18n/index.js'
 
-export interface NoticeDetailViewModel { notice: Notice | null; backPath: string }
+export interface NoticeDetailViewModel {
+  notice: Notice | null
+  backPath: string
+  meta: PageMeta
+}
 
-export async function loadViewModel({ client, route }: ViewContext): Promise<NoticeDetailViewModel> {
+export async function loadViewModel({ client, route, locale }: ViewContext): Promise<NoticeDetailViewModel> {
   const slug = route.params.slug ?? ''
   const notice = slug ? await client.get('notice.bySlug', { slug }) : null
-  return { notice, backPath: route.path.split('/').slice(0, -1).join('/') }
+  const description = notice
+    ? toPlainText(resolveText(notice.summary ?? notice.body, locale))
+    : ''
+
+  return {
+    notice,
+    backPath: route.path.split('/').slice(0, -1).join('/'),
+    meta: {
+      ...(notice ? { title: resolveText(notice.title, locale) } : {}),
+      ...(description ? { description } : {}),
+    },
+  }
 }

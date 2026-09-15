@@ -136,7 +136,17 @@ const highlighted = visible(navigation.primary).filter(menuItem => menuItem.high
 
   .fe-ticker { background: var(--fe-color-bg); border-bottom: 1px solid var(--fe-color-border); overflow: hidden; }
   :global(.fe-ticker-inner) { display: flex; align-items: center; gap: var(--fe-space-3); padding-block: var(--fe-space-2); }
-  .fe-ticker-label { flex: none; background: var(--fe-color-accent); color: var(--fe-color-primaryText); padding: var(--fe-space-1) var(--fe-space-3); border-radius: var(--fe-radius-sm); font-size: var(--fe-size-xs); font-weight: 600; white-space: nowrap; }
+  .fe-ticker-label {
+    flex: none;
+    padding-inline-end: var(--fe-space-3);
+    border-inline-end: 1px solid var(--fe-color-border);
+    color: var(--fe-color-accent);
+    font-size: var(--fe-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
   .fe-ticker-viewport { flex: 1; overflow: hidden; }
   .fe-ticker-track { display: flex; gap: var(--fe-space-8); list-style: none; margin: 0; padding: 0; white-space: nowrap; animation: fe-ticker-scroll 30s linear infinite; }
   .fe-ticker-viewport:hover .fe-ticker-track, .fe-ticker-viewport:focus-within .fe-ticker-track { animation-play-state: paused; }

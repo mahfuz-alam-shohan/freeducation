@@ -56,5 +56,6 @@
   "search.empty": "Nothing matched your search.",
   "search.prompt": "Type something to search.",
   "search.results": "Results",
-  "ticker.label": "Latest notices"
+  "ticker.label": "Latest notices",
+  "common.breadcrumb": "Breadcrumb"
 }

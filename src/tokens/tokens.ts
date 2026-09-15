@@ -13,7 +13,7 @@ export const baseTokens = {
   'color.accent': '#b8860b',
   'color.danger': '#b3261e',
   'color.focus': '#1a73e8',
-  'color.onPrimarySurface': 'rgb(255 255 255 / 0.12)',
+  'color.onPrimarySurface': 'rgb(255 255 255 / 0.28)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.16)',
 
   'font.body': "'Noto Sans Bengali', 'Noto Sans', system-ui, -apple-system, sans-serif",

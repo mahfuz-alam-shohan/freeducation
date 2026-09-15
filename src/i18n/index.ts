@@ -43,6 +43,13 @@ export function formatDate(value: string | undefined, locale: Locale): string {
   }).format(date)
 }
 
+/** Turns rich text into a single clean line suitable for a meta description. */
+export function toPlainText(html: string, maxLength = 160): string {
+  const text = html.replace(/<[^>]*>/g, ' ').replace(/&[a-zA-Z]+;|&#\d+;/g, ' ').replace(/\s+/g, ' ').trim()
+  if (text.length <= maxLength) return text
+  return `${text.slice(0, maxLength - 1).trimEnd()}…`
+}
+
 export function formatNumber(value: number, locale: Locale): string {
   return new Intl.NumberFormat(locale === 'bn' ? 'bn-BD' : 'en-GB').format(value)
 }

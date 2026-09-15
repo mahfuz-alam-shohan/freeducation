@@ -1,7 +1,9 @@
 ---
 import SiteHeader from '../sections/SiteHeader.astro'
 import SiteFooter from '../sections/SiteFooter.astro'
+import Breadcrumbs from '../sections/Breadcrumbs.astro'
 import { tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
+import type { Crumb } from '../sections/Breadcrumbs.astro'
 import type { Locale, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
 import type { SchoolConfig } from '../config/index.js'
@@ -17,21 +19,47 @@ interface Props {
   currentPath: string
   searchPath?: string | undefined
   ticker?: Notice[] | undefined
+  /** The path to this page. Empty on the home page. */
+  crumbs?: Crumb[] | undefined
+  /** Shown in search results and link previews. */
+  description?: string | undefined
+  image?: string | undefined
 }
 const {
   config, navigation, profile, locale, t, title, currentPath, searchPath, ticker,
+  crumbs = [], description, image,
 }: Props = Astro.props
 
 const preset = themePresets[config.theme.preset] ?? {}
 const themeCss = tokensToCss({ ...preset, ...(config.theme.overrides as Partial<Record<TokenName, string>>) })
 const siteName = resolveText(profile.name, locale)
+const pageTitle = title ? `${title} · ${siteName}` : siteName
+const summary = description ?? resolveText(profile.tagline, locale)
+
+// Canonical and preview URLs come from the live request, so each school's own
+// domain is correct without any per-school build configuration.
+const canonical = new URL(Astro.url.pathname, Astro.url.origin).href
+const previewImage = image ? new URL(image, Astro.url.origin).href : undefined
 ---
 <!doctype html>
 <html lang={locale} dir="ltr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title ? `${title} · ${siteName}` : siteName}</title>
+    <title>{pageTitle}</title>
+    <link rel="canonical" href={canonical} />
+    {summary && <meta name="description" content={summary} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'bn' ? 'bn_BD' : 'en_GB'} />
+    {summary && <meta property="og:description" content={summary} />}
+    {previewImage && <meta property="og:image" content={previewImage} />}
+    <meta name="twitter:card" content={previewImage ? 'summary_large_image' : 'summary'} />
+
+    <link rel="alternate" type="application/rss+xml" title={siteName} href="/feed.xml" />
     <style is:inline set:html={themeCss}></style>
     <script is:inline>
       // Applied before paint so the chosen theme never flashes.
@@ -49,6 +77,7 @@ const siteName = resolveText(profile.name, locale)
       features={{ languageSwitch: config.features.languageSwitch, themeToggle: config.features.themeToggle, search: config.features.search }}
       searchPath={searchPath} ticker={ticker}
     />
+    <Breadcrumbs crumbs={crumbs} t={t} />
     <main id="main" class="fe-main"><slot /></main>
     <SiteFooter navigation={navigation} profile={profile} locale={locale} t={t} />
 

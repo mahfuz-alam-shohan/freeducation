@@ -1,20 +1,25 @@
 ---
 import Base from '../layouts/Base.astro'
 import Container from '../ui/Container.astro'
-import { loadSchool } from '../config/index.js'
-import { createClient, fixtureSource } from '../data/index.js'
-import { createTranslator } from '../i18n/index.js'
+import { loadSite } from '../runtime/site.js'
 
-const config = loadSchool()
-const client = createClient(fixtureSource())
-const locale = config.locales.default
-const t = createTranslator(locale)
-const [navigation, profile] = await Promise.all([client.get('site.navigation'), client.get('site.profile')])
+// Uses the school's real data source, so a live site shows its own menu here too.
+const site = await loadSite(Astro.url)
+const { config, locale, t, navigation, profile } = site
 ---
-<Base config={config} navigation={navigation} profile={profile} locale={locale} t={t} title={t('page.notFound')} currentPath="">
+<Base
+  config={config} navigation={navigation} profile={profile} locale={locale} t={t}
+  title={t('page.notFound')} currentPath=""
+  searchPath={site.searchPath}
+>
   <Container>
     <h1>{t('page.notFound')}</h1>
     <p>{t('page.notFoundBody')}</p>
     <a href="/">{t('common.home')}</a>
   </Container>
 </Base>
+<style>
+  h1 { font-family: var(--fe-font-heading); font-size: var(--fe-size-2xl); margin: 0 0 var(--fe-space-3); }
+  p { color: var(--fe-color-textMuted); margin: 0 0 var(--fe-space-6); }
+  a { color: var(--fe-color-primary); }
+</style>

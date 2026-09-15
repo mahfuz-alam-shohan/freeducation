@@ -66,7 +66,7 @@ const { vm, locale, t }: Props = Astro.props
   .fe-stack a:hover { color: var(--fe-color-primary); text-decoration: underline; }
   .fe-stack p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
   .fe-inline { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--fe-space-4); }
-  .fe-inline li { display: grid; padding: var(--fe-space-3) var(--fe-space-4); background: var(--fe-color-surface); border-radius: var(--fe-radius-sm); }
+  .fe-inline li { display: grid; gap: var(--fe-space-1); padding-inline-start: var(--fe-space-4); border-inline-start: 2px solid var(--fe-color-accent); }
   .fe-inline a { color: var(--fe-color-text); text-decoration: none; }
   .fe-inline time { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
   .fe-more { display: inline-block; margin-top: var(--fe-space-4); color: var(--fe-color-primary); text-decoration: none; font-size: var(--fe-size-sm); }

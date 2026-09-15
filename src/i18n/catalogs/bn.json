@@ -56,5 +56,6 @@
   "search.empty": "আপনার অনুসন্ধানে কিছু পাওয়া যায়নি।",
   "search.prompt": "খুঁজতে কিছু লিখুন।",
   "search.results": "ফলাফল",
-  "ticker.label": "সাম্প্রতিক নোটিশ"
+  "ticker.label": "সাম্প্রতিক নোটিশ",
+  "common.breadcrumb": "ব্রেডক্রাম্ব"
 }

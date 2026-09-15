@@ -27,9 +27,13 @@ const { vm, locale, t } = Astro.props
                 <a href={`/${vm.basePath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
               </td>
               <td>
-                {notice.attachments.map(file => (
-                  <a class="fe-file" href={file.url}>{t('common.download')}</a>
-                ))}
+                {notice.attachments.length > 0 && (
+                  <ul class="fe-files">
+                    {notice.attachments.map(file => (
+                      <li><a href={file.url}>{resolveText(file.label, locale)}</a></li>
+                    ))}
+                  </ul>
+                )}
               </td>
             </tr>
           ))}
@@ -48,6 +52,15 @@ const { vm, locale, t } = Astro.props
   .fe-table td time { color: var(--fe-color-textMuted); white-space: nowrap; }
   .fe-table a { color: var(--fe-color-text); text-decoration: none; }
   .fe-table a:hover { color: var(--fe-color-primary); text-decoration: underline; }
-  .fe-pin { display: inline-block; margin-inline-end: var(--fe-space-2); padding: 0 var(--fe-space-2); border-radius: var(--fe-radius-sm); background: var(--fe-color-accent); color: var(--fe-color-primaryText); font-size: var(--fe-size-xs); }
-  .fe-file { color: var(--fe-color-primary) !important; white-space: nowrap; }
+  .fe-pin {
+    display: inline-block;
+    margin-inline-end: var(--fe-space-2);
+    color: var(--fe-color-accent);
+    font-size: var(--fe-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .fe-files { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-1); }
+  .fe-files a { color: var(--fe-color-primary); white-space: nowrap; }
 </style>

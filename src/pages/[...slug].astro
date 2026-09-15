@@ -1,39 +1,19 @@
 ---
 import Base from '../layouts/Base.astro'
-import { loadSchool } from '../config/index.js'
-import { createClient, fixtureSource, httpSource } from '../data/index.js'
-import { buildRoutes, matchRoute } from '../routing/resolver.js'
+import { loadSite } from '../runtime/site.js'
+import { matchRoute } from '../routing/resolver.js'
 import { controllers, isRenderable } from '../views/controllers.js'
+import { metaOf } from '../views/types.js'
 import { activeVariants } from 'virtual:fe/active-variants'
-import { createTranslator, resolveText } from '../i18n/index.js'
-import type { Locale } from '../contracts/index.js'
+import { resolveText } from '../i18n/index.js'
+import { normalisePath } from '../routing/resolver.js'
+import type { Crumb } from '../sections/Breadcrumbs.astro'
 
 // One route serves every page a school defines. Adding a page is a menu edit, not a deploy.
-const config = loadSchool()
-
-const source = config.data.source === 'http'
-  ? httpSource({
-      baseUrl: config.data.baseUrl ?? '',
-      apiKey: import.meta.env.CONTENT_API_KEY,
-      tenant: config.data.tenant,
-    })
-  : fixtureSource()
-
-const client = createClient(source)
-
-const requestedLocale = Astro.url.searchParams.get('lang') as Locale | null
-const locale: Locale = requestedLocale && config.locales.supported.includes(requestedLocale)
-  ? requestedLocale
-  : config.locales.default
-const t = createTranslator(locale)
-
-const [navigation, profile] = await Promise.all([
-  client.get('site.navigation'),
-  client.get('site.profile'),
-])
+const site = await loadSite(Astro.url)
+const { config, client, locale, t, navigation, profile, routes } = site
 
 const currentPath = Astro.params.slug ?? ''
-const routes = buildRoutes(navigation)
 const route = matchRoute(routes, currentPath)
 
 if (!route || !isRenderable(route.view)) {
@@ -46,17 +26,32 @@ const load = activeVariants[route.view]
 if (!load) return new Response(null, { status: 404 })
 const Variant = (await load()).default
 
-const title = route.path === '' ? '' : resolveText(route.item.label, locale)
+const meta = metaOf(viewModel)
+const isHome = route.path === ''
 
-// The search box and ticker are driven by the menu and the school's feature flags.
-const searchPath = routes.find(candidate => candidate.view === 'search')?.path
-const ticker = config.features.noticeTicker
-  ? (await client.get('notice.list', { pageSize: 6 })).items
-  : []
+// A detail page names itself: a shared notice link should show its headline, not
+// the label of the list it came from.
+const isDetail = route.path !== normalisePath(route.item.path)
+const title = isHome ? '' : (meta.title ?? resolveText(route.item.label, locale))
+
+const crumbs: Crumb[] = isHome ? [] : [
+  ...route.trail.map(item => ({
+    label: resolveText(item.label, locale),
+    href: `/${normalisePath(item.path)}`,
+  })),
+  ...(isDetail && meta.title ? [{ label: meta.title }] : []),
+]
+
+// The last crumb is the current page, so it is not a link.
+const lastCrumb = crumbs[crumbs.length - 1]
+if (lastCrumb) delete lastCrumb.href
 ---
 <Base
   config={config} navigation={navigation} profile={profile} locale={locale} t={t}
-  title={title} currentPath={currentPath} searchPath={searchPath} ticker={ticker}
+  title={title} currentPath={currentPath}
+  searchPath={site.searchPath} ticker={site.ticker}
+  crumbs={crumbs}
+  description={meta.description} image={meta.image}
 >
   <Variant vm={viewModel} locale={locale} t={t} />
 </Base>

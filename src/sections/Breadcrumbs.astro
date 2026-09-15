@@ -1,0 +1,42 @@
+---
+import Container from '../ui/Container.astro'
+import type { Translator } from '../i18n/index.js'
+
+export interface Crumb {
+  label: string
+  /** Absent on the current page, which is not a link. */
+  href?: string | undefined
+}
+
+interface Props {
+  /** The path to this page, outermost first, already resolved to display text. */
+  crumbs: Crumb[]
+  t: Translator
+}
+const { crumbs, t }: Props = Astro.props
+---
+{crumbs.length > 0 && (
+  <nav class="fe-crumbs" aria-label={t('common.breadcrumb')}>
+    <Container>
+      <ol>
+        <li><a href="/">{t('common.home')}</a></li>
+        {crumbs.map(crumb => (
+          <li>
+            {crumb.href
+              ? <a href={crumb.href}>{crumb.label}</a>
+              : <span aria-current="page">{crumb.label}</span>}
+          </li>
+        ))}
+      </ol>
+    </Container>
+  </nav>
+)}
+<style>
+  .fe-crumbs { border-bottom: 1px solid var(--fe-color-border); background: var(--fe-color-surface); }
+  .fe-crumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fe-space-2); list-style: none; margin: 0; padding-block: var(--fe-space-2); font-size: var(--fe-size-xs); }
+  .fe-crumbs li + li::before { content: '/'; margin-inline-end: var(--fe-space-2); color: var(--fe-color-textMuted); }
+  .fe-crumbs a { color: var(--fe-color-textMuted); text-decoration: none; }
+  .fe-crumbs a:hover { color: var(--fe-color-primary); text-decoration: underline; }
+  .fe-crumbs [aria-current='page'] { color: var(--fe-color-text); font-weight: 600; }
+  @media print { .fe-crumbs { display: none; } }
+</style>

@@ -112,7 +112,18 @@ rejected. → Zod `superRefine`, tested
 **C4** Wide content (tables, routines) scrolls inside its own container; the page body
 never scrolls sideways. → review
 
-**C5** Spacing, radius and type sizes come from tokens. → review; `fe/no-raw-color`
+**C5** **No pill-shaped labels, no highlighted text tablets.** Filled rounded badges
+around words — the "chip" look — read as cheap and generic. Signal importance with
+weight, colour, letter-spacing, a rule, or position instead. Fully rounded corners belong
+to avatars and to real buttons, nothing else. → review, and it is a hard rule: prefer
+editorial typography over decoration.
+
+**C6** No gradient text, no glow, no drop shadows on type, no emoji standing in for
+icons, no unnecessary animation. This is an institution's website: it should read as
+considered and calm, closer to a well-set printed prospectus than to a product landing
+page. → review
+
+**C7** Spacing, radius and type sizes come from tokens. → review; `fe/no-raw-color`
 covers colour, and a dimension rule is deliberately not enforced because borders and
 100% widths make it noisy
 

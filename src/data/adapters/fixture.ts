@@ -1,5 +1,6 @@
 import type { DataSource } from '../source.js'
 import type { DataKey } from '../keys.js'
+import type { Notice } from '../../contracts/index.js'
 import { fixtures } from '../../testing/fixtures/index.js'
 
 /**
@@ -20,7 +21,7 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
         case 'notice.list': {
           const category = params.category as string | undefined
           const all = category ? fixtures.notices.filter(n => n.category === category) : fixtures.notices
-          return page(all, params)
+          return page([...all].sort(byPinnedThenNewest), params)
         }
         case 'notice.bySlug':
           return fixtures.notices.find(n => n.slug === params.slug) ?? null
@@ -34,10 +35,12 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
           return page(all, params)
         }
 
-        case 'event.list': return page(fixtures.events, params)
+        case 'event.list':
+          return page([...fixtures.events].sort((a, b) => a.startsAt.localeCompare(b.startsAt)), params)
         case 'event.bySlug': return fixtures.events.find(e => e.slug === params.slug) ?? null
 
-        case 'gallery.albums': return page(fixtures.albums, params)
+        case 'gallery.albums':
+          return page([...fixtures.albums].sort((a, b) => (b.takenAt ?? '').localeCompare(a.takenAt ?? '')), params)
         case 'gallery.album': return fixtures.albums.find(a => a.slug === params.slug) ?? null
 
         case 'routine.classes': return fixtures.classes
@@ -60,6 +63,9 @@ export function fixtureSource(overrides: Partial<Record<DataKey, unknown>> = {})
     },
   }
 }
+
+const byPinnedThenNewest = (a: Notice, b: Notice) =>
+  Number(b.pinned) - Number(a.pinned) || b.publishedAt.localeCompare(a.publishedAt)
 
 function page<T>(all: T[], params: Record<string, unknown>) {
   const pageNumber = Number(params.page ?? 1)
