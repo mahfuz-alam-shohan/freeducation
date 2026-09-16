@@ -1,0 +1,145 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { ResultLookupViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: ResultLookupViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { result } = vm
+---
+<!--
+  A lookup and a marksheet. The answer is set like a document a school would hand
+  over the counter: the student's particulars ruled across the head, the subjects
+  beneath.
+-->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  {vm.exams.length === 0 ? <EmptyState message={t('result.unavailable')} /> : (
+    <>
+      <Panel title={t('result.submit')} icon="results" headingId="h-lookup">
+        <form class="fe-lookup" method="get" action={`/${vm.basePath}`}>
+          <p class="fe-field">
+            <label for="exam">{t('result.exam')}</label>
+            <select id="exam" name="exam">
+              {vm.exams.map(exam => (
+                <option value={exam.id} selected={exam.id === vm.query.exam}>
+                  {resolveText(exam.label, locale)}
+                </option>
+              ))}
+            </select>
+          </p>
+          <p class="fe-field">
+            <label for="roll">{t('result.roll')}</label>
+            <input id="roll" name="roll" type="text" inputmode="numeric" value={vm.query.roll} required />
+          </p>
+          <p class="fe-field">
+            <button type="submit">{t('result.submit')}<Icon name="arrow-right" size={14} /></button>
+          </p>
+        </form>
+      </Panel>
+
+      <div class="fe-answer">
+        {!vm.searched && <EmptyState message={t('result.prompt')} />}
+        {vm.searched && !result && <EmptyState message={t('result.notFound')} />}
+
+        {result && (
+          <Panel title={resolveText(result.exam, locale)} icon="results" headingId="h-result" flush>
+            <dl class="fe-particulars">
+              <div><dt>{t('result.student')}</dt><dd>{resolveText(result.studentName, locale)}</dd></div>
+              <div><dt>{t('result.roll')}</dt><dd>{result.roll}</dd></div>
+              <div><dt>{t('result.class')}</dt><dd>{resolveText(result.className, locale)}</dd></div>
+              {result.gpa && <div class="fe-gpa"><dt>{t('result.gpa')}</dt><dd>{result.gpa}</dd></div>}
+              {result.publishedAt && (
+                <div><dt>{t('common.published')}</dt><dd>{formatDate(result.publishedAt, locale)}</dd></div>
+              )}
+            </dl>
+
+            {result.subjects.length > 0 && (
+              <div class="fe-scroll">
+                <table>
+                  <thead>
+                    <tr><th scope="col">{t('result.subject')}</th><th scope="col">{t('result.grade')}</th></tr>
+                  </thead>
+                  <tbody>
+                    {result.subjects.map(subject => (
+                      <tr>
+                        <td>{resolveText(subject.name, locale)}</td>
+                        <td class="fe-grade">{subject.grade}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
+        )}
+      </div>
+    </>
+  )}
+</Container>
+
+<style>
+  .fe-lookup { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); align-items: end; }
+  .fe-field { margin: 0; display: grid; gap: var(--fe-space-2); }
+  label { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  select, input {
+    padding: var(--fe-space-3) var(--fe-space-4);
+    border: 1px solid var(--fe-color-border);
+    background: var(--fe-color-bg); color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-sm);
+  }
+  select:focus-visible, input:focus-visible { outline: 2px solid var(--fe-color-accent); outline-offset: -1px; }
+
+  button {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    padding: var(--fe-space-4) var(--fe-space-8);
+    border: 1px solid var(--fe-color-primary);
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    font: inherit; font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.16em; cursor: pointer;
+    transition: background-color 240ms ease;
+  }
+  button:hover { background: color-mix(in srgb, var(--fe-color-primary) 88%, black); }
+  button :global(.fe-icon) { transition: transform 240ms ease; }
+  button:hover :global(.fe-icon) { transform: translateX(3px); }
+
+  .fe-answer { margin-block-start: var(--fe-space-6); }
+
+  .fe-particulars {
+    margin: 0; display: flex; flex-wrap: wrap;
+    border-block-end: 1px solid var(--fe-color-border);
+  }
+  .fe-particulars div {
+    flex: 1 1 11rem; display: grid; gap: 3px;
+    padding: var(--fe-space-4) var(--fe-space-6);
+  }
+  .fe-particulars div + div { border-inline-start: 1px solid var(--fe-rule-hair); }
+  .fe-particulars dt {
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.16em;
+  }
+  .fe-particulars dd { margin: 0; font-size: var(--fe-size-sm); font-variant-numeric: tabular-nums; }
+  .fe-gpa dd { font-size: var(--fe-size-lg); color: var(--fe-color-accent); }
+
+  .fe-scroll { overflow-x: auto; }
+  table { inline-size: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-3) var(--fe-space-6); }
+  th {
+    background: var(--fe-color-surface);
+    border-block-end: 1px solid var(--fe-color-border);
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  tbody tr + tr td { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-grade { inline-size: 6rem; font-variant-numeric: tabular-nums; font-weight: var(--fe-weight-medium); }
+
+  @media print { .fe-lookup { display: none; } }
+  @media (prefers-reduced-motion: reduce) { button :global(.fe-icon) { transition: none; } }
+</style>

@@ -53,16 +53,16 @@
       "rich-page": "editorial",
       "person-list": "editorial",
       "event-list": "editorial",
-      "event-detail": "standard",
-      "event-calendar": "month-grid",
+      "event-detail": "editorial",
+      "event-calendar": "editorial",
       "gallery-albums": "editorial",
-      "gallery-album": "standard",
-      "video-list": "grid",
+      "gallery-album": "editorial",
+      "video-list": "editorial",
       "contact": "editorial",
-      "routine": "day-cards",
-      "result-lookup": "standard",
-      "search": "standard",
-      "admission-form": "standard"
+      "routine": "editorial",
+      "result-lookup": "editorial",
+      "search": "editorial",
+      "admission-form": "editorial"
     }
   },
   "quiet": {

@@ -34,6 +34,7 @@ const {
     {actionHref && actionLabel && (
       <a href={actionHref}>{actionLabel}<Icon name="arrow-right" size={13} /></a>
     )}
+    <slot name="action" />
   </header>
   )}
   <div class:list={['fe-panel-body', flush && 'is-flush']}><slot /></div>

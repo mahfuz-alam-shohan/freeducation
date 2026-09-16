@@ -1,0 +1,124 @@
+---
+import Container from '../../../ui/Container.astro'
+import Field from '../../../ui/Field.astro'
+import FormResult from '../../../ui/FormResult.astro'
+import Icon from '../../../ui/Icon.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { AdmissionFormViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: AdmissionFormViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { submission } = vm
+const errors = submission.errors
+const value = (field: string) => submission.values[field] ?? ''
+
+const intro = vm.info?.blocks.find(block => block.type === 'richtext')
+---
+<!-- The application in one panel, the rules beside it in another, so both are read. -->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <div class="fe-apply">
+    <Panel title={t('admission.apply')} icon="edit" headingId="h-apply">
+      <form method="post" class="fe-form" novalidate>
+        <FormResult submission={submission} t={t} successMessage={t('admission.submitted')} />
+
+        <input type="hidden" name="_form" value="admission.application" />
+        <p class="fe-trap" aria-hidden="true">
+          <input name="_website" type="text" tabindex="-1" autocomplete="off" />
+        </p>
+
+        <div class="fe-pair">
+          <Field name="studentName" label={t('admission.student')} t={t} value={value('studentName')} error={errors.studentName} required autocomplete="name" />
+          <Field name="guardianName" label={t('admission.guardian')} t={t} value={value('guardianName')} error={errors.guardianName} required />
+        </div>
+
+        <div class="fe-pair">
+          <Field name="phone" label={t('contact.phone')} t={t} type="tel" value={value('phone')} error={errors.phone} required autocomplete="tel" inputmode="tel" />
+          <Field name="email" label={t('contact.email')} t={t} type="email" value={value('email')} error={errors.email} autocomplete="email" inputmode="email" />
+        </div>
+
+        <div class="fe-pair">
+          <p class="fe-field">
+            <label for="fe-class">{t('admission.class')}</label>
+            {vm.classes.length > 0 ? (
+              <select id="fe-class" name="classApplyingFor" required aria-invalid={errors.classApplyingFor ? 'true' : undefined}>
+                {vm.classes.map(entry => (
+                  <option value={resolveText(entry.label, locale)} selected={value('classApplyingFor') === resolveText(entry.label, locale)}>
+                    {resolveText(entry.label, locale)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input id="fe-class" name="classApplyingFor" type="text" value={value('classApplyingFor')} required />
+            )}
+            {errors.classApplyingFor && <span class="fe-error">{t(errors.classApplyingFor as never)}</span>}
+          </p>
+          <Field name="group" label={t('admission.group')} t={t} value={value('group')} error={errors.group} />
+        </div>
+
+        <div class="fe-pair">
+          <Field name="dateOfBirth" label={t('admission.dob')} t={t} type="date" value={value('dateOfBirth')} error={errors.dateOfBirth} />
+          <Field name="previousSchool" label={t('admission.previous')} t={t} value={value('previousSchool')} error={errors.previousSchool} />
+        </div>
+
+        <Field name="address" label={t('admission.address')} t={t} type="textarea" rows={3} value={value('address')} error={errors.address} />
+        <Field name="note" label={t('admission.note')} t={t} type="textarea" rows={3} value={value('note')} error={errors.note} />
+
+        <p class="fe-send">
+          <button type="submit">{t('form.send')}<Icon name="arrow-right" size={14} /></button>
+        </p>
+      </form>
+    </Panel>
+
+    {intro && (
+      <Panel title={resolveText(vm.info?.title, locale)} icon="notice" headingId="h-rules">
+        <Prose html={resolveText(intro.html, locale)} />
+      </Panel>
+    )}
+  </div>
+</Container>
+
+<style>
+  .fe-apply { display: grid; gap: var(--fe-space-6); align-items: start; }
+  @media (min-width: 60rem) {
+    .fe-apply { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); gap: var(--fe-space-8); }
+  }
+
+  .fe-form { display: grid; gap: var(--fe-space-4); align-content: start; }
+  .fe-form p { margin: 0; }
+  .fe-pair { display: grid; gap: var(--fe-space-4); }
+  @media (min-width: 30rem) { .fe-pair { grid-template-columns: 1fr 1fr; } }
+  .fe-trap { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  .fe-field { margin: 0; display: grid; gap: var(--fe-space-2); }
+  label { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  select {
+    inline-size: 100%; padding: var(--fe-space-3) var(--fe-space-4);
+    border: 1px solid var(--fe-color-border);
+    background: var(--fe-color-bg); color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-sm);
+  }
+  select:focus-visible { outline: 2px solid var(--fe-color-accent); outline-offset: -1px; }
+  .fe-error { color: var(--fe-color-danger); font-size: var(--fe-size-2xs); }
+
+  .fe-send { margin-block-start: var(--fe-space-2); }
+  button {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    padding: var(--fe-space-4) var(--fe-space-8);
+    border: 1px solid var(--fe-color-primary);
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    font: inherit; font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.16em; cursor: pointer;
+    transition: background-color 240ms ease;
+  }
+  button:hover { background: color-mix(in srgb, var(--fe-color-primary) 88%, black); }
+  button :global(.fe-icon) { transition: transform 240ms ease; }
+  button:hover :global(.fe-icon) { transform: translateX(3px); }
+
+  @media (prefers-reduced-motion: reduce) { button :global(.fe-icon) { transition: none; } }
+</style>

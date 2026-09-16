@@ -182,10 +182,10 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 23 variants |
-| Design sets | Done — 4 complete looks, enforced whole-site |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 39 variants |
+| Design sets | Done — 4 complete looks, enforced whole-site; `editorial` has its own variant for all 16 views |
 | Features | Done — search, ticker, routine, results, forms, events calendar, video gallery, dark mode, images |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 215 tests |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 260 tests |
 | Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 

@@ -1,0 +1,123 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { VideoListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatDuration, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: VideoListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- Framed posters with the caption ruled beneath, matching the photo albums. -->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <Panel>
+    {vm.videos.length === 0 ? <EmptyState message={t('video.empty')} /> : (
+      <ul class="fe-videos">
+        {vm.videos.map(video => (
+          <li>
+            <!--
+              A poster with a play button, not an embed. The provider is only contacted
+              when someone actually presses play; with scripting off this is simply a
+              link to the video.
+            -->
+            <a
+              class="fe-poster"
+              href={video.watchUrl ?? video.embedUrl}
+              data-fe-video={video.embedUrl}
+              data-fe-video-title={resolveText(video.title, locale)}
+              rel="noopener"
+            >
+              <Photo image={video.poster} locale={locale} width={480} height={270} sizes="(max-width: 48rem) 100vw, 20rem" />
+              <span class="fe-play"><Icon name="play" size={18} /></span>
+              <span class="fe-sr">{t('video.play')}</span>
+              {video.durationSeconds && (
+                <span class="fe-duration">{formatDuration(video.durationSeconds, locale)}</span>
+              )}
+            </a>
+
+            <div class="fe-caption">
+              <strong>{resolveText(video.title, locale)}</strong>
+              {video.description && <p>{resolveText(video.description, locale)}</p>}
+              {video.publishedAt && (
+                <time datetime={video.publishedAt}>{formatDate(video.publishedAt, locale)}</time>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </Panel>
+
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
+</Container>
+
+<script>
+  for (const trigger of document.querySelectorAll<HTMLAnchorElement>('[data-fe-video]')) {
+    trigger.addEventListener('click', event => {
+      const embed = trigger.dataset.feVideo
+      if (!embed) return
+      event.preventDefault()
+
+      const frame = document.createElement('iframe')
+      frame.src = `${embed}${embed.includes('?') ? '&' : '?'}autoplay=1`
+      frame.title = trigger.dataset.feVideoTitle ?? ''
+      frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen'
+      frame.allowFullscreen = true
+      frame.loading = 'lazy'
+      frame.className = 'fe-frame'
+
+      trigger.replaceWith(frame)
+    })
+  }
+</script>
+
+<style>
+  .fe-videos {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+  .fe-videos li { display: grid; grid-template-rows: auto 1fr; border: 1px solid var(--fe-color-border); overflow: hidden; }
+
+  .fe-poster { position: relative; display: block; }
+  .fe-poster :global(.fe-photo) { display: block; inline-size: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  .fe-play {
+    position: absolute; inset-block-start: 50%; inset-inline-start: 50%;
+    transform: translate(-50%, -50%);
+    display: grid; place-items: center;
+    inline-size: 44px; block-size: 44px;
+    border: 1px solid var(--fe-color-primaryText);
+    background: var(--fe-color-scrim); color: var(--fe-color-primaryText);
+    transition: background-color 240ms ease;
+  }
+  .fe-poster:hover .fe-play { background: var(--fe-color-primary); }
+  .fe-duration {
+    position: absolute; inset-block-end: 0; inset-inline-end: 0;
+    padding: 2px var(--fe-space-2);
+    background: var(--fe-color-scrim); color: var(--fe-color-bg);
+    font-size: var(--fe-size-3xs); font-variant-numeric: tabular-nums;
+  }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  :global(.fe-frame) { inline-size: 100%; aspect-ratio: 16 / 9; border: 0; }
+
+  .fe-caption {
+    display: grid; gap: var(--fe-space-2);
+    padding: var(--fe-space-4);
+    border-block-start: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+  }
+  .fe-caption strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-caption p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); line-height: var(--fe-leading-snug); }
+  .fe-caption time { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.12em; }
+
+  @media (prefers-reduced-motion: reduce) { .fe-play { transition: none; } }
+</style>
