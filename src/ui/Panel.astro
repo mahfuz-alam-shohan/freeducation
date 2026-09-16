@@ -1,0 +1,71 @@
+---
+import Icon from './Icon.astro'
+import type { IconName } from './Icon.astro'
+
+/**
+ * A bordered block with a ruled head: the editorial designs' unit of layout.
+ *
+ * Every page built from these reads as the same site, because the frame, the head
+ * rule and the inset are decided here once rather than in each variant.
+ */
+interface Props {
+  /** Omitted on a panel whose page heading already says what it holds. */
+  title?: string | undefined
+  icon?: IconName | undefined
+  /** An optional action in the head, usually "View all". */
+  actionHref?: string | undefined
+  actionLabel?: string | undefined
+  /** Removes the body inset for panels whose own content is already ruled edge to edge. */
+  flush?: boolean | undefined
+  headingId?: string | undefined
+  class?: string | undefined
+}
+const {
+  title, icon, actionHref, actionLabel, flush = false, headingId, class: className,
+}: Props = Astro.props
+---
+<section class:list={['fe-panel', className]} aria-labelledby={title ? headingId : undefined}>
+  {title && (
+  <header class="fe-panel-head">
+    <h2 id={headingId}>
+      {icon && <Icon name={icon} size={15} />}
+      {title}
+    </h2>
+    {actionHref && actionLabel && (
+      <a href={actionHref}>{actionLabel}<Icon name="arrow-right" size={13} /></a>
+    )}
+  </header>
+  )}
+  <div class:list={['fe-panel-body', flush && 'is-flush']}><slot /></div>
+</section>
+
+<style>
+  .fe-panel {
+    border: 1px solid var(--fe-color-border);
+    background: var(--fe-color-bg);
+  }
+  .fe-panel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    border-block-end: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+  }
+  .fe-panel-head h2 {
+    flex: 1; min-inline-size: 0;
+    display: flex; align-items: center; gap: var(--fe-space-2); margin: 0;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  .fe-panel-head > a {
+    flex: none; display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.12em;
+    transition: color 220ms ease;
+  }
+  .fe-panel-head > a:hover { color: var(--fe-color-accent); }
+  .fe-panel-head > a:hover :global(.fe-icon) { transform: translateX(2px); }
+  .fe-panel-head > a :global(.fe-icon) { transition: transform 220ms ease; }
+
+  .fe-panel-body { padding: var(--fe-space-6); }
+  .fe-panel-body.is-flush { padding: 0; }
+</style>

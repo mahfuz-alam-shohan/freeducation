@@ -1,0 +1,82 @@
+---
+import Container from '../../../ui/Container.astro'
+import DateTile from '../../../ui/DateTile.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { EventListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatTime, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: EventListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- The school diary: one ruled row per event, its date tiled and its time and place beside it. -->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <Panel flush>
+    {vm.events.length === 0 ? (
+      <div class="fe-empty"><EmptyState message={t('event.empty')} /></div>
+    ) : (
+      <ul class="fe-diary">
+        {vm.events.map(event => (
+          <li>
+            <DateTile value={event.startsAt} locale={locale} timeZone={vm.timeZone} solid />
+            <div class="fe-what">
+              <a href={`/${vm.basePath}/${event.slug}`}>{resolveText(event.title, locale)}</a>
+              {event.description && <p>{resolveText(event.description, locale)}</p>}
+              <div class="fe-when">
+                <span><Icon name="clock" size={12} />{formatTime(event.startsAt, locale, vm.timeZone)}</span>
+                {event.location && (
+                  <span><Icon name="pin" size={12} />{resolveText(event.location, locale)}</span>
+                )}
+              </div>
+            </div>
+            <Icon name="arrow-right" size={14} class="fe-go" />
+          </li>
+        ))}
+      </ul>
+    )}
+  </Panel>
+</Container>
+
+<style>
+  .fe-empty { padding: var(--fe-space-6); }
+  .fe-diary { list-style: none; margin: 0; padding: var(--fe-space-2) 0; }
+  .fe-diary li {
+    display: flex; align-items: flex-start; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    transition: background-color 220ms ease;
+  }
+  .fe-diary li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-diary li:hover { background: var(--fe-color-surface); }
+
+  .fe-what { flex: 1; min-inline-size: 0; display: grid; gap: var(--fe-space-2); }
+  .fe-what > a {
+    color: var(--fe-color-text); text-decoration: none;
+    font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium);
+    line-height: var(--fe-leading-snug);
+  }
+  .fe-what > a:hover { color: var(--fe-color-accent); }
+  .fe-what p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+
+  .fe-when { display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-4); }
+  .fe-when span {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  :global(.fe-go) {
+    flex: none; margin-block-start: var(--fe-space-2); color: var(--fe-color-textMuted);
+    transition: transform 240ms ease, color 240ms ease;
+  }
+  .fe-diary li:hover :global(.fe-go) { transform: translateX(3px); color: var(--fe-color-accent); }
+
+  @media (max-width: 40rem) {
+    .fe-diary li { padding-inline: var(--fe-space-4); }
+  }
+  @media (prefers-reduced-motion: reduce) { :global(.fe-go) { transition: none; } }
+</style>

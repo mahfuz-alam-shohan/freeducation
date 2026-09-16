@@ -1,0 +1,41 @@
+---
+import type { Locale } from '../contracts/index.js'
+import { formatDateParts } from '../i18n/index.js'
+
+/** A date set as a tile: the day over its month, both localised. */
+interface Props {
+  value: string
+  locale: Locale
+  timeZone?: string | undefined
+  /** Filled rather than outlined, for dates that lead a row. */
+  solid?: boolean | undefined
+}
+const { value, locale, timeZone, solid = false }: Props = Astro.props
+const on = formatDateParts(value, locale, timeZone)
+---
+<time class:list={['fe-tile', solid && 'is-solid']} datetime={value}>
+  <b>{on.day}</b><i>{on.month}</i>
+</time>
+
+<style>
+  .fe-tile {
+    flex: none; inline-size: 2.75rem; padding-block: 5px;
+    display: grid; justify-items: center; gap: 1px;
+    border: 1px solid var(--fe-color-border);
+    line-height: 1;
+  }
+  .fe-tile b {
+    font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+  .fe-tile i {
+    font-style: normal; font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--fe-color-textMuted);
+  }
+  .fe-tile.is-solid {
+    background: var(--fe-color-primary); border-color: var(--fe-color-primary);
+    color: var(--fe-color-primaryText);
+  }
+  .fe-tile.is-solid i { color: inherit; opacity: 0.75; }
+</style>

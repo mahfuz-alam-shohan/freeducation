@@ -1,0 +1,104 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { PersonListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: PersonListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!--
+  A staff list as a ruled register: portrait, name and post on the left, the ways to
+  reach that person on the right. Dense enough to scan a whole department in one
+  screen, which a grid of cards never is.
+-->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <Panel flush>
+    {vm.people.length === 0 ? (
+      <div class="fe-empty"><EmptyState message={t('person.empty')} /></div>
+    ) : (
+      <ul class="fe-register">
+        {vm.people.map(person => (
+          <li>
+            <div class="fe-face">
+              {person.photo
+                ? <Photo image={person.photo} locale={locale} width={96} height={96} sizes="3rem" />
+                : <span aria-hidden="true"><Icon name="users" size={18} /></span>}
+            </div>
+
+            <div class="fe-who">
+              <strong>{resolveText(person.name, locale)}</strong>
+              {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+              {person.department && <small>{resolveText(person.department, locale)}</small>}
+            </div>
+
+            <div class="fe-reach">
+              {person.phone && (
+                <a href={`tel:${person.phone}`}><Icon name="phone" size={13} />{person.phone}</a>
+              )}
+              {person.email && (
+                <a href={`mailto:${person.email}`}><Icon name="mail" size={13} />{person.email}</a>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </Panel>
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-empty { padding: var(--fe-space-6); }
+
+  .fe-register { list-style: none; margin: 0; padding: var(--fe-space-2) 0; }
+  /* Three columns rather than "left edge and right edge": at 1240px a name and an
+     email pushed to opposite margins stop reading as one person. */
+  .fe-register li {
+    display: grid; align-items: center; gap: var(--fe-space-4);
+    grid-template-columns: auto minmax(0, 20rem) minmax(0, 1fr);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    transition: background-color 220ms ease;
+  }
+  .fe-register li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-register li:hover { background: var(--fe-color-surface); }
+
+  .fe-face {
+    flex: none; inline-size: 2.5rem; block-size: 2.5rem;
+    display: grid; place-items: center; overflow: hidden;
+    border: 1px solid var(--fe-color-border); border-radius: 50%;
+    color: var(--fe-color-textMuted); background: var(--fe-color-surface);
+  }
+  .fe-face :global(.fe-photo) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+
+  .fe-who { min-inline-size: 0; display: grid; gap: 2px; }
+  .fe-who strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  .fe-who span { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-who small { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+
+  .fe-reach { display: grid; gap: 3px; justify-items: start; }
+  .fe-reach a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-xs); font-variant-numeric: tabular-nums;
+    transition: color 220ms ease;
+  }
+  .fe-reach a:hover { color: var(--fe-color-accent); }
+
+  @media (max-width: 44rem) {
+    .fe-register li { grid-template-columns: auto minmax(0, 1fr); padding-inline: var(--fe-space-4); }
+    .fe-reach { grid-column: 2; }
+  }
+</style>

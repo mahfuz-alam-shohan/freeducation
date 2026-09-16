@@ -1,0 +1,138 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { RichPageViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RichPageViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!--
+  An editable page in the editorial vocabulary. Prose keeps a reading measure; tables,
+  files and people are panelled and ruled, so an About page reads like the rest of the
+  site rather than like a pasted document.
+-->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  {vm.blocks.length === 0 ? <EmptyState message={t('page.empty')} /> : (
+    <div class="fe-blocks">
+      {vm.blocks.map(block => (
+        <>
+          {block.type === 'richtext' && (
+            <div class="fe-measure"><Prose html={resolveText(block.html, locale)} /></div>
+          )}
+
+          {block.type === 'image' && (
+            <figure class="fe-plate">
+              <Photo image={block.image} locale={locale} width={1200} height={750} sizes="(max-width: 64rem) 100vw, 56rem" />
+              {block.caption && <figcaption>{resolveText(block.caption, locale)}</figcaption>}
+            </figure>
+          )}
+
+          {block.type === 'table' && (
+            <div class="fe-framed">
+              <div class="fe-scroll">
+                <table>
+                  {block.header && block.rows[0] && (
+                    <thead><tr>{block.rows[0].map(cell => <th scope="col">{resolveText(cell, locale)}</th>)}</tr></thead>
+                  )}
+                  <tbody>
+                    {block.rows.slice(block.header ? 1 : 0).map(row => (
+                      <tr>{row.map(cell => <td>{resolveText(cell, locale)}</td>)}</tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {block.type === 'files' && (
+            <ul class="fe-framed fe-files">
+              {block.files.map(file => (
+                <li>
+                  <a href={file.url} download>
+                    <Icon name="download" size={15} />
+                    <span>{resolveText(file.label, locale)}</span>
+                    <Icon name="arrow-right" size={13} class="fe-go" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {block.type === 'people' && (
+            <ul class="fe-framed fe-people">
+              {(vm.peopleByGroup[block.group] ?? []).map(person => (
+                <li>
+                  <strong>{resolveText(person.name, locale)}</strong>
+                  {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ))}
+    </div>
+  )}
+</Container>
+
+<style>
+  .fe-blocks { display: grid; gap: var(--fe-space-8); }
+  .fe-measure { max-inline-size: 42rem; }
+  .fe-measure :global(.fe-prose) { font-size: var(--fe-size-base); }
+
+  .fe-plate { margin: 0; border: 1px solid var(--fe-color-border); max-inline-size: 56rem; }
+  .fe-plate :global(.fe-photo) { display: block; inline-size: 100%; }
+  .fe-plate figcaption {
+    padding: var(--fe-space-3) var(--fe-space-6);
+    border-block-start: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-xs);
+  }
+
+  /* Capped rather than full-bleed: a two-column table stretched to 1240px puts its
+     key and its value at opposite ends of the screen. */
+  .fe-framed { border: 1px solid var(--fe-color-border); margin: 0; padding: 0; list-style: none; max-inline-size: 56rem; }
+  .fe-scroll { overflow-x: auto; }
+
+  table { inline-size: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-4) var(--fe-space-6); }
+  th {
+    background: var(--fe-color-surface);
+    border-block-end: 1px solid var(--fe-color-border);
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em; white-space: nowrap;
+  }
+  tbody tr + tr td { border-block-start: 1px solid var(--fe-rule-hair); }
+  tbody tr:hover td { background: var(--fe-color-surface); }
+
+  .fe-files li + li, .fe-people li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-files a {
+    display: flex; align-items: center; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm);
+    transition: background-color 220ms ease;
+  }
+  .fe-files a span { flex: 1; min-inline-size: 0; }
+  .fe-files a:hover { background: var(--fe-color-surface); color: var(--fe-color-accent); }
+  :global(.fe-go) { color: var(--fe-color-textMuted); transition: transform 240ms ease, color 240ms ease; }
+  .fe-files a:hover :global(.fe-go) { transform: translateX(3px); color: var(--fe-color-accent); }
+
+  .fe-people li {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+  }
+  .fe-people strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  .fe-people span {
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs);
+    text-transform: uppercase; letter-spacing: 0.14em; text-align: end;
+  }
+
+  @media (prefers-reduced-motion: reduce) { :global(.fe-go) { transition: none; } }
+</style>

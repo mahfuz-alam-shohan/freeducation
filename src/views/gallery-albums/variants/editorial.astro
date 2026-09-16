@@ -1,0 +1,73 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { GalleryAlbumsViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: GalleryAlbumsViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- Albums as plates on a wall: even frames, the caption ruled beneath rather than over. -->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <Panel>
+    {vm.albums.length === 0 ? <EmptyState message={t('gallery.empty')} /> : (
+      <ul class="fe-plates">
+        {vm.albums.map(album => (
+          <li>
+            <a href={`/${vm.basePath}/${album.slug}`}>
+              <Photo image={album.cover} locale={locale} width={640} height={400} sizes="(max-width: 48rem) 100vw, 20rem" />
+              <span class="fe-caption">
+                <strong>{resolveText(album.title, locale)}</strong>
+                <small>
+                  {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+                  <i>{formatNumber(album.photos.length, locale)}</i>
+                </small>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </Panel>
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-plates {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-6);
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  }
+  .fe-plates li { border: 1px solid var(--fe-color-border); overflow: hidden; }
+  .fe-plates a { display: grid; text-decoration: none; color: var(--fe-color-text); }
+  .fe-plates :global(.fe-photo) {
+    inline-size: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+    transition: transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fe-plates a:hover :global(.fe-photo) { transform: scale(1.05); }
+
+  .fe-caption {
+    display: grid; gap: 3px;
+    padding: var(--fe-space-4) var(--fe-space-4);
+    border-block-start: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+  }
+  .fe-caption strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-caption small { display: flex; justify-content: space-between; gap: var(--fe-space-4); color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+  .fe-caption i { font-style: normal; font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fe-plates :global(.fe-photo) { transition: none; }
+  }
+</style>

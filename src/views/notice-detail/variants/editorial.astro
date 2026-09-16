@@ -1,0 +1,100 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Panel from '../../../ui/Panel.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { NoticeDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { notice } = vm
+---
+<!--
+  One notice, set for reading: a ruled masthead, a reading measure for the body, and
+  attachments in a panel of their own so a parent can find the form without hunting.
+-->
+<Container>
+  {!notice ? <EmptyState message={t('page.notFoundBody')} /> : (
+    <article class="fe-article">
+      <header>
+        <p class="fe-marks">
+          <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+          {notice.pinned && <span class="fe-flag">{t('notice.pinned')}</span>}
+        </p>
+        <h1>{resolveText(notice.title, locale)}</h1>
+        {notice.summary && <p class="fe-lede">{resolveText(notice.summary, locale)}</p>}
+      </header>
+
+      {notice.body && <div class="fe-body"><Prose html={resolveText(notice.body, locale)} /></div>}
+
+      {notice.attachments.length > 0 && (
+        <Panel title={t('notice.attachments')} icon="download" headingId="h-files" flush class="fe-files">
+          <ul>
+            {notice.attachments.map(file => (
+              <li>
+                <a href={file.url} download>
+                  <Icon name="download" size={15} />
+                  <span>{resolveText(file.label, locale)}</span>
+                  <Icon name="arrow-right" size={13} class="fe-go" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      <a class="fe-back" href={`/${vm.backPath}`}>
+        <Icon name="arrow-right" size={14} />{t('common.viewAll')}
+      </a>
+    </article>
+  )}
+</Container>
+
+<style>
+  .fe-article { max-inline-size: 46rem; }
+
+  .fe-marks { display: flex; align-items: center; gap: var(--fe-space-3); margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-flag { color: var(--fe-color-accent); border-inline-start: 1px solid var(--fe-color-border); padding-inline-start: var(--fe-space-3); }
+
+  .fe-article h1 {
+    margin: var(--fe-space-3) 0 0;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-2xl);
+    font-weight: var(--fe-weight-regular);
+    line-height: var(--fe-leading-tight); letter-spacing: -0.015em;
+  }
+  .fe-lede { margin: var(--fe-space-3) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-base); line-height: var(--fe-leading-snug); }
+
+  .fe-body {
+    margin-block-start: var(--fe-space-8);
+    padding-block-start: var(--fe-space-8);
+    border-block-start: 1px solid var(--fe-color-border);
+  }
+
+  .fe-files { margin-block-start: var(--fe-space-8); }
+  .fe-files ul { list-style: none; margin: 0; padding: var(--fe-space-2) 0; }
+  .fe-files li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-files a {
+    display: flex; align-items: center; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm);
+    transition: background-color 220ms ease, color 220ms ease;
+  }
+  .fe-files a span { flex: 1; min-inline-size: 0; }
+  .fe-files a:hover { background: var(--fe-color-surface); color: var(--fe-color-accent); }
+  :global(.fe-go) { color: var(--fe-color-textMuted); transition: transform 240ms ease, color 240ms ease; }
+  .fe-files a:hover :global(.fe-go) { transform: translateX(3px); color: var(--fe-color-accent); }
+
+  .fe-back {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    margin-block-start: var(--fe-space-8);
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.16em;
+  }
+  .fe-back :global(.fe-icon) { transform: rotate(180deg); }
+  .fe-back:hover { color: var(--fe-color-accent); }
+
+  @media (prefers-reduced-motion: reduce) { :global(.fe-go) { transition: none; } }
+</style>

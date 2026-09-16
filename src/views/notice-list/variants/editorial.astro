@@ -1,0 +1,117 @@
+---
+import Container from '../../../ui/Container.astro'
+import DateTile from '../../../ui/DateTile.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import FilterBar from '../../../ui/FilterBar.astro'
+import Icon from '../../../ui/Icon.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Panel from '../../../ui/Panel.astro'
+import PageHeading from '../../../ui/PageHeading.astro'
+import type { NoticeListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!--
+  The notice board in the editorial vocabulary: one panel, ruled rows, a tiled date
+  leading each. Attachments are listed as what they are — files to take away — rather
+  than as loose text beneath the summary.
+-->
+<Container>
+  <PageHeading title={resolveText(vm.title, locale)} />
+
+  <FilterBar
+    label={t('notice.title')}
+    items={vm.filters.map(filter => ({ ...filter, label: resolveText(filter.label, locale) }))}
+  />
+
+  <Panel flush>
+    {vm.notices.length === 0 ? (
+      <div class="fe-empty"><EmptyState message={t('notice.empty')} /></div>
+    ) : (
+      <ul class="fe-rows">
+        {vm.notices.map(notice => (
+          <li>
+            <DateTile value={notice.publishedAt} locale={locale} />
+            <div class="fe-body">
+              <a class="fe-title" href={`/${vm.basePath}/${notice.slug}`}>
+                {resolveText(notice.title, locale)}
+                {notice.pinned && <span class="fe-flag">{t('notice.pinned')}</span>}
+              </a>
+              {notice.summary && <p>{resolveText(notice.summary, locale)}</p>}
+              {notice.attachments.length > 0 && (
+                <p class="fe-files">
+                  {notice.attachments.map(file => (
+                    <a href={file.url} download>
+                      <Icon name="download" size={13} />{resolveText(file.label, locale)}
+                    </a>
+                  ))}
+                </p>
+              )}
+            </div>
+            <Icon name="arrow-right" size={14} class="fe-go" />
+          </li>
+        ))}
+      </ul>
+    )}
+  </Panel>
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-empty { padding: var(--fe-space-6); }
+
+  .fe-rows { list-style: none; margin: 0; padding: var(--fe-space-2) 0; }
+  .fe-rows li {
+    display: flex; align-items: flex-start; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    transition: background-color 220ms ease;
+  }
+  .fe-rows li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-rows li:hover { background: var(--fe-color-surface); }
+
+  .fe-body { flex: 1; min-inline-size: 0; display: grid; gap: var(--fe-space-2); }
+
+  .fe-title {
+    display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: var(--fe-space-3);
+    color: var(--fe-color-text); text-decoration: none;
+    font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium);
+    line-height: var(--fe-leading-snug);
+  }
+  .fe-title:hover { color: var(--fe-color-accent); }
+  .fe-flag {
+    color: var(--fe-color-accent); font-size: var(--fe-size-3xs);
+    font-weight: var(--fe-weight-regular);
+    text-transform: uppercase; letter-spacing: 0.16em;
+  }
+
+  .fe-body p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+  .fe-files { display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-4); }
+  .fe-files a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.1em;
+    border-block-end: 1px solid var(--fe-color-border); padding-block-end: 2px;
+    transition: color 220ms ease, border-color 220ms ease;
+  }
+  .fe-files a:hover { color: var(--fe-color-accent); border-block-end-color: currentColor; }
+
+  :global(.fe-go) {
+    flex: none; margin-block-start: var(--fe-space-2); color: var(--fe-color-textMuted);
+    transition: transform 240ms ease, color 240ms ease;
+  }
+  .fe-rows li:hover :global(.fe-go) { transform: translateX(3px); color: var(--fe-color-accent); }
+
+  @media (max-width: 40rem) {
+    .fe-rows li { padding-inline: var(--fe-space-4); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.fe-go) { transition: none; }
+  }
+</style>

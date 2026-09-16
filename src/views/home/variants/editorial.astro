@@ -257,8 +257,8 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
   .fe-quick a:nth-child(odd) { border-inline-start: 0; }
   .fe-quick a span { flex: 1; min-inline-size: 0; }
   .fe-quick a:hover { background: var(--fe-color-surface); color: var(--fe-color-accent); }
-  .fe-go { opacity: 0; transform: translateX(-4px); transition: opacity 260ms ease, transform 260ms ease; }
-  a:hover > .fe-go, a:focus-visible > .fe-go { opacity: 1; transform: none; }
+  :global(.fe-go) { color: var(--fe-color-textMuted); transition: transform 260ms ease, color 260ms ease; }
+  a:hover :global(.fe-go) { transform: translateX(3px); color: var(--fe-color-accent); }
 
   .fe-facts {
     margin: 0;
@@ -392,6 +392,6 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
   @media (prefers-reduced-motion: reduce) {
     [data-reveal] { opacity: 1; transform: none; transition: none; }
     .fe-view :global(.fe-photo) { animation: none; }
-    .fe-go, .fe-plates :global(.fe-photo) { transition: none; }
+    :global(.fe-go), .fe-plates :global(.fe-photo) { transition: none; }
   }
 </style>
