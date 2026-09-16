@@ -12,7 +12,7 @@ export interface HttpSourceOptions {
 }
 
 /** Maps a data key to an endpoint. The only place URL shapes are known. */
-const endpoints: Record<DataKey, string> = {
+export const endpoints: Record<DataKey, string> = {
   'site.profile': 'site/profile',
   'site.navigation': 'site/navigation',
   'site.stats': 'site/stats',
@@ -33,7 +33,7 @@ const endpoints: Record<DataKey, string> = {
 }
 
 /** Where a submitted form is sent. */
-const formEndpoints: Record<FormKey, string> = {
+export const formEndpoints: Record<FormKey, string> = {
   'contact.message': 'forms/contact',
   'admission.application': 'forms/admission',
 }

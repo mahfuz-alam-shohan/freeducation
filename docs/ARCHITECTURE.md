@@ -190,8 +190,10 @@ immediately names every variant that needs updating.
 Astro 7 with TypeScript and Zod, server-rendered (`output: 'server'`), deployed to
 Cloudflare Workers. Vitest for tests, ESLint for boundaries.
 
-Astro was chosen over Next because this is a public content site with no logged-in
-portal: it ships almost no JavaScript, which matters for a mid-range Android on 3G.
+Astro was chosen because this is a public content site with no logged-in area: it ships
+almost no JavaScript, which matters for a mid-range Android on 3G. Content is authored in
+the school system's own dashboard and read from it over a keyed API — nothing is authored
+here, so this side needs no database, no sessions and no admin.
 
 `ADAPTER=node` swaps in the Node adapter to preview a real production build locally.
 

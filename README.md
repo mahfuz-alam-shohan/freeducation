@@ -96,15 +96,26 @@ transparency duty, so those are first-class list pages, not afterthoughts.
 
 ---
 
-## Scope
+## Where this sits
 
-**Phase 1 — the public site.** Everything above, driven by config and external content.
+This repository is **the public face only**. Content is authored and owned elsewhere —
+in the school system's own dashboard — and reaches this site through a keyed API.
 
-**Phase 2 — the portal.** Admin manages content; teachers take attendance and enter
-marks; students and guardians see routine, results and fees. The architecture is built
-so phase 1 is not thrown away to get there.
+```
+   your dashboard                 this repository              a visitor
+  ┌────────────────┐   API key   ┌──────────────────┐        ┌──────────┐
+  │ notices        │ ──────────► │ contracts        │ ─────► │ a school │
+  │ teachers       │   JSON      │ designs          │  HTML  │ website  │
+  │ results, menus │             │ per-school config│        └──────────┘
+  └────────────────┘             └──────────────────┘
+```
 
-Phase 1 must be genuinely useful with no login at all.
+Nothing is authored here. There is no admin interface, no login, and no second place to
+edit content — that would only duplicate the dashboard. What this repository owns is the
+menu-to-page mapping, the designs, and each school's configuration.
+
+[docs/API.md](docs/API.md) is the exact contract the dashboard has to satisfy: every
+endpoint this site calls, its parameters, and a valid example response.
 
 ## Principles
 
