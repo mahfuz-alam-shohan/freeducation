@@ -1,0 +1,43 @@
+---
+import Container from './Container.astro'
+
+/**
+ * The coloured strip an inner page opens with: the page's name, and one line saying
+ * what the page is for. It is what gives a photo-led site a consistent second screen
+ * once the visitor has left the front page.
+ */
+interface Props {
+  title: string
+  subtitle?: string | undefined
+  id?: string | undefined
+}
+const { title, subtitle, id }: Props = Astro.props
+---
+<div class="fe-banner">
+  <Container>
+    <h1 id={id}>{title}</h1>
+    {subtitle && <p>{subtitle}</p>}
+  </Container>
+</div>
+
+<style>
+  .fe-banner {
+    /* The banner is the first thing on the page, so it cancels the main element's own
+       top padding and sits flush under the navigation. */
+    margin-block-start: calc(var(--fe-space-8) * -1);
+    padding-block: var(--fe-space-12);
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    border-block-end: 4px solid var(--fe-color-accent);
+  }
+  .fe-banner h1 {
+    margin: 0; max-inline-size: 24ch;
+    font-family: var(--fe-font-body);
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: var(--fe-weight-semibold);
+    line-height: 1.1; letter-spacing: -0.02em;
+  }
+  .fe-banner p {
+    margin: var(--fe-space-3) 0 0; max-inline-size: 52ch;
+    font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug);
+    opacity: 0.82;
+  }
+</style>

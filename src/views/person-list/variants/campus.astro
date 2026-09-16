@@ -1,0 +1,75 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { PersonListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: PersonListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- Staff as portrait cards, the way a faculty page is built. -->
+<PageBanner title={resolveText(vm.title, locale)} />
+
+<Band>
+  {vm.people.length === 0 ? <EmptyState message={t('person.empty')} /> : (
+    <ul class="fe-faculty">
+      {vm.people.map(person => (
+        <li>
+          <div class="fe-portrait">
+            {person.photo
+              ? <Photo image={person.photo} locale={locale} width={420} height={520} sizes="(max-width: 48rem) 45vw, 15rem" />
+              : <span aria-hidden="true"><Icon name="users" size={30} /></span>}
+          </div>
+          <div class="fe-who">
+            <strong>{resolveText(person.name, locale)}</strong>
+            {person.designation && <span class="fe-post">{resolveText(person.designation, locale)}</span>}
+            {person.department && <span class="fe-dept">{resolveText(person.department, locale)}</span>}
+            <p class="fe-reach">
+              {person.phone && <a href={`tel:${person.phone}`}><Icon name="phone" size={13} />{person.phone}</a>}
+              {person.email && <a href={`mailto:${person.email}`}><Icon name="mail" size={13} />{person.email}</a>}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Band>
+
+<style>
+  .fe-faculty {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-8) var(--fe-space-6);
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  }
+  .fe-faculty li { display: grid; grid-template-rows: auto 1fr; gap: var(--fe-space-4); }
+
+  .fe-portrait {
+    aspect-ratio: 4 / 5; display: grid; place-items: center; overflow: hidden;
+    background: var(--fe-color-surface); color: var(--fe-color-textMuted);
+    border-block-end: 3px solid var(--fe-color-primary);
+  }
+  .fe-portrait :global(.fe-photo) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+
+  .fe-who { display: grid; gap: 3px; align-content: start; }
+  .fe-who strong { font-size: var(--fe-size-base); font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-snug); }
+  .fe-post { color: var(--fe-color-accent); font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-dept { color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); }
+
+  .fe-reach { display: grid; gap: 3px; margin: var(--fe-space-2) 0 0; }
+  .fe-reach a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-xs); font-variant-numeric: tabular-nums;
+  }
+  .fe-reach a:hover { color: var(--fe-color-primary); }
+</style>

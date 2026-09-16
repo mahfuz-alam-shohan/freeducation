@@ -141,7 +141,7 @@ PUBLIC_SCHOOL=hillview npm run dev # a different school: different designs, colo
 npm run verify                     # structure + lint + types + tests
 ```
 
-Four example schools are included. They share every line of code and differ only in
+Six example schools are included. They share every line of code and differ only in
 their JSON:
 
 | School | Language | Design | Look |
@@ -150,6 +150,8 @@ their JSON:
 | `riverside` | English-first, maroon | `journal` | Notice-led front page, carded notices, photo grid, terracotta ornament |
 | `hillview` | English-first, indigo | `quiet` | Stacked front page, notice timeline, kantha ornament |
 | `crestwood` | English-first, ivory | `editorial` | The premium tier: panelled blocks, ruled rows, the building leading |
+| `northgate` | English-first, newsprint | `broadsheet` | A newspaper: rules and columns, no boxes at all |
+| `westbrook` | English-first, harbour | `campus` | Photo-led and banded, in the international-school idiom |
 
 Changing any of them to another look is one line:
 
@@ -182,10 +184,10 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 39 variants |
-| Design sets | Done — 4 complete looks, enforced whole-site; `editorial` has its own variant for all 16 views |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 71 variants |
+| Design sets | Done — 6 complete looks, enforced whole-site; `editorial`, `broadsheet` and `campus` each have their own variant for all 16 views |
 | Features | Done — search, ticker, routine, results, forms, events calendar, video gallery, dark mode, images |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 260 tests |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 366 tests |
 | Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 

@@ -347,7 +347,7 @@ chosen designs, because the menu is not known at build time, so it was removed.
 
 Built: contracts, keyed data layer with two adapters, school config, tokens and theming
 with dark mode, bilingual i18n, dynamic menu-driven routing, header with search box and
-notice ticker, footer, 16 views with 39 variants, site search, class routine, result
+notice ticker, footer, 16 views with 71 variants, site search, class routine, result
 lookup, a contact form and an online admission application, an events calendar, a video
 gallery, an image pipeline, traditional ornament, the verifier, five project lint rules,
 and 180 tests.

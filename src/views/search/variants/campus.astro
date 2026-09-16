@@ -1,0 +1,96 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import type { SearchViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: SearchViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<PageBanner title={resolveText(vm.title, locale)} />
+
+<Band>
+  <form class="fe-searchbox" method="get" action={`/${vm.basePath}`} role="search">
+    <label class="fe-sr" for="q">{t('search.placeholder')}</label>
+    <span class="fe-lens"><Icon name="search" size={18} /></span>
+    <input id="q" name="q" type="search" value={vm.query} placeholder={t('search.placeholder')} />
+    <button type="submit">{t('common.search')}</button>
+  </form>
+
+  {!vm.query && <EmptyState message={t('search.prompt')} />}
+  {vm.query && vm.hits.length === 0 && <EmptyState message={t('search.empty')} />}
+
+  {vm.hits.length > 0 && (
+    <>
+      <p class="fe-count">{t('search.results')} · {formatNumber(vm.total, locale)}</p>
+      <ul class="fe-hits">
+        {vm.hits.map(hit => (
+          <li>
+            <a href={`/${hit.path}`}>
+              <strong>{resolveText(hit.title, locale)}</strong>
+              {hit.snippet && <span class="fe-snip">{resolveText(hit.snippet, locale)}</span>}
+              <span class="fe-path">
+                /{hit.path}
+                {hit.date && <time datetime={hit.date}>{formatDate(hit.date, locale)}</time>}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Band>
+
+<style>
+  .fe-searchbox {
+    display: flex; align-items: stretch;
+    max-inline-size: 40rem; margin-block-end: var(--fe-space-8);
+    border: 1px solid var(--fe-color-border);
+  }
+  .fe-lens { display: grid; place-items: center; padding-inline: var(--fe-space-4); color: var(--fe-color-textMuted); }
+  .fe-searchbox input {
+    flex: 1; min-inline-size: 0;
+    padding: var(--fe-space-4) var(--fe-space-2);
+    border: 0; background: transparent; color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-base);
+  }
+  .fe-searchbox input:focus-visible { outline: 0; }
+  .fe-searchbox:focus-within { border-color: var(--fe-color-primary); }
+  .fe-searchbox button {
+    padding-inline: var(--fe-space-8);
+    border: 0; background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    font: inherit; font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.16em; cursor: pointer;
+  }
+  .fe-searchbox button:hover { background: var(--fe-color-accent); }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .fe-count { margin: 0 0 var(--fe-space-4); color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.16em; }
+
+  .fe-hits { list-style: none; margin: 0; padding: 0; }
+  .fe-hits li { border-block-end: 1px solid var(--fe-color-border); }
+  .fe-hits li:first-child { border-block-start: 1px solid var(--fe-color-border); }
+  .fe-hits a {
+    display: grid; gap: var(--fe-space-2);
+    padding: var(--fe-space-6) var(--fe-space-4) var(--fe-space-6) 0;
+    text-decoration: none; color: var(--fe-color-text);
+    transition: background-color 220ms ease, padding-inline-start 220ms ease;
+  }
+  .fe-hits a:hover { background: var(--fe-color-surface); padding-inline-start: var(--fe-space-4); }
+  .fe-hits strong { font-size: var(--fe-size-lg); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-snip { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+  .fe-path {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-4);
+    color: var(--fe-color-accent); font-size: var(--fe-size-3xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.14em;
+  }
+</style>

@@ -3,6 +3,7 @@ export type { HomeViewModel } from './viewModel.js'
 
 /** Lazily loaded so a page ships only the design it actually uses. */
 export const variants = {
+  'campus': () => import('./variants/campus.astro'),
   'broadsheet': () => import('./variants/broadsheet.astro'),
   'newsroom': () => import('./variants/newsroom.astro'),
   'editorial': () => import('./variants/editorial.astro'),

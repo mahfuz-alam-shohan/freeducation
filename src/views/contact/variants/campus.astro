@@ -1,0 +1,107 @@
+---
+import Band from '../../../ui/Band.astro'
+import Field from '../../../ui/Field.astro'
+import FormResult from '../../../ui/FormResult.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import type { ContactViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: ContactViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { profile, submission } = vm
+const errors = submission.errors
+const value = (field: string) => submission.values[field] ?? ''
+---
+<PageBanner title={resolveText(vm.title, locale)} />
+
+<div class="fe-strip">
+  <div class="fe-strip-inner">
+    {profile.address && <p><Icon name="pin" size={16} />{resolveText(profile.address, locale)}</p>}
+    {profile.phones[0] && <p><Icon name="phone" size={16} /><a href={`tel:${profile.phones[0]}`}>{profile.phones.join(', ')}</a></p>}
+    {profile.emails[0] && <p><Icon name="mail" size={16} /><a href={`mailto:${profile.emails[0]}`}>{profile.emails[0]}</a></p>}
+  </div>
+</div>
+
+<Band>
+  <div class="fe-contact">
+    <section aria-labelledby="h-form">
+      <h2 id="h-form">{t('contact.formTitle')}</h2>
+      <FormResult submission={submission} t={t} />
+
+      <form method="post" class="fe-form" novalidate>
+        <input type="hidden" name="_form" value="contact.message" />
+        <!-- Hidden from people and from screen readers; bots fill it in and are
+             quietly discarded. The tempting field name is the whole bait. -->
+        <p class="fe-trap" aria-hidden="true">
+          <input name="_website" type="text" tabindex="-1" autocomplete="off" />
+        </p>
+
+        <Field name="name" label={t('contact.name')} t={t} value={value('name')} error={errors.name} required autocomplete="name" />
+        <div class="fe-pair">
+          <Field name="phone" label={t('contact.phone')} t={t} type="tel" value={value('phone')} error={errors.phone} autocomplete="tel" inputmode="tel" />
+          <Field name="email" label={t('contact.email')} t={t} type="email" value={value('email')} error={errors.email} autocomplete="email" inputmode="email" />
+        </div>
+        <Field name="subject" label={t('contact.subject')} t={t} value={value('subject')} error={errors.subject} required />
+        <Field name="message" label={t('contact.message')} t={t} type="textarea" value={value('message')} error={errors.message} required />
+
+        <p><button type="submit">{t('form.send')}<Icon name="arrow-right" size={15} /></button></p>
+      </form>
+    </section>
+
+    {profile.mapEmbedUrl && (
+      <aside>
+        <h2>{t('contact.address')}</h2>
+        <iframe class="fe-map" src={profile.mapEmbedUrl} loading="lazy" title={t('contact.address')}></iframe>
+      </aside>
+    )}
+  </div>
+</Band>
+
+<style>
+  .fe-strip { background: var(--fe-color-surface); border-block-end: 1px solid var(--fe-color-border); }
+  .fe-strip-inner {
+    inline-size: 100%; max-inline-size: var(--fe-container-max);
+    margin-inline: auto; padding: var(--fe-space-4);
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-4) var(--fe-space-12);
+  }
+  .fe-strip p {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2); margin: 0;
+    color: var(--fe-color-primary); font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .fe-strip a { color: inherit; text-decoration: none; font-variant-numeric: tabular-nums; }
+  .fe-strip a:hover { color: var(--fe-color-accent); }
+
+  .fe-contact { display: grid; gap: var(--fe-space-12); align-items: start; }
+  @media (min-width: 60rem) { .fe-contact { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+
+  h2 {
+    margin: 0 0 var(--fe-space-6); padding-block-end: var(--fe-space-3);
+    border-block-end: 2px solid var(--fe-color-border);
+    font-family: var(--fe-font-body); font-size: var(--fe-size-lg);
+    font-weight: var(--fe-weight-semibold);
+  }
+
+  .fe-form { display: grid; gap: var(--fe-space-4); }
+  .fe-pair { display: grid; gap: var(--fe-space-4); }
+  @media (min-width: 30rem) { .fe-pair { grid-template-columns: 1fr 1fr; } }
+  .fe-trap { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+  .fe-form p { margin: 0; }
+
+  button {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    justify-self: start; margin-block-start: var(--fe-space-2);
+    padding: var(--fe-space-4) var(--fe-space-8);
+    border: 0; background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    font: inherit; font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.16em; cursor: pointer;
+    transition: background-color 240ms ease;
+  }
+  button:hover { background: var(--fe-color-accent); }
+
+  .fe-map { inline-size: 100%; min-block-size: 20rem; border: 1px solid var(--fe-color-border); }
+
+  @media (prefers-reduced-motion: reduce) { button { transition: none; } }
+</style>

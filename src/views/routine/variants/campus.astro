@@ -1,0 +1,111 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import type { RoutineViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RoutineViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { routine } = vm
+
+const days = routine
+  ? routine.days.map((day, dayIndex) => ({
+      label: resolveText(day, locale),
+      lessons: routine.periods
+        .map((period, periodIndex) => ({ period, cell: routine.grid[dayIndex]?.[periodIndex] ?? null }))
+        .filter(entry => entry.cell !== null),
+    }))
+  : []
+---
+<PageBanner
+  title={resolveText(vm.title, locale)}
+  subtitle={routine?.updatedAt ? `${t('common.updated')} ${formatDate(routine.updatedAt, locale)}` : undefined}
+/>
+
+<Band>
+  {vm.classes.length > 1 && (
+    <nav class="fe-classes" aria-label={t('routine.selectClass')}>
+      {vm.classes.map(entry => (
+        <a href={`/${vm.basePath}?class=${entry.id}`} aria-current={entry.id === vm.selected?.id ? 'page' : undefined}>
+          {resolveText(entry.label, locale)}
+        </a>
+      ))}
+    </nav>
+  )}
+
+  {!routine ? <EmptyState message={t('routine.empty')} /> : (
+    <div class="fe-week">
+      {days.map(day => (
+        <section>
+          <h2>{day.label}</h2>
+          {day.lessons.length === 0 ? <p class="fe-free">{t('routine.free')}</p> : (
+            <ol>
+              {day.lessons.map(({ period, cell }) => (
+                <li>
+                  <span class="fe-when">
+                    {period.startsAt ?? resolveText(period.label, locale)}
+                  </span>
+                  <span class="fe-what">
+                    <strong>{resolveText(cell!.subject, locale)}</strong>
+                    {cell!.teacher && <small>{resolveText(cell!.teacher, locale)}</small>}
+                  </span>
+                  {cell!.room && <span class="fe-where"><Icon name="pin" size={12} />{cell!.room}</span>}
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      ))}
+    </div>
+  )}
+</Band>
+
+<style>
+  .fe-classes { display: flex; flex-wrap: wrap; margin-block-end: var(--fe-space-8); }
+  .fe-classes a {
+    padding: var(--fe-space-3) var(--fe-space-6);
+    border: 1px solid var(--fe-color-border);
+    color: var(--fe-color-text); text-decoration: none;
+    font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium);
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+  .fe-classes a + a { border-inline-start: 0; }
+  .fe-classes a:hover { background: var(--fe-color-surface); }
+  .fe-classes a[aria-current='page'] {
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    border-color: var(--fe-color-primary);
+  }
+
+  .fe-week { display: grid; gap: var(--fe-space-6); grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); }
+  section { border: 1px solid var(--fe-color-border); break-inside: avoid; }
+  h2 {
+    margin: 0; padding: var(--fe-space-4) var(--fe-space-6);
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    font-family: var(--fe-font-body); font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.18em;
+  }
+
+  .fe-free { margin: 0; padding: var(--fe-space-4) var(--fe-space-6); color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+
+  ol { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: grid; grid-template-columns: 4rem minmax(0, 1fr) auto;
+    gap: var(--fe-space-3); align-items: baseline;
+    padding: var(--fe-space-4) var(--fe-space-6);
+  }
+  li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+
+  .fe-when { color: var(--fe-color-accent); font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold); font-variant-numeric: tabular-nums; }
+  .fe-what strong { display: block; font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  .fe-what small { display: block; margin-block-start: 2px; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+  .fe-where {
+    display: inline-flex; align-items: center; gap: 3px;
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
+  }
+
+  @media print { .fe-classes { display: none; } .fe-week { grid-template-columns: repeat(2, 1fr); } }
+</style>

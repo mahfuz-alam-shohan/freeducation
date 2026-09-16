@@ -5,7 +5,7 @@ import Breadcrumbs from '../sections/Breadcrumbs.astro'
 import Decor from '../ui/Decor.astro'
 import NavTray from '../sections/NavTray.astro'
 import MobileTabBar, { type Tab } from '../sections/MobileTabBar.astro'
-import { baseTokens, tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
+import { baseTokens, darkPresets, tokensToCss, themePresets, type TokenName } from '../tokens/tokens.js'
 import type { Crumb } from '../sections/Breadcrumbs.astro'
 import type { Locale, Navigation, Notice, SchoolProfile } from '../contracts/index.js'
 import { resolveText, type Translator } from '../i18n/index.js'
@@ -44,7 +44,12 @@ const preset = themePresets[config.theme.preset] ?? {}
 const themeColor = (config.theme.overrides as Record<string, string>)['color.primary']
   ?? preset['color.primary']
   ?? baseTokens['color.primary']
-const themeCss = tokensToCss({ ...preset, ...(config.theme.overrides as Partial<Record<TokenName, string>>) })
+// A school's own overrides apply to both modes: they are its colours, not its daylight.
+const chosen = config.theme.overrides as Partial<Record<TokenName, string>>
+const themeCss = tokensToCss(
+  { ...preset, ...chosen },
+  { ...(darkPresets[config.theme.preset] ?? {}), ...chosen },
+)
 const siteName = resolveText(profile.name, locale)
 const pageTitle = title ? `${title} · ${siteName}` : siteName
 const summary = description ?? resolveText(profile.tagline, locale)

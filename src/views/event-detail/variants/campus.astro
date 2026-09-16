@@ -1,0 +1,73 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import Photo from '../../../ui/Photo.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { EventDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatTime, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: EventDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { event } = vm
+---
+<!-- Title band, a strip of particulars, the picture, then the description. -->
+{!event ? (
+  <Band><EmptyState message={t('page.notFoundBody')} /></Band>
+) : (
+  <>
+    <PageBanner title={resolveText(event.title, locale)} />
+
+    <div class="fe-strip">
+      <div class="fe-strip-inner">
+        <p><Icon name="calendar" size={16} /><time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time></p>
+        <p><Icon name="clock" size={16} />{formatTime(event.startsAt, locale)}</p>
+        {event.location && <p><Icon name="pin" size={16} />{resolveText(event.location, locale)}</p>}
+      </div>
+    </div>
+
+    <Band>
+      <article class="fe-article">
+        {event.cover && (
+          <figure class="fe-figure">
+            <Photo image={event.cover} locale={locale} width={1400} height={700} sizes="(max-width: 64rem) 100vw, 56rem" eager />
+          </figure>
+        )}
+        {event.description && <Prose html={resolveText(event.description, locale)} />}
+        <a class="fe-back" href={`/${vm.backPath}`}>
+          <Icon name="arrow-right" size={15} />{t('common.viewAll')}
+        </a>
+      </article>
+    </Band>
+  </>
+)}
+
+<style>
+  .fe-strip { background: var(--fe-color-surface); border-block-end: 1px solid var(--fe-color-border); }
+  .fe-strip-inner {
+    inline-size: 100%; max-inline-size: var(--fe-container-max);
+    margin-inline: auto; padding: var(--fe-space-4);
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-4) var(--fe-space-12);
+  }
+  .fe-strip p {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2); margin: 0;
+    color: var(--fe-color-primary); font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.14em;
+  }
+
+  .fe-article { max-inline-size: 52rem; }
+  .fe-figure { margin: 0 0 var(--fe-space-8); }
+  .fe-figure :global(.fe-photo) { display: block; inline-size: 100%; aspect-ratio: 2 / 1; object-fit: cover; }
+
+  .fe-back {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    margin-block-start: var(--fe-space-8);
+    color: var(--fe-color-primary); text-decoration: none;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-back :global(.fe-icon) { transform: rotate(180deg); }
+  .fe-back:hover { text-decoration: underline; text-underline-offset: 4px; }
+</style>

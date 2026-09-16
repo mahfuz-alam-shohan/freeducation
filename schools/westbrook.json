@@ -1,0 +1,29 @@
+{
+  "slug": "westbrook",
+  "locales": {
+    "supported": [
+      "en",
+      "bn"
+    ],
+    "default": "en"
+  },
+  "timezone": "Asia/Dhaka",
+  "weekStartsOn": 6,
+  "decor": "none",
+  "theme": {
+    "preset": "harbour",
+    "overrides": {
+      "container.max": "1220px"
+    }
+  },
+  "design": "campus",
+  "features": {
+    "search": true,
+    "noticeTicker": false,
+    "themeToggle": true,
+    "languageSwitch": true
+  },
+  "data": {
+    "source": "fixture"
+  }
+}

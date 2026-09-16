@@ -108,5 +108,27 @@
       "search": "broadsheet",
       "admission-form": "broadsheet"
     }
+  },
+  "campus": {
+    "label": "Campus",
+    "note": "Photo-led and banded, the way international schools build: a photographic opening, full-width sections alternating plain and tinted, one deep blue and one warm accent.",
+    "views": {
+      "home": "campus",
+      "notice-list": "campus",
+      "notice-detail": "campus",
+      "rich-page": "campus",
+      "person-list": "campus",
+      "event-list": "campus",
+      "event-detail": "campus",
+      "event-calendar": "campus",
+      "gallery-albums": "campus",
+      "gallery-album": "campus",
+      "video-list": "campus",
+      "contact": "campus",
+      "routine": "campus",
+      "result-lookup": "campus",
+      "search": "campus",
+      "admission-form": "campus"
+    }
   }
 }

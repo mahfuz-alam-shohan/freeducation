@@ -1,0 +1,65 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { GalleryAlbumsViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: GalleryAlbumsViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<PageBanner title={resolveText(vm.title, locale)} />
+
+<Band>
+  {vm.albums.length === 0 ? <EmptyState message={t('gallery.empty')} /> : (
+    <ul class="fe-cards">
+      {vm.albums.map(album => (
+        <li>
+          <a href={`/${vm.basePath}/${album.slug}`}>
+            <Photo image={album.cover} locale={locale} width={720} height={480} sizes="(max-width: 52rem) 100vw, 20rem" />
+            <div>
+              <strong>{resolveText(album.title, locale)}</strong>
+              <small>
+                {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+                <i>{formatNumber(album.photos.length, locale)}</i>
+              </small>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Band>
+
+<style>
+  .fe-cards {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  }
+  .fe-cards li { border: 1px solid var(--fe-color-border); overflow: hidden; }
+  .fe-cards a { display: grid; grid-template-rows: auto 1fr; text-decoration: none; color: var(--fe-color-text); }
+  .fe-cards :global(.fe-photo) {
+    inline-size: 100%; aspect-ratio: 3 / 2; object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fe-cards a:hover :global(.fe-photo) { transform: scale(1.04); }
+  .fe-cards div { display: grid; gap: var(--fe-space-2); padding: var(--fe-space-6); }
+  .fe-cards strong { font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-cards small {
+    display: flex; justify-content: space-between; gap: var(--fe-space-4);
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-cards i { font-style: normal; font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) { .fe-cards :global(.fe-photo) { transition: none; } }
+</style>

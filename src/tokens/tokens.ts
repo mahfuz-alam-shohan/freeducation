@@ -16,6 +16,9 @@ export const baseTokens = {
   'color.scrim': 'rgb(8 14 20 / 0.5)',
   /* Keeps display type legible over any photograph, dark at both ends, open in the middle. */
   'gradient.stage': 'linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.38) 46%, rgb(0 0 0 / 0.76))',
+  /* A far lighter shade, for a photograph whose caption sits on a solid card rather
+     than on the image itself: enough for the card's edge to read, no more. */
+  'gradient.veil': 'linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.3))',
   'color.onPrimarySurface': 'rgb(255 255 255 / 0.28)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.16)',
 
@@ -97,6 +100,7 @@ export const darkTokens: Partial<Record<TokenName, string>> = {
   'color.primaryText': '#06231a',
   'color.scrim': 'rgb(0 0 0 / 0.66)',
   'gradient.stage': 'linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.46) 46%, rgb(0 0 0 / 0.84))',
+  'gradient.veil': 'linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.42))',
   'color.onPrimarySurface': 'rgb(255 255 255 / 0.22)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.3)',
   'rule.hair': 'rgb(255 255 255 / 0.11)',
@@ -159,16 +163,85 @@ export const themePresets: Record<string, Partial<Record<TokenName, string>>> = 
     'rule.hair': 'rgb(21 19 16 / 0.26)',
   },
 
+  /*
+   * The palette international school sites converge on: a clean white page, one deep
+   * institutional blue doing the heavy lifting, a cool tint for the bands between
+   * sections, and a warm accent so the blue is not the only colour on the page.
+   */
+  harbour: {
+    'color.bg': '#FFFFFF',
+    'color.surface': '#EEF3F6',
+    'color.border': '#D3DFE6',
+    'color.text': '#0F2430',
+    'color.textMuted': '#546874',
+    'color.primary': '#0B3C55',
+    'color.primaryText': '#FFFFFF',
+    'color.accent': '#C4622D',
+    'color.scrim': 'rgb(8 32 45 / 0.55)',
+    'color.onPrimarySurface': 'rgb(255 255 255 / 0.16)',
+    'rule.hair': 'rgb(15 36 48 / 0.12)',
+  },
+
   sapphire: { 'color.primary': '#14508c', 'color.accent': '#c2703d' },
   maroon: { 'color.primary': '#7b1e3a', 'color.accent': '#0f766e' },
   indigo: { 'color.primary': '#3730a3', 'color.accent': '#b45309' },
 }
 
+/**
+ * A preset's dark counterpart. Without one a school in dark mode falls back to the
+ * generic dark palette, which keeps none of its identity: a navy-and-terracotta site
+ * turned green after sunset because the default primary was still in force.
+ *
+ * Presets that only shift primary and accent need no entry — the generic dark suits
+ * them. Presets that set a whole palette have to answer for both modes.
+ */
+export const darkPresets: Record<string, Partial<Record<TokenName, string>>> = {
+  ivory: {
+    'color.bg': '#14171A',
+    'color.surface': '#1C2024',
+    'color.border': '#2E3339',
+    'color.text': '#ECE9E2',
+    'color.textMuted': '#9A958A',
+    'color.primary': '#C8A659',
+    'color.primaryText': '#14171A',
+    'color.accent': '#C8A659',
+    'rule.hair': 'rgb(236 233 226 / 0.12)',
+  },
+
+  newsprint: {
+    'color.bg': '#15150F',
+    'color.surface': '#1D1D16',
+    'color.border': '#F2EFE6',
+    'color.text': '#F2EFE6',
+    'color.textMuted': '#A8A296',
+    'color.primary': '#F2EFE6',
+    'color.primaryText': '#15150F',
+    'color.accent': '#E2856F',
+    'rule.hair': 'rgb(242 239 230 / 0.3)',
+  },
+
+  harbour: {
+    'color.bg': '#0B1620',
+    'color.surface': '#132330',
+    'color.border': '#22394A',
+    'color.text': '#E8EEF2',
+    'color.textMuted': '#93A7B4',
+    'color.primary': '#1B5E80',
+    'color.primaryText': '#FFFFFF',
+    'color.accent': '#E0834A',
+    'color.scrim': 'rgb(4 16 24 / 0.6)',
+    'rule.hair': 'rgb(232 238 242 / 0.14)',
+  },
+}
+
 const cssVar = (name: string) => `--fe-${name.replace(/\./g, '-')}`
 
-export function tokensToCss(overrides: Partial<Record<TokenName, string>> = {}): string {
+export function tokensToCss(
+  overrides: Partial<Record<TokenName, string>> = {},
+  darkOverrides: Partial<Record<TokenName, string>> = {},
+): string {
   const light = { ...baseTokens, ...overrides }
-  const dark = { ...darkTokens }
+  const dark = { ...darkTokens, ...darkOverrides }
 
   const declare = (entries: Record<string, string>) =>
     Object.entries(entries).map(([name, value]) => `${cssVar(name)}: ${value};`).join('\n  ')

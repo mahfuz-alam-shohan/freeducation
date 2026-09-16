@@ -1,0 +1,125 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import Photo from '../../../ui/Photo.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { RichPageViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RichPageViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- Title band, then the blocks: prose on a measure, images and tables full width. -->
+<PageBanner title={resolveText(vm.title, locale)} />
+
+<Band>
+  {vm.blocks.length === 0 ? <EmptyState message={t('page.empty')} /> : (
+    <div class="fe-blocks">
+      {vm.blocks.map(block => (
+        <>
+          {block.type === 'richtext' && (
+            <div class="fe-copy"><Prose html={resolveText(block.html, locale)} /></div>
+          )}
+
+          {block.type === 'image' && (
+            <figure class="fe-figure">
+              <Photo image={block.image} locale={locale} width={1400} height={800} sizes="(max-width: 72rem) 100vw, 64rem" />
+              {block.caption && <figcaption>{resolveText(block.caption, locale)}</figcaption>}
+            </figure>
+          )}
+
+          {block.type === 'table' && (
+            <div class="fe-scroll">
+              <table>
+                {block.header && block.rows[0] && (
+                  <thead><tr>{block.rows[0].map(cell => <th scope="col">{resolveText(cell, locale)}</th>)}</tr></thead>
+                )}
+                <tbody>
+                  {block.rows.slice(block.header ? 1 : 0).map(row => (
+                    <tr>{row.map(cell => <td>{resolveText(cell, locale)}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {block.type === 'files' && (
+            <ul class="fe-files">
+              {block.files.map(file => (
+                <li>
+                  <a href={file.url} download>
+                    <Icon name="download" size={16} />
+                    <span>{resolveText(file.label, locale)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {block.type === 'people' && (
+            <ul class="fe-people">
+              {(vm.peopleByGroup[block.group] ?? []).map(person => (
+                <li>
+                  <strong>{resolveText(person.name, locale)}</strong>
+                  {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ))}
+    </div>
+  )}
+</Band>
+
+<style>
+  .fe-blocks { display: grid; gap: var(--fe-space-12); }
+  .fe-copy { max-inline-size: 44rem; }
+  .fe-copy :global(.fe-prose) { font-size: var(--fe-size-base); line-height: 1.68; }
+
+  .fe-figure { margin: 0; }
+  .fe-figure :global(.fe-photo) { display: block; inline-size: 100%; }
+  .fe-figure figcaption {
+    margin-block-start: var(--fe-space-3);
+    padding-inline-start: var(--fe-space-4);
+    border-inline-start: 3px solid var(--fe-color-accent);
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-sm);
+  }
+
+  .fe-scroll { overflow-x: auto; max-inline-size: 56rem; }
+  table { inline-size: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-4) var(--fe-space-6); }
+  th {
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em; white-space: nowrap;
+  }
+  tbody tr { border-block-end: 1px solid var(--fe-color-border); }
+  tbody tr:nth-child(odd) { background: var(--fe-color-surface); }
+
+  .fe-files { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-3); max-inline-size: 44rem; }
+  .fe-files a {
+    display: flex; align-items: center; gap: var(--fe-space-3);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    border: 1px solid var(--fe-color-border); border-inline-start: 3px solid var(--fe-color-accent);
+    color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm);
+    transition: background-color 220ms ease;
+  }
+  .fe-files a:hover { background: var(--fe-color-surface); }
+
+  .fe-people {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-4);
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+  .fe-people li {
+    display: grid; gap: 3px;
+    padding: var(--fe-space-4) var(--fe-space-6);
+    border: 1px solid var(--fe-color-border); border-block-start: 3px solid var(--fe-color-primary);
+  }
+  .fe-people strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); }
+  .fe-people span { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.14em; }
+</style>

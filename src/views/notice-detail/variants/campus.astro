@@ -1,0 +1,97 @@
+---
+import Band from '../../../ui/Band.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import PageBanner from '../../../ui/PageBanner.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { NoticeDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { notice } = vm
+---
+<!-- The notice's own title band, then the body on a reading measure. -->
+{!notice ? (
+  <Band><EmptyState message={t('page.notFoundBody')} /></Band>
+) : (
+  <>
+    <PageBanner
+      title={resolveText(notice.title, locale)}
+      subtitle={notice.summary ? resolveText(notice.summary, locale) : undefined}
+    />
+
+    <Band>
+      <article class="fe-article">
+        <p class="fe-meta">
+          <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+          {notice.pinned && <em>{t('notice.pinned')}</em>}
+        </p>
+
+        {notice.body && <Prose html={resolveText(notice.body, locale)} />}
+
+        {notice.attachments.length > 0 && (
+          <section class="fe-files" aria-labelledby="h-files">
+            <h2 id="h-files">{t('notice.attachments')}</h2>
+            <ul>
+              {notice.attachments.map(file => (
+                <li>
+                  <a href={file.url} download>
+                    <Icon name="download" size={16} />
+                    <span>{resolveText(file.label, locale)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <a class="fe-back" href={`/${vm.backPath}`}>
+          <Icon name="arrow-right" size={15} />{t('common.viewAll')}
+        </a>
+      </article>
+    </Band>
+  </>
+)}
+
+<style>
+  .fe-article { max-inline-size: 46rem; }
+  .fe-meta {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--fe-space-4);
+    margin: 0 0 var(--fe-space-6); padding-block-end: var(--fe-space-4);
+    border-block-end: 2px solid var(--fe-color-border);
+  }
+  .fe-meta time {
+    color: var(--fe-color-accent); font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-meta em { font-style: normal; color: var(--fe-color-primary); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.16em; }
+
+  .fe-files { margin-block-start: var(--fe-space-8); }
+  .fe-files h2 {
+    margin: 0 0 var(--fe-space-4);
+    font-family: var(--fe-font-body); font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--fe-color-textMuted);
+  }
+  .fe-files ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fe-space-3); }
+  .fe-files a {
+    display: flex; align-items: center; gap: var(--fe-space-3);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    border: 1px solid var(--fe-color-border); border-inline-start: 3px solid var(--fe-color-accent);
+    color: var(--fe-color-text); text-decoration: none; font-size: var(--fe-size-sm);
+    transition: background-color 220ms ease;
+  }
+  .fe-files a:hover { background: var(--fe-color-surface); }
+
+  .fe-back {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    margin-block-start: var(--fe-space-8);
+    color: var(--fe-color-primary); text-decoration: none;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-back :global(.fe-icon) { transform: rotate(180deg); }
+  .fe-back:hover { text-decoration: underline; text-underline-offset: 4px; }
+</style>

@@ -1,0 +1,33 @@
+---
+import Container from './Container.astro'
+
+/**
+ * A full-width horizontal band, the unit the photo-led designs are built from.
+ *
+ * Sections alternate plain and tinted so a long page reads as a stack of distinct
+ * areas rather than one scroll of text — the structure most international school
+ * sites use. The band runs edge to edge; its contents stay on the site's measure.
+ */
+interface Props {
+  tone?: 'plain' | 'tint' | 'primary' | undefined
+  /** Removes the vertical padding, for a band whose child supplies its own. */
+  flush?: boolean | undefined
+  as?: string | undefined
+  label?: string | undefined
+  class?: string | undefined
+}
+const {
+  tone = 'plain', flush = false, as: Tag = 'section', label, class: className,
+}: Props = Astro.props
+---
+<Tag class:list={['fe-band', `is-${tone}`, flush && 'is-flush', className]} aria-labelledby={label}>
+  <Container><slot /></Container>
+</Tag>
+
+<style>
+  .fe-band { padding-block: var(--fe-space-16); }
+  .fe-band.is-flush { padding-block: 0; }
+  .fe-band.is-tint { background: var(--fe-color-surface); }
+  .fe-band.is-primary { background: var(--fe-color-primary); color: var(--fe-color-primaryText); }
+  .fe-band.is-primary :global(a) { color: inherit; }
+</style>

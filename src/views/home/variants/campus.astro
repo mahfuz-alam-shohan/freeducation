@@ -1,0 +1,314 @@
+---
+import Band from '../../../ui/Band.astro'
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { IconName } from '../../../ui/Icon.astro'
+import type { HomeViewModel } from '../viewModel.js'
+import type { Locale, ViewType } from '../../../contracts/index.js'
+import { formatDate, resolveText, toPlainText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+
+const notices = vm.notices.slice(0, 5)
+const messageText = vm.message?.blocks.find(block => block.type === 'richtext')
+const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale), 260) : ''
+
+const SHORTCUT_ICON: Record<string, IconName> = {
+  'admission-form': 'edit',
+  'result-lookup': 'results',
+  'routine': 'clock',
+  'event-calendar': 'calendar',
+  'person-list': 'users',
+  'notice-list': 'notice',
+}
+const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-right'
+---
+<!--
+  The shape international school sites converge on: a photographic opening, then the
+  page as a stack of full-width bands that alternate plain and tinted. Square corners,
+  one deep blue, one warm accent, and the photography doing the persuading.
+-->
+<section class="fe-hero">
+  <div class="fe-hero-media">
+    <Photo image={vm.profile.cover} locale={locale} width={1800} height={1000} eager sizes="100vw" />
+  </div>
+  <Container>
+    <div class="fe-hero-card">
+      <p class="fe-estd">
+        {vm.profile.established && <span>{t('common.since')} {vm.profile.established}</span>}
+        {vm.profile.eiin && <span>{t('common.eiin')} {vm.profile.eiin}</span>}
+      </p>
+      <h1>{resolveText(vm.profile.name, locale)}</h1>
+      {vm.profile.tagline && <p class="fe-tag">{resolveText(vm.profile.tagline, locale)}</p>}
+    </div>
+  </Container>
+</section>
+
+{vm.quickLinks.length > 0 && (
+  <nav class="fe-actions" aria-label={t('common.quickLinks')}>
+    <Container>
+      <ul>
+        {vm.quickLinks.map(link => (
+          <li>
+            <a href={`/${link.path}`}>
+              <Icon name={iconFor(link.view)} size={22} />
+              <span>{resolveText(link.label, locale)}</span>
+              <Icon name="arrow-right" size={15} class="fe-go" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </Container>
+  </nav>
+)}
+
+<Band tone="tint" label="h-news">
+  <div class="fe-split">
+    <section aria-labelledby="h-news">
+      <header class="fe-sechead">
+        <h2 id="h-news">{t('home.notices')}</h2>
+        <a href={`/${vm.noticesPath}`}>{t('common.viewAll')}<Icon name="arrow-right" size={14} /></a>
+      </header>
+
+      {notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
+        <ul class="fe-notices">
+          {notices.map(notice => (
+            <li>
+              <a href={`/${vm.noticesPath}/${notice.slug}`}>
+                <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+                <strong>{resolveText(notice.title, locale)}</strong>
+                {notice.summary && <span>{resolveText(notice.summary, locale)}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
+    <section class="fe-diary" aria-labelledby="h-events">
+      <header class="fe-sechead">
+        <h2 id="h-events">{t('home.events')}</h2>
+        <a href={`/${vm.eventsPath}`}>{t('common.viewAll')}<Icon name="arrow-right" size={14} /></a>
+      </header>
+
+      {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
+        <ul>
+          {vm.events.slice(0, 4).map(event => (
+            <li>
+              <a href={`/${vm.eventsPath}/${event.slug}`}>
+                <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
+                <strong>{resolveText(event.title, locale)}</strong>
+                {event.location && (
+                  <span><Icon name="pin" size={13} />{resolveText(event.location, locale)}</span>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  </div>
+</Band>
+
+{excerpt && (
+  <Band tone="primary" label="h-word">
+    <div class="fe-word">
+      <div>
+        <h2 id="h-word">{t('home.principal')}</h2>
+        <blockquote>{excerpt}</blockquote>
+        <p class="fe-who">
+          {vm.principal && <strong>{resolveText(vm.principal.name, locale)}</strong>}
+          {vm.principal?.designation && <span>{resolveText(vm.principal.designation, locale)}</span>}
+        </p>
+        {vm.messagePath && (
+          <a class="fe-more" href={`/${vm.messagePath}`}>{t('common.readMore')}<Icon name="arrow-right" size={15} /></a>
+        )}
+      </div>
+      {vm.principal?.photo && (
+        <Photo image={vm.principal.photo} locale={locale} width={420} height={520} sizes="14rem" class="fe-portrait" />
+      )}
+    </div>
+  </Band>
+)}
+
+{vm.albums.length > 0 && (
+  <Band label="h-gallery">
+    <header class="fe-sechead">
+      <h2 id="h-gallery">{t('home.gallery')}</h2>
+      <a href={`/${vm.galleryPath}`}>{t('common.viewAll')}<Icon name="arrow-right" size={14} /></a>
+    </header>
+
+    <ul class="fe-cards">
+      {vm.albums.slice(0, 3).map(album => (
+        <li>
+          <a href={`/${vm.galleryPath}/${album.slug}`}>
+            <Photo image={album.cover} locale={locale} width={720} height={480} sizes="(max-width: 52rem) 100vw, 22rem" />
+            <div>
+              <strong>{resolveText(album.title, locale)}</strong>
+              {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </Band>
+)}
+
+<style>
+  /* ---------- hero ---------- */
+  .fe-hero {
+    position: relative; isolation: isolate;
+    display: flex; align-items: flex-end;
+    /* Flush under the navigation: cancel the main element's top padding. */
+    margin-block-start: calc(var(--fe-space-8) * -1);
+    min-block-size: clamp(24rem, 66vh, 40rem);
+  }
+  .fe-hero-media { position: absolute; inset: 0; z-index: -2; overflow: hidden; background: var(--fe-color-primary); }
+  .fe-hero-media :global(.fe-photo) { inline-size: 100%; block-size: 100%; object-fit: cover; object-position: 50% 45%; }
+  .fe-hero::after {
+    content: ''; position: absolute; inset-inline: 0; inset-block-end: 0; z-index: -1;
+    block-size: 45%;
+    background: var(--fe-gradient-veil);
+  }
+
+  .fe-hero-card {
+    max-inline-size: 42rem;
+    margin-block-end: calc(var(--fe-space-16) * -1);
+    padding: var(--fe-space-8);
+    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
+    border-block-start: 4px solid var(--fe-color-accent);
+  }
+  .fe-estd {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-6);
+    margin: 0; font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.78;
+  }
+  .fe-hero-card h1 {
+    margin: var(--fe-space-3) 0 0;
+    font-family: var(--fe-font-body);
+    font-size: clamp(1.9rem, 4vw, 3rem); font-weight: var(--fe-weight-semibold);
+    line-height: 1.06; letter-spacing: -0.025em;
+  }
+  .fe-tag { margin: var(--fe-space-3) 0 0; font-size: var(--fe-size-base); opacity: 0.86; }
+
+  /* ---------- action strip ---------- */
+  .fe-actions { padding-block: calc(var(--fe-space-16) + var(--fe-space-8)) var(--fe-space-12); }
+  .fe-actions ul {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-4);
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  }
+  .fe-actions a {
+    display: flex; align-items: center; gap: var(--fe-space-4);
+    padding: var(--fe-space-6);
+    border: 1px solid var(--fe-color-border);
+    border-block-start: 3px solid var(--fe-color-primary);
+    color: var(--fe-color-text); text-decoration: none;
+    font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium);
+    transition: border-color 240ms ease, background-color 240ms ease;
+  }
+  .fe-actions a span { flex: 1; min-inline-size: 0; }
+  .fe-actions a:hover { background: var(--fe-color-surface); border-block-start-color: var(--fe-color-accent); }
+  .fe-actions :global(.fe-go) { color: var(--fe-color-textMuted); transition: transform 240ms ease; }
+  .fe-actions a:hover :global(.fe-go) { transform: translateX(3px); }
+
+  /* ---------- section heads ---------- */
+  .fe-sechead {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--fe-space-4);
+    margin-block-end: var(--fe-space-6);
+    padding-block-end: var(--fe-space-3);
+    border-block-end: 2px solid var(--fe-color-border);
+  }
+  .fe-sechead h2 {
+    flex: 1; min-inline-size: 0;
+    margin: 0; font-family: var(--fe-font-body);
+    font-size: var(--fe-size-lg); font-weight: var(--fe-weight-semibold); letter-spacing: -0.01em;
+  }
+  .fe-sechead a {
+    flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    color: var(--fe-color-accent); text-decoration: none;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-sechead a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+  /* ---------- notices and diary ---------- */
+  .fe-split { display: grid; gap: var(--fe-space-12); }
+  @media (min-width: 60rem) { .fe-split { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }
+
+  .fe-notices, .fe-diary ul { list-style: none; margin: 0; padding: 0; }
+  .fe-notices a, .fe-diary a {
+    display: grid; gap: var(--fe-space-2);
+    padding-block: var(--fe-space-6);
+    border-block-end: 1px solid var(--fe-rule-hair);
+    text-decoration: none; color: var(--fe-color-text);
+  }
+  .fe-notices li:first-child a, .fe-diary li:first-child a { padding-block-start: 0; }
+  .fe-notices time, .fe-diary time {
+    color: var(--fe-color-accent); font-size: var(--fe-size-2xs);
+    font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-notices strong, .fe-diary strong { font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-notices a:hover strong, .fe-diary a:hover strong { color: var(--fe-color-primary); }
+  .fe-notices span, .fe-diary span {
+    display: flex; align-items: center; gap: 5px;
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug);
+  }
+
+  /* ---------- principal ---------- */
+  .fe-word { display: grid; gap: var(--fe-space-8); align-items: center; }
+  @media (min-width: 52rem) { .fe-word { grid-template-columns: minmax(0, 1fr) 14rem; gap: var(--fe-space-16); } }
+
+  .fe-word h2 {
+    margin: 0 0 var(--fe-space-4);
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.72;
+  }
+  .fe-word blockquote {
+    margin: 0;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-xl);
+    line-height: 1.46; letter-spacing: -0.01em;
+  }
+  .fe-who { display: grid; gap: 2px; margin: var(--fe-space-6) 0 0; }
+  .fe-who strong { font-size: var(--fe-size-sm); }
+  .fe-who span { font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.16em; opacity: 0.72; }
+  .fe-more {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    margin-block-start: var(--fe-space-6);
+    padding-block-end: 4px;
+    border-block-end: 2px solid var(--fe-color-accent);
+    text-decoration: none;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-word :global(.fe-portrait) {
+    inline-size: 100%; aspect-ratio: 4 / 5; object-fit: cover;
+    border-block-end: 4px solid var(--fe-color-accent);
+  }
+
+  /* ---------- cards ---------- */
+  .fe-cards {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  }
+  .fe-cards li { border: 1px solid var(--fe-color-border); }
+  .fe-cards a { display: grid; grid-template-rows: auto 1fr; text-decoration: none; color: var(--fe-color-text); }
+  .fe-cards :global(.fe-photo) {
+    inline-size: 100%; aspect-ratio: 3 / 2; object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fe-cards li { overflow: hidden; }
+  .fe-cards a:hover :global(.fe-photo) { transform: scale(1.04); }
+  .fe-cards div { display: grid; gap: var(--fe-space-2); padding: var(--fe-space-6); }
+  .fe-cards strong { font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-cards time { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.14em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fe-cards :global(.fe-photo), .fe-actions :global(.fe-go) { transition: none; }
+  }
+</style>
