@@ -16,7 +16,8 @@
   "variants": {
     "home": "minimal-stack",
     "notice-list": "timeline",
-    "person-list": "detailed-rows"
+    "person-list": "detailed-rows",
+    "routine": "day-cards"
   },
   "features": {
     "search": true,

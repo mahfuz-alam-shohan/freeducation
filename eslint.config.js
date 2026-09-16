@@ -119,9 +119,10 @@ export default [
   },
 
   {
-    // Build tooling legitimately compares configuration slugs to filenames.
+    // Build tooling legitimately compares configuration slugs to filenames, and the
+    // review PDF is a standalone document with no access to the site's design tokens.
     files: ['tools/**'],
-    rules: { 'no-restricted-syntax': 'off' },
+    rules: { 'no-restricted-syntax': 'off', 'fe/no-raw-color': 'off' },
   },
 
   {
