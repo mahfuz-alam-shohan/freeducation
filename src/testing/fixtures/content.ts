@@ -8,6 +8,7 @@ export const profile: SchoolProfile = {
   eiin: '108573',
   established: '1965',
   logo: { url: '/sample/crest.svg', width: 64, height: 64, variants: [] },
+  cover: { url: '/sample/hero.svg', width: 1600, height: 900, variants: [] },
   address: t('১২ কলেজ রোড, ধানমন্ডি, ঢাকা ১২০৫', '12 College Road, Dhanmondi, Dhaka 1205'),
   phones: ['+880 2 9876543', '+880 1711 223344'],
   emails: ['info@adarsha.edu.bd'],
@@ -144,7 +145,8 @@ export const pages: RichPage[] = [
   },
 ]
 
-const photo = (bn: string, en: string) => ({ ...campus, alt: t(bn, en) })
+const plate = (n: number) => ({ url: `/sample/plate-${n}.svg`, width: 800, height: 550, variants: [] })
+const photo = (bn: string, en: string, n = 1) => ({ ...plate(n), alt: t(bn, en) })
 
 const poster = { url: '/sample/video-poster.svg', width: 640, height: 360, variants: [] }
 
@@ -176,22 +178,22 @@ export const videos: Video[] = [
 export const albums: GalleryAlbum[] = [
   {
     id: 'a1', slug: 'annual-sports-2026', title: t('বার্ষিক ক্রীড়া ২০২৬', 'Annual Sports 2026'),
-    cover: campus, takenAt: '2026-12-18T00:00:00.000Z',
+    cover: plate(1), takenAt: '2026-12-18T00:00:00.000Z',
     photos: [
-      photo('উদ্বোধনী কুচকাওয়াজ', 'The opening parade'),
-      photo('দৌড় প্রতিযোগিতা', 'The sprint race'),
-      photo('পুরস্কার বিতরণী', 'Prize distribution'),
-      photo('অংশগ্রহণকারী দল', 'The participating houses'),
+      photo('উদ্বোধনী কুচকাওয়াজ', 'The opening parade', 1),
+      photo('দৌড় প্রতিযোগিতা', 'The sprint race', 3),
+      photo('পুরস্কার বিতরণী', 'Prize distribution', 2),
+      photo('অংশগ্রহণকারী দল', 'The participating houses', 1),
     ],
   },
   {
     id: 'a2', slug: 'science-fair-2026', title: t('বিজ্ঞান মেলা ২০২৬', 'Science Fair 2026'),
-    cover: campus, takenAt: '2026-11-05T00:00:00.000Z',
-    photos: [photo('প্রকল্প প্রদর্শনী', 'Project exhibition'), photo('বিচারকমণ্ডলী', 'The panel of judges')],
+    cover: plate(2), takenAt: '2026-11-05T00:00:00.000Z',
+    photos: [photo('প্রকল্প প্রদর্শনী', 'Project exhibition', 2), photo('বিচারকমণ্ডলী', 'The panel of judges', 3)],
   },
   {
     id: 'a3', slug: 'victory-day-2026', title: t('বিজয় দিবস ২০২৬', 'Victory Day 2026'),
-    cover: campus, takenAt: '2026-12-16T00:00:00.000Z',
-    photos: [photo('পুষ্পস্তবক অর্পণ', 'Laying of flowers')],
+    cover: plate(3), takenAt: '2026-12-16T00:00:00.000Z',
+    photos: [photo('পুষ্পস্তবক অর্পণ', 'Laying of flowers', 3)],
   },
 ]

@@ -6,6 +6,7 @@
 export type IconName =
   | 'home' | 'notice' | 'results' | 'search' | 'menu' | 'close'
   | 'chevron-down' | 'arrow-right' | 'phone' | 'mail' | 'pin' | 'download' | 'theme' | 'play'
+  | 'calendar' | 'clock' | 'users' | 'edit'
 
 interface Props {
   name: IconName
@@ -29,6 +30,10 @@ const paths: Record<IconName, string> = {
   'download': 'M12 3v11M7.5 10 12 14.5 16.5 10M5 19h14',
   'theme': 'M12 3a9 9 0 1 0 0 18zM12 3a9 9 0 0 1 0 18',
   'play': 'M8 5.5v13l11-6.5z',
+  'calendar': 'M4 6h16v14H4zM4 10h16M8.5 3v4M15.5 3v4',
+  'edit': 'M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17zM14.5 7l2.5 2.5',
+  'clock': 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16M12 7.5V12l3 2',
+  'users': 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 4.5a3.5 3.5 0 0 1 0 7M17.5 14.8c2.1.7 3.5 2.6 3.5 5.2',
 }
 ---
 <svg

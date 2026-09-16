@@ -8,6 +8,8 @@ export const SchoolProfile = z.object({
   eiin: z.string().optional(),
   established: z.string().optional(),
   logo: Image.optional(),
+  /** A wide photograph for designs that open with one. */
+  cover: Image.optional(),
   address: LocalizedText.optional(),
   phones: z.array(z.string()).default([]),
   emails: z.array(z.string()).default([]),

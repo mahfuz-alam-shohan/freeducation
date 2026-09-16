@@ -53,6 +53,12 @@ Example response:
     "height": 64,
     "variants": []
   },
+  "cover": {
+    "url": "/sample/hero.svg",
+    "width": 1600,
+    "height": 900,
+    "variants": []
+  },
   "address": {
     "bn": "১২ কলেজ রোড, ধানমন্ডি, ঢাকা ১২০৫",
     "en": "12 College Road, Dhanmondi, Dhaka 1205"
@@ -567,30 +573,30 @@ Example response:
         "en": "Annual Sports 2026"
       },
       "cover": {
-        "url": "/sample/campus.svg",
+        "url": "/sample/plate-1.svg",
         "width": 800,
-        "height": 600,
+        "height": 550,
         "variants": []
       },
       "photos": [
         {
-          "url": "/sample/campus.svg",
+          "url": "/sample/plate-1.svg",
           "alt": {
             "bn": "উদ্বোধনী কুচকাওয়াজ",
             "en": "The opening parade"
           },
           "width": 800,
-          "height": 600,
+          "height": 550,
           "variants": []
         },
         {
-          "url": "/sample/campus.svg",
+          "url": "/sample/plate-3.svg",
           "alt": {
             "bn": "দৌড় প্রতিযোগিতা",
             "en": "The sprint race"
           },
           "width": 800,
-          "height": 600,
+          "height": 550,
           "variants": []
         }
       ],
@@ -604,20 +610,20 @@ Example response:
         "en": "Victory Day 2026"
       },
       "cover": {
-        "url": "/sample/campus.svg",
+        "url": "/sample/plate-3.svg",
         "width": 800,
-        "height": 600,
+        "height": 550,
         "variants": []
       },
       "photos": [
         {
-          "url": "/sample/campus.svg",
+          "url": "/sample/plate-3.svg",
           "alt": {
             "bn": "পুষ্পস্তবক অর্পণ",
             "en": "Laying of flowers"
           },
           "width": 800,
-          "height": 600,
+          "height": 550,
           "variants": []
         }
       ],
@@ -647,30 +653,30 @@ Example response:
     "en": "Annual Sports 2026"
   },
   "cover": {
-    "url": "/sample/campus.svg",
+    "url": "/sample/plate-1.svg",
     "width": 800,
-    "height": 600,
+    "height": 550,
     "variants": []
   },
   "photos": [
     {
-      "url": "/sample/campus.svg",
+      "url": "/sample/plate-1.svg",
       "alt": {
         "bn": "উদ্বোধনী কুচকাওয়াজ",
         "en": "The opening parade"
       },
       "width": 800,
-      "height": 600,
+      "height": 550,
       "variants": []
     },
     {
-      "url": "/sample/campus.svg",
+      "url": "/sample/plate-3.svg",
       "alt": {
         "bn": "দৌড় প্রতিযোগিতা",
         "en": "The sprint race"
       },
       "width": 800,
-      "height": 600,
+      "height": 550,
       "variants": []
     }
   ],

@@ -45,6 +45,23 @@ export function formatDate(value: string | undefined, locale: Locale, timeZone?:
   }).format(date)
 }
 
+/**
+ * A date split for designs that set it in a tile — the day large, the month beneath it.
+ * Both parts are localised, so a Bangla site gets Bangla digits and month names.
+ */
+export function formatDateParts(
+  value: string | undefined, locale: Locale, timeZone?: string,
+): { day: string; month: string; year: string } {
+  const empty = { day: '', month: '', year: '' }
+  if (!value) return empty
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return empty
+  const zone = timeZone ? { timeZone } : {}
+  const part = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(intlLocale(locale), { ...options, ...zone }).format(date)
+  return { day: part({ day: 'numeric' }), month: part({ month: 'short' }), year: part({ year: 'numeric' }) }
+}
+
 export function formatTime(value: string | undefined, locale: Locale, timeZone?: string): string {
   if (!value) return ''
   const date = new Date(value)

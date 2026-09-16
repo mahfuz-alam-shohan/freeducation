@@ -94,5 +94,6 @@
   "admission.submitted": "Your application has been received. Keep the reference below.",
   "calendar.today": "Today",
   "video.empty": "No videos have been published yet.",
-  "video.play": "Play"
+  "video.play": "Play",
+  "common.since": "Since"
 }

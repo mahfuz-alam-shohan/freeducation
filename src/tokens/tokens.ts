@@ -14,6 +14,8 @@ export const baseTokens = {
   'color.danger': '#b3261e',
   'color.focus': '#1a73e8',
   'color.scrim': 'rgb(8 14 20 / 0.5)',
+  /* Keeps display type legible over any photograph, dark at both ends, open in the middle. */
+  'gradient.stage': 'linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.38) 46%, rgb(0 0 0 / 0.76))',
   'color.onPrimarySurface': 'rgb(255 255 255 / 0.28)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.16)',
 
@@ -35,6 +37,7 @@ export const baseTokens = {
    * A small, tightly-spaced scale. Body text sits at 15px rather than 16px: at these
    * sizes Inter and Anek Bangla stay crisp, and more of the page is usable at a glance.
    */
+  'size.3xs': '0.625rem',
   'size.2xs': '0.6875rem',
   'size.xs': '0.75rem',
   'size.sm': '0.8125rem',
@@ -43,6 +46,8 @@ export const baseTokens = {
   'size.xl': '1.3125rem',
   'size.2xl': '1.625rem',
   'size.3xl': '2.125rem',
+  /* Only the largest display settings use this; it scales with the viewport. */
+  'size.display': 'clamp(1.9rem, 3.4vw, 2.85rem)',
 
   'leading.tight': '1.18',
   'leading.snug': '1.4',
@@ -74,6 +79,8 @@ export const baseTokens = {
   'radius.lg': '10px',
   'shadow.sm': '0 1px 2px rgba(16, 24, 40, 0.05)',
   'shadow.md': '0 6px 18px rgba(16, 24, 40, 0.09)',
+  /* Keeps display type readable where a photograph is bright behind it. */
+  'shadow.displayText': '0 1px 24px rgb(0 0 0 / 0.35)',
   'container.max': '1160px',
   'rule.hair': 'rgb(16 24 40 / 0.09)',
 } as const
@@ -89,6 +96,7 @@ export const darkTokens: Partial<Record<TokenName, string>> = {
   'color.primary': '#3fbc8e',
   'color.primaryText': '#06231a',
   'color.scrim': 'rgb(0 0 0 / 0.66)',
+  'gradient.stage': 'linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.46) 46%, rgb(0 0 0 / 0.84))',
   'color.onPrimarySurface': 'rgb(255 255 255 / 0.22)',
   'color.onPrimaryHover': 'rgb(0 0 0 / 0.3)',
   'rule.hair': 'rgb(255 255 255 / 0.11)',
@@ -99,6 +107,39 @@ export const darkTokens: Partial<Record<TokenName, string>> = {
 /** Named starting points a school picks in config, then overrides individually. */
 export const themePresets: Record<string, Partial<Record<TokenName, string>>> = {
   emerald: {},
+
+  /*
+   * Two presets for schools that want the site to look expensive. Both work by
+   * restraint rather than decoration: warm paper or deep ink, a single metallic
+   * accent, a serif carrying the display sizes, and almost no colour anywhere else.
+   */
+  ivory: {
+    'color.bg': '#FBFAF7',
+    'color.surface': '#F3F0EA',
+    'color.border': '#E0DAD0',
+    'color.text': '#15181B',
+    'color.textMuted': '#6B6558',
+    'color.primary': '#1B2A24',
+    'color.primaryText': '#FBFAF7',
+    'color.accent': '#8A6D2F',
+    'color.onPrimarySurface': 'rgb(255 255 255 / 0.2)',
+    'rule.hair': 'rgb(21 24 27 / 0.1)',
+  },
+
+  obsidian: {
+    'color.bg': '#0E1114',
+    'color.surface': '#171B20',
+    'color.border': '#2A3038',
+    'color.text': '#ECEAE4',
+    'color.textMuted': '#9A978E',
+    'color.primary': '#C8A659',
+    'color.primaryText': '#14171A',
+    'color.accent': '#C8A659',
+    'color.scrim': 'rgb(0 0 0 / 0.72)',
+    'color.onPrimarySurface': 'rgb(255 255 255 / 0.14)',
+    'rule.hair': 'rgb(236 234 228 / 0.12)',
+  },
+
   sapphire: { 'color.primary': '#14508c', 'color.accent': '#c2703d' },
   maroon: { 'color.primary': '#7b1e3a', 'color.accent': '#0f766e' },
   indigo: { 'color.primary': '#3730a3', 'color.accent': '#b45309' },

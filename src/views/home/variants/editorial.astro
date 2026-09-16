@@ -1,0 +1,397 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Photo from '../../../ui/Photo.astro'
+import type { IconName } from '../../../ui/Icon.astro'
+import type { HomeViewModel } from '../viewModel.js'
+import type { Locale, ViewType } from '../../../contracts/index.js'
+import { formatDate, formatDateParts, resolveText, toPlainText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+
+const [lead, ...rest] = vm.notices
+const secondary = rest.slice(0, 6)
+const messageText = vm.message?.blocks.find(block => block.type === 'richtext')
+const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale), 210) : ''
+
+const SHORTCUT_ICON: Record<string, IconName> = {
+  'admission-form': 'edit',
+  'result-lookup': 'results',
+  'routine': 'clock',
+  'event-calendar': 'calendar',
+  'person-list': 'users',
+  'notice-list': 'notice',
+}
+const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-right'
+---
+<!--
+  A design for schools that want the site to look expensive. It buys that with density
+  and detail, not air: a bordered masthead, panelled boards, ruled rows, tiled dates
+  and drawn icons — every block on the same grid, every line doing work.
+-->
+<Container>
+  <section class="fe-masthead">
+    <figure class="fe-view" data-reveal style="--i: 0">
+      <Photo image={vm.profile.cover} locale={locale} width={1280} height={800} eager sizes="(max-width: 64rem) 100vw, 58vw" />
+    </figure>
+
+    <div class="fe-ident">
+      <p class="fe-marks" data-reveal style="--i: 1">
+        {vm.profile.eiin && <span>{t('common.eiin')} {vm.profile.eiin}</span>}
+        {vm.profile.established && <span>{t('common.since')} {vm.profile.established}</span>}
+      </p>
+      <h1 data-reveal style="--i: 2">{resolveText(vm.profile.name, locale)}</h1>
+      {vm.profile.tagline && <p class="fe-tag" data-reveal style="--i: 3">{resolveText(vm.profile.tagline, locale)}</p>}
+
+      {vm.quickLinks.length > 0 && (
+        <nav class="fe-quick" aria-label={t('common.quickLinks')}>
+          {vm.quickLinks.map((link, index) => (
+            <a href={`/${link.path}`} data-reveal style={`--i: ${4 + index}`}>
+              <Icon name={iconFor(link.view)} size={17} />
+              <span>{resolveText(link.label, locale)}</span>
+              <Icon name="arrow-right" size={14} class="fe-go" />
+            </a>
+          ))}
+        </nav>
+      )}
+
+      <dl class="fe-facts" data-reveal style="--i: 8">
+        {vm.profile.address && (
+          <div>
+            <dt><Icon name="pin" size={15} /><span class="fe-sr">{t('contact.address')}</span></dt>
+            <dd>{resolveText(vm.profile.address, locale)}</dd>
+          </div>
+        )}
+        {vm.profile.phones[0] && (
+          <div>
+            <dt><Icon name="phone" size={15} /><span class="fe-sr">{t('contact.phone')}</span></dt>
+            <dd><a href={`tel:${vm.profile.phones[0]}`}>{vm.profile.phones.join(', ')}</a></dd>
+          </div>
+        )}
+        {vm.profile.emails[0] && (
+          <div>
+            <dt><Icon name="mail" size={15} /><span class="fe-sr">{t('contact.email')}</span></dt>
+            <dd><a href={`mailto:${vm.profile.emails[0]}`}>{vm.profile.emails[0]}</a></dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  </section>
+
+  <div class="fe-columns">
+    <section class="fe-panel fe-board" aria-labelledby="h-news">
+      <header class="fe-panel-head">
+        <h2 id="h-news"><Icon name="notice" size={15} />{t('home.notices')}</h2>
+        <a href={`/${vm.noticesPath}`}>{t('common.viewAll')}<Icon name="arrow-right" size={13} /></a>
+      </header>
+
+      {!lead ? <EmptyState message={t('notice.empty')} /> : (
+        <>
+          <a class="fe-lead" href={`/${vm.noticesPath}/${lead.slug}`} data-reveal>
+            <span class="fe-lead-meta">
+              <time datetime={lead.publishedAt}>{formatDate(lead.publishedAt, locale)}</time>
+              {lead.pinned && <span class="fe-flag">{t('notice.pinned')}</span>}
+            </span>
+            <strong>{resolveText(lead.title, locale)}</strong>
+            {lead.summary && <span class="fe-lead-sum">{resolveText(lead.summary, locale)}</span>}
+            <span class="fe-lead-go">{t('common.readMore')}<Icon name="arrow-right" size={13} /></span>
+          </a>
+
+          <ul class="fe-rows">
+            {secondary.map((notice, index) => {
+              const on = formatDateParts(notice.publishedAt, locale)
+              return (
+                <li data-reveal style={`--i: ${index}`}>
+                  <a href={`/${vm.noticesPath}/${notice.slug}`}>
+                    <time class="fe-tile" datetime={notice.publishedAt}>
+                      <b>{on.day}</b><i>{on.month}</i>
+                    </time>
+                    <span class="fe-row-title">{resolveText(notice.title, locale)}</span>
+                    <Icon name="arrow-right" size={14} class="fe-go" />
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+    </section>
+
+    <aside class="fe-rail">
+      <section class="fe-panel fe-diary" aria-labelledby="h-diary">
+        <header class="fe-panel-head">
+          <h2 id="h-diary"><Icon name="calendar" size={15} />{t('home.events')}</h2>
+          <a href={`/${vm.eventsPath}`}>{t('common.viewAll')}<Icon name="arrow-right" size={13} /></a>
+        </header>
+
+        {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
+          <ul class="fe-rows">
+            {vm.events.slice(0, 4).map((event, index) => {
+              const on = formatDateParts(event.startsAt, locale)
+              return (
+                <li data-reveal style={`--i: ${index}`}>
+                  <a href={`/${vm.eventsPath}/${event.slug}`}>
+                    <time class="fe-tile fe-tile-solid" datetime={event.startsAt}>
+                      <b>{on.day}</b><i>{on.month}</i>
+                    </time>
+                    <span class="fe-row-title">
+                      {resolveText(event.title, locale)}
+                      {event.location && <small><Icon name="pin" size={12} />{resolveText(event.location, locale)}</small>}
+                    </span>
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
+
+      {excerpt && (
+        <section class="fe-panel fe-word" aria-labelledby="h-word" data-reveal>
+          <header class="fe-panel-head">
+            <h2 id="h-word"><Icon name="users" size={15} />{t('home.principal')}</h2>
+          </header>
+          <blockquote>{excerpt}</blockquote>
+          <footer>
+            {vm.principal?.photo && (
+              <Photo image={vm.principal.photo} locale={locale} width={96} height={96} sizes="3rem" class="fe-face" />
+            )}
+            <span>
+              {vm.principal && <strong>{resolveText(vm.principal.name, locale)}</strong>}
+              {vm.principal?.designation && <i>{resolveText(vm.principal.designation, locale)}</i>}
+            </span>
+            {vm.messagePath && (
+              <a href={`/${vm.messagePath}`} aria-label={t('common.readMore')}><Icon name="arrow-right" size={14} /></a>
+            )}
+          </footer>
+        </section>
+      )}
+    </aside>
+  </div>
+
+  {vm.albums.length > 0 && (
+    <section class="fe-panel fe-plates" aria-labelledby="h-plates">
+      <header class="fe-panel-head">
+        <h2 id="h-plates"><Icon name="play" size={15} />{t('home.gallery')}</h2>
+        <a href={`/${vm.galleryPath}`}>{t('common.viewAll')}<Icon name="arrow-right" size={13} /></a>
+      </header>
+      <ul style={`--n: ${Math.min(vm.albums.length, 4)}`}>
+        {vm.albums.slice(0, 4).map((album, index) => (
+          <li data-reveal style={`--i: ${index}`}>
+            <a href={`/${vm.galleryPath}/${album.slug}`}>
+              <Photo image={album.cover} locale={locale} width={520} height={360} sizes="(max-width: 48rem) 45vw, 18rem" />
+              <strong>{resolveText(album.title, locale)}</strong>
+              {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Container>
+
+<script>
+  // Motion is opt-in per element and happens once. Anything already on screen when the
+  // page loads is revealed immediately, so nothing is ever waiting to appear.
+  const targets = document.querySelectorAll<HTMLElement>('[data-reveal]')
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (still || !('IntersectionObserver' in window)) {
+    for (const element of targets) element.classList.add('is-in')
+  } else {
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        entry.target.classList.add('is-in')
+        observer.unobserve(entry.target)
+      }
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 })
+
+    for (const element of targets) observer.observe(element)
+  }
+</script>
+
+<style>
+  /* ---------- masthead ---------- */
+  .fe-masthead {
+    margin-block: var(--fe-space-6) var(--fe-space-8);
+    display: grid; gap: var(--fe-space-6);
+    align-items: stretch;
+  }
+  @media (min-width: 64rem) {
+    .fe-masthead { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); gap: var(--fe-space-8); }
+  }
+
+  .fe-view { margin: 0; overflow: hidden; border: 1px solid var(--fe-color-border); background: var(--fe-color-surface); }
+  .fe-view :global(.fe-photo) {
+    display: block; inline-size: 100%; block-size: 100%; min-block-size: 15rem;
+    object-fit: cover; object-position: 50% 45%;
+    animation: fe-settle 1600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .fe-ident { display: flex; flex-direction: column; justify-content: space-between; gap: var(--fe-space-6); }
+  .fe-marks { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.16em; }
+  .fe-ident h1 {
+    margin: var(--fe-space-4) 0 0;
+    font-size: var(--fe-size-display); font-weight: var(--fe-weight-regular);
+    line-height: 1.05; letter-spacing: -0.022em;
+  }
+  .fe-tag { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); }
+
+  .fe-quick {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid var(--fe-color-border);
+  }
+  .fe-quick a {
+    display: flex; align-items: center; gap: var(--fe-space-2);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    text-decoration: none; color: var(--fe-color-text);
+    font-size: var(--fe-size-xs); font-weight: var(--fe-weight-medium);
+    border-block-start: 1px solid var(--fe-color-border);
+    border-inline-start: 1px solid var(--fe-color-border);
+    transition: background-color 260ms ease, color 260ms ease;
+  }
+  .fe-quick a:nth-child(-n + 2) { border-block-start: 0; }
+  .fe-quick a:nth-child(odd) { border-inline-start: 0; }
+  .fe-quick a span { flex: 1; min-inline-size: 0; }
+  .fe-quick a:hover { background: var(--fe-color-surface); color: var(--fe-color-accent); }
+  .fe-go { opacity: 0; transform: translateX(-4px); transition: opacity 260ms ease, transform 260ms ease; }
+  a:hover > .fe-go, a:focus-visible > .fe-go { opacity: 1; transform: none; }
+
+  .fe-facts {
+    margin: 0;
+    border: 1px solid var(--fe-color-border);
+  }
+  .fe-facts div {
+    display: flex; align-items: baseline; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+  }
+  .fe-facts div + div { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-facts dt { flex: none; color: var(--fe-color-textMuted); transform: translateY(2px); }
+  .fe-facts dd { margin: 0; font-size: var(--fe-size-xs); line-height: var(--fe-leading-snug); }
+  .fe-facts a { color: inherit; text-decoration: none; }
+  .fe-facts a:hover { color: var(--fe-color-accent); }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ---------- panels ---------- */
+  .fe-columns { display: grid; gap: var(--fe-space-6); align-items: start; }
+  @media (min-width: 64rem) {
+    .fe-columns { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); gap: var(--fe-space-8); }
+  }
+
+  .fe-panel { border: 1px solid var(--fe-color-border); background: var(--fe-color-bg); margin-block-end: var(--fe-space-6); }
+  .fe-panel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    border-block-end: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+  }
+  .fe-panel-head h2 {
+    flex: 1; min-inline-size: 0;
+    display: flex; align-items: center; gap: var(--fe-space-2); margin: 0;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  .fe-panel-head > a {
+    flex: none; display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.12em;
+    transition: color 220ms ease;
+  }
+  .fe-panel-head > a:hover { color: var(--fe-color-accent); }
+
+  /* ---------- lead notice ---------- */
+  .fe-lead {
+    display: grid; gap: var(--fe-space-3);
+    padding: var(--fe-space-8) var(--fe-space-6);
+    text-decoration: none; color: var(--fe-color-text);
+    border-inline-start: 3px solid var(--fe-color-accent);
+    border-block-end: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+    transition: background-color 280ms ease;
+  }
+  .fe-lead:hover { background: var(--fe-color-bg); }
+  .fe-lead-meta { display: flex; align-items: center; gap: var(--fe-space-3); color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.12em; }
+  .fe-flag { color: var(--fe-color-accent); border-inline-start: 1px solid var(--fe-color-border); padding-inline-start: var(--fe-space-3); }
+  .fe-lead strong {
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-xl);
+    font-weight: var(--fe-weight-regular); line-height: 1.2; letter-spacing: -0.015em;
+  }
+  .fe-lead-sum { color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+  .fe-lead-go { display: flex; align-items: center; gap: 5px; margin-block-start: var(--fe-space-2); color: var(--fe-color-accent); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-lead:hover .fe-lead-go :global(.fe-icon) { transform: translateX(3px); }
+  .fe-lead-go :global(.fe-icon) { transition: transform 260ms ease; }
+
+  /* ---------- ruled rows ---------- */
+  .fe-rows { list-style: none; margin: 0; padding: 0; }
+  .fe-rows li + li > a { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-rows { padding-block: var(--fe-space-2); }
+  .fe-rows a {
+    display: flex; align-items: center; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    text-decoration: none; color: var(--fe-color-text);
+    transition: background-color 220ms ease;
+  }
+  .fe-rows a:hover { background: var(--fe-color-surface); }
+  .fe-row-title { flex: 1; min-inline-size: 0; font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+  .fe-row-title small { display: flex; align-items: center; gap: 4px; margin-block-start: 3px; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+
+  .fe-tile {
+    flex: none; inline-size: 2.75rem; padding-block: 5px;
+    display: grid; justify-items: center; gap: 1px;
+    border: 1px solid var(--fe-color-border);
+    line-height: 1;
+  }
+  .fe-tile b { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); font-variant-numeric: tabular-nums; }
+  .fe-tile i { font-style: normal; font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--fe-color-textMuted); }
+  .fe-tile-solid { background: var(--fe-color-primary); border-color: var(--fe-color-primary); color: var(--fe-color-primaryText); }
+  .fe-tile-solid i { color: inherit; opacity: 0.75; }
+
+  /* ---------- principal ---------- */
+  .fe-word blockquote {
+    margin: 0; padding: var(--fe-space-6);
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-base);
+    line-height: 1.55; letter-spacing: -0.005em;
+  }
+  .fe-word footer {
+    display: flex; align-items: center; gap: var(--fe-space-4);
+    padding: var(--fe-space-4) var(--fe-space-6);
+    border-block-start: 1px solid var(--fe-color-border);
+    background: var(--fe-color-surface);
+  }
+  .fe-word footer > span { flex: 1; min-inline-size: 0; display: grid; gap: 1px; }
+  .fe-word :global(.fe-face) { flex: none; inline-size: 2.5rem; block-size: 2.5rem; object-fit: cover; border-radius: 50%; }
+  .fe-word strong { font-size: var(--fe-size-xs); }
+  .fe-word i { font-style: normal; color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-word footer > a { display: flex; color: var(--fe-color-textMuted); transition: color 220ms ease, transform 220ms ease; }
+  .fe-word footer > a:hover { color: var(--fe-color-accent); transform: translateX(3px); }
+
+  /* ---------- plates ---------- */
+  .fe-plates ul { list-style: none; margin: 0; padding: var(--fe-space-6); display: grid; gap: var(--fe-space-6); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 48rem) { .fe-plates ul { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); } }
+  .fe-plates li { overflow: hidden; }
+  .fe-plates li a { display: grid; gap: var(--fe-space-2); text-decoration: none; color: var(--fe-color-text); }
+  .fe-plates :global(.fe-photo) { inline-size: 100%; aspect-ratio: 16 / 10; object-fit: cover; transition: transform 800ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .fe-plates li a:hover :global(.fe-photo) { transform: scale(1.05); }
+  .fe-plates strong { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-plates time { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+
+  /* ---------- motion ---------- */
+  [data-reveal] {
+    opacity: 0; transform: translateY(10px);
+    transition:
+      opacity 620ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 55ms),
+      transform 620ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 55ms);
+  }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+
+  @keyframes fe-settle { from { transform: scale(1.05); } to { transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] { opacity: 1; transform: none; transition: none; }
+    .fe-view :global(.fe-photo) { animation: none; }
+    .fe-go, .fe-plates :global(.fe-photo) { transition: none; }
+  }
+</style>
