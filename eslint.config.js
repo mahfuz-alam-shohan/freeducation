@@ -29,6 +29,11 @@ const restrictedZones = [
     message: 'tokens is a leaf.',
   },
   {
+    target: './src/designs',
+    from: ['./src/data', './src/config', './src/ui', './src/sections', './src/views', './src/runtime'],
+    message: 'designs is a leaf: it names variants, it does not load or render them.',
+  },
+  {
     target: './src/views/*/variants',
     from: ['./src/data', './src/config'],
     message: 'A variant renders its view-model and nothing else: no fetching, no config.',
@@ -129,6 +134,13 @@ export default [
     // Fixtures are sample content, not interface text.
     files: ['src/testing/**', '**/*.test.ts'],
     rules: { 'fe/no-bare-string': 'off', 'fe/no-raw-color': 'off' },
+  },
+
+  {
+    // A test proves a boundary holds, which means reaching across it to look. The
+    // boundaries themselves are enforced on the code that ships.
+    files: ['**/*.test.ts'],
+    rules: { 'import/no-restricted-paths': 'off' },
   },
 
   {

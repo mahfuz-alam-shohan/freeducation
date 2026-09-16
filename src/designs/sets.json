@@ -1,0 +1,90 @@
+{
+  "classic": {
+    "label": "Classic",
+    "note": "The institutional default: a newsroom front page and dense tables. Reads like a government college site, which is what most visitors expect.",
+    "views": {
+      "home": "newsroom",
+      "notice-list": "table-dense",
+      "notice-detail": "standard",
+      "rich-page": "standard",
+      "person-list": "table-compact",
+      "event-list": "standard",
+      "event-detail": "standard",
+      "event-calendar": "month-grid",
+      "gallery-albums": "standard",
+      "gallery-album": "standard",
+      "video-list": "grid",
+      "contact": "standard",
+      "routine": "grid",
+      "result-lookup": "standard",
+      "search": "standard",
+      "admission-form": "standard"
+    }
+  },
+  "journal": {
+    "label": "Journal",
+    "note": "Notice-led. The front page opens on the notice board and everything is carded, for schools whose site is mostly announcements.",
+    "views": {
+      "home": "notice-first",
+      "notice-list": "card-stack",
+      "notice-detail": "standard",
+      "rich-page": "standard",
+      "person-list": "grid-photo",
+      "event-list": "standard",
+      "event-detail": "standard",
+      "event-calendar": "month-grid",
+      "gallery-albums": "standard",
+      "gallery-album": "standard",
+      "video-list": "grid",
+      "contact": "standard",
+      "routine": "grid",
+      "result-lookup": "standard",
+      "search": "standard",
+      "admission-form": "standard"
+    }
+  },
+  "editorial": {
+    "label": "Editorial",
+    "note": "The premium tier. Panelled blocks, ruled rows, tiled dates and drawn icons, opening on the school's own building.",
+    "views": {
+      "home": "editorial",
+      "notice-list": "timeline",
+      "notice-detail": "standard",
+      "rich-page": "standard",
+      "person-list": "detailed-rows",
+      "event-list": "standard",
+      "event-detail": "standard",
+      "event-calendar": "month-grid",
+      "gallery-albums": "standard",
+      "gallery-album": "standard",
+      "video-list": "grid",
+      "contact": "standard",
+      "routine": "day-cards",
+      "result-lookup": "standard",
+      "search": "standard",
+      "admission-form": "standard"
+    }
+  },
+  "quiet": {
+    "label": "Quiet",
+    "note": "Stacked and unhurried, with a timeline notice board. Suits small schools with little content, where a dense grid would look empty.",
+    "views": {
+      "home": "minimal-stack",
+      "notice-list": "timeline",
+      "notice-detail": "standard",
+      "rich-page": "standard",
+      "person-list": "detailed-rows",
+      "event-list": "standard",
+      "event-detail": "standard",
+      "event-calendar": "month-grid",
+      "gallery-albums": "standard",
+      "gallery-album": "standard",
+      "video-list": "grid",
+      "contact": "standard",
+      "routine": "day-cards",
+      "result-lookup": "standard",
+      "search": "standard",
+      "admission-form": "standard"
+    }
+  }
+}

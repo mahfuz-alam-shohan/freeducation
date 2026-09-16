@@ -40,7 +40,10 @@ Adapters are swappable: `httpSource` talks to the real API with a key from env,
 backend. Every response is parsed through its contract at the boundary — nothing
 unvalidated escapes this folder.
 
-**`src/config`** — a school is a JSON file: identity, locales, theme, variant choices,
+**`src/designs`** — named design sets. Each names a variant for every view, so a school
+picks one look rather than sixteen.
+
+**`src/config`** — a school is a JSON file: identity, locales, theme, its design,
 features. `schools/*.json` is auto-discovered, so adding a school is zero code. Invalid
 config throws at boot; a half-configured site is worse than none.
 
@@ -125,8 +128,37 @@ so each is a separate build chunk and a page only executes the design it uses.
 Adding a design is one new file plus one registry line. It touches no data code, no
 other variant, and no other view.
 
-Which variant renders is resolved from the school's `variants` map, falling back to the
-view's default.
+### One school, one design
+
+A school does not choose a variant per page. It chooses a **design set** — a named look
+that names a variant for *every* view:
+
+```
+src/designs/sets.json     classic · journal · editorial · quiet
+```
+
+```json
+{ "slug": "crestwood", "design": "editorial" }
+```
+
+That single line dresses all sixteen views. The school's `variants` map still exists, but
+only as a deliberate exception on top of the set:
+
+```json
+{ "design": "editorial", "variants": { "notice-list": "card-stack" } }
+```
+
+Two properties make this a guarantee rather than a convention:
+
+- **A set must cover every view.** `tools/verify` fails if one is missing, so adding a
+  view to the platform forces every design to say what it looks like. There is no
+  fall-back path where a page quietly renders someone else's design.
+- **A variant no set names is an error.** A design nobody can choose is dead code, and
+  the verifier says so rather than letting it accumulate.
+
+`src/config/load.ts` is the single place a set and its overrides are combined:
+`loadSchool()` hands back a `variants` map that is already complete, so nothing
+downstream has to know design sets exist, and nothing can forget to apply one.
 
 ### Only the chosen design is shipped
 
@@ -139,8 +171,13 @@ Two things keep a page down to the design it renders:
 - `src/views/controllers.ts` imports each `viewModel.ts` **directly**, never through a
   view's `index.ts`, so no variant is reachable from the route that way.
 - `virtual:fe/active-variants` is generated at build time by
-  `tools/active-variants-plugin.mjs`. It reads the school's config and emits exactly one
-  import per view: the design that school uses.
+  `tools/active-variants-plugin.mjs`. It reads the school's design set and emits exactly
+  one import per view: the design that school uses.
+
+The plugin decides which CSS ships; the resolved config decides which markup renders. If
+those two ever disagreed a school would get one design's HTML in another's styles, so
+`src/designs/designs.test.ts` runs both for every school and asserts they name the same
+variant for every page.
 
 `src/views/registry.ts` still holds the full set, and is what the tests and the verifier
 work against.
@@ -164,6 +201,9 @@ is the same command CI runs.
 | Every view is in the registry | `tools/verify` |
 | Translations complete in every locale | `tools/verify` |
 | School config points at real views and variants | `tools/verify` |
+| Every design set covers every view | `tools/verify` |
+| Every variant belongs to a design set | `tools/verify` |
+| The build plugin and the config loader agree | `src/designs/designs.test.ts` |
 | `schools/` holds only JSON | `tools/verify` |
 | Config rejects unknown tokens, presets, bad locales | Zod, tested |
 | API payloads match contracts | Zod at the data boundary |

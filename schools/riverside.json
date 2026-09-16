@@ -14,11 +14,7 @@
       "radius.md": "2px"
     }
   },
-  "variants": {
-    "home": "notice-first",
-    "notice-list": "card-stack",
-    "person-list": "table-compact"
-  },
+  "design": "journal",
   "features": {
     "search": true,
     "noticeTicker": false,

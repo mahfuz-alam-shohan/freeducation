@@ -27,8 +27,9 @@ usually get tangled together:
 
 - **Content is universal.** Every school has notices, teachers, routines, results.
   Those shapes never change.
-- **Design is per-school.** Homepage, notice board, teacher list — each has several
-  designs, and a school picks one per page.
+- **Design is per-school.** A school picks one **design set** — a named look that dresses
+  every page — not a variant per page. Its notice board, teacher list and routine cannot
+  end up in three different designs.
 
 Because design components never fetch and data code never renders, a new design is a new
 folder that touches nothing else. That is the whole architecture in one sentence.
@@ -37,7 +38,7 @@ folder that touches nothing else. That is the whole architecture in one sentence
 
 1. **Config** — name, logo, contacts, locales, feature flags, menu
 2. **Theme tokens** — colours, type, spacing
-3. **Variant choice** — which design each page uses
+3. **Design set** — one line, `"design": "editorial"`, and every page follows
 
 Anything a school needs beyond these is a missing platform feature, not a reason to
 fork. See ARCHITECTURE §8.
@@ -140,14 +141,21 @@ PUBLIC_SCHOOL=hillview npm run dev # a different school: different designs, colo
 npm run verify                     # structure + lint + types + tests
 ```
 
-Three example schools are included. They share every line of code and differ only in
+Four example schools are included. They share every line of code and differ only in
 their JSON:
 
-| School | Language | Look |
-|---|---|---|
-| `demo` | Bangla-first, green | Newsroom homepage, dense notice table, photo grid, alpona ornament |
-| `riverside` | English-first, maroon | Notice-led homepage, notice cards, compact table, terracotta ornament |
-| `hillview` | English-first, indigo | Minimal stacked homepage, notice timeline, detailed rows, kantha ornament |
+| School | Language | Design | Look |
+|---|---|---|---|
+| `demo` | Bangla-first, green | `classic` | Newsroom front page, dense notice table, alpona ornament |
+| `riverside` | English-first, maroon | `journal` | Notice-led front page, carded notices, photo grid, terracotta ornament |
+| `hillview` | English-first, indigo | `quiet` | Stacked front page, notice timeline, kantha ornament |
+| `crestwood` | English-first, ivory | `editorial` | The premium tier: panelled blocks, ruled rows, the building leading |
+
+Changing any of them to another look is one line:
+
+```json
+{ "design": "editorial" }
+```
 
 ## Deploying
 
@@ -174,9 +182,10 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Menu research | Done |
 | Architecture & conventions | Done |
 | Stack decision | Astro 7 + TypeScript, server-rendered on Cloudflare |
-| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 22 variants |
+| Foundation | Done — contracts, data, config, tokens, i18n, routing, 16 views, 23 variants |
+| Design sets | Done — 4 complete looks, enforced whole-site |
 | Features | Done — search, ticker, routine, results, forms, events calendar, video gallery, dark mode, images |
-| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 180 tests |
+| Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 215 tests |
 | Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 

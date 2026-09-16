@@ -11,10 +11,7 @@
     "preset": "emerald",
     "overrides": {}
   },
-  "variants": {
-    "home": "newsroom",
-    "notice-list": "table-dense"
-  },
+  "design": "classic",
   "features": {
     "search": true,
     "noticeTicker": true,

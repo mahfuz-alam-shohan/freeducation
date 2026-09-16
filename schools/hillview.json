@@ -13,12 +13,7 @@
       "font.heading": "Georgia, 'Noto Serif Bengali', serif"
     }
   },
-  "variants": {
-    "home": "minimal-stack",
-    "notice-list": "timeline",
-    "person-list": "detailed-rows",
-    "routine": "day-cards"
-  },
+  "design": "quiet",
   "features": {
     "search": true,
     "noticeTicker": true,

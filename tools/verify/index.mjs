@@ -65,6 +65,58 @@ for (const view of viewDirs) {
   viewVariants.set(view, registered.map((entry) => entry.id))
 }
 
+// ---------------------------------------------------------------- designs
+// A design set must answer for every view. That is what makes "one school, one look"
+// a guarantee rather than a hope: there is no view a set can leave to chance, and
+// adding a view to the platform forces every set to say what it looks like.
+let designs = {}
+try {
+  designs = JSON.parse(read('src/designs/sets.json'))
+} catch (cause) {
+  fail(`src/designs/sets.json is not valid JSON: ${cause.message}`)
+}
+
+const claimed = new Set()
+
+for (const [name, set] of Object.entries(designs)) {
+  if (!/^[a-z0-9-]+$/.test(name)) fail(`design '${name}': names are kebab-case`)
+  for (const field of ['label', 'note']) {
+    if (typeof set?.[field] !== 'string' || set[field].length === 0) {
+      fail(`design '${name}' has no ${field}`)
+    }
+  }
+
+  const views = set?.views ?? {}
+
+  for (const view of viewDirs) {
+    if (!(view in views)) {
+      fail(`design '${name}' does not say which variant view '${view}' uses`)
+    }
+  }
+  for (const [view, variant] of Object.entries(views)) {
+    const available = viewVariants.get(view)
+    if (!available) {
+      fail(`design '${name}' names view '${view}', which does not exist`)
+    } else if (!available.includes(variant)) {
+      fail(`design '${name}': view '${view}' has no variant '${variant}' (available: ${available.join(', ')})`)
+    } else {
+      claimed.add(`${view}/${variant}`)
+    }
+  }
+}
+
+// A variant no design set names is a design nobody can choose. Either put it in a set
+// or delete it — there is no third state where it just sits in the tree.
+if (Object.keys(designs).length > 0) {
+  for (const [view, variants] of viewVariants) {
+    for (const variant of variants) {
+      if (!claimed.has(`${view}/${variant}`)) {
+        fail(`src/views/${view}/variants/${variant}.astro is in no design set, so no school can use it`)
+      }
+    }
+  }
+}
+
 // ---------------------------------------------------------------- translations
 const catalogNames = readdirSync(join(root, 'src/i18n/catalogs')).filter((f) => f.endsWith('.json'))
 const catalogs = catalogNames.map((name) => [name, JSON.parse(read(`src/i18n/catalogs/${name}`))])
@@ -100,11 +152,18 @@ for (const file of readdirSync(join(root, 'schools'))) {
   const slug = file.replace(/\.json$/, '')
   if (config.slug !== slug) fail(`schools/${file}: slug '${config.slug}' does not match its filename`)
 
+  const design = config.design ?? 'classic'
+  if (!designs[design]) {
+    fail(`schools/${file}: design '${design}' does not exist (available: ${Object.keys(designs).join(', ')})`)
+  }
+
   for (const [view, variant] of Object.entries(config.variants ?? {})) {
     const available = viewVariants.get(view)
     if (!available) fail(`schools/${file}: '${view}' is not a known view`)
     else if (!available.includes(variant)) {
       fail(`schools/${file}: view '${view}' has no variant '${variant}' (available: ${available.join(', ')})`)
+    } else if (designs[design]?.views?.[view] === variant) {
+      fail(`schools/${file}: override '${view}: ${variant}' is what design '${design}' already gives. Remove it.`)
     }
   }
 }
@@ -116,4 +175,7 @@ if (errors.length > 0) {
   console.error('')
   process.exit(1)
 }
-console.log(`✓ structure check passed (${viewDirs.length} views, ${catalogNames.length} locales)`)
+console.log(
+  `✓ structure check passed (${viewDirs.length} views, ${Object.keys(designs).length} designs, `
+  + `${catalogNames.length} locales)`,
+)

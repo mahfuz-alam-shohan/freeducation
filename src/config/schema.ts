@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { Locale } from '../contracts/index.js'
 import { isTokenName, themePresets } from '../tokens/tokens.js'
+import { designNames, isDesignName } from '../designs/index.js'
 
 const TokenOverrides = z.record(z.string(), z.string()).default({}).superRefine((value, ctx) => {
   for (const name of Object.keys(value)) {
@@ -34,7 +35,18 @@ export const SchoolConfig = z.object({
     overrides: TokenOverrides,
   }).default({ preset: 'emerald', overrides: {} }),
 
-  /** Design choice per view type. Unknown ids are rejected at boot by the registry check. */
+  /**
+   * One design for the whole site. Every page renders that set's variant, so a school
+   * cannot end up looking like four different sites.
+   */
+  design: z.string()
+    .refine(isDesignName, { message: `unknown design (available: ${designNames.join(', ')})` })
+    .default('classic'),
+
+  /**
+   * Per-view exceptions to the chosen design. Deliberately narrow: if a school needs
+   * more than an exception or two, it wanted a different design set.
+   */
   variants: z.record(z.string(), z.string()).default({}),
 
   features: z.object({

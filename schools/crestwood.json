@@ -1,19 +1,29 @@
 {
   "slug": "crestwood",
-  "locales": { "supported": ["en", "bn"], "default": "en" },
+  "locales": {
+    "supported": [
+      "en",
+      "bn"
+    ],
+    "default": "en"
+  },
   "timezone": "Asia/Dhaka",
   "weekStartsOn": 6,
   "decor": "none",
   "theme": {
     "preset": "ivory",
-    "overrides": { "container.max": "1240px" }
+    "overrides": {
+      "container.max": "1240px"
+    }
   },
-  "variants": {
-    "home": "editorial",
-    "notice-list": "timeline",
-    "person-list": "detailed-rows",
-    "routine": "day-cards"
+  "design": "editorial",
+  "features": {
+    "search": true,
+    "noticeTicker": false,
+    "themeToggle": true,
+    "languageSwitch": true
   },
-  "features": { "search": true, "noticeTicker": false, "themeToggle": true, "languageSwitch": true },
-  "data": { "source": "fixture" }
+  "data": {
+    "source": "fixture"
+  }
 }

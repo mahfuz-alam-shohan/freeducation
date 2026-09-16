@@ -171,6 +171,18 @@ production. → tested in `src/data/source.test.ts`
 
 **G2** Every variant named in a school config exists for that view. → `tools/verify`
 
+**G4** A school names a **design**, not a page-by-page list. One design dresses every
+view, so a site cannot be four designs at once. → `SchoolConfig.design`, `tools/verify`
+
+**G5** A design set names a variant for **every** view. A set that cannot answer for a
+view is incomplete, not permissive — there is no fall-back. → `tools/verify`
+
+**G6** Every variant belongs to at least one design set. A design no school can choose is
+dead code. → `tools/verify`
+
+**G7** A school's `variants` map is exceptions only. Re-stating what the design already
+gives is an error, not a harmless duplicate. → `tools/verify`
+
 **G3** No school-specific branching in code. `if (school.slug === …)` is banned.
 → `no-restricted-syntax`
 
@@ -190,9 +202,19 @@ production. → tested in `src/data/source.test.ts`
 
 1. `src/views/<view>/variants/<name>.astro`, props `{ vm, locale, t }`
 2. Register the lazy loader in `index.ts`
-3. `npm run verify` — the harness renders it in all three states
+3. Name it in the design set it belongs to, in `src/designs/sets.json` — a variant in no
+   set is one no school can choose, and `tools/verify` rejects it
+4. `npm run verify` — the harness renders it in all three states
 
 No data work. No config schema change. No other variant touched.
+
+### Adding a design set
+
+1. A new entry in `src/designs/sets.json` with `label`, `note`, and a variant for **every**
+   view — the verifier lists any you miss
+2. `npm run verify`
+
+Nothing else. A set is data, so adding a look is never a code change.
 
 ### Adding a view
 
@@ -200,7 +222,8 @@ No data work. No config schema change. No other variant touched.
 2. Schemas in `contracts`, keys in `data/keys.ts` if new content is needed, plus an
    endpoint in `data/adapters/http.ts`, fixture data, and an entry in `emptyFallback`
 3. At least one variant; two if the design is likely to vary
-4. Register it in `registry.ts`, in `controllers.ts`, and in `ViewType`
+4. Register it in `registry.ts`, in `controllers.ts`, and in `ViewType`, and give **every**
+   design set in `src/designs/sets.json` a variant for it
 5. Add its params to `routeParams` in the harness, and a query to `routeQuery` if the
    view reads the URL
 6. `npm run verify`
