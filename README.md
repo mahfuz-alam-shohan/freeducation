@@ -12,6 +12,8 @@ upgrades.
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The foundation: contracts, data keys, view-models, variants, theming, i18n, layer rules |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | The rulebook — every rule and the mechanism that enforces it |
+| [docs/CONTENT.md](docs/CONTENT.md) | What the school system must supply, field by field |
+| [docs/API.md](docs/API.md) | The endpoints the site calls and what they must answer |
 
 ---
 
@@ -114,8 +116,15 @@ Nothing is authored here. There is no admin interface, no login, and no second p
 edit content — that would only duplicate the dashboard. What this repository owns is the
 menu-to-page mapping, the designs, and each school's configuration.
 
-[docs/API.md](docs/API.md) is the exact contract the dashboard has to satisfy: every
-endpoint this site calls, its parameters, and a valid example response.
+Two generated documents describe the join, from each side:
+
+| Document | For |
+|---|---|
+| [docs/CONTENT.md](docs/CONTENT.md) | **What the dashboard has to supply** — every content type, field by field, required or optional |
+| [docs/API.md](docs/API.md) | **How the site asks for it** — endpoints, parameters, and a valid example response for each |
+
+Both are generated from the site's own schemas as snapshot tests, so neither can drift
+from what the code actually does.
 
 ## Principles
 
