@@ -1,0 +1,133 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { ResultLookupViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: ResultLookupViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { result } = vm
+---
+<!-- The marksheet as a printed return: particulars on ruled lines, grades in a column. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {vm.exams.length === 0 ? <EmptyState message={t('result.unavailable')} /> : (
+    <>
+      <form class="fe-lookup" method="get" action={`/${vm.basePath}`}>
+        <p class="fe-field">
+          <label for="exam">{t('result.exam')}</label>
+          <select id="exam" name="exam">
+            {vm.exams.map(exam => (
+              <option value={exam.id} selected={exam.id === vm.query.exam}>
+                {resolveText(exam.label, locale)}
+              </option>
+            ))}
+          </select>
+        </p>
+        <p class="fe-field">
+          <label for="roll">{t('result.roll')}</label>
+          <input id="roll" name="roll" type="text" inputmode="numeric" value={vm.query.roll} required />
+        </p>
+        <p class="fe-field">
+          <button type="submit">{t('result.submit')}</button>
+        </p>
+      </form>
+
+      {!vm.searched && <EmptyState message={t('result.prompt')} />}
+      {vm.searched && !result && <EmptyState message={t('result.notFound')} />}
+
+      {result && (
+        <article class="fe-return">
+          <h2>{resolveText(result.exam, locale)}</h2>
+
+          <dl class="fe-particulars">
+            <div><dt>{t('result.student')}</dt><dd>{resolveText(result.studentName, locale)}</dd></div>
+            <div><dt>{t('result.roll')}</dt><dd>{result.roll}</dd></div>
+            <div><dt>{t('result.class')}</dt><dd>{resolveText(result.className, locale)}</dd></div>
+            {result.gpa && <div><dt>{t('result.gpa')}</dt><dd class="fe-gpa">{result.gpa}</dd></div>}
+            {result.publishedAt && (
+              <div><dt>{t('common.published')}</dt><dd>{formatDate(result.publishedAt, locale)}</dd></div>
+            )}
+          </dl>
+
+          {result.subjects.length > 0 && (
+            <table>
+              <thead>
+                <tr><th scope="col">{t('result.subject')}</th><th scope="col">{t('result.grade')}</th></tr>
+              </thead>
+              <tbody>
+                {result.subjects.map(subject => (
+                  <tr>
+                    <td>{resolveText(subject.name, locale)}</td>
+                    <td class="fe-grade">{subject.grade}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </article>
+      )}
+    </>
+  )}
+</Container>
+
+<style>
+  .fe-lookup {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-6); align-items: end;
+    padding-block-end: var(--fe-space-6);
+    border-block-end: 3px double var(--fe-color-border);
+    margin-block-end: var(--fe-space-8);
+  }
+  .fe-field { margin: 0; display: grid; gap: var(--fe-space-2); }
+  label { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em; }
+  select, input {
+    padding: var(--fe-space-2) 0;
+    border: 0; border-block-end: 1px solid var(--fe-color-border);
+    background: transparent; color: var(--fe-color-text);
+    font: inherit; font-family: var(--fe-font-heading); font-size: var(--fe-size-base);
+  }
+  select:focus-visible, input:focus-visible { outline: 0; border-block-end-color: var(--fe-color-accent); }
+  button {
+    padding: var(--fe-space-2) 0;
+    border: 0; border-block-end: 2px solid var(--fe-color-accent);
+    background: transparent; color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em; cursor: pointer;
+  }
+  button:hover { color: var(--fe-color-accent); }
+
+  .fe-return { max-inline-size: 46rem; }
+  .fe-return h2 {
+    margin: 0 0 var(--fe-space-4);
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-xl);
+    font-weight: var(--fe-weight-semibold);
+  }
+
+  .fe-particulars { margin: 0 0 var(--fe-space-8); border-block-start: 1px solid var(--fe-color-border); }
+  .fe-particulars div {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--fe-space-6);
+    padding-block: var(--fe-space-3);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  .fe-particulars div:first-child { border-block-start: 0; }
+  .fe-particulars dt { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em; }
+  .fe-particulars dd { margin: 0; font-family: var(--fe-font-heading); font-size: var(--fe-size-base); font-variant-numeric: tabular-nums; }
+  .fe-gpa { color: var(--fe-color-accent); font-size: var(--fe-size-xl) !important; }
+
+  table { inline-size: 100%; border-collapse: collapse; }
+  th, td { text-align: start; padding: var(--fe-space-3) 0; }
+  th {
+    border-block-end: 1px solid var(--fe-color-border);
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em; color: var(--fe-color-textMuted);
+  }
+  td { font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); }
+  tbody tr + tr td { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-grade, th:last-child { text-align: end; inline-size: 7rem; font-variant-numeric: tabular-nums; }
+
+  @media print { .fe-lookup { display: none; } }
+</style>

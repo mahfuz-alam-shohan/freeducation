@@ -32,7 +32,7 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
   and drawn icons — every block on the same grid, every line doing work.
 -->
 <Container>
-  <section class="fe-masthead">
+  <section class="fe-opening">
     <figure class="fe-view" data-reveal style="--i: 0">
       <Photo image={vm.profile.cover} locale={locale} width={1280} height={800} eager sizes="(max-width: 64rem) 100vw, 58vw" />
     </figure>
@@ -215,13 +215,13 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
 
 <style>
   /* ---------- masthead ---------- */
-  .fe-masthead {
+  .fe-opening {
     margin-block: var(--fe-space-6) var(--fe-space-8);
     display: grid; gap: var(--fe-space-6);
     align-items: stretch;
   }
   @media (min-width: 64rem) {
-    .fe-masthead { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); gap: var(--fe-space-8); }
+    .fe-opening { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); gap: var(--fe-space-8); }
   }
 
   .fe-view { margin: 0; overflow: hidden; border: 1px solid var(--fe-color-border); background: var(--fe-color-surface); }

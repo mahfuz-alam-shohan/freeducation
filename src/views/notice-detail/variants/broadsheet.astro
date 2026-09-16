@@ -1,0 +1,90 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Prose from '../../../ui/Prose.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { NoticeDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { notice } = vm
+---
+<!-- One notice set as a story: kicker, headline, standfirst, then the body in measure. -->
+<Container>
+  {!notice ? <EmptyState message={t('page.notFoundBody')} /> : (
+    <article class="fe-story">
+      <p class="fe-kicker">
+        <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+        {notice.pinned && <span>{t('notice.pinned')}</span>}
+      </p>
+      <h1>{resolveText(notice.title, locale)}</h1>
+      {notice.summary && <p class="fe-standfirst">{resolveText(notice.summary, locale)}</p>}
+
+      {notice.body && <div class="fe-body"><Prose html={resolveText(notice.body, locale)} /></div>}
+
+      {notice.attachments.length > 0 && (
+        <section aria-labelledby="h-files">
+          <RuleHeading title={t('notice.attachments')} id="h-files" />
+          <ul class="fe-files">
+            {notice.attachments.map(file => (
+              <li><a href={file.url} download>{resolveText(file.label, locale)}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <a class="fe-back" href={`/${vm.backPath}`}>{t('common.viewAll')}</a>
+    </article>
+  )}
+</Container>
+
+<style>
+  .fe-story { max-inline-size: 46rem; }
+
+  .fe-kicker {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-3); margin: 0;
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .fe-kicker span { color: var(--fe-color-accent); }
+
+  .fe-story h1 {
+    margin: var(--fe-space-3) 0 0;
+    font-family: var(--fe-font-heading);
+    font-size: clamp(1.8rem, 3.2vw, 2.5rem); font-weight: var(--fe-weight-semibold);
+    line-height: 1.08; letter-spacing: -0.02em;
+  }
+  .fe-standfirst {
+    margin: var(--fe-space-4) 0 0;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-lg);
+    line-height: 1.42; color: var(--fe-color-textMuted);
+  }
+
+  .fe-body {
+    margin-block-start: var(--fe-space-6);
+    padding-block-start: var(--fe-space-6);
+    border-block-start: 3px double var(--fe-color-border);
+  }
+  .fe-body :global(.fe-prose) { font-size: var(--fe-size-base); line-height: 1.62; }
+
+  section { margin-block-start: var(--fe-space-8); }
+  .fe-files { list-style: none; margin: 0; padding: 0; }
+  .fe-files li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-files li:first-child { border-block-start: 0; }
+  .fe-files a {
+    display: block; padding-block: var(--fe-space-3);
+    color: var(--fe-color-text); text-decoration: none;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-sm);
+  }
+  .fe-files a:hover { color: var(--fe-color-accent); }
+
+  .fe-back {
+    display: inline-block; margin-block-start: var(--fe-space-8);
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em;
+    border-block-end: 1px solid var(--fe-color-border); padding-block-end: 3px;
+  }
+  .fe-back:hover { color: var(--fe-color-accent); }
+</style>

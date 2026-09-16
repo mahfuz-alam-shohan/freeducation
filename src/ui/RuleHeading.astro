@@ -1,0 +1,62 @@
+---
+import Icon from './Icon.astro'
+
+/**
+ * A section head for designs that draw with rules instead of boxes: a small-caps
+ * label, a hairline running out to the margin, and an optional link at the end of it.
+ *
+ * The broadsheet designs are built from this the way the editorial ones are built from
+ * Panel — it is what keeps their sections on one measure across sixteen pages.
+ */
+interface Props {
+  title: string
+  /** 'page' sets the heading as an <h1>; sections are <h2>. */
+  level?: 'page' | 'section' | undefined
+  actionHref?: string | undefined
+  actionLabel?: string | undefined
+  /** A heavier double rule, for the head of a page rather than a section within it. */
+  major?: boolean | undefined
+  id?: string | undefined
+  class?: string | undefined
+}
+const {
+  title, level = 'section', actionHref, actionLabel, major = false, id, class: className,
+}: Props = Astro.props
+const Tag = level === 'page' ? 'h1' : 'h2'
+---
+<div class:list={['fe-rulehead', major && 'is-major', className]}>
+  <Tag id={id}>{title}</Tag>
+  <span class="fe-rule" aria-hidden="true"></span>
+  {actionHref && actionLabel && (
+    <a href={actionHref}>{actionLabel}<Icon name="arrow-right" size={12} /></a>
+  )}
+</div>
+
+<style>
+  .fe-rulehead {
+    display: flex; align-items: baseline; gap: var(--fe-space-4);
+    margin-block-end: var(--fe-space-4);
+  }
+  .fe-rulehead h1, .fe-rulehead h2 {
+    flex: none; margin: 0;
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.24em;
+  }
+  .fe-rule {
+    flex: 1;
+    border-block-start: 1px solid var(--fe-color-border);
+    transform: translateY(-3px);
+  }
+  .is-major .fe-rule {
+    border-block-start: 3px double var(--fe-color-border);
+    transform: translateY(-4px);
+  }
+  .fe-rulehead a {
+    flex: none; display: inline-flex; align-items: center; gap: 4px;
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.16em;
+    transition: color 220ms ease;
+  }
+  .fe-rulehead a:hover { color: var(--fe-color-accent); }
+</style>

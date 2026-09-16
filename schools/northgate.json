@@ -1,0 +1,29 @@
+{
+  "slug": "northgate",
+  "locales": {
+    "supported": [
+      "en",
+      "bn"
+    ],
+    "default": "en"
+  },
+  "timezone": "Asia/Dhaka",
+  "weekStartsOn": 6,
+  "decor": "none",
+  "theme": {
+    "preset": "newsprint",
+    "overrides": {
+      "container.max": "1180px"
+    }
+  },
+  "design": "broadsheet",
+  "features": {
+    "search": true,
+    "noticeTicker": true,
+    "themeToggle": true,
+    "languageSwitch": true
+  },
+  "data": {
+    "source": "fixture"
+  }
+}

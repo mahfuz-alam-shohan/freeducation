@@ -86,5 +86,27 @@
       "search": "standard",
       "admission-form": "standard"
     }
+  },
+  "broadsheet": {
+    "label": "Broadsheet",
+    "note": "A newspaper. Nothing is boxed: the page is drawn with rules and columns, a serif carries every size, and the order of the stories is the hierarchy. For a school that wants to look printed rather than designed.",
+    "views": {
+      "home": "broadsheet",
+      "notice-list": "broadsheet",
+      "notice-detail": "broadsheet",
+      "rich-page": "broadsheet",
+      "person-list": "broadsheet",
+      "event-list": "broadsheet",
+      "event-detail": "broadsheet",
+      "event-calendar": "broadsheet",
+      "gallery-albums": "broadsheet",
+      "gallery-album": "broadsheet",
+      "video-list": "broadsheet",
+      "contact": "broadsheet",
+      "routine": "broadsheet",
+      "result-lookup": "broadsheet",
+      "search": "broadsheet",
+      "admission-form": "broadsheet"
+    }
   }
 }

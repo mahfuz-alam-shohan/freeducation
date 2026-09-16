@@ -140,6 +140,25 @@ export const themePresets: Record<string, Partial<Record<TokenName, string>>> = 
     'rule.hair': 'rgb(236 234 228 / 0.12)',
   },
 
+  /*
+   * Newsprint. Warm uncoated paper and a true black ink, with one oxblood the colour a
+   * press actually ran as a second plate. There is no surface colour worth the name:
+   * the broadsheet design draws with rules, not with panels, so a filled block would
+   * have nothing to sit in.
+   */
+  newsprint: {
+    'color.bg': '#F7F4ED',
+    'color.surface': '#F0ECE1',
+    'color.border': '#151310',
+    'color.text': '#151310',
+    'color.textMuted': '#5C574C',
+    'color.primary': '#151310',
+    'color.primaryText': '#F7F4ED',
+    'color.accent': '#8C2F24',
+    'color.onPrimarySurface': 'rgb(255 255 255 / 0.18)',
+    'rule.hair': 'rgb(21 19 16 / 0.26)',
+  },
+
   sapphire: { 'color.primary': '#14508c', 'color.accent': '#c2703d' },
   maroon: { 'color.primary': '#7b1e3a', 'color.accent': '#0f766e' },
   indigo: { 'color.primary': '#3730a3', 'color.accent': '#b45309' },

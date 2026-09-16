@@ -1,0 +1,108 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Icon from '../../../ui/Icon.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Photo from '../../../ui/Photo.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { VideoListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatDuration, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: VideoListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- Stills with a caption under a rule; the play mark is drawn, not filled. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {vm.videos.length === 0 ? <EmptyState message={t('video.empty')} /> : (
+    <ul class="fe-videos">
+      {vm.videos.map(video => (
+        <li>
+          <!--
+            A poster with a play button, not an embed. The provider is only contacted
+            when someone actually presses play; with scripting off this is simply a
+            link to the video.
+          -->
+          <a
+            class="fe-poster"
+            href={video.watchUrl ?? video.embedUrl}
+            data-fe-video={video.embedUrl}
+            data-fe-video-title={resolveText(video.title, locale)}
+            rel="noopener"
+          >
+            <Photo image={video.poster} locale={locale} width={480} height={270} sizes="(max-width: 48rem) 100vw, 18rem" />
+            <span class="fe-play"><Icon name="play" size={16} /></span>
+            <span class="fe-sr">{t('video.play')}</span>
+          </a>
+
+          <div class="fe-caption">
+            <strong>{resolveText(video.title, locale)}</strong>
+            {video.description && <p>{resolveText(video.description, locale)}</p>}
+            <small>
+              {video.publishedAt && <time datetime={video.publishedAt}>{formatDate(video.publishedAt, locale)}</time>}
+              {video.durationSeconds && <i>{formatDuration(video.durationSeconds, locale)}</i>}
+            </small>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <Pagination page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }} />
+</Container>
+
+<script>
+  for (const trigger of document.querySelectorAll<HTMLAnchorElement>('[data-fe-video]')) {
+    trigger.addEventListener('click', event => {
+      const embed = trigger.dataset.feVideo
+      if (!embed) return
+      event.preventDefault()
+
+      const frame = document.createElement('iframe')
+      frame.src = `${embed}${embed.includes('?') ? '&' : '?'}autoplay=1`
+      frame.title = trigger.dataset.feVideoTitle ?? ''
+      frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen'
+      frame.allowFullscreen = true
+      frame.loading = 'lazy'
+      frame.className = 'fe-frame'
+
+      trigger.replaceWith(frame)
+    })
+  }
+</script>
+
+<style>
+  .fe-videos {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-8) var(--fe-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  }
+  .fe-videos li { display: grid; grid-template-rows: auto 1fr; gap: var(--fe-space-2); }
+
+  .fe-poster { position: relative; display: block; }
+  .fe-poster :global(.fe-photo) {
+    display: block; inline-size: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+    filter: saturate(0.82) contrast(1.04); transition: filter 600ms ease;
+  }
+  .fe-poster:hover :global(.fe-photo) { filter: none; }
+  .fe-play {
+    position: absolute; inset-block-end: var(--fe-space-3); inset-inline-start: var(--fe-space-3);
+    display: grid; place-items: center; inline-size: 34px; block-size: 34px;
+    border: 1px solid var(--fe-color-primaryText);
+    color: var(--fe-color-primaryText); background: var(--fe-color-scrim);
+  }
+  .fe-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  :global(.fe-frame) { inline-size: 100%; aspect-ratio: 16 / 9; border: 0; }
+
+  .fe-caption { display: grid; gap: var(--fe-space-2); align-content: start; padding-block-start: var(--fe-space-2); border-block-start: 1px solid var(--fe-color-border); }
+  .fe-caption strong { font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-snug); }
+  .fe-caption p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-xs); line-height: var(--fe-leading-snug); }
+  .fe-caption small { display: flex; justify-content: space-between; gap: var(--fe-space-4); color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-caption i { font-style: normal; font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) { .fe-poster :global(.fe-photo) { transition: none; } }
+</style>

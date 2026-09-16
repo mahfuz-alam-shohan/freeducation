@@ -1,0 +1,67 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import Photo from '../../../ui/Photo.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { GalleryAlbumsViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: GalleryAlbumsViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- A picture page: plates in a row, each captioned under a hairline. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {vm.albums.length === 0 ? <EmptyState message={t('gallery.empty')} /> : (
+    <ul class="fe-plates">
+      {vm.albums.map(album => (
+        <li>
+          <a href={`/${vm.basePath}/${album.slug}`}>
+            <Photo image={album.cover} locale={locale} width={640} height={480} sizes="(max-width: 48rem) 100vw, 18rem" />
+            <strong>{resolveText(album.title, locale)}</strong>
+            <small>
+              {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+              <i>{formatNumber(album.photos.length, locale)}</i>
+            </small>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-plates {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-8) var(--fe-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  }
+  .fe-plates a { display: grid; gap: var(--fe-space-2); text-decoration: none; color: var(--fe-color-text); }
+  .fe-plates :global(.fe-photo) {
+    inline-size: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+    filter: saturate(0.82) contrast(1.04); transition: filter 600ms ease;
+  }
+  .fe-plates a:hover :global(.fe-photo) { filter: none; }
+  .fe-plates strong {
+    padding-block-start: var(--fe-space-2);
+    border-block-start: 1px solid var(--fe-color-border);
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-sm);
+    font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-snug);
+  }
+  .fe-plates small {
+    display: flex; justify-content: space-between; gap: var(--fe-space-4);
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-plates i { font-style: normal; font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) { .fe-plates :global(.fe-photo) { transition: none; } }
+</style>

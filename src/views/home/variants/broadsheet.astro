@@ -1,0 +1,284 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Photo from '../../../ui/Photo.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { HomeViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, toPlainText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+
+const [lead, second, ...rest] = vm.notices
+const messageText = vm.message?.blocks.find(block => block.type === 'richtext')
+const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale), 320) : ''
+---
+<!--
+  A newspaper front page. Nothing is in a box: the page is drawn with rules and
+  columns, the serif carries every size, and the hierarchy is the story order —
+  masthead, lead, columns beneath.
+-->
+<Container>
+  <header class="fe-nameplate">
+    <p class="fe-ear">
+      {vm.profile.eiin && <span>{t('common.eiin')} {vm.profile.eiin}</span>}
+      {vm.profile.address && <span>{resolveText(vm.profile.address, locale)}</span>}
+    </p>
+    <h1>{resolveText(vm.profile.name, locale)}</h1>
+    <p class="fe-ear fe-ear-lower">
+      {vm.profile.tagline && <span>{resolveText(vm.profile.tagline, locale)}</span>}
+      {vm.profile.established && <span>{t('common.since')} {vm.profile.established}</span>}
+    </p>
+  </header>
+
+  {!lead ? <EmptyState message={t('notice.empty')} /> : (
+    <section class="fe-front" aria-labelledby="h-lead">
+      <article class="fe-lead">
+        <p class="fe-kicker" id="h-lead">
+          <time datetime={lead.publishedAt}>{formatDate(lead.publishedAt, locale)}</time>
+          {lead.pinned && <span>{t('notice.pinned')}</span>}
+        </p>
+        <h2><a href={`/${vm.noticesPath}/${lead.slug}`}>{resolveText(lead.title, locale)}</a></h2>
+        {lead.summary && <p class="fe-standfirst">{resolveText(lead.summary, locale)}</p>}
+
+        {vm.profile.cover && (
+          <figure class="fe-cut">
+            <Photo image={vm.profile.cover} locale={locale} width={1200} height={700} sizes="(max-width: 60rem) 100vw, 40rem" eager />
+            {vm.profile.tagline && <figcaption>{resolveText(vm.profile.tagline, locale)}</figcaption>}
+          </figure>
+        )}
+
+        {excerpt && (
+          <div class="fe-columns">
+            <p>{excerpt}</p>
+            {vm.principal && (
+              <p class="fe-byline">
+                {resolveText(vm.principal.name, locale)}
+                {vm.principal.designation && <span>{resolveText(vm.principal.designation, locale)}</span>}
+              </p>
+            )}
+          </div>
+        )}
+      </article>
+
+      <aside class="fe-column">
+        {second && (
+          <article class="fe-second">
+            <p class="fe-kicker">
+              <time datetime={second.publishedAt}>{formatDate(second.publishedAt, locale)}</time>
+            </p>
+            <h3><a href={`/${vm.noticesPath}/${second.slug}`}>{resolveText(second.title, locale)}</a></h3>
+            {second.summary && <p>{resolveText(second.summary, locale)}</p>}
+          </article>
+        )}
+
+        {rest.length > 0 && (
+          <section class="fe-stub" aria-labelledby="h-also">
+            <RuleHeading title={t('home.notices')} id="h-also" actionHref={`/${vm.noticesPath}`} actionLabel={t('common.viewAll')} />
+            <ol class="fe-numbered">
+              {rest.slice(0, 5).map((notice, index) => (
+                <li>
+                  <span class="fe-num">{formatNumber(index + 1, locale)}</span>
+                  <span class="fe-item">
+                    <a href={`/${vm.noticesPath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
+                    <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+      </aside>
+    </section>
+  )}
+
+  {vm.events.length > 0 && (
+    <section class="fe-diary" aria-labelledby="h-diary">
+      <RuleHeading title={t('home.events')} id="h-diary" actionHref={`/${vm.eventsPath}`} actionLabel={t('common.viewAll')} />
+      <ul>
+        {vm.events.slice(0, 4).map(event => (
+          <li>
+            <time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time>
+            <a href={`/${vm.eventsPath}/${event.slug}`}>{resolveText(event.title, locale)}</a>
+            {event.location && <small>{resolveText(event.location, locale)}</small>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {vm.albums.length > 0 && (
+    <section class="fe-plates" aria-labelledby="h-plates">
+      <RuleHeading title={t('home.gallery')} id="h-plates" actionHref={`/${vm.galleryPath}`} actionLabel={t('common.viewAll')} />
+      <ul>
+        {vm.albums.slice(0, 4).map(album => (
+          <li>
+            <a href={`/${vm.galleryPath}/${album.slug}`}>
+              <Photo image={album.cover} locale={locale} width={520} height={390} sizes="(max-width: 48rem) 45vw, 16rem" />
+              <strong>{resolveText(album.title, locale)}</strong>
+              {album.takenAt && <time datetime={album.takenAt}>{formatDate(album.takenAt, locale)}</time>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Container>
+
+<style>
+  /* ---------- masthead ---------- */
+  .fe-nameplate {
+    padding-block: var(--fe-space-8) var(--fe-space-4);
+    border-block-end: 3px double var(--fe-color-border);
+    text-align: center;
+  }
+  .fe-nameplate h1 {
+    margin: var(--fe-space-3) 0;
+    font-family: var(--fe-font-heading);
+    font-size: var(--fe-size-display); font-weight: var(--fe-weight-semibold);
+    line-height: 1; letter-spacing: -0.02em;
+  }
+  .fe-ear {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: var(--fe-space-2) var(--fe-space-6);
+    margin: 0; color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.22em;
+  }
+  .fe-ear-lower { padding-block-start: var(--fe-space-3); border-block-start: 1px solid var(--fe-rule-hair); }
+
+  /* ---------- the front ---------- */
+  .fe-front { display: grid; gap: var(--fe-space-8); padding-block: var(--fe-space-8); }
+  @media (min-width: 60rem) {
+    .fe-front { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: var(--fe-space-12); }
+    .fe-column {
+      padding-inline-start: var(--fe-space-12);
+      border-inline-start: 1px solid var(--fe-color-border);
+      margin-inline-start: calc(var(--fe-space-12) * -0.5);
+    }
+  }
+
+  .fe-kicker {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-3); margin: 0;
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .fe-kicker span { color: var(--fe-color-accent); }
+
+  .fe-lead h2 {
+    margin: var(--fe-space-3) 0 0;
+    font-family: var(--fe-font-heading);
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem); font-weight: var(--fe-weight-semibold);
+    line-height: 1.04; letter-spacing: -0.022em;
+  }
+  .fe-lead h2 a { color: inherit; text-decoration: none; }
+  .fe-lead h2 a:hover { color: var(--fe-color-accent); }
+
+  .fe-standfirst {
+    margin: var(--fe-space-4) 0 0;
+    font-family: var(--fe-font-heading);
+    font-size: var(--fe-size-lg); line-height: 1.4; color: var(--fe-color-textMuted);
+  }
+
+  .fe-columns {
+    margin-block-start: var(--fe-space-6);
+    padding-block-start: var(--fe-space-6);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  @media (min-width: 44rem) {
+    .fe-columns { column-count: 2; column-gap: var(--fe-space-12); column-rule: 1px solid var(--fe-rule-hair); }
+  }
+  .fe-columns p { margin: 0; font-size: var(--fe-size-sm); line-height: 1.62; text-align: justify; hyphens: auto; }
+  /* A drop cap, set from the paragraph itself rather than from a wrapper element. */
+  .fe-columns p:first-child::first-letter {
+    float: inline-start;
+    margin-inline-end: var(--fe-space-2);
+    padding-block-start: 4px;
+    font-family: var(--fe-font-heading); font-size: 3.1em; line-height: 0.82;
+    font-weight: var(--fe-weight-semibold);
+  }
+  .fe-byline {
+    margin-block-start: var(--fe-space-4) !important;
+    text-align: start !important;
+    font-size: var(--fe-size-2xs) !important; text-transform: uppercase; letter-spacing: 0.16em;
+  }
+  .fe-byline span { display: block; color: var(--fe-color-textMuted); letter-spacing: 0.12em; }
+
+  .fe-second h3 {
+    margin: var(--fe-space-2) 0 var(--fe-space-3);
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-xl);
+    font-weight: var(--fe-weight-semibold); line-height: 1.16;
+  }
+  .fe-second h3 a { color: inherit; text-decoration: none; }
+  .fe-second h3 a:hover { color: var(--fe-color-accent); }
+  .fe-second p { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+
+  .fe-cut { margin: var(--fe-space-6) 0 0; }
+  .fe-cut :global(.fe-photo) { display: block; inline-size: 100%; aspect-ratio: 16 / 9; object-fit: cover; filter: saturate(0.82) contrast(1.04); }
+  .fe-cut figcaption {
+    margin-block-start: var(--fe-space-2);
+    padding-block-start: var(--fe-space-2);
+    border-block-start: 1px solid var(--fe-rule-hair);
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+
+  /* ---------- also inside ---------- */
+  section { padding-block-end: var(--fe-space-8); }
+
+  .fe-stub { padding-block: var(--fe-space-8) 0; }
+  .fe-numbered { list-style: none; margin: 0; padding: 0; }
+  .fe-numbered li {
+    display: flex; align-items: baseline; gap: var(--fe-space-4);
+    padding-block: var(--fe-space-3);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  .fe-num {
+    flex: none; inline-size: 1.4rem;
+    color: var(--fe-color-accent);
+    font-size: var(--fe-size-2xs); font-variant-numeric: tabular-nums;
+  }
+  .fe-item { flex: 1; min-inline-size: 0; display: grid; gap: 2px; }
+  .fe-item a {
+    color: var(--fe-color-text); text-decoration: none;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-base);
+    line-height: var(--fe-leading-snug);
+  }
+  .fe-item a:hover { color: var(--fe-color-accent); }
+  .fe-item time { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em; }
+
+  /* ---------- diary ---------- */
+  .fe-diary ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  @media (min-width: 52rem) {
+    .fe-diary ul { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--fe-space-12); }
+  }
+  .fe-diary li {
+    display: grid; grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: var(--fe-space-4); align-items: baseline;
+    padding-block: var(--fe-space-3);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  .fe-diary time { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-diary a { color: var(--fe-color-text); text-decoration: none; font-family: var(--fe-font-heading); font-size: var(--fe-size-base); }
+  .fe-diary a:hover { color: var(--fe-color-accent); }
+  .fe-diary small { grid-column: 2; color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); }
+
+  /* ---------- plates ---------- */
+  .fe-plates ul {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--fe-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+  .fe-plates a { display: grid; gap: var(--fe-space-2); text-decoration: none; color: var(--fe-color-text); }
+  .fe-plates :global(.fe-photo) {
+    inline-size: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+    filter: saturate(0.82) contrast(1.04);
+    transition: filter 600ms ease;
+  }
+  .fe-plates a:hover :global(.fe-photo) { filter: none; }
+  .fe-plates strong { font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-snug); }
+  .fe-plates time { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fe-plates :global(.fe-photo) { transition: none; }
+  }
+</style>

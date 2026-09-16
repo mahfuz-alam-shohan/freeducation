@@ -1,0 +1,82 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { PersonListViewModel } from '../viewModel.js'
+import type { Locale, Person } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: PersonListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+
+// Grouped by department the way a staff list is printed, in the order people arrive.
+const departments: { label: string; people: Person[] }[] = []
+for (const person of vm.people) {
+  const label = person.department ? resolveText(person.department, locale) : ''
+  const last = departments.at(-1)
+  if (last && last.label === label) last.people.push(person)
+  else departments.push({ label, people: [person] })
+}
+---
+<!-- A staff register set in columns, ruled between departments rather than boxed. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {vm.people.length === 0 ? <EmptyState message={t('person.empty')} /> : (
+    <div class="fe-register">
+      {departments.map(group => (
+        <section>
+          {group.label && <h2>{group.label}</h2>}
+          <ul>
+            {group.people.map(person => (
+              <li>
+                <strong>{resolveText(person.name, locale)}</strong>
+                {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+                <span class="fe-reach">
+                  {person.phone && <a href={`tel:${person.phone}`}>{person.phone}</a>}
+                  {person.email && <a href={`mailto:${person.email}`}>{person.email}</a>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-register { border-block-start: 1px solid var(--fe-color-border); }
+  @media (min-width: 52rem) {
+    .fe-register { columns: 2; column-gap: var(--fe-space-12); column-rule: 1px solid var(--fe-rule-hair); }
+  }
+
+  section { break-inside: avoid; padding-block-start: var(--fe-space-6); }
+  h2 {
+    margin: 0 0 var(--fe-space-2);
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--fe-color-accent);
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: grid; gap: 2px;
+    padding-block: var(--fe-space-3);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  li:first-child { border-block-start: 0; }
+
+  strong { font-family: var(--fe-font-heading); font-size: var(--fe-size-base); font-weight: var(--fe-weight-semibold); }
+  li > span { color: var(--fe-color-textMuted); font-size: var(--fe-size-2xs); text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-reach { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); text-transform: none; letter-spacing: 0; font-size: var(--fe-size-xs); }
+  .fe-reach a { color: var(--fe-color-textMuted); text-decoration: none; font-variant-numeric: tabular-nums; }
+  .fe-reach a:hover { color: var(--fe-color-accent); }
+</style>

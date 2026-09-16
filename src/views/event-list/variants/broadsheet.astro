@@ -1,0 +1,61 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { EventListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatTime, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: EventListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- The diary column: date at the left margin, the entry in the measure beside it. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {vm.events.length === 0 ? <EmptyState message={t('event.empty')} /> : (
+    <ul class="fe-diary">
+      {vm.events.map(event => (
+        <li>
+          <p class="fe-when">
+            <time datetime={event.startsAt}>{formatDate(event.startsAt, locale, vm.timeZone)}</time>
+            <span>{formatTime(event.startsAt, locale, vm.timeZone)}</span>
+          </p>
+          <div class="fe-entry">
+            <h2><a href={`/${vm.basePath}/${event.slug}`}>{resolveText(event.title, locale)}</a></h2>
+            {event.location && <p class="fe-where">{resolveText(event.location, locale)}</p>}
+            {event.description && <p class="fe-sum">{resolveText(event.description, locale)}</p>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Container>
+
+<style>
+  .fe-diary { list-style: none; margin: 0; padding: 0; }
+  .fe-diary li {
+    display: grid; gap: var(--fe-space-2);
+    padding-block: var(--fe-space-6);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  .fe-diary li:first-child { border-block-start: 1px solid var(--fe-color-border); }
+  @media (min-width: 44rem) {
+    .fe-diary li { grid-template-columns: 11rem minmax(0, 1fr); gap: var(--fe-space-8); }
+  }
+
+  .fe-when { margin: 0; display: grid; gap: 2px; }
+  .fe-when time { font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); }
+  .fe-when span { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.16em; font-variant-numeric: tabular-nums; }
+
+  .fe-entry h2 {
+    margin: 0;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-xl);
+    font-weight: var(--fe-weight-semibold); line-height: 1.16;
+  }
+  .fe-entry h2 a { color: inherit; text-decoration: none; }
+  .fe-entry h2 a:hover { color: var(--fe-color-accent); }
+
+  .fe-where { margin: var(--fe-space-2) 0 0; color: var(--fe-color-accent); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em; }
+  .fe-sum { margin: var(--fe-space-2) 0 0; max-inline-size: 44rem; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+</style>

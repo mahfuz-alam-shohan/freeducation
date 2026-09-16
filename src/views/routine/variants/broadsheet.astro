@@ -1,0 +1,113 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { RoutineViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RoutineViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { routine } = vm
+---
+<!--
+  The timetable as a printed grid: rules only, the period times down the stub column,
+  the days across the head. It reads the way the sheet pinned up in a corridor does.
+-->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {routine?.updatedAt && (
+    <p class="fe-when">{t('common.updated')} {formatDate(routine.updatedAt, locale)}</p>
+  )}
+
+  {vm.classes.length > 1 && (
+    <nav class="fe-classes" aria-label={t('routine.selectClass')}>
+      {vm.classes.map(entry => (
+        <a href={`/${vm.basePath}?class=${entry.id}`} aria-current={entry.id === vm.selected?.id ? 'page' : undefined}>
+          {resolveText(entry.label, locale)}
+        </a>
+      ))}
+    </nav>
+  )}
+
+  {!routine ? <EmptyState message={t('routine.empty')} /> : (
+    <div class="fe-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{t('routine.day')}</th>
+            {routine.periods.map(period => (
+              <th scope="col">
+                {resolveText(period.label, locale)}
+                {period.startsAt && <small>{period.startsAt}</small>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {routine.days.map((day, dayIndex) => (
+            <tr>
+              <th scope="row">{resolveText(day, locale)}</th>
+              {routine.periods.map((_, periodIndex) => {
+                const cell = routine.grid[dayIndex]?.[periodIndex] ?? null
+                return (
+                  <td>
+                    {cell ? (
+                      <>
+                        <strong>{resolveText(cell.subject, locale)}</strong>
+                        {cell.teacher && <small>{resolveText(cell.teacher, locale)}</small>}
+                        {cell.room && <small class="fe-room">{cell.room}</small>}
+                      </>
+                    ) : <span class="fe-free">{t('routine.free')}</span>}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Container>
+
+<style>
+  .fe-when { margin: 0 0 var(--fe-space-6); color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em; }
+
+  .fe-classes { display: flex; flex-wrap: wrap; gap: var(--fe-space-6); margin-block-end: var(--fe-space-6); padding-block-end: var(--fe-space-3); border-block-end: 1px solid var(--fe-color-border); }
+  .fe-classes a {
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em;
+    padding-block-end: 3px;
+  }
+  .fe-classes a:hover { color: var(--fe-color-accent); }
+  .fe-classes a[aria-current='page'] { color: var(--fe-color-text); border-block-end: 2px solid var(--fe-color-accent); }
+
+  .fe-scroll { overflow-x: auto; }
+  table { inline-size: 100%; border-collapse: collapse; min-inline-size: 52rem; }
+
+  thead th {
+    padding: 0 var(--fe-space-4) var(--fe-space-3) 0;
+    border-block-end: 1px solid var(--fe-color-border);
+    text-align: start; vertical-align: bottom;
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  thead th small { display: block; margin-block-start: 3px; color: var(--fe-color-textMuted); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+  tbody th {
+    inline-size: 8rem; padding: var(--fe-space-4) var(--fe-space-4) var(--fe-space-4) 0;
+    text-align: start; vertical-align: top;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold);
+  }
+  tbody tr + tr th, tbody tr + tr td { border-block-start: 1px solid var(--fe-rule-hair); }
+
+  td { padding: var(--fe-space-4) var(--fe-space-4) var(--fe-space-4) 0; vertical-align: top; }
+  td strong { display: block; font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); }
+  td small { display: block; color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); }
+  .fe-room { text-transform: uppercase; letter-spacing: 0.14em; }
+  .fe-free { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.16em; }
+
+  @media print { .fe-classes { display: none; } }
+</style>

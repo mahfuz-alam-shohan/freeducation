@@ -1,0 +1,100 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import FilterBar from '../../../ui/FilterBar.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { NoticeListViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: NoticeListViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- The notice board as a numbered index: a rule between entries, nothing boxed. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  <FilterBar
+    label={t('notice.title')}
+    items={vm.filters.map(filter => ({ ...filter, label: resolveText(filter.label, locale) }))}
+  />
+
+  {vm.notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
+    <ol class="fe-index">
+      {vm.notices.map((notice, index) => (
+        <li>
+          <span class="fe-num">{formatNumber((vm.page - 1) * vm.pageSize + index + 1, locale)}</span>
+          <div class="fe-entry">
+            <p class="fe-kicker">
+              <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+              {notice.pinned && <span>{t('notice.pinned')}</span>}
+            </p>
+            <h2><a href={`/${vm.basePath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a></h2>
+            {notice.summary && <p class="fe-sum">{resolveText(notice.summary, locale)}</p>}
+            {notice.attachments.length > 0 && (
+              <p class="fe-files">
+                {notice.attachments.map(file => (
+                  <a href={file.url} download>{resolveText(file.label, locale)}</a>
+                ))}
+              </p>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-index { list-style: none; margin: 0; padding: 0; }
+  .fe-index li {
+    display: flex; align-items: baseline; gap: var(--fe-space-6);
+    padding-block: var(--fe-space-6);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  .fe-index li:first-child { border-block-start: 1px solid var(--fe-color-border); }
+
+  .fe-num {
+    flex: none; inline-size: 2.2rem;
+    color: var(--fe-color-accent);
+    font-size: var(--fe-size-2xs); font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+  }
+  .fe-entry { flex: 1; min-inline-size: 0; }
+
+  .fe-kicker {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-3); margin: 0;
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .fe-kicker span { color: var(--fe-color-accent); }
+
+  .fe-entry h2 {
+    margin: var(--fe-space-2) 0 0;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-xl);
+    font-weight: var(--fe-weight-semibold); line-height: 1.16; letter-spacing: -0.012em;
+  }
+  .fe-entry h2 a { color: inherit; text-decoration: none; }
+  .fe-entry h2 a:hover { color: var(--fe-color-accent); }
+
+  .fe-sum { margin: var(--fe-space-2) 0 0; max-inline-size: 46rem; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+
+  .fe-files { display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-6); margin: var(--fe-space-3) 0 0; }
+  .fe-files a {
+    color: var(--fe-color-text); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.16em;
+    border-block-end: 1px solid var(--fe-color-border); padding-block-end: 2px;
+  }
+  .fe-files a:hover { color: var(--fe-color-accent); border-block-end-color: currentColor; }
+
+  @media (max-width: 40rem) {
+    .fe-index li { gap: var(--fe-space-4); }
+    .fe-num { inline-size: 1.6rem; }
+  }
+</style>

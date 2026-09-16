@@ -3,6 +3,7 @@ export type { NoticeListViewModel } from './viewModel.js'
 
 /** Lazily loaded so a page ships only the design it actually uses. */
 export const variants = {
+  'broadsheet': () => import('./variants/broadsheet.astro'),
   'editorial': () => import('./variants/editorial.astro'),
   'table-dense': () => import('./variants/table-dense.astro'),
   'card-stack': () => import('./variants/card-stack.astro'),

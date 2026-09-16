@@ -1,0 +1,119 @@
+---
+import Container from '../../../ui/Container.astro'
+import Field from '../../../ui/Field.astro'
+import FormResult from '../../../ui/FormResult.astro'
+import Prose from '../../../ui/Prose.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { AdmissionFormViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: AdmissionFormViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { submission } = vm
+const errors = submission.errors
+const value = (field: string) => submission.values[field] ?? ''
+
+const intro = vm.info?.blocks.find(block => block.type === 'richtext')
+---
+<!-- The application form, with the rules printed in the column beside it. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  <div class="fe-apply">
+    <section aria-labelledby="h-apply">
+      <RuleHeading title={t('admission.apply')} id="h-apply" />
+
+      <form method="post" class="fe-form" novalidate>
+        <FormResult submission={submission} t={t} successMessage={t('admission.submitted')} />
+
+        <input type="hidden" name="_form" value="admission.application" />
+        <p class="fe-trap" aria-hidden="true">
+          <input name="_website" type="text" tabindex="-1" autocomplete="off" />
+        </p>
+
+        <div class="fe-pair">
+          <Field name="studentName" label={t('admission.student')} t={t} value={value('studentName')} error={errors.studentName} required autocomplete="name" />
+          <Field name="guardianName" label={t('admission.guardian')} t={t} value={value('guardianName')} error={errors.guardianName} required />
+        </div>
+
+        <div class="fe-pair">
+          <Field name="phone" label={t('contact.phone')} t={t} type="tel" value={value('phone')} error={errors.phone} required autocomplete="tel" inputmode="tel" />
+          <Field name="email" label={t('contact.email')} t={t} type="email" value={value('email')} error={errors.email} autocomplete="email" inputmode="email" />
+        </div>
+
+        <div class="fe-pair">
+          <p class="fe-field">
+            <label for="fe-class">{t('admission.class')}</label>
+            {vm.classes.length > 0 ? (
+              <select id="fe-class" name="classApplyingFor" required aria-invalid={errors.classApplyingFor ? 'true' : undefined}>
+                {vm.classes.map(entry => (
+                  <option value={resolveText(entry.label, locale)} selected={value('classApplyingFor') === resolveText(entry.label, locale)}>
+                    {resolveText(entry.label, locale)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input id="fe-class" name="classApplyingFor" type="text" value={value('classApplyingFor')} required />
+            )}
+            {errors.classApplyingFor && <span class="fe-error">{t(errors.classApplyingFor as never)}</span>}
+          </p>
+          <Field name="group" label={t('admission.group')} t={t} value={value('group')} error={errors.group} />
+        </div>
+
+        <div class="fe-pair">
+          <Field name="dateOfBirth" label={t('admission.dob')} t={t} type="date" value={value('dateOfBirth')} error={errors.dateOfBirth} />
+          <Field name="previousSchool" label={t('admission.previous')} t={t} value={value('previousSchool')} error={errors.previousSchool} />
+        </div>
+
+        <Field name="address" label={t('admission.address')} t={t} type="textarea" rows={3} value={value('address')} error={errors.address} />
+        <Field name="note" label={t('admission.note')} t={t} type="textarea" rows={3} value={value('note')} error={errors.note} />
+
+        <p><button type="submit">{t('form.send')}</button></p>
+      </form>
+    </section>
+
+    {intro && (
+      <aside>
+        <RuleHeading title={resolveText(vm.info?.title, locale)} />
+        <Prose html={resolveText(intro.html, locale)} />
+      </aside>
+    )}
+  </div>
+</Container>
+
+<style>
+  .fe-apply { display: grid; gap: var(--fe-space-12); align-items: start; }
+  @media (min-width: 60rem) {
+    .fe-apply { grid-template-columns: minmax(0, 1.6fr) minmax(16rem, 1fr); }
+    aside { padding-inline-start: var(--fe-space-12); border-inline-start: 1px solid var(--fe-color-border); }
+  }
+
+  .fe-form { display: grid; gap: var(--fe-space-4); align-content: start; }
+  .fe-form p { margin: 0; }
+  .fe-pair { display: grid; gap: var(--fe-space-4); }
+  @media (min-width: 30rem) { .fe-pair { grid-template-columns: 1fr 1fr; } }
+  .fe-trap { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  .fe-field { margin: 0; display: grid; gap: var(--fe-space-2); }
+  label { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-medium); }
+  select {
+    inline-size: 100%; padding: var(--fe-space-3);
+    border: 1px solid var(--fe-color-border);
+    background: var(--fe-color-bg); color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-sm);
+  }
+  .fe-error { color: var(--fe-color-danger); font-size: var(--fe-size-2xs); }
+
+  button {
+    justify-self: start;
+    padding: var(--fe-space-3) 0;
+    border: 0; border-block-end: 2px solid var(--fe-color-accent);
+    background: transparent; color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em; cursor: pointer;
+  }
+  button:hover { color: var(--fe-color-accent); }
+
+  aside :global(.fe-prose) { font-size: var(--fe-size-sm); line-height: 1.6; }
+</style>

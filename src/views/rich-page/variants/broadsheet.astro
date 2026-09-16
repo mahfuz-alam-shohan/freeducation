@@ -1,0 +1,120 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Photo from '../../../ui/Photo.astro'
+import Prose from '../../../ui/Prose.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { RichPageViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: RichPageViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!--
+  An editable page set as a feature: the prose runs in two columns with a rule
+  between them, tables are ruled rather than gridded, and a figure spans the measure.
+-->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  {vm.blocks.length === 0 ? <EmptyState message={t('page.empty')} /> : (
+    <div class="fe-blocks">
+      {vm.blocks.map(block => (
+        <>
+          {block.type === 'richtext' && (
+            <div class="fe-copy"><Prose html={resolveText(block.html, locale)} /></div>
+          )}
+
+          {block.type === 'image' && (
+            <figure class="fe-cut">
+              <Photo image={block.image} locale={locale} width={1200} height={750} sizes="(max-width: 64rem) 100vw, 52rem" />
+              {block.caption && <figcaption>{resolveText(block.caption, locale)}</figcaption>}
+            </figure>
+          )}
+
+          {block.type === 'table' && (
+            <div class="fe-scroll">
+              <table>
+                {block.header && block.rows[0] && (
+                  <thead><tr>{block.rows[0].map(cell => <th scope="col">{resolveText(cell, locale)}</th>)}</tr></thead>
+                )}
+                <tbody>
+                  {block.rows.slice(block.header ? 1 : 0).map(row => (
+                    <tr>{row.map(cell => <td>{resolveText(cell, locale)}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {block.type === 'files' && (
+            <ul class="fe-files">
+              {block.files.map(file => (
+                <li><a href={file.url} download>{resolveText(file.label, locale)}</a></li>
+              ))}
+            </ul>
+          )}
+
+          {block.type === 'people' && (
+            <ul class="fe-people">
+              {(vm.peopleByGroup[block.group] ?? []).map(person => (
+                <li>
+                  <strong>{resolveText(person.name, locale)}</strong>
+                  {person.designation && <span>{resolveText(person.designation, locale)}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ))}
+    </div>
+  )}
+</Container>
+
+<style>
+  .fe-blocks { display: grid; gap: var(--fe-space-8); max-inline-size: 52rem; }
+
+  .fe-copy :global(.fe-prose) { font-size: var(--fe-size-sm); line-height: 1.62; }
+  @media (min-width: 44rem) {
+    .fe-copy :global(.fe-prose) {
+      columns: 2; column-gap: var(--fe-space-12); column-rule: 1px solid var(--fe-rule-hair);
+      text-align: justify; hyphens: auto;
+    }
+  }
+
+  .fe-cut { margin: 0; }
+  .fe-cut :global(.fe-photo) { display: block; inline-size: 100%; filter: saturate(0.82) contrast(1.04); }
+  .fe-cut figcaption {
+    margin-block-start: var(--fe-space-2); padding-block-start: var(--fe-space-2);
+    border-block-start: 1px solid var(--fe-rule-hair);
+    color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+
+  .fe-scroll { overflow-x: auto; }
+  table { inline-size: 100%; border-collapse: collapse; font-size: var(--fe-size-sm); }
+  th, td { text-align: start; padding: var(--fe-space-3) var(--fe-space-4) var(--fe-space-3) 0; }
+  th {
+    border-block-end: 1px solid var(--fe-color-border);
+    font-family: var(--fe-font-body);
+    font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em; white-space: nowrap;
+  }
+  tbody tr + tr td { border-block-start: 1px solid var(--fe-rule-hair); }
+
+  .fe-files, .fe-people { list-style: none; margin: 0; padding: 0; border-block-start: 1px solid var(--fe-color-border); }
+  .fe-files li, .fe-people li { border-block-start: 1px solid var(--fe-rule-hair); }
+  .fe-files li:first-child, .fe-people li:first-child { border-block-start: 0; }
+
+  .fe-files a {
+    display: block; padding-block: var(--fe-space-3);
+    color: var(--fe-color-text); text-decoration: none;
+    font-family: var(--fe-font-heading); font-size: var(--fe-size-sm);
+  }
+  .fe-files a:hover { color: var(--fe-color-accent); }
+
+  .fe-people li { display: flex; align-items: baseline; justify-content: space-between; gap: var(--fe-space-4); padding-block: var(--fe-space-3); }
+  .fe-people strong { font-family: var(--fe-font-heading); font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); }
+  .fe-people span { color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.16em; text-align: end; }
+</style>

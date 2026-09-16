@@ -1,0 +1,66 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Photo from '../../../ui/Photo.astro'
+import Prose from '../../../ui/Prose.astro'
+import type { EventDetailViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatTime, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: EventDetailViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+const { event } = vm
+---
+<!-- One event, set as a story with its particulars on a ruled line under the headline. -->
+<Container>
+  {!event ? <EmptyState message={t('page.notFoundBody')} /> : (
+    <article class="fe-story">
+      <p class="fe-kicker"><time datetime={event.startsAt}>{formatDate(event.startsAt, locale)}</time></p>
+      <h1>{resolveText(event.title, locale)}</h1>
+
+      <p class="fe-particulars">
+        <span>{formatTime(event.startsAt, locale)}</span>
+        {event.location && <span>{resolveText(event.location, locale)}</span>}
+      </p>
+
+      {event.cover && (
+        <figure class="fe-cut">
+          <Photo image={event.cover} locale={locale} width={1200} height={600} sizes="(max-width: 64rem) 100vw, 46rem" eager />
+        </figure>
+      )}
+
+      {event.description && <div class="fe-body"><Prose html={resolveText(event.description, locale)} /></div>}
+
+      <a class="fe-back" href={`/${vm.backPath}`}>{t('common.viewAll')}</a>
+    </article>
+  )}
+</Container>
+
+<style>
+  .fe-story { max-inline-size: 46rem; }
+  .fe-kicker { margin: 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em; }
+  .fe-story h1 {
+    margin: var(--fe-space-3) 0 0;
+    font-family: var(--fe-font-heading);
+    font-size: clamp(1.8rem, 3.2vw, 2.5rem); font-weight: var(--fe-weight-semibold);
+    line-height: 1.08; letter-spacing: -0.02em;
+  }
+  .fe-particulars {
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-6);
+    margin: var(--fe-space-4) 0 0; padding-block: var(--fe-space-3);
+    border-block: 1px solid var(--fe-color-border);
+    color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  .fe-cut { margin: var(--fe-space-6) 0 0; }
+  .fe-cut :global(.fe-photo) { display: block; inline-size: 100%; aspect-ratio: 2 / 1; object-fit: cover; filter: saturate(0.82) contrast(1.04); }
+  .fe-body { margin-block-start: var(--fe-space-6); }
+  .fe-body :global(.fe-prose) { font-size: var(--fe-size-base); line-height: 1.62; }
+  .fe-back {
+    display: inline-block; margin-block-start: var(--fe-space-8);
+    color: var(--fe-color-textMuted); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em;
+    border-block-end: 1px solid var(--fe-color-border); padding-block-end: 3px;
+  }
+  .fe-back:hover { color: var(--fe-color-accent); }
+</style>

@@ -117,6 +117,47 @@ if (Object.keys(designs).length > 0) {
   }
 }
 
+// ---------------------------------------------------------------- class names
+// A :global() rule in the shell applies everywhere, including inside a variant's own
+// markup. When a variant then styles the same class name, the shell's declarations it
+// did not think to reset are still in force — a header laid out as a flex row because
+// something else already claimed '.fe-masthead'. The names have to stay distinct.
+const globalClasses = new Map()
+const declared = /:global\(\s*\.([a-zA-Z0-9_-]+)/g
+
+for (const area of ['src/ui', 'src/sections', 'src/layouts']) {
+  if (!existsSync(join(root, area))) continue
+  for (const file of readdirSync(join(root, area))) {
+    if (!file.endsWith('.astro')) continue
+    for (const [, name] of read(`${area}/${file}`).matchAll(declared)) {
+      if (!globalClasses.has(name)) globalClasses.set(name, `${area}/${file}`)
+    }
+  }
+}
+
+for (const view of viewDirs) {
+  const dir = join(root, 'src/views', view, 'variants')
+  if (!existsSync(dir)) continue
+
+  for (const file of readdirSync(dir).filter((name) => name.endsWith('.astro'))) {
+    const source = read(`src/views/${view}/variants/${file}`)
+    const styles = source.slice(source.indexOf('<style'))
+
+    for (const [name, owner] of globalClasses) {
+      // Only a scoped declaration is a problem; targeting it through :global() is how a
+      // variant is meant to reach a shared component on purpose.
+      const scoped = new RegExp(`(^|[\\s,{}])\\.${name}(?![a-zA-Z0-9_-])`, 'm')
+      const stripped = styles.replace(/:global\([^)]*\)/g, '')
+      if (scoped.test(stripped)) {
+        fail(
+          `src/views/${view}/variants/${file} styles '.${name}', which ${owner} declares `
+          + `:global — the shell's rules would still apply. Rename the local one.`,
+        )
+      }
+    }
+  }
+}
+
 // ---------------------------------------------------------------- translations
 const catalogNames = readdirSync(join(root, 'src/i18n/catalogs')).filter((f) => f.endsWith('.json'))
 const catalogs = catalogNames.map((name) => [name, JSON.parse(read(`src/i18n/catalogs/${name}`))])

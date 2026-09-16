@@ -1,0 +1,94 @@
+---
+import Container from '../../../ui/Container.astro'
+import EmptyState from '../../../ui/EmptyState.astro'
+import Pagination from '../../../ui/Pagination.astro'
+import RuleHeading from '../../../ui/RuleHeading.astro'
+import type { SearchViewModel } from '../viewModel.js'
+import type { Locale } from '../../../contracts/index.js'
+import { formatDate, formatNumber, resolveText, type Translator } from '../../../i18n/index.js'
+
+interface Props { vm: SearchViewModel; locale: Locale; t: Translator }
+const { vm, locale, t }: Props = Astro.props
+---
+<!-- A ruled search line and a numbered list of what it found. -->
+<Container>
+  <RuleHeading title={resolveText(vm.title, locale)} level="page" major />
+
+  <form class="fe-searchbox" method="get" action={`/${vm.basePath}`} role="search">
+    <label for="q">{t('search.placeholder')}</label>
+    <input id="q" name="q" type="search" value={vm.query} placeholder={t('search.placeholder')} />
+    <button type="submit">{t('common.search')}</button>
+  </form>
+
+  {!vm.query && <EmptyState message={t('search.prompt')} />}
+  {vm.query && vm.hits.length === 0 && <EmptyState message={t('search.empty')} />}
+
+  {vm.hits.length > 0 && (
+    <>
+      <p class="fe-count">{t('search.results')} · {formatNumber(vm.total, locale)}</p>
+      <ol class="fe-hits">
+        {vm.hits.map((hit, index) => (
+          <li>
+            <span class="fe-num">{formatNumber((vm.page - 1) * vm.pageSize + index + 1, locale)}</span>
+            <div>
+              <h2><a href={`/${hit.path}`}>{resolveText(hit.title, locale)}</a></h2>
+              {hit.snippet && <p>{resolveText(hit.snippet, locale)}</p>}
+              <p class="fe-path">
+                /{hit.path}
+                {hit.date && <time datetime={hit.date}>{formatDate(hit.date, locale)}</time>}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </>
+  )}
+
+  <Pagination
+    page={vm.page} pageSize={vm.pageSize} total={vm.total} basePath={vm.basePath}
+    labels={{ previous: t('common.previous'), next: t('common.next'), page: t('common.page') }}
+  />
+</Container>
+
+<style>
+  .fe-searchbox {
+    display: grid; gap: var(--fe-space-2);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    max-inline-size: 38rem; margin-block-end: var(--fe-space-8);
+  }
+  label { grid-column: 1 / -1; color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em; }
+  input {
+    padding: var(--fe-space-3) 0;
+    border: 0; border-block-end: 1px solid var(--fe-color-border);
+    background: transparent; color: var(--fe-color-text);
+    font: inherit; font-family: var(--fe-font-heading); font-size: var(--fe-size-lg);
+  }
+  input:focus-visible { outline: 0; border-block-end-color: var(--fe-color-accent); }
+  button {
+    padding: var(--fe-space-3) 0 var(--fe-space-3) var(--fe-space-6);
+    border: 0; border-block-end: 1px solid var(--fe-color-border);
+    background: transparent; color: var(--fe-color-text);
+    font: inherit; font-size: var(--fe-size-3xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.18em; cursor: pointer;
+  }
+  button:hover { color: var(--fe-color-accent); }
+
+  .fe-count { margin: 0 0 var(--fe-space-4); color: var(--fe-color-textMuted); font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.2em; }
+
+  .fe-hits { list-style: none; margin: 0; padding: 0; }
+  .fe-hits li {
+    display: flex; align-items: baseline; gap: var(--fe-space-6);
+    padding-block: var(--fe-space-5);
+    border-block-start: 1px solid var(--fe-rule-hair);
+  }
+  .fe-hits li:first-child { border-block-start: 1px solid var(--fe-color-border); }
+  .fe-num { flex: none; inline-size: 2.2rem; color: var(--fe-color-accent); font-size: var(--fe-size-2xs); font-variant-numeric: tabular-nums; }
+  .fe-hits div { flex: 1; min-inline-size: 0; }
+
+  .fe-hits h2 { margin: 0; font-family: var(--fe-font-heading); font-size: var(--fe-size-lg); font-weight: var(--fe-weight-semibold); line-height: var(--fe-leading-snug); }
+  .fe-hits h2 a { color: inherit; text-decoration: none; }
+  .fe-hits h2 a:hover { color: var(--fe-color-accent); }
+  .fe-hits p { margin: var(--fe-space-2) 0 0; color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug); }
+  .fe-path { display: flex; flex-wrap: wrap; gap: var(--fe-space-4); font-size: var(--fe-size-3xs) !important; text-transform: uppercase; letter-spacing: 0.14em; }
+</style>
