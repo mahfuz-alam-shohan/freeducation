@@ -31,7 +31,17 @@ const pages = [
   ['administration', '/administration'],
   ['teachers', '/administration/teachers'],
   ['about', '/about'],
+  ['history', '/about/history'],
   ['facilities', '/about/facilities'],
+  ['principal', '/administration/principal'],
+  ['staff', '/administration/staff'],
+  ['academics', '/academics'],
+  ['syllabus', '/academics/syllabus'],
+  ['academic-calendar', '/academics/calendar'],
+  ['admission', '/admission'],
+  ['fees', '/admission/fees'],
+  ['notice-academic', '/notice/academic'],
+  ['career', '/career'],
   ['routine', '/academics/routine'],
   ['results-form', '/results'],
   ['results-found', '/results?exam=half-yearly-2026&roll=101'],
@@ -47,10 +57,11 @@ const pages = [
 ]
 
 const viewports = [
-  { name: 'desktop', width: 1280, height: 900 },
+  { name: 'desktop', width: 1440, height: 900 },
+  { name: 'tablet', width: 834, height: 1112 },
   { name: 'phone', width: 390, height: 844 },
   // Dark is a supported theme, so it gets reviewed like any other.
-  { name: 'dark', width: 1280, height: 900, theme: 'dark' },
+  { name: 'dark', width: 1440, height: 900, theme: 'dark' },
 ]
 
 mkdirSync(outDir, { recursive: true })
