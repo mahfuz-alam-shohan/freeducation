@@ -1,4 +1,4 @@
-# Freeducation — A Dynamic Website Platform for Schools
+# Institution Website Templates
 
 One codebase. Many schools. Different designs for each. Content from an external API.
 

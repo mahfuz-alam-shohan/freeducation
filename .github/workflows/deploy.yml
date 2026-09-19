@@ -53,7 +53,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: >-
             deploy -c dist/server/wrangler.json
-            --name freeducation-${{ matrix.school }}
+            --name institution-website-templates-${{ matrix.school }}
           secrets: |
             CONTENT_API_KEY
         env:

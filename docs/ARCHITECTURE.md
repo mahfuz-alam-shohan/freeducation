@@ -323,8 +323,9 @@ API cannot produce sized variants, putting an image CDN in front of it is the ne
 
 ## Deployment
 
-Each school is a separate Cloudflare Worker named `freeducation-<slug>`, built with its
-own `PUBLIC_SCHOOL` and therefore carrying only its own designs.
+Each school is a separate Cloudflare Worker named
+`institution-website-templates-<slug>`, built with its own `PUBLIC_SCHOOL` and
+therefore carrying only its own designs.
 
 `.github/workflows/deploy.yml` builds and deploys on every push to `main`. It needs
 `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets, and skips with
