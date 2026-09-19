@@ -31,7 +31,6 @@ const { vm, locale, t }: Props = Astro.props
               {notice.pinned && <span>{t('notice.pinned')}</span>}
             </p>
             <h2><a href={`/${vm.basePath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a></h2>
-            {notice.summary && <p class="fe-sum">{resolveText(notice.summary, locale)}</p>}
             {notice.attachments.length > 0 && (
               <p class="fe-files">
                 {notice.attachments.map(file => (

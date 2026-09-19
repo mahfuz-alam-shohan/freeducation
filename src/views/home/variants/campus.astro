@@ -3,7 +3,9 @@ import Band from '../../../ui/Band.astro'
 import Container from '../../../ui/Container.astro'
 import EmptyState from '../../../ui/EmptyState.astro'
 import Icon from '../../../ui/Icon.astro'
+import NoticeList from '../../../ui/NoticeList.astro'
 import Photo from '../../../ui/Photo.astro'
+import Slideshow from '../../../ui/Slideshow.astro'
 import type { IconName } from '../../../ui/Icon.astro'
 import type { HomeViewModel } from '../viewModel.js'
 import type { Locale, ViewType } from '../../../contracts/index.js'
@@ -12,7 +14,11 @@ import { formatDate, resolveText, toPlainText, type Translator } from '../../../
 interface Props { vm: HomeViewModel; locale: Locale; t: Translator }
 const { vm, locale, t }: Props = Astro.props
 
-const notices = vm.notices.slice(0, 5)
+const notices = vm.notices.slice(0, 6)
+// A slideshow if the school supplies one; otherwise its cover photograph as a single frame.
+const slides = vm.profile.slides.length > 0
+  ? vm.profile.slides
+  : vm.profile.cover ? [{ image: vm.profile.cover, title: vm.profile.name, caption: vm.profile.tagline }] : []
 const messageText = vm.message?.blocks.find(block => block.type === 'richtext')
 const excerpt = messageText ? toPlainText(resolveText(messageText.html, locale), 260) : ''
 
@@ -31,21 +37,7 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
   page as a stack of full-width bands that alternate plain and tinted. Square corners,
   one deep blue, one warm accent, and the photography doing the persuading.
 -->
-<section class="fe-hero">
-  <div class="fe-hero-media">
-    <Photo image={vm.profile.cover} locale={locale} width={1800} height={1000} eager sizes="100vw" />
-  </div>
-  <Container>
-    <div class="fe-hero-card">
-      <p class="fe-estd">
-        {vm.profile.established && <span>{t('common.since')} {vm.profile.established}</span>}
-        {vm.profile.eiin && <span>{t('common.eiin')} {vm.profile.eiin}</span>}
-      </p>
-      <h1>{resolveText(vm.profile.name, locale)}</h1>
-      {vm.profile.tagline && <p class="fe-tag">{resolveText(vm.profile.tagline, locale)}</p>}
-    </div>
-  </Container>
-</section>
+<Slideshow slides={slides} locale={locale} t={t} />
 
 {vm.quickLinks.length > 0 && (
   <nav class="fe-actions" aria-label={t('common.quickLinks')}>
@@ -74,17 +66,7 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
       </header>
 
       {notices.length === 0 ? <EmptyState message={t('notice.empty')} /> : (
-        <ul class="fe-notices">
-          {notices.map(notice => (
-            <li>
-              <a href={`/${vm.noticesPath}/${notice.slug}`}>
-                <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
-                <strong>{resolveText(notice.title, locale)}</strong>
-                {notice.summary && <span>{resolveText(notice.summary, locale)}</span>}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <NoticeList notices={notices} basePath={vm.noticesPath} locale={locale} t={t} />
       )}
     </section>
 
@@ -158,44 +140,8 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
 )}
 
 <style>
-  /* ---------- hero ---------- */
-  .fe-hero {
-    position: relative; isolation: isolate;
-    display: flex; align-items: flex-end;
-    /* Flush under the navigation: cancel the main element's top padding. */
-    margin-block-start: calc(var(--fe-space-8) * -1);
-    min-block-size: clamp(24rem, 66vh, 40rem);
-  }
-  .fe-hero-media { position: absolute; inset: 0; z-index: -2; overflow: hidden; background: var(--fe-color-primary); }
-  .fe-hero-media :global(.fe-photo) { inline-size: 100%; block-size: 100%; object-fit: cover; object-position: 50% 45%; }
-  .fe-hero::after {
-    content: ''; position: absolute; inset-inline: 0; inset-block-end: 0; z-index: -1;
-    block-size: 45%;
-    background: var(--fe-gradient-veil);
-  }
-
-  .fe-hero-card {
-    max-inline-size: 42rem;
-    margin-block-end: calc(var(--fe-space-16) * -1);
-    padding: var(--fe-space-8);
-    background: var(--fe-color-primary); color: var(--fe-color-primaryText);
-    border-block-start: 4px solid var(--fe-color-accent);
-  }
-  .fe-estd {
-    display: flex; flex-wrap: wrap; gap: var(--fe-space-2) var(--fe-space-6);
-    margin: 0; font-size: var(--fe-size-3xs);
-    text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.78;
-  }
-  .fe-hero-card h1 {
-    margin: var(--fe-space-3) 0 0;
-    font-family: var(--fe-font-body);
-    font-size: clamp(1.9rem, 4vw, 3rem); font-weight: var(--fe-weight-semibold);
-    line-height: 1.06; letter-spacing: -0.025em;
-  }
-  .fe-tag { margin: var(--fe-space-3) 0 0; font-size: var(--fe-size-base); opacity: 0.86; }
-
   /* ---------- action strip ---------- */
-  .fe-actions { padding-block: calc(var(--fe-space-16) + var(--fe-space-8)) var(--fe-space-12); }
+  .fe-actions { padding-block: var(--fe-space-12); }
   .fe-actions ul {
     list-style: none; margin: 0; padding: 0;
     display: grid; gap: var(--fe-space-4);
@@ -239,21 +185,21 @@ const iconFor = (view: ViewType): IconName => SHORTCUT_ICON[view] ?? 'arrow-righ
   .fe-split { display: grid; gap: var(--fe-space-12); }
   @media (min-width: 60rem) { .fe-split { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }
 
-  .fe-notices, .fe-diary ul { list-style: none; margin: 0; padding: 0; }
-  .fe-notices a, .fe-diary a {
+  .fe-diary ul { list-style: none; margin: 0; padding: 0; }
+  .fe-diary li a {
     display: grid; gap: var(--fe-space-2);
     padding-block: var(--fe-space-6);
     border-block-end: 1px solid var(--fe-rule-hair);
     text-decoration: none; color: var(--fe-color-text);
   }
-  .fe-notices li:first-child a, .fe-diary li:first-child a { padding-block-start: 0; }
-  .fe-notices time, .fe-diary time {
+  .fe-diary li:first-child a { padding-block-start: 0; }
+  .fe-diary li time {
     color: var(--fe-color-accent); font-size: var(--fe-size-2xs);
     font-weight: var(--fe-weight-semibold); text-transform: uppercase; letter-spacing: 0.14em;
   }
-  .fe-notices strong, .fe-diary strong { font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
-  .fe-notices a:hover strong, .fe-diary a:hover strong { color: var(--fe-color-primary); }
-  .fe-notices span, .fe-diary span {
+  .fe-diary li strong { font-size: var(--fe-size-base); font-weight: var(--fe-weight-medium); line-height: var(--fe-leading-snug); }
+  .fe-diary li a:hover strong { color: var(--fe-color-primary); }
+  .fe-diary li span {
     display: flex; align-items: center; gap: 5px;
     color: var(--fe-color-textMuted); font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug);
   }

@@ -35,6 +35,7 @@ const { title, subtitle, id }: Props = Astro.props
     font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: var(--fe-weight-semibold);
     line-height: 1.1; letter-spacing: -0.02em;
   }
+  @media (max-width: 47.99rem) { .fe-banner { padding-block: var(--fe-space-8); } }
   .fe-banner p {
     margin: var(--fe-space-3) 0 0; max-inline-size: 52ch;
     font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug);

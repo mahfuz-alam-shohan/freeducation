@@ -13,6 +13,31 @@ export const profile: SchoolProfile = {
   phones: ['+880 2 9876543', '+880 1711 223344'],
   emails: ['info@adarsha.edu.bd'],
   social: { facebook: 'https://facebook.com/example', youtube: 'https://youtube.com/@example' },
+  slides: [
+    {
+      image: { url: '/sample/hero.jpg', width: 1600, height: 900, variants: [] },
+      title: t('আদর্শ স্কুল অ্যান্ড কলেজ', 'Adarsha School & College'),
+      caption: t('১৯৬৫ সাল থেকে জ্ঞানের আলো ছড়িয়ে দিচ্ছে', 'Spreading the light of knowledge since 1965'),
+    },
+    {
+      image: { url: '/sample/plate-4.jpg', width: 900, height: 620, variants: [] },
+      title: t('শ্রেণিকক্ষে', 'In the classroom'),
+      caption: t('ছয়টি শ্রেণিতে চার হাজারের বেশি শিক্ষার্থী', 'More than four thousand students across six classes'),
+      href: 'about',
+    },
+    {
+      image: { url: '/sample/plate-2.jpg', width: 900, height: 620, variants: [] },
+      title: t('বিজ্ঞান মেলা ২০২৬', 'Science Fair 2026'),
+      caption: t('প্রকল্প জমা দেওয়ার শেষ তারিখ ২৫ অক্টোবর', 'Projects must be submitted by 25 October'),
+      href: 'notice/science-fair-call',
+    },
+    {
+      image: { url: '/sample/plate-1.jpg', width: 900, height: 620, variants: [] },
+      title: t('বার্ষিক ক্রীড়া প্রতিযোগিতা', 'Annual Sports'),
+      caption: t('১৮ ডিসেম্বর, কলেজ মাঠে', '18 December, on the college ground'),
+      href: 'gallery/annual-sports-2026',
+    },
+  ],
 }
 
 export const stats: Stat[] = [

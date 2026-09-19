@@ -1,0 +1,216 @@
+---
+import Icon from './Icon.astro'
+import Photo from './Photo.astro'
+import type { Locale, Slide } from '../contracts/index.js'
+import { resolveText, type Translator } from '../i18n/index.js'
+
+/**
+ * The homepage slideshow every institutional site here opens with.
+ *
+ * Built on scroll-snap, so without JavaScript it is still a working, swipeable strip
+ * of photographs with real links in it — the script only adds the timer and keeps the
+ * dots in step. Nothing is hidden behind a script that a visitor cannot reach.
+ */
+interface Props {
+  slides: Slide[]
+  locale: Locale
+  t: Translator
+  /** Seconds between frames. 0 turns the timer off. */
+  interval?: number | undefined
+  class?: string | undefined
+}
+const { slides, locale, t, interval = 6, class: className }: Props = Astro.props
+const id = `fe-slides-${Math.random().toString(36).slice(2, 8)}`
+---
+{slides.length > 0 && (
+  <section
+    class:list={['fe-show', className]}
+    id={id}
+    data-fe-slideshow
+    data-interval={interval}
+    aria-roledescription="carousel"
+    aria-label={t('home.gallery')}
+  >
+    <ul class="fe-frames">
+      {slides.map((slide, index) => (
+        <li
+          id={`${id}-${index}`}
+          aria-roledescription="slide"
+          aria-label={`${index + 1} / ${slides.length}`}
+        >
+          <Photo
+            image={slide.image} locale={locale}
+            width={1800} height={900}
+            eager={index === 0} sizes="100vw"
+          />
+          {(slide.title || slide.caption) && (
+            <div class="fe-frame-copy">
+              <div>
+                {slide.title && <h2>{resolveText(slide.title, locale)}</h2>}
+                {slide.caption && <p>{resolveText(slide.caption, locale)}</p>}
+                {slide.href && (
+                  <a href={`/${slide.href}`}>{t('common.readMore')}<Icon name="arrow-right" size={15} /></a>
+                )}
+              </div>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+
+    {slides.length > 1 && (
+      <>
+        <button type="button" class="fe-arrow fe-prev" data-fe-slide-prev aria-label={t('common.previous')}>
+          <Icon name="chevron-down" size={22} />
+        </button>
+        <button type="button" class="fe-arrow fe-next" data-fe-slide-next aria-label={t('common.next')}>
+          <Icon name="chevron-down" size={22} />
+        </button>
+
+        <nav class="fe-dots" aria-label={t('common.page')}>
+          {slides.map((_, index) => (
+            <a href={`#${id}-${index}`} data-fe-slide-dot={index} aria-label={`${index + 1}`}>
+              <span></span>
+            </a>
+          ))}
+        </nav>
+      </>
+    )}
+  </section>
+)}
+
+<script>
+  for (const show of document.querySelectorAll<HTMLElement>('[data-fe-slideshow]')) {
+    const strip = show.querySelector<HTMLElement>('.fe-frames')
+    const frames = [...show.querySelectorAll<HTMLElement>('.fe-frames > li')]
+    const dots = [...show.querySelectorAll<HTMLElement>('[data-fe-slide-dot]')]
+    if (!strip || frames.length < 2) continue
+
+    let index = 0
+    const still = matchMedia('(prefers-reduced-motion: reduce)')
+
+    const show_ = (next: number, smooth = true) => {
+      index = (next + frames.length) % frames.length
+      strip.scrollTo({ left: strip.clientWidth * index, behavior: smooth && !still.matches ? 'smooth' : 'auto' })
+      mark()
+    }
+    const mark = () => {
+      for (const [at, dot] of dots.entries()) {
+        dot.setAttribute('aria-current', at === index ? 'true' : 'false')
+      }
+    }
+
+    show.querySelector('[data-fe-slide-prev]')?.addEventListener('click', () => show_(index - 1))
+    show.querySelector('[data-fe-slide-next]')?.addEventListener('click', () => show_(index + 1))
+    for (const [at, dot] of dots.entries()) {
+      dot.addEventListener('click', event => { event.preventDefault(); show_(at) })
+    }
+
+    // Keep the dots honest when the strip is swiped rather than clicked.
+    strip.addEventListener('scroll', () => {
+      const at = Math.round(strip.scrollLeft / strip.clientWidth)
+      if (at !== index) { index = at; mark() }
+    }, { passive: true })
+
+    const seconds = Number(show.dataset.interval ?? 0)
+    if (seconds > 0 && !still.matches) {
+      let timer = setInterval(() => show_(index + 1), seconds * 1000)
+      const stop = () => clearInterval(timer)
+      const start = () => { stop(); timer = setInterval(() => show_(index + 1), seconds * 1000) }
+      // A visitor reading a frame is not asking for the next one.
+      show.addEventListener('mouseenter', stop)
+      show.addEventListener('mouseleave', start)
+      show.addEventListener('focusin', stop)
+      show.addEventListener('focusout', start)
+      document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()))
+    }
+
+    mark()
+  }
+</script>
+
+<style>
+  .fe-show { position: relative; isolation: isolate; background: var(--fe-color-primary); }
+
+  .fe-frames {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; overflow-x: auto;
+    scroll-snap-type: x mandatory; scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  .fe-frames::-webkit-scrollbar { display: none; }
+  .fe-frames > li {
+    position: relative; flex: 0 0 100%; scroll-snap-align: start;
+  }
+  .fe-frames :global(.fe-photo) {
+    display: block; inline-size: 100%;
+    block-size: clamp(15rem, 52vw, 30rem);
+    object-fit: cover;
+  }
+
+  .fe-frame-copy {
+    position: absolute; inset-inline: 0; inset-block-end: 0;
+    padding: var(--fe-space-16) var(--fe-space-4) var(--fe-space-8);
+    background: var(--fe-gradient-stage);
+    color: var(--fe-color-primaryText);
+  }
+  .fe-frame-copy > div {
+    inline-size: 100%; max-inline-size: var(--fe-container-max); margin-inline: auto;
+  }
+  .fe-frame-copy h2 {
+    margin: 0; max-inline-size: 24ch;
+    font-size: clamp(1.15rem, 2.6vw, 2rem); font-weight: var(--fe-weight-semibold);
+    line-height: 1.12; letter-spacing: -0.02em;
+    text-shadow: var(--fe-shadow-displayText);
+  }
+  .fe-frame-copy p {
+    margin: var(--fe-space-2) 0 0; max-inline-size: 52ch;
+    font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug);
+    text-shadow: var(--fe-shadow-displayText);
+  }
+  .fe-frame-copy a {
+    display: inline-flex; align-items: center; gap: var(--fe-space-2);
+    margin-block-start: var(--fe-space-4);
+    padding: var(--fe-space-3) var(--fe-space-6);
+    background: var(--fe-color-accent); color: var(--fe-color-primaryText);
+    text-decoration: none;
+    font-size: var(--fe-size-2xs); font-weight: var(--fe-weight-semibold);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .fe-frame-copy a:hover { filter: brightness(1.08); }
+
+  .fe-arrow {
+    position: absolute; inset-block-start: 50%; transform: translateY(-50%);
+    display: grid; place-items: center;
+    inline-size: 40px; block-size: 56px;
+    border: 0; cursor: pointer;
+    background: var(--fe-color-scrim); color: var(--fe-color-primaryText);
+    transition: background-color 200ms ease;
+  }
+  .fe-arrow:hover { background: var(--fe-color-primary); }
+  .fe-prev { inset-inline-start: 0; }
+  .fe-next { inset-inline-end: 0; }
+  .fe-prev :global(.fe-icon) { transform: rotate(90deg); }
+  .fe-next :global(.fe-icon) { transform: rotate(-90deg); }
+
+  .fe-dots {
+    position: absolute; inset-block-end: var(--fe-space-3); inset-inline: 0;
+    display: flex; justify-content: center; gap: var(--fe-space-2);
+  }
+  .fe-dots a { display: block; padding: var(--fe-space-2); }
+  .fe-dots span {
+    display: block; inline-size: 26px; block-size: 3px;
+    background: var(--fe-color-onPrimarySurface);
+    transition: background-color 200ms ease;
+  }
+  .fe-dots a[aria-current='true'] span { background: var(--fe-color-accent); }
+
+  @media (max-width: 40rem) {
+    .fe-arrow { display: none; }
+    .fe-frame-copy { padding-block: var(--fe-space-12) var(--fe-space-8); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fe-frames { scroll-behavior: auto; }
+    .fe-arrow, .fe-dots span { transition: none; }
+  }
+</style>

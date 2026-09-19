@@ -29,7 +29,6 @@ const { vm, locale, t }: Props = Astro.props
           <li>
             <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
             <a href={`/${vm.noticesPath}/${notice.slug}`}>{resolveText(notice.title, locale)}</a>
-            {notice.summary && <p>{resolveText(notice.summary, locale)}</p>}
           </li>
         ))}
       </ol>

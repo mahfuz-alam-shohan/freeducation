@@ -59,6 +59,41 @@ Example response:
     "height": 900,
     "variants": []
   },
+  "slides": [
+    {
+      "image": {
+        "url": "/sample/hero.jpg",
+        "width": 1600,
+        "height": 900,
+        "variants": []
+      },
+      "title": {
+        "bn": "আদর্শ স্কুল অ্যান্ড কলেজ",
+        "en": "Adarsha School & College"
+      },
+      "caption": {
+        "bn": "১৯৬৫ সাল থেকে জ্ঞানের আলো ছড়িয়ে দিচ্ছে",
+        "en": "Spreading the light of knowledge since 1965"
+      }
+    },
+    {
+      "image": {
+        "url": "/sample/plate-4.jpg",
+        "width": 900,
+        "height": 620,
+        "variants": []
+      },
+      "title": {
+        "bn": "শ্রেণিকক্ষে",
+        "en": "In the classroom"
+      },
+      "caption": {
+        "bn": "ছয়টি শ্রেণিতে চার হাজারের বেশি শিক্ষার্থী",
+        "en": "More than four thousand students across six classes"
+      },
+      "href": "about"
+    }
+  ],
   "address": {
     "bn": "১২ কলেজ রোড, ধানমন্ডি, ঢাকা ১২০৫",
     "en": "12 College Road, Dhanmondi, Dhaka 1205"

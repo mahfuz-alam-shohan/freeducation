@@ -1,6 +1,23 @@
 import { z } from 'zod'
 import { Attachment, Image, IsoDate, LocalizedText } from './primitives.js'
 
+/**
+ * One frame of the homepage slideshow.
+ *
+ * Every institutional site in Bangladesh opens on a rotating set of photographs —
+ * the building, a prize day, a new laboratory — usually with a line of text over it
+ * and somewhere to go. This is that, as content the school supplies rather than
+ * decoration the design invents.
+ */
+export const Slide = z.object({
+  image: Image,
+  title: LocalizedText.optional(),
+  caption: LocalizedText.optional(),
+  /** Where the frame leads, if anywhere. Site-relative, no leading slash. */
+  href: z.string().optional(),
+})
+export type Slide = z.infer<typeof Slide>
+
 export const SchoolProfile = z.object({
   name: LocalizedText,
   shortName: LocalizedText.optional(),
@@ -10,6 +27,8 @@ export const SchoolProfile = z.object({
   logo: Image.optional(),
   /** A wide photograph for designs that open with one. */
   cover: Image.optional(),
+  /** The homepage slideshow. Designs that open on one still fall back to `cover`. */
+  slides: z.array(Slide).default([]),
   address: LocalizedText.optional(),
   phones: z.array(z.string()).default([]),
   emails: z.array(z.string()).default([]),

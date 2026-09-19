@@ -78,6 +78,7 @@ Sent once and used everywhere: the header, the footer, the contact page, the bro
 | `established` | optional | text |  |
 | `logo` | optional | image |  |
 | `cover` | optional | image |  |
+| `slides` | optional | list of value |  |
 | `address` | optional | bilingual text |  |
 | `phones` | optional | list of text |  |
 | `emails` | optional | list of text |  |

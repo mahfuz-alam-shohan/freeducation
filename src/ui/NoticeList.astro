@@ -1,0 +1,104 @@
+---
+import Icon from './Icon.astro'
+import type { Locale, Notice } from '../contracts/index.js'
+import { formatDate, formatDateParts, resolveText, type Translator } from '../i18n/index.js'
+
+/**
+ * A notice board: one line per notice, a date and a title, and nothing else.
+ *
+ * This is how every institutional notice board in the country reads, on paper and on
+ * screen. A summary under each entry turns six notices into a wall of prose and buries
+ * the seventh below the fold — the list is for scanning, and the notice's own page is
+ * where the detail belongs.
+ */
+interface Props {
+  notices: Notice[]
+  /** Where an individual notice lives. */
+  basePath: string
+  locale: Locale
+  t: Translator
+  /** 'tile' sets the date as a block beside the title; 'inline' keeps it on the line. */
+  date?: 'tile' | 'inline' | undefined
+  class?: string | undefined
+}
+const { notices, basePath, locale, t, date = 'inline', class: className }: Props = Astro.props
+---
+<ul class:list={['fe-board', `is-${date}`, className]}>
+  {notices.map(notice => {
+    const on = formatDateParts(notice.publishedAt, locale)
+    return (
+      <li>
+        <a href={`/${basePath}/${notice.slug}`}>
+          {date === 'tile' ? (
+            <time class="fe-tile" datetime={notice.publishedAt}>
+              <b>{on.day}</b><i>{on.month}</i>
+            </time>
+          ) : (
+            <time datetime={notice.publishedAt}>{formatDate(notice.publishedAt, locale)}</time>
+          )}
+          <span class="fe-title">{resolveText(notice.title, locale)}</span>
+          {notice.pinned && <em>{t('notice.pinned')}</em>}
+          {notice.attachments.length > 0 && (
+            <Icon name="download" size={14} class="fe-clip" />
+          )}
+        </a>
+      </li>
+    )
+  })}
+</ul>
+
+<style>
+  .fe-board { list-style: none; margin: 0; padding: 0; }
+  .fe-board li + li { border-block-start: 1px solid var(--fe-rule-hair); }
+
+  .fe-board a {
+    display: flex; align-items: baseline; gap: var(--fe-space-4);
+    padding: var(--fe-space-3) 0;
+    text-decoration: none; color: var(--fe-color-text);
+  }
+  .fe-board a:hover .fe-title { color: var(--fe-color-primary); }
+
+  .fe-board time {
+    flex: none; color: var(--fe-color-textMuted);
+    font-size: var(--fe-size-2xs); font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .is-inline time {
+    inline-size: 8.5rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  /* Never more than two lines, and never a summary: the list stays scannable. */
+  .fe-title {
+    flex: 1; min-inline-size: 0;
+    font-size: var(--fe-size-sm); line-height: var(--fe-leading-snug);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .fe-board em {
+    flex: none; font-style: normal; color: var(--fe-color-accent);
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  :global(.fe-clip) { flex: none; color: var(--fe-color-textMuted); align-self: center; }
+
+  /* The tile form, for boards that lead with the date rather than run it inline. */
+  .is-tile a { align-items: center; gap: var(--fe-space-3); padding-block: var(--fe-space-3); }
+  .fe-tile {
+    inline-size: 2.9rem; padding-block: 5px;
+    display: grid; justify-items: center; gap: 1px;
+    border: 1px solid var(--fe-color-border);
+    line-height: 1;
+  }
+  .fe-tile b { font-size: var(--fe-size-sm); font-weight: var(--fe-weight-semibold); }
+  .fe-tile i {
+    font-style: normal; font-size: var(--fe-size-3xs);
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--fe-color-textMuted);
+  }
+
+  @media (max-width: 40rem) {
+    /* The date drops above the title rather than squeezing it into a third of the row. */
+    .is-inline a { flex-wrap: wrap; gap: 2px var(--fe-space-3); }
+    .is-inline time { inline-size: auto; order: -1; flex-basis: 100%; }
+  }
+</style>

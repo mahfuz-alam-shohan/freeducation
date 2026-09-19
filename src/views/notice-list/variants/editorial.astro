@@ -40,7 +40,6 @@ const { vm, locale, t }: Props = Astro.props
                 {resolveText(notice.title, locale)}
                 {notice.pinned && <span class="fe-flag">{t('notice.pinned')}</span>}
               </a>
-              {notice.summary && <p>{resolveText(notice.summary, locale)}</p>}
               {notice.attachments.length > 0 && (
                 <p class="fe-files">
                   {notice.attachments.map(file => (
