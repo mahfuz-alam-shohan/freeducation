@@ -14,7 +14,7 @@ jobs:
       # Deploy schools one at a time so a failure does not leave a half-updated set.
       max-parallel: 1
       matrix:
-        school: [demo]
+        school: [demo, riverside, hillview, crestwood, northgate, westbrook]
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +45,17 @@ jobs:
         env:
           PUBLIC_SCHOOL: ${{ matrix.school }}
 
+      - name: Bind the sessions KV namespace
+        if: steps.creds.outputs.ready == 'true'
+        run: |
+          node -e "
+            const fs = require('fs'); const path = 'dist/server/wrangler.json';
+            const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+            config.kv_namespaces = [{ binding: 'SESSION', id: '${{ vars.SESSIONS_KV_ID }}' }];
+            delete config.previews;
+            fs.writeFileSync(path, JSON.stringify(config));
+          "
+
       - name: Deploy ${{ matrix.school }}
         if: steps.creds.outputs.ready == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -53,8 +64,35 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: >-
             deploy -c dist/server/wrangler.json
-            --name institution-website-templates-${{ matrix.school }}
+            --name iwt-demo-${{ matrix.school }}
           secrets: |
             CONTENT_API_KEY
         env:
           CONTENT_API_KEY: ${{ secrets.CONTENT_API_KEY }}
+
+  # The index visitors land on. Static assets only, so it needs no build.
+  gallery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Cloudflare credentials are configured
+        id: creds
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cloudflare secrets are not set; skipping the gallery deploy."
+          fi
+
+      - name: Deploy the gallery
+        if: steps.creds.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy -c gallery/wrangler.json

@@ -124,6 +124,14 @@ export default [
   },
 
   {
+    // The demo bar belongs to the showcase, not to the school it sits above, and has
+    // to read identically over six palettes. Taking the school's tokens is exactly
+    // what it must not do, so it carries its own fixed colours.
+    files: ['src/sections/DemoBar.astro'],
+    rules: { 'fe/no-raw-color': 'off' },
+  },
+
+  {
     // Build tooling legitimately compares configuration slugs to filenames, and the
     // review PDF is a standalone document with no access to the site's design tokens.
     files: ['tools/**'],

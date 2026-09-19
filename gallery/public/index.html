@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Institution Website Templates</title>
+<meta name="description" content="Six complete website designs for schools and colleges. One codebase, one configuration file per institution, content from your own system.">
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --ink: #10141a; --paper: #ffffff; --tint: #f3f5f8; --edge: #dde3ea;
+    --muted: #5a6775; --brand: #0b3c55; --accent: #c4622d;
+    --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#eef2f6; --paper:#0d1117; --tint:#141a22; --edge:#242d38; --muted:#93a2b2; --brand:#3f8db3; --accent:#e0834a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap { width:100%; max-width:1180px; margin-inline:auto; padding-inline:20px; }
+  a { color:inherit; }
+
+  header.top { border-bottom:1px solid var(--edge); }
+  header.top .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-block:14px; }
+  .mark { display:flex; align-items:center; gap:9px; font-size:12px; text-transform:uppercase; letter-spacing:.17em; color:var(--muted); }
+  .dot { width:7px; height:7px; background:var(--accent); }
+  .repo { font-size:12px; text-transform:uppercase; letter-spacing:.13em; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--edge); padding-bottom:2px; }
+  .repo:hover { color:var(--ink); border-bottom-color:var(--accent); }
+
+  .hero { padding-block:64px 44px; border-bottom:1px solid var(--edge); }
+  .hero .split { display:grid; gap:28px; align-items:end; }
+  @media (min-width:60rem) { .hero .split { grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:56px; } }
+  .hero h1 { margin:0; font-size:clamp(2rem,4.4vw,3.1rem); line-height:1.05; letter-spacing:-.03em; }
+  .hero p { margin:0; font-size:17px; color:var(--muted); }
+  .facts { display:flex; flex-wrap:wrap; gap:0; margin-top:34px; border:1px solid var(--edge); }
+  .facts div { flex:1 1 11rem; padding:16px 20px; }
+  .facts div + div { border-left:1px solid var(--edge); }
+  .facts dt { font-size:11px; text-transform:uppercase; letter-spacing:.17em; color:var(--muted); }
+  .facts dd { margin:5px 0 0; font-size:15px; }
+
+  section.grid { padding-block:48px 72px; }
+  .lead { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:24px; padding-bottom:12px; border-bottom:2px solid var(--edge); }
+  .lead h2 { margin:0; font-size:19px; letter-spacing:-.01em; }
+  .lead span { font-size:12px; text-transform:uppercase; letter-spacing:.15em; color:var(--muted); }
+
+  ul.cards { list-style:none; margin:0; padding:0; display:grid; gap:28px; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); }
+  .card { border:1px solid var(--edge); display:grid; grid-template-rows:auto 1fr; background:var(--paper); }
+  .shot { display:block; overflow:hidden; border-bottom:1px solid var(--edge); }
+  .shot img { display:block; width:100%; height:auto; aspect-ratio:4/3; object-fit:cover; object-position:top; transition:transform .7s cubic-bezier(.16,1,.3,1); }
+  .card:hover .shot img { transform:scale(1.03); }
+  .body { padding:20px; display:grid; gap:8px; align-content:start; }
+  .eyebrow { margin:0; font-size:11px; text-transform:uppercase; letter-spacing:.18em; color:var(--accent); font-weight:600; }
+  .body h2 { margin:0; font-size:21px; letter-spacing:-.015em; }
+  .note { margin:0; color:var(--muted); font-size:14px; }
+  .links { margin:10px 0 0; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .go { display:inline-block; padding:9px 18px; background:var(--brand); color:#fff; text-decoration:none; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.15em; }
+  .go:hover { background:var(--accent); }
+  .sub { display:inline-block; padding:8px 12px; border:1px solid var(--edge); text-decoration:none; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
+  .sub:hover { color:var(--ink); border-color:var(--muted); }
+
+  .how { background:var(--tint); border-block:1px solid var(--edge); padding-block:56px; }
+  .how h2 { margin:0 0 6px; font-size:19px; }
+  .how > .wrap > p { margin:0 0 28px; color:var(--muted); max-width:60ch; }
+  .steps { list-style:none; margin:0; padding:0; display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); counter-reset:s; }
+  .steps li { counter-increment:s; padding-top:14px; border-top:2px solid var(--brand); }
+  .steps li::before { content:counter(s,decimal-leading-zero); display:block; font-size:11px; letter-spacing:.16em; color:var(--accent); font-weight:600; margin-bottom:6px; }
+  .steps strong { display:block; font-size:15px; margin-bottom:4px; }
+  .steps span { color:var(--muted); font-size:14px; }
+
+  footer { padding-block:32px; border-top:1px solid var(--edge); }
+  footer .wrap { display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; }
+  footer p { margin:0; font-size:12px; color:var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) { .shot img { transition:none; } }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <p class="mark"><span class="dot"></span>Institution Website Templates</p>
+      <a class="repo" href="https://github.com/mahfuz-alam-shohan/freeducation">Source</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="split">
+        <h1>Six complete websites for one institution to choose from.</h1>
+        <p>Every design below is the same platform running the same content. An institution picks one line of configuration and every page of its site follows &mdash; notices, teachers, routine, results, admission, gallery. Content comes from your own system through an API; nothing is authored twice.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>Designs</dt><dd>6 complete sets</dd></div>
+        <div><dt>Pages covered</dt><dd>16 page types, every one designed</dd></div>
+        <div><dt>Languages</dt><dd>Bangla and English</dd></div>
+        <div><dt>Built for</dt><dd>Phones first, 3G, printable</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <section class="grid">
+    <div class="wrap">
+      <div class="lead">
+        <h2>Live demonstrations</h2>
+        <span>Every demo is the real site</span>
+      </div>
+      <ul class="cards">
+        <li class="card">
+          <a href="https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev" class="shot">
+            <img src="/shots/westbrook.jpg" alt="The Campus design, front page" loading="lazy" width="1200" height="900">
+          </a>
+          <div class="body">
+            <p class="eyebrow">campus</p>
+            <h2>Campus</h2>
+            <p class="note">Photo-led and banded, in the international-school idiom.</p>
+            <p class="links">
+              <a class="go" href="https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev">Open demo</a>
+              <a class="sub" href="https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev/notice">Notices</a>
+              <a class="sub" href="https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev/administration/teachers">Teachers</a>
+              <a class="sub" href="https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev/academics/routine">Routine</a>
+            </p>
+          </div>
+        </li>
+        <li class="card">
+          <a href="https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev" class="shot">
+            <img src="/shots/crestwood.jpg" alt="The Editorial design, front page" loading="lazy" width="1200" height="900">
+          </a>
+          <div class="body">
+            <p class="eyebrow">editorial</p>
+            <h2>Editorial</h2>
+            <p class="note">Panelled blocks and ruled rows, led by the building.</p>
+            <p class="links">
+              <a class="go" href="https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev">Open demo</a>
+              <a class="sub" href="https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev/notice">Notices</a>
+              <a class="sub" href="https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev/administration/teachers">Teachers</a>
+              <a class="sub" href="https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev/academics/routine">Routine</a>
+            </p>
+          </div>
+        </li>
+        <li class="card">
+          <a href="https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev" class="shot">
+            <img src="/shots/northgate.jpg" alt="The Broadsheet design, front page" loading="lazy" width="1200" height="900">
+          </a>
+          <div class="body">
+            <p class="eyebrow">broadsheet</p>
+            <h2>Broadsheet</h2>
+            <p class="note">A newspaper: rules and columns, nothing boxed.</p>
+            <p class="links">
+              <a class="go" href="https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev">Open demo</a>
+              <a class="sub" href="https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev/notice">Notices</a>
+              <a class="sub" href="https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev/administration/teachers">Teachers</a>
+              <a class="sub" href="https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev/academics/routine">Routine</a>
+            </p>
+          </div>
+        </li>
+        <li class="card">
+          <a href="https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev" class="shot">
+            <img src="/shots/demo.jpg" alt="The Classic design, front page" loading="lazy" width="1200" height="900">
+          </a>
+          <div class="body">
+            <p class="eyebrow">classic</p>
+            <h2>Classic</h2>
+            <p class="note">The institutional default: newsroom front page, dense tables.</p>
+            <p class="links">
+              <a class="go" href="https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev">Open demo</a>
+              <a class="sub" href="https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev/notice">Notices</a>
+              <a class="sub" href="https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev/administration/teachers">Teachers</a>
+              <a class="sub" href="https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev/academics/routine">Routine</a>
+            </p>
+          </div>
+        </li>
+        <li class="card">
+          <a href="https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev" class="shot">
+            <img src="/shots/riverside.jpg" alt="The Journal design, front page" loading="lazy" width="1200" height="900">
+          </a>
+          <div class="body">
+            <p class="eyebrow">journal</p>
+            <h2>Journal</h2>
+            <p class="note">Notice-led and carded, for a site that is mostly announcements.</p>
+            <p class="links">
+              <a class="go" href="https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev">Open demo</a>
+              <a class="sub" href="https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev/notice">Notices</a>
+              <a class="sub" href="https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev/administration/teachers">Teachers</a>
+              <a class="sub" href="https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev/academics/routine">Routine</a>
+            </p>
+          </div>
+        </li>
+        <li class="card">
+          <a href="https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev" class="shot">
+            <img src="/shots/hillview.jpg" alt="The Quiet design, front page" loading="lazy" width="1200" height="900">
+          </a>
+          <div class="body">
+            <p class="eyebrow">quiet</p>
+            <h2>Quiet</h2>
+            <p class="note">Stacked and unhurried, for a school with little content.</p>
+            <p class="links">
+              <a class="go" href="https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev">Open demo</a>
+              <a class="sub" href="https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev/notice">Notices</a>
+              <a class="sub" href="https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev/administration/teachers">Teachers</a>
+              <a class="sub" href="https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev/academics/routine">Routine</a>
+            </p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="how">
+    <div class="wrap">
+      <h2>How an institution gets its own</h2>
+      <p>No forking, no theme to maintain, no second place to edit content.</p>
+      <ol class="steps">
+        <li><strong>Choose a design</strong><span>One name in a configuration file dresses all sixteen page types.</span></li>
+        <li><strong>Set the colours</strong><span>A palette and a logo. Everything else follows from design tokens.</span></li>
+        <li><strong>Connect your content</strong><span>The site reads notices, staff, routines and results from your existing system.</span></li>
+        <li><strong>Publish</strong><span>Each institution is deployed separately, carrying only its own design.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <p>Institution Website Templates &mdash; demonstration build</p>
+      <p>Content shown is sample data, not any real institution&rsquo;s records.</p>
+    </div>
+  </footer>
+</body>
+</html>

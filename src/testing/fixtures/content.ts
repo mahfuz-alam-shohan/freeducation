@@ -8,7 +8,7 @@ export const profile: SchoolProfile = {
   eiin: '108573',
   established: '1965',
   logo: { url: '/sample/crest.svg', width: 64, height: 64, variants: [] },
-  cover: { url: '/sample/hero.svg', width: 1600, height: 900, variants: [] },
+  cover: { url: '/sample/hero.jpg', width: 1600, height: 900, variants: [] },
   address: t('১২ কলেজ রোড, ধানমন্ডি, ঢাকা ১২০৫', '12 College Road, Dhanmondi, Dhaka 1205'),
   phones: ['+880 2 9876543', '+880 1711 223344'],
   emails: ['info@adarsha.edu.bd'],
@@ -145,10 +145,10 @@ export const pages: RichPage[] = [
   },
 ]
 
-const plate = (n: number) => ({ url: `/sample/plate-${n}.svg`, width: 800, height: 550, variants: [] })
+const plate = (n: number) => ({ url: `/sample/plate-${n}.jpg`, width: 900, height: 620, variants: [] })
 const photo = (bn: string, en: string, n = 1) => ({ ...plate(n), alt: t(bn, en) })
 
-const poster = { url: '/sample/video-poster.svg', width: 640, height: 360, variants: [] }
+const poster = { url: '/sample/video-poster.jpg', width: 960, height: 540, variants: [] }
 
 export const videos: Video[] = [
   {

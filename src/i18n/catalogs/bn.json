@@ -95,5 +95,9 @@
   "calendar.today": "আজ",
   "video.empty": "এখনো কোনো ভিডিও প্রকাশ করা হয়নি।",
   "video.play": "চালান",
-  "common.since": "প্রতিষ্ঠিত"
+  "common.since": "প্রতিষ্ঠিত",
+  "demo.badge": "টেমপ্লেট ডেমো",
+  "demo.switch": "ডিজাইন বদলান",
+  "demo.others": "অন্যান্য টেমপ্লেট",
+  "demo.all": "সব টেমপ্লেট"
 }

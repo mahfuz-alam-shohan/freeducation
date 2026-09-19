@@ -54,7 +54,15 @@ export const SchoolConfig = z.object({
     noticeTicker: z.boolean().default(true),
     themeToggle: z.boolean().default(true),
     languageSwitch: z.boolean().default(true),
-  }).default({ search: true, noticeTicker: true, themeToggle: true, languageSwitch: true }),
+    /**
+     * Shows the bar that lets a visitor move between published demonstrations.
+     * Off for a real school: it is scaffolding for evaluating the platform, and a
+     * school's own visitors have nothing to switch to.
+     */
+    demoBar: z.boolean().default(false),
+  }).default({
+    search: true, noticeTicker: true, themeToggle: true, languageSwitch: true, demoBar: false,
+  }),
 
   data: z.object({
     source: z.enum(['http', 'fixture']).default('fixture'),

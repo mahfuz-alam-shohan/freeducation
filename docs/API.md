@@ -54,7 +54,7 @@ Example response:
     "variants": []
   },
   "cover": {
-    "url": "/sample/hero.svg",
+    "url": "/sample/hero.jpg",
     "width": 1600,
     "height": 900,
     "variants": []
@@ -438,9 +438,9 @@ Example response:
         "en": "Administration"
       },
       "photo": {
-        "url": "/sample/portrait.svg",
-        "width": 300,
-        "height": 300,
+        "url": "/sample/portrait.jpg",
+        "width": 560,
+        "height": 700,
         "variants": []
       },
       "email": "principal@adarsha.edu.bd",
@@ -462,9 +462,9 @@ Example response:
         "en": "Administration"
       },
       "photo": {
-        "url": "/sample/portrait.svg",
-        "width": 300,
-        "height": 300,
+        "url": "/sample/portrait.jpg",
+        "width": 560,
+        "height": 700,
         "variants": []
       },
       "order": 2
@@ -546,9 +546,9 @@ Example response:
     "en": "College ground"
   },
   "cover": {
-    "url": "/sample/campus.svg",
-    "width": 800,
-    "height": 600,
+    "url": "/sample/plate-5.jpg",
+    "width": 900,
+    "height": 620,
     "variants": []
   }
 }
@@ -573,30 +573,30 @@ Example response:
         "en": "Annual Sports 2026"
       },
       "cover": {
-        "url": "/sample/plate-1.svg",
-        "width": 800,
-        "height": 550,
+        "url": "/sample/plate-1.jpg",
+        "width": 900,
+        "height": 620,
         "variants": []
       },
       "photos": [
         {
-          "url": "/sample/plate-1.svg",
+          "url": "/sample/plate-1.jpg",
           "alt": {
             "bn": "উদ্বোধনী কুচকাওয়াজ",
             "en": "The opening parade"
           },
-          "width": 800,
-          "height": 550,
+          "width": 900,
+          "height": 620,
           "variants": []
         },
         {
-          "url": "/sample/plate-3.svg",
+          "url": "/sample/plate-3.jpg",
           "alt": {
             "bn": "দৌড় প্রতিযোগিতা",
             "en": "The sprint race"
           },
-          "width": 800,
-          "height": 550,
+          "width": 900,
+          "height": 620,
           "variants": []
         }
       ],
@@ -610,20 +610,20 @@ Example response:
         "en": "Victory Day 2026"
       },
       "cover": {
-        "url": "/sample/plate-3.svg",
-        "width": 800,
-        "height": 550,
+        "url": "/sample/plate-3.jpg",
+        "width": 900,
+        "height": 620,
         "variants": []
       },
       "photos": [
         {
-          "url": "/sample/plate-3.svg",
+          "url": "/sample/plate-3.jpg",
           "alt": {
             "bn": "পুষ্পস্তবক অর্পণ",
             "en": "Laying of flowers"
           },
-          "width": 800,
-          "height": 550,
+          "width": 900,
+          "height": 620,
           "variants": []
         }
       ],
@@ -653,30 +653,30 @@ Example response:
     "en": "Annual Sports 2026"
   },
   "cover": {
-    "url": "/sample/plate-1.svg",
-    "width": 800,
-    "height": 550,
+    "url": "/sample/plate-1.jpg",
+    "width": 900,
+    "height": 620,
     "variants": []
   },
   "photos": [
     {
-      "url": "/sample/plate-1.svg",
+      "url": "/sample/plate-1.jpg",
       "alt": {
         "bn": "উদ্বোধনী কুচকাওয়াজ",
         "en": "The opening parade"
       },
-      "width": 800,
-      "height": 550,
+      "width": 900,
+      "height": 620,
       "variants": []
     },
     {
-      "url": "/sample/plate-3.svg",
+      "url": "/sample/plate-3.jpg",
       "alt": {
         "bn": "দৌড় প্রতিযোগিতা",
         "en": "The sprint race"
       },
-      "width": 800,
-      "height": 550,
+      "width": 900,
+      "height": 620,
       "variants": []
     }
   ],
@@ -709,9 +709,9 @@ Example response:
       "embedUrl": "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ",
       "watchUrl": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
       "poster": {
-        "url": "/sample/video-poster.svg",
-        "width": 640,
-        "height": 360,
+        "url": "/sample/video-poster.jpg",
+        "width": 960,
+        "height": 540,
         "variants": []
       },
       "publishedAt": "2026-12-20T00:00:00.000Z",
@@ -727,9 +727,9 @@ Example response:
       "embedUrl": "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ",
       "watchUrl": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
       "poster": {
-        "url": "/sample/video-poster.svg",
-        "width": 640,
-        "height": 360,
+        "url": "/sample/video-poster.jpg",
+        "width": 960,
+        "height": 540,
         "variants": []
       },
       "publishedAt": "2026-11-06T00:00:00.000Z",

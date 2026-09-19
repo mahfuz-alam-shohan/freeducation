@@ -29,7 +29,7 @@ const visible = items.filter(item => item.visible)
   <div class="fe-panel" role="dialog" aria-modal="true" aria-label={t('common.menu')}>
     <span class="fe-grip" aria-hidden="true"></span>
     <div class="fe-panel-head">
-      <span class="fe-panel-title">{resolveText(profile.shortName ?? profile.name, locale)}</span>
+      <span class="fe-panel-title">{resolveText(profile.name, locale)}</span>
       <button type="button" class="fe-close" data-fe-nav-close aria-label={t('common.closeMenu')}>
         <Icon name="close" size={22} />
       </button>

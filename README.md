@@ -6,6 +6,23 @@ Not a theme a school forks and edits — a platform where a school is **a config
 record**, and its look is **a choice among variants**. Nobody forks, so everybody
 upgrades.
 
+## See it running
+
+**[iwt-demo.mahfuz-alam-shohan.workers.dev](https://iwt-demo.mahfuz-alam-shohan.workers.dev)** — the index, with every design side by side.
+
+| Design | Set | What it is | Live |
+|---|---|---|---|
+| **Campus** | `campus` | Photo-led and banded, in the international-school idiom. | [Open](https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev) |
+| **Editorial** | `editorial` | Panelled blocks and ruled rows, led by the building. | [Open](https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev) |
+| **Broadsheet** | `broadsheet` | A newspaper: rules and columns, nothing boxed. | [Open](https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev) |
+| **Classic** | `classic` | The institutional default: newsroom front page, dense tables. | [Open](https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev) |
+| **Journal** | `journal` | Notice-led and carded, for a site that is mostly announcements. | [Open](https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev) |
+| **Quiet** | `quiet` | Stacked and unhurried, for a school with little content. | [Open](https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev) |
+
+Every demo is the real site, not a mock-up: the same code, the same sixteen page types,
+sample content throughout. A bar along the top lets a visitor switch design without
+losing their place — viewing the notices in one design lands on the notices in the next.
+
 ## Read these first
 
 | Document | What it covers |
@@ -188,7 +205,7 @@ school to the matrix in `.github/workflows/deploy.yml` to deploy it as well.
 | Design sets | Done — 6 complete looks, enforced whole-site; `editorial`, `broadsheet` and `campus` each have their own variant for all 16 views |
 | Features | Done — search, ticker, routine, results, forms, events calendar, video gallery, dark mode, images |
 | Enforcement | Done — boundaries, 5 project lint rules, structure verifier, contract harness, 366 tests |
-| Deployment | Workflow ready — needs two Cloudflare secrets added to the repository |
+| Deployment | Live — six demonstrations and an index, on Cloudflare Workers |
 | Real content API | Adapter written and integration-tested; not yet pointed at a live backend |
 
 The ordered next steps are at the end of

@@ -1,0 +1,129 @@
+---
+import Icon from '../ui/Icon.astro'
+import type { DemoEntry } from '../demo/index.js'
+import type { Translator } from '../i18n/index.js'
+
+/**
+ * The strip along the top of a published demonstration.
+ *
+ * It says plainly that this is a demonstration rather than a school's real site,
+ * names the design being shown, and lets the visitor move straight to another one.
+ * Deliberately its own colours, not the school's: it must never be mistaken for part
+ * of the design underneath it.
+ */
+interface Props {
+  current: DemoEntry | null
+  peers: DemoEntry[]
+  galleryUrl: string
+  /** The path being viewed, so switching designs lands on the same page. */
+  currentPath: string
+  t: Translator
+}
+const { current, peers, galleryUrl, currentPath, t }: Props = Astro.props
+const suffix = currentPath === '' ? '' : `/${currentPath}`
+---
+<div class="fe-demobar">
+  <div class="fe-demobar-inner">
+    <p class="fe-mark">
+      <span class="fe-dot" aria-hidden="true"></span>
+      {t('demo.badge')}
+      {current && <strong>{current.label}</strong>}
+    </p>
+
+    {peers.length > 0 && (
+      <nav class="fe-swap" aria-label={t('demo.others')}>
+        <span class="fe-swap-label">{t('demo.switch')}</span>
+        <ul>
+          {peers.map(peer => (
+            <li><a href={`${peer.url}${suffix}`}>{peer.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    <a class="fe-all" href={galleryUrl}>{t('demo.all')}<Icon name="arrow-right" size={13} /></a>
+  </div>
+</div>
+
+<style>
+  /*
+   * Fixed ink and paper rather than theme tokens: the bar belongs to the showcase,
+   * not to the school being shown, and has to read the same above every design.
+   */
+  .fe-demobar {
+    --demo-ink: #f4f5f7;
+    --demo-ground: #16181d;
+    --demo-edge: #32363f;
+    --demo-live: #46d39a;
+    position: relative; z-index: 60;
+    background: var(--demo-ground); color: var(--demo-ink);
+    border-block-end: 1px solid var(--demo-edge);
+  }
+  .fe-demobar-inner {
+    inline-size: 100%; max-inline-size: 90rem; margin-inline: auto;
+    padding: var(--fe-space-3) var(--fe-space-4);
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--fe-space-3) var(--fe-space-6);
+  }
+
+  .fe-mark {
+    display: flex; align-items: center; gap: var(--fe-space-2); margin: 0;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--demo-ink) 62%, transparent);
+  }
+  .fe-mark strong {
+    color: var(--demo-ink); font-weight: var(--fe-weight-semibold);
+    padding-inline-start: var(--fe-space-2);
+    border-inline-start: 1px solid var(--demo-edge);
+  }
+  .fe-dot { inline-size: 6px; block-size: 6px; background: var(--demo-live); }
+
+  .fe-swap { flex: 1; min-inline-size: 0; display: flex; align-items: center; gap: var(--fe-space-4); }
+  .fe-swap-label {
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--demo-ink) 55%, transparent);
+  }
+  .fe-swap ul {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: var(--fe-space-2);
+  }
+  .fe-swap a {
+    display: block; padding: 3px var(--fe-space-3);
+    border: 1px solid var(--demo-edge);
+    color: var(--demo-ink); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.12em;
+    transition: background-color 200ms ease, border-color 200ms ease;
+  }
+  .fe-swap a:hover { background: var(--demo-edge); border-color: var(--demo-ink); }
+
+  .fe-all {
+    display: inline-flex; align-items: center; gap: 5px; margin-inline-start: auto;
+    color: var(--demo-ink); text-decoration: none;
+    font-size: var(--fe-size-3xs); text-transform: uppercase; letter-spacing: 0.14em;
+    padding-block-end: 2px; border-block-end: 1px solid var(--demo-live);
+  }
+  .fe-all:hover { color: var(--demo-live); }
+
+  /*
+   * On a phone the design list cannot wrap: wrapped chips pushed the bar to a third
+   * of the screen and collided with the link beside them. Two fixed rows instead,
+   * the chips scrolling sideways within their own.
+   */
+  @media (max-width: 52rem) {
+    .fe-demobar-inner {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--fe-space-2) var(--fe-space-4);
+    }
+    .fe-mark { grid-column: 1; }
+    .fe-all { grid-column: 2; margin-inline-start: 0; }
+    .fe-swap {
+      grid-column: 1 / -1;
+      overflow-x: auto; scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fe-swap::-webkit-scrollbar { display: none; }
+    .fe-swap-label { display: none; }
+    .fe-swap ul { flex-wrap: nowrap; }
+    .fe-swap a { white-space: nowrap; }
+  }
+  @media (prefers-reduced-motion: reduce) { .fe-swap a { transition: none; } }
+</style>

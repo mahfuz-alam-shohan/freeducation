@@ -95,5 +95,9 @@
   "calendar.today": "Today",
   "video.empty": "No videos have been published yet.",
   "video.play": "Play",
-  "common.since": "Since"
+  "common.since": "Since",
+  "demo.badge": "Template demo",
+  "demo.switch": "Switch design",
+  "demo.others": "Other templates",
+  "demo.all": "All templates"
 }

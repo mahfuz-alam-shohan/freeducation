@@ -19,7 +19,8 @@
     "search": true,
     "noticeTicker": false,
     "themeToggle": true,
-    "languageSwitch": true
+    "languageSwitch": true,
+    "demoBar": true
   },
   "data": {
     "source": "fixture"

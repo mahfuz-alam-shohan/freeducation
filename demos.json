@@ -1,0 +1,47 @@
+{
+  "galleryUrl": "https://iwt-demo.mahfuz-alam-shohan.workers.dev",
+  "entries": [
+    {
+      "slug": "westbrook",
+      "design": "campus",
+      "label": "Campus",
+      "note": "Photo-led and banded, in the international-school idiom.",
+      "url": "https://iwt-demo-westbrook.mahfuz-alam-shohan.workers.dev"
+    },
+    {
+      "slug": "crestwood",
+      "design": "editorial",
+      "label": "Editorial",
+      "note": "Panelled blocks and ruled rows, led by the building.",
+      "url": "https://iwt-demo-crestwood.mahfuz-alam-shohan.workers.dev"
+    },
+    {
+      "slug": "northgate",
+      "design": "broadsheet",
+      "label": "Broadsheet",
+      "note": "A newspaper: rules and columns, nothing boxed.",
+      "url": "https://iwt-demo-northgate.mahfuz-alam-shohan.workers.dev"
+    },
+    {
+      "slug": "demo",
+      "design": "classic",
+      "label": "Classic",
+      "note": "The institutional default: newsroom front page, dense tables.",
+      "url": "https://iwt-demo-demo.mahfuz-alam-shohan.workers.dev"
+    },
+    {
+      "slug": "riverside",
+      "design": "journal",
+      "label": "Journal",
+      "note": "Notice-led and carded, for a site that is mostly announcements.",
+      "url": "https://iwt-demo-riverside.mahfuz-alam-shohan.workers.dev"
+    },
+    {
+      "slug": "hillview",
+      "design": "quiet",
+      "label": "Quiet",
+      "note": "Stacked and unhurried, for a school with little content.",
+      "url": "https://iwt-demo-hillview.mahfuz-alam-shohan.workers.dev"
+    }
+  ]
+}
